@@ -421,11 +421,32 @@ function Setup({ setZtfInstalled, setSystemChecks }) {
     setInstalling(true)
     setInstallStatus('running')
     setLogs([])
-    await streamExecute({ __installMode: true }, evt => {
-      setLogs(prev => [...prev, { type: evt.type, data: typeof evt.data === 'string' ? evt.data : JSON.stringify(evt.data) }])
-      if (evt.type === 'done') setInstallStatus('done')
-      if (evt.type === 'error') setInstallStatus('error')
-    }).catch(() => setInstallStatus('error'))
+    try {
+      const resp = await fetch('/api/install', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      const reader = resp.body.getReader()
+      const dec = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop() || ''
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const evt = JSON.parse(line.slice(6))
+              setLogs(prev => [...prev, { type: evt.type, data: typeof evt.data === 'string' ? evt.data : JSON.stringify(evt.data) }])
+              if (evt.type === 'done') setInstallStatus('done')
+              if (evt.type === 'error') setInstallStatus('error')
+            } catch {}
+          }
+        }
+      }
+    } catch (err) {
+      setLogs(prev => [...prev, { type: 'error', data: String(err) }])
+      setInstallStatus('error')
+    }
     setInstalling(false)
     const data = await api('/api/system/check')
     setChecks(data.checks)

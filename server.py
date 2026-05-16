@@ -117,10 +117,10 @@ def install_ztf():
         def send(event_type, data):
             yield f"data: {json.dumps({'type': event_type, 'data': data})}\n\n"
 
-        def run_cmd(cmd, cwd=None):
+        def run_cmd(cmd, cwd=None, env=None):
             yield from send("log", f"$ {cmd}")
             proc = subprocess.Popen(
-                cmd, shell=True, cwd=cwd,
+                cmd, shell=True, cwd=cwd, env=env,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
             )
             for line in proc.stdout:
@@ -138,8 +138,101 @@ def install_ztf():
                 yield from run_cmd("git pull", cwd=ztf_path)
 
             yield from send("step", "Installing Python dependencies...")
-            req_file = "requirements/requirements.txt" if Path(ztf_path, "requirements/requirements.txt").exists() else "requirements.txt"
-            yield from run_cmd(f'{python_path} -m pip install -r {req_file}', cwd=ztf_path)
+            ztf = Path(ztf_path)
+
+            # Find the requirements file
+            req_file = None
+            candidates = ["requirements/requirements.txt", "requirements.txt"]
+            req_dir = ztf / "requirements"
+            if req_dir.is_dir():
+                for f in sorted(req_dir.glob("*.txt")):
+                    candidates.insert(0, str(f.relative_to(ztf)))
+            for c in candidates:
+                if (ztf / c).exists():
+                    req_file = c
+                    break
+            if req_file is None:
+                raise RuntimeError(f"Could not find a requirements file in {ztf_path}")
+
+            # Patch any hardcoded absolute paths to local wheel files.
+            # prod.txt ships with developer-machine paths like:
+            #   calm-dsl @ file:///Users/darshan.p/.../calm-whl/calm.dsl-X.whl
+            # Replace them with the correct path inside the cloned repo.
+            import re
+            import tempfile
+            req_text = (ztf / req_file).read_text()
+            def fix_local_wheel(m):
+                whl_name = Path(m.group(1)).name
+                local = ztf / "calm-whl" / whl_name
+                if local.exists():
+                    return f"@ file://{local}"
+                return m.group(0)
+            patched = re.sub(r'@ file://(\S+\.whl)', fix_local_wheel, req_text)
+
+            if patched != req_text:
+                yield from send("log", "Patched hardcoded wheel paths to local repo copies")
+                tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False)
+                tmp.write(patched)
+                tmp.close()
+                install_arg = tmp.name
+            else:
+                install_arg = str(ztf / req_file)
+
+            # `scrypt` requires OpenSSL headers which are absent on stock macOS.
+            # It is only needed for CyberArk vault auth — strip it from the main
+            # install and attempt it separately so it doesn't block everything else.
+            import platform, os
+            pip_env = os.environ.copy()
+            scrypt_line_re = re.compile(r'^scrypt\b.*', re.MULTILINE)
+
+            patched_for_install = patched if patched != req_text else (ztf / req_file).read_text()
+            scrypt_lines = scrypt_line_re.findall(patched_for_install)
+            patched_no_scrypt = scrypt_line_re.sub('# scrypt skipped – requires OpenSSL headers', patched_for_install)
+
+            tmp2 = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False)
+            tmp2.write(patched_no_scrypt)
+            tmp2.close()
+            install_arg = tmp2.name
+
+            yield from send("log", f"Using requirements file: {req_file}")
+            # prod.txt is a fully-compiled pip-tools lockfile — every transitive
+            # dependency is already listed and pinned, so --no-deps is safe and
+            # prevents pip from re-resolving deps from wheel METADATA (which would
+            # pull scrypt back in via calm-dsl's Requires-Dist).
+            yield from run_cmd(
+                f'{python_path} -m pip install --no-deps -r "{install_arg}"',
+                cwd=ztf_path, env=pip_env
+            )
+
+            # Now try scrypt separately with OpenSSL hints (optional – CyberArk only)
+            if scrypt_lines:
+                yield from send("step", "Attempting optional scrypt install (CyberArk vault support)...")
+                scrypt_env = pip_env.copy()
+                if platform.system() == "Darwin":
+                    # Try common OpenSSL locations (Homebrew, MacPorts, system)
+                    for openssl_prefix in [
+                        "/usr/local/opt/openssl",
+                        "/opt/homebrew/opt/openssl",
+                        "/opt/local",
+                        "/usr",
+                    ]:
+                        if Path(openssl_prefix, "include/openssl/aes.h").exists():
+                            scrypt_env["CFLAGS"] = f"-I{openssl_prefix}/include " + scrypt_env.get("CFLAGS", "")
+                            scrypt_env["LDFLAGS"] = f"-L{openssl_prefix}/lib " + scrypt_env.get("LDFLAGS", "")
+                            yield from send("log", f"Found OpenSSL at {openssl_prefix}")
+                            break
+                try:
+                    yield from run_cmd(
+                        f'{python_path} -m pip install "scrypt==0.8.20"',
+                        cwd=ztf_path, env=scrypt_env
+                    )
+                    yield from send("log", "scrypt installed ✓ (CyberArk vault support enabled)")
+                except RuntimeError:
+                    yield from send("log",
+                        "⚠ scrypt could not be built (OpenSSL headers not found). "
+                        "CyberArk vault auth will be unavailable, but all other ZTF features work normally. "
+                        "Install OpenSSL (e.g. via Homebrew: brew install openssl) and re-run setup to enable it."
+                    )
 
             yield from send("done", "ZeroTouch Framework installed successfully!")
         except Exception as e:
