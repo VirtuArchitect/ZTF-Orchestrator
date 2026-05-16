@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZeroTouch Framework UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            nutanix: { blue: '#034ea2', cyan: '#21c2f8', teal: '#00b388' },
+            surface: { DEFAULT: '#1c1e2d', elevated: '#252840' },
+            border: { DEFAULT: '#2e3150', light: '#3d4170' },
+          },
+          fontFamily: { mono: ['JetBrains Mono', 'Fira Code', 'monospace'] }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #030712; color: #f1f5f9; margin: 0; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #111827; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 9999px; }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; border:none; outline:none; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-primary { background:#034ea2; color:white; }
+    .btn-primary:hover:not(:disabled) { background:#1a6bbf; }
+    .btn-secondary { background:#252840; color:#d1d5db; border:1px solid #2e3150; }
+    .btn-secondary:hover:not(:disabled) { background:#2e3150; }
+    .btn-success { background:#00b388; color:white; }
+    .btn-success:hover:not(:disabled) { background:#009970; }
+    .btn-danger { background:#dc2626; color:white; }
+    .btn-danger:hover:not(:disabled) { background:#b91c1c; }
+    .btn-ghost { background:transparent; color:#9ca3af; }
+    .btn-ghost:hover { background:#1c1e2d; color:#d1d5db; }
+    .card { background:#1c1e2d; border:1px solid #2e3150; border-radius:12px; padding:20px; }
+    .input { width:100%; background:#111827; border:1px solid #2e3150; border-radius:8px; padding:8px 12px; font-size:13px; color:#f1f5f9; outline:none; transition:border-color 0.15s; }
+    .input:focus { border-color:#034ea2; }
+    .input::placeholder { color:#6b7280; }
+    .label { display:block; font-size:11px; font-weight:500; color:#9ca3af; margin-bottom:4px; }
+    select.input { appearance:none; cursor:pointer; }
+    textarea.input { resize:vertical; min-height:100px; }
+    .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500; }
+    .badge-blue { background:rgba(59,130,246,.15); color:#93c5fd; border:1px solid rgba(59,130,246,.2); }
+    .badge-green { background:rgba(16,185,129,.15); color:#6ee7b7; border:1px solid rgba(16,185,129,.2); }
+    .badge-yellow { background:rgba(245,158,11,.15); color:#fcd34d; border:1px solid rgba(245,158,11,.2); }
+    .badge-red { background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.2); }
+    .badge-purple { background:rgba(139,92,246,.15); color:#c4b5fd; border:1px solid rgba(139,92,246,.2); }
+    .badge-gray { background:#1f2937; color:#9ca3af; border:1px solid #374151; }
+    .terminal { font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; background:#030712; border:1px solid #2e3150; border-radius:10px; padding:16px; overflow:auto; max-height:400px; }
+    .sidebar { position:fixed; top:0; left:0; height:100vh; background:#030712; border-right:1px solid #2e3150; display:flex; flex-direction:column; transition:width 0.3s; z-index:40; }
+    .main { transition:margin-left 0.3s; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+    .form-section { background:rgba(17,24,39,.5); border:1px solid rgba(46,49,80,.5); border-radius:12px; padding:16px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:13px; font-weight:500; color:#9ca3af; text-decoration:none; }
+    .nav-item:hover { background:#1c1e2d; color:#e5e7eb; }
+    .nav-item.active { background:#034ea2; color:white; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .animate-spin { animation:spin 1s linear infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+    .animate-pulse { animation:pulse 2s ease-in-out infinite; }
+    #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:16px; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div style="width:40px;height:40px;border:3px solid #2e3150;border-top-color:#21c2f8;border-radius:50%" class="animate-spin"></div>
+    <p style="color:#6b7280;font-size:14px">Loading ZeroTouch Framework UI...</p>
+  </div>
+  <div id="root" style="display:none"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18",
+        "react-dom/client": "https://esm.sh/react-dom@18/client",
+        "react-dom": "https://esm.sh/react-dom@18",
+        "js-yaml": "https://esm.sh/js-yaml@4"
+      }
+    }
+  </script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
