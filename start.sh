@@ -3,7 +3,7 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "ZeroTouch Framework UI"
+echo "Nutanix ZeroTouch Framework UI"
 echo "======================"
 
 # Check Python

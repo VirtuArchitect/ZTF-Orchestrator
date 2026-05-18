@@ -1,4 +1,4 @@
-# ZeroTouch Framework UI
+# Nutanix ZeroTouch Framework UI
 
 A fully functional web-based installer and configuration UI for the [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework), replacing GitHub-based configuration management with a visual interface.
 

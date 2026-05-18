@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ZeroTouch Framework UI - Flask Backend"""
+"""Nutanix ZeroTouch Framework UI - Flask Backend"""
 
 import json
 import os
@@ -431,7 +431,7 @@ def clear_executions():
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("  ZeroTouch Framework UI")
+    print("  Nutanix ZeroTouch Framework UI")
     print("=" * 50)
     print(f"  Open: http://localhost:5001")
     print("=" * 50)

@@ -1,5 +1,5 @@
 {
-  "name": "ztf-ui",
+  "name": "nutanix-zerotouch-framework-ui",
   "version": "1.0.0",
   "private": true,
   "scripts": {
