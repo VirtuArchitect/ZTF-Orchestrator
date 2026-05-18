@@ -13,9 +13,9 @@ app.use(express.json())
 
 // Config and state directories
 const CONFIG_DIR = path.join(os.homedir(), '.ztf-ui')
-const HISTORY_FILE = path.join(CONFIG_DIR, 'history.json')
-const SETTINGS_FILE = path.join(CONFIG_DIR, 'settings.json')
 const CONFIGS_DIR = path.join(CONFIG_DIR, 'configs')
+const HISTORY_FILE = path.join(CONFIG_DIR, 'history.json')
+const SETTINGS_FILE = path.join(CONFIG_DIR, 'settings.json');
 
 // Ensure directories exist
 [CONFIG_DIR, CONFIGS_DIR].forEach(dir => {
@@ -66,14 +66,19 @@ app.get('/api/system/check', async (req, res) => {
     runCheck('Python 3.9+', `${settings.pythonPath} --version`),
     runCheck('pip', `pip3 --version`),
     runCheck('git', 'git --version'),
-    runCheck('ZTF Installed', `test -f "${settings.ztfPath}/main.py" && echo "found"`),
   ])
 
-  const ztfInstalled = results.find(r => r.name === 'ZTF Installed')?.ok || false
+  const ztfMainPath = path.join(settings.ztfPath, 'main.py')
+  const ztfInstalled = fs.existsSync(ztfMainPath)
+  results.push({ name: 'ZTF Installed', ok: ztfInstalled, value: ztfInstalled ? 'found' : null })
 
   if (ztfInstalled) {
-    const reqFile = path.join(settings.ztfPath, 'requirements', 'requirements.txt')
-    results.push({ name: 'Requirements File', ok: fs.existsSync(reqFile), value: reqFile })
+    const reqFiles = [
+      path.join(settings.ztfPath, 'requirements', 'requirements.txt'),
+      path.join(settings.ztfPath, 'requirements.txt'),
+    ]
+    const found = reqFiles.find(f => fs.existsSync(f))
+    results.push({ name: 'Requirements File', ok: !!found, value: found || reqFiles[0] })
   }
 
   res.json({ checks: results, ztfInstalled })

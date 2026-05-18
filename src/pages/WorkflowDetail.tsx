@@ -24,7 +24,7 @@ import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
 import clsx from 'clsx'
 
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
 }
