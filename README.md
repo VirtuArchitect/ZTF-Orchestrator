@@ -5,14 +5,14 @@ A fully functional web-based installer and configuration UI for the [Nutanix Zer
 ## Quick Start
 
 ```bash
-# Install Python dependencies
-pip3 install flask flask-cors pyyaml
+# Install Node dependencies
+npm install
 
-# Start the UI server
-python3 server.py
+# Start the UI and API servers
+npm run dev
 ```
 
-Open **http://localhost:5001** in your browser.
+Open **http://localhost:5173** in your browser.
 
 Or use the start script:
 ```bash
