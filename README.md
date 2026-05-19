@@ -1,6 +1,6 @@
-# Nutanix ZeroTouch Framework UI
+# ZTF-Orchestrator
 
-A fully functional web-based installer and configuration UI for the [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework), replacing GitHub-based configuration management with a visual interface.
+A fully functional web-based installer and configuration orchestrator for the [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework), replacing GitHub-based configuration management with a visual interface.
 
 ## Quick Start
 
