@@ -3,6 +3,7 @@ import { Trash2, RefreshCw, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
 import Layout from '../components/Layout'
 import type { Execution } from '../types'
 import clsx from 'clsx'
+import { apiFetch } from '../utils/api'
 
 export default function Executions() {
   const [executions, setExecutions] = useState<Execution[]>([])
@@ -13,7 +14,7 @@ export default function Executions() {
   const load = async () => {
     setLoading(true)
     try {
-      const resp = await fetch('/api/executions')
+      const resp = await apiFetch('/api/executions')
       if (resp.ok) setExecutions(await resp.json())
     } finally {
       setLoading(false)
@@ -24,7 +25,7 @@ export default function Executions() {
 
   const clear = async () => {
     if (!confirm('Clear all execution history?')) return
-    await fetch('/api/executions', { method: 'DELETE' })
+    await apiFetch('/api/executions', { method: 'DELETE' })
     setExecutions([])
   }
 

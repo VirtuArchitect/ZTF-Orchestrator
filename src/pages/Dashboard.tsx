@@ -8,6 +8,7 @@ import {
 import Layout from '../components/Layout'
 import { useStore } from '../store'
 import type { Execution, SystemCheck } from '../types'
+import { apiFetch } from '../utils/api'
 import clsx from 'clsx'
 
 interface SystemStatus {
@@ -31,8 +32,8 @@ export default function Dashboard() {
     const init = async () => {
       try {
         const [sysResp, execResp] = await Promise.all([
-          fetch('/api/system/check'),
-          fetch('/api/executions'),
+          apiFetch('/api/system/check'),
+          apiFetch('/api/executions'),
         ])
         if (sysResp.ok) {
           const data: SystemStatus = await sysResp.json()

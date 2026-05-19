@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
 import { buildGlobalYaml } from '../utils/yaml'
 import clsx from 'clsx'
+import { apiFetch } from '../utils/api'
 
 interface Credential {
   ref: string
@@ -32,7 +33,7 @@ export default function GlobalConfig() {
   const [infoblox, setInfoblox] = useState({ host: '', username: '', password: '', dnsView: 'default', networkView: 'default' })
 
   useEffect(() => {
-    fetch('/api/global-config').then(r => r.json()).then(data => {
+    apiFetch('/api/global-config').then(r => r.json()).then(data => {
       if (data.content) {
         try {
           // Parse existing global.yml if present
@@ -65,7 +66,7 @@ export default function GlobalConfig() {
   const save = async () => {
     setSaving(true)
     try {
-      await fetch('/api/global-config', {
+      await apiFetch('/api/global-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: getYaml() }),

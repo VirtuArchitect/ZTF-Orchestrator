@@ -1,6 +1,7 @@
 import Layout from '../components/Layout'
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
+import { apiFetch } from '../utils/api'
 
 type UserRecord = {
   id: string
@@ -27,7 +28,7 @@ export default function UserRoles() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/users')
+      const res = await apiFetch('/api/users')
       if (!res.ok) throw new Error('Failed to load users')
       setUsers(await res.json())
     } catch (err) {
@@ -37,7 +38,7 @@ export default function UserRoles() {
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch('/api/roles')
+      const res = await apiFetch('/api/roles')
       if (!res.ok) throw new Error('Failed to load roles')
       setRoles(await res.json())
     } catch (err) {
@@ -60,7 +61,7 @@ export default function UserRoles() {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/users', {
+      const res = await apiFetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: newUserName, roles: newUserRoles.split(',').map(r => r.trim()).filter(Boolean) }),
@@ -87,7 +88,7 @@ export default function UserRoles() {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/roles', {
+      const res = await apiFetch('/api/roles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newRoleName, permissions: newRolePermissions.split(',').map(p => p.trim()).filter(Boolean) }),

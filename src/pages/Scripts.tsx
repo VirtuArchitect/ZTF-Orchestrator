@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { SCRIPTS, SCRIPT_CATEGORIES } from '../data'
 import Terminal_component from '../components/Terminal'
 import clsx from 'clsx'
+import { apiFetch } from '../utils/api'
 
 interface LogLine { type: string; data: string; ts: number }
 
@@ -45,7 +46,7 @@ export default function Scripts() {
     setRunStatus('running')
     setLogs([])
 
-    const resp = await fetch('/api/execute', {
+    const resp = await apiFetch('/api/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
