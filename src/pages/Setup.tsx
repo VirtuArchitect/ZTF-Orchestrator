@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
 import { useStore } from '../store'
 import clsx from 'clsx'
+import { apiFetch } from '../utils/api'
 
 interface LogLine { type: string; data: string; ts: number }
 
@@ -25,7 +26,7 @@ export default function Setup() {
     setChecking(true)
     setChecks([])
     try {
-      const resp = await fetch('/api/system/check')
+      const resp = await apiFetch('/api/system/check')
       const data = await resp.json()
       setChecks(data.checks)
       setSystemChecks(data.checks, data.ztfInstalled)
@@ -40,7 +41,7 @@ export default function Setup() {
     setInstallStatus('running')
     setLogs([])
 
-    const resp = await fetch('/api/install', {
+    const resp = await apiFetch('/api/install', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
@@ -74,7 +75,7 @@ export default function Setup() {
       setInstallStatus('done')
       setStep(2)
       // Re-check after install
-      const resp2 = await fetch('/api/system/check')
+      const resp2 = await apiFetch('/api/system/check')
       const data = await resp2.json()
       setChecks(data.checks)
       setSystemChecks(data.checks, data.ztfInstalled)

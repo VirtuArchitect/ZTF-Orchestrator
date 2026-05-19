@@ -44,6 +44,7 @@ export const useStore = create<AppState>()(
         pythonPath: 'python3',
         configDir: '',
         repoUrl: 'https://github.com/nutanixdev/zerotouch-framework.git',
+        apiKey: '',
       },
       setSettings: (s) => set(state => ({ settings: { ...state.settings, ...s } })),
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FileCode, Plus, Trash2, Save, Download, Upload, RefreshCw } from 'lucide-react'
 import Layout from '../components/Layout'
 import clsx from 'clsx'
+import { apiFetch } from '../utils/api'
 
 interface ConfigFile {
   name: string
@@ -21,7 +22,7 @@ export default function ConfigFiles() {
   const loadFiles = async () => {
     setLoading(true)
     try {
-      const resp = await fetch('/api/configs')
+      const resp = await apiFetch('/api/configs')
       if (resp.ok) setFiles(await resp.json())
     } finally {
       setLoading(false)
@@ -32,7 +33,7 @@ export default function ConfigFiles() {
 
   const openFile = async (name: string) => {
     setSelected(name)
-    const resp = await fetch(`/api/configs/${encodeURIComponent(name)}`)
+    const resp = await apiFetch(`/api/configs/${encodeURIComponent(name)}`)
     if (resp.ok) {
       const data = await resp.json()
       setContent(data.content)
@@ -43,7 +44,7 @@ export default function ConfigFiles() {
     if (!selected) return
     setSaving(true)
     try {
-      await fetch(`/api/configs/${encodeURIComponent(selected)}`, {
+      await apiFetch(`/api/configs/${encodeURIComponent(selected)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
@@ -57,7 +58,7 @@ export default function ConfigFiles() {
 
   const deleteFile = async (name: string) => {
     if (!confirm(`Delete ${name}?`)) return
-    await fetch(`/api/configs/${encodeURIComponent(name)}`, { method: 'DELETE' })
+    await apiFetch(`/api/configs/${encodeURIComponent(name)}`, { method: 'DELETE' })
     if (selected === name) { setSelected(null); setContent('') }
     loadFiles()
   }
@@ -66,7 +67,7 @@ export default function ConfigFiles() {
     const name = newFileName.trim()
     if (!name) return
     const fname = name.endsWith('.yml') || name.endsWith('.yaml') || name.endsWith('.json') ? name : `${name}.yml`
-    await fetch(`/api/configs/${encodeURIComponent(fname)}`, {
+    await apiFetch(`/api/configs/${encodeURIComponent(fname)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: '# New configuration file\n' }),
@@ -93,7 +94,7 @@ export default function ConfigFiles() {
       const file = input.files?.[0]
       if (!file) return
       const text = await file.text()
-      await fetch(`/api/configs/${encodeURIComponent(file.name)}`, {
+      await apiFetch(`/api/configs/${encodeURIComponent(file.name)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text }),

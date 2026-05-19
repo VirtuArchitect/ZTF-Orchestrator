@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { X, Play } from 'lucide-react'
 import Terminal from './Terminal'
 import { useStore } from '../store'
+import { apiFetch } from '../utils/api'
 
 interface ExecutionModalProps {
   onClose: () => void
@@ -26,7 +27,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
       ...extraParams,
     }
 
-    const resp = await fetch('/api/execute', {
+    const resp = await apiFetch('/api/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { useStore } from '../store'
+import { apiFetch } from '../utils/api'
 
 interface AuthModalProps {
   open: boolean
@@ -19,7 +20,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
     }
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }),

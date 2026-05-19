@@ -2,6 +2,7 @@ import Layout from '../components/Layout'
 import { ShieldCheck, Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
+import { apiFetch } from '../utils/api'
 
 type Request = {
   id: string
@@ -26,7 +27,7 @@ export default function Governance() {
   const fetchRequests = async () => {
     setLoading(true)
     try {
-      const r = await fetch('/api/governance/requests')
+      const r = await apiFetch('/api/governance/requests')
       const data = await r.json()
       setItems(data)
     } catch (err) {
@@ -38,7 +39,7 @@ export default function Governance() {
 
   const fetchUsers = async () => {
     try {
-      const r = await fetch('/api/users')
+      const r = await apiFetch('/api/users')
       const data = await r.json()
       setUsers(data)
     } catch (err) { console.error(err) }
@@ -56,7 +57,7 @@ export default function Governance() {
       headers['x-user'] = currentUser.username
       if (currentUser.roles && currentUser.roles.length) headers['x-role'] = currentUser.roles[0]
     }
-    const r = await fetch('/api/governance/requests', {
+    const r = await apiFetch('/api/governance/requests', {
       method: 'POST',
       headers,
       body: JSON.stringify({ title, details, requester: currentUser?.username || 'local-user' }),
@@ -76,14 +77,14 @@ export default function Governance() {
       if (currentUser.roles && currentUser.roles.length) headers['x-role'] = currentUser.roles[0]
     }
     const body = action === 'reject' ? JSON.stringify({ reason: 'Rejected from UI' }) : undefined
-    const r = await fetch(`/api/governance/${id}/${action}`, { method: 'POST', headers, body })
+    const r = await apiFetch(`/api/governance/${id}/${action}`, { method: 'POST', headers, body })
     const updated = await r.json()
     setItems(prev => prev.map(p => (p.id === updated.id ? updated : p)))
   }
 
   const createUser = async () => {
     if (!newUserName) return
-    const r = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: newUserName, roles: newUserRoles.split(',').map(s=>s.trim()) }) })
+    const r = await apiFetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: newUserName, roles: newUserRoles.split(',').map(s=>s.trim()) }) })
     if (r.ok) {
       setNewUserName('')
       setNewUserRoles('approver')
