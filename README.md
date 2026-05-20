@@ -8,7 +8,7 @@ replacing GitHub-based configuration management with a visual interface.
 
 ## Quick Start
 
-### Option A — Production (Flask serves everything on one port)
+### Option A: Production (Flask serves everything on one port)
 
 ```bash
 pip install -r requirements.txt
@@ -20,7 +20,7 @@ Open **http://localhost:5001**
 Flask serves the pre-built frontend from `dist/` and handles all API calls.
 This is the recommended way to run the tool.
 
-### Option B — Development (Vite hot-reload + Flask API)
+### Option B: Development (Vite hot-reload + Flask API)
 
 Run both servers simultaneously in separate terminals:
 
