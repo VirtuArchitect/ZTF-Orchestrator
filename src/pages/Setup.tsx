@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { CheckCircle, XCircle, Loader, Download, Terminal as TermIcon, RefreshCw } from 'lucide-react'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
@@ -12,12 +12,13 @@ const STEPS = ['Check Prerequisites', 'Install Framework', 'Verify Installation'
 
 export default function Setup() {
   const { setSystemChecks, ztfInstalled } = useStore()
-  const [step, setStep] = useState(0)
-  const [checking, setChecking] = useState(false)
-  const [installing, setInstalling] = useState(false)
-  const [checks, setChecks] = useState<Array<{ name: string; ok: boolean; value: string | null }>>([])
-  const [logs, setLogs] = useState<LogLine[]>([])
+  const [step,          setStep]          = useState(0)
+  const [checking,      setChecking]      = useState(false)
+  const [installing,    setInstalling]    = useState(false)
+  const [checks,        setChecks]        = useState<Array<{ name: string; ok: boolean; value: string | null }>>([])
+  const [logs,          setLogs]          = useState<LogLine[]>([])
   const [installStatus, setInstallStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [checkError,    setCheckError]    = useState('')
 
   const appendLog = (type: string, data: string) =>
     setLogs(prev => [...prev, { type, data, ts: Date.now() }])
@@ -25,12 +26,21 @@ export default function Setup() {
   const runCheck = async () => {
     setChecking(true)
     setChecks([])
+    setCheckError('')
     try {
       const resp = await apiFetch('/api/system/check')
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}))
+        setCheckError(err.error || `Server returned ${resp.status}`)
+        return
+      }
       const data = await resp.json()
-      setChecks(data.checks)
-      setSystemChecks(data.checks, data.ztfInstalled)
+      const safeChecks = Array.isArray(data.checks) ? data.checks : []
+      setChecks(safeChecks)
+      setSystemChecks(safeChecks, !!data.ztfInstalled)
       setStep(1)
+    } catch (e) {
+      setCheckError('Could not reach the server. Is it running?')
     } finally {
       setChecking(false)
     }
@@ -41,44 +51,59 @@ export default function Setup() {
     setInstallStatus('running')
     setLogs([])
 
-    const resp = await apiFetch('/api/install', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
+    try {
+      const resp = await apiFetch('/api/install', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({}),
+      })
 
-    if (!resp.body) { setInstallStatus('error'); return }
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({}))
+        appendLog('error', err.error || `Server returned ${resp.status}`)
+        setInstallStatus('error')
+        setInstalling(false)
+        return
+      }
 
-    const reader = resp.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
+      const reader  = resp.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer    = ''
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const evt = JSON.parse(line.slice(6))
-            appendLog(evt.type, typeof evt.data === 'string' ? evt.data : JSON.stringify(evt.data))
-            if (evt.type === 'done') setInstallStatus('done')
-            if (evt.type === 'error') setInstallStatus('error')
-          } catch { /* ignore */ }
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const evt = JSON.parse(line.slice(6))
+              appendLog(evt.type, typeof evt.data === 'string' ? evt.data : JSON.stringify(evt.data))
+              if (evt.type === 'done')  setInstallStatus('done')
+              if (evt.type === 'error') setInstallStatus('error')
+            } catch { /* ignore malformed SSE line */ }
+          }
         }
       }
-    }
-    setInstalling(false)
-    if (installStatus !== 'error') {
-      setInstallStatus('done')
+
+      setInstalling(false)
+      setInstallStatus(prev => prev === 'error' ? 'error' : 'done')
       setStep(2)
-      // Re-check after install
+
+      // Re-verify after install
       const resp2 = await apiFetch('/api/system/check')
-      const data = await resp2.json()
-      setChecks(data.checks)
-      setSystemChecks(data.checks, data.ztfInstalled)
+      if (resp2.ok) {
+        const data2      = await resp2.json()
+        const safeChecks = Array.isArray(data2.checks) ? data2.checks : []
+        setChecks(safeChecks)
+        setSystemChecks(safeChecks, !!data2.ztfInstalled)
+      }
+    } catch {
+      appendLog('error', 'Could not reach the server.')
+      setInstallStatus('error')
+      setInstalling(false)
     }
   }
 
@@ -91,12 +116,12 @@ export default function Setup() {
             <div className={clsx(
               'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
               i === step ? 'bg-nutanix-blue text-white' :
-              i < step ? 'text-nutanix-teal' : 'text-gray-500'
+              i < step   ? 'text-nutanix-teal' : 'text-gray-500'
             )}>
               <span className={clsx(
                 'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold',
                 i === step ? 'bg-white/20' :
-                i < step ? 'bg-nutanix-teal/20' : 'bg-gray-800'
+                i < step   ? 'bg-nutanix-teal/20' : 'bg-gray-800'
               )}>
                 {i < step ? '✓' : i + 1}
               </span>
@@ -108,6 +133,14 @@ export default function Setup() {
           </div>
         ))}
       </div>
+
+      {/* Error banner */}
+      {checkError && (
+        <div className="mb-4 p-3 rounded-lg bg-red-900/20 border border-red-700/40 text-sm text-red-400 flex items-center gap-2">
+          <XCircle size={14} className="flex-shrink-0" />
+          {checkError}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Step 1: Prerequisites */}
@@ -125,8 +158,8 @@ export default function Setup() {
           <div className="space-y-3 mb-4">
             {[
               { name: 'Python 3.9+', desc: 'Required for running ZTF' },
-              { name: 'pip', desc: 'Python package manager' },
-              { name: 'git', desc: 'For cloning the repository' },
+              { name: 'pip',         desc: 'Python package manager'  },
+              { name: 'git',         desc: 'For cloning the repository' },
             ].map(req => {
               const check = checks.find(c => c.name === req.name)
               return (
@@ -134,7 +167,7 @@ export default function Setup() {
                   {check
                     ? check.ok
                       ? <CheckCircle size={16} className="text-nutanix-teal flex-shrink-0" />
-                      : <XCircle size={16} className="text-red-400 flex-shrink-0" />
+                      : <XCircle    size={16} className="text-red-400 flex-shrink-0" />
                     : <div className="w-4 h-4 rounded-full border-2 border-gray-700 flex-shrink-0" />
                   }
                   <div className="flex-1">
@@ -151,8 +184,10 @@ export default function Setup() {
             disabled={checking}
             className="btn-primary w-full justify-center"
           >
-            {checking ? <Loader size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-            {checking ? 'Checking...' : 'Run Prerequisites Check'}
+            {checking
+              ? <Loader size={14} className="animate-spin" />
+              : <RefreshCw size={14} />}
+            {checking ? 'Checking…' : 'Run Prerequisites Check'}
           </button>
         </div>
 
@@ -189,13 +224,15 @@ export default function Setup() {
             disabled={installing || checks.length === 0}
             className={clsx('btn-primary w-full justify-center', ztfInstalled && 'opacity-80')}
           >
-            {installing ? <Loader size={14} className="animate-spin" /> : <Download size={14} />}
-            {installing ? 'Installing...' : ztfInstalled ? 'Reinstall / Update' : 'Install Framework'}
+            {installing
+              ? <Loader size={14} className="animate-spin" />
+              : <Download size={14} />}
+            {installing ? 'Installing…' : ztfInstalled ? 'Reinstall / Update' : 'Install Framework'}
           </button>
         </div>
       </div>
 
-      {/* Terminal Output */}
+      {/* Terminal output */}
       {logs.length > 0 && (
         <div className="mt-6">
           <Terminal
@@ -206,7 +243,7 @@ export default function Setup() {
         </div>
       )}
 
-      {/* Instructions */}
+      {/* Manual instructions */}
       <div className="mt-6 card">
         <div className="flex items-center gap-3 mb-4">
           <TermIcon size={16} className="text-gray-400" />
@@ -234,9 +271,8 @@ export default function Setup() {
         </div>
         <div className="mt-4 pt-4 border-t border-border">
           <p className="text-sm text-gray-400">
-            After installation, go to{' '}
-            <a href="/settings" className="text-nutanix-cyan hover:underline">Settings</a>{' '}
-            to configure the ZTF installation path.
+            After installation, configure the ZTF path in{' '}
+            <span className="text-nutanix-cyan">Settings</span>.
           </p>
         </div>
       </div>

@@ -2,171 +2,163 @@ import Layout from '../components/Layout'
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
+import { Trash2, Plus, RefreshCw } from 'lucide-react'
 
 type UserRecord = {
-  id: string
   username: string
-  roles?: string[]
-  createdAt?: string
+  role: 'admin' | 'operator' | 'viewer'
+  created_at?: string
 }
 
-type RoleRecord = {
-  name: string
-  permissions?: string[]
-}
+const ROLES = ['admin', 'operator', 'viewer'] as const
 
 export default function UserRoles() {
-  const currentUser = useStore(s => s.currentUser)
-  const [users, setUsers] = useState<UserRecord[]>([])
-  const [roles, setRoles] = useState<RoleRecord[]>([])
-  const [newUserName, setNewUserName] = useState('')
-  const [newUserRoles, setNewUserRoles] = useState('approver')
-  const [newRoleName, setNewRoleName] = useState('admin')
-  const [newRolePermissions, setNewRolePermissions] = useState('approve,execute')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const currentUser = useStore(s => s.user)
+  const isAdmin     = currentUser?.role === 'admin'
+
+  const [users,       setUsers]       = useState<UserRecord[]>([])
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState('')
+  const [newUsername, setNewUsername] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [newRole,     setNewRole]     = useState<typeof ROLES[number]>('operator')
 
   const fetchUsers = async () => {
+    setLoading(true)
     try {
       const res = await apiFetch('/api/users')
-      if (!res.ok) throw new Error('Failed to load users')
-      setUsers(await res.json())
-    } catch (err) {
-      console.error(err)
+      if (res.ok) setUsers(await res.json())
+    } finally {
+      setLoading(false)
     }
   }
 
-  const fetchRoles = async () => {
-    try {
-      const res = await apiFetch('/api/roles')
-      if (!res.ok) throw new Error('Failed to load roles')
-      setRoles(await res.json())
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-    fetchRoles()
-  }, [])
-
-  const isAdmin = currentUser?.roles?.includes('admin')
+  useEffect(() => { fetchUsers() }, [])
 
   const createUser = async () => {
     setError('')
-    if (!newUserName) {
-      setError('Enter a username')
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await apiFetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: newUserName, roles: newUserRoles.split(',').map(r => r.trim()).filter(Boolean) }),
-      })
-      if (!res.ok) {
-        const json = await res.json()
-        throw new Error(json.error || 'Failed to create user')
-      }
-      setNewUserName('')
-      setNewUserRoles('approver')
-      fetchUsers()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create user')
-    } finally {
-      setLoading(false)
-    }
+    if (!newUsername || !newPassword) { setError('Username and password are required'); return }
+    const res = await apiFetch('/api/users', {
+      method: 'POST',
+      body: JSON.stringify({ username: newUsername, password: newPassword, role: newRole }),
+    })
+    if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed'); return }
+    setNewUsername('')
+    setNewPassword('')
+    fetchUsers()
   }
 
-  const createRole = async () => {
-    setError('')
-    if (!newRoleName) {
-      setError('Enter a role name')
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await apiFetch('/api/roles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newRoleName, permissions: newRolePermissions.split(',').map(p => p.trim()).filter(Boolean) }),
-      })
-      if (!res.ok) {
-        const json = await res.json()
-        throw new Error(json.error || 'Failed to create role')
-      }
-      setNewRoleName('')
-      setNewRolePermissions('approve,execute')
-      fetchRoles()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create role')
-    } finally {
-      setLoading(false)
-    }
+  const deleteUser = async (username: string) => {
+    if (!confirm(`Delete user "${username}"?`)) return
+    const res = await apiFetch(`/api/users/${username}`, { method: 'DELETE' })
+    if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed'); return }
+    fetchUsers()
+  }
+
+  const changeRole = async (username: string, role: string) => {
+    const res = await apiFetch(`/api/users/${username}`, {
+      method: 'PUT',
+      body: JSON.stringify({ role }),
+    })
+    if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed'); return }
+    fetchUsers()
   }
 
   return (
-    <Layout title="Users & Roles" subtitle="Manage auth identities and role permissions">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="card p-5">
-          <h2 className="text-lg font-semibold text-gray-100 mb-3">Users</h2>
-          <p className="text-sm text-gray-400 mb-4">Create users and assign roles for auth and approvals.</p>
-          {currentUser && !isAdmin && (
-            <div className="rounded-lg bg-yellow-950 border border-yellow-700 p-3 mb-4 text-sm text-yellow-100">
-              Only users with the <strong>admin</strong> role can manage users and roles.
-            </div>
-          )}
-          <div className="space-y-3 mb-4">
-            {users.map(user => (
-              <div key={user.id} className="rounded-lg border border-border p-3 bg-surface">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="font-medium text-white">{user.username}</div>
-                    <div className="text-xs text-gray-400">{user.roles?.join(', ') || 'No roles'}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Username</label>
-              <input className="input w-full" value={newUserName} onChange={e => setNewUserName(e.target.value)} disabled={!isAdmin} />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Roles</label>
-              <input className="input w-full" value={newUserRoles} onChange={e => setNewUserRoles(e.target.value)} disabled={!isAdmin} placeholder="approver,admin" />
-            </div>
-            <button className="btn btn-primary" onClick={createUser} disabled={!isAdmin || loading}>Create user</button>
-          </div>
-        </section>
+    <Layout title="Users & Roles" subtitle="Manage user accounts and role assignments">
+      <div className="max-w-2xl space-y-6">
 
-        <section className="card p-5">
-          <h2 className="text-lg font-semibold text-gray-100 mb-3">Roles</h2>
-          <p className="text-sm text-gray-400 mb-4">Define role permissions to control approval and execution access.</p>
-          <div className="space-y-3 mb-4">
-            {roles.map(role => (
-              <div key={role.name} className="rounded-lg border border-border p-3 bg-surface">
-                <div className="font-medium text-white">{role.name}</div>
-                <div className="text-xs text-gray-400">{role.permissions?.join(', ') || 'No permissions'}</div>
+        {!isAdmin && (
+          <div className="card border-amber-700/30 bg-amber-900/5 text-sm text-amber-400">
+            User management requires the <strong>admin</strong> role.
+          </div>
+        )}
+
+        {/* User list */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-100">Users</h3>
+            <button onClick={fetchUsers} disabled={loading} className="btn-ghost p-1.5">
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {users.map(u => (
+              <div key={u.username}
+                className="flex items-center gap-3 p-3 rounded-lg bg-gray-900 border border-border/50">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-200 truncate">{u.username}</p>
+                  {u.created_at && (
+                    <p className="text-xs text-gray-500">
+                      Created {new Date(u.created_at).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+
+                {isAdmin ? (
+                  <select
+                    value={u.role}
+                    onChange={e => changeRole(u.username, e.target.value)}
+                    className="input text-xs py-1 px-2 w-28"
+                  >
+                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                ) : (
+                  <span className="text-xs text-gray-400 px-2 py-1 rounded bg-gray-800 border border-border">
+                    {u.role}
+                  </span>
+                )}
+
+                {isAdmin && u.username !== currentUser?.username && (
+                  <button
+                    onClick={() => deleteUser(u.username)}
+                    className="btn-ghost p-1.5 text-gray-500 hover:text-red-400"
+                    title="Delete user"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             ))}
+            {!loading && users.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">No users found</p>
+            )}
           </div>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Role name</label>
-              <input className="input w-full" value={newRoleName} onChange={e => setNewRoleName(e.target.value)} disabled={!isAdmin} />
+        </div>
+
+        {/* Create user */}
+        {isAdmin && (
+          <div className="card">
+            <h3 className="font-semibold text-gray-100 mb-4">Create User</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="label">Username</label>
+                <input className="input" value={newUsername}
+                  onChange={e => setNewUsername(e.target.value)}
+                  placeholder="alice" />
+              </div>
+              <div>
+                <label className="label">Password</label>
+                <input className="input" type="password" value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 characters" />
+              </div>
+              <div>
+                <label className="label">Role</label>
+                <select className="input" value={newRole}
+                  onChange={e => setNewRole(e.target.value as typeof ROLES[number])}>
+                  {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              {error && <p className="text-sm text-red-400">{error}</p>}
+              <button onClick={createUser} className="btn-primary gap-1.5">
+                <Plus size={14} /> Create User
+              </button>
             </div>
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Permissions</label>
-              <input className="input w-full" value={newRolePermissions} onChange={e => setNewRolePermissions(e.target.value)} disabled={!isAdmin} placeholder="approve,execute" />
-            </div>
-            <button className="btn btn-primary" onClick={createRole} disabled={!isAdmin || loading}>Create role</button>
           </div>
-          {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
-        </section>
+        )}
+
       </div>
     </Layout>
   )

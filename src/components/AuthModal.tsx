@@ -11,7 +11,7 @@ interface AuthModalProps {
 export default function AuthModal({ open, onClose }: AuthModalProps) {
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
-  const setCurrentUser = useStore(s => s.setCurrentUser)
+  const setAuth = useStore(s => s.setAuth)
 
   const signIn = async () => {
     if (!username) {
@@ -30,8 +30,8 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         setError(json.error || 'Sign-in failed')
         return
       }
-      const user = await res.json()
-      setCurrentUser(user)
+      const data = await res.json()
+      setAuth(data.token, data.user)
       setUsername('')
       setError('')
       onClose()
