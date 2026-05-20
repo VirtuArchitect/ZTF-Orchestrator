@@ -1,3 +1,5 @@
-flask>=3.0.0
-flask-cors>=4.0.0
-pyyaml>=6.0.0
+bcrypt==4.2.1
+flask==3.0.3
+flask-cors==4.0.1
+flask-limiter==3.8.0
+pyyaml==6.0.2

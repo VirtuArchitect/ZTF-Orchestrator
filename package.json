@@ -1,12 +1,11 @@
 {
   "name": "nutanix-zerotouch-framework-ui",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"vite\" \"node server.js\"",
+    "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "server": "node server.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -24,9 +23,6 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
-    "concurrently": "^8.2.2",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
     "postcss": "^8.4.40",
     "tailwindcss": "^3.4.7",
     "typescript": "^5.5.3",
