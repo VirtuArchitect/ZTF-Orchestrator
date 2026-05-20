@@ -51,7 +51,7 @@ ALLOWED_ORIGINS = [
 class JSONFormatter(logging.Formatter):
     def format(self, record):
         log = {
-            'ts':      datetime.datetime.utcnow().isoformat() + 'Z',
+            'ts':      datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
             'level':   record.levelname,
             'msg':     record.getMessage(),
             'logger':  record.name,
@@ -93,7 +93,7 @@ def _secure_write(p: Path, data: str):
 _secure_mkdir(CONFIG_DIR)
 log = _setup_logging()
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__, static_folder='dist', static_url_path='')
 CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
 limiter = Limiter(
@@ -169,7 +169,7 @@ def _ensure_default_admin():
         'username':     'admin',
         'password_hash': hashed,
         'role':         'admin',
-        'created_at':   datetime.datetime.utcnow().isoformat() + 'Z',
+        'created_at':   datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
     }])
     print('\n' + '=' * 60)
     print('  First run — default admin account created')
@@ -184,7 +184,7 @@ _SESSIONS_LOCK = threading.Lock()
 
 def _create_session(username: str, role: str) -> str:
     token = secrets.token_hex(32)
-    expires = datetime.datetime.utcnow() + datetime.timedelta(seconds=TOKEN_TTL)
+    expires = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=TOKEN_TTL)
     with _SESSIONS_LOCK:
         _SESSIONS[token] = {'username': username, 'role': role, 'expires': expires}
     return token
@@ -192,7 +192,7 @@ def _create_session(username: str, role: str) -> str:
 def _get_session(token: str) -> dict | None:
     with _SESSIONS_LOCK:
         session = _SESSIONS.get(token)
-        if session and datetime.datetime.utcnow() < session['expires']:
+        if session and datetime.datetime.now(datetime.timezone.utc) < session['expires']:
             return session
         if session:
             del _SESSIONS[token]
@@ -203,7 +203,7 @@ def _invalidate_session(token: str):
         _SESSIONS.pop(token, None)
 
 def _purge_expired():
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     with _SESSIONS_LOCK:
         expired = [t for t, s in _SESSIONS.items() if now >= s['expires']]
         for t in expired:
@@ -337,7 +337,26 @@ def backup_config(path: Path):
 
 @app.route('/')
 def index():
-    return send_from_directory('static', 'index.html')
+    return send_from_directory('dist', 'index.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    """Suppress 404 spam — return empty 204 if no favicon exists in dist."""
+    try:
+        return send_from_directory('dist', 'favicon.ico')
+    except Exception:
+        return '', 204
+
+@app.route('/<path:path>')
+def spa_fallback(path):
+    """React Router catch-all — serve index.html for all non-API client routes."""
+    # Let Flask serve real static assets (JS, CSS, images) from dist/
+    dist = Path(app.static_folder)
+    asset = dist / path
+    if asset.exists() and asset.is_file():
+        return send_from_directory('dist', path)
+    # Everything else is a React route — hand back index.html
+    return send_from_directory('dist', 'index.html')
 
 # ─── Health (public — no auth) ────────────────────────────────────────────────
 
@@ -371,7 +390,7 @@ def auth_login():
     return jsonify({
         'token':   token,
         'user':    {'username': username, 'role': user['role']},
-        'expires': (datetime.datetime.utcnow() + datetime.timedelta(seconds=TOKEN_TTL)).isoformat() + 'Z',
+        'expires': (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=TOKEN_TTL)).isoformat() + 'Z',
     })
 
 @app.route('/api/auth/logout', methods=['POST'])
@@ -418,7 +437,7 @@ def create_user():
         'username':      username,
         'password_hash': hashed,
         'role':          role,
-        'created_at':    datetime.datetime.utcnow().isoformat() + 'Z',
+        'created_at':    datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
     })
     _save_users(users)
     log.info('user_created', extra={'user': request.current_user['username'], 'action': f'created {username}'})
@@ -807,7 +826,7 @@ def execute_workflow():
                 'workflow':  workflow or script,
                 'type':      'workflow' if workflow else 'script',
                 'status':    status,
-                'timestamp': datetime.datetime.utcnow().isoformat() + 'Z',
+                'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
                 'user':      current_user,
             })
             write_json(HISTORY_FILE, history[:1000])
