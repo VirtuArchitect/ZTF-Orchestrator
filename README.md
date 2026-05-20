@@ -10,10 +10,10 @@ replacing GitHub-based configuration management with a visual interface.
 
 | Requirement | Version | Notes |
 |---|---|---|
-| Python | **3.10+** | 3.10 minimum — earlier versions are not supported |
+| Python | **3.10+** | 3.10 minimum earlier versions are not supported |
 | pip | any | Included with Python |
-| git | any | Optional — only needed for the in-app Setup/Install feature |
-| Node.js | 18+ | Development mode only — not needed to run the tool |
+| git | any | Optional only needed for the in-app Setup/Install feature |
+| Node.js | 18+ | Development mode only not needed to run the tool |
 
 > **Windows users:** `python` and `python3` both work depending on your installation.
 > Always use a virtual environment (see below) to avoid polluting your system Python.
@@ -22,14 +22,14 @@ replacing GitHub-based configuration management with a visual interface.
 
 ## Installation
 
-### Step 1 — Clone the repository
+### Step 1: Clone the repository
 
 ```bash
 git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git
 cd ZTF-Orchestrator
 ```
 
-### Step 2 — Create a virtual environment
+### Step 2: Create a virtual environment
 
 **Windows (PowerShell):**
 ```powershell
@@ -43,7 +43,7 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Step 3 — Install Python dependencies
+### Step 3: Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 This installs: `flask`, `flask-cors`, `flask-limiter`, `pyyaml`, `bcrypt` (all pinned).
 
-### Step 4 — Start the server
+### Step 4: Start the server
 
 ```bash
 python server.py
