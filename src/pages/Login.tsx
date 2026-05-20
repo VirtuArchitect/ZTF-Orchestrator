@@ -1,14 +1,20 @@
 import { useState, FormEvent } from 'react'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { Server, Eye, EyeOff, LogIn } from 'lucide-react'
 import { useStore } from '../store'
 
 export default function Login() {
-  const { setAuth } = useStore()
+  const { setAuth, sessionToken } = useStore()
+  const navigate = useNavigate()
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPw,   setShowPw]   = useState(false)
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
+
+  // Already authenticated — skip the login page entirely
+  if (sessionToken) return <Navigate to="/" replace />
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -27,6 +33,7 @@ export default function Login() {
       }
       const data = await resp.json()
       setAuth(data.token, data.user)
+      navigate('/')           // ← redirect to dashboard after login
     } catch {
       setError('Could not reach the server. Is it running?')
     } finally {
