@@ -513,8 +513,24 @@ def system_check():
         {'name': 'ZTF Installed', 'ok': ztf_installed, 'value': 'found' if ztf_installed else ''},
     ]
     if ztf_installed:
-        req = Path(ztf_path) / 'requirements' / 'requirements.txt'
-        checks.append({'name': 'Requirements File', 'ok': req.exists(), 'value': str(req) if req.exists() else ''})
+        # Use the same dynamic lookup as the install endpoint —
+        # ZTF ships prod.txt not requirements.txt
+        ztf = Path(ztf_path)
+        req_file = None
+        candidates = ['requirements/requirements.txt', 'requirements.txt']
+        req_dir = ztf / 'requirements'
+        if req_dir.is_dir():
+            for f in sorted(req_dir.glob('*.txt')):
+                candidates.insert(0, str(f.relative_to(ztf)))
+        for c in candidates:
+            if (ztf / c).exists():
+                req_file = c
+                break
+        checks.append({
+            'name':  'Requirements File',
+            'ok':    req_file is not None,
+            'value': req_file or 'not found',
+        })
     return jsonify({'checks': checks, 'ztfInstalled': ztf_installed})
 
 # ─── Install ZTF ──────────────────────────────────────────────────────────────
