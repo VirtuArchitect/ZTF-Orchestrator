@@ -1,27 +1,60 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
-import Setup from './pages/Setup'
-import GlobalConfig from './pages/GlobalConfig'
-import Workflows from './pages/Workflows'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useStore } from './store'
+import Dashboard     from './pages/Dashboard'
+import Setup         from './pages/Setup'
+import GlobalConfig  from './pages/GlobalConfig'
+import Workflows     from './pages/Workflows'
 import WorkflowDetail from './pages/WorkflowDetail'
-import Scripts from './pages/Scripts'
-import Executions from './pages/Executions'
-import Settings from './pages/Settings'
-import ConfigFiles from './pages/ConfigFiles'
+import Scripts       from './pages/Scripts'
+import Executions    from './pages/Executions'
+import Settings      from './pages/Settings'
+import ConfigFiles   from './pages/ConfigFiles'
+import Login         from './pages/Login'
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const sessionToken = useStore(s => s.sessionToken)
+  if (!sessionToken) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/setup" element={<Setup />} />
-        <Route path="/global-config" element={<GlobalConfig />} />
-        <Route path="/workflows" element={<Workflows />} />
-        <Route path="/workflows/:id" element={<WorkflowDetail />} />
-        <Route path="/scripts" element={<Scripts />} />
-        <Route path="/configs" element={<ConfigFiles />} />
-        <Route path="/executions" element={<Executions />} />
-        <Route path="/settings" element={<Settings />} />
+        {/* Public */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected */}
+        <Route path="/" element={
+          <RequireAuth><Dashboard /></RequireAuth>
+        } />
+        <Route path="/setup" element={
+          <RequireAuth><Setup /></RequireAuth>
+        } />
+        <Route path="/global-config" element={
+          <RequireAuth><GlobalConfig /></RequireAuth>
+        } />
+        <Route path="/workflows" element={
+          <RequireAuth><Workflows /></RequireAuth>
+        } />
+        <Route path="/workflows/:id" element={
+          <RequireAuth><WorkflowDetail /></RequireAuth>
+        } />
+        <Route path="/scripts" element={
+          <RequireAuth><Scripts /></RequireAuth>
+        } />
+        <Route path="/configs" element={
+          <RequireAuth><ConfigFiles /></RequireAuth>
+        } />
+        <Route path="/executions" element={
+          <RequireAuth><Executions /></RequireAuth>
+        } />
+        <Route path="/settings" element={
+          <RequireAuth><Settings /></RequireAuth>
+        } />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

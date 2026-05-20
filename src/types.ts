@@ -68,7 +68,6 @@ export interface Settings {
   pythonPath: string
   configDir: string
   repoUrl: string
-  apiKey: string
 }
 
 // Workflow config types

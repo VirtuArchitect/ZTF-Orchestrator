@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ztf-orchestrator:
+    build: .
+    container_name: ztf-orchestrator
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001"   # localhost only — put nginx in front for TLS
+    volumes:
+      - ztf-data:/var/lib/ztf-orchestrator          # persistent data (users, history, configs)
+      - ztf-logs:/var/log/ztf-orchestrator          # persistent logs
+      - ${ZTF_FRAMEWORK_PATH:-/opt/zerotouch-framework}:/opt/zerotouch-framework:ro
+    environment:
+      - ZTF_DATA_DIR=/var/lib/ztf-orchestrator
+      - ZTF_PATH=/opt/zerotouch-framework
+      - ZTF_PORT=5001
+      - ZTF_LOG_LEVEL=${ZTF_LOG_LEVEL:-INFO}
+      - ZTF_EXEC_TIMEOUT=${ZTF_EXEC_TIMEOUT:-3600}
+      - ZTF_TOKEN_TTL=${ZTF_TOKEN_TTL:-28800}
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  ztf-data:
+  ztf-logs:

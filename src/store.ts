@@ -2,7 +2,18 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Settings, Execution, SystemCheck } from './types'
 
+interface User {
+  username: string
+  role: 'admin' | 'operator' | 'viewer'
+}
+
 interface AppState {
+  // Auth
+  sessionToken: string
+  user: User | null
+  setAuth: (token: string, user: User) => void
+  clearAuth: () => void
+
   // Settings
   settings: Settings
   setSettings: (s: Partial<Settings>) => void
@@ -39,12 +50,18 @@ interface AppState {
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
+      // Auth
+      sessionToken: '',
+      user: null,
+      setAuth: (token, user) => set({ sessionToken: token, user }),
+      clearAuth: () => set({ sessionToken: '', user: null }),
+
+      // Settings
       settings: {
-        ztfPath: '',
+        ztfPath:   '',
         pythonPath: 'python3',
         configDir: '',
-        repoUrl: 'https://github.com/nutanixdev/zerotouch-framework.git',
-        apiKey: '',
+        repoUrl:   'https://github.com/nutanixdev/zerotouch-framework.git',
       },
       setSettings: (s) => set(state => ({ settings: { ...state.settings, ...s } })),
 
@@ -62,20 +79,27 @@ export const useStore = create<AppState>()(
       setActivePage: (p) => set({ activePage: p }),
 
       runningExecution: null,
-      startExecution: (id, workflow) => set({ runningExecution: { id, workflow, logs: [], status: 'running' } }),
+      startExecution: (id, workflow) => set({
+        runningExecution: { id, workflow, logs: [], status: 'running' },
+      }),
       appendLog: (type, data) => set(state => ({
         runningExecution: state.runningExecution
           ? { ...state.runningExecution, logs: [...state.runningExecution.logs, { type, data, ts: Date.now() }] }
-          : null
+          : null,
       })),
       finishExecution: (status) => set(state => ({
-        runningExecution: state.runningExecution ? { ...state.runningExecution, status } : null
+        runningExecution: state.runningExecution ? { ...state.runningExecution, status } : null,
       })),
       clearRunning: () => set({ runningExecution: null }),
     }),
     {
       name: 'ztf-ui-store',
-      partialize: (state) => ({ settings: state.settings, sidebarOpen: state.sidebarOpen }),
+      partialize: (state) => ({
+        sessionToken: state.sessionToken,
+        user:         state.user,
+        settings:     state.settings,
+        sidebarOpen:  state.sidebarOpen,
+      }),
     }
   )
 )
