@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  ArrowLeft, Play, Download, Save
+  ArrowLeft, Play, Download, Save, ListChecks
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
@@ -38,6 +38,7 @@ export default function WorkflowDetail() {
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Configure')
   const [yamlContent, setYamlContent] = useState('')
   const [showExecution, setShowExecution] = useState(false)
+  const [isDryRun, setIsDryRun] = useState(false)
 
   if (!workflow) {
     return (
@@ -92,7 +93,16 @@ export default function WorkflowDetail() {
             </button>
           )}
           <button
-            onClick={() => yamlContent && setShowExecution(true)}
+            onClick={() => { if (yamlContent) { setIsDryRun(true); setShowExecution(true) } }}
+            disabled={!yamlContent}
+            className="btn-secondary gap-1.5"
+            title={!yamlContent ? 'Fill out the form first' : 'Validate config and check connectivity without running'}
+          >
+            <ListChecks size={14} />
+            Dry Run
+          </button>
+          <button
+            onClick={() => { if (yamlContent) { setIsDryRun(false); setShowExecution(true) } }}
             disabled={!yamlContent}
             className="btn-success gap-1.5"
             title={!yamlContent ? 'Fill out the form first' : undefined}
@@ -157,6 +167,7 @@ export default function WorkflowDetail() {
           workflow={workflow.id}
           configContent={yamlContent}
           configFile={workflow.configFile}
+          dryRun={isDryRun}
         />
       )}
     </Layout>

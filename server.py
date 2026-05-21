@@ -2,12 +2,14 @@
 """Nutanix ZeroTouch Framework UI — Flask Backend (production-hardened)"""
 
 import datetime
+import ipaddress
 import json
 import logging
 import os
 import queue
 import re
 import secrets
+import socket
 import stat
 import subprocess
 import sys
@@ -133,6 +135,81 @@ ALLOWED_SCRIPTS = {
 ALLOWED_REPOS = {
     'https://github.com/nutanixdev/zerotouch-framework.git',
     'https://github.com/nutanixdev/zerotouch-framework',
+}
+
+# ─── Dry-run preflight definitions ───────────────────────────────────────────
+# required: top-level YAML keys that must be present and non-empty
+# ip_fields: keys whose values must be valid IP addresses
+# connect: [(field_key, port, label)] — TCP reachability checks
+# cluster_dict_connect: (port, label) — check each key of a clusters:{ip: ...} map
+WORKFLOW_PREFLIGHT: dict[str, dict] = {
+    'cluster-create': {
+        'required':    ['fc_ip', 'pc_credential', 'cvm_credential', 'clusters'],
+        'ip_fields':   ['fc_ip'],
+        'connect':     [('fc_ip', 9440, 'Foundation Central')],
+    },
+    'imaging-only': {
+        'required':    ['fc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
+        'ip_fields':   ['fc_ip'],
+        'connect':     [('fc_ip', 9440, 'Foundation Central')],
+    },
+    'imaging': {
+        'required':    ['fc_ip', 'cvm_credential'],
+        'ip_fields':   ['fc_ip'],
+        'connect':     [('fc_ip', 9440, 'Foundation Central')],
+    },
+    'site-deploy': {
+        'required':    ['pc_ip', 'pc_credential', 'cvm_credential'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Prism Central')],
+    },
+    'config-cluster': {
+        'required':              ['clusters'],
+        'ip_fields':             [],
+        'connect':               [],
+        'cluster_dict_connect':  (9440, 'Prism Element'),
+    },
+    'deploy-pc': {
+        'required':              ['pe_credential', 'cvm_credential', 'clusters'],
+        'ip_fields':             [],
+        'connect':               [],
+        'cluster_dict_connect':  (9440, 'Prism Element'),
+    },
+    'config-pc': {
+        'required':    ['pc_ip', 'pc_credential'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Prism Central')],
+    },
+    'pod-config': {
+        'required':    ['pc_ip', 'pc_credential'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Prism Central')],
+    },
+    'deploy-management-pc': {
+        'required':    ['pc_ip', 'pe_credential'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Management PC')],
+    },
+    'config-management-pc': {
+        'required':    ['pc_ip', 'pe_credential'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Management PC')],
+    },
+    'calm-vm-workloads': {
+        'required':    ['ncm_vm_ip', 'ncm_credential'],
+        'ip_fields':   ['ncm_vm_ip'],
+        'connect':     [('ncm_vm_ip', 9440, 'NCM (Calm)')],
+    },
+    'calm-edgeai-vm-workload': {
+        'required':    ['ncm_vm_ip', 'ncm_credential'],
+        'ip_fields':   ['ncm_vm_ip'],
+        'connect':     [('ncm_vm_ip', 9440, 'NCM (Calm)')],
+    },
+    'ndb': {
+        'required':    ['cluster_ip', 'pe_credential', 'ndb_credential'],
+        'ip_fields':   ['cluster_ip'],
+        'connect':     [('cluster_ip', 9440, 'NDB Cluster')],
+    },
 }
 
 ALLOWED_SETTINGS_KEYS = {'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl'}
@@ -294,6 +371,111 @@ def get_settings() -> dict:
         'webhookUrl': '',
     }
     return {**defaults, **read_json(SETTINGS_FILE, {})}
+
+
+def _tcp_check(host: str, port: int, timeout: float = 5.0) -> tuple[bool, float]:
+    """Return (reachable, latency_ms). Never raises."""
+    import time as _t
+    t0 = _t.monotonic()
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True, (_t.monotonic() - t0) * 1000
+    except OSError:
+        return False, 0.0
+
+
+def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Generator[str, None, None]:
+    """Yield SSE events for dry-run pre-flight checks (no subprocess)."""
+
+    def send(t: str, d):
+        yield f"data: {json.dumps({'type': t, 'data': d, 'executionId': execution_id})}\n\n"
+
+    passed = 0
+    failed = 0
+
+    yield from send('start', {'command': f'dry-run --workflow {workflow}', 'workingDir': ''})
+    yield from send('stdout', f'ZTF Orchestrator — Dry Run Pre-flight')
+    yield from send('stdout', f'Workflow : {workflow}')
+    yield from send('stdout', '-' * 52)
+
+    # ── 1. Parse YAML ────────────────────────────────────────────────────────
+    try:
+        config: dict = yaml.safe_load(config_content) or {}
+        yield from send('stdout', '[PASS] YAML is valid and parseable')
+        passed += 1
+    except yaml.YAMLError as exc:
+        yield from send('stdout', f'[FAIL] YAML parse error: {exc}')
+        failed += 1
+        yield from send('stdout', '')
+        yield from send('stdout', f'Result: {passed} passed, {failed} failed')
+        yield from send('done', {'status': 'failed', 'dryRun': True})
+        return
+
+    preflight = WORKFLOW_PREFLIGHT.get(workflow, {})
+    if not preflight:
+        yield from send('stdout', f'[INFO] No preflight schema defined for "{workflow}" — YAML check only')
+
+    # ── 2. Required fields ───────────────────────────────────────────────────
+    for field in preflight.get('required', []):
+        val = config.get(field)
+        empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+        if empty:
+            yield from send('stdout', f'[FAIL] Required field missing : {field}')
+            failed += 1
+        else:
+            display = str(val) if not isinstance(val, (list, dict)) else f'({len(val)} item{"s" if len(val) != 1 else ""})'
+            yield from send('stdout', f'[PASS] Required field present : {field} = {display}')
+            passed += 1
+
+    # ── 3. IP address format ─────────────────────────────────────────────────
+    for field in preflight.get('ip_fields', []):
+        val = str(config.get(field, '')).strip()
+        if not val:
+            continue   # already caught by required check
+        try:
+            ipaddress.ip_address(val)
+            yield from send('stdout', f'[PASS] IP address valid        : {field} = {val}')
+            passed += 1
+        except ValueError:
+            yield from send('stdout', f'[FAIL] IP address invalid      : {field} = "{val}"')
+            failed += 1
+
+    # ── 4. TCP reachability ──────────────────────────────────────────────────
+    for (field, port, label) in preflight.get('connect', []):
+        host = str(config.get(field, '')).strip()
+        if not host:
+            continue   # already caught
+        reachable, ms = _tcp_check(host, port)
+        if reachable:
+            yield from send('stdout', f'[PASS] Reachable ({ms:>5.0f}ms)    : {label} {host}:{port}')
+            passed += 1
+        else:
+            yield from send('stdout', f'[FAIL] Unreachable             : {label} {host}:{port}')
+            failed += 1
+
+    # ── 5. Cluster-dict connectivity (deploy-pc / config-cluster) ────────────
+    if 'cluster_dict_connect' in preflight:
+        port, label = preflight['cluster_dict_connect']
+        clusters = config.get('clusters', {})
+        if isinstance(clusters, dict):
+            for ip in list(clusters.keys())[:4]:
+                try:
+                    ipaddress.ip_address(str(ip).strip())
+                except ValueError:
+                    continue
+                reachable, ms = _tcp_check(str(ip), port)
+                if reachable:
+                    yield from send('stdout', f'[PASS] Reachable ({ms:>5.0f}ms)    : {label} {ip}:{port}')
+                    passed += 1
+                else:
+                    yield from send('stdout', f'[FAIL] Unreachable             : {label} {ip}:{port}')
+                    failed += 1
+
+    # ── Summary ──────────────────────────────────────────────────────────────
+    yield from send('stdout', '-' * 52)
+    yield from send('stdout', f'Result: {passed} passed, {failed} failed')
+    status = 'success' if failed == 0 else 'failed'
+    yield from send('done', {'status': status, 'dryRun': True, 'passed': passed, 'failed': failed})
 
 
 def _fire_webhook(url: str, payload: dict) -> None:
@@ -771,6 +953,7 @@ def execute_workflow():
     config_content = data.get('configContent')
     config_file    = data.get('configFile')
     debug          = bool(data.get('debug', False))
+    dry_run        = bool(data.get('dryRun', False))
 
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         return jsonify({'error': 'Unknown workflow'}), 400
@@ -778,6 +961,16 @@ def execute_workflow():
         return jsonify({'error': 'Unknown script'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
+
+    # Dry-run: run pre-flight checks only — no subprocess, no concurrency lock
+    if dry_run:
+        import time as _tm
+        execution_id = str(int(_tm.time() * 1000))
+        return Response(
+            _run_preflight(workflow or script or '', config_content or '', execution_id),
+            mimetype='text/event-stream',
+            headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
+        )
 
     settings    = get_settings()
     ztf_path    = settings['ztfPath']

@@ -10,9 +10,10 @@ interface ExecutionModalProps {
   configContent: string
   configFile: string
   extraParams?: Record<string, string>
+  dryRun?: boolean
 }
 
-export default function ExecutionModal({ onClose, workflow, configContent, configFile, extraParams }: ExecutionModalProps) {
+export default function ExecutionModal({ onClose, workflow, configContent, configFile, extraParams, dryRun }: ExecutionModalProps) {
   const { runningExecution, startExecution, appendLog, finishExecution, addExecution } = useStore()
   const evtSourceRef = useRef<EventSource | null>(null)
 
@@ -24,6 +25,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
       workflow,
       configContent,
       configFile,
+      ...(dryRun ? { dryRun: true } : {}),
       ...extraParams,
     }
 
@@ -92,8 +94,10 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
               <Play size={14} className="text-nutanix-cyan" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-100">Running: {workflow}</h3>
-              <p className="text-xs text-gray-500">{configFile}</p>
+              <h3 className="font-semibold text-gray-100">
+                {dryRun ? 'Dry Run: ' : 'Running: '}{workflow}
+              </h3>
+              <p className="text-xs text-gray-500">{dryRun ? 'Pre-flight checks — no changes will be made' : configFile}</p>
             </div>
           </div>
           {runningExecution?.status !== 'running' && (

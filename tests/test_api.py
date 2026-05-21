@@ -237,6 +237,107 @@ def test_update_user_role(client, auth_headers):
     assert resp.status_code == 200
 
 
+# ── Dry-run / preflight ───────────────────────────────────────────────────────
+
+def test_dry_run_valid_yaml(client, auth_headers, monkeypatch):
+    """Dry-run with valid YAML returns a streaming 200."""
+    import server
+    # Mock TCP checks so the test doesn't hit the network
+    monkeypatch.setattr(server, '_tcp_check', lambda host, port, timeout=5.0: (True, 12.0))
+
+    yaml_body = 'fc_ip: 192.168.1.1\npc_credential: pc_user\ncvm_credential: cvm_cred\nclusters:\n  - name: test\n'
+    resp = client.post('/api/execute',
+                       json={'workflow': 'cluster-create',
+                             'configContent': yaml_body,
+                             'configFile': 'test.yml',
+                             'dryRun': True},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert b'dry-run' in resp.data.lower() or b'preflight' in resp.data.lower() or b'PASS' in resp.data or b'pass' in resp.data.lower()
+
+
+def test_dry_run_invalid_yaml(client, auth_headers):
+    """Dry-run with broken YAML reports a YAML parse failure."""
+    resp = client.post('/api/execute',
+                       json={'workflow': 'cluster-create',
+                             'configContent': 'key: [\nbroken',
+                             'configFile': 'bad.yml',
+                             'dryRun': True},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert b'FAIL' in resp.data
+
+
+def test_dry_run_unknown_workflow_rejected(client, auth_headers):
+    """Dry-run with an unknown workflow name is rejected before preflight."""
+    resp = client.post('/api/execute',
+                       json={'workflow': 'rm -rf /',
+                             'configContent': 'key: val',
+                             'dryRun': True},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+
+
+def test_preflight_generator_pass(monkeypatch):
+    """_run_preflight produces pass events for valid cluster-create YAML."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_ok = (
+        'fc_ip: 10.0.0.1\n'
+        'pc_credential: pc_user\n'
+        'cvm_credential: cvm_cred\n'
+        'clusters:\n  - name: c1\n'
+    )
+    output = ''.join(server._run_preflight('cluster-create', yaml_ok, 'test-id'))
+    assert '[PASS]' in output
+    assert '[FAIL]' not in output
+
+
+def test_preflight_generator_missing_field(monkeypatch):
+    """_run_preflight flags missing required fields."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (False, 0.0))
+    yaml_missing = 'pc_credential: pc_user\n'   # fc_ip missing
+    output = ''.join(server._run_preflight('cluster-create', yaml_missing, 'test-id'))
+    assert '[FAIL]' in output
+
+
+def test_preflight_generator_unreachable(monkeypatch):
+    """_run_preflight flags unreachable hosts."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (False, 0.0))
+    yaml_body = (
+        'fc_ip: 10.0.0.1\n'
+        'pc_credential: pc_user\n'
+        'cvm_credential: cvm_cred\n'
+        'clusters:\n  - name: c1\n'
+    )
+    output = ''.join(server._run_preflight('cluster-create', yaml_body, 'test-id'))
+    assert 'Unreachable' in output
+
+
+def test_tcp_check_success(monkeypatch):
+    """_tcp_check returns True when connection succeeds."""
+    import server, socket as _sock
+    class FakeConn:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+    monkeypatch.setattr(_sock, 'create_connection', lambda addr, timeout: FakeConn())
+    ok, ms = server._tcp_check('10.0.0.1', 9440)
+    assert ok is True
+    assert ms >= 0
+
+
+def test_tcp_check_failure(monkeypatch):
+    """_tcp_check returns False when connection is refused."""
+    import server, socket as _sock
+    monkeypatch.setattr(_sock, 'create_connection',
+                        lambda addr, timeout: (_ for _ in ()).throw(OSError('refused')))
+    ok, ms = server._tcp_check('10.0.0.1', 9440)
+    assert ok is False
+    assert ms == 0.0
+
+
 # ── Webhook helper ───────────────────────────────────────────────────────────
 
 def test_fire_webhook_success(monkeypatch):
