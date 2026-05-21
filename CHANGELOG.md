@@ -7,6 +7,40 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.2] — 2026-05-21
+
+### Summary
+Feature and polish release. Adds execution re-run directly from history,
+fixes the favicon, and corrects the sidebar version string.
+
+### Added
+- **Execution re-run** — expand any row in Execution History to see a
+  **Re-run** button alongside the config filename. Clicking fires the
+  workflow or script immediately using the original stored YAML — no
+  form re-entry required. The config is saved with each execution record
+  going forward; older records without stored config do not show the button.
+  History reloads automatically when the re-run modal closes.
+
+### Fixed
+- **Favicon not displaying** — `favicon.png` was placed in `static/` (not
+  served at `/`) and `index.html` still referenced `/favicon.svg`. Moved to
+  `public/` so Vite copies it into `dist/` on build; updated the `<link>`
+  to `type="image/png" href="/favicon.png"`.
+- **Sidebar version string** — the bottom-left sidebar showed `ZTF UI v1.0.0`
+  regardless of the installed version. Updated to `v1.2.2` and aligned with
+  the other version strings in `server.py`, `package.json`, and `Settings.tsx`.
+- **`backup_config` Windows compatibility** — `Path.rename()` raises
+  `FileExistsError` on Windows when the `.bak.1` target already exists.
+  Replaced with `Path.replace()`, which is atomic and overwrites on all
+  platforms.
+
+### Changed
+- Execution history records now include `configContent` and `configFile`
+  fields to support re-run. Existing records without these fields are
+  unaffected.
+
+---
+
 ## [1.2.1] — 2026-05-21
 
 ### Summary
@@ -242,6 +276,7 @@ operator interface.
 
 ---
 
+[1.2.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.0.0...v1.1.0
