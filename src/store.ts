@@ -58,10 +58,11 @@ export const useStore = create<AppState>()(
 
       // Settings
       settings: {
-        ztfPath:   '',
+        ztfPath:    '',
         pythonPath: 'python3',
-        configDir: '',
-        repoUrl:   'https://github.com/nutanixdev/zerotouch-framework.git',
+        configDir:  '',
+        repoUrl:    'https://github.com/nutanixdev/zerotouch-framework.git',
+        webhookUrl: '',
       },
       setSettings: (s) => set(state => ({ settings: { ...state.settings, ...s } })),
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, FolderOpen } from 'lucide-react'
+import { Save, FolderOpen, Bell } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
@@ -117,6 +117,34 @@ export default function Settings() {
               placeholder="https://github.com/nutanixdev/zerotouch-framework.git"
             />
             <p className="text-xs text-gray-500 mt-1">Used during setup. Must be the official ZTF repository or an approved internal mirror.</p>
+          </div>
+        </div>
+
+        {/* Notifications */}
+        <div className="card">
+          <h3 className="font-semibold text-gray-100 mb-1 flex items-center gap-2">
+            <Bell size={15} className="text-nutanix-cyan" />
+            Notifications
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">
+            POST a JSON summary to a URL when any workflow or script finishes. Leave blank to disable.
+          </p>
+          <div>
+            <label className="label">Webhook URL</label>
+            <input
+              className="input font-mono"
+              value={form.webhookUrl ?? ''}
+              onChange={e => setForm(p => ({ ...p, webhookUrl: e.target.value }))}
+              disabled={!isAdmin}
+              placeholder="https://hooks.slack.com/services/…"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Receives <code className="font-mono bg-gray-800 px-1 rounded">POST</code> with{' '}
+              <code className="font-mono bg-gray-800 px-1 rounded">workflow</code>,{' '}
+              <code className="font-mono bg-gray-800 px-1 rounded">status</code>,{' '}
+              <code className="font-mono bg-gray-800 px-1 rounded">user</code>, and{' '}
+              <code className="font-mono bg-gray-800 px-1 rounded">timestamp</code> on every completion.
+            </p>
           </div>
         </div>
 

@@ -68,6 +68,7 @@ export interface Settings {
   pythonPath: string
   configDir: string
   repoUrl: string
+  webhookUrl: string
 }
 
 // Workflow config types

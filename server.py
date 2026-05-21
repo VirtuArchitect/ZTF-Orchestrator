@@ -135,7 +135,7 @@ ALLOWED_REPOS = {
     'https://github.com/nutanixdev/zerotouch-framework',
 }
 
-ALLOWED_SETTINGS_KEYS = {'ztfPath', 'pythonPath', 'configDir', 'repoUrl'}
+ALLOWED_SETTINGS_KEYS = {'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl'}
 
 # ─── Concurrency lock ─────────────────────────────────────────────────────────
 
@@ -287,12 +287,30 @@ def write_json(path: Path, data):
 
 def get_settings() -> dict:
     defaults = {
-        'ztfPath':   ZTF_DEFAULT,
+        'ztfPath':    ZTF_DEFAULT,
         'pythonPath': PYTHON_DEFAULT,
-        'configDir': str(CONFIG_DIR / 'configs'),
-        'repoUrl':   'https://github.com/nutanixdev/zerotouch-framework.git',
+        'configDir':  str(CONFIG_DIR / 'configs'),
+        'repoUrl':    'https://github.com/nutanixdev/zerotouch-framework.git',
+        'webhookUrl': '',
     }
     return {**defaults, **read_json(SETTINGS_FILE, {})}
+
+
+def _fire_webhook(url: str, payload: dict) -> None:
+    """Best-effort webhook POST — runs in a daemon thread, never raises."""
+    import urllib.request as _req
+    try:
+        body = json.dumps(payload).encode()
+        req  = _req.Request(
+            url, data=body,
+            headers={'Content-Type': 'application/json', 'User-Agent': 'ZTF-Orchestrator/1.2.0'},
+            method='POST',
+        )
+        with _req.urlopen(req, timeout=8):
+            pass
+        log.info('webhook_fired', extra={'url': url, 'workflow': payload.get('workflow'), 'status': payload.get('status')})
+    except Exception as exc:
+        log.warning('webhook_failed', extra={'url': url, 'error': str(exc)})
 
 def get_configs_dir() -> Path:
     d = Path(get_settings().get('configDir', CONFIG_DIR / 'configs'))
@@ -883,6 +901,23 @@ def execute_workflow():
                 'user': current_user, 'workflow': workflow or script,
                 'action': 'execute', 'status': status,
             })
+
+            webhook_url = settings.get('webhookUrl', '').strip()
+            if webhook_url:
+                threading.Thread(
+                    target=_fire_webhook,
+                    args=(webhook_url, {
+                        'executionId': execution_id,
+                        'workflow':    workflow or script,
+                        'type':        'workflow' if workflow else 'script',
+                        'status':      status,
+                        'returnCode':  proc.returncode if proc else -1,
+                        'user':        current_user,
+                        'timestamp':   history[0]['timestamp'],
+                    }),
+                    daemon=True,
+                ).start()
+
             yield from send('done', {'code': proc.returncode if proc else -1,
                                      'status': status})
 

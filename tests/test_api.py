@@ -237,6 +237,38 @@ def test_update_user_role(client, auth_headers):
     assert resp.status_code == 200
 
 
+# ── Webhook helper ───────────────────────────────────────────────────────────
+
+def test_fire_webhook_success(monkeypatch):
+    """_fire_webhook POSTs JSON and silently succeeds."""
+    import server
+    calls = []
+
+    class FakeResp:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+
+    def fake_urlopen(req, timeout=None):
+        calls.append({'url': req.full_url, 'data': req.data})
+        return FakeResp()
+
+    monkeypatch.setattr('urllib.request.urlopen', fake_urlopen)
+    server._fire_webhook('http://example.com/hook', {'status': 'success', 'workflow': 'test'})
+    assert len(calls) == 1
+    assert b'success' in calls[0]['data']
+
+
+def test_fire_webhook_failure_silent(monkeypatch):
+    """_fire_webhook swallows exceptions — never raises."""
+    import server
+
+    def fake_urlopen(req, timeout=None):
+        raise OSError('connection refused')
+
+    monkeypatch.setattr('urllib.request.urlopen', fake_urlopen)
+    server._fire_webhook('http://unreachable/hook', {'status': 'failed'})
+
+
 # ── Security headers ─────────────────────────────────────────────────────────
 
 def test_security_headers_present(client, auth_headers):
