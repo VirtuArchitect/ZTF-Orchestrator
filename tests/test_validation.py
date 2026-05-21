@@ -65,7 +65,9 @@ def test_path_traversal_post_rejected(client, auth_headers, name):
     resp = client.post(f'/api/configs/{name}',
                        json={'content': 'key: value'},
                        headers=auth_headers)
-    assert resp.status_code in (400, 404)
+    # 400/404 = rejected by validation; 405 = Werkzeug normalised the dotdot
+    # path to a URL that has no POST handler (still a rejection)
+    assert resp.status_code in (400, 404, 405)
 
 
 # ── YAML validation ───────────────────────────────────────────────────────────

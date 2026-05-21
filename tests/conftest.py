@@ -12,6 +12,7 @@ def isolated_data_dir(tmp_path, monkeypatch):
     import importlib
     import server
     importlib.reload(server)
+    server._ensure_default_admin()
     yield tmp_path
 
 
@@ -24,7 +25,7 @@ def client(isolated_data_dir):
 
 
 @pytest.fixture()
-def admin_token(client):
+def admin_token(client, isolated_data_dir):
     """Log in as the default admin and return a bearer token."""
     import server
     # Read the generated password from users.json

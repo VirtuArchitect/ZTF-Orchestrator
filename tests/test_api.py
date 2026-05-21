@@ -154,6 +154,89 @@ def test_duplicate_user_rejected(client, auth_headers):
     assert resp.status_code == 409
 
 
+# ── Backup list & restore ────────────────────────────────────────────────────
+
+def test_backup_list_empty_initially(client, auth_headers):
+    client.post('/api/configs/bak_test.yml',
+                json={'content': 'v1: true\n'}, headers=auth_headers)
+    resp = client.get('/api/configs/bak_test.yml/backups', headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json() == []
+
+
+def test_backup_list_populated_after_overwrite(client, auth_headers):
+    client.post('/api/configs/bak2.yml',
+                json={'content': 'v1: true\n'}, headers=auth_headers)
+    client.post('/api/configs/bak2.yml',
+                json={'content': 'v2: true\n'}, headers=auth_headers)
+    resp = client.get('/api/configs/bak2.yml/backups', headers=auth_headers)
+    assert resp.status_code == 200
+    backups = resp.get_json()
+    assert len(backups) == 1
+    assert backups[0]['version'] == 1
+
+
+def test_backup_restore_reverts_content(client, auth_headers):
+    client.post('/api/configs/restore_me.yml',
+                json={'content': 'original: true\n'}, headers=auth_headers)
+    client.post('/api/configs/restore_me.yml',
+                json={'content': 'updated: true\n'}, headers=auth_headers)
+    resp = client.post('/api/configs/restore_me.yml/restore/1', headers=auth_headers)
+    assert resp.status_code == 200
+    resp = client.get('/api/configs/restore_me.yml', headers=auth_headers)
+    assert 'original' in resp.get_json()['content']
+
+
+def test_backup_restore_missing_version(client, auth_headers):
+    client.post('/api/configs/no_bak.yml',
+                json={'content': 'key: val\n'}, headers=auth_headers)
+    resp = client.post('/api/configs/no_bak.yml/restore/1', headers=auth_headers)
+    assert resp.status_code == 404
+
+
+def test_backup_restore_invalid_version(client, auth_headers):
+    resp = client.post('/api/configs/any.yml/restore/99', headers=auth_headers)
+    assert resp.status_code == 400
+
+
+# ── Executions ───────────────────────────────────────────────────────────────
+
+def test_get_executions_empty(client, auth_headers):
+    resp = client.get('/api/executions', headers=auth_headers)
+    assert resp.status_code == 200
+    assert isinstance(resp.get_json(), list)
+
+
+def test_clear_executions(client, auth_headers):
+    resp = client.delete('/api/executions', headers=auth_headers)
+    assert resp.status_code == 200
+
+
+# ── Global config ────────────────────────────────────────────────────────────
+
+def test_get_global_config(client, auth_headers):
+    resp = client.get('/api/global-config', headers=auth_headers)
+    assert resp.status_code == 200
+    assert 'content' in resp.get_json()
+
+
+def test_save_global_config(client, auth_headers):
+    resp = client.post('/api/global-config',
+                       json={'content': 'vault_to_use: local\n'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+
+# ── User role update ─────────────────────────────────────────────────────────
+
+def test_update_user_role(client, auth_headers):
+    _create_user(client, auth_headers, 'roleuser', 'viewer')
+    resp = client.put('/api/users/roleuser',
+                      json={'role': 'operator'},
+                      headers=auth_headers)
+    assert resp.status_code == 200
+
+
 # ── Security headers ─────────────────────────────────────────────────────────
 
 def test_security_headers_present(client, auth_headers):
