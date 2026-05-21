@@ -683,6 +683,38 @@ def delete_config(name):
         path.unlink()
     return jsonify({'success': True})
 
+@app.route('/api/configs/<name>/backups')
+@require_role('admin', 'operator', 'viewer')
+def list_config_backups(name):
+    configs_dir = get_configs_dir()
+    path = safe_config_path(name, configs_dir)
+    if path is None:
+        return jsonify({'error': 'Invalid filename'}), 400
+    backups = []
+    for i in range(1, CONFIG_BACKUPS + 1):
+        bak = Path(str(path) + f'.bak.{i}')
+        if bak.exists():
+            s = bak.stat()
+            backups.append({'version': i, 'size': s.st_size, 'modified': s.st_mtime})
+    return jsonify(backups)
+
+@app.route('/api/configs/<name>/restore/<int:version>', methods=['POST'])
+@require_role('admin', 'operator')
+def restore_config_backup(name, version):
+    configs_dir = get_configs_dir()
+    path = safe_config_path(name, configs_dir)
+    if path is None:
+        return jsonify({'error': 'Invalid filename'}), 400
+    if not 1 <= version <= CONFIG_BACKUPS:
+        return jsonify({'error': 'Invalid version'}), 400
+    bak = Path(str(path) + f'.bak.{version}')
+    if not bak.exists():
+        return jsonify({'error': 'Backup not found'}), 404
+    content = bak.read_text()
+    backup_config(path)
+    _secure_write(path, content)
+    return jsonify({'success': True})
+
 # ─── Global config ────────────────────────────────────────────────────────────
 
 @app.route('/api/global-config')

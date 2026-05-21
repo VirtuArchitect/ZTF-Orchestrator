@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Trash2, Save, Eye, EyeOff, Download, Upload } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
-import { buildGlobalYaml } from '../utils/yaml'
+import { buildGlobalYaml, fromYaml } from '../utils/yaml'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
 
@@ -34,12 +34,43 @@ export default function GlobalConfig() {
 
   useEffect(() => {
     apiFetch('/api/global-config').then(r => r.json()).then(data => {
-      if (data.content) {
-        try {
-          // Parse existing global.yml if present
-          // For simplicity, keep defaults - a full parser would be needed
-        } catch { /* ignore */ }
-      }
+      if (!data.content) return
+      try {
+        const parsed = fromYaml(data.content) as Record<string, unknown>
+        if (!parsed || typeof parsed !== 'object') return
+
+        if (parsed.vault_to_use === 'cyberark' || parsed.vault_to_use === 'local') {
+          setVaultType(parsed.vault_to_use)
+        }
+        if (parsed.ip_allocation_method === 'infoblox' || parsed.ip_allocation_method === 'static') {
+          setIpMethod(parsed.ip_allocation_method as 'static' | 'infoblox')
+        }
+
+        const vaults = parsed.vaults as Record<string, unknown> | undefined
+        const localCreds = (vaults?.local as Record<string, unknown> | undefined)?.credentials
+        if (localCreds && typeof localCreds === 'object') {
+          const creds = Object.entries(localCreds as Record<string, Record<string, string>>).map(
+            ([ref, val]) => ({ ref, username: val?.username ?? '', password: val?.password ?? '' })
+          )
+          if (creds.length > 0) setCredentials(creds)
+        }
+
+        const ca = (vaults?.cyberark as Record<string, string> | undefined)
+        if (ca) {
+          setCyberark({ host: ca.host ?? '', certFile: ca.cert_file ?? '', keyFile: ca.key_file ?? '' })
+        }
+
+        const ib = parsed.infoblox as Record<string, string> | undefined
+        if (ib) {
+          setInfoblox({
+            host: ib.host ?? '',
+            username: ib.username ?? '',
+            password: ib.password ?? '',
+            dnsView: ib.dns_view ?? 'default',
+            networkView: ib.network_view ?? 'default',
+          })
+        }
+      } catch { /* ignore malformed YAML */ }
     }).catch(() => {})
   }, [])
 

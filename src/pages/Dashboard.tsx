@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Server, CheckCircle, XCircle, Clock, Play,
+  Server, CheckCircle, XCircle, Clock,
   Activity, AlertTriangle, Zap, Settings, Download,
-  TrendingUp, Database, Cloud
+  TrendingUp, Database, Cloud, RefreshCw
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -27,26 +27,32 @@ export default function Dashboard() {
   const { setSystemChecks, ztfInstalled, systemChecks } = useStore()
   const [executions, setExecutions] = useState<Execution[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const refresh = async (showSpinner = false) => {
+    if (showSpinner) setRefreshing(true)
+    try {
+      const [sysResp, execResp] = await Promise.all([
+        apiFetch('/api/system/check'),
+        apiFetch('/api/executions'),
+      ])
+      if (sysResp.ok) {
+        const data: SystemStatus = await sysResp.json()
+        setSystemChecks(data.checks, data.ztfInstalled)
+      }
+      if (execResp.ok) {
+        setExecutions(await execResp.json())
+      }
+    } finally {
+      setLoading(false)
+      if (showSpinner) setRefreshing(false)
+    }
+  }
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const [sysResp, execResp] = await Promise.all([
-          apiFetch('/api/system/check'),
-          apiFetch('/api/executions'),
-        ])
-        if (sysResp.ok) {
-          const data: SystemStatus = await sysResp.json()
-          setSystemChecks(data.checks, data.ztfInstalled)
-        }
-        if (execResp.ok) {
-          setExecutions(await execResp.json())
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    init()
+    refresh()
+    const interval = setInterval(() => refresh(), 30_000)
+    return () => clearInterval(interval)
   }, [setSystemChecks])
 
   const successCount = executions.filter(e => e.status === 'success').length
@@ -64,12 +70,18 @@ export default function Dashboard() {
       title="Dashboard"
       subtitle="ZeroTouch Framework Control Center"
       actions={
-        !ztfInstalled && (
-          <Link to="/setup" className="btn-primary gap-2">
-            <Download size={14} />
-            Install ZTF
-          </Link>
-        )
+        <div className="flex gap-2">
+          <button onClick={() => refresh(true)} disabled={refreshing} className="btn-secondary gap-1.5">
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          {!ztfInstalled && (
+            <Link to="/setup" className="btn-primary gap-2">
+              <Download size={14} />
+              Install ZTF
+            </Link>
+          )}
+        </div>
       }
     >
       {/* Welcome Banner */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FileCode, Plus, Trash2, Save, Download, Upload, RefreshCw } from 'lucide-react'
+import { FileCode, Plus, Trash2, Save, Download, Upload, RefreshCw, History, RotateCcw } from 'lucide-react'
 import Layout from '../components/Layout'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
@@ -10,6 +10,12 @@ interface ConfigFile {
   modified: string
 }
 
+interface Backup {
+  version: number
+  size: number
+  modified: number
+}
+
 export default function ConfigFiles() {
   const [files, setFiles] = useState<ConfigFile[]>([])
   const [selected, setSelected] = useState<string | null>(null)
@@ -18,6 +24,9 @@ export default function ConfigFiles() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [newFileName, setNewFileName] = useState('')
+  const [backups, setBackups] = useState<Backup[]>([])
+  const [showBackups, setShowBackups] = useState(false)
+  const [restoring, setRestoring] = useState<number | null>(null)
 
   const loadFiles = async () => {
     setLoading(true)
@@ -33,10 +42,29 @@ export default function ConfigFiles() {
 
   const openFile = async (name: string) => {
     setSelected(name)
+    setShowBackups(false)
+    setBackups([])
     const resp = await apiFetch(`/api/configs/${encodeURIComponent(name)}`)
     if (resp.ok) {
       const data = await resp.json()
       setContent(data.content)
+    }
+    const bakResp = await apiFetch(`/api/configs/${encodeURIComponent(name)}/backups`)
+    if (bakResp.ok) setBackups(await bakResp.json())
+  }
+
+  const restoreBackup = async (version: number) => {
+    if (!selected || !confirm(`Restore version ${version}? The current file will be backed up first.`)) return
+    setRestoring(version)
+    try {
+      const resp = await apiFetch(`/api/configs/${encodeURIComponent(selected)}/restore/${version}`, { method: 'POST' })
+      if (resp.ok) {
+        await openFile(selected)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      }
+    } finally {
+      setRestoring(null)
     }
   }
 
@@ -116,6 +144,15 @@ export default function ConfigFiles() {
           </button>
           {selected && (
             <>
+              {backups.length > 0 && (
+                <button
+                  onClick={() => setShowBackups(v => !v)}
+                  className={clsx('btn-secondary gap-1.5', showBackups && 'border-nutanix-blue/60 text-nutanix-cyan')}
+                >
+                  <History size={14} />
+                  History ({backups.length})
+                </button>
+              )}
               <button onClick={download} className="btn-secondary gap-1.5">
                 <Download size={14} />Download
               </button>
@@ -199,12 +236,46 @@ export default function ConfigFiles() {
                 </div>
                 <span className="flex-1 text-center text-xs font-mono text-gray-400">{selected}</span>
               </div>
-              <textarea
-                className="flex-1 input font-mono text-xs resize-none rounded-t-none border-t-0 min-h-96"
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                spellCheck={false}
-              />
+
+              {showBackups ? (
+                <div className="flex-1 card overflow-y-auto min-h-96">
+                  <div className="flex items-center gap-2 mb-4">
+                    <History size={15} className="text-nutanix-cyan" />
+                    <h3 className="font-semibold text-gray-200 text-sm">Version History</h3>
+                    <span className="text-xs text-gray-500 ml-auto">Restoring backs up the current file first</span>
+                  </div>
+                  <div className="space-y-2">
+                    {backups.map(bak => (
+                      <div
+                        key={bak.version}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-elevated border border-border"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-300 font-medium">Version {bak.version}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(bak.modified * 1000).toLocaleString()} &mdash; {(bak.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => restoreBackup(bak.version)}
+                          disabled={restoring !== null}
+                          className="btn-secondary text-xs gap-1.5 flex-shrink-0"
+                        >
+                          <RotateCcw size={12} className={restoring === bak.version ? 'animate-spin' : ''} />
+                          {restoring === bak.version ? 'Restoring…' : 'Restore'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <textarea
+                  className="flex-1 input font-mono text-xs resize-none rounded-t-none border-t-0 min-h-96"
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  spellCheck={false}
+                />
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
