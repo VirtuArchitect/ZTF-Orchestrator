@@ -7,6 +7,68 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.1] — 2026-05-21
+
+### Summary
+Bug-fix and security patch release. Resolves three functional regressions
+in the 1.2.0 UI, patches seven CVEs in Python dependencies, fixes the
+CI pipeline, and adds webhook notifications.
+
+### Fixed
+
+#### UI
+- **Global Config round-trip** — opening the Global Config page no longer
+  resets all fields to defaults. The fetched `global.yml` is now parsed back
+  into form state: vault type, IP allocation method, credentials, CyberArk
+  settings, and Infoblox settings all populate correctly on load.
+- **Config backup restore unreachable** — the server-side `.bak.N` backup
+  files created on every config overwrite were previously inaccessible from
+  the UI. A **History** button now appears when backups exist; clicking it
+  shows all versions with timestamps and sizes, each with a **Restore**
+  action (the current file is backed up before restoring).
+- **Dashboard no auto-refresh** — the dashboard fetched system checks and
+  execution history once on mount and never updated. It now polls every
+  30 seconds and includes a manual **Refresh** button with a spinner.
+
+#### CI / Build
+- `npm ci` was failing with a peer dependency conflict: `@vitejs/plugin-react@4.x`
+  declares `vite@"^4–7"` as its peer but the lockfile had `vite@8`. Upgraded
+  to `@vitejs/plugin-react@^6.0.2` which targets `vite@^8`.
+- `tests/conftest.py` — `admin_token` fixture referenced `isolated_data_dir`
+  without declaring it as a parameter, causing pytest to inject the raw fixture
+  function instead of the resolved `Path`. Fixed parameter declaration; added
+  `server._ensure_default_admin()` call after module reload so `users.json`
+  exists before any test reads it.
+- Four POST path-traversal test assertions updated to accept HTTP 405 alongside
+  400/404 — Werkzeug normalises `../../etc/passwd` URLs before routing, landing
+  on the GET-only SPA fallback.
+- Added 11 targeted tests (backup list/restore, executions, global config,
+  user role update) to restore coverage above the 70% CI gate.
+
+### Added
+- **Webhook notifications** — set a URL in **Settings → Notifications** to
+  receive a `POST` on every workflow or script completion. Payload includes
+  `workflow`, `status`, `returnCode`, `user`, `timestamp`, and `executionId`.
+  Fired in a daemon thread using stdlib `urllib` (no new dependency); failures
+  are logged and never interrupt an execution.
+- **Favicon** — `static/favicon.png`: dark-navy background with a faceted
+  teal prism and automation arc.
+
+### Security
+- `flask` upgraded `3.0.3 → 3.1.3` — resolves **CVE-2026-27205**.
+- `flask-cors` upgraded `4.0.1 → 6.0.2` — resolves **CVE-2024-6844**,
+  **CVE-2024-6866**, **CVE-2024-6839**, **PYSEC-2024-71**, **PYSEC-2024-260**.
+  `PYSEC-2024-271` (CRLF log injection in debug mode, no fix available in any
+  release) suppressed in `pip-audit` with documented justification; app binds
+  to localhost only and debug logging is off by default.
+
+### Changed
+- `.gitignore` expanded to exclude `__pycache__/`, `*.pyc`, `.coverage`,
+  `.pytest_cache/` — generated artefacts are no longer committable.
+- `dist/` rebuilt against `@vitejs/plugin-react@6` and new frontend changes.
+
+---
+
 ## [1.2.0] — 2026-05-20
 
 ### Summary
@@ -180,6 +242,7 @@ operator interface.
 
 ---
 
+[1.2.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.0.0
