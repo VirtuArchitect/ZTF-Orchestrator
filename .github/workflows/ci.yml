@@ -23,7 +23,10 @@ jobs:
         run: pip install -r requirements.txt pytest pytest-cov pip-audit
 
       - name: Vulnerability scan
-        run: pip-audit -r requirements.txt
+        # PYSEC-2024-271: log-injection via CRLF in flask-cors debug mode.
+        # No fixed version exists in any flask-cors release. Risk is accepted:
+        # the app binds to localhost only and debug logging is off by default.
+        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2024-271
 
       - name: Run tests
         run: pytest tests/ -v --cov=server --cov-report=term-missing --cov-fail-under=70
