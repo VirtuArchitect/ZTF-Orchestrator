@@ -7,26 +7,26 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.2.2] — 2026-05-21
+## [1.2.2]  2026-05-21
 
 ### Summary
 Feature and polish release. Adds execution re-run directly from history,
 fixes the favicon, and corrects the sidebar version string.
 
 ### Added
-- **Execution re-run** — expand any row in Execution History to see a
+- **Execution re-run** expand any row in Execution History to see a
   **Re-run** button alongside the config filename. Clicking fires the
-  workflow or script immediately using the original stored YAML — no
+  workflow or script immediately using the original stored YAML no
   form re-entry required. The config is saved with each execution record
   going forward; older records without stored config do not show the button.
   History reloads automatically when the re-run modal closes.
 
 ### Fixed
-- **Favicon not displaying** — `favicon.png` was placed in `static/` (not
+- **Favicon not displaying** `favicon.png` was placed in `static/` (not
   served at `/`) and `index.html` still referenced `/favicon.svg`. Moved to
   `public/` so Vite copies it into `dist/` on build; updated the `<link>`
   to `type="image/png" href="/favicon.png"`.
-- **Sidebar version string** — the bottom-left sidebar showed `ZTF UI v1.0.0`
+- **Sidebar version string** the bottom-left sidebar showed `ZTF UI v1.0.0`
   regardless of the installed version. Updated to `v1.2.2` and aligned with
   the other version strings in `server.py`, `package.json`, and `Settings.tsx`.
 - **`backup_config` Windows compatibility** — `Path.rename()` raises
@@ -41,7 +41,7 @@ fixes the favicon, and corrects the sidebar version string.
 
 ---
 
-## [1.2.1] — 2026-05-21
+## [1.2.1]  2026-05-21
 
 ### Summary
 Bug-fix and security patch release. Resolves three functional regressions
@@ -103,7 +103,7 @@ CI pipeline, and adds webhook notifications.
 
 ---
 
-## [1.2.0] — 2026-05-20
+## [1.2.0] 2026-05-20
 
 ### Summary
 Production hardening release. Replaces the shared API key with a full
@@ -117,9 +117,9 @@ pytest test suite.
 #### Authentication & Authorisation
 - User authentication: bcrypt-hashed passwords stored in `users.json`
 - Session tokens (64-char hex, 8-hour TTL) returned on `POST /api/auth/login`
-- `POST /api/auth/logout` — invalidates the current session token
-- `GET /api/auth/me` — returns current user info
-- Three roles: `admin`, `operator`, `viewer` — enforced on every endpoint
+- `POST /api/auth/logout` invalidates the current session token
+- `GET /api/auth/me` returns current user info
+- Three roles: `admin`, `operator`, `viewer` enforced on every endpoint
 - Role matrix:
   - **admin** — full access including settings, global config, and user management
   - **operator** — execute workflows, manage config files, read executions
@@ -189,7 +189,7 @@ pytest test suite.
 
 ---
 
-## [1.1.0] — 2026-05-20
+## [1.1.0] 2026-05-20
 
 ### Summary
 Security remediation release. Addressed all critical and high severity
@@ -250,7 +250,7 @@ vulnerabilities identified in the initial validation review.
 
 ---
 
-## [1.0.0] — 2026-05-16
+## [1.0.0] 2026-05-16
 
 ### Summary
 Initial release. Web-based graphical interface for the
