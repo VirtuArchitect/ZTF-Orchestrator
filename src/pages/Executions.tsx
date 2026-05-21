@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react'
-import { Trash2, RefreshCw, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Terminal } from 'lucide-react'
+import { Trash2, RefreshCw, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Terminal, Play } from 'lucide-react'
 import Layout from '../components/Layout'
+import ExecutionModal from '../components/ExecutionModal'
 import type { Execution } from '../types'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
+
+interface RerunTarget {
+  workflow: string
+  configContent: string
+  configFile: string
+  type: 'workflow' | 'script'
+}
 
 export default function Executions() {
   const [executions, setExecutions] = useState<Execution[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all')
+  const [rerunTarget, setRerunTarget] = useState<RerunTarget | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -32,6 +41,7 @@ export default function Executions() {
   const filtered = executions.filter(e => filter === 'all' || e.status === filter)
 
   return (
+    <>
     <Layout
       title="Execution History"
       subtitle="View and manage past workflow and script runs"
@@ -119,18 +129,54 @@ export default function Executions() {
               </div>
             </button>
 
-            {expanded === exec.id && exec.command && (
+            {expanded === exec.id && (
               <div className="px-5 pb-4 border-t border-border">
-                <p className="text-xs text-gray-500 mb-2 mt-3">Command:</p>
-                <div className="bg-gray-950 rounded-lg p-3 font-mono text-xs text-gray-300 break-all">
-                  {exec.command}
-                </div>
+                {exec.command && (
+                  <>
+                    <p className="text-xs text-gray-500 mb-2 mt-3">Command:</p>
+                    <div className="bg-gray-950 rounded-lg p-3 font-mono text-xs text-gray-300 break-all">
+                      {exec.command}
+                    </div>
+                  </>
+                )}
+                {exec.configContent && (
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                      Config: <span className="font-mono text-gray-400">{exec.configFile}</span>
+                    </p>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        setRerunTarget({
+                          workflow: exec.workflow,
+                          configContent: exec.configContent!,
+                          configFile: `rerun-${Date.now()}-${exec.configFile || 'config.yml'}`,
+                          type: exec.type,
+                        })
+                      }}
+                      className="btn-primary text-xs gap-1.5"
+                    >
+                      <Play size={11} />
+                      Re-run
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         ))}
       </div>
     </Layout>
+
+    {rerunTarget && (
+      <ExecutionModal
+        workflow={rerunTarget.workflow}
+        configContent={rerunTarget.configContent}
+        configFile={rerunTarget.configFile}
+        onClose={() => { setRerunTarget(null); load() }}
+      />
+    )}
+    </>
   )
 }
 

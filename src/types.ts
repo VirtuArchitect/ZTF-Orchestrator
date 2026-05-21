@@ -55,6 +55,7 @@ export interface Execution {
   duration?: number
   timestamp: string
   configFile?: string
+  configContent?: string
 }
 
 export interface SystemCheck {

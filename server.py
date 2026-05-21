@@ -343,9 +343,9 @@ def backup_config(path: Path):
         src = Path(str(path) + f'.bak.{i}')
         dst = Path(str(path) + f'.bak.{i + 1}')
         if src.exists():
-            src.rename(dst)
+            src.replace(dst)   # replace() is atomic and works on Windows
     bak = Path(str(path) + '.bak.1')
-    path.rename(bak)
+    path.replace(bak)          # rename() raises FileExistsError on Windows
     try:
         os.chmod(bak, stat.S_IRUSR | stat.S_IWUSR)
     except OSError:
@@ -888,12 +888,14 @@ def execute_workflow():
 
             history  = read_json(HISTORY_FILE, [])
             history.insert(0, {
-                'id':        execution_id,
-                'workflow':  workflow or script,
-                'type':      'workflow' if workflow else 'script',
-                'status':    status,
-                'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
-                'user':      current_user,
+                'id':            execution_id,
+                'workflow':      workflow or script,
+                'type':          'workflow' if workflow else 'script',
+                'status':        status,
+                'timestamp':     datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+                'user':          current_user,
+                'configFile':    config_file or '',
+                'configContent': config_content or '',
             })
             write_json(HISTORY_FILE, history[:1000])
 
