@@ -2,7 +2,7 @@ import Layout from '../components/Layout'
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
-import { Trash2, Plus, RefreshCw } from 'lucide-react'
+import { Trash2, Plus, RefreshCw, KeyRound, Check, X } from 'lucide-react'
 
 type UserRecord = {
   username: string
@@ -16,12 +16,15 @@ export default function UserRoles() {
   const currentUser = useStore(s => s.user)
   const isAdmin     = currentUser?.role === 'admin'
 
-  const [users,       setUsers]       = useState<UserRecord[]>([])
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState('')
-  const [newUsername, setNewUsername] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [newRole,     setNewRole]     = useState<typeof ROLES[number]>('operator')
+  const [users,        setUsers]        = useState<UserRecord[]>([])
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState('')
+  const [newUsername,  setNewUsername]  = useState('')
+  const [newPassword,  setNewPassword]  = useState('')
+  const [newRole,      setNewRole]      = useState<typeof ROLES[number]>('operator')
+  const [resetTarget,  setResetTarget]  = useState<string | null>(null)
+  const [resetPw,      setResetPw]      = useState('')
+  const [resetSaving,  setResetSaving]  = useState(false)
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -64,6 +67,23 @@ export default function UserRoles() {
     fetchUsers()
   }
 
+  const savePassword = async () => {
+    if (!resetPw || !resetTarget) { setError('New password is required'); return }
+    setResetSaving(true)
+    setError('')
+    try {
+      const res = await apiFetch(`/api/users/${resetTarget}`, {
+        method: 'PUT',
+        body: JSON.stringify({ password: resetPw }),
+      })
+      if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed'); return }
+      setResetTarget(null)
+      setResetPw('')
+    } finally {
+      setResetSaving(false)
+    }
+  }
+
   return (
     <Layout title="Users & Roles" subtitle="Manage user accounts and role assignments">
       <div className="max-w-2xl space-y-6">
@@ -86,38 +106,79 @@ export default function UserRoles() {
           <div className="space-y-2">
             {users.map(u => (
               <div key={u.username}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gray-900 border border-border/50">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200 truncate">{u.username}</p>
-                  {u.created_at && (
-                    <p className="text-xs text-gray-500">
-                      Created {new Date(u.created_at).toLocaleDateString()}
-                    </p>
+                className="rounded-lg bg-gray-900 border border-border/50 overflow-hidden">
+                <div className="flex items-center gap-3 p-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-200 truncate">{u.username}</p>
+                    {u.created_at && (
+                      <p className="text-xs text-gray-500">
+                        Created {new Date(u.created_at).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+
+                  {isAdmin ? (
+                    <select
+                      value={u.role}
+                      onChange={e => changeRole(u.username, e.target.value)}
+                      className="input text-xs py-1 px-2 w-28"
+                    >
+                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  ) : (
+                    <span className="text-xs text-gray-400 px-2 py-1 rounded bg-gray-800 border border-border">
+                      {u.role}
+                    </span>
+                  )}
+
+                  {isAdmin && (
+                    <button
+                      onClick={() => { setResetTarget(resetTarget === u.username ? null : u.username); setResetPw(''); setError('') }}
+                      className="btn-ghost p-1.5 text-gray-500 hover:text-nutanix-cyan"
+                      title="Reset password"
+                    >
+                      <KeyRound size={14} />
+                    </button>
+                  )}
+
+                  {isAdmin && u.username !== currentUser?.username && (
+                    <button
+                      onClick={() => deleteUser(u.username)}
+                      className="btn-ghost p-1.5 text-gray-500 hover:text-red-400"
+                      title="Delete user"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   )}
                 </div>
 
-                {isAdmin ? (
-                  <select
-                    value={u.role}
-                    onChange={e => changeRole(u.username, e.target.value)}
-                    className="input text-xs py-1 px-2 w-28"
-                  >
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                ) : (
-                  <span className="text-xs text-gray-400 px-2 py-1 rounded bg-gray-800 border border-border">
-                    {u.role}
-                  </span>
-                )}
-
-                {isAdmin && u.username !== currentUser?.username && (
-                  <button
-                    onClick={() => deleteUser(u.username)}
-                    className="btn-ghost p-1.5 text-gray-500 hover:text-red-400"
-                    title="Delete user"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                {/* Inline password reset form */}
+                {isAdmin && resetTarget === u.username && (
+                  <div className="flex items-center gap-2 px-3 pb-3 pt-0 border-t border-border/40">
+                    <input
+                      className="input text-xs flex-1"
+                      type="password"
+                      placeholder="New password"
+                      value={resetPw}
+                      onChange={e => setResetPw(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && savePassword()}
+                      autoFocus
+                    />
+                    <button
+                      onClick={savePassword}
+                      disabled={resetSaving || !resetPw}
+                      className="btn-primary text-xs px-3 py-1.5 gap-1"
+                    >
+                      <Check size={12} />
+                      {resetSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => { setResetTarget(null); setResetPw('') }}
+                      className="btn-ghost p-1.5 text-gray-500"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
