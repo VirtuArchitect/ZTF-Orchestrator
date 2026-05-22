@@ -64,6 +64,27 @@ export interface SystemCheck {
   value: string | null
 }
 
+export interface PipelineStep {
+  workflow:   string
+  configFile: string
+}
+
+export interface Pipeline {
+  id:        string
+  name:      string
+  steps:     PipelineStep[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PipelineStepResult {
+  step:       number
+  workflow:   string
+  configFile?: string
+  status:     'success' | 'failed' | 'skipped' | 'running'
+  returnCode?: number
+}
+
 export interface Settings {
   ztfPath: string
   pythonPath: string

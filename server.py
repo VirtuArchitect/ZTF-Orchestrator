@@ -38,10 +38,11 @@ TOKEN_TTL     = int(os.environ.get('ZTF_TOKEN_TTL',     28800))  # seconds (8 h)
 MAX_BODY      = int(os.environ.get('ZTF_MAX_BODY',      1048576)) # 1 MB
 CONFIG_BACKUPS= int(os.environ.get('ZTF_CONFIG_BACKUPS',5))
 
-USERS_FILE    = CONFIG_DIR / 'users.json'
-HISTORY_FILE  = CONFIG_DIR / 'history.json'
-SETTINGS_FILE = CONFIG_DIR / 'settings.json'
-LOG_FILE      = CONFIG_DIR / 'ztf-orchestrator.log'
+USERS_FILE     = CONFIG_DIR / 'users.json'
+HISTORY_FILE   = CONFIG_DIR / 'history.json'
+SETTINGS_FILE  = CONFIG_DIR / 'settings.json'
+PIPELINES_FILE = CONFIG_DIR / 'pipelines.json'
+LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 
 ALLOWED_ORIGINS = [
     f'http://localhost:{PORT}',    f'http://127.0.0.1:{PORT}',
@@ -476,6 +477,13 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
     yield from send('stdout', f'Result: {passed} passed, {failed} failed')
     status = 'success' if failed == 0 else 'failed'
     yield from send('done', {'status': status, 'dryRun': True, 'passed': passed, 'failed': failed})
+
+
+def _load_pipelines() -> list[dict]:
+    return read_json(PIPELINES_FILE, [])
+
+def _save_pipelines(pipelines: list[dict]) -> None:
+    write_json(PIPELINES_FILE, pipelines)
 
 
 def _fire_webhook(url: str, payload: dict) -> None:
@@ -940,6 +948,268 @@ def save_global_config():
     backup_config(global_yml)
     _secure_write(global_yml, content)
     return jsonify({'success': True})
+
+# ─── Pipelines ───────────────────────────────────────────────────────────────
+
+@app.route('/api/pipelines')
+@require_role('admin', 'operator', 'viewer')
+def list_pipelines():
+    return jsonify(_load_pipelines())
+
+
+@app.route('/api/pipelines', methods=['POST'])
+@require_role('admin', 'operator')
+def create_pipeline():
+    data  = request.json or {}
+    name  = str(data.get('name', '')).strip()
+    steps = data.get('steps', [])
+    if not name:
+        return jsonify({'error': 'name required'}), 400
+    for s in steps:
+        if s.get('workflow') not in ALLOWED_WORKFLOWS:
+            return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
+    pipeline = {
+        'id':        str(uuid.uuid4()),
+        'name':      name,
+        'steps':     steps,
+        'createdAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+        'updatedAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+    }
+    pipelines = _load_pipelines()
+    pipelines.append(pipeline)
+    _save_pipelines(pipelines)
+    return jsonify(pipeline), 201
+
+
+@app.route('/api/pipelines/<pipeline_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_pipeline(pipeline_id: str):
+    pipeline = next((p for p in _load_pipelines() if p['id'] == pipeline_id), None)
+    if not pipeline:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(pipeline)
+
+
+@app.route('/api/pipelines/<pipeline_id>', methods=['PUT'])
+@require_role('admin', 'operator')
+def update_pipeline(pipeline_id: str):
+    data      = request.json or {}
+    pipelines = _load_pipelines()
+    pipeline  = next((p for p in pipelines if p['id'] == pipeline_id), None)
+    if not pipeline:
+        return jsonify({'error': 'Not found'}), 404
+    if 'name' in data:
+        pipeline['name'] = str(data['name']).strip()
+    if 'steps' in data:
+        for s in data['steps']:
+            if s.get('workflow') not in ALLOWED_WORKFLOWS:
+                return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
+        pipeline['steps'] = data['steps']
+    pipeline['updatedAt'] = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+    _save_pipelines(pipelines)
+    return jsonify(pipeline)
+
+
+@app.route('/api/pipelines/<pipeline_id>', methods=['DELETE'])
+@require_role('admin', 'operator')
+def delete_pipeline(pipeline_id: str):
+    pipelines = _load_pipelines()
+    pipelines = [p for p in pipelines if p['id'] != pipeline_id]
+    _save_pipelines(pipelines)
+    return jsonify({'success': True})
+
+
+@app.route('/api/pipelines/<pipeline_id>/run', methods=['POST'])
+@require_role('admin', 'operator')
+@limiter.limit('5 per minute')
+def run_pipeline(pipeline_id: str):
+    pipeline = next((p for p in _load_pipelines() if p['id'] == pipeline_id), None)
+    if not pipeline:
+        return jsonify({'error': 'Pipeline not found'}), 404
+    steps = pipeline.get('steps', [])
+    if not steps:
+        return jsonify({'error': 'Pipeline has no steps'}), 400
+    for s in steps:
+        if s.get('workflow') not in ALLOWED_WORKFLOWS:
+            return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
+
+    settings     = get_settings()
+    ztf_path     = settings['ztfPath']
+    python_path  = settings['pythonPath']
+    configs_dir  = get_configs_dir()
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+
+    import time as _tm
+    pipeline_run_id = str(int(_tm.time() * 1000))
+
+    def generate() -> Generator[str, None, None]:
+
+        def send(t: str, d):
+            yield f"data: {json.dumps({'type': t, 'data': d, 'pipelineRunId': pipeline_run_id})}\n\n"
+
+        step_results: list[dict] = []
+        overall_status = 'success'
+
+        yield from send('pipeline_start', {
+            'pipelineName': pipeline['name'],
+            'totalSteps':   len(steps),
+        })
+
+        for step_idx, step in enumerate(steps):
+            workflow    = step['workflow']
+            config_file = step.get('configFile', '')
+
+            yield from send('step_start', {
+                'step':       step_idx,
+                'workflow':   workflow,
+                'configFile': config_file,
+            })
+
+            # Resolve config path
+            cfg_path: str | None = None
+            if config_file:
+                path = safe_config_path(config_file, configs_dir)
+                if path and path.exists():
+                    cfg_path = str(path)
+
+            cmd_args = [python_path, 'main.py', '--workflow', workflow]
+            if cfg_path:
+                cmd_args += ['-f', cfg_path]
+
+            proc        = None
+            kill_timer  = None
+            step_status = 'success'
+
+            try:
+                proc = subprocess.Popen(
+                    cmd_args, cwd=ztf_path,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                )
+
+                def _timeout_kill():
+                    if proc and proc.poll() is None:
+                        proc.kill()
+
+                kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
+                kill_timer.start()
+
+                combined: queue.Queue = queue.Queue()
+
+                def _reader(stream, label):
+                    for line in stream:
+                        combined.put((label, line.rstrip()))
+                    combined.put(None)
+
+                t_out = threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True)
+                t_err = threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True)
+                t_out.start(); t_err.start()
+
+                done = 0
+                while done < 2:
+                    item = combined.get()
+                    if item is None:
+                        done += 1
+                    else:
+                        label, line = item
+                        yield from send(label, line)
+
+                proc.wait()
+                step_status = 'success' if proc.returncode == 0 else 'failed'
+
+            except GeneratorExit:
+                if proc and proc.poll() is None:
+                    proc.kill()
+                    log.info('pipeline_cancelled', extra={'user': current_user, 'pipeline': pipeline['name']})
+                return
+
+            except Exception as exc:
+                yield from send('stderr', f'Step {step_idx} error: {exc}')
+                step_status = 'failed'
+
+            finally:
+                if kill_timer:
+                    kill_timer.cancel()
+
+            step_results.append({
+                'step':       step_idx,
+                'workflow':   workflow,
+                'configFile': config_file,
+                'status':     step_status,
+                'returnCode': proc.returncode if proc else -1,
+            })
+
+            yield from send('step_complete', {
+                'step':       step_idx,
+                'workflow':   workflow,
+                'status':     step_status,
+                'returnCode': proc.returncode if proc else -1,
+            })
+
+            if step_status == 'failed':
+                overall_status = 'failed'
+                # Mark remaining steps as skipped
+                for remaining_idx in range(step_idx + 1, len(steps)):
+                    step_results.append({
+                        'step':     remaining_idx,
+                        'workflow': steps[remaining_idx]['workflow'],
+                        'status':   'skipped',
+                    })
+                    yield from send('step_skipped', {
+                        'step':     remaining_idx,
+                        'workflow': steps[remaining_idx]['workflow'],
+                    })
+                break
+
+        # Record in history
+        ts       = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+        history  = read_json(HISTORY_FILE, [])
+        history.insert(0, {
+            'id':         pipeline_run_id,
+            'workflow':   f'[Pipeline] {pipeline["name"]}',
+            'type':       'pipeline',
+            'status':     overall_status,
+            'timestamp':  ts,
+            'user':       current_user,
+            'pipelineId': pipeline_id,
+            'steps':      step_results,
+        })
+        write_json(HISTORY_FILE, history[:1000])
+
+        log.info('pipeline_complete', extra={
+            'user':     current_user,
+            'pipeline': pipeline['name'],
+            'status':   overall_status,
+        })
+
+        yield from send('pipeline_done', {
+            'status':     overall_status,
+            'steps':      step_results,
+            'pipelineId': pipeline_id,
+        })
+
+        # Webhook notification
+        webhook_url = settings.get('webhookUrl', '').strip()
+        if webhook_url:
+            threading.Thread(
+                target=_fire_webhook,
+                args=(webhook_url, {
+                    'type':         'pipeline',
+                    'pipelineName': pipeline['name'],
+                    'pipelineId':   pipeline_id,
+                    'status':       overall_status,
+                    'user':         current_user,
+                    'timestamp':    ts,
+                    'steps':        step_results,
+                }),
+                daemon=True,
+            ).start()
+
+    return Response(
+        generate(),
+        mimetype='text/event-stream',
+        headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
+    )
+
 
 # ─── Execute workflow ─────────────────────────────────────────────────────────
 
