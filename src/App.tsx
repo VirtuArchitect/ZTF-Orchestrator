@@ -10,6 +10,7 @@ import Executions    from './pages/Executions'
 import Settings      from './pages/Settings'
 import ConfigFiles   from './pages/ConfigFiles'
 import UserRoles     from './pages/UserRoles'
+import Pipelines     from './pages/Pipelines'
 import Login         from './pages/Login'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,9 @@ export default function App() {
         } />
         <Route path="/users" element={
           <RequireAuth><UserRoles /></RequireAuth>
+        } />
+        <Route path="/pipelines" element={
+          <RequireAuth><Pipelines /></RequireAuth>
         } />
 
         {/* Fallback */}
