@@ -7,6 +7,44 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.3]  2026-05-21
+
+### Summary
+Feature release: Pipeline Builder. Operators can now chain workflows
+sequentially with automatic pass/fail gates, enabling fully unattended
+end-to-end Nutanix site deployments.
+
+### Added
+
+#### Pipeline Builder
+- **Pipelines page** — create, edit, delete, and run named pipelines
+  from the sidebar. Each pipeline is an ordered list of workflow + config
+  file pairs stored in `~/.ztf-ui/pipelines.json`.
+- **Builder UI** — per-step workflow selector (all 13 workflows) and
+  config file picker, with up/down reordering and add/remove controls.
+- **Sequential execution engine** — `POST /api/pipelines/<id>/run`
+  chains ZTF subprocess invocations inside a single SSE stream. Each
+  step only starts if the previous step exited with return code 0. On
+  first failure, remaining steps are marked skipped and the stream closes.
+- **Step progress rail** — the execution modal shows all steps with live
+  status: pending → running (spinner) → success / failed / skipped.
+  Terminal output is combined with step-separator headers between steps.
+- **History integration** — pipeline runs recorded with `type: pipeline`,
+  full `steps[]` result array, and webhook notification on completion.
+- **RBAC** — admin and operator can create/edit/delete/run; viewer can
+  list only.
+
+#### API
+- `GET/POST /api/pipelines` — list and create
+- `GET/PUT/DELETE /api/pipelines/<id>` — read, update, delete
+- `POST /api/pipelines/<id>/run` — SSE execution stream
+
+### Changed
+- Sidebar: Pipelines nav item (GitBranch icon) between Executions and Users
+- Coverage: 72% → 74% (13 new tests in `tests/test_pipelines.py`)
+
+---
+
 ## [1.2.2]  2026-05-21
 
 ### Summary
@@ -276,6 +314,7 @@ operator interface.
 
 ---
 
+[1.2.3]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.1.0...v1.2.0

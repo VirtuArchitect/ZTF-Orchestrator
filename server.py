@@ -576,7 +576,7 @@ def health():
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
-        'version':       '1.2.2',
+        'version':       '1.2.3',
     }), 200 if ztf_ok else 503
 
 # ─── Auth endpoints ───────────────────────────────────────────────────────────
@@ -1413,7 +1413,7 @@ def clear_executions():
 if __name__ == '__main__':
     _ensure_default_admin()
     print('=' * 60)
-    print('  Nutanix ZeroTouch Framework UI  v1.2.2')
+    print('  Nutanix ZeroTouch Framework UI  v1.2.3')
     print('=' * 60)
     print(f'  URL:  http://localhost:{PORT}')
     print(f'  Logs: {LOG_FILE}')
