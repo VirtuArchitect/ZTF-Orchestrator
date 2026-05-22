@@ -338,6 +338,77 @@ def test_tcp_check_failure(monkeypatch):
     assert ms == 0.0
 
 
+# ── Multi-script composition ──────────────────────────────────────────────────
+
+def test_multi_script_array_accepted(client, auth_headers, monkeypatch):
+    """Array of valid scripts passes allowlist validation."""
+    import subprocess
+    class FakeProc:
+        returncode = 0
+        stdout = iter([]); stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+    resp = client.post('/api/execute',
+                       json={'script': ['AddAdServerPe', 'AddAdServerPc'],
+                             'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+
+def test_multi_script_comma_string_accepted(client, auth_headers, monkeypatch):
+    """Comma-separated string of valid scripts is accepted."""
+    import subprocess
+    class FakeProc:
+        returncode = 0
+        stdout = iter([]); stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+    resp = client.post('/api/execute',
+                       json={'script': 'AddAdServerPe,AddAdServerPc',
+                             'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+
+def test_multi_script_unknown_in_array_rejected(client, auth_headers):
+    """Array containing an unknown script is rejected."""
+    resp = client.post('/api/execute',
+                       json={'script': ['AddAdServerPe', 'evil; rm -rf /'],
+                             'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'Unknown script' in resp.get_json()['error']
+
+
+# ── Audit log ────────────────────────────────────────────────────────────────
+
+def test_audit_log_returns_list(client, auth_headers):
+    """Audit log endpoint returns a list (may be empty if log file absent)."""
+    resp = client.get('/api/audit-log', headers=auth_headers)
+    assert resp.status_code == 200
+    assert isinstance(resp.get_json(), list)
+
+
+def test_audit_log_viewer_forbidden(client, auth_headers):
+    """Audit log is admin-only."""
+    _create_user(client, auth_headers, 'viewer_audit', 'viewer')
+    vh = _login(client, 'viewer_audit')
+    resp = client.get('/api/audit-log', headers=vh)
+    assert resp.status_code == 403
+
+
+def test_audit_log_operator_forbidden(client, auth_headers):
+    """Audit log is restricted to admin role only."""
+    _create_user(client, auth_headers, 'op_audit', 'operator')
+    oh = _login(client, 'op_audit')
+    resp = client.get('/api/audit-log', headers=oh)
+    assert resp.status_code == 403
+
+
 # ── Webhook helper ───────────────────────────────────────────────────────────
 
 def test_fire_webhook_success(monkeypatch):

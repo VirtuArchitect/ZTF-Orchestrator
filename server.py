@@ -1219,16 +1219,26 @@ def run_pipeline(pipeline_id: str):
 def execute_workflow():
     data           = request.json or {}
     workflow       = data.get('workflow')
-    script         = data.get('script')
     config_content = data.get('configContent')
     config_file    = data.get('configFile')
     debug          = bool(data.get('debug', False))
     dry_run        = bool(data.get('dryRun', False))
 
+    # script accepts a single ID string or a list for multi-script composition
+    raw_script = data.get('script')
+    if isinstance(raw_script, list):
+        script_ids = [str(s).strip() for s in raw_script if str(s).strip()]
+    elif raw_script:
+        script_ids = [s.strip() for s in str(raw_script).split(',') if s.strip()]
+    else:
+        script_ids = []
+    script = ','.join(script_ids) if script_ids else None
+
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         return jsonify({'error': 'Unknown workflow'}), 400
-    if script and script not in ALLOWED_SCRIPTS:
-        return jsonify({'error': 'Unknown script'}), 400
+    for sid in script_ids:
+        if sid not in ALLOWED_SCRIPTS:
+            return jsonify({'error': f'Unknown script: {sid}'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
 
@@ -1394,6 +1404,45 @@ def execute_workflow():
 
     return Response(generate(), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
+
+# ─── Audit log ───────────────────────────────────────────────────────────────
+
+@app.route('/api/audit-log')
+@require_role('admin')
+def get_audit_log():
+    """Return the last N structured log entries from ztf-orchestrator.log."""
+    limit  = min(int(request.args.get('limit', 200)), 1000)
+    level  = request.args.get('level', '').upper()
+    user   = request.args.get('user', '').lower()
+    action = request.args.get('action', '').lower()
+
+    if not LOG_FILE.exists():
+        return jsonify([])
+
+    entries: list[dict] = []
+    try:
+        with open(LOG_FILE, encoding='utf-8', errors='replace') as f:
+            for raw in f:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    entry = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if level  and entry.get('level', '').upper() != level:
+                    continue
+                if user   and entry.get('user',  '').lower() != user:
+                    continue
+                if action and action not in entry.get('msg', '').lower() \
+                          and action not in entry.get('action', '').lower():
+                    continue
+                entries.append(entry)
+    except OSError:
+        return jsonify([])
+
+    return jsonify(entries[-limit:])
+
 
 # ─── Execution history ────────────────────────────────────────────────────────
 

@@ -11,6 +11,7 @@ import Settings      from './pages/Settings'
 import ConfigFiles   from './pages/ConfigFiles'
 import UserRoles     from './pages/UserRoles'
 import Pipelines     from './pages/Pipelines'
+import AuditLog      from './pages/AuditLog'
 import Login         from './pages/Login'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -59,6 +60,9 @@ export default function App() {
         } />
         <Route path="/pipelines" element={
           <RequireAuth><Pipelines /></RequireAuth>
+        } />
+        <Route path="/audit-log" element={
+          <RequireAuth><AuditLog /></RequireAuth>
         } />
 
         {/* Fallback */}

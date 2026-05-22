@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
-  History, FileCode, Wrench, ChevronRight, Activity, Users, GitBranch
+  History, FileCode, Wrench, ChevronRight, Activity, Users, GitBranch, ScrollText
 } from 'lucide-react'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -14,8 +14,9 @@ const NAV_ITEMS = [
   { path: '/scripts', icon: Terminal, label: 'Scripts' },
   { path: '/configs', icon: FileCode, label: 'Config Files' },
   { path: '/executions', icon: History,    label: 'Executions' },
-  { path: '/pipelines',  icon: GitBranch, label: 'Pipelines' },
-  { path: '/users',      icon: Users,     label: 'Users' },
+  { path: '/pipelines',  icon: GitBranch,  label: 'Pipelines' },
+  { path: '/audit-log',  icon: ScrollText, label: 'Audit Log' },
+  { path: '/users',      icon: Users,      label: 'Users' },
   { path: '/settings',  icon: Wrench, label: 'Settings' },
 ]
 
