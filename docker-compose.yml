@@ -1,30 +1,50 @@
 version: '3.8'
 
+# ── ZTF-Orchestrator — all-in-one deployment ──────────────────────────────────
+#
+# ZeroTouch Framework is baked into the image at build time.
+# No separate ZTF installation or volume mount is required.
+#
+# Quick start:
+#   docker compose up -d
+#   docker compose logs -f          # copy admin password on first run
+#   open http://localhost:5001
+#
+# Build args (override for internal mirrors / specific ZTF version):
+#   docker compose build \
+#     --build-arg ZTF_REPO_URL=https://gitea.internal/ztf.git \
+#     --build-arg ZTF_REF=v2.1.0
+
 services:
   ztf-orchestrator:
-    build: .
+    build:
+      context: .
+      args:
+        ZTF_REPO_URL: ${ZTF_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}
+        ZTF_REF:      ${ZTF_REF:-main}
+    image: ztf-orchestrator:latest
     container_name: ztf-orchestrator
     restart: unless-stopped
     ports:
       - "127.0.0.1:5001:5001"   # localhost only — put nginx in front for TLS
     volumes:
-      - ztf-data:/var/lib/ztf-orchestrator          # persistent data (users, history, configs)
-      - ztf-logs:/var/log/ztf-orchestrator          # persistent logs
-      - ${ZTF_FRAMEWORK_PATH:-/opt/zerotouch-framework}:/opt/zerotouch-framework:ro
+      - ztf-data:/var/lib/ztf-orchestrator   # users, history, configs, logs, pipelines
+      - ztf-logs:/var/log/ztf-orchestrator
     environment:
-      - ZTF_DATA_DIR=/var/lib/ztf-orchestrator
-      - ZTF_PATH=/opt/zerotouch-framework
-      - ZTF_PORT=5001
-      - ZTF_LOG_LEVEL=${ZTF_LOG_LEVEL:-INFO}
-      - ZTF_EXEC_TIMEOUT=${ZTF_EXEC_TIMEOUT:-3600}
-      - ZTF_TOKEN_TTL=${ZTF_TOKEN_TTL:-28800}
+      ZTF_DATA_DIR:       /var/lib/ztf-orchestrator
+      ZTF_PATH:           /opt/zerotouch-framework
+      ZTF_PORT:           "5001"
+      ZTF_LOG_LEVEL:      ${ZTF_LOG_LEVEL:-INFO}
+      ZTF_EXEC_TIMEOUT:   ${ZTF_EXEC_TIMEOUT:-3600}
+      ZTF_TOKEN_TTL:      ${ZTF_TOKEN_TTL:-28800}
+      ZTF_CONFIG_BACKUPS: ${ZTF_CONFIG_BACKUPS:-5}
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
     logging:
       driver: "json-file"
       options:
