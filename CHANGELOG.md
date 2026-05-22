@@ -7,6 +7,41 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.4]  2026-05-21
+
+### Summary
+Feature release: Multi-script composition and Audit Log UI. Closes both
+remaining explicit gaps from the architecture document.
+
+### Added
+
+#### Multi-Script Composition
+- **Script queue** — clicking a script now toggles it in an ordered queue;
+  numbered badges show queue position directly in the list
+- **Reordering** — up/down arrows within the queue panel
+- **Execution** — Run passes the full queue to ZTF as
+  `--script A,B,C` in a single invocation; ZTF executes scripts sequentially
+- **Backend** — `script` parameter now accepts a JSON array or a
+  comma-separated string; every ID is validated against the allowlist
+  before execution
+
+#### Audit Log UI
+- **`GET /api/audit-log`** — reads `ztf-orchestrator.log`, parses
+  structured JSON lines, returns last N entries (default 200, max 1000);
+  supports `?level=`, `?user=`, `?action=` query filters; admin-only
+- **Audit Log page** — newest-first list with timestamp, level badge,
+  message, user, IP, and status; expandable rows show all additional
+  structured fields; free-text search and level filter buttons
+  (ALL / INFO / WARNING / ERROR)
+- Sidebar nav item (ScrollText icon) between Pipelines and Users
+
+### Tests
+- 6 new tests: multi-script array and comma-string acceptance, unknown
+  script rejection, audit log RBAC (viewer and operator get 403)
+- Coverage maintained at 74% (78 tests total)
+
+---
+
 ## [1.2.3]  2026-05-21
 
 ### Summary
@@ -314,6 +349,7 @@ operator interface.
 
 ---
 
+[1.2.4]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.0...v1.2.1

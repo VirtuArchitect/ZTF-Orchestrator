@@ -88,7 +88,7 @@ export default function Sidebar() {
       {/* Version */}
       {sidebarOpen && (
         <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-gray-600">ZTF UI v1.2.3</p>
+          <p className="text-xs text-gray-600">ZTF UI v1.2.4</p>
         </div>
       )}
     </aside>
