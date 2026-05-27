@@ -8,6 +8,9 @@ ARG ZTF_REF=main
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV ZTF_DATA_DIR=/var/lib/ztf-orchestrator
+ENV ZTF_PATH=/opt/zerotouch-framework
+ENV ZTF_PORT=5001
 
 # ============================================================================
 # Install system packages
@@ -81,14 +84,14 @@ USER ztf-svc
 # Expose port
 # ============================================================================
 
-EXPOSE 5000
+EXPOSE 5001
 
 # ============================================================================
 # Healthcheck
 # ============================================================================
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:5001/health || exit 1
 
 # ============================================================================
 # Start application
