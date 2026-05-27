@@ -4,8 +4,6 @@ A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework),
 replacing GitHub-based configuration management with a visual interface.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-John%20A.%20Goulden-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/johnagoulden/)
-
 ---
 
 ## Requirements
