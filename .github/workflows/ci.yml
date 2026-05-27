@@ -7,12 +7,12 @@ on:
     branches: [ main ]
 
 jobs:
-  # ── Python backend ───────────────────────────────────────────────────────────
+  # -- Python backend ----------------------------------------------------------
   python:
     name: Python tests & security
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
@@ -31,12 +31,12 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --cov=server --cov-report=term-missing --cov-fail-under=70
 
-  # ── Frontend ─────────────────────────────────────────────────────────────────
+  # -- Frontend ---------------------------------------------------------------
   frontend:
     name: Frontend build & audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
@@ -55,14 +55,14 @@ jobs:
       - name: Build
         run: npm run build
 
-  # ── Docker ───────────────────────────────────────────────────────────────────
+  # -- Docker -----------------------------------------------------------------
   docker:
     name: Docker build
     runs-on: ubuntu-latest
     needs: [python, frontend]
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build image
         run: docker build -t ztf-orchestrator:${{ github.sha }} .
@@ -70,6 +70,14 @@ jobs:
       - name: Smoke test
         run: |
           docker run -d --name smoke -p 5001:5001 ztf-orchestrator:${{ github.sha }}
-          sleep 5
-          curl -f http://localhost:5001/health
+          for i in {1..12}; do
+            if curl -fsS http://localhost:5001/health; then
+              docker stop smoke
+              exit 0
+            fi
+            docker logs smoke
+            sleep 5
+          done
+          docker logs smoke
           docker stop smoke
+          exit 1
