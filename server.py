@@ -769,12 +769,25 @@ def install_ztf():
             if proc.returncode != 0:
                 raise RuntimeError(f'Command failed (exit {proc.returncode})')
 
+        def is_git_checkout(path: Path) -> bool:
+            try:
+                result = subprocess.run(
+                    ['git', '-C', str(path), 'rev-parse', '--is-inside-work-tree'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=10,
+                )
+                return result.returncode == 0 and result.stdout.strip() == 'true'
+            except Exception:
+                return False
+
         try:
             ztf = Path(ztf_path)
             if not (ztf / 'main.py').exists():
                 yield from send('step', 'Cloning ZeroTouch Framework...')
                 yield from run_cmd(['git', 'clone', repo_url, ztf_path])
-            elif (ztf / '.git').exists():
+            elif is_git_checkout(ztf):
                 yield from send('step', 'Updating existing ZeroTouch Framework...')
                 yield from run_cmd(['git', 'pull'], cwd=ztf_path)
             else:

@@ -147,6 +147,10 @@ def test_install_skips_git_pull_for_non_git_framework(client, auth_headers, tmp_
 
     calls = []
 
+    class FakeRun:
+        returncode = 1
+        stdout = ''
+
     class FakeProc:
         returncode = 0
         stdout = iter(['ok\n'])
@@ -156,6 +160,7 @@ def test_install_skips_git_pull_for_non_git_framework(client, auth_headers, tmp_
         calls.append(args)
         return FakeProc()
 
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: FakeRun())
     monkeypatch.setattr(subprocess, 'Popen', fake_popen)
 
     resp = client.post('/api/install', headers=auth_headers)
@@ -165,3 +170,43 @@ def test_install_skips_git_pull_for_non_git_framework(client, auth_headers, tmp_
     assert 'not a git checkout' in body
     assert all(call[:2] != ['git', 'pull'] for call in calls)
     assert any(call[:3] == ['python', '-m', 'pip'] for call in calls)
+
+
+def test_install_skips_git_pull_for_invalid_git_marker(client, auth_headers, tmp_path, monkeypatch):
+    """A stale .git marker should not be enough to run git pull."""
+    import subprocess
+
+    ztf_dir = tmp_path / 'zerotouch-framework'
+    ztf_dir.mkdir()
+    (ztf_dir / 'main.py').write_text('# ztf entrypoint\n')
+    (ztf_dir / 'requirements.txt').write_text('pyyaml==6.0.2\n')
+    (ztf_dir / '.git').mkdir()
+
+    client.post('/api/settings',
+                json={'ztfPath': str(ztf_dir), 'pythonPath': 'python'},
+                headers=auth_headers)
+
+    calls = []
+
+    class FakeRun:
+        returncode = 128
+        stdout = ''
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['ok\n'])
+        def wait(self): pass
+
+    def fake_popen(args, **kwargs):
+        calls.append(args)
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: FakeRun())
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
+
+    resp = client.post('/api/install', headers=auth_headers)
+    body = resp.data.decode()
+
+    assert resp.status_code == 200
+    assert 'not a git checkout' in body
+    assert all(call[:2] != ['git', 'pull'] for call in calls)
