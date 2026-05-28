@@ -130,3 +130,38 @@ def test_settings_unknown_keys_discarded(client, auth_headers):
     resp2 = client.get('/api/settings', headers=auth_headers)
     data = resp2.get_json()
     assert 'EVIL_KEY' not in data
+
+
+def test_install_skips_git_pull_for_non_git_framework(client, auth_headers, tmp_path, monkeypatch):
+    """Existing framework files without .git should reinstall dependencies, not fail on git pull."""
+    import subprocess
+
+    ztf_dir = tmp_path / 'zerotouch-framework'
+    ztf_dir.mkdir()
+    (ztf_dir / 'main.py').write_text('# ztf entrypoint\n')
+    (ztf_dir / 'requirements.txt').write_text('pyyaml==6.0.2\n')
+
+    client.post('/api/settings',
+                json={'ztfPath': str(ztf_dir), 'pythonPath': 'python'},
+                headers=auth_headers)
+
+    calls = []
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['ok\n'])
+        def wait(self): pass
+
+    def fake_popen(args, **kwargs):
+        calls.append(args)
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
+
+    resp = client.post('/api/install', headers=auth_headers)
+    body = resp.data.decode()
+
+    assert resp.status_code == 200
+    assert 'not a git checkout' in body
+    assert all(call[:2] != ['git', 'pull'] for call in calls)
+    assert any(call[:3] == ['python', '-m', 'pip'] for call in calls)

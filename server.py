@@ -770,15 +770,18 @@ def install_ztf():
                 raise RuntimeError(f'Command failed (exit {proc.returncode})')
 
         try:
-            if not Path(ztf_path, 'main.py').exists():
+            ztf = Path(ztf_path)
+            if not (ztf / 'main.py').exists():
                 yield from send('step', 'Cloning ZeroTouch Framework...')
                 yield from run_cmd(['git', 'clone', repo_url, ztf_path])
-            else:
+            elif (ztf / '.git').exists():
                 yield from send('step', 'Updating existing ZeroTouch Framework...')
                 yield from run_cmd(['git', 'pull'], cwd=ztf_path)
+            else:
+                yield from send('step', 'Existing ZeroTouch Framework is not a git checkout; skipping source update.')
+                yield from send('log', 'To update source files, set ZTF Path to a cloned zerotouch-framework repository.')
 
             yield from send('step', 'Installing Python dependencies...')
-            ztf = Path(ztf_path)
             req_file = None
             candidates = ['requirements/requirements.txt', 'requirements.txt']
             req_dir = ztf / 'requirements'
