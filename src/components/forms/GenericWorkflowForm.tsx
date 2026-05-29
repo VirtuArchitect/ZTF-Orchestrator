@@ -65,7 +65,7 @@ ntp_servers_list:
   'imaging': `# Pod Imaging Configuration
 pc_credential: pc_user
 cvm_credential: cvm_credential
-fc_ip: 10.0.0.100
+pc_ip: 10.0.0.100
 
 aos_url: "http://server/nutanix-aos.tar.gz"
 hypervisor_type: kvm

@@ -245,7 +245,7 @@ def test_dry_run_valid_yaml(client, auth_headers, monkeypatch):
     # Mock TCP checks so the test doesn't hit the network
     monkeypatch.setattr(server, '_tcp_check', lambda host, port, timeout=5.0: (True, 12.0))
 
-    yaml_body = 'fc_ip: 192.168.1.1\npc_credential: pc_user\ncvm_credential: cvm_cred\nclusters:\n  - name: test\n'
+    yaml_body = 'pc_ip: 192.168.1.1\npc_credential: pc_user\ncvm_credential: cvm_cred\nclusters:\n  - name: test\n'
     resp = client.post('/api/execute',
                        json={'workflow': 'cluster-create',
                              'configContent': yaml_body,
@@ -283,7 +283,7 @@ def test_preflight_generator_pass(monkeypatch):
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
     yaml_ok = (
-        'fc_ip: 10.0.0.1\n'
+        'pc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
         'clusters:\n  - name: c1\n'
@@ -293,11 +293,38 @@ def test_preflight_generator_pass(monkeypatch):
     assert '[FAIL]' not in output
 
 
+def test_preflight_accepts_legacy_fc_ip_alias(monkeypatch):
+    """Legacy Orchestrator configs with fc_ip still preflight as pc_ip."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_ok = (
+        'fc_ip: 10.0.0.1\n'
+        'pc_credential: pc_user\n'
+        'cvm_credential: cvm_cred\n'
+        'clusters:\n  - name: c1\n'
+    )
+    output = ''.join(server._run_preflight('cluster-create', yaml_ok, 'test-id'))
+    assert 'Legacy fc_ip detected' in output
+    assert '[FAIL]' not in output
+
+
+def test_legacy_fc_ip_content_normalized_for_execution():
+    """Execution writes upstream-compatible pc_ip when an old fc_ip file is supplied."""
+    import server
+    normalized, changed = server._normalize_ztf_config_content(
+        'cluster-create',
+        'fc_ip: 10.0.0.1\npc_credential: pc_user\n',
+    )
+    assert changed is True
+    assert 'pc_ip: 10.0.0.1' in normalized
+    assert 'fc_ip:' not in normalized
+
+
 def test_preflight_generator_missing_field(monkeypatch):
     """_run_preflight flags missing required fields."""
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (False, 0.0))
-    yaml_missing = 'pc_credential: pc_user\n'   # fc_ip missing
+    yaml_missing = 'pc_credential: pc_user\n'   # pc_ip missing
     output = ''.join(server._run_preflight('cluster-create', yaml_missing, 'test-id'))
     assert '[FAIL]' in output
 
@@ -307,13 +334,38 @@ def test_preflight_generator_unreachable(monkeypatch):
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (False, 0.0))
     yaml_body = (
-        'fc_ip: 10.0.0.1\n'
+        'pc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
         'clusters:\n  - name: c1\n'
     )
     output = ''.join(server._run_preflight('cluster-create', yaml_body, 'test-id'))
     assert 'Unreachable' in output
+
+
+def test_execution_start_exception_is_recorded_as_failed(client, auth_headers, monkeypatch):
+    """Failures before ZTF starts should still create a failed execution history row."""
+    import subprocess
+
+    def fail_popen(*args, **kwargs):
+        raise OSError('cannot start process')
+
+    monkeypatch.setattr(subprocess, 'Popen', fail_popen)
+
+    resp = client.post('/api/execute',
+                       json={'workflow': 'config-management-pc',
+                             'configContent': 'pc_ip: 10.0.0.51\npc_credential: pc_user\n',
+                             'configFile': 'pod-management-config.yml'},
+                       headers=auth_headers)
+
+    body = resp.data.decode()
+    assert resp.status_code == 200
+    assert '"status": "failed"' in body
+
+    history = client.get('/api/executions', headers=auth_headers).get_json()
+    assert history[0]['workflow'] == 'config-management-pc'
+    assert history[0]['status'] == 'failed'
+    assert history[0]['configFile'] == 'pod-management-config.yml'
 
 
 def test_tcp_check_success(monkeypatch):

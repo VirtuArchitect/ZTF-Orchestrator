@@ -145,19 +145,19 @@ ALLOWED_REPOS = {
 # cluster_dict_connect: (port, label) — check each key of a clusters:{ip: ...} map
 WORKFLOW_PREFLIGHT: dict[str, dict] = {
     'cluster-create': {
-        'required':    ['fc_ip', 'pc_credential', 'cvm_credential', 'clusters'],
-        'ip_fields':   ['fc_ip'],
-        'connect':     [('fc_ip', 9440, 'Foundation Central')],
+        'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'clusters'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
     'imaging-only': {
-        'required':    ['fc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
-        'ip_fields':   ['fc_ip'],
-        'connect':     [('fc_ip', 9440, 'Foundation Central')],
+        'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
     'imaging': {
-        'required':    ['fc_ip', 'cvm_credential'],
-        'ip_fields':   ['fc_ip'],
-        'connect':     [('fc_ip', 9440, 'Foundation Central')],
+        'required':    ['pc_ip', 'cvm_credential'],
+        'ip_fields':   ['pc_ip'],
+        'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
     'site-deploy': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential'],
@@ -212,6 +212,31 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'connect':     [('cluster_ip', 9440, 'NDB Cluster')],
     },
 }
+
+PC_IP_WORKFLOWS = {'cluster-create', 'imaging-only', 'imaging'}
+
+
+def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]:
+    """Map legacy Orchestrator fc_ip configs to upstream ZTF's pc_ip key."""
+    if workflow in PC_IP_WORKFLOWS and 'pc_ip' not in config and config.get('fc_ip'):
+        normalized = dict(config)
+        normalized['pc_ip'] = normalized.pop('fc_ip')
+        return normalized, True
+    return config, False
+
+
+def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[str, bool]:
+    """Return YAML content with pc_ip if a legacy fc_ip-only file was supplied."""
+    try:
+        parsed = yaml.safe_load(config_content) or {}
+    except yaml.YAMLError:
+        return config_content, False
+    if not isinstance(parsed, dict):
+        return config_content, False
+    normalized, changed = _normalize_ztf_config_keys(workflow, parsed)
+    if not changed:
+        return config_content, False
+    return yaml.safe_dump(normalized, sort_keys=False), True
 
 ALLOWED_SETTINGS_KEYS = {'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl'}
 
@@ -402,7 +427,10 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
     # ── 1. Parse YAML ────────────────────────────────────────────────────────
     try:
         config: dict = yaml.safe_load(config_content) or {}
+        config, normalized_pc_ip = _normalize_ztf_config_keys(workflow, config)
         yield from send('stdout', '[PASS] YAML is valid and parseable')
+        if normalized_pc_ip:
+            yield from send('stdout', '[INFO] Legacy fc_ip detected; using pc_ip for Nutanix ZTF compatibility')
         passed += 1
     except yaml.YAMLError as exc:
         yield from send('stdout', f'[FAIL] YAML parse error: {exc}')
@@ -501,6 +529,34 @@ def _fire_webhook(url: str, payload: dict) -> None:
         log.info('webhook_fired', extra={'url': url, 'workflow': payload.get('workflow'), 'status': payload.get('status')})
     except Exception as exc:
         log.warning('webhook_failed', extra={'url': url, 'error': str(exc)})
+
+
+def _record_execution_history(
+    *,
+    execution_id: str,
+    workflow_or_script: str,
+    execution_type: str,
+    status: str,
+    user: str,
+    config_file: str = '',
+    config_content: str = '',
+) -> dict:
+    """Persist a workflow/script attempt so failed starts remain auditable."""
+    entry = {
+        'id':            execution_id,
+        'workflow':      workflow_or_script,
+        'type':          execution_type,
+        'status':        status,
+        'timestamp':     datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+        'user':          user,
+        'configFile':    config_file or '',
+        'configContent': config_content or '',
+    }
+    history = read_json(HISTORY_FILE, [])
+    history.insert(0, entry)
+    write_json(HISTORY_FILE, history[:1000])
+    return entry
+
 
 def get_configs_dir() -> Path:
     d = Path(get_settings().get('configDir', CONFIG_DIR / 'configs'))
@@ -1286,24 +1342,49 @@ def execute_workflow():
     def generate() -> Generator[str, None, None]:
         proc = None
         kill_timer = None
+        effective_config_content = config_content or ''
 
         def send(t, d):
             yield f"data: {json.dumps({'type': t, 'data': d, 'executionId': execution_id})}\n\n"
 
+        def record_failed_attempt(reason: str):
+            entry = _record_execution_history(
+                execution_id=execution_id,
+                workflow_or_script=workflow or script,
+                execution_type='workflow' if workflow else 'script',
+                status='failed',
+                user=current_user,
+                config_file=config_file or '',
+                config_content=effective_config_content,
+            )
+            log.info('execution_complete', extra={
+                'user': current_user, 'workflow': workflow or script,
+                'action': 'execute', 'status': 'failed', 'reason': reason,
+            })
+            return entry
+
         try:
             cfg_path = None
-            if config_content and config_file:
+            if effective_config_content and config_file:
                 path = safe_config_path(config_file, configs_dir)
                 if path is None:
+                    record_failed_attempt('invalid_config_filename')
                     yield from send('error', 'Invalid config filename')
+                    yield from send('done', {'code': -1, 'status': 'failed'})
                     return
                 if path.suffix in ('.yml', '.yaml'):
-                    ok, err = validate_yaml(config_content)
+                    ok, err = validate_yaml(effective_config_content)
                     if not ok:
+                        record_failed_attempt('invalid_yaml')
                         yield from send('error', f'Invalid YAML: {err}')
+                        yield from send('done', {'code': -1, 'status': 'failed'})
                         return
+                    normalized_content, normalized_pc_ip = _normalize_ztf_config_content(workflow or '', effective_config_content)
+                    if normalized_pc_ip:
+                        effective_config_content = normalized_content
+                        yield from send('stdout', 'Legacy fc_ip detected; saved as pc_ip for Nutanix ZTF compatibility')
                 backup_config(path)
-                _secure_write(path, config_content)
+                _secure_write(path, effective_config_content)
                 cfg_path = str(path)
 
             cmd_args = [python_path, 'main.py']
@@ -1367,25 +1448,24 @@ def execute_workflow():
 
         except Exception:
             log.exception('execution_error', extra={'user': current_user, 'workflow': workflow or script})
+            record_failed_attempt('exception')
             yield from send('error', 'Execution failed. Check server logs for details.')
+            yield from send('done', {'code': -1, 'status': 'failed'})
 
         else:
             import time as tm
             duration = 0  # calculated below
             status   = 'success' if proc and proc.returncode == 0 else 'failed'
 
-            history  = read_json(HISTORY_FILE, [])
-            history.insert(0, {
-                'id':            execution_id,
-                'workflow':      workflow or script,
-                'type':          'workflow' if workflow else 'script',
-                'status':        status,
-                'timestamp':     datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
-                'user':          current_user,
-                'configFile':    config_file or '',
-                'configContent': config_content or '',
-            })
-            write_json(HISTORY_FILE, history[:1000])
+            entry = _record_execution_history(
+                execution_id=execution_id,
+                workflow_or_script=workflow or script,
+                execution_type='workflow' if workflow else 'script',
+                status=status,
+                user=current_user,
+                config_file=config_file or '',
+                config_content=effective_config_content,
+            )
 
             log.info('execution_complete', extra={
                 'user': current_user, 'workflow': workflow or script,
@@ -1403,7 +1483,7 @@ def execute_workflow():
                         'status':      status,
                         'returnCode':  proc.returncode if proc else -1,
                         'user':        current_user,
-                        'timestamp':   history[0]['timestamp'],
+                        'timestamp':   entry['timestamp'],
                     }),
                     daemon=True,
                 ).start()

@@ -58,7 +58,7 @@ export function buildGlobalYaml(config: {
 export function buildClusterCreateYaml(cfg: {
   pcCredential: string
   cvmCredential: string
-  fcIp: string
+  pcIp: string
   dnsServers: string[]
   ntpServers: string[]
   clusters: Array<{
@@ -102,7 +102,7 @@ export function buildClusterCreateYaml(cfg: {
   return toYaml({
     pc_credential: cfg.pcCredential,
     cvm_credential: cfg.cvmCredential,
-    fc_ip: cfg.fcIp,
+    pc_ip: cfg.pcIp,
     clusters,
   })
 }
@@ -110,7 +110,7 @@ export function buildClusterCreateYaml(cfg: {
 export function buildImagingOnlyYaml(cfg: {
   pcCredential: string
   cvmCredential: string
-  fcIp: string
+  pcIp: string
   dnsServers: string[]
   ntpServers: string[]
   aosUrl: string
@@ -129,7 +129,7 @@ export function buildImagingOnlyYaml(cfg: {
   return toYaml({
     pc_credential: cfg.pcCredential,
     cvm_credential: cfg.cvmCredential,
-    fc_ip: cfg.fcIp,
+    pc_ip: cfg.pcIp,
     name_servers_list: cfg.dnsServers,
     ntp_servers_list: cfg.ntpServers,
     aos_url: cfg.aosUrl,

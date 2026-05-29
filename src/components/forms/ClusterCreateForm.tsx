@@ -38,17 +38,17 @@ const defaultCluster = (): Cluster => ({
 export default function ClusterCreateForm({ onYamlChange }: Props) {
   const [pcCred, setPcCred] = useState('pc_user')
   const [cvmCred, setCvmCred] = useState('cvm_credential')
-  const [fcIp, setFcIp] = useState('')
+  const [pcIp, setPcIp] = useState('')
   const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
   const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
   const [clusters, setClusters] = useState<Cluster[]>([defaultCluster()])
 
   useEffect(() => {
-    if (!fcIp) return
+    if (!pcIp) return
     const yaml = buildClusterCreateYaml({
       pcCredential: pcCred,
       cvmCredential: cvmCred,
-      fcIp,
+      pcIp,
       dnsServers,
       ntpServers,
       clusters: clusters.map(c => ({
@@ -60,7 +60,7 @@ export default function ClusterCreateForm({ onYamlChange }: Props) {
       })),
     })
     onYamlChange(yaml)
-  }, [pcCred, cvmCred, fcIp, dnsServers, ntpServers, clusters, onYamlChange])
+  }, [pcCred, cvmCred, pcIp, dnsServers, ntpServers, clusters, onYamlChange])
 
   const addCluster = () => setClusters(p => [...p, defaultCluster()])
   const removeCluster = (i: number) => setClusters(p => p.filter((_, idx) => idx !== i))
@@ -96,7 +96,7 @@ export default function ClusterCreateForm({ onYamlChange }: Props) {
           </div>
           <div className="col-span-2">
             <label className="label">Foundation Central IP <span className="text-red-400">*</span></label>
-            <input className="input" value={fcIp} onChange={e => setFcIp(e.target.value)} placeholder="10.0.0.100" />
+            <input className="input" value={pcIp} onChange={e => setPcIp(e.target.value)} placeholder="10.0.0.100" />
           </div>
         </div>
       </div>

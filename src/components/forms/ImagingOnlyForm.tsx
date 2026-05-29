@@ -23,7 +23,7 @@ const defaultNode = (): Node => ({ cvmIp: '', hostIp: '', ipmiIp: '', hostname: 
 export default function ImagingOnlyForm({ onYamlChange }: Props) {
   const [pcCred, setPcCred] = useState('pc_user')
   const [cvmCred, setCvmCred] = useState('cvm_credential')
-  const [fcIp, setFcIp] = useState('')
+  const [pcIp, setPcIp] = useState('')
   const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
   const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
   const [aosUrl, setAosUrl] = useState('')
@@ -32,11 +32,11 @@ export default function ImagingOnlyForm({ onYamlChange }: Props) {
   const [batches, setBatches] = useState<Batch[]>([{ nodes: [defaultNode()] }])
 
   useEffect(() => {
-    if (!fcIp || !aosUrl || !hypervisorUrl) return
+    if (!pcIp || !aosUrl || !hypervisorUrl) return
     onYamlChange(buildImagingOnlyYaml({
       pcCredential: pcCred,
       cvmCredential: cvmCred,
-      fcIp,
+      pcIp,
       dnsServers,
       ntpServers,
       aosUrl,
@@ -44,7 +44,7 @@ export default function ImagingOnlyForm({ onYamlChange }: Props) {
       hypervisorUrl,
       batches,
     }))
-  }, [pcCred, cvmCred, fcIp, dnsServers, ntpServers, aosUrl, hypervisorType, hypervisorUrl, batches, onYamlChange])
+  }, [pcCred, cvmCred, pcIp, dnsServers, ntpServers, aosUrl, hypervisorType, hypervisorUrl, batches, onYamlChange])
 
   const addNode = (bi: number) =>
     setBatches(p => p.map((b, i) => i === bi ? { ...b, nodes: [...b.nodes, defaultNode()] } : b))
@@ -67,7 +67,7 @@ export default function ImagingOnlyForm({ onYamlChange }: Props) {
               {CREDENTIAL_KEYS.map(k => <option key={k}>{k}</option>)}
             </select></div>
           <div className="col-span-2"><label className="label">Foundation Central IP <span className="text-red-400">*</span></label>
-            <input className="input" value={fcIp} onChange={e => setFcIp(e.target.value)} placeholder="10.0.0.100" /></div>
+            <input className="input" value={pcIp} onChange={e => setPcIp(e.target.value)} placeholder="10.0.0.100" /></div>
         </div>
       </div>
 
