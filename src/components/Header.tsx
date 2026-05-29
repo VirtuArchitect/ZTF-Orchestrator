@@ -23,8 +23,8 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
   }
 
   return (
-    <header className="h-16 border-b border-border flex items-center px-6 gap-4 bg-gray-950/80 backdrop-blur-sm flex-shrink-0">
-      <button onClick={toggleSidebar} className="btn-ghost p-1.5 -ml-1.5">
+    <header className="min-h-16 border-b border-border flex items-center px-4 sm:px-6 gap-3 sm:gap-4 bg-gray-950/90 backdrop-blur-sm flex-shrink-0">
+      <button onClick={toggleSidebar} className="btn-ghost p-1.5 -ml-1.5" aria-label="Toggle navigation">
         <Menu size={18} />
       </button>
 
@@ -33,12 +33,12 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
         {subtitle && <p className="text-xs text-gray-500 truncate">{subtitle}</p>}
       </div>
 
-      {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
+      {actions && <div className="hidden sm:flex items-center gap-2 flex-shrink-0">{actions}</div>}
 
       {/* User badge */}
       {user && (
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5">
+          <div className="hidden sm:flex items-center gap-1.5">
             <UserCircle size={15} className="text-gray-400" />
             <span className="text-sm text-gray-300">{user.username}</span>
             <span className={`text-xs px-1.5 py-0.5 rounded border font-medium ${ROLE_COLOURS[user.role] ?? ROLE_COLOURS.viewer}`}>

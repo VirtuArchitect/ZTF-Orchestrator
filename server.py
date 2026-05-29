@@ -96,7 +96,7 @@ def _secure_write(p: Path, data: str):
 _secure_mkdir(CONFIG_DIR)
 log = _setup_logging()
 
-app = Flask(__name__, static_folder='dist', static_url_path='')
+app = Flask(__name__, static_folder='dist', static_url_path='/static-dist')
 CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
 
 limiter = Limiter(
@@ -557,6 +557,8 @@ def favicon():
 
 @app.route('/<path:path>')
 def spa_fallback(path):
+    if path == 'api' or path.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
     """React Router catch-all — serve index.html for all non-API client routes."""
     # Let Flask serve real static assets (JS, CSS, images) from dist/
     dist = Path(app.static_folder)

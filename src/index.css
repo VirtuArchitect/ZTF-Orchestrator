@@ -28,15 +28,15 @@
 
 @layer components {
   .card {
-    @apply bg-surface rounded-xl border border-border p-5;
+    @apply bg-surface rounded-lg border border-border p-5;
   }
 
   .card-elevated {
-    @apply bg-surface-elevated rounded-xl border border-border p-5;
+    @apply bg-surface-elevated rounded-lg border border-border p-5;
   }
 
   .btn {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
@@ -60,7 +60,7 @@
   }
 
   .input {
-    @apply w-full bg-gray-900 border border-border rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-nutanix-blue focus:border-nutanix-blue transition-colors;
+    @apply w-full bg-gray-900 border border-border rounded-md px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-nutanix-blue focus:border-nutanix-blue transition-colors;
   }
 
   .label {
@@ -104,7 +104,7 @@
   }
 
   .form-section {
-    @apply space-y-4 p-5 bg-gray-900/50 rounded-xl border border-border/50;
+    @apply space-y-4 p-5 bg-gray-900/50 rounded-lg border border-border/50;
   }
 
   .form-section-title {
@@ -113,6 +113,10 @@
 
   .terminal {
     @apply font-mono text-xs bg-gray-950 rounded-lg border border-border p-4 overflow-auto;
+  }
+
+  .empty-state {
+    @apply rounded-lg border border-dashed border-border bg-gray-900/30 px-6 py-10 text-center;
   }
 }
 

@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
-  History, FileCode, Wrench, ChevronRight, Activity, Users, GitBranch, ScrollText
+  History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText
 } from 'lucide-react'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -21,23 +21,25 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar() {
-  const { sidebarOpen, ztfInstalled } = useStore()
+  const { sidebarOpen, ztfInstalled, toggleSidebar } = useStore()
   const location = useLocation()
 
   return (
     <aside className={clsx(
-      'fixed top-0 left-0 h-full bg-gray-950 border-r border-border flex flex-col transition-all duration-300 z-40',
-      sidebarOpen ? 'w-64' : 'w-16'
+      'fixed top-0 left-0 h-full bg-gray-950 border-r border-border flex flex-col transition-all duration-300 z-40 shadow-2xl shadow-black/20 md:shadow-none',
+      sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-16'
     )}>
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-border flex-shrink-0 gap-3">
-        <div className="w-8 h-8 rounded-lg bg-nutanix-blue flex items-center justify-center flex-shrink-0">
-          <Activity size={16} className="text-white" />
-        </div>
+        <img
+          src="/veridian-mark.svg"
+          alt="ZeroTouch"
+          className="w-8 h-8 rounded-lg flex-shrink-0"
+        />
         {sidebarOpen && (
           <div className="min-w-0">
             <div className="text-sm font-bold text-gray-100 truncate">ZeroTouch</div>
-            <div className="text-xs text-gray-500 truncate">Framework UI</div>
+            <div className="text-xs text-gray-500 truncate">Enterprise Orchestrator</div>
           </div>
         )}
       </div>
@@ -64,6 +66,9 @@ export default function Sidebar() {
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={() => {
+                  if (window.innerWidth < 768 && sidebarOpen) toggleSidebar()
+                }}
                 className={clsx(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group',
                   active

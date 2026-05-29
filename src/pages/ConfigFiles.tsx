@@ -165,9 +165,9 @@ export default function ConfigFiles() {
         </div>
       }
     >
-      <div className="flex gap-5 h-full">
+      <div className="flex flex-col lg:flex-row gap-5 min-h-0 lg:h-full">
         {/* File List */}
-        <div className="w-72 flex-shrink-0 flex flex-col gap-3">
+        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3">
           {/* New file */}
           <div className="flex gap-2">
             <input
@@ -182,7 +182,7 @@ export default function ConfigFiles() {
             </button>
           </div>
 
-          <div className="card p-2 flex-1 overflow-y-auto">
+          <div className="card p-2 flex-1 overflow-y-auto min-h-56 lg:min-h-0">
             <div className="flex items-center justify-between px-2 py-1 mb-1">
               <span className="text-xs text-gray-500">{files.length} files</span>
               <button onClick={loadFiles} className="btn-ghost p-1">
@@ -191,9 +191,10 @@ export default function ConfigFiles() {
             </div>
 
             {files.length === 0 && !loading && (
-              <div className="text-center py-8 text-gray-500 text-sm">
-                <FileCode size={28} className="mx-auto mb-2 opacity-30" />
-                <p>No config files yet</p>
+              <div className="empty-state py-8 text-sm">
+                <FileCode size={28} className="mx-auto mb-2 text-gray-700" />
+                <p className="font-medium text-gray-400">No config files yet</p>
+                <p className="text-xs text-gray-600 mt-1">Create a YAML file or upload an existing config.</p>
               </div>
             )}
 
@@ -278,11 +279,11 @@ export default function ConfigFiles() {
               )}
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <FileCode size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="text-lg font-medium">Select a config file</p>
-                <p className="text-sm mt-1">Or create a new one using the input above</p>
+            <div className="flex-1 flex items-center justify-center text-gray-500 min-h-96">
+              <div className="empty-state max-w-md">
+                <FileCode size={40} className="mx-auto mb-3 text-gray-700" />
+                <p className="text-lg font-medium text-gray-400">Select a config file</p>
+                <p className="text-sm mt-1 text-gray-600">Choose a file from the list, create a new YAML file, or upload an existing config.</p>
               </div>
             </div>
           )}

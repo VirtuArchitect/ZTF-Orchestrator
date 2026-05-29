@@ -458,3 +458,10 @@ def test_health_returns_json(client):
     data = resp.get_json()
     assert 'status' in data
     assert 'version' in data
+
+
+def test_spa_deep_link_serves_react_app(client):
+    """Direct browser loads of React routes should not be treated as missing static files."""
+    resp = client.get('/setup')
+    assert resp.status_code == 200
+    assert b'<div id="root">' in resp.data
