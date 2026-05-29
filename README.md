@@ -411,6 +411,12 @@ npm run build
 
 ---
 
+## Maintainer
+
+ZTF-Orchestrator is developed and maintained by **John Goulden**.
+
+---
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
