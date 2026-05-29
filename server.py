@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Nutanix ZeroTouch Framework UI — Flask Backend (production-hardened)"""
+"""ZeroTouch Enterprise Orchestrator — Flask Backend (production-hardened)"""
 
 import datetime
 import ipaddress
@@ -395,7 +395,7 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
     failed = 0
 
     yield from send('start', {'command': f'dry-run --workflow {workflow}', 'workingDir': ''})
-    yield from send('stdout', f'ZTF Orchestrator — Dry Run Pre-flight')
+    yield from send('stdout', f'ZeroTouch Enterprise Orchestrator — Dry Run Pre-flight')
     yield from send('stdout', f'Workflow : {workflow}')
     yield from send('stdout', '-' * 52)
 
@@ -1477,7 +1477,7 @@ def clear_executions():
 if __name__ == '__main__':
     _ensure_default_admin()
     print('=' * 60)
-    print('  Nutanix ZeroTouch Framework UI  v1.2.4')
+    print('  ZeroTouch Enterprise Orchestrator  v1.2.4')
     print('=' * 60)
     print(f'  URL:  http://localhost:{PORT}')
     print(f'  Logs: {LOG_FILE}')

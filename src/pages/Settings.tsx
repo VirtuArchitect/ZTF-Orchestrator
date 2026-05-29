@@ -150,7 +150,7 @@ export default function Settings() {
 
         {/* About */}
         <div className="card bg-nutanix-blue/5 border-nutanix-blue/20">
-          <h3 className="font-semibold text-gray-100 mb-2">About ZTF UI</h3>
+          <h3 className="font-semibold text-gray-100 mb-2">About ZeroTouch Enterprise Orchestrator</h3>
           <p className="text-sm text-gray-400 leading-relaxed">
             ZeroTouch Framework UI is an open-source interface for the{' '}
             <a

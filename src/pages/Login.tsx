@@ -48,7 +48,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <img src="/veridian-mark.svg" alt="ZeroTouch" className="w-14 h-14 rounded-2xl mb-4" />
-          <h1 className="text-2xl font-bold text-gray-100">ZTF Orchestrator</h1>
+          <h1 className="text-2xl font-bold text-gray-100">ZeroTouch Enterprise Orchestrator</h1>
           <p className="text-sm text-gray-500 mt-1">Enterprise ZeroTouch operations console</p>
         </div>
 
