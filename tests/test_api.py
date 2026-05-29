@@ -465,3 +465,10 @@ def test_spa_deep_link_serves_react_app(client):
     resp = client.get('/setup')
     assert resp.status_code == 200
     assert b'<div id="root">' in resp.data
+
+
+def test_legacy_favicon_serves_veridian_mark(client):
+    resp = client.get('/favicon.ico')
+    assert resp.status_code == 200
+    assert resp.mimetype == 'image/svg+xml'
+    assert b'1A6B6B' in resp.data

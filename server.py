@@ -549,11 +549,8 @@ def index():
 
 @app.route('/favicon.ico')
 def favicon():
-    """Suppress 404 spam — return empty 204 if no favicon exists in dist."""
-    try:
-        return send_from_directory('dist', 'favicon.ico')
-    except Exception:
-        return '', 204
+    """Serve the Veridian favicon for browsers that still request /favicon.ico."""
+    return send_from_directory('dist', 'favicon.svg', mimetype='image/svg+xml')
 
 @app.route('/<path:path>')
 def spa_fallback(path):
