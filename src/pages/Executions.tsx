@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Trash2, RefreshCw, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Terminal, Play } from 'lucide-react'
 import Layout from '../components/Layout'
 import ExecutionModal from '../components/ExecutionModal'
@@ -14,10 +15,14 @@ interface RerunTarget {
 }
 
 export default function Executions() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialStatus = searchParams.get('status')
   const [executions, setExecutions] = useState<Execution[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all')
+  const [filter, setFilter] = useState<'all' | 'success' | 'failed'>(
+    initialStatus === 'success' || initialStatus === 'failed' ? initialStatus : 'all'
+  )
   const [rerunTarget, setRerunTarget] = useState<RerunTarget | null>(null)
 
   const load = async () => {
@@ -31,6 +36,16 @@ export default function Executions() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    const status = searchParams.get('status')
+    setFilter(status === 'success' || status === 'failed' ? status : 'all')
+  }, [searchParams])
+
+  const updateFilter = (nextFilter: 'all' | 'success' | 'failed') => {
+    setFilter(nextFilter)
+    setSearchParams(nextFilter === 'all' ? {} : { status: nextFilter })
+  }
 
   const clear = async () => {
     if (!confirm('Clear all execution history?')) return
@@ -65,7 +80,7 @@ export default function Executions() {
         {(['all', 'success', 'failed'] as const).map(f => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
+            onClick={() => updateFilter(f)}
             className={clsx(
               'px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize',
               filter === f

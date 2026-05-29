@@ -61,9 +61,9 @@ export default function Dashboard() {
   const lastRun = executions[0]
 
   const stats = [
-    { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan' },
-    { label: 'Successful', value: successCount, hint: 'Completed without error', icon: CheckCircle, color: 'text-nutanix-teal' },
-    { label: 'Failed', value: failCount, hint: 'Needs operator review', icon: XCircle, color: failCount ? 'text-red-400' : 'text-gray-500' },
+    { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
+    { label: 'Successful', value: successCount, hint: 'Completed without error', icon: CheckCircle, color: 'text-nutanix-teal', path: '/executions?status=success' },
+    { label: 'Failed', value: failCount, hint: 'Needs operator review', icon: XCircle, color: failCount ? 'text-red-400' : 'text-gray-500', path: '/executions?status=failed' },
     { label: 'Last Run', value: lastRun ? new Date(lastRun.timestamp).toLocaleDateString() : 'Never', hint: lastRun?.workflow ?? 'No execution history', icon: Clock, color: 'text-yellow-400' },
   ]
 
@@ -114,11 +114,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        {stats.map(stat => (
-          <div key={stat.label} className="card">
+        {stats.map(stat => {
+          const isClickable = Boolean(stat.path && typeof stat.value === 'number' && stat.value > 0 && !loading)
+          const content = (
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium">{stat.label}</p>
+                <p className={clsx('text-xs font-medium', isClickable ? 'text-gray-400' : 'text-gray-500')}>{stat.label}</p>
                 <p className="text-2xl font-bold text-gray-100 mt-1">{loading ? '-' : stat.value}</p>
                 <p className="text-xs text-gray-600 mt-1 truncate">{stat.hint}</p>
               </div>
@@ -126,8 +127,23 @@ export default function Dashboard() {
                 <stat.icon size={18} />
               </div>
             </div>
-          </div>
-        ))}
+          )
+
+          return isClickable ? (
+            <Link
+              key={stat.label}
+              to={stat.path!}
+              aria-label={`View ${stat.label.toLowerCase()} in execution history`}
+              className="card block transition-all hover:-translate-y-0.5 hover:border-nutanix-cyan/40 hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-nutanix-cyan/40"
+            >
+              {content}
+            </Link>
+          ) : (
+            <div key={stat.label} className="card">
+              {content}
+            </div>
+          )
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
