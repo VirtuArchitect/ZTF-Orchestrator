@@ -199,6 +199,12 @@ succeeded. Failed steps halt the pipeline and remaining steps are marked skipped
 A live step-progress rail shows pending / running / success / failed / skipped status.
 Pipeline runs are recorded in Execution History with full step results.
 
+### Drift Detection
+Compare a saved ZTF config file against the last successful applied config or a
+pasted current-state JSON/YAML snapshot. Results are classified as **Matched**,
+**Changed**, **Missing**, **Unexpected**, or **Unknown** and stored in drift
+history for later review.
+
 ### Execution History
 Last 1,000 execution records — workflow name, status, duration, user, timestamp.
 **Re-run:** expand any row to re-run the workflow or script immediately using the

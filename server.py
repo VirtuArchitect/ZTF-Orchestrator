@@ -42,6 +42,7 @@ USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
 SETTINGS_FILE  = CONFIG_DIR / 'settings.json'
 PIPELINES_FILE = CONFIG_DIR / 'pipelines.json'
+DRIFT_FILE     = CONFIG_DIR / 'drift.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 
 ALLOWED_ORIGINS = [
@@ -596,6 +597,105 @@ def backup_config(path: Path):
         os.chmod(bak, stat.S_IRUSR | stat.S_IWUSR)
     except OSError:
         pass
+
+
+def _parse_structured_config(content: str, filename: str = '') -> tuple[object, str]:
+    """Parse YAML or JSON config content into comparable Python data."""
+    try:
+        if filename.lower().endswith('.json'):
+            return json.loads(content or '{}'), ''
+        parsed = yaml.safe_load(content or '') or {}
+        return parsed, ''
+    except (json.JSONDecodeError, yaml.YAMLError) as exc:
+        return None, str(exc)
+
+
+def _flatten_config(value, prefix: str = '') -> dict[str, object]:
+    """Flatten nested dict/list structures into dot paths for drift comparison."""
+    if isinstance(value, dict):
+        flattened: dict[str, object] = {}
+        for key in sorted(value.keys(), key=str):
+            path = f'{prefix}.{key}' if prefix else str(key)
+            flattened.update(_flatten_config(value[key], path))
+        return flattened
+    if isinstance(value, list):
+        flattened = {}
+        for idx, item in enumerate(value):
+            path = f'{prefix}[{idx}]' if prefix else f'[{idx}]'
+            flattened.update(_flatten_config(item, path))
+        return flattened
+    return {prefix or '$': value}
+
+
+def _compare_drift(desired, observed) -> tuple[list[dict], dict]:
+    desired_flat = _flatten_config(desired)
+    observed_flat = _flatten_config(observed)
+    findings: list[dict] = []
+
+    for path in sorted(desired_flat.keys()):
+        if path not in observed_flat:
+            findings.append({
+                'path': path,
+                'status': 'missing',
+                'desired': desired_flat[path],
+                'observed': None,
+            })
+        elif desired_flat[path] == observed_flat[path]:
+            findings.append({
+                'path': path,
+                'status': 'matched',
+                'desired': desired_flat[path],
+                'observed': observed_flat[path],
+            })
+        else:
+            findings.append({
+                'path': path,
+                'status': 'changed',
+                'desired': desired_flat[path],
+                'observed': observed_flat[path],
+            })
+
+    for path in sorted(observed_flat.keys()):
+        if path not in desired_flat:
+            findings.append({
+                'path': path,
+                'status': 'unexpected',
+                'desired': None,
+                'observed': observed_flat[path],
+            })
+
+    summary = {
+        'matched':    sum(1 for f in findings if f['status'] == 'matched'),
+        'changed':    sum(1 for f in findings if f['status'] == 'changed'),
+        'missing':    sum(1 for f in findings if f['status'] == 'missing'),
+        'unexpected': sum(1 for f in findings if f['status'] == 'unexpected'),
+    }
+    summary['total'] = sum(summary.values())
+    return findings, summary
+
+
+def _load_drift_runs() -> list[dict]:
+    return read_json(DRIFT_FILE, [])
+
+
+def _save_drift_runs(runs: list[dict]) -> None:
+    write_json(DRIFT_FILE, runs[:200])
+
+
+def _find_last_applied_config(config_file: str, workflow: str = '') -> dict | None:
+    history = read_json(HISTORY_FILE, [])
+    for entry in history:
+        if entry.get('status') != 'success':
+            continue
+        if entry.get('type') not in ('workflow', 'script'):
+            continue
+        if config_file and entry.get('configFile') != config_file:
+            continue
+        if workflow and entry.get('workflow') != workflow:
+            continue
+        if entry.get('configContent'):
+            return entry
+    return None
 
 # ─── Static ───────────────────────────────────────────────────────────────────
 
@@ -1537,6 +1637,118 @@ def get_audit_log():
         return jsonify([])
 
     return jsonify(entries[-limit:])
+
+
+# ─── Drift detection ─────────────────────────────────────────────────────────
+
+@app.route('/api/drift')
+@require_role('admin', 'operator', 'viewer')
+def list_drift_runs():
+    return jsonify(_load_drift_runs())
+
+
+@app.route('/api/drift/check', methods=['POST'])
+@require_role('admin', 'operator')
+def check_drift():
+    data = request.json or {}
+    config_file = str(data.get('configFile', '')).strip()
+    workflow = str(data.get('workflow', '')).strip()
+    baseline = str(data.get('baseline', 'last_applied')).strip() or 'last_applied'
+    current_state_content = data.get('currentStateContent')
+
+    if not config_file:
+        return jsonify({'error': 'configFile required'}), 400
+    if workflow and workflow not in ALLOWED_WORKFLOWS:
+        return jsonify({'error': f'Unknown workflow: {workflow}'}), 400
+    if baseline not in ('last_applied', 'current_state'):
+        return jsonify({'error': 'baseline must be last_applied or current_state'}), 400
+
+    configs_dir = get_configs_dir()
+    desired_path = safe_config_path(config_file, configs_dir)
+    if desired_path is None or not desired_path.exists():
+        return jsonify({'error': 'Config file not found'}), 404
+
+    desired_content = desired_path.read_text()
+    desired, desired_error = _parse_structured_config(desired_content, desired_path.name)
+    if desired_error:
+        return jsonify({'error': f'Desired config parse error: {desired_error}'}), 400
+
+    observed_source = baseline
+    observed_label = 'Last successful execution'
+    observed_content = ''
+    applied_execution = None
+
+    if baseline == 'current_state':
+        observed_label = 'Current state snapshot'
+        observed_content = str(current_state_content or '')
+        if not observed_content.strip():
+            return jsonify({'error': 'currentStateContent required for current_state baseline'}), 400
+    else:
+        applied_execution = _find_last_applied_config(config_file, workflow)
+        if not applied_execution:
+            result = {
+                'id': str(uuid.uuid4()),
+                'configFile': config_file,
+                'workflow': workflow,
+                'status': 'unknown',
+                'baseline': baseline,
+                'observedLabel': observed_label,
+                'summary': {'matched': 0, 'changed': 0, 'missing': 0, 'unexpected': 0, 'total': 0},
+                'findings': [],
+                'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+                'user': request.current_user['username'],
+                'message': 'No successful execution with stored config content was found for this config file.',
+            }
+            runs = _load_drift_runs()
+            runs.insert(0, result)
+            _save_drift_runs(runs)
+            log.info('drift_check',
+                     extra={'user': request.current_user['username'],
+                            'action': 'drift_check',
+                            'workflow': workflow or config_file,
+                            'status': 'unknown'})
+            return jsonify(result), 200
+        observed_content = applied_execution.get('configContent', '')
+
+    observed, observed_error = _parse_structured_config(observed_content, config_file)
+    if observed_error:
+        return jsonify({'error': f'Observed state parse error: {observed_error}'}), 400
+
+    findings, summary = _compare_drift(desired, observed)
+    drift_count = summary['changed'] + summary['missing'] + summary['unexpected']
+    status = 'matched' if drift_count == 0 else 'drifted'
+
+    result = {
+        'id': str(uuid.uuid4()),
+        'configFile': config_file,
+        'workflow': workflow,
+        'status': status,
+        'baseline': observed_source,
+        'observedLabel': observed_label,
+        'appliedExecutionId': applied_execution.get('id') if applied_execution else None,
+        'summary': summary,
+        'findings': findings,
+        'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+        'user': request.current_user['username'],
+    }
+
+    runs = _load_drift_runs()
+    runs.insert(0, result)
+    _save_drift_runs(runs)
+
+    log.info('drift_check',
+             extra={'user': request.current_user['username'],
+                    'action': 'drift_check',
+                    'workflow': workflow or config_file,
+                    'status': status})
+    return jsonify(result)
+
+
+@app.route('/api/drift', methods=['DELETE'])
+@require_role('admin')
+def clear_drift_runs():
+    write_json(DRIFT_FILE, [])
+    return jsonify({'success': True})
 
 
 # ─── Execution history ────────────────────────────────────────────────────────

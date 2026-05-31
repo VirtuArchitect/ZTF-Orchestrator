@@ -227,6 +227,99 @@ def test_save_global_config(client, auth_headers):
     assert resp.status_code == 200
 
 
+# ── Drift detection ──────────────────────────────────────────────────────────
+
+def test_drift_check_matches_last_applied_config(client, auth_headers):
+    import server
+
+    client.post('/api/configs/drift.yml',
+                json={'content': 'pc_ip: 10.0.0.1\nntp:\n  - 1.1.1.1\n'},
+                headers=auth_headers)
+    server._record_execution_history(
+        execution_id='exec-drift-match',
+        workflow_or_script='config-pc',
+        execution_type='workflow',
+        status='success',
+        user='admin',
+        config_file='drift.yml',
+        config_content='pc_ip: 10.0.0.1\nntp:\n  - 1.1.1.1\n',
+    )
+
+    resp = client.post('/api/drift/check',
+                       json={'configFile': 'drift.yml', 'workflow': 'config-pc'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'matched'
+    assert body['summary']['changed'] == 0
+    assert body['appliedExecutionId'] == 'exec-drift-match'
+
+
+def test_drift_check_detects_changed_missing_and_unexpected_fields(client, auth_headers):
+    resp = client.post('/api/configs/drift_state.yml',
+                       json={'content': 'pc_ip: 10.0.0.1\ndns: 8.8.8.8\nntp: 1.1.1.1\n'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.post('/api/drift/check',
+                       json={
+                           'configFile': 'drift_state.yml',
+                           'baseline': 'current_state',
+                           'currentStateContent': 'pc_ip: 10.0.0.2\nntp: 1.1.1.1\nextra: true\n',
+                       },
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    statuses = {finding['path']: finding['status'] for finding in body['findings']}
+    assert body['status'] == 'drifted'
+    assert statuses['pc_ip'] == 'changed'
+    assert statuses['dns'] == 'missing'
+    assert statuses['extra'] == 'unexpected'
+
+
+def test_drift_check_unknown_without_successful_execution(client, auth_headers):
+    client.post('/api/configs/no_baseline.yml',
+                json={'content': 'pc_ip: 10.0.0.1\n'},
+                headers=auth_headers)
+
+    resp = client.post('/api/drift/check',
+                       json={'configFile': 'no_baseline.yml'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    assert resp.get_json()['status'] == 'unknown'
+
+
+def test_drift_history_can_be_listed_and_cleared(client, auth_headers):
+    client.post('/api/configs/drift_clear.yml',
+                json={'content': 'pc_ip: 10.0.0.1\n'},
+                headers=auth_headers)
+    client.post('/api/drift/check',
+                json={'configFile': 'drift_clear.yml'},
+                headers=auth_headers)
+
+    resp = client.get('/api/drift', headers=auth_headers)
+    assert resp.status_code == 200
+    assert len(resp.get_json()) == 1
+
+    resp = client.delete('/api/drift', headers=auth_headers)
+    assert resp.status_code == 200
+    assert client.get('/api/drift', headers=auth_headers).get_json() == []
+
+
+def test_drift_check_viewer_forbidden(client, auth_headers):
+    _create_user(client, auth_headers, 'viewer_drift', 'viewer')
+    vh = _login(client, 'viewer_drift')
+
+    resp = client.post('/api/drift/check',
+                       json={'configFile': 'any.yml'},
+                       headers=vh)
+
+    assert resp.status_code == 403
+
+
 # ── User role update ─────────────────────────────────────────────────────────
 
 def test_update_user_role(client, auth_headers):

@@ -93,6 +93,37 @@ export interface Settings {
   webhookUrl: string
 }
 
+export type DriftStatus = 'matched' | 'drifted' | 'unknown'
+export type DriftFindingStatus = 'matched' | 'changed' | 'missing' | 'unexpected'
+
+export interface DriftFinding {
+  path: string
+  status: DriftFindingStatus
+  desired: unknown
+  observed: unknown
+}
+
+export interface DriftRun {
+  id: string
+  configFile: string
+  workflow?: string
+  status: DriftStatus
+  baseline: 'last_applied' | 'current_state'
+  observedLabel: string
+  appliedExecutionId?: string | null
+  summary: {
+    matched: number
+    changed: number
+    missing: number
+    unexpected: number
+    total: number
+  }
+  findings: DriftFinding[]
+  timestamp: string
+  user: string
+  message?: string
+}
+
 // Workflow config types
 
 export interface NodeDetail {

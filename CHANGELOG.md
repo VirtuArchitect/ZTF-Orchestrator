@@ -7,6 +7,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- Drift Detection page and API for comparing saved desired configuration against
+  the last successful applied config or a pasted current-state snapshot.
+- Drift results are persisted in `drift.json` with matched, changed, missing,
+  unexpected, and unknown baseline states.
+
+---
+
 ## [1.2.5]  2026-05-31
 
 ### Summary
