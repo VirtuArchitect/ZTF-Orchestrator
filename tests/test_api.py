@@ -320,6 +320,131 @@ def test_drift_check_viewer_forbidden(client, auth_headers):
     assert resp.status_code == 403
 
 
+# ── v1.2.6 feature endpoints ─────────────────────────────────────────────────
+
+def test_schedule_rejects_unknown_script(client, auth_headers):
+    resp = client.post('/api/schedules',
+                       json={'name': 'bad script',
+                             'script': '../../etc/passwd',
+                             'cronExpr': '0 * * * *'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    assert 'Unknown script' in resp.get_json()['error']
+
+
+def test_schedule_runner_uses_configured_config_dir(client, auth_headers, tmp_path, monkeypatch):
+    import server
+
+    config_dir = tmp_path / 'custom-configs'
+    config_dir.mkdir()
+    config_file = config_dir / 'scheduled.yml'
+    config_file.write_text('pc_ip: 10.0.0.1\n')
+    ztf_dir = tmp_path / 'ztf'
+    ztf_dir.mkdir()
+
+    client.post('/api/settings',
+                json={'configDir': str(config_dir),
+                      'ztfPath': str(ztf_dir),
+                      'pythonPath': 'python'},
+                headers=auth_headers)
+
+    calls = []
+
+    class FakeRun:
+        returncode = 0
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return FakeRun()
+
+    monkeypatch.setattr(server.subprocess, 'run', fake_run)
+    monkeypatch.setattr(server, '_fire_configured_webhook', lambda *args, **kwargs: None)
+    server._require_engines()
+
+    status = server._schedule_engine._run_cb({
+        'workflow': 'config-pc',
+        'configFile': 'scheduled.yml',
+    })
+
+    assert status == 'success'
+    assert calls
+    assert str(config_file) in calls[0][0]
+
+
+def test_configured_webhook_payload_uses_settings_url(client, auth_headers, monkeypatch):
+    import server
+
+    captured = {}
+    client.post('/api/settings',
+                json={'webhookUrl': 'http://example.com/hook'},
+                headers=auth_headers)
+
+    def fake_fire(url, payload):
+        captured['url'] = url
+        captured['payload'] = payload
+
+    monkeypatch.setattr(server, '_fire_webhook', fake_fire)
+
+    server._fire_configured_webhook('config-pc', 'success', 0, 'scheduler', 'exec-1', 'schedule')
+
+    assert captured['url'] == 'http://example.com/hook'
+    assert captured['payload']['workflow'] == 'config-pc'
+    assert captured['payload']['status'] == 'success'
+    assert captured['payload']['executionId'] == 'exec-1'
+    assert captured['payload']['type'] == 'schedule'
+
+
+def test_approval_create_and_decide_fire_configured_webhook(client, auth_headers, monkeypatch):
+    import server
+
+    events = []
+    client.post('/api/settings',
+                json={'webhookUrl': 'http://example.com/hook'},
+                headers=auth_headers)
+
+    monkeypatch.setattr(server, '_fire_webhook',
+                        lambda url, payload: events.append((url, payload)))
+
+    create_resp = client.post('/api/approvals',
+                              json={'workflow': 'config-pc',
+                                    'configContent': 'pc_ip: 10.0.0.1\n'},
+                              headers=auth_headers)
+    assert create_resp.status_code == 201
+    approval_id = create_resp.get_json()['id']
+
+    approve_resp = client.post(f'/api/approvals/{approval_id}/approve',
+                               json={'notes': 'approved'},
+                               headers=auth_headers)
+    assert approve_resp.status_code == 200
+    assert [event[1]['status'] for event in events] == ['pending', 'approved']
+    assert all(event[0] == 'http://example.com/hook' for event in events)
+
+
+def test_parallel_submit_uses_configured_webhook_adapter(client, auth_headers, monkeypatch):
+    import server
+
+    server._require_engines()
+    captured = {}
+
+    def fake_submit(**kwargs):
+        captured.update(kwargs)
+        return {'id': 'parallel-1', 'workflow': kwargs['workflow'], 'status': 'running', 'sites': []}
+
+    monkeypatch.setattr(server._parallel_engine, 'submit', fake_submit)
+
+    resp = client.post('/api/parallel-runs',
+                       json={'workflow': 'config-pc',
+                             'sites': [
+                                 {'label': 'A', 'configContent': 'pc_ip: 10.0.0.1\n'},
+                                 {'label': 'B', 'configContent': 'pc_ip: 10.0.0.2\n'},
+                             ]},
+                       headers=auth_headers)
+
+    assert resp.status_code == 202
+    assert captured['on_webhook'] is server._fire_configured_webhook
+
+
 # ── User role update ─────────────────────────────────────────────────────────
 
 def test_update_user_role(client, auth_headers):

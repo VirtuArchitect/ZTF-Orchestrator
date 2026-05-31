@@ -149,7 +149,7 @@ class ScheduleEngine:
                      'jobs': sum(1 for s in schedules if s.get('enabled'))})
         else:
             log.warning('scheduler_start', extra={'action': 'scheduler_degraded',
-                'msg': 'APScheduler not installed — using polling fallback'})
+                'detail': 'APScheduler not installed - using polling fallback'})
             self._start_poll_loop()
 
     def shutdown(self):
