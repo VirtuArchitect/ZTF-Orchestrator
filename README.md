@@ -25,7 +25,7 @@ replacing GitHub-based configuration management with a visual interface.
 
 ## Installation
 
-### Option A: One-Command (Linux / macOS) — Recommended
+### Option A: One-Command (Linux / macOS) - Recommended
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/install.sh | bash
@@ -45,7 +45,7 @@ The script automatically:
 5. Installs all dependencies for both components
 6. Starts ZTF-Orchestrator (admin credentials printed on first run)
 
-### Option B: One-Command (Windows PowerShell) — Recommended
+### Option B: One-Command (Windows PowerShell) - Recommended
 
 ```powershell
 iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/install.ps1'))
@@ -66,7 +66,7 @@ docker compose up -d
 docker compose logs -f   # admin password printed here on first run
 ```
 
-ZTF is cloned and installed inside the image at build time — no separate volume mount required.
+ZTF is cloned and installed inside the image at build time - no separate volume mount required.
 
 ### Option D: Manual
 
