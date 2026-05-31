@@ -7,6 +7,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.5]  2026-05-31
+
+### Summary
+Patch release for Setup page session state and release metadata.
+
+### Fixed
+- Setup prerequisite check results now persist while navigating during the same app session.
+- Successful prerequisite checks keep Step 1 marked complete when returning to Setup & Install.
+
+---
+
 ## [1.2.4]  2026-05-21
 
 ### Summary
@@ -349,6 +360,7 @@ operator interface.
 
 ---
 
+[1.2.5]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.1...v1.2.2

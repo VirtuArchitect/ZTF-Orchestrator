@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCircle, XCircle, Loader, Download, Terminal as TermIcon, RefreshCw } from 'lucide-react'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
@@ -11,21 +11,29 @@ interface LogLine { type: string; data: string; ts: number }
 const STEPS = ['Check Prerequisites', 'Install Framework', 'Verify Installation']
 
 export default function Setup() {
-  const { setSystemChecks, ztfInstalled } = useStore()
-  const [step,          setStep]          = useState(0)
+  const { setSystemChecks, ztfInstalled, systemChecks } = useStore()
+  const [step,          setStep]          = useState(
+    systemChecks.length > 0 && systemChecks.every(check => check.ok) ? 1 : 0
+  )
   const [checking,      setChecking]      = useState(false)
   const [installing,    setInstalling]    = useState(false)
-  const [checks,        setChecks]        = useState<Array<{ name: string; ok: boolean; value: string | null }>>([])
   const [logs,          setLogs]          = useState<LogLine[]>([])
   const [installStatus, setInstallStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [checkError,    setCheckError]    = useState('')
+
+  const checks = systemChecks
+
+  useEffect(() => {
+    if (systemChecks.length > 0 && systemChecks.every(check => check.ok)) {
+      setStep(prev => Math.max(prev, 1))
+    }
+  }, [systemChecks])
 
   const appendLog = (type: string, data: string) =>
     setLogs(prev => [...prev, { type, data, ts: Date.now() }])
 
   const runCheck = async () => {
     setChecking(true)
-    setChecks([])
     setCheckError('')
     try {
       const resp = await apiFetch('/api/system/check')
@@ -36,9 +44,10 @@ export default function Setup() {
       }
       const data = await resp.json()
       const safeChecks = Array.isArray(data.checks) ? data.checks : []
-      setChecks(safeChecks)
       setSystemChecks(safeChecks, !!data.ztfInstalled)
-      setStep(1)
+      if (safeChecks.length > 0 && safeChecks.every((check: { ok: boolean }) => check.ok)) {
+        setStep(1)
+      }
     } catch (e) {
       setCheckError('Could not reach the server. Is it running?')
     } finally {
@@ -97,7 +106,6 @@ export default function Setup() {
       if (resp2.ok) {
         const data2      = await resp2.json()
         const safeChecks = Array.isArray(data2.checks) ? data2.checks : []
-        setChecks(safeChecks)
         setSystemChecks(safeChecks, !!data2.ztfInstalled)
       }
     } catch {

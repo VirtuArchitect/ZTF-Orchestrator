@@ -163,7 +163,7 @@ export default function Settings() {
             </a>.
           </p>
           <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-500">
-            <div>UI Version: <span className="text-gray-300">1.2.4</span></div>
+            <div>UI Version: <span className="text-gray-300">1.2.5</span></div>
             <div>ZTF Supported: <span className="text-gray-300">AOS 6.5+, PC 2022.6+</span></div>
             <div>Maintainer: <span className="text-gray-300">John Goulden</span></div>
             <div>Project: <span className="text-gray-300">ZTF-Orchestrator</span></div>
