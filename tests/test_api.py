@@ -740,5 +740,5 @@ def test_spa_deep_link_serves_react_app(client):
 def test_legacy_favicon_serves_veridian_mark(client):
     resp = client.get('/favicon.ico')
     assert resp.status_code == 200
-    assert resp.mimetype == 'image/svg+xml'
-    assert b'1A6B6B' in resp.data
+    assert resp.mimetype == 'image/x-icon'
+    assert resp.data[:4] == b'\x00\x00\x01\x00'

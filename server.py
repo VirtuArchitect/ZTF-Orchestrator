@@ -872,7 +872,7 @@ def index():
 @app.route('/favicon.ico')
 def favicon():
     """Serve the Veridian favicon for browsers that still request /favicon.ico."""
-    return send_from_directory('dist', 'favicon.svg', mimetype='image/svg+xml')
+    return send_from_directory('dist', 'favicon.ico', mimetype='image/x-icon')
 
 @app.route('/<path:path>')
 def spa_fallback(path):
