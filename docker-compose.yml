@@ -1,5 +1,3 @@
-version: '3.8'
-
 # ── ZTF-Orchestrator — all-in-one deployment ──────────────────────────────────
 #
 # ZeroTouch Framework is baked into the image at build time.
