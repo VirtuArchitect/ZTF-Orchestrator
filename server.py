@@ -43,6 +43,9 @@ HISTORY_FILE   = CONFIG_DIR / 'history.json'
 SETTINGS_FILE  = CONFIG_DIR / 'settings.json'
 PIPELINES_FILE = CONFIG_DIR / 'pipelines.json'
 DRIFT_FILE     = CONFIG_DIR / 'drift.json'
+SCHEDULES_FILE = CONFIG_DIR / 'schedules.json'
+PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
+APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 
 ALLOWED_ORIGINS = [
@@ -114,6 +117,7 @@ ALLOWED_WORKFLOWS = {
     'config-cluster', 'deploy-pc', 'config-pc', 'pod-config',
     'deploy-management-pc', 'config-management-pc',
     'calm-vm-workloads', 'calm-edgeai-vm-workload', 'ndb',
+    'lcm-update',
 }
 
 ALLOWED_SCRIPTS = {
@@ -240,6 +244,100 @@ def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[s
     return yaml.safe_dump(normalized, sort_keys=False), True
 
 ALLOWED_SETTINGS_KEYS = {'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl'}
+
+# ─── Feature engines (lazy-initialised in _init_engines) ─────────────────────
+
+from scheduler    import ScheduleEngine
+from parallel_exec import ParallelEngine
+from approvals    import ApprovalManager
+
+_schedule_engine:  ScheduleEngine  | None = None
+_parallel_engine:  ParallelEngine  | None = None
+_approval_manager: ApprovalManager | None = None
+
+def _init_engines():
+    global _schedule_engine, _parallel_engine, _approval_manager
+
+    def _sched_run_callback(schedule: dict) -> str:
+        """Execute a scheduled workflow via subprocess; return 'success'/'failed'."""
+        import time as _t
+        settings    = get_settings()
+        ztf_path    = settings['ztfPath']
+        python_path = settings['pythonPath']
+        configs_dir = str(CONFIG_DIR / 'configs')
+
+        workflow       = schedule.get('workflow') or ''
+        script         = schedule.get('script') or ''
+        config_content = schedule.get('configContent') or ''
+        config_file    = schedule.get('configFile') or ''
+
+        import tempfile
+        tf_path = None
+        if config_content:
+            with tempfile.NamedTemporaryFile(
+                mode='w', suffix='.yml', dir=configs_dir,
+                delete=False, prefix='sched_'
+            ) as tf:
+                tf.write(config_content)
+                tf_path = tf.name
+        elif config_file:
+            tf_path = str(Path(configs_dir) / config_file)
+
+        cmd = [python_path, 'main.py']
+        if workflow:
+            cmd.append(f'--workflow={workflow}')
+        if script:
+            cmd += ['--script', script]
+        if tf_path:
+            cmd += ['-f', tf_path]
+
+        try:
+            r = subprocess.run(
+                cmd, cwd=ztf_path, capture_output=True, text=True,
+                timeout=EXEC_TIMEOUT
+            )
+            rc = r.returncode
+        except subprocess.TimeoutExpired:
+            rc = -1
+        except Exception:
+            rc = -1
+        finally:
+            if config_content and tf_path:
+                try:
+                    Path(tf_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+        status = 'success' if rc == 0 else 'failed'
+        # Record in history
+        entry = {
+            'id':        str(int(_t.time() * 1000)),
+            'workflow':  workflow or script,
+            'type':      'schedule',
+            'command':   ' '.join(cmd),
+            'status':    status,
+            'returnCode': rc,
+            'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'user':      'scheduler',
+            'configFile': config_file,
+        }
+        hist = read_json(HISTORY_FILE, [])
+        hist.insert(0, entry)
+        write_json(HISTORY_FILE, hist[:1000])
+        _fire_webhook(workflow or script, status, rc, 'scheduler',
+                      entry['id'])
+        return status
+
+    _schedule_engine  = ScheduleEngine(SCHEDULES_FILE, _sched_run_callback)
+    _parallel_engine  = ParallelEngine(PARALLEL_FILE, EXEC_TIMEOUT)
+    _approval_manager = ApprovalManager(APPROVALS_FILE, _fire_webhook)
+    _schedule_engine.start()
+
+import atexit as _atexit
+def _shutdown_engines():
+    if _schedule_engine:
+        _schedule_engine.shutdown()
+_atexit.register(_shutdown_engines)
 
 # ─── Concurrency lock ─────────────────────────────────────────────────────────
 
@@ -1751,6 +1849,178 @@ def clear_drift_runs():
     return jsonify({'success': True})
 
 
+# ─── Scheduled executions ─────────────────────────────────────────────────────
+
+@app.route('/api/schedules')
+@require_role('admin', 'operator', 'viewer')
+def list_schedules():
+    return jsonify(_schedule_engine.list_schedules())
+
+@app.route('/api/schedules', methods=['POST'])
+@require_role('admin', 'operator')
+def create_schedule():
+    data = request.json or {}
+    cron = data.get('cronExpr', '').strip()
+    if not cron or len(cron.split()) != 5:
+        return jsonify({'error': 'cronExpr must be a valid 5-field cron expression'}), 400
+    workflow = data.get('workflow', '')
+    script   = data.get('script', '')
+    if workflow and workflow not in ALLOWED_WORKFLOWS:
+        return jsonify({'error': 'Unknown workflow'}), 400
+    if not workflow and not script:
+        return jsonify({'error': 'workflow or script required'}), 400
+    s = _schedule_engine.create_schedule(data)
+    return jsonify(s), 201
+
+@app.route('/api/schedules/<sid>')
+@require_role('admin', 'operator', 'viewer')
+def get_schedule(sid):
+    s = _schedule_engine.get_schedule(sid)
+    if not s:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(s)
+
+@app.route('/api/schedules/<sid>', methods=['PUT'])
+@require_role('admin', 'operator')
+def update_schedule(sid):
+    data = request.json or {}
+    if 'workflow' in data and data['workflow'] and data['workflow'] not in ALLOWED_WORKFLOWS:
+        return jsonify({'error': 'Unknown workflow'}), 400
+    s = _schedule_engine.update_schedule(sid, data)
+    if not s:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(s)
+
+@app.route('/api/schedules/<sid>', methods=['DELETE'])
+@require_role('admin')
+def delete_schedule(sid):
+    if not _schedule_engine.delete_schedule(sid):
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'success': True})
+
+@app.route('/api/schedules/<sid>/run-now', methods=['POST'])
+@require_role('admin', 'operator')
+def run_schedule_now(sid):
+    if not _schedule_engine.run_now(sid):
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'success': True})
+
+# ─── Parallel execution ────────────────────────────────────────────────────────
+
+@app.route('/api/parallel-runs')
+@require_role('admin', 'operator', 'viewer')
+def list_parallel_runs():
+    return jsonify(_parallel_engine.list_runs())
+
+@app.route('/api/parallel-runs/<run_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_parallel_run(run_id):
+    run = _parallel_engine.get_run(run_id)
+    if not run:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(run)
+
+@app.route('/api/parallel-runs', methods=['POST'])
+@require_role('admin', 'operator')
+@limiter.limit('5 per minute')
+def start_parallel_run():
+    data     = request.json or {}
+    workflow = data.get('workflow', '')
+    sites    = data.get('sites', [])
+
+    if not workflow or workflow not in ALLOWED_WORKFLOWS:
+        return jsonify({'error': 'Unknown workflow'}), 400
+    if not sites or not isinstance(sites, list):
+        return jsonify({'error': 'sites must be a non-empty list'}), 400
+    if len(sites) > 10:
+        return jsonify({'error': 'Maximum 10 sites per parallel run'}), 400
+
+    settings    = get_settings()
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+
+    try:
+        run = _parallel_engine.submit(
+            workflow   = workflow,
+            sites      = sites,
+            python_path = settings['pythonPath'],
+            ztf_path   = settings['ztfPath'],
+            configs_dir = get_configs_dir(),
+            user        = current_user,
+            on_webhook  = _fire_webhook,
+        )
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+    return jsonify(run), 202
+
+@app.route('/api/parallel-runs/<run_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_parallel_run(run_id):
+    if not _parallel_engine.delete_run(run_id):
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'success': True})
+
+# ─── Approval gates ────────────────────────────────────────────────────────────
+
+@app.route('/api/approvals')
+@require_role('admin', 'operator', 'viewer')
+def list_approvals():
+    status_filter = request.args.get('status')
+    return jsonify(_approval_manager.list_approvals(status=status_filter))
+
+@app.route('/api/approvals', methods=['POST'])
+@require_role('admin', 'operator')
+def create_approval():
+    data = request.json or {}
+    workflow = data.get('workflow', '')
+    if not workflow or workflow not in ALLOWED_WORKFLOWS:
+        return jsonify({'error': 'Unknown workflow'}), 400
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    approval = _approval_manager.create_request(
+        workflow       = workflow,
+        config_file    = data.get('configFile', ''),
+        config_content = data.get('configContent', ''),
+        requested_by   = current_user,
+        notes          = data.get('notes', ''),
+        pipeline_id    = data.get('pipelineId'),
+    )
+    return jsonify(approval), 201
+
+@app.route('/api/approvals/<aid>')
+@require_role('admin', 'operator', 'viewer')
+def get_approval(aid):
+    approval = _approval_manager.get_approval(aid)
+    if not approval:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(approval)
+
+@app.route('/api/approvals/<aid>/approve', methods=['POST'])
+@require_role('admin')
+def approve_request(aid):
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    notes = (request.json or {}).get('notes', '')
+    result = _approval_manager.decide(aid, 'approved', current_user, notes)
+    if not result:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(result)
+
+@app.route('/api/approvals/<aid>/reject', methods=['POST'])
+@require_role('admin')
+def reject_request(aid):
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    notes = (request.json or {}).get('notes', '')
+    result = _approval_manager.decide(aid, 'rejected', current_user, notes)
+    if not result:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(result)
+
+@app.route('/api/approvals/<aid>', methods=['DELETE'])
+@require_role('admin')
+def delete_approval(aid):
+    if not _approval_manager.delete_approval(aid):
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'success': True})
+
 # ─── Execution history ────────────────────────────────────────────────────────
 
 @app.route('/api/executions')
@@ -1768,8 +2038,9 @@ def clear_executions():
 
 if __name__ == '__main__':
     _ensure_default_admin()
+    _init_engines()
     print('=' * 60)
-    print('  ZeroTouch Enterprise Orchestrator  v1.2.5')
+    print('  ZeroTouch Enterprise Orchestrator  v1.2.6')
     print('=' * 60)
     print(f'  URL:  http://localhost:{PORT}')
     print(f'  Logs: {LOG_FILE}')

@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.2.5
+# ZTF-Orchestrator · v1.2.6
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework),
@@ -178,6 +178,7 @@ Visual editor for `global.yml` — vault type (Local/CyberArk), IPAM method
 | Calm VM Workloads | Workloads |
 | Edge AI Workload | Workloads |
 | NDB Deploy | Services |
+| LCM Update | Lifecycle Management |
 
 Each workflow has form-based configuration, live YAML preview, and one-click
 execution with real-time terminal output.
@@ -198,6 +199,25 @@ file pair. Steps execute one at a time — a step only starts if the previous st
 succeeded. Failed steps halt the pipeline and remaining steps are marked skipped.
 A live step-progress rail shows pending / running / success / failed / skipped status.
 Pipeline runs are recorded in Execution History with full step results.
+
+### Scheduled Executions
+Automate workflow runs using standard 5-field cron expressions (UTC). Create
+named schedules with per-schedule YAML config. Schedules survive restarts and
+fire automatically via APScheduler. Toggle enable/disable, run immediately
+with **Run Now**, and review last-run status per schedule. Scheduled runs are
+recorded in Execution History and fire webhook notifications.
+
+### Parallel Execution
+Run the same workflow against up to 10 sites simultaneously using a
+`ThreadPoolExecutor` engine. Each site supplies its own YAML config; output
+is captured per site. Overall status is `success`, `partial`, or `failed`.
+Results are stored and browseable with per-site expandable terminal output.
+
+### Approval Gates
+Operators submit approval requests — specifying workflow, YAML config, and
+notes — before executing sensitive operations. Admins approve or reject with
+an optional decision note. Requests auto-expire after 24 hours. A pending
+count badge on the sidebar signals outstanding requests to admins.
 
 ### Drift Detection
 Compare a saved ZTF config file against the last successful applied config or a
@@ -344,6 +364,9 @@ all files within use 0600.
 | `settings.json` | ZTF path, Python path, config directory, webhook URL |
 | `history.json` | Last 1,000 execution records |
 | `pipelines.json` | Named pipeline definitions |
+| `schedules.json` | Scheduled execution definitions |
+| `parallel_runs.json` | Parallel multi-site run results (last 100) |
+| `approvals.json` | Approval request records (last 200) |
 | `ztf-orchestrator.log` | Structured JSON application log (Audit Log source) |
 | `configs/` | User-generated YAML/JSON workflow config files |
 | `configs/*.yml.bak.N` | Automatic backups — last 5 versions per file |
@@ -420,6 +443,15 @@ npm run build
 ## Maintainer
 
 ZTF-Orchestrator is developed and maintained by **John Goulden**.
+
+---
+
+## Deployment Guides
+
+| Guide | Description |
+|---|---|
+| [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
+| [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
 
 ---
 

@@ -212,6 +212,69 @@ export interface ADConfig {
   }>
 }
 
+// ── Scheduled executions ──────────────────────────────────────────────────────
+
+export interface Schedule {
+  id:            string
+  name:          string
+  workflow:      string
+  script:        string
+  configFile:    string
+  configContent: string
+  cronExpr:      string
+  enabled:       boolean
+  createdAt:     string
+  nextRun:       string | null
+  lastRun:       string | null
+  lastStatus:    'success' | 'failed' | 'error' | null
+}
+
+// ── Parallel execution ─────────────────────────────────────────────────────────
+
+export interface ParallelSiteResult {
+  label:       string
+  status:      'pending' | 'running' | 'success' | 'failed' | 'error'
+  returnCode:  number | null
+  output:      string
+  startedAt:   string | null
+  finishedAt:  string | null
+}
+
+export interface ParallelRun {
+  id:          string
+  workflow:    string
+  user:        string
+  status:      'running' | 'success' | 'partial' | 'failed' | 'unknown'
+  sites:       ParallelSiteResult[]
+  startedAt:   string
+  finishedAt:  string | null
+}
+
+export interface ParallelSiteInput {
+  label:         string
+  configContent: string
+  configFile?:   string
+}
+
+// ── Approval gates ─────────────────────────────────────────────────────────────
+
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired'
+
+export interface ApprovalRequest {
+  id:            string
+  workflow:      string
+  configFile:    string
+  configContent: string
+  requestedBy:   string
+  requestedAt:   string
+  expiresAt:     string
+  status:        ApprovalStatus
+  decidedBy:     string | null
+  decidedAt:     string | null
+  notes:         string
+  pipelineId:    string | null
+}
+
 export interface ClusterConfigSpec {
   cluster_ip: string
   name_servers_list?: string[]

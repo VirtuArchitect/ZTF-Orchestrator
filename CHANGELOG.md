@@ -7,6 +7,74 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.6] — 2026-05-31
+
+### Summary
+Feature release: Scheduled Executions, Parallel Multi-Site Execution, and
+Execution Approval Gates. Also adds the LCM Update workflow, nginx TLS and
+systemd deployment guides, and new data-store files for each feature.
+
+### Added
+
+#### Scheduled Executions
+- **`scheduler.py`** — APScheduler-backed cron engine (degrades gracefully to
+  threading-based polling if APScheduler is not installed). Persists schedules
+  to `schedules.json`; restores all enabled jobs on restart.
+- **Schedules page** — create, edit, toggle, delete, and run-now named
+  schedules; 5-field cron expressions with preset shortcuts; YAML config
+  content stored per schedule; last-run status badge.
+- **API** — `GET/POST /api/schedules`, `GET/PUT/DELETE /api/schedules/<id>`,
+  `POST /api/schedules/<id>/run-now`. Viewer role can list; admin/operator
+  can create and modify; only admin can delete.
+- Scheduled runs are recorded in `history.json` and fire the webhook on
+  completion.
+
+#### Parallel Multi-Site Execution
+- **`parallel_exec.py`** — `ThreadPoolExecutor`-based engine. Runs the same
+  workflow against up to 10 sites simultaneously; per-site output buffers and
+  status tracking; overall status `success` / `partial` / `failed`.
+- **Parallel Execution page** — build a run with 2–10 labelled sites (each
+  with its own YAML config), submit, and watch per-site progress in real time
+  (3 s poll while running). Per-site terminal output expandable inline.
+- **API** — `GET /api/parallel-runs`, `POST /api/parallel-runs` (rate-limited
+  5/min), `GET/DELETE /api/parallel-runs/<id>`.
+
+#### Execution Approval Gates
+- **`approvals.py`** — state machine: `pending → approved / rejected / expired`.
+  `threading.Event` for blocking pipeline integration. 24-hour auto-expire via
+  daemon timer. Webhook notification on request creation and decision.
+- **Approvals page** — operators submit approval requests with workflow, YAML
+  config, and notes; admins approve or reject with an optional decision note;
+  status-filter tabs (pending / approved / rejected / expired); pending-count
+  badge on sidebar item.
+- **API** — `GET/POST /api/approvals`, `GET /api/approvals/<id>`,
+  `POST /api/approvals/<id>/approve` (admin only),
+  `POST /api/approvals/<id>/reject` (admin only),
+  `DELETE /api/approvals/<id>` (admin only).
+
+#### LCM Update Workflow
+- `lcm-update` added to `ALLOWED_WORKFLOWS` (Life Cycle Manager firmware and
+  software update workflow).
+
+#### Deployment Guides
+- **`docs/nginx-tls.md`** — nginx reverse proxy guide: TLS 1.2+, HSTS,
+  SSE-safe proxy settings, rate limiting, UFW firewall rules, BSI
+  IT-Grundschutz alignment table.
+- **`docs/systemd.md`** — systemd unit file with `NoNewPrivileges`,
+  `PrivateTmp`, `ProtectSystem=strict`, `CapabilityBoundingSet=`, resource
+  limits (`MemoryMax=512M`, `CPUQuota=80%`), journald logging, update
+  procedure, BSI IT-Grundschutz alignment table.
+
+### Changed
+- `requirements.txt` — added `apscheduler==3.10.4`
+- `server.py` — added `SCHEDULES_FILE`, `PARALLEL_FILE`, `APPROVALS_FILE`
+  constants; engines initialised at startup via `_init_engines()`; atexit
+  shutdown hook for scheduler
+- `src/components/Sidebar.tsx` — added Schedules (Clock), Parallel Exec
+  (Layers), and Approvals (ShieldCheck) nav items; version bumped to v1.2.6
+- `src/types.ts` — added `Schedule`, `ParallelRun`, `ParallelSiteResult`,
+  `ParallelSiteInput`, `ApprovalRequest`, `ApprovalStatus` interfaces
+
 ## [Unreleased]
 
 ### Added

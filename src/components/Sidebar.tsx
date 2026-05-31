@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
-  History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText, FileSearch
+  History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
+  FileSearch, Clock, Layers, ShieldCheck
 } from 'lucide-react'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -15,10 +16,13 @@ const NAV_ITEMS = [
   { path: '/configs', icon: FileCode, label: 'Config Files' },
   { path: '/executions', icon: History,    label: 'Executions' },
   { path: '/pipelines',  icon: GitBranch,  label: 'Pipelines' },
-  { path: '/drift',      icon: FileSearch, label: 'Drift Detection' },
-  { path: '/audit-log',  icon: ScrollText, label: 'Audit Log' },
-  { path: '/users',      icon: Users,      label: 'Users' },
-  { path: '/settings',  icon: Wrench, label: 'Settings' },
+  { path: '/drift',      icon: FileSearch,  label: 'Drift Detection' },
+  { path: '/schedules',  icon: Clock,       label: 'Schedules' },
+  { path: '/parallel',   icon: Layers,      label: 'Parallel Exec' },
+  { path: '/approvals',  icon: ShieldCheck, label: 'Approvals' },
+  { path: '/audit-log',  icon: ScrollText,  label: 'Audit Log' },
+  { path: '/users',      icon: Users,       label: 'Users' },
+  { path: '/settings',   icon: Wrench,      label: 'Settings' },
 ]
 
 export default function Sidebar() {
@@ -94,7 +98,7 @@ export default function Sidebar() {
       {/* Version */}
       {sidebarOpen && (
         <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-gray-600">ZeroTouch Enterprise Orchestrator v1.2.5</p>
+          <p className="text-xs text-gray-600">ZeroTouch Enterprise Orchestrator v1.2.6</p>
           <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
         </div>
       )}

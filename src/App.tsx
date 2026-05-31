@@ -12,8 +12,11 @@ import ConfigFiles   from './pages/ConfigFiles'
 import UserRoles     from './pages/UserRoles'
 import Pipelines     from './pages/Pipelines'
 import AuditLog      from './pages/AuditLog'
-import DriftDetection from './pages/DriftDetection'
-import Login         from './pages/Login'
+import DriftDetection    from './pages/DriftDetection'
+import Schedules         from './pages/Schedules'
+import ParallelExecution from './pages/ParallelExecution'
+import Approvals         from './pages/Approvals'
+import Login             from './pages/Login'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const sessionToken = useStore(s => s.sessionToken)
@@ -67,6 +70,15 @@ export default function App() {
         } />
         <Route path="/audit-log" element={
           <RequireAuth><AuditLog /></RequireAuth>
+        } />
+        <Route path="/schedules" element={
+          <RequireAuth><Schedules /></RequireAuth>
+        } />
+        <Route path="/parallel" element={
+          <RequireAuth><ParallelExecution /></RequireAuth>
+        } />
+        <Route path="/approvals" element={
+          <RequireAuth><Approvals /></RequireAuth>
         } />
 
         {/* Fallback */}
