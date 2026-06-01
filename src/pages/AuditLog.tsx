@@ -8,9 +8,14 @@ interface LogEntry {
   ts:      string
   level:   string
   msg:     string
+  event?:  string
   user?:   string
   ip?:     string
   action?: string
+  method?: string
+  path?:   string
+  query?:  string
+  workflow?: string
   status?: string
   [key: string]: unknown
 }
@@ -20,6 +25,44 @@ const LEVEL_STYLE: Record<string, string> = {
   WARNING: 'bg-yellow-900/30 text-yellow-300',
   ERROR:   'bg-red-900/30 text-red-400',
   DEBUG:   'bg-gray-800 text-gray-500',
+}
+
+function titleCase(value: string) {
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase())
+}
+
+function describeEntry(entry: LogEntry) {
+  const action = entry.action || entry.msg
+
+  if (entry.event === 'http_request' || entry.method || entry.path) {
+    const target = `${entry.method || ''} ${entry.path || ''}`.trim() || action
+    return {
+      title: target,
+      detail: entry.query ? `Query: ${entry.query}` : 'HTTP request processed',
+    }
+  }
+
+  if (entry.workflow) {
+    const status = entry.status ? ` - ${entry.status}` : ''
+    return {
+      title: `${titleCase(entry.msg)}${status}`,
+      detail: `Workflow: ${entry.workflow}`,
+    }
+  }
+
+  if (entry.status) {
+    return {
+      title: `${titleCase(entry.msg)} - ${entry.status}`,
+      detail: action !== entry.msg ? action : '',
+    }
+  }
+
+  return {
+    title: titleCase(entry.msg),
+    detail: action !== entry.msg ? action : '',
+  }
 }
 
 export default function AuditLog() {
@@ -53,6 +96,10 @@ export default function AuditLog() {
       e.msg?.toLowerCase().includes(q) ||
       e.user?.toLowerCase().includes(q) ||
       e.action?.toLowerCase().includes(q) ||
+      e.event?.toLowerCase().includes(q) ||
+      e.method?.toLowerCase().includes(q) ||
+      e.path?.toLowerCase().includes(q) ||
+      e.workflow?.toLowerCase().includes(q) ||
       e.ip?.includes(q)
     )
   })
@@ -60,7 +107,7 @@ export default function AuditLog() {
   // Extra fields to show in expanded view (excluding already-shown ones)
   const extraKeys = (e: LogEntry) =>
     Object.entries(e).filter(([k]) =>
-      !['ts', 'level', 'msg', 'logger', 'user', 'ip', 'action', 'status'].includes(k)
+      !['ts', 'level', 'msg', 'logger', 'user', 'ip', 'status'].includes(k)
     )
 
   return (
@@ -117,10 +164,11 @@ export default function AuditLog() {
       )}
 
       <div className="space-y-1">
-        {filtered.map((entry, i) => {
-          const isExpanded = expanded === i
-          const extras = extraKeys(entry)
-          return (
+            {filtered.map((entry, i) => {
+              const isExpanded = expanded === i
+              const extras = extraKeys(entry)
+              const description = describeEntry(entry)
+              return (
             <div
               key={i}
               className={clsx(
@@ -146,9 +194,16 @@ export default function AuditLog() {
                   {entry.level}
                 </span>
 
-                {/* Message */}
-                <span className="text-sm text-gray-300 font-medium flex-1 truncate">
-                  {entry.msg}
+                {/* Event summary */}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-gray-200 font-semibold truncate">
+                    {description.title}
+                  </span>
+                  {description.detail && (
+                    <span className="block text-xs text-gray-500 truncate mt-0.5">
+                      {description.detail}
+                    </span>
+                  )}
                 </span>
 
                 {/* User */}

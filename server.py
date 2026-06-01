@@ -56,6 +56,13 @@ ALLOWED_ORIGINS = [
 # ─── Structured logging ───────────────────────────────────────────────────────
 
 class JSONFormatter(logging.Formatter):
+    _standard_attrs = {
+        'args', 'asctime', 'created', 'exc_info', 'exc_text', 'filename',
+        'funcName', 'levelname', 'levelno', 'lineno', 'module', 'msecs',
+        'message', 'msg', 'name', 'pathname', 'process', 'processName',
+        'relativeCreated', 'stack_info', 'thread', 'threadName',
+    }
+
     def format(self, record):
         log = {
             'ts':      datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
@@ -65,9 +72,14 @@ class JSONFormatter(logging.Formatter):
         }
         if record.exc_info:
             log['exc'] = self.formatException(record.exc_info)
-        for k in ('user', 'action', 'workflow', 'status', 'ip'):
-            if hasattr(record, k):
-                log[k] = getattr(record, k)
+        for key, value in record.__dict__.items():
+            if key in self._standard_attrs or key.startswith('_'):
+                continue
+            try:
+                json.dumps(value)
+                log[key] = value
+            except TypeError:
+                log[key] = str(value)
         return json.dumps(log)
 
 def _setup_logging() -> logging.Logger:
@@ -502,8 +514,14 @@ def check_body_size():
 def log_request():
     _purge_expired()
     session = _current_session()
-    log.info('request',
-             extra={'action': request.method + ' ' + request.path,
+    path = request.full_path.rstrip('?')
+    action = f'{request.method} {path}'
+    log.info(action,
+             extra={'event': 'http_request',
+                    'action': action,
+                    'method': request.method,
+                    'path': request.path,
+                    'query': request.query_string.decode('utf-8', errors='replace'),
                     'ip': request.remote_addr,
                     'user': session['username'] if session else 'anonymous'})
 
