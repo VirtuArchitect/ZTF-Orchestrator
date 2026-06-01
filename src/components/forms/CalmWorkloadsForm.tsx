@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { buildCalmWorkloadsYaml } from '../../utils/yaml'
 import { CREDENTIAL_KEYS } from '../../data'
+import type { ConnectionProfile } from '../../types'
 
 interface Blueprint { dslFile: string; name: string; appName: string; runtimeVars: string }
 interface Project { projectName: string; clusterName: string; subnetName: string; imageName: string; accountName: string }
 
-interface Props { onYamlChange: (yaml: string) => void }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
 
-export default function CalmWorkloadsForm({ onYamlChange }: Props) {
-  const [ncmIp, setNcmIp] = useState('')
-  const [ncmCred, setNcmCred] = useState('ncm_user')
+export default function CalmWorkloadsForm({ onYamlChange, profile }: Props) {
+  const [ncmIp, setNcmIp] = useState(profile?.ncm.endpoint || profile?.prismCentral.endpoint || '')
+  const [ncmCred, setNcmCred] = useState(profile?.ncm.credentialRef || 'ncm_user')
   const [blueprints, setBlueprints] = useState<Blueprint[]>([{ dslFile: 'calm-dsl-bps/blueprints/LAMP/LAMP.py', name: 'LAMP-dsl', appName: 'LAMP-app', runtimeVars: '' }])
-  const [projects, setProjects] = useState<Project[]>([{ projectName: '', clusterName: '', subnetName: '', imageName: '', accountName: 'NTNX_LOCAL_AZ' }])
+  const [projects, setProjects] = useState<Project[]>([{ projectName: profile?.ncm.projectName || '', clusterName: '', subnetName: profile?.prismElement.networkName || '', imageName: '', accountName: profile?.ncm.accountName || 'NTNX_LOCAL_AZ' }])
 
   useEffect(() => {
     if (!ncmIp) return

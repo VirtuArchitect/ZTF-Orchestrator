@@ -3,6 +3,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp, Server } from 'lucide-react'
 import { buildClusterCreateYaml } from '../../utils/yaml'
 import { TIMEZONES, CREDENTIAL_KEYS } from '../../data'
 import TagInput from './TagInput'
+import type { ConnectionProfile } from '../../types'
 
 interface Node {
   cvmIp: string
@@ -23,7 +24,10 @@ interface Cluster {
 
 interface Props {
   onYamlChange: (yaml: string) => void
+  profile?: ConnectionProfile
 }
+
+const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
 
 const defaultNode = (): Node => ({ cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmRamGb: 12 })
 const defaultCluster = (): Cluster => ({
@@ -35,12 +39,12 @@ const defaultCluster = (): Cluster => ({
   expanded: true,
 })
 
-export default function ClusterCreateForm({ onYamlChange }: Props) {
-  const [pcCred, setPcCred] = useState('pc_user')
-  const [cvmCred, setCvmCred] = useState('cvm_credential')
-  const [pcIp, setPcIp] = useState('')
-  const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
+export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
+  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'pc_user')
+  const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
+  const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
+  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
+  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
   const [clusters, setClusters] = useState<Cluster[]>([defaultCluster()])
 
   useEffect(() => {

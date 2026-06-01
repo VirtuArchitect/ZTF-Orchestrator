@@ -3,20 +3,23 @@ import { Plus, Trash2 } from 'lucide-react'
 import { buildClusterConfigYaml } from '../../utils/yaml'
 import { CREDENTIAL_KEYS } from '../../data'
 import TagInput from './TagInput'
+import type { ConnectionProfile } from '../../types'
 
 interface Container { name: string; replicationFactor: number; compression: boolean; dedup: boolean }
 interface Network { name: string; vlanId: number; networkIp: string; prefix: number; gateway: string; ipPools: string[] }
 interface RoleMapping { role: string; entityType: string; values: string }
 
-interface Props { onYamlChange: (yaml: string) => void }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
+
+const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
 
 const AD_ROLES = ['ROLE_CLUSTER_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BACKUP_ADMIN', 'ROLE_READONLY', 'ROLE_CLUSTER_VIEWER']
 
-export default function ClusterConfigForm({ onYamlChange }: Props) {
-  const [peCred, setPeCred] = useState('pe_user')
-  const [clusterIps, setClusterIps] = useState([''])
-  const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
+export default function ClusterConfigForm({ onYamlChange, profile }: Props) {
+  const [peCred, setPeCred] = useState(profile?.prismElement.peCredentialRef || 'pe_user')
+  const [clusterIps, setClusterIps] = useState([profile?.prismElement.defaultClusterVip || ''])
+  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
+  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
 
   // EULA
   const [eulaUser, setEulaUser] = useState('admin')
@@ -30,16 +33,16 @@ export default function ClusterConfigForm({ onYamlChange }: Props) {
   const [enableAD, setEnableAD] = useState(false)
   const [adIp, setAdIp] = useState('')
   const [adName, setAdName] = useState('')
-  const [adDomain, setAdDomain] = useState('')
+  const [adDomain, setAdDomain] = useState(profile?.directory.domain || '')
   const [adSvcUser, setAdSvcUser] = useState('')
   const [adSvcPass, setAdSvcPass] = useState('')
   const [adRoles, setAdRoles] = useState<RoleMapping[]>([{ role: 'ROLE_CLUSTER_ADMIN', entityType: 'GROUP', values: '' }])
 
   // Storage
-  const [containers, setContainers] = useState<Container[]>([{ name: 'default-container', replicationFactor: 2, compression: true, dedup: false }])
+  const [containers, setContainers] = useState<Container[]>([{ name: profile?.prismElement.storageContainer || 'default-container', replicationFactor: 2, compression: true, dedup: false }])
 
   // Networks
-  const [networks, setNetworks] = useState<Network[]>([{ name: 'vlan0', vlanId: 0, networkIp: '', prefix: 24, gateway: '', ipPools: [] }])
+  const [networks, setNetworks] = useState<Network[]>([{ name: profile?.prismElement.networkName || 'vlan0', vlanId: 0, networkIp: '', prefix: 24, gateway: '', ipPools: [] }])
 
   useEffect(() => {
     const validClusters = clusterIps.filter(ip => ip.trim())

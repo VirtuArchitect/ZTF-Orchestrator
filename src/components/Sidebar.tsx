@@ -7,22 +7,47 @@ import {
 import { useStore } from '../store'
 import clsx from 'clsx'
 
-const NAV_ITEMS = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/setup', icon: Download, label: 'Setup & Install' },
-  { path: '/global-config', icon: Settings, label: 'Global Config' },
-  { path: '/workflows', icon: Workflow, label: 'Workflows' },
-  { path: '/scripts', icon: Terminal, label: 'Scripts' },
-  { path: '/configs', icon: FileCode, label: 'Config Files' },
-  { path: '/executions', icon: History,    label: 'Executions' },
-  { path: '/pipelines',  icon: GitBranch,  label: 'Pipelines' },
-  { path: '/drift',      icon: FileSearch,  label: 'Drift Detection' },
-  { path: '/schedules',  icon: Clock,       label: 'Schedules' },
-  { path: '/parallel',   icon: Layers,      label: 'Parallel Exec' },
-  { path: '/approvals',  icon: ShieldCheck, label: 'Approvals' },
-  { path: '/audit-log',  icon: ScrollText,  label: 'Audit Log' },
-  { path: '/users',      icon: Users,       label: 'Users' },
-  { path: '/settings',   icon: Wrench,      label: 'Settings' },
+const NAV_GROUPS = [
+  {
+    label: 'Overview',
+    items: [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/setup', icon: Download, label: 'Setup & Install' },
+    ],
+  },
+  {
+    label: 'Configure',
+    items: [
+      { path: '/global-config', icon: Settings, label: 'Global Config' },
+      { path: '/configs', icon: FileCode, label: 'Config Files' },
+      { path: '/workflows', icon: Workflow, label: 'Workflows' },
+      { path: '/scripts', icon: Terminal, label: 'Scripts' },
+    ],
+  },
+  {
+    label: 'Execute',
+    items: [
+      { path: '/executions', icon: History, label: 'Executions' },
+      { path: '/pipelines', icon: GitBranch, label: 'Pipelines' },
+      { path: '/schedules', icon: Clock, label: 'Schedules' },
+      { path: '/parallel', icon: Layers, label: 'Parallel Exec' },
+    ],
+  },
+  {
+    label: 'Govern',
+    items: [
+      { path: '/approvals', icon: ShieldCheck, label: 'Approvals' },
+      { path: '/drift', icon: FileSearch, label: 'Drift Detection' },
+      { path: '/audit-log', icon: ScrollText, label: 'Audit Log' },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { path: '/users', icon: Users, label: 'Users' },
+      { path: '/settings', icon: Wrench, label: 'Settings' },
+    ],
+  },
 ]
 
 export default function Sidebar() {
@@ -44,7 +69,7 @@ export default function Sidebar() {
         {sidebarOpen && (
           <div className="min-w-0">
             <div className="text-sm font-bold text-gray-100 truncate">ZeroTouch</div>
-            <div className="text-xs text-gray-500 truncate">Enterprise Orchestrator</div>
+            <div className="text-xs text-gray-500 truncate">Orchestrator</div>
           </div>
         )}
       </div>
@@ -63,42 +88,55 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-3 overflow-y-auto">
-        <div className="space-y-0.5 px-2">
-          {NAV_ITEMS.map(item => {
-            const active = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path))
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => {
-                  if (window.innerWidth < 768 && sidebarOpen) toggleSidebar()
-                }}
-                className={clsx(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group',
-                  active
-                    ? 'bg-nutanix-blue text-white'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-surface'
-                )}
-                title={!sidebarOpen ? item.label : undefined}
-              >
-                <item.icon size={18} className="flex-shrink-0" />
-                {sidebarOpen && (
-                  <>
-                    <span className="flex-1 truncate font-medium">{item.label}</span>
-                    {active && <ChevronRight size={14} className="flex-shrink-0 opacity-60" />}
-                  </>
-                )}
-              </Link>
-            )
-          })}
+        <div className="space-y-4 px-2">
+          {NAV_GROUPS.map(group => (
+            <div key={group.label}>
+              {sidebarOpen ? (
+                <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+                  {group.label}
+                </div>
+              ) : (
+                <div className="mx-3 mb-1 border-t border-border/70" />
+              )}
+              <div className="space-y-0.5">
+                {group.items.map(item => {
+                  const active = location.pathname === item.path ||
+                    (item.path !== '/' && location.pathname.startsWith(item.path))
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => {
+                        if (window.innerWidth < 768 && sidebarOpen) toggleSidebar()
+                      }}
+                      className={clsx(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group',
+                        active
+                          ? 'bg-nutanix-blue text-white'
+                          : 'text-gray-400 hover:text-gray-200 hover:bg-surface'
+                      )}
+                      title={!sidebarOpen ? item.label : undefined}
+                    >
+                      <item.icon size={18} className="flex-shrink-0" />
+                      {sidebarOpen && (
+                        <>
+                          <span className="flex-1 truncate font-medium">{item.label}</span>
+                          {active && <ChevronRight size={14} className="flex-shrink-0 opacity-60" />}
+                        </>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </nav>
 
       {/* Version */}
       {sidebarOpen && (
         <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-gray-600">ZeroTouch Enterprise Orchestrator v1.2.6</p>
+          <p className="text-xs text-gray-600">ZeroTouch Orchestrator v1.2.6</p>
           <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
         </div>
       )}

@@ -2,32 +2,33 @@ import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { buildNDBYaml } from '../../utils/yaml'
 import { CREDENTIAL_KEYS } from '../../data'
+import type { ConnectionProfile } from '../../types'
 
 interface ComputeProfile { name: string; vcpus: number; cores: number; ram: number }
 interface RegisteredCluster { clusterIp: string; credential: string; storageContainer: string; agentVmIp: string }
 
-interface Props { onYamlChange: (yaml: string) => void }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
 
-export default function NDBForm({ onYamlChange }: Props) {
-  const [clusterIp, setClusterIp] = useState('')
-  const [peCred, setPeCred] = useState('pe_user')
+export default function NDBForm({ onYamlChange, profile }: Props) {
+  const [clusterIp, setClusterIp] = useState(profile?.prismElement.defaultClusterVip || '')
+  const [peCred, setPeCred] = useState(profile?.prismElement.peCredentialRef || 'pe_user')
   const [ndbCred, setNdbCred] = useState('admin_cred')
   const [enablePulse, setEnablePulse] = useState(true)
 
   // NDB VM
   const [enableVm, setEnableVm] = useState(true)
   const [imagePath, setImagePath] = useState('')
-  const [container, setContainer] = useState('SelfServiceContainer')
+  const [container, setContainer] = useState(profile?.prismElement.storageContainer || 'SelfServiceContainer')
   const [vmName, setVmName] = useState('NDB-VM-01')
   const [ram, setRam] = useState(32)
   const [vcpus, setVcpus] = useState(16)
-  const [networkName, setNetworkName] = useState('')
+  const [networkName, setNetworkName] = useState(profile?.prismElement.networkName || '')
   const [vmIp, setVmIp] = useState('')
   const [gateway, setGateway] = useState('')
   const [subnetMask, setSubnetMask] = useState('255.255.255.0')
 
   const [computeProfiles, setComputeProfiles] = useState<ComputeProfile[]>([{ name: 'ndb', vcpus: 16, cores: 1, ram: 16 }])
-  const [regClusters, setRegClusters] = useState<RegisteredCluster[]>([{ clusterIp: '', credential: 'pe_user', storageContainer: 'SelfServiceContainer', agentVmIp: '' }])
+  const [regClusters, setRegClusters] = useState<RegisteredCluster[]>([{ clusterIp: profile?.prismElement.defaultClusterVip || '', credential: profile?.prismElement.peCredentialRef || 'pe_user', storageContainer: profile?.prismElement.storageContainer || 'SelfServiceContainer', agentVmIp: '' }])
 
   useEffect(() => {
     if (!clusterIp) return

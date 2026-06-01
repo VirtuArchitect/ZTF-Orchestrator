@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { buildImagingOnlyYaml } from '../../utils/yaml'
 import { CREDENTIAL_KEYS } from '../../data'
 import TagInput from './TagInput'
+import type { ConnectionProfile } from '../../types'
 
 interface Node {
   cvmIp: string
@@ -16,19 +17,21 @@ interface Batch {
   nodes: Node[]
 }
 
-interface Props { onYamlChange: (yaml: string) => void }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
+
+const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
 
 const defaultNode = (): Node => ({ cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmRamGb: 12 })
 
-export default function ImagingOnlyForm({ onYamlChange }: Props) {
-  const [pcCred, setPcCred] = useState('pc_user')
-  const [cvmCred, setCvmCred] = useState('cvm_credential')
-  const [pcIp, setPcIp] = useState('')
-  const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
-  const [aosUrl, setAosUrl] = useState('')
-  const [hypervisorType, setHypervisorType] = useState('kvm')
-  const [hypervisorUrl, setHypervisorUrl] = useState('')
+export default function ImagingOnlyForm({ onYamlChange, profile }: Props) {
+  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'pc_user')
+  const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
+  const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
+  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
+  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
+  const [aosUrl, setAosUrl] = useState(profile?.foundationCentral.aosUrl || '')
+  const [hypervisorType, setHypervisorType] = useState(profile?.foundationCentral.hypervisorType || 'kvm')
+  const [hypervisorUrl, setHypervisorUrl] = useState(profile?.foundationCentral.hypervisorUrl || '')
   const [batches, setBatches] = useState<Batch[]>([{ nodes: [defaultNode()] }])
 
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function ImagingOnlyForm({ onYamlChange }: Props) {
           <div><label className="label">AOS Package URL <span className="text-red-400">*</span></label>
             <input className="input font-mono text-xs" value={aosUrl} onChange={e => setAosUrl(e.target.value)} placeholder="http://web-server/nutanix-aos-6.8-x86_64.tar.gz" /></div>
           <div><label className="label">Hypervisor Type</label>
-            <select className="input" value={hypervisorType} onChange={e => setHypervisorType(e.target.value)}>
+            <select className="input" value={hypervisorType} onChange={e => setHypervisorType(e.target.value as 'kvm' | 'esx' | 'hyperv')}>
               <option value="kvm">AHV (KVM)</option>
               <option value="esx">VMware ESXi</option>
               <option value="hyperv">Hyper-V</option>

@@ -23,6 +23,7 @@ import CalmWorkloadsForm from '../components/forms/CalmWorkloadsForm'
 import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
 import clsx from 'clsx'
+import { useStore } from '../store'
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
@@ -34,6 +35,8 @@ const TABS = ['Configure', 'YAML Preview'] as const
 export default function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const workflow = WORKFLOWS.find(w => w.id === id)
+  const settings = useStore(s => s.settings)
+  const activeProfile = settings.connectionProfiles?.find(p => p.id === settings.activeProfileId)
 
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Configure')
   const [yamlContent, setYamlContent] = useState('')
@@ -67,7 +70,7 @@ export default function WorkflowDetail() {
   }
 
   const renderForm = () => {
-    const props = { onYamlChange: handleYamlGenerated }
+    const props = { onYamlChange: handleYamlGenerated, profile: activeProfile }
     switch (workflow.id) {
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'imaging-only': return <ImagingOnlyForm {...props} />

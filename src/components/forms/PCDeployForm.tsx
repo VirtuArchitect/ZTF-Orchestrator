@@ -3,27 +3,38 @@ import { Plus, Trash2 } from 'lucide-react'
 import { buildPCDeployYaml } from '../../utils/yaml'
 import { CREDENTIAL_KEYS, PC_VERSIONS } from '../../data'
 import TagInput from './TagInput'
+import type { ConnectionProfile } from '../../types'
 
 interface PCCluster {
   clusterIp: string; pcVmName: string; pcIp: string
   networkName: string; defaultGateway: string; subnetMask: string; vip: string
 }
 
-interface Props { onYamlChange: (yaml: string) => void }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
 
-export default function PCDeployForm({ onYamlChange }: Props) {
-  const [peCred, setPeCred] = useState('pe_user')
-  const [cvmCred, setCvmCred] = useState('cvm_credential')
-  const [pcVersion, setPcVersion] = useState('pc.2024.3')
+const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
+
+export default function PCDeployForm({ onYamlChange, profile }: Props) {
+  const [peCred, setPeCred] = useState(profile?.prismElement.peCredentialRef || 'pe_user')
+  const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
+  const [pcVersion, setPcVersion] = useState(profile?.prismCentral.defaultPcVersion || 'pc.2024.3')
   const [fileUrl, setFileUrl] = useState('')
   const [metadataUrl, setMetadataUrl] = useState('')
   const [md5sum, setMd5sum] = useState('')
   const [vmSize, setVmSize] = useState('large')
-  const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
-  const [container, setContainer] = useState('SelfServiceContainer')
+  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
+  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
+  const [container, setContainer] = useState(profile?.prismElement.storageContainer || 'SelfServiceContainer')
   const [enableCmsp, setEnableCmsp] = useState(false)
-  const [clusters, setClusters] = useState<PCCluster[]>([{ clusterIp: '', pcVmName: 'PC-VM-01', pcIp: '', networkName: '', defaultGateway: '', subnetMask: '255.255.255.0', vip: '' }])
+  const [clusters, setClusters] = useState<PCCluster[]>([{
+    clusterIp: profile?.prismElement.defaultClusterVip || '',
+    pcVmName: 'PC-VM-01',
+    pcIp: profile?.prismCentral.endpoint || '',
+    networkName: profile?.prismElement.networkName || '',
+    defaultGateway: '',
+    subnetMask: '255.255.255.0',
+    vip: '',
+  }])
 
   useEffect(() => {
     if (!fileUrl || !clusters.every(c => c.clusterIp && c.pcIp)) return

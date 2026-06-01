@@ -243,7 +243,10 @@ def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[s
         return config_content, False
     return yaml.safe_dump(normalized, sort_keys=False), True
 
-ALLOWED_SETTINGS_KEYS = {'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl'}
+ALLOWED_SETTINGS_KEYS = {
+    'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl',
+    'activeProfileId', 'connectionProfiles',
+}
 
 # ─── Feature engines (lazy-initialised in _init_engines) ─────────────────────
 
@@ -533,14 +536,82 @@ def write_json(path: Path, data):
     _secure_write(path, json.dumps(data, indent=2))
 
 def get_settings() -> dict:
+    default_profile = {
+        'id': 'default',
+        'name': 'Default',
+        'description': 'Shared connection defaults for generated ZTF configuration',
+        'environment': 'lab',
+        'prismCentral': {
+            'endpoint': '',
+            'credentialRef': 'pc_user',
+            'remoteCredentialRef': 'remote_pc_credentials',
+            'defaultPcVersion': '',
+            'enableObjects': False,
+            'enableNke': False,
+            'enableFlow': False,
+            'enableNetworkController': False,
+        },
+        'foundationCentral': {
+            'endpoint': '',
+            'credentialRef': 'pc_user',
+            'apiKeyRef': '',
+            'aosUrl': '',
+            'hypervisorType': 'kvm',
+            'hypervisorUrl': '',
+            'foundationVersion': '',
+        },
+        'prismElement': {
+            'defaultClusterVip': '',
+            'peCredentialRef': 'pe_user',
+            'cvmCredentialRef': 'cvm_credential',
+            'storageContainer': '',
+            'networkName': '',
+        },
+        'ncm': {
+            'endpoint': '',
+            'credentialRef': 'ncm_user',
+            'projectName': '',
+            'accountName': 'NTNX_LOCAL_AZ',
+        },
+        'directory': {
+            'domain': '',
+            'ldapUrl': '',
+            'serviceAccountCredentialRef': 'service_account_credential',
+            'defaultGroups': '',
+        },
+        'ipam': {
+            'method': 'static',
+            'infobloxHost': '',
+            'credentialRef': 'infoblox_user',
+            'dnsView': 'default',
+            'networkView': 'default',
+        },
+        'defaults': {
+            'dnsServers': '',
+            'ntpServers': '',
+            'timezone': 'UTC',
+            'siteCode': '',
+        },
+    }
     defaults = {
         'ztfPath':    ZTF_DEFAULT,
         'pythonPath': PYTHON_DEFAULT,
         'configDir':  str(CONFIG_DIR / 'configs'),
         'repoUrl':    'https://github.com/nutanixdev/zerotouch-framework.git',
         'webhookUrl': '',
+        'activeProfileId': 'default',
+        'connectionProfiles': [default_profile],
     }
-    return {**defaults, **read_json(SETTINGS_FILE, {})}
+    stored = read_json(SETTINGS_FILE, {})
+    merged = {**defaults, **stored}
+    profiles = merged.get('connectionProfiles')
+    if not isinstance(profiles, list) or not profiles:
+        merged['connectionProfiles'] = [default_profile]
+        merged['activeProfileId'] = 'default'
+    elif not any(p.get('id') == merged.get('activeProfileId') for p in profiles if isinstance(p, dict)):
+        first = next((p for p in profiles if isinstance(p, dict) and p.get('id')), default_profile)
+        merged['activeProfileId'] = first['id']
+    return merged
 
 
 def _tcp_check(host: str, port: int, timeout: float = 5.0) -> tuple[bool, float]:

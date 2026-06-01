@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { FileCode } from 'lucide-react'
-import type { WorkflowDef } from '../../types'
+import type { ConnectionProfile, WorkflowDef } from '../../types'
 import { toYaml } from '../../utils/yaml'
 
 interface Props {
   workflow: WorkflowDef
   onYamlChange: (yaml: string) => void
+  profile?: ConnectionProfile
 }
 
 const PLACEHOLDERS: Record<string, string> = {
@@ -87,8 +88,32 @@ projects:
 `,
 }
 
-export default function GenericWorkflowForm({ workflow, onYamlChange }: Props) {
-  const [content, setContent] = useState(PLACEHOLDERS[workflow.id] || `# ${workflow.name} Configuration\n# Edit this YAML configuration for ${workflow.id}\n`)
+function replaceToken(content: string, from: string, to: string): string {
+  return content.split(from).join(to)
+}
+
+function withProfileDefaults(content: string, profile?: ConnectionProfile): string {
+  if (!profile) return content
+  let next = content
+  next = replaceToken(next, 'pc_ip: 10.0.0.51', `pc_ip: ${profile.prismCentral.endpoint || '10.0.0.51'}`)
+  next = replaceToken(next, 'pc_ip: 10.0.0.100', `pc_ip: ${profile.foundationCentral.endpoint || profile.prismCentral.endpoint || '10.0.0.100'}`)
+  next = replaceToken(next, 'pc_credential: pc_user', `pc_credential: ${profile.prismCentral.credentialRef || 'pc_user'}`)
+  next = replaceToken(next, 'pe_credential: pe_user', `pe_credential: ${profile.prismElement.peCredentialRef || 'pe_user'}`)
+  next = replaceToken(next, 'cvm_credential: cvm_credential', `cvm_credential: ${profile.prismElement.cvmCredentialRef || 'cvm_credential'}`)
+  next = replaceToken(next, 'ncm_vm_ip: 10.0.0.60', `ncm_vm_ip: ${profile.ncm.endpoint || profile.prismCentral.endpoint || '10.0.0.60'}`)
+  next = replaceToken(next, 'ncm_credential: ncm_user', `ncm_credential: ${profile.ncm.credentialRef || 'ncm_user'}`)
+  next = replaceToken(next, 'SUBNET_NAME: vlan0-managed', `SUBNET_NAME: ${profile.prismElement.networkName || 'vlan0-managed'}`)
+  next = replaceToken(next, 'network: vlan0-managed', `network: ${profile.prismElement.networkName || 'vlan0-managed'}`)
+  next = replaceToken(next, 'hypervisor_type: kvm', `hypervisor_type: ${profile.foundationCentral.hypervisorType || 'kvm'}`)
+  next = replaceToken(next, '"http://server/nutanix-aos.tar.gz"', `"${profile.foundationCentral.aosUrl || 'http://server/nutanix-aos.tar.gz'}"`)
+  next = replaceToken(next, '"http://server/AHV.iso"', `"${profile.foundationCentral.hypervisorUrl || 'http://server/AHV.iso'}"`)
+  next = replaceToken(next, 'ad_domain: corp.domain.com', `ad_domain: ${profile.directory.domain || 'corp.domain.com'}`)
+  return next
+}
+
+export default function GenericWorkflowForm({ workflow, onYamlChange, profile }: Props) {
+  const placeholder = PLACEHOLDERS[workflow.id] || `# ${workflow.name} Configuration\n# Edit this YAML configuration for ${workflow.id}\n`
+  const [content, setContent] = useState(withProfileDefaults(placeholder, profile))
 
   useEffect(() => {
     onYamlChange(content)

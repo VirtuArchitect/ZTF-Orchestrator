@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Settings, Execution, SystemCheck } from './types'
+import type { Settings, Execution, SystemCheck, ConnectionProfile } from './types'
 
 interface User {
   username: string
@@ -47,6 +47,64 @@ interface AppState {
   clearRunning: () => void
 }
 
+const DEFAULT_CONNECTION_PROFILE: ConnectionProfile = {
+  id: 'default',
+  name: 'Default',
+  description: 'Shared connection defaults for generated ZTF configuration',
+  environment: 'lab',
+  prismCentral: {
+    endpoint: '',
+    credentialRef: 'pc_user',
+    remoteCredentialRef: 'remote_pc_credentials',
+    defaultPcVersion: '',
+    enableObjects: false,
+    enableNke: false,
+    enableFlow: false,
+    enableNetworkController: false,
+  },
+  foundationCentral: {
+    endpoint: '',
+    credentialRef: 'pc_user',
+    apiKeyRef: '',
+    aosUrl: '',
+    hypervisorType: 'kvm',
+    hypervisorUrl: '',
+    foundationVersion: '',
+  },
+  prismElement: {
+    defaultClusterVip: '',
+    peCredentialRef: 'pe_user',
+    cvmCredentialRef: 'cvm_credential',
+    storageContainer: '',
+    networkName: '',
+  },
+  ncm: {
+    endpoint: '',
+    credentialRef: 'ncm_user',
+    projectName: '',
+    accountName: 'NTNX_LOCAL_AZ',
+  },
+  directory: {
+    domain: '',
+    ldapUrl: '',
+    serviceAccountCredentialRef: 'service_account_credential',
+    defaultGroups: '',
+  },
+  ipam: {
+    method: 'static',
+    infobloxHost: '',
+    credentialRef: 'infoblox_user',
+    dnsView: 'default',
+    networkView: 'default',
+  },
+  defaults: {
+    dnsServers: '',
+    ntpServers: '',
+    timezone: 'UTC',
+    siteCode: '',
+  },
+}
+
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
@@ -63,6 +121,8 @@ export const useStore = create<AppState>()(
         configDir:  '',
         repoUrl:    'https://github.com/nutanixdev/zerotouch-framework.git',
         webhookUrl: '',
+        activeProfileId: 'default',
+        connectionProfiles: [DEFAULT_CONNECTION_PROFILE],
       },
       setSettings: (s) => set(state => ({ settings: { ...state.settings, ...s } })),
 

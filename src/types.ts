@@ -91,6 +91,66 @@ export interface Settings {
   configDir: string
   repoUrl: string
   webhookUrl: string
+  activeProfileId: string
+  connectionProfiles: ConnectionProfile[]
+}
+
+export interface ConnectionProfile {
+  id: string
+  name: string
+  description?: string
+  environment: 'lab' | 'preprod' | 'production' | 'customer' | 'other'
+  prismCentral: {
+    endpoint: string
+    credentialRef: string
+    remoteCredentialRef: string
+    defaultPcVersion: string
+    enableObjects: boolean
+    enableNke: boolean
+    enableFlow: boolean
+    enableNetworkController: boolean
+  }
+  foundationCentral: {
+    endpoint: string
+    credentialRef: string
+    apiKeyRef: string
+    aosUrl: string
+    hypervisorType: 'kvm' | 'esx' | 'hyperv'
+    hypervisorUrl: string
+    foundationVersion: string
+  }
+  prismElement: {
+    defaultClusterVip: string
+    peCredentialRef: string
+    cvmCredentialRef: string
+    storageContainer: string
+    networkName: string
+  }
+  ncm: {
+    endpoint: string
+    credentialRef: string
+    projectName: string
+    accountName: string
+  }
+  directory: {
+    domain: string
+    ldapUrl: string
+    serviceAccountCredentialRef: string
+    defaultGroups: string
+  }
+  ipam: {
+    method: 'static' | 'infoblox'
+    infobloxHost: string
+    credentialRef: string
+    dnsView: string
+    networkView: string
+  }
+  defaults: {
+    dnsServers: string
+    ntpServers: string
+    timezone: string
+    siteCode: string
+  }
 }
 
 export type DriftStatus = 'matched' | 'drifted' | 'unknown'

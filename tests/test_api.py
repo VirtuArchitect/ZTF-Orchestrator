@@ -63,6 +63,75 @@ def test_operator_cannot_change_settings(client, auth_headers):
     assert resp.status_code == 403
 
 
+def test_settings_persist_connection_profiles(client, auth_headers):
+    profile = {
+        'id': 'prod',
+        'name': 'Production',
+        'environment': 'production',
+        'prismCentral': {
+            'endpoint': 'pc.prod.example.com',
+            'credentialRef': 'pc_user',
+            'remoteCredentialRef': 'remote_pc_credentials',
+            'defaultPcVersion': 'pc.2024.1',
+            'enableObjects': True,
+            'enableNke': False,
+            'enableFlow': True,
+            'enableNetworkController': True,
+        },
+        'foundationCentral': {
+            'endpoint': 'pc.prod.example.com',
+            'credentialRef': 'pc_user',
+            'apiKeyRef': 'foundation_api_key',
+            'aosUrl': 'https://repo/aos.tar.gz',
+            'hypervisorType': 'kvm',
+            'hypervisorUrl': 'https://repo/ahv.iso',
+            'foundationVersion': '5.6.0.1',
+        },
+        'prismElement': {
+            'defaultClusterVip': '10.0.0.10',
+            'peCredentialRef': 'pe_user',
+            'cvmCredentialRef': 'cvm_credential',
+            'storageContainer': 'SelfServiceContainer',
+            'networkName': 'MGMTVLAN0',
+        },
+        'ncm': {
+            'endpoint': 'pc.prod.example.com',
+            'credentialRef': 'ncm_user',
+            'projectName': 'Production',
+            'accountName': 'NTNX_LOCAL_AZ',
+        },
+        'directory': {
+            'domain': 'prod.example.com',
+            'ldapUrl': 'ldap://10.0.0.20:389',
+            'serviceAccountCredentialRef': 'service_account_credential',
+            'defaultGroups': 'Nutanix Admins',
+        },
+        'ipam': {
+            'method': 'infoblox',
+            'infobloxHost': 'infoblox.prod.example.com',
+            'credentialRef': 'infoblox_user',
+            'dnsView': 'Internal',
+            'networkView': 'default',
+        },
+        'defaults': {
+            'dnsServers': '10.0.0.20, 10.0.0.21',
+            'ntpServers': '10.0.0.30',
+            'timezone': 'Europe/London',
+            'siteCode': 'prod-uk',
+        },
+    }
+    resp = client.post('/api/settings',
+                       json={'activeProfileId': 'prod', 'connectionProfiles': [profile]},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.get('/api/settings', headers=auth_headers)
+    body = resp.get_json()
+    assert body['activeProfileId'] == 'prod'
+    assert body['connectionProfiles'][0]['prismCentral']['endpoint'] == 'pc.prod.example.com'
+    assert body['connectionProfiles'][0]['ipam']['method'] == 'infoblox'
+
+
 def test_only_admin_can_create_users(client, auth_headers):
     _create_user(client, auth_headers, 'op3', 'operator')
     op_headers = _login(client, 'op3')

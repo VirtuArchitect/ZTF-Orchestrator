@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import {
   Server, CheckCircle, XCircle, Clock,
   Activity, AlertTriangle, Zap, Settings, Download,
-  TrendingUp, Database, Cloud, RefreshCw, ShieldCheck
+  TrendingUp, Database, Cloud, RefreshCw, ShieldCheck,
+  FileCode, PlayCircle, ArrowRight
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -181,8 +182,11 @@ export default function Dashboard() {
         <div className="card">
           <h2 className="section-title flex items-center gap-2 mb-4">
             <Zap size={16} className="text-nutanix-cyan" />
-            Quick Actions
+            Common Workflows
           </h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Fast access to the workflows most teams run during initial deployment and day-2 setup.
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {QUICK_ACTIONS.map(action => (
               <Link
@@ -207,10 +211,28 @@ export default function Dashboard() {
           </h2>
           <div className="space-y-2">
             {executions.length === 0 && (
-              <div className="empty-state py-8">
-                <Activity size={28} className="mx-auto mb-3 text-gray-700" />
-                <p className="text-sm font-medium text-gray-400">No executions yet</p>
-                <p className="text-xs text-gray-600 mt-1">Launch a workflow or script to populate this feed.</p>
+              <div className="rounded-lg border border-border bg-gray-900/40 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-nutanix-blue/10 border border-nutanix-blue/20 flex items-center justify-center flex-shrink-0">
+                    <PlayCircle size={17} className="text-nutanix-cyan" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-200">Run your first workflow</p>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                      Start with a guided workflow, save the generated YAML, then watch execution output appear here.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Link to="/workflows" className="btn-primary text-xs gap-1.5 py-1.5">
+                        Browse Workflows
+                        <ArrowRight size={12} />
+                      </Link>
+                      <Link to="/configs" className="btn-secondary text-xs gap-1.5 py-1.5">
+                        <FileCode size={12} />
+                        Create Config
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {executions.slice(0, 6).map(exec => (

@@ -3,6 +3,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { buildSiteDeployYaml } from '../../utils/yaml'
 import { CREDENTIAL_KEYS } from '../../data'
 import TagInput from './TagInput'
+import type { ConnectionProfile } from '../../types'
 
 interface Node {
   nodeSerial: string; cvmIp: string; hostIp: string; ipmiIp: string; hostname: string; cvmVlanId: string
@@ -16,7 +17,9 @@ interface Site {
   clusters: Cluster[]; expanded: boolean
 }
 
-interface Props { onYamlChange: (yaml: string) => void }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
+
+const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
 
 const defaultNode = (): Node => ({ nodeSerial: '', cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmVlanId: '' })
 const defaultCluster = (): Cluster => ({ clusterName: '', clusterVip: '', redundancyFactor: 2, clusterSize: 3, cvmRam: 12, nodes: [defaultNode()] })
@@ -26,15 +29,15 @@ const defaultSite = (): Site => ({
   clusters: [defaultCluster()], expanded: true,
 })
 
-export default function SiteDeployForm({ onYamlChange }: Props) {
-  const [pcCred, setPcCred] = useState('pc_user')
-  const [cvmCred, setCvmCred] = useState('cvm_credential')
-  const [pcIp, setPcIp] = useState('')
-  const [dnsServers, setDnsServers] = useState(['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(['0.us.pool.ntp.org'])
-  const [aosUrl, setAosUrl] = useState('')
-  const [hypervisorType, setHypervisorType] = useState('kvm')
-  const [hypervisorUrl, setHypervisorUrl] = useState('')
+export default function SiteDeployForm({ onYamlChange, profile }: Props) {
+  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'pc_user')
+  const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
+  const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
+  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
+  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
+  const [aosUrl, setAosUrl] = useState(profile?.foundationCentral.aosUrl || '')
+  const [hypervisorType, setHypervisorType] = useState(profile?.foundationCentral.hypervisorType || 'kvm')
+  const [hypervisorUrl, setHypervisorUrl] = useState(profile?.foundationCentral.hypervisorUrl || '')
   const [sites, setSites] = useState<Site[]>([defaultSite()])
 
   useEffect(() => {
@@ -97,7 +100,7 @@ export default function SiteDeployForm({ onYamlChange }: Props) {
           <div className="col-span-2"><label className="label">AOS Package URL</label>
             <input className="input font-mono text-xs" value={aosUrl} onChange={e => setAosUrl(e.target.value)} placeholder="http://server/nutanix-aos.tar.gz" /></div>
           <div><label className="label">Hypervisor Type</label>
-            <select className="input" value={hypervisorType} onChange={e => setHypervisorType(e.target.value)}>
+            <select className="input" value={hypervisorType} onChange={e => setHypervisorType(e.target.value as 'kvm' | 'esx' | 'hyperv')}>
               <option value="kvm">AHV (KVM)</option><option value="esx">ESXi</option><option value="hyperv">Hyper-V</option>
             </select></div>
           <div><label className="label">Hypervisor ISO URL</label>
