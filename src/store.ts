@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type { Settings, Execution, SystemCheck, ConnectionProfile } from './types'
 
 interface User {
@@ -155,6 +155,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'ztf-ui-store',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         sessionToken: state.sessionToken,
         user:         state.user,
