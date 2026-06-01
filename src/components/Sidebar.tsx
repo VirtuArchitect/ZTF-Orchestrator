@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
@@ -7,52 +8,65 @@ import {
 import { useStore } from '../store'
 import clsx from 'clsx'
 
-const NAV_GROUPS = [
+type Role = 'admin' | 'operator' | 'viewer'
+type NavItem = { path: string; icon: ElementType; label: string; roles: Role[] }
+type NavGroup = { label: string; items: NavItem[] }
+
+const ALL_ROLES: Role[] = ['admin', 'operator', 'viewer']
+const OPERATORS: Role[] = ['admin', 'operator']
+const ADMINS: Role[] = ['admin']
+
+const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Overview',
     items: [
-      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-      { path: '/setup', icon: Download, label: 'Setup & Install' },
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ALL_ROLES },
+      { path: '/setup', icon: Download, label: 'Setup & Install', roles: OPERATORS },
     ],
   },
   {
     label: 'Configure',
     items: [
-      { path: '/global-config', icon: Settings, label: 'Global Config' },
-      { path: '/configs', icon: FileCode, label: 'Config Files' },
-      { path: '/workflows', icon: Workflow, label: 'Workflows' },
-      { path: '/scripts', icon: Terminal, label: 'Scripts' },
+      { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
+      { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
+      { path: '/workflows', icon: Workflow, label: 'Workflows', roles: OPERATORS },
+      { path: '/scripts', icon: Terminal, label: 'Scripts', roles: OPERATORS },
     ],
   },
   {
     label: 'Execute',
     items: [
-      { path: '/executions', icon: History, label: 'Executions' },
-      { path: '/pipelines', icon: GitBranch, label: 'Pipelines' },
-      { path: '/schedules', icon: Clock, label: 'Schedules' },
-      { path: '/parallel', icon: Layers, label: 'Parallel Exec' },
+      { path: '/executions', icon: History, label: 'Executions', roles: ALL_ROLES },
+      { path: '/pipelines', icon: GitBranch, label: 'Pipelines', roles: ALL_ROLES },
+      { path: '/schedules', icon: Clock, label: 'Schedules', roles: ALL_ROLES },
+      { path: '/parallel', icon: Layers, label: 'Parallel Exec', roles: ALL_ROLES },
     ],
   },
   {
     label: 'Govern',
     items: [
-      { path: '/approvals', icon: ShieldCheck, label: 'Approvals' },
-      { path: '/drift', icon: FileSearch, label: 'Drift Detection' },
-      { path: '/audit-log', icon: ScrollText, label: 'Audit Log' },
+      { path: '/approvals', icon: ShieldCheck, label: 'Approvals', roles: ALL_ROLES },
+      { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
+      { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
     ],
   },
   {
     label: 'Admin',
     items: [
-      { path: '/users', icon: Users, label: 'Users' },
-      { path: '/settings', icon: Wrench, label: 'Settings' },
+      { path: '/users', icon: Users, label: 'Users', roles: ADMINS },
+      { path: '/settings', icon: Wrench, label: 'Settings', roles: OPERATORS },
     ],
   },
 ]
 
 export default function Sidebar() {
-  const { sidebarOpen, ztfInstalled, toggleSidebar } = useStore()
+  const { sidebarOpen, ztfInstalled, toggleSidebar, user } = useStore()
   const location = useLocation()
+  const role = user?.role
+  const visibleGroups = NAV_GROUPS.map(group => ({
+    ...group,
+    items: group.items.filter(item => role && item.roles.includes(role)),
+  })).filter(group => group.items.length > 0)
 
   return (
     <aside className={clsx(
@@ -89,7 +103,7 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 py-3 overflow-y-auto">
         <div className="space-y-4 px-2">
-          {NAV_GROUPS.map(group => (
+          {visibleGroups.map(group => (
             <div key={group.label}>
               {sidebarOpen ? (
                 <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-600">

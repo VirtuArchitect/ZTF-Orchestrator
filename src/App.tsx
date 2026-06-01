@@ -17,10 +17,34 @@ import Schedules         from './pages/Schedules'
 import ParallelExecution from './pages/ParallelExecution'
 import Approvals         from './pages/Approvals'
 import Login             from './pages/Login'
+import Layout            from './components/Layout'
+
+type Role = 'admin' | 'operator' | 'viewer'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const sessionToken = useStore(s => s.sessionToken)
   if (!sessionToken) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
+
+function AccessDenied() {
+  return (
+    <Layout title="Access Denied" subtitle="Your current role does not allow access to this area">
+      <div className="card max-w-xl">
+        <h2 className="text-lg font-semibold text-gray-100 mb-2">Permission Required</h2>
+        <p className="text-sm text-gray-400">
+          This page is restricted by role. Contact an administrator if you need additional access.
+        </p>
+      </div>
+    </Layout>
+  )
+}
+
+function RequireRole({ roles, children }: { roles: Role[]; children: React.ReactNode }) {
+  const sessionToken = useStore(s => s.sessionToken)
+  const user = useStore(s => s.user)
+  if (!sessionToken) return <Navigate to="/login" replace />
+  if (!user || !roles.includes(user.role)) return <AccessDenied />
   return <>{children}</>
 }
 
@@ -36,49 +60,49 @@ export default function App() {
           <RequireAuth><Dashboard /></RequireAuth>
         } />
         <Route path="/setup" element={
-          <RequireAuth><Setup /></RequireAuth>
+          <RequireRole roles={['admin', 'operator']}><Setup /></RequireRole>
         } />
         <Route path="/global-config" element={
-          <RequireAuth><GlobalConfig /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><GlobalConfig /></RequireRole>
         } />
         <Route path="/workflows" element={
-          <RequireAuth><Workflows /></RequireAuth>
+          <RequireRole roles={['admin', 'operator']}><Workflows /></RequireRole>
         } />
         <Route path="/workflows/:id" element={
-          <RequireAuth><WorkflowDetail /></RequireAuth>
+          <RequireRole roles={['admin', 'operator']}><WorkflowDetail /></RequireRole>
         } />
         <Route path="/scripts" element={
-          <RequireAuth><Scripts /></RequireAuth>
+          <RequireRole roles={['admin', 'operator']}><Scripts /></RequireRole>
         } />
         <Route path="/configs" element={
-          <RequireAuth><ConfigFiles /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><ConfigFiles /></RequireRole>
         } />
         <Route path="/executions" element={
-          <RequireAuth><Executions /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><Executions /></RequireRole>
         } />
         <Route path="/settings" element={
-          <RequireAuth><Settings /></RequireAuth>
+          <RequireRole roles={['admin', 'operator']}><Settings /></RequireRole>
         } />
         <Route path="/users" element={
-          <RequireAuth><UserRoles /></RequireAuth>
+          <RequireRole roles={['admin']}><UserRoles /></RequireRole>
         } />
         <Route path="/pipelines" element={
-          <RequireAuth><Pipelines /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><Pipelines /></RequireRole>
         } />
         <Route path="/drift" element={
-          <RequireAuth><DriftDetection /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><DriftDetection /></RequireRole>
         } />
         <Route path="/audit-log" element={
-          <RequireAuth><AuditLog /></RequireAuth>
+          <RequireRole roles={['admin']}><AuditLog /></RequireRole>
         } />
         <Route path="/schedules" element={
-          <RequireAuth><Schedules /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><Schedules /></RequireRole>
         } />
         <Route path="/parallel" element={
-          <RequireAuth><ParallelExecution /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><ParallelExecution /></RequireRole>
         } />
         <Route path="/approvals" element={
-          <RequireAuth><Approvals /></RequireAuth>
+          <RequireRole roles={['admin', 'operator', 'viewer']}><Approvals /></RequireRole>
         } />
 
         {/* Fallback */}
