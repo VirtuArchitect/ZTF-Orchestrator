@@ -147,6 +147,38 @@ export default function Dashboard() {
         })}
       </div>
 
+      {!loading && executions.length === 0 && (
+        <div className="mb-6 rounded-lg border border-nutanix-blue/30 bg-nutanix-blue/10 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg bg-nutanix-blue/20 border border-nutanix-blue/30 flex items-center justify-center flex-shrink-0">
+                <PlayCircle size={18} className="text-nutanix-cyan" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-100">Ready to orchestrate your first deployment?</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Start with a guided workflow, create a reusable config file, or revisit setup before launching automation.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 lg:flex-shrink-0">
+              <Link to="/workflows" className="btn-primary gap-1.5">
+                Browse Workflows
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/configs" className="btn-secondary gap-1.5">
+                <FileCode size={14} />
+                Create Config
+              </Link>
+              <Link to="/setup" className="btn-secondary gap-1.5">
+                <Download size={14} />
+                View Setup
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="card xl:col-span-1">
           <div className="flex items-start justify-between gap-3 mb-4">
@@ -211,28 +243,10 @@ export default function Dashboard() {
           </h2>
           <div className="space-y-2">
             {executions.length === 0 && (
-              <div className="rounded-lg border border-border bg-gray-900/40 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-nutanix-blue/10 border border-nutanix-blue/20 flex items-center justify-center flex-shrink-0">
-                    <PlayCircle size={17} className="text-nutanix-cyan" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-200">Run your first workflow</p>
-                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                      Start with a guided workflow, save the generated YAML, then watch execution output appear here.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <Link to="/workflows" className="btn-primary text-xs gap-1.5 py-1.5">
-                        Browse Workflows
-                        <ArrowRight size={12} />
-                      </Link>
-                      <Link to="/configs" className="btn-secondary text-xs gap-1.5 py-1.5">
-                        <FileCode size={12} />
-                        Create Config
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+              <div className="empty-state py-8">
+                <Activity size={28} className="mx-auto mb-3 text-gray-700" />
+                <p className="text-sm font-medium text-gray-400">No executions yet</p>
+                <p className="text-xs text-gray-600 mt-1">Completed workflows, scripts, schedules, and pipelines will appear here.</p>
               </div>
             )}
             {executions.slice(0, 6).map(exec => (
