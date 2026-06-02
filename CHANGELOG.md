@@ -7,6 +7,31 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.7] - 2026-06-02
+
+### Summary
+Enterprise reliability release: PostgreSQL is now the default Docker backend,
+Dashboard health exposes the active state backend, and workflow/script
+executions now run through a durable background job worker.
+
+### Added
+- Default Docker PostgreSQL service with persistent `ztf-postgres` volume.
+- Standalone `docker-compose.file.yml` for file-backed local testing.
+- Durable execution jobs with queued/running/success/failed/cancelled states.
+- Background execution workers controlled by `ZTF_EXEC_WORKERS`.
+- Job APIs for submit, list, detail, stream, and cancellation.
+- Job queue health in `/health`.
+- `jobs.json` migration/import and retention support.
+
+### Changed
+- `/api/execute` keeps the existing streaming behavior but now streams from the
+  persisted job log instead of owning the subprocess lifecycle.
+- PostgreSQL-backed deployments persist users, sessions, settings, executions,
+  approvals, schedules, pipelines, drift data, jobs, and audit events.
+- Dashboard System Status shows the active state backend and database location.
+
+---
+
 ## [1.2.6] — 2026-05-31
 
 ### Summary

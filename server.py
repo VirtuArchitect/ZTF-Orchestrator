@@ -1411,7 +1411,7 @@ def health():
             'running': sum(1 for job in jobs if job.get('status') in ('running', 'cancelling')),
             'recent': len(jobs),
         },
-        'version':       '1.2.6',
+        'version':       '1.2.7',
     }), 200 if ztf_ok else 503
 
 # ─── Auth endpoints ───────────────────────────────────────────────────────────
@@ -2750,7 +2750,7 @@ if __name__ == '__main__':
     _ensure_default_admin()
     _init_engines()
     print('=' * 60)
-    print('  ZeroTouch Enterprise Orchestrator  v1.2.6')
+    print('  ZeroTouch Enterprise Orchestrator  v1.2.7')
     print('=' * 60)
     print(f'  URL:  http://localhost:{PORT}')
     print(f'  Logs: {LOG_FILE}')

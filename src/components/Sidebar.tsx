@@ -150,7 +150,7 @@ export default function Sidebar() {
       {/* Version */}
       {sidebarOpen && (
         <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-gray-600">ZeroTouch Orchestrator v1.2.6</p>
+          <p className="text-xs text-gray-600">ZeroTouch Orchestrator v1.2.7</p>
           <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
         </div>
       )}
