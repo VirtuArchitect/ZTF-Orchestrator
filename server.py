@@ -25,6 +25,7 @@ from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from storage_backend import StorageError, create_storage
 
 # ─── Environment configuration ───────────────────────────────────────────────
 
@@ -37,6 +38,9 @@ EXEC_TIMEOUT  = int(os.environ.get('ZTF_EXEC_TIMEOUT',  3600))   # seconds
 TOKEN_TTL     = int(os.environ.get('ZTF_TOKEN_TTL',     28800))  # seconds (8 h)
 MAX_BODY      = int(os.environ.get('ZTF_MAX_BODY',      1048576)) # 1 MB
 CONFIG_BACKUPS= int(os.environ.get('ZTF_CONFIG_BACKUPS',5))
+STORAGE_BACKEND = os.environ.get('ZTF_STORAGE_BACKEND', 'file').strip().lower() or 'file'
+AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
+EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
@@ -82,9 +86,28 @@ class JSONFormatter(logging.Formatter):
                 log[key] = str(value)
         return json.dumps(log)
 
+
+class StorageAuditHandler(logging.Handler):
+    """Persist structured log events to the configured storage backend."""
+
+    def __init__(self, storage):
+        super().__init__()
+        self.storage = storage
+
+    def emit(self, record):
+        if not hasattr(self.storage, 'append_audit_event'):
+            return
+        try:
+            event = json.loads(self.format(record))
+            self.storage.append_audit_event(event)
+        except Exception:
+            pass
+
+
 def _setup_logging() -> logging.Logger:
     logger = logging.getLogger('ztf')
     logger.setLevel(getattr(logging, LOG_LEVEL.upper(), logging.INFO))
+    logger.handlers.clear()
     fmt = JSONFormatter()
     sh = logging.StreamHandler(sys.stderr)
     sh.setFormatter(fmt)
@@ -95,6 +118,10 @@ def _setup_logging() -> logging.Logger:
         logger.addHandler(fh)
     except OSError:
         pass
+    if hasattr(_storage, 'append_audit_event'):
+        ah = StorageAuditHandler(_storage)
+        ah.setFormatter(fmt)
+        logger.addHandler(ah)
     return logger
 
 # ─── App setup ────────────────────────────────────────────────────────────────
@@ -110,6 +137,11 @@ def _secure_write(p: Path, data: str):
     except OSError: pass
 
 _secure_mkdir(CONFIG_DIR)
+try:
+    _storage = create_storage(CONFIG_DIR)
+except StorageError as exc:
+    print(f'ZTF-Orchestrator storage initialisation failed: {exc}', file=sys.stderr, flush=True)
+    raise
 log = _setup_logging()
 
 app = Flask(__name__, static_folder='dist', static_url_path='/static-dist')
@@ -366,9 +398,24 @@ def _init_engines():
                                  entry['id'])
         return status
 
-    _schedule_engine  = ScheduleEngine(SCHEDULES_FILE, _sched_run_callback)
-    _parallel_engine  = ParallelEngine(PARALLEL_FILE, EXEC_TIMEOUT)
-    _approval_manager = ApprovalManager(APPROVALS_FILE, _fire_configured_webhook)
+    _schedule_engine  = ScheduleEngine(
+        SCHEDULES_FILE,
+        _sched_run_callback,
+        load_callback=lambda: read_json(SCHEDULES_FILE, []),
+        save_callback=lambda schedules: write_json(SCHEDULES_FILE, schedules),
+    )
+    _parallel_engine  = ParallelEngine(
+        PARALLEL_FILE,
+        EXEC_TIMEOUT,
+        load_callback=lambda: read_json(PARALLEL_FILE, []),
+        save_callback=lambda runs: write_json(PARALLEL_FILE, runs),
+    )
+    _approval_manager = ApprovalManager(
+        APPROVALS_FILE,
+        _fire_configured_webhook,
+        load_callback=lambda: read_json(APPROVALS_FILE, []),
+        save_callback=lambda approvals: write_json(APPROVALS_FILE, approvals),
+    )
     _schedule_engine.start()
 
 import atexit as _atexit
@@ -409,14 +456,10 @@ _RUNNING_LOCK = threading.Lock()
 ROLES = ('admin', 'operator', 'viewer')
 
 def _load_users() -> list[dict]:
-    try:
-        with open(USERS_FILE) as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return read_json(USERS_FILE, [])
 
 def _save_users(users: list[dict]):
-    _secure_write(USERS_FILE, json.dumps(users, indent=2))
+    write_json(USERS_FILE, users)
 
 def _find_user(username: str) -> dict | None:
     return next((u for u in _load_users() if u['username'] == username), None)
@@ -447,11 +490,16 @@ _SESSIONS_LOCK = threading.Lock()
 def _create_session(username: str, role: str) -> str:
     token = secrets.token_hex(32)
     expires = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=TOKEN_TTL)
+    if hasattr(_storage, 'create_session'):
+        _storage.create_session(token, username, role, expires)
+        return token
     with _SESSIONS_LOCK:
         _SESSIONS[token] = {'username': username, 'role': role, 'expires': expires}
     return token
 
 def _get_session(token: str) -> dict | None:
+    if hasattr(_storage, 'get_session'):
+        return _storage.get_session(token)
     with _SESSIONS_LOCK:
         session = _SESSIONS.get(token)
         if session and datetime.datetime.now(datetime.timezone.utc) < session['expires']:
@@ -461,10 +509,16 @@ def _get_session(token: str) -> dict | None:
     return None
 
 def _invalidate_session(token: str):
+    if hasattr(_storage, 'invalidate_session'):
+        _storage.invalidate_session(token)
+        return
     with _SESSIONS_LOCK:
         _SESSIONS.pop(token, None)
 
 def _purge_expired():
+    if hasattr(_storage, 'purge_expired_sessions'):
+        _storage.purge_expired_sessions()
+        return
     now = datetime.datetime.now(datetime.timezone.utc)
     with _SESSIONS_LOCK:
         expired = [t for t, s in _SESSIONS.items() if now >= s['expires']]
@@ -544,14 +598,11 @@ def add_security_headers(resp):
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def read_json(path: Path, default=None):
-    try:
-        with open(path) as f:
-            return json.load(f)
-    except Exception:
-        return default if default is not None else {}
+    fallback = default if default is not None else {}
+    return _storage.read_json(path, fallback)
 
 def write_json(path: Path, data):
-    _secure_write(path, json.dumps(data, indent=2))
+    _storage.write_json(path, data)
 
 def get_settings() -> dict:
     default_profile = {
@@ -986,6 +1037,11 @@ def health():
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
+        'storage':       _storage.name,
+        'retention': {
+            'auditDays': AUDIT_RETENTION_DAYS,
+            'executionDays': EXECUTION_RETENTION_DAYS,
+        },
         'version':       '1.2.6',
     }), 200 if ztf_ok else 503
 
@@ -1866,6 +1922,9 @@ def get_audit_log():
     user   = request.args.get('user', '').lower()
     action = request.args.get('action', '').lower()
 
+    if hasattr(_storage, 'read_audit_events'):
+        return jsonify(_storage.read_audit_events(limit, level, user, action))
+
     if not LOG_FILE.exists():
         return jsonify([])
 
@@ -1892,6 +1951,30 @@ def get_audit_log():
         return jsonify([])
 
     return jsonify(entries[-limit:])
+
+
+@app.route('/api/maintenance/retention', methods=['POST'])
+@require_role('admin')
+def run_retention_cleanup():
+    """Apply configured retention cleanup where the storage backend supports it."""
+    if not hasattr(_storage, 'cleanup_retention'):
+        return jsonify({
+            'success': True,
+            'storage': _storage.name,
+            'message': 'File-backed retention is handled by per-document limits.',
+        })
+    _storage.cleanup_retention(AUDIT_RETENTION_DAYS, EXECUTION_RETENTION_DAYS)
+    log.info('retention_cleanup', extra={
+        'action': 'retention_cleanup',
+        'user': request.current_user['username'],
+        'status': 'success',
+    })
+    return jsonify({
+        'success': True,
+        'storage': _storage.name,
+        'auditRetentionDays': AUDIT_RETENTION_DAYS,
+        'executionRetentionDays': EXECUTION_RETENTION_DAYS,
+    })
 
 
 # ─── Drift detection ─────────────────────────────────────────────────────────

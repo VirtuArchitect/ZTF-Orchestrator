@@ -32,15 +32,25 @@ def _expires_iso() -> str:
 class ApprovalManager:
     """Thread-safe approval gate state machine."""
 
-    def __init__(self, approvals_file: Path, on_webhook: Callable | None = None):
+    def __init__(
+        self,
+        approvals_file: Path,
+        on_webhook: Callable | None = None,
+        load_callback: Callable[[], list[dict]] | None = None,
+        save_callback: Callable[[list[dict]], None] | None = None,
+    ):
         self._file       = approvals_file
         self._on_webhook = on_webhook
+        self._load_cb    = load_callback
+        self._save_cb    = save_callback
         self._lock       = threading.Lock()
         self._gates: dict[str, threading.Event] = {}   # id → Event (set when decided)
 
     # ── Persistence ───────────────────────────────────────────────────────────
 
     def _load(self) -> list[dict]:
+        if self._load_cb:
+            return self._load_cb()
         try:
             with open(self._file) as f:
                 return json.load(f)
@@ -48,6 +58,9 @@ class ApprovalManager:
             return []
 
     def _save(self, approvals: list[dict]):
+        if self._save_cb:
+            self._save_cb(approvals[:MAX_STORED])
+            return
         self._file.write_text(
             json.dumps(approvals[:MAX_STORED], indent=2), encoding='utf-8'
         )

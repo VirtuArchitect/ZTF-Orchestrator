@@ -36,6 +36,10 @@ services:
       ZTF_EXEC_TIMEOUT:   ${ZTF_EXEC_TIMEOUT:-3600}
       ZTF_TOKEN_TTL:      ${ZTF_TOKEN_TTL:-28800}
       ZTF_CONFIG_BACKUPS: ${ZTF_CONFIG_BACKUPS:-5}
+      ZTF_STORAGE_BACKEND: ${ZTF_STORAGE_BACKEND:-file}
+      ZTF_DATABASE_URL:   ${ZTF_DATABASE_URL:-}
+      ZTF_AUDIT_RETENTION_DAYS: ${ZTF_AUDIT_RETENTION_DAYS:-90}
+      ZTF_EXECUTION_RETENTION_DAYS: ${ZTF_EXECUTION_RETENTION_DAYS:-180}
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]

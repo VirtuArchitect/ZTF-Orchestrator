@@ -30,14 +30,24 @@ def _now_iso() -> str:
 class ParallelEngine:
     """Thread-safe parallel execution manager."""
 
-    def __init__(self, runs_file: Path, exec_timeout: int = 3600):
+    def __init__(
+        self,
+        runs_file: Path,
+        exec_timeout: int = 3600,
+        load_callback: Callable[[], list[dict]] | None = None,
+        save_callback: Callable[[list[dict]], None] | None = None,
+    ):
         self._file    = runs_file
         self._timeout = exec_timeout
+        self._load_cb = load_callback
+        self._save_cb = save_callback
         self._lock    = threading.Lock()
 
     # ── Persistence ───────────────────────────────────────────────────────────
 
     def _load(self) -> list[dict]:
+        if self._load_cb:
+            return self._load_cb()
         try:
             with open(self._file) as f:
                 return json.load(f)
@@ -45,6 +55,9 @@ class ParallelEngine:
             return []
 
     def _save(self, runs: list[dict]):
+        if self._save_cb:
+            self._save_cb(runs[:MAX_STORED_RUNS])
+            return
         self._file.write_text(
             json.dumps(runs[:MAX_STORED_RUNS], indent=2), encoding='utf-8'
         )

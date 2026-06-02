@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ztf-orchestrator
+  namespace: ztf-orchestrator
+spec:
+  tls:
+    - hosts:
+        - ztf-orchestrator.example.com
+      secretName: ztf-orchestrator-tls
+  rules:
+    - host: ztf-orchestrator.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ztf-orchestrator
+                port:
+                  number: 5001

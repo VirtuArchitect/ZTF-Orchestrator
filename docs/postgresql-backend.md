@@ -1,0 +1,122 @@
+# PostgreSQL Backend
+
+ZTF-Orchestrator defaults to file-backed state for simple appliance-style deployments.
+PostgreSQL can be enabled for enterprise deployments that need database-backed users,
+sessions, settings, execution history, schedules, approvals, parallel runs,
+pipelines, drift results, and audit events.
+
+## Storage Modes
+
+```text
+ZTF_STORAGE_BACKEND=file      # default, current JSON-file behavior
+ZTF_STORAGE_BACKEND=postgres  # optional PostgreSQL document backend
+```
+
+When PostgreSQL mode is enabled, the server creates the required schema on startup.
+Current database-backed documents include:
+
+- `users.json`
+- `settings.json`
+- `history.json`
+- `pipelines.json`
+- `drift.json`
+- `schedules.json`
+- `parallel_runs.json`
+- `approvals.json`
+
+Structured audit entries are also written to the `ztf_audit_events` table, and
+login sessions are stored in `ztf_sessions`.
+
+## Docker Compose
+
+File-backed mode remains unchanged:
+
+```bash
+docker compose up -d --build
+```
+
+PostgreSQL-backed mode uses the optional override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
+```
+
+Set a stronger database password before production use:
+
+```bash
+POSTGRES_PASSWORD='change-me' docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
+```
+
+## Environment Variables
+
+```text
+ZTF_STORAGE_BACKEND=postgres
+ZTF_DATABASE_URL=postgresql://ztf:ztf@postgres:5432/ztf_orchestrator
+```
+
+For managed PostgreSQL, set `ZTF_DATABASE_URL` to the managed database connection
+string and do not run the bundled `postgres` service.
+
+## Schema
+
+The MVP backend intentionally stores the existing JSON document shapes in a
+PostgreSQL document table:
+
+```text
+ztf_documents
+  name        text primary key
+  data        jsonb
+  updated_at  timestamptz
+
+ztf_audit_events
+  id          bigserial primary key
+  ts          timestamptz
+  level       text
+  msg         text
+  username    text
+  action      text
+  workflow    text
+  status      text
+  ip          text
+  event       jsonb
+
+ztf_sessions
+  token       text primary key
+  username    text
+  role        text
+  expires_at  timestamptz
+  created_at  timestamptz
+```
+
+This keeps the first migration low-risk because the API can preserve the current
+data model while moving the backing store to PostgreSQL.
+
+## Import Existing JSON State
+
+To migrate an existing file-backed appliance into PostgreSQL:
+
+```bash
+python scripts/migrate_json_to_postgres.py \
+  --data-dir /var/lib/ztf-orchestrator \
+  --database-url postgresql://ztf:ztf@postgres:5432/ztf_orchestrator
+```
+
+Use `--overwrite` to replace documents that already exist in PostgreSQL.
+
+## Retention
+
+Retention settings:
+
+```text
+ZTF_AUDIT_RETENTION_DAYS=90
+ZTF_EXECUTION_RETENTION_DAYS=180
+```
+
+Admins can run retention cleanup through:
+
+```text
+POST /api/maintenance/retention
+```
+
+In PostgreSQL mode this removes expired sessions and old audit events. File mode
+continues to use existing per-document limits.

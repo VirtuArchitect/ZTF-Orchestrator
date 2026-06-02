@@ -40,9 +40,17 @@ def _now_iso() -> str:
 class ScheduleEngine:
     """Thread-safe scheduled execution manager."""
 
-    def __init__(self, schedules_file: Path, run_callback: Callable):
+    def __init__(
+        self,
+        schedules_file: Path,
+        run_callback: Callable,
+        load_callback: Callable[[], list[dict]] | None = None,
+        save_callback: Callable[[list[dict]], None] | None = None,
+    ):
         self._file = schedules_file
         self._run_cb = run_callback          # called with (schedule_dict) on fire
+        self._load_cb = load_callback
+        self._save_cb = save_callback
         self._lock   = threading.Lock()
         self._sched  = None
         self._poll_timer: threading.Timer | None = None
@@ -50,6 +58,8 @@ class ScheduleEngine:
     # ── Persistence ───────────────────────────────────────────────────────────
 
     def _load(self) -> list[dict]:
+        if self._load_cb:
+            return self._load_cb()
         try:
             with open(self._file) as f:
                 return json.load(f)
@@ -57,6 +67,9 @@ class ScheduleEngine:
             return []
 
     def _save(self, schedules: list[dict]):
+        if self._save_cb:
+            self._save_cb(schedules)
+            return
         self._file.write_text(json.dumps(schedules, indent=2), encoding='utf-8')
         try:
             os.chmod(self._file, 0o600)

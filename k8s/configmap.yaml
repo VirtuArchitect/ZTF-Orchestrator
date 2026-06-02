@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ztf-orchestrator-config
+  namespace: ztf-orchestrator
+data:
+  ZTF_DATA_DIR: /var/lib/ztf-orchestrator
+  ZTF_PATH: /opt/zerotouch-framework
+  ZTF_PORT: "5001"
+  ZTF_LOG_LEVEL: INFO
+  ZTF_EXEC_TIMEOUT: "3600"
+  ZTF_TOKEN_TTL: "28800"
+  ZTF_CONFIG_BACKUPS: "5"
+  ZTF_STORAGE_BACKEND: postgres
+  ZTF_AUDIT_RETENTION_DAYS: "90"
+  ZTF_EXECUTION_RETENTION_DAYS: "180"

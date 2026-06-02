@@ -1,0 +1,28 @@
+services:
+  ztf-orchestrator:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ZTF_STORAGE_BACKEND: postgres
+      ZTF_DATABASE_URL: postgresql://ztf:${POSTGRES_PASSWORD:-ztf}@postgres:5432/ztf_orchestrator
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ztf-orchestrator-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ztf_orchestrator
+      POSTGRES_USER: ztf
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ztf}
+    volumes:
+      - ztf-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ztf -d ztf_orchestrator"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  ztf-postgres:

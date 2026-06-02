@@ -68,6 +68,17 @@ docker compose logs -f   # admin password printed here on first run
 
 ZTF is cloned and installed inside the image at build time - no separate volume mount required.
 
+For database-backed deployments, PostgreSQL can be enabled with the optional Compose
+override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
+```
+
+See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
+
+Starter Kubernetes manifests are available in [k8s](k8s/).
+
 ### Option D: Manual
 
 **Step 1: Clone the repository**

@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ztf-postgres
+  namespace: ztf-orchestrator
+spec:
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: ztf-postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ztf-postgres
+  namespace: ztf-orchestrator
+spec:
+  serviceName: ztf-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ztf-postgres
+  template:
+    metadata:
+      labels:
+        app: ztf-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: ztf_orchestrator
+            - name: POSTGRES_USER
+              value: ztf
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ztf-orchestrator-secrets
+                  key: POSTGRES_PASSWORD
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "ztf", "-d", "ztf_orchestrator"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
