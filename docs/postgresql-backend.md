@@ -24,9 +24,14 @@ Current database-backed documents include:
 - `schedules.json`
 - `parallel_runs.json`
 - `approvals.json`
+- `jobs.json`
 
 Structured audit entries are also written to the `ztf_audit_events` table, and
 login sessions are stored in `ztf_sessions`.
+
+Executions are submitted as durable jobs. The API stores job status and log
+events before a background worker launches the ZeroTouch Framework subprocess,
+which keeps long-running workflows independent from the browser session.
 
 ## Docker Compose
 
@@ -53,6 +58,7 @@ POSTGRES_PASSWORD='change-me' docker compose up -d --build
 ```text
 ZTF_STORAGE_BACKEND=postgres
 ZTF_DATABASE_URL=postgresql://ztf:ztf@postgres:5432/ztf_orchestrator
+ZTF_EXEC_WORKERS=1
 ```
 
 For managed PostgreSQL, set `ZTF_DATABASE_URL` to the managed database connection

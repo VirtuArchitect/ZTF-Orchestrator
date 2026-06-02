@@ -68,7 +68,9 @@ docker compose logs -f   # admin password printed here on first run
 
 ZTF is cloned and installed inside the image at build time - no separate volume mount required.
 PostgreSQL is started by default and stores users, sessions, execution history,
-approvals, schedules, drift results, and audit events.
+approvals, schedules, drift results, execution jobs, and audit events. Workflow
+and script runs are submitted as durable jobs, then processed by background
+workers so execution is no longer tied to an open browser request.
 
 For simple file-backed testing without PostgreSQL:
 
@@ -330,6 +332,7 @@ file (see `.env.example`).
 | `ZTF_PYTHON` | current Python | Python executable for running ZTF |
 | `ZTF_PORT` | `5001` | Flask listen port |
 | `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
+| `ZTF_EXEC_WORKERS` | `1` | Background execution worker count |
 | `ZTF_TOKEN_TTL` | `28800` | Session token lifetime (seconds, default 8 h) |
 | `ZTF_LOG_LEVEL` | `INFO` | Log level: DEBUG, INFO, WARNING, ERROR |
 | `ZTF_CONFIG_BACKUPS` | `5` | Config file backup versions to retain |

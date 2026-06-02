@@ -11,9 +11,12 @@ def isolated_data_dir(tmp_path, monkeypatch):
     # Re-import server with the new env var
     import importlib
     import server
+    if hasattr(server, '_job_manager'):
+        server._job_manager.stop()
     importlib.reload(server)
     server._ensure_default_admin()
     yield tmp_path
+    server._job_manager.stop()
 
 
 @pytest.fixture()

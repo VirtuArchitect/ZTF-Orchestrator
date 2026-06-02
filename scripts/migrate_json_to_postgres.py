@@ -23,6 +23,7 @@ DOCUMENTS = [
     'schedules.json',
     'parallel_runs.json',
     'approvals.json',
+    'jobs.json',
 ]
 
 

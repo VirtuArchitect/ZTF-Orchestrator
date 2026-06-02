@@ -241,6 +241,7 @@ class PostgresStorage:
             self._prune_document_list('drift.json', cutoff, ('timestamp',))
             self._prune_document_list('approvals.json', cutoff, ('requestedAt', 'decidedAt'))
             self._prune_document_list('parallel_runs.json', cutoff, ('startedAt', 'finishedAt'))
+            self._prune_document_list('jobs.json', cutoff, ('createdAt', 'startedAt', 'finishedAt'))
 
     def _prune_document_list(self, name: str, cutoff: datetime, date_keys: tuple[str, ...]) -> None:
         data = self.read_json(Path(name), [])

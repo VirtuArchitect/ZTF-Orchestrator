@@ -35,6 +35,7 @@ PYTHON_DEFAULT= os.environ.get('ZTF_PYTHON',           sys.executable)
 PORT          = int(os.environ.get('ZTF_PORT',          5001))
 LOG_LEVEL     = os.environ.get('ZTF_LOG_LEVEL',        'INFO')
 EXEC_TIMEOUT  = int(os.environ.get('ZTF_EXEC_TIMEOUT',  3600))   # seconds
+EXEC_WORKERS  = max(1, int(os.environ.get('ZTF_EXEC_WORKERS', '1')))
 TOKEN_TTL     = int(os.environ.get('ZTF_TOKEN_TTL',     28800))  # seconds (8 h)
 MAX_BODY      = int(os.environ.get('ZTF_MAX_BODY',      1048576)) # 1 MB
 CONFIG_BACKUPS= int(os.environ.get('ZTF_CONFIG_BACKUPS',5))
@@ -50,6 +51,7 @@ DRIFT_FILE     = CONFIG_DIR / 'drift.json'
 SCHEDULES_FILE = CONFIG_DIR / 'schedules.json'
 PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
+JOBS_FILE      = CONFIG_DIR / 'jobs.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 
 ALLOWED_ORIGINS = [
@@ -880,6 +882,346 @@ def _record_execution_history(
     return entry
 
 
+class ExecutionJobManager:
+    """Durable workflow/script queue backed by the configured storage backend."""
+
+    TERMINAL = {'success', 'failed', 'cancelled', 'interrupted'}
+
+    def __init__(self, workers: int):
+        self.workers = workers
+        self._lock = threading.RLock()
+        self._condition = threading.Condition(self._lock)
+        self._active: dict[str, subprocess.Popen] = {}
+        self._stop = False
+        self._started = False
+        self._recover_interrupted_jobs()
+
+    def start(self) -> None:
+        if self._started:
+            return
+        self._started = True
+        for idx in range(self.workers):
+            threading.Thread(target=self._worker_loop, name=f'ztf-job-worker-{idx + 1}', daemon=True).start()
+
+    def stop(self) -> None:
+        with self._condition:
+            self._stop = True
+            for proc in list(self._active.values()):
+                if proc.poll() is None:
+                    proc.kill()
+            self._condition.notify_all()
+
+    def submit(self, payload: dict, user: str) -> dict:
+        now = self._now()
+        job = {
+            'id': str(int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)),
+            'status': 'queued',
+            'workflow': payload.get('workflow') or payload.get('script') or '',
+            'type': 'workflow' if payload.get('workflow') else 'script',
+            'user': user,
+            'createdAt': now,
+            'updatedAt': now,
+            'startedAt': '',
+            'finishedAt': '',
+            'returnCode': None,
+            'payload': payload,
+            'logs': [],
+        }
+        with self._condition:
+            jobs = self._load_jobs()
+            jobs.insert(0, job)
+            self._save_jobs(jobs)
+            self._condition.notify()
+        log.info('job_queued', extra={'user': user, 'workflow': job['workflow'], 'jobId': job['id']})
+        return self._public_job(job)
+
+    def list_jobs(self, limit: int = 200) -> list[dict]:
+        return [self._public_job(job) for job in self._load_jobs()[:limit]]
+
+    def get_job(self, job_id: str, include_logs: bool = True) -> dict | None:
+        for job in self._load_jobs():
+            if job.get('id') == job_id:
+                return self._public_job(job, include_logs)
+        return None
+
+    def cancel(self, job_id: str, user: str) -> dict | None:
+        proc = None
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return None
+            if job.get('status') in self.TERMINAL:
+                return self._public_job(job)
+            proc = self._active.get(job_id)
+            self._append_event(job, 'stderr', f'Cancellation requested by {user}')
+            if job.get('status') == 'queued':
+                self._finish_job(job, 'cancelled', -1)
+            else:
+                job['status'] = 'cancelling'
+                job['updatedAt'] = self._now()
+            self._save_jobs(jobs)
+            self._condition.notify_all()
+        if proc and proc.poll() is None:
+            proc.kill()
+        log.info('job_cancel_requested', extra={'user': user, 'jobId': job_id})
+        return self.get_job(job_id)
+
+    def stream_events(self, job_id: str, start_offset: int = 0) -> Generator[str, None, None]:
+        offset = max(0, start_offset)
+        sent_start = False
+        while True:
+            with self._condition:
+                job = self.get_job(job_id, include_logs=True)
+                if not job:
+                    yield self._sse('error', 'Job not found', job_id)
+                    return
+                logs = job.get('logs', [])
+                if not sent_start:
+                    yield self._sse('job', self._public_job(job, include_logs=False), job_id)
+                    sent_start = True
+                for event in logs[offset:]:
+                    yield self._sse(event.get('type', 'stdout'), event.get('data', ''), job_id)
+                offset = len(logs)
+                if job.get('status') in self.TERMINAL:
+                    yield self._sse('done', {
+                        'code': job.get('returnCode', -1),
+                        'status': job.get('status'),
+                        'jobId': job_id,
+                    }, job_id)
+                    return
+                self._condition.wait(timeout=1.0)
+
+    def _worker_loop(self) -> None:
+        while True:
+            with self._condition:
+                job = self._next_queued_job()
+                while not job:
+                    if self._stop:
+                        return
+                    self._condition.wait()
+                    job = self._next_queued_job()
+                if self._stop:
+                    return
+                self._mark_running(job)
+                job_id = job['id']
+                payload = dict(job.get('payload') or {})
+            self._run_job(job_id, payload, job.get('user', 'unknown'))
+
+    def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        proc = None
+        kill_timer = None
+        workflow = payload.get('workflow')
+        script = payload.get('script')
+        config_content = payload.get('configContent') or ''
+        config_file = payload.get('configFile') or ''
+        debug = bool(payload.get('debug', False))
+        effective_config_content = config_content
+        status = 'failed'
+        return_code = -1
+        try:
+            settings = get_settings()
+            ztf_path = settings['ztfPath']
+            python_path = settings['pythonPath']
+            configs_dir = get_configs_dir()
+            cfg_path = None
+
+            if effective_config_content and config_file:
+                path = safe_config_path(config_file, configs_dir)
+                if path is None:
+                    self._emit(job_id, 'error', 'Invalid config filename')
+                    return
+                if path.suffix in ('.yml', '.yaml'):
+                    ok, err = validate_yaml(effective_config_content)
+                    if not ok:
+                        self._emit(job_id, 'error', f'Invalid YAML: {err}')
+                        return
+                    normalized_content, normalized_pc_ip = _normalize_ztf_config_content(workflow or '', effective_config_content)
+                    if normalized_pc_ip:
+                        effective_config_content = normalized_content
+                        self._emit(job_id, 'stdout', 'Legacy fc_ip detected; saved as pc_ip for Nutanix ZTF compatibility')
+                backup_config(path)
+                _secure_write(path, effective_config_content)
+                cfg_path = str(path)
+
+            cmd_args = [python_path, 'main.py']
+            if workflow: cmd_args += ['--workflow', workflow]
+            if script:   cmd_args += ['--script', script]
+            if cfg_path: cmd_args += ['-f', cfg_path]
+            if debug:    cmd_args.append('--debug')
+
+            display = ' '.join(cmd_args[:4]) + (' ...' if len(cmd_args) > 4 else '')
+            self._emit(job_id, 'start', {'command': display, 'workingDir': ztf_path})
+            log.info('execution_start', extra={
+                'user': user, 'workflow': workflow or script,
+                'action': 'execute', 'status': 'started', 'jobId': job_id,
+            })
+
+            proc = subprocess.Popen(
+                cmd_args, cwd=ztf_path,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            )
+            with self._condition:
+                self._active[job_id] = proc
+
+            def _timeout_kill():
+                if proc.poll() is None:
+                    proc.kill()
+                    self._emit(job_id, 'stderr', f'Execution timed out after {EXEC_TIMEOUT} seconds')
+                    log.warning('execution_timeout', extra={'user': user, 'workflow': workflow or script, 'jobId': job_id})
+
+            kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
+            kill_timer.start()
+
+            combined: queue.Queue = queue.Queue()
+
+            def _reader(stream, label):
+                for line in stream:
+                    combined.put((label, line.rstrip()))
+                combined.put(None)
+
+            threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True).start()
+            threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True).start()
+
+            done = 0
+            while done < 2:
+                item = combined.get()
+                if item is None:
+                    done += 1
+                else:
+                    label, line = item
+                    self._emit(job_id, label, line)
+
+            proc.wait()
+            return_code = proc.returncode
+            current = self.get_job(job_id, include_logs=False) or {}
+            status = 'cancelled' if current.get('status') == 'cancelling' else ('success' if return_code == 0 else 'failed')
+
+        except Exception:
+            log.exception('execution_error', extra={'user': user, 'workflow': workflow or script, 'jobId': job_id})
+            self._emit(job_id, 'error', 'Execution failed. Check server logs for details.')
+            status = 'failed'
+            return_code = -1
+        finally:
+            if kill_timer:
+                kill_timer.cancel()
+            with self._condition:
+                self._active.pop(job_id, None)
+            entry = _record_execution_history(
+                execution_id=job_id,
+                workflow_or_script=workflow or script,
+                execution_type='workflow' if workflow else 'script',
+                status=status,
+                user=user,
+                config_file=config_file,
+                config_content=effective_config_content,
+            )
+            self._complete(job_id, status, return_code)
+            log.info('execution_complete', extra={
+                'user': user, 'workflow': workflow or script,
+                'action': 'execute', 'status': status, 'jobId': job_id,
+            })
+            _fire_configured_webhook(
+                workflow=workflow or script,
+                status=status,
+                return_code=return_code,
+                user=user,
+                execution_id=job_id,
+                execution_type='workflow' if workflow else 'script',
+            )
+
+    def _recover_interrupted_jobs(self) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            changed = False
+            for job in jobs:
+                if job.get('status') in {'queued', 'running', 'cancelling'}:
+                    self._append_event(job, 'stderr', 'Execution interrupted during service restart')
+                    self._finish_job(job, 'interrupted', -1)
+                    changed = True
+            if changed:
+                self._save_jobs(jobs)
+
+    def _emit(self, job_id: str, event_type: str, data) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return
+            self._append_event(job, event_type, data)
+            self._save_jobs(jobs)
+            self._condition.notify_all()
+
+    def _complete(self, job_id: str, status: str, return_code: int) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if job:
+                self._finish_job(job, status, return_code)
+                self._save_jobs(jobs)
+            self._condition.notify_all()
+
+    def _mark_running(self, job: dict) -> None:
+        jobs = self._load_jobs()
+        current = self._find_job(jobs, job['id'])
+        if current:
+            now = self._now()
+            current['status'] = 'running'
+            current['startedAt'] = now
+            current['updatedAt'] = now
+            self._save_jobs(jobs)
+            job.update(current)
+
+    def _next_queued_job(self) -> dict | None:
+        jobs = self._load_jobs()
+        queued = [job for job in jobs if job.get('status') == 'queued']
+        if not queued:
+            return None
+        return sorted(queued, key=lambda item: item.get('createdAt', ''))[0]
+
+    def _append_event(self, job: dict, event_type: str, data) -> None:
+        logs = job.setdefault('logs', [])
+        logs.append({'type': event_type, 'data': data, 'ts': self._now()})
+        job['updatedAt'] = self._now()
+
+    def _finish_job(self, job: dict, status: str, return_code: int) -> None:
+        now = self._now()
+        job['status'] = status
+        job['returnCode'] = return_code
+        job['finishedAt'] = now
+        job['updatedAt'] = now
+
+    def _load_jobs(self) -> list[dict]:
+        jobs = read_json(JOBS_FILE, [])
+        return jobs if isinstance(jobs, list) else []
+
+    def _save_jobs(self, jobs: list[dict]) -> None:
+        write_json(JOBS_FILE, jobs[:1000])
+
+    @staticmethod
+    def _find_job(jobs: list[dict], job_id: str) -> dict | None:
+        return next((job for job in jobs if job.get('id') == job_id), None)
+
+    @staticmethod
+    def _now() -> str:
+        return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+
+    @staticmethod
+    def _sse(event_type: str, data, job_id: str) -> str:
+        return f"data: {json.dumps({'type': event_type, 'data': data, 'executionId': job_id, 'jobId': job_id})}\n\n"
+
+    @staticmethod
+    def _public_job(job: dict, include_logs: bool = False) -> dict:
+        public = {k: v for k, v in job.items() if k != 'payload'}
+        if not include_logs:
+            public.pop('logs', None)
+        return public
+
+
+_job_manager = ExecutionJobManager(EXEC_WORKERS)
+_job_manager.start()
+
+
 def get_configs_dir() -> Path:
     d = Path(get_settings().get('configDir', CONFIG_DIR / 'configs'))
     _secure_mkdir(d)
@@ -1049,6 +1391,7 @@ def health():
     settings = get_settings()
     ztf_ok = (Path(settings['ztfPath']) / 'main.py').exists()
     status  = 'healthy' if ztf_ok else 'degraded'
+    jobs = _job_manager.list_jobs(1000)
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
@@ -1061,6 +1404,12 @@ def health():
         'retention': {
             'auditDays': AUDIT_RETENTION_DAYS,
             'executionDays': EXECUTION_RETENTION_DAYS,
+        },
+        'jobs': {
+            'workers': EXEC_WORKERS,
+            'queued': sum(1 for job in jobs if job.get('status') == 'queued'),
+            'running': sum(1 for job in jobs if job.get('status') in ('running', 'cancelling')),
+            'recent': len(jobs),
         },
         'version':       '1.2.6',
     }), 200 if ztf_ok else 503
@@ -1754,6 +2103,21 @@ def execute_workflow():
             headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
         )
 
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    job = _job_manager.submit({
+        'workflow': workflow,
+        'script': script,
+        'configContent': config_content,
+        'configFile': config_file,
+        'debug': debug,
+    }, current_user)
+
+    return Response(
+        _job_manager.stream_events(job['id']),
+        mimetype='text/event-stream',
+        headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
+    )
+
     settings    = get_settings()
     ztf_path    = settings['ztfPath']
     python_path = settings['pythonPath']
@@ -1932,6 +2296,78 @@ def execute_workflow():
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
 
 # ─── Audit log ───────────────────────────────────────────────────────────────
+
+@app.route('/api/jobs', methods=['POST'])
+@require_role('admin', 'operator')
+@limiter.limit('10 per minute')
+def submit_job():
+    data = request.json or {}
+    workflow = data.get('workflow')
+    raw_script = data.get('script')
+    if isinstance(raw_script, list):
+        script_ids = [str(s).strip() for s in raw_script if str(s).strip()]
+    elif raw_script:
+        script_ids = [s.strip() for s in str(raw_script).split(',') if s.strip()]
+    else:
+        script_ids = []
+    script = ','.join(script_ids) if script_ids else None
+
+    if workflow and workflow not in ALLOWED_WORKFLOWS:
+        return jsonify({'error': 'Unknown workflow'}), 400
+    for sid in script_ids:
+        if sid not in ALLOWED_SCRIPTS:
+            return jsonify({'error': f'Unknown script: {sid}'}), 400
+    if not workflow and not script:
+        return jsonify({'error': 'workflow or script required'}), 400
+
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    job = _job_manager.submit({
+        'workflow': workflow,
+        'script': script,
+        'configContent': data.get('configContent'),
+        'configFile': data.get('configFile'),
+        'debug': bool(data.get('debug', False)),
+    }, current_user)
+    return jsonify(job), 202
+
+
+@app.route('/api/jobs')
+@require_role('admin', 'operator', 'viewer')
+def list_jobs():
+    limit = min(int(request.args.get('limit', 200)), 1000)
+    return jsonify(_job_manager.list_jobs(limit))
+
+
+@app.route('/api/jobs/<job_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_job(job_id):
+    include_logs = request.args.get('logs', 'true').lower() != 'false'
+    job = _job_manager.get_job(job_id, include_logs=include_logs)
+    if not job:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(job)
+
+
+@app.route('/api/jobs/<job_id>/stream')
+@require_role('admin', 'operator', 'viewer')
+def stream_job(job_id):
+    offset = int(request.args.get('offset', 0))
+    return Response(
+        _job_manager.stream_events(job_id, offset),
+        mimetype='text/event-stream',
+        headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
+    )
+
+
+@app.route('/api/jobs/<job_id>/cancel', methods=['POST'])
+@require_role('admin', 'operator')
+def cancel_job(job_id):
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    job = _job_manager.cancel(job_id, current_user)
+    if not job:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(job)
+
 
 @app.route('/api/audit-log')
 @require_role('admin')

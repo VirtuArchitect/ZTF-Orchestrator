@@ -725,6 +725,63 @@ def test_multi_script_unknown_in_array_rejected(client, auth_headers):
 
 # ── Audit log ────────────────────────────────────────────────────────────────
 
+def test_job_submit_persists_status_logs_and_history(client, auth_headers, monkeypatch):
+    """Submit-only jobs are executed by the background worker and persisted."""
+    import subprocess
+    import time
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['ok\n'])
+        stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    job = None
+    for _ in range(30):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] == 'success':
+            break
+        time.sleep(0.05)
+
+    assert job['status'] == 'success'
+    assert any(event['type'] == 'stdout' and event['data'] == 'ok' for event in job['logs'])
+
+    jobs = client.get('/api/jobs', headers=auth_headers).get_json()
+    assert jobs[0]['id'] == job_id
+
+    history = client.get('/api/executions', headers=auth_headers).get_json()
+    assert history[0]['id'] == job_id
+    assert history[0]['status'] == 'success'
+
+
+def test_cancel_queued_job(client, auth_headers):
+    """Queued jobs can be cancelled before a worker starts them."""
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    cancel = client.post(f'/api/jobs/{job_id}/cancel', headers=auth_headers)
+    assert cancel.status_code == 200
+    assert cancel.get_json()['status'] == 'cancelled'
+
+
 def test_audit_log_returns_list(client, auth_headers):
     """Audit log endpoint returns a list (may be empty if log file absent)."""
     resp = client.get('/api/audit-log', headers=auth_headers)
