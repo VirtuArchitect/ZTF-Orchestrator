@@ -57,6 +57,21 @@ ALLOWED_ORIGINS = [
     'http://localhost:5173',       'http://127.0.0.1:5173',
 ]
 
+
+def _database_location(database_url: str) -> str:
+    """Return a non-sensitive database location for UI/status output."""
+    if not database_url:
+        return ''
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(database_url)
+        host = parsed.hostname or ''
+        port = f':{parsed.port}' if parsed.port else ''
+        name = parsed.path.lstrip('/')
+        return f'{parsed.scheme}://{host}{port}/{name}' if host else parsed.scheme
+    except Exception:
+        return 'configured'
+
 # ─── Structured logging ───────────────────────────────────────────────────────
 
 class JSONFormatter(logging.Formatter):
@@ -1038,6 +1053,11 @@ def health():
         'status':        status,
         'ztf_installed': ztf_ok,
         'storage':       _storage.name,
+        'database': {
+            'configured': bool(os.environ.get('ZTF_DATABASE_URL', '')),
+            'location': _database_location(os.environ.get('ZTF_DATABASE_URL', '')),
+        },
+        'dataDir':       str(CONFIG_DIR),
         'retention': {
             'auditDays': AUDIT_RETENTION_DAYS,
             'executionDays': EXECUTION_RETENTION_DAYS,

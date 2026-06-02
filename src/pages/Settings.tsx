@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
   Bell, Copy, Database, FolderOpen, Globe2, HardDrive, Network,
-  Plus, Save, Server, ShieldCheck, Trash2,
+  Plus, Save, Server, ShieldCheck, Trash2, RefreshCw,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import Layout from '../components/Layout'
@@ -13,6 +13,22 @@ import type { ConnectionProfile, Settings as AppSettings } from '../types'
 import clsx from 'clsx'
 
 const ENVIRONMENTS: ConnectionProfile['environment'][] = ['lab', 'preprod', 'production', 'customer', 'other']
+
+interface PlatformHealth {
+  status: string
+  storage: 'file' | 'postgres' | string
+  dataDir?: string
+  database?: {
+    configured: boolean
+    location: string
+  }
+  retention?: {
+    auditDays: number
+    executionDays: number
+  }
+  ztf_installed?: boolean
+  version?: string
+}
 
 function newProfile(seed?: Partial<ConnectionProfile>): ConnectionProfile {
   const id = seed?.id || `profile-${Date.now()}`
@@ -191,6 +207,26 @@ function Field({
   )
 }
 
+function ReadOnlyField({
+  label, value, mono = false,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+}) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      <div className={clsx(
+        'min-h-[42px] rounded-md border border-border bg-gray-950/70 px-3 py-2 text-sm text-gray-300 flex items-center break-all',
+        mono && 'font-mono text-xs'
+      )}>
+        {value || 'not configured'}
+      </div>
+    </div>
+  )
+}
+
 function Toggle({
   label, checked, onChange, disabled,
 }: {
@@ -245,8 +281,10 @@ export default function Settings() {
   const [form, setForm] = useState<AppSettings>(() => normalizeSettings(settings))
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'runtime' | 'connections' | 'notifications' | 'about'>('runtime')
+  const [activeTab, setActiveTab] = useState<'runtime' | 'storage' | 'connections' | 'notifications' | 'about'>('runtime')
   const [copied, setCopied] = useState(false)
+  const [health, setHealth] = useState<PlatformHealth | null>(null)
+  const [healthLoading, setHealthLoading] = useState(false)
 
   useEffect(() => {
     apiFetch('/api/settings').then(r => r.json()).then(data => {
@@ -255,6 +293,18 @@ export default function Settings() {
       setSettings(normalized)
     }).catch(() => {})
   }, [setSettings])
+
+  const loadHealth = async () => {
+    setHealthLoading(true)
+    try {
+      const response = await fetch('/health')
+      if (response.ok) setHealth(await response.json())
+    } finally {
+      setHealthLoading(false)
+    }
+  }
+
+  useEffect(() => { loadHealth() }, [])
 
   const isAdmin = user?.role === 'admin'
   const profiles = form.connectionProfiles
@@ -343,6 +393,7 @@ export default function Settings() {
 
   const tabs = [
     { id: 'runtime', label: 'Runtime' },
+    { id: 'storage', label: 'Storage' },
     { id: 'connections', label: 'Connection Profiles' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'about', label: 'About' },
@@ -405,6 +456,46 @@ export default function Settings() {
                 onChange={value => setForm(p => ({ ...p, repoUrl: value }))} />
               <p className="text-xs text-gray-500 mt-3">
                 Used during Setup & Install. Use the official ZTF repository or an approved internal mirror.
+              </p>
+            </Section>
+          </div>
+        )}
+
+        {activeTab === 'storage' && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <Section title="Storage Backend" subtitle="Current persistence mode and state location" icon={Database}>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ReadOnlyField label="Backend" value={health?.storage || 'loading'} />
+                  <ReadOnlyField label="Status" value={health?.status || 'unknown'} />
+                  <ReadOnlyField label="Data Directory" value={health?.dataDir || ''} mono />
+                  <ReadOnlyField
+                    label="Database Location"
+                    value={health?.database?.location || (health?.storage === 'postgres' ? 'configured' : 'not used')}
+                    mono
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button onClick={loadHealth} disabled={healthLoading} className="btn-secondary gap-1.5">
+                    <RefreshCw size={14} className={healthLoading ? 'animate-spin' : ''} />
+                    Refresh
+                  </button>
+                  <span className="text-xs text-gray-500">
+                    Database credentials are intentionally hidden.
+                  </span>
+                </div>
+              </div>
+            </Section>
+
+            <Section title="Retention" subtitle="Operational history retention settings" icon={HardDrive}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ReadOnlyField label="Audit Retention" value={`${health?.retention?.auditDays ?? 90} days`} />
+                <ReadOnlyField label="Execution Retention" value={`${health?.retention?.executionDays ?? 180} days`} />
+                <ReadOnlyField label="ZTF Installed" value={health?.ztf_installed ? 'yes' : 'no'} />
+                <ReadOnlyField label="Version" value={health?.version || '1.2.6'} />
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                Change storage and retention values with environment variables, then restart the service.
               </p>
             </Section>
           </div>
