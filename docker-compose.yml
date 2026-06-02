@@ -1,7 +1,8 @@
 # ── ZTF-Orchestrator — all-in-one deployment ──────────────────────────────────
 #
 # ZeroTouch Framework is baked into the image at build time.
-# No separate ZTF installation or volume mount is required.
+# PostgreSQL is the default state backend for users, sessions, history, schedules,
+# approvals, drift data, and audit events.
 #
 # Quick start:
 #   docker compose up -d
@@ -23,6 +24,9 @@ services:
     image: ztf-orchestrator:latest
     container_name: ztf-orchestrator
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "127.0.0.1:5001:5001"   # localhost only — put nginx in front for TLS
     volumes:
@@ -36,8 +40,8 @@ services:
       ZTF_EXEC_TIMEOUT:   ${ZTF_EXEC_TIMEOUT:-3600}
       ZTF_TOKEN_TTL:      ${ZTF_TOKEN_TTL:-28800}
       ZTF_CONFIG_BACKUPS: ${ZTF_CONFIG_BACKUPS:-5}
-      ZTF_STORAGE_BACKEND: ${ZTF_STORAGE_BACKEND:-file}
-      ZTF_DATABASE_URL:   ${ZTF_DATABASE_URL:-}
+      ZTF_STORAGE_BACKEND: ${ZTF_STORAGE_BACKEND:-postgres}
+      ZTF_DATABASE_URL:   ${ZTF_DATABASE_URL:-postgresql://ztf:${POSTGRES_PASSWORD:-ztf}@postgres:5432/ztf_orchestrator}
       ZTF_AUDIT_RETENTION_DAYS: ${ZTF_AUDIT_RETENTION_DAYS:-90}
       ZTF_EXECUTION_RETENTION_DAYS: ${ZTF_EXECUTION_RETENTION_DAYS:-180}
     healthcheck:
@@ -53,6 +57,24 @@ services:
         max-size: "50m"
         max-file: "5"
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: ztf-orchestrator-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ztf_orchestrator
+      POSTGRES_USER: ztf
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ztf}
+    volumes:
+      - ztf-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ztf -d ztf_orchestrator"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   ztf-data:
   ztf-logs:
+  ztf-postgres:

@@ -1,15 +1,16 @@
 # PostgreSQL Backend
 
-ZTF-Orchestrator defaults to file-backed state for simple appliance-style deployments.
-PostgreSQL can be enabled for enterprise deployments that need database-backed users,
+ZTF-Orchestrator defaults to PostgreSQL for Docker deployments.
+File-backed state remains available for simple local testing. PostgreSQL is used
+for enterprise deployments that need database-backed users,
 sessions, settings, execution history, schedules, approvals, parallel runs,
 pipelines, drift results, and audit events.
 
 ## Storage Modes
 
 ```text
-ZTF_STORAGE_BACKEND=file      # default, current JSON-file behavior
-ZTF_STORAGE_BACKEND=postgres  # optional PostgreSQL document backend
+ZTF_STORAGE_BACKEND=postgres  # default Docker behavior
+ZTF_STORAGE_BACKEND=file      # optional JSON-file behavior
 ```
 
 When PostgreSQL mode is enabled, the server creates the required schema on startup.
@@ -29,22 +30,22 @@ login sessions are stored in `ztf_sessions`.
 
 ## Docker Compose
 
-File-backed mode remains unchanged:
+PostgreSQL-backed mode is the default:
 
 ```bash
 docker compose up -d --build
 ```
 
-PostgreSQL-backed mode uses the optional override:
+File-backed mode uses the standalone Compose file:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
+docker compose -f docker-compose.file.yml up -d --build
 ```
 
 Set a stronger database password before production use:
 
 ```bash
-POSTGRES_PASSWORD='change-me' docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
+POSTGRES_PASSWORD='change-me' docker compose up -d --build
 ```
 
 ## Environment Variables

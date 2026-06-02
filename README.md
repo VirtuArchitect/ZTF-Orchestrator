@@ -67,12 +67,13 @@ docker compose logs -f   # admin password printed here on first run
 ```
 
 ZTF is cloned and installed inside the image at build time - no separate volume mount required.
+PostgreSQL is started by default and stores users, sessions, execution history,
+approvals, schedules, drift results, and audit events.
 
-For database-backed deployments, PostgreSQL can be enabled with the optional Compose
-override:
+For simple file-backed testing without PostgreSQL:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
+docker compose -f docker-compose.file.yml up -d --build
 ```
 
 See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
