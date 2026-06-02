@@ -17,6 +17,15 @@ interface SystemStatus {
   ztfInstalled: boolean
 }
 
+interface PlatformHealth {
+  status: string
+  storage: string
+  database?: {
+    configured: boolean
+    location: string
+  }
+}
+
 const QUICK_ACTIONS = [
   { label: 'Deploy Prism Central', icon: Cloud, path: '/workflows/deploy-pc', color: 'text-blue-400' },
   { label: 'Cluster Create', icon: Server, path: '/workflows/cluster-create', color: 'text-emerald-400' },
@@ -27,15 +36,17 @@ const QUICK_ACTIONS = [
 export default function Dashboard() {
   const { setSystemChecks, ztfInstalled, systemChecks } = useStore()
   const [executions, setExecutions] = useState<Execution[]>([])
+  const [health, setHealth] = useState<PlatformHealth | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
   const refresh = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true)
     try {
-      const [sysResp, execResp] = await Promise.all([
+      const [sysResp, execResp, healthResp] = await Promise.all([
         apiFetch('/api/system/check'),
         apiFetch('/api/executions'),
+        apiFetch('/health'),
       ])
       if (sysResp.ok) {
         const data: SystemStatus = await sysResp.json()
@@ -43,6 +54,9 @@ export default function Dashboard() {
       }
       if (execResp.ok) {
         setExecutions(await execResp.json())
+      }
+      if (healthResp.ok) {
+        setHealth(await healthResp.json())
       }
     } finally {
       setLoading(false)
@@ -59,6 +73,12 @@ export default function Dashboard() {
   const successCount = executions.filter(e => e.status === 'success').length
   const failCount = executions.filter(e => e.status === 'failed').length
   const healthFailures = systemChecks.filter(check => !check.ok)
+  const storageBackend = health?.storage || 'unknown'
+  const storageDisplay = storageBackend === 'postgres' ? 'PostgreSQL' : storageBackend === 'file' ? 'File-backed' : storageBackend
+  const databaseConfigured = health?.database?.configured ?? storageBackend !== 'postgres'
+  const databaseLocation = health?.database?.location || (storageBackend === 'postgres' ? 'not configured' : 'not used')
+  const storageIssue = storageBackend === 'postgres' && !databaseConfigured
+  const healthIssueCount = healthFailures.length + (storageIssue ? 1 : 0)
   const lastRun = executions[0]
 
   const stats = [
@@ -186,11 +206,23 @@ export default function Dashboard() {
               <TrendingUp size={16} className="text-nutanix-cyan" />
               System Status
             </h2>
-            <span className={healthFailures.length ? 'badge-red' : 'badge-green'}>
-              {healthFailures.length ? `${healthFailures.length} issue${healthFailures.length === 1 ? '' : 's'}` : 'Healthy'}
+            <span className={healthIssueCount ? 'badge-red' : 'badge-green'}>
+              {healthIssueCount ? `${healthIssueCount} issue${healthIssueCount === 1 ? '' : 's'}` : 'Healthy'}
             </span>
           </div>
           <div className="space-y-2.5">
+            <div className="flex items-start gap-3 rounded-md bg-gray-900/40 px-3 py-2">
+              {storageIssue
+                ? <XCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+                : <CheckCircle size={14} className="text-nutanix-teal flex-shrink-0 mt-0.5" />
+              }
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-gray-300">State Backend</div>
+                <div className="text-xs text-gray-500 font-mono truncate" title={databaseLocation}>
+                  {storageDisplay}{storageBackend === 'postgres' ? ` - ${databaseLocation}` : ''}
+                </div>
+              </div>
+            </div>
             {systemChecks.length === 0 && !loading && (
               <p className="text-sm text-gray-500">No status data. <Link to="/setup" className="text-nutanix-cyan hover:underline">Run check</Link></p>
             )}
