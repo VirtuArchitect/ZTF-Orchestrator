@@ -51,11 +51,33 @@ export interface Execution {
   workflow: string
   type: 'workflow' | 'script'
   command: string
-  status: 'running' | 'success' | 'failed'
+  status: 'running' | 'success' | 'failed' | 'cancelled' | 'interrupted'
   duration?: number
   timestamp: string
   configFile?: string
   configContent?: string
+}
+
+export type ExecutionJobStatus = 'queued' | 'running' | 'cancelling' | 'success' | 'failed' | 'cancelled' | 'interrupted'
+
+export interface ExecutionJobLogEvent {
+  type: 'start' | 'stdout' | 'stderr' | 'error' | 'done' | 'job' | string
+  data: unknown
+  ts: string
+}
+
+export interface ExecutionJob {
+  id: string
+  status: ExecutionJobStatus
+  workflow: string
+  type: 'workflow' | 'script'
+  user: string
+  createdAt: string
+  updatedAt: string
+  startedAt?: string
+  finishedAt?: string
+  returnCode?: number | null
+  logs?: ExecutionJobLogEvent[]
 }
 
 export interface SystemCheck {

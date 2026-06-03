@@ -7,6 +7,7 @@ import Workflows     from './pages/Workflows'
 import WorkflowDetail from './pages/WorkflowDetail'
 import Scripts       from './pages/Scripts'
 import Executions    from './pages/Executions'
+import Jobs          from './pages/Jobs'
 import Settings      from './pages/Settings'
 import ConfigFiles   from './pages/ConfigFiles'
 import UserRoles     from './pages/UserRoles'
@@ -79,6 +80,9 @@ export default function App() {
         } />
         <Route path="/executions" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Executions /></RequireRole>
+        } />
+        <Route path="/jobs" element={
+          <RequireRole roles={['admin', 'operator', 'viewer']}><Jobs /></RequireRole>
         } />
         <Route path="/settings" element={
           <RequireRole roles={['admin', 'operator']}><Settings /></RequireRole>

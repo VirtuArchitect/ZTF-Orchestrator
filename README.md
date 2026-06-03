@@ -244,6 +244,12 @@ Last 1,000 execution records — workflow name, status, duration, user, timestam
 **Re-run:** expand any row to re-run the workflow or script immediately using the
 original stored config — no form re-entry required.
 
+### Jobs / Queue
+View durable execution jobs created by workflow and script submissions. The page
+shows active, queued, running, failed, cancelled, and interrupted job counts,
+persisted job logs, worker timestamps, return codes, and cancellation controls
+for queued or running jobs.
+
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from
 `ztf-orchestrator.log` — timestamp, level badge, message, user, IP, and status.
