@@ -79,6 +79,8 @@ docker compose -f docker-compose.file.yml up -d --build
 ```
 
 See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
+See [Validation Status](docs/validation-status.md) for what has been locally
+validated and what still requires infrastructure UAT.
 
 Starter Kubernetes manifests are available in [k8s](k8s/).
 
