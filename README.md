@@ -13,7 +13,7 @@ replacing GitHub-based configuration management with a visual interface.
 | Python | **3.10+** | 3.10, 3.11, and 3.12 are all supported |
 | pip | any | Bundled with Python 3.10+ |
 | git | any | Required to clone both repos |
-| Node.js | 18+ | Development mode only — not needed to run the tool |
+| Node.js | 18+ | Development mode only - not needed to run the tool |
 
 > **Windows users:** `python` and `python3` both work depending on your installation.
 > Always use a virtual environment (see below) to avoid polluting your system Python.
