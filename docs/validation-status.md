@@ -6,6 +6,9 @@ transparent rather than promotional: local validation proves the application
 logic and packaging path, while Nutanix infrastructure validation requires real
 Prism Central, Foundation Central, Prism Element, and safe test targets.
 
+For the current repository-level security review, see
+[Security Assessment](security/SECURITY_ASSESSMENT.md).
+
 ## Current Validation Position
 
 ZTF-Orchestrator is locally validated and ready for controlled infrastructure
@@ -36,6 +39,7 @@ checks, static configuration checks, or local Docker checks:
 | Drift detection | Matched, changed, missing, unexpected, unknown, list, clear, and viewer restriction behavior are tested. |
 | Audit/logging | Structured audit endpoint access and role restrictions are tested. |
 | Security controls | Security headers, auth enforcement, allowlists, path traversal rejection, request size limit, and role checks are tested. |
+| Repository security assessment | Baseline source, dependency, auth/RBAC, storage, execution, and deployment review completed on 2026-06-05. |
 | Version control | Release branch, `main`, and version tag workflow have been exercised for v1.2.7. |
 
 ## Requires Environment Validation

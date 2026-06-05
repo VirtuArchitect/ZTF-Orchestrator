@@ -81,6 +81,8 @@ docker compose -f docker-compose.file.yml up -d --build
 See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
 See [Validation Status](docs/validation-status.md) for what has been locally
 validated and what still requires infrastructure UAT.
+See [Security Assessment](docs/security/SECURITY_ASSESSMENT.md) for the latest
+repository-level security review and current hardening recommendations.
 
 Starter Kubernetes manifests are available in [k8s](k8s/).
 
@@ -294,7 +296,7 @@ Passwords are bcrypt-hashed. Session tokens expire after 8 hours.
 - Path traversal protection on all config file operations
 - YAML `safe_load` validation before accepting any config content
 - `Content-Security-Policy`, `X-Frame-Options`, `Permissions-Policy` headers
-- Server binds to `127.0.0.1` only — not reachable from the network by default
+- Docker Compose publishes the application to `127.0.0.1:5001` by default
 
 ### Deployment boundary
 
@@ -303,6 +305,10 @@ Passwords are bcrypt-hashed. Session tokens expire after 8 hours.
 | Local workstation, single user | Supported |
 | Team server, internal network | Supported — add nginx + TLS in front |
 | Internet-exposed | Not supported — requires TLS reverse proxy and firewall rules |
+
+For vulnerability reporting and baseline security guidance, see
+[SECURITY.md](SECURITY.md). For the latest repository-level assessment, see
+[docs/security/SECURITY_ASSESSMENT.md](docs/security/SECURITY_ASSESSMENT.md).
 
 ---
 
