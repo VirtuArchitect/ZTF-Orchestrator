@@ -206,7 +206,7 @@ Status: mitigated by current controls; ongoing operational risk.
 Targeted local tests completed successfully:
 
 ```text
-101 passed, 1 skipped
+106 passed, 1 skipped
 ```
 
 The skipped test requires `ZTF_TEST_DATABASE_URL` and is intended for PostgreSQL

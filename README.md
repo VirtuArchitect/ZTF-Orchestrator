@@ -300,6 +300,8 @@ Three roles are available:
 
 ### Settings
 ZTF path, Python executable, config directory. Write access is admin-only.
+**Storage:** view active backend, database location, retention windows, and
+create/download admin-only PostgreSQL logical backups.
 **Notifications:** set a Webhook URL to receive a `POST` on every workflow or
 script completion (payload: `workflow`, `status`, `returnCode`, `user`,
 `timestamp`, `executionId`).
@@ -377,6 +379,7 @@ other settings via environment variables or a `.env` file (see `.env.example`).
 | `ZTF_BIND_HOST` | `127.0.0.1` | Flask bind address for manual runs. Docker sets `0.0.0.0` inside the container. |
 | `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
 | `ZTF_EXEC_WORKERS` | `1` | Background execution worker count |
+| `ZTF_BACKUP_TIMEOUT` | `300` | Max PostgreSQL backup runtime (seconds) |
 | `ZTF_TOKEN_TTL` | `28800` | Session token lifetime (seconds, default 8 h) |
 | `ZTF_LOG_LEVEL` | `INFO` | Log level: DEBUG, INFO, WARNING, ERROR |
 | `ZTF_CONFIG_BACKUPS` | `5` | Config file backup versions to retain |
@@ -433,6 +436,9 @@ all files within use 0600.
 | `ztf-orchestrator.log` | Structured JSON application log (Audit Log source) |
 | `configs/` | User-generated YAML/JSON workflow config files |
 | `configs/*.yml.bak.N` | Automatic backups — last 5 versions per file |
+
+PostgreSQL logical backups created from Settings are stored in
+`backups/postgres/*.dump`.
 
 `global.yml` is written to `<ZTF_PATH>/config/global.yml`.
 

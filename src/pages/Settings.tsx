@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
-  Bell, Copy, Database, FolderOpen, Globe2, HardDrive, Network,
+  Bell, Copy, Database, Download, FolderOpen, Globe2, HardDrive, Network,
   Plus, Save, Server, ShieldCheck, Trash2, RefreshCw,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -28,6 +28,12 @@ interface PlatformHealth {
   }
   ztf_installed?: boolean
   version?: string
+}
+
+interface DatabaseBackup {
+  filename: string
+  size: number
+  createdAt: string
 }
 
 function newProfile(seed?: Partial<ConnectionProfile>): ConnectionProfile {
@@ -276,6 +282,25 @@ function Section({
   )
 }
 
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let value = bytes / 1024
+  let index = 0
+  while (value >= 1024 && index < units.length - 1) {
+    value /= 1024
+    index += 1
+  }
+  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[index]}`
+}
+
+function formatDate(value?: string): string {
+  if (!value) return 'unknown'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
+
 export default function Settings() {
   const { settings, setSettings, user } = useStore()
   const [form, setForm] = useState<AppSettings>(() => normalizeSettings(settings))
@@ -285,6 +310,11 @@ export default function Settings() {
   const [copied, setCopied] = useState(false)
   const [health, setHealth] = useState<PlatformHealth | null>(null)
   const [healthLoading, setHealthLoading] = useState(false)
+  const [backups, setBackups] = useState<DatabaseBackup[]>([])
+  const [backupsLoading, setBackupsLoading] = useState(false)
+  const [backupRunning, setBackupRunning] = useState(false)
+  const [backupError, setBackupError] = useState('')
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     apiFetch('/api/settings').then(r => r.json()).then(data => {
@@ -304,9 +334,25 @@ export default function Settings() {
     }
   }
 
-  useEffect(() => { loadHealth() }, [])
+  const loadBackups = async () => {
+    if (!isAdmin) return
+    setBackupsLoading(true)
+    try {
+      const response = await apiFetch('/api/maintenance/database-backups')
+      if (response.ok) {
+        const data = await response.json()
+        setBackups(data.backups || [])
+      }
+    } finally {
+      setBackupsLoading(false)
+    }
+  }
 
-  const isAdmin = user?.role === 'admin'
+  useEffect(() => { loadHealth() }, [])
+  useEffect(() => {
+    if (activeTab === 'storage' && isAdmin) loadBackups()
+  }, [activeTab, isAdmin])
+
   const profiles = form.connectionProfiles
   const activeProfile = profiles.find(p => p.id === form.activeProfileId) || profiles[0]
 
@@ -391,6 +437,38 @@ export default function Settings() {
     setTimeout(() => setCopied(false), 1600)
   }
 
+  const createBackup = async () => {
+    setBackupError('')
+    setBackupRunning(true)
+    try {
+      const response = await apiFetch('/api/maintenance/database-backups', { method: 'POST' })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setBackupError(data.error || 'Database backup failed')
+        return
+      }
+      setBackups(prev => [data.backup, ...prev.filter(item => item.filename !== data.backup.filename)])
+      await loadBackups()
+    } finally {
+      setBackupRunning(false)
+    }
+  }
+
+  const downloadBackup = async (backup: DatabaseBackup) => {
+    const response = await apiFetch(`/api/maintenance/database-backups/${encodeURIComponent(backup.filename)}`)
+    if (!response.ok) {
+      setBackupError('Backup download failed')
+      return
+    }
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = backup.filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   const tabs = [
     { id: 'runtime', label: 'Runtime' },
     { id: 'storage', label: 'Storage' },
@@ -462,41 +540,100 @@ export default function Settings() {
         )}
 
         {activeTab === 'storage' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <Section title="Storage Backend" subtitle="Current persistence mode and state location" icon={Database}>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <ReadOnlyField label="Backend" value={health?.storage || 'loading'} />
-                  <ReadOnlyField label="Status" value={health?.status || 'unknown'} />
-                  <ReadOnlyField label="Data Directory" value={health?.dataDir || ''} mono />
-                  <ReadOnlyField
-                    label="Database Location"
-                    value={health?.database?.location || (health?.storage === 'postgres' ? 'configured' : 'not used')}
-                    mono
-                  />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <Section title="Storage Backend" subtitle="Current persistence mode and state location" icon={Database}>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ReadOnlyField label="Backend" value={health?.storage || 'loading'} />
+                    <ReadOnlyField label="Status" value={health?.status || 'unknown'} />
+                    <ReadOnlyField label="Data Directory" value={health?.dataDir || ''} mono />
+                    <ReadOnlyField
+                      label="Database Location"
+                      value={health?.database?.location || (health?.storage === 'postgres' ? 'configured' : 'not used')}
+                      mono
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={loadHealth} disabled={healthLoading} className="btn-secondary gap-1.5">
+                      <RefreshCw size={14} className={healthLoading ? 'animate-spin' : ''} />
+                      Refresh
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      Database credentials are intentionally hidden.
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={loadHealth} disabled={healthLoading} className="btn-secondary gap-1.5">
-                    <RefreshCw size={14} className={healthLoading ? 'animate-spin' : ''} />
-                    Refresh
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    Database credentials are intentionally hidden.
-                  </span>
-                </div>
-              </div>
-            </Section>
+              </Section>
 
-            <Section title="Retention" subtitle="Operational history retention settings" icon={HardDrive}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ReadOnlyField label="Audit Retention" value={`${health?.retention?.auditDays ?? 90} days`} />
-                <ReadOnlyField label="Execution Retention" value={`${health?.retention?.executionDays ?? 180} days`} />
-                <ReadOnlyField label="ZTF Installed" value={health?.ztf_installed ? 'yes' : 'no'} />
-                <ReadOnlyField label="Version" value={health?.version || '1.2.7'} />
+              <Section title="Retention" subtitle="Operational history retention settings" icon={HardDrive}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ReadOnlyField label="Audit Retention" value={`${health?.retention?.auditDays ?? 90} days`} />
+                  <ReadOnlyField label="Execution Retention" value={`${health?.retention?.executionDays ?? 180} days`} />
+                  <ReadOnlyField label="ZTF Installed" value={health?.ztf_installed ? 'yes' : 'no'} />
+                  <ReadOnlyField label="Version" value={health?.version || '1.2.7'} />
+                </div>
+                <p className="text-xs text-gray-500 mt-3">
+                  Change storage and retention values with environment variables, then restart the service.
+                </p>
+              </Section>
+            </div>
+
+            <Section title="Database Backups" subtitle="Admin-only PostgreSQL logical exports" icon={Download}>
+              <div className="space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  <p className="text-sm text-gray-400 max-w-2xl">
+                    Create an on-demand PostgreSQL backup for Docker and small-team deployments. Managed PostgreSQL platforms should still use native automated backups.
+                  </p>
+                  <div className="flex gap-2">
+                    <button onClick={loadBackups} disabled={!isAdmin || backupsLoading} className="btn-secondary gap-1.5">
+                      <RefreshCw size={14} className={backupsLoading ? 'animate-spin' : ''} />
+                      Refresh
+                    </button>
+                    <button
+                      onClick={createBackup}
+                      disabled={!isAdmin || backupRunning || health?.storage !== 'postgres'}
+                      className="btn-primary gap-1.5"
+                    >
+                      <Database size={14} />
+                      {backupRunning ? 'Creating...' : 'Create Backup'}
+                    </button>
+                  </div>
+                </div>
+
+                {health?.storage !== 'postgres' && (
+                  <div className="rounded-lg border border-amber-700/30 bg-amber-900/5 px-3 py-2 text-sm text-amber-400">
+                    Database backups are available when the active storage backend is PostgreSQL.
+                  </div>
+                )}
+
+                {backupError && (
+                  <div className="rounded-lg border border-red-700/30 bg-red-900/10 px-3 py-2 text-sm text-red-300">
+                    {backupError}
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-border overflow-hidden">
+                  {backups.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-sm text-gray-500">
+                      No database backups have been created.
+                    </div>
+                  ) : backups.map(backup => (
+                    <div key={backup.filename} className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 border-b border-border last:border-b-0">
+                      <div className="min-w-0">
+                        <div className="font-mono text-sm text-gray-200 truncate">{backup.filename}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {formatDate(backup.createdAt)} · {formatBytes(backup.size)}
+                        </div>
+                      </div>
+                      <button onClick={() => downloadBackup(backup)} className="btn-secondary gap-1.5 w-fit">
+                        <Download size={14} />
+                        Download
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-3">
-                Change storage and retention values with environment variables, then restart the service.
-              </p>
             </Section>
           </div>
         )}

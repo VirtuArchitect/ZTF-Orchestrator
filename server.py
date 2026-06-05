@@ -22,7 +22,7 @@ from typing import Generator
 
 import bcrypt
 import yaml
-from flask import Flask, Response, jsonify, request, send_from_directory
+from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -61,6 +61,7 @@ PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
 JOBS_FILE      = CONFIG_DIR / 'jobs.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
+POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 
 ALLOWED_ORIGINS = [
     f'http://localhost:{PORT}',    f'http://127.0.0.1:{PORT}',
@@ -81,6 +82,109 @@ def _database_location(database_url: str) -> str:
         return f'{parsed.scheme}://{host}{port}/{name}' if host else parsed.scheme
     except Exception:
         return 'configured'
+
+
+def _now_iso() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+
+
+def _postgres_backup_metadata(path: Path) -> dict:
+    stat_result = path.stat()
+    return {
+        'filename': path.name,
+        'size': stat_result.st_size,
+        'createdAt': datetime.datetime.fromtimestamp(
+            stat_result.st_mtime,
+            datetime.timezone.utc,
+        ).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+    }
+
+
+def _list_postgres_backups() -> list[dict]:
+    if not POSTGRES_BACKUP_DIR.exists():
+        return []
+    backups = [
+        _postgres_backup_metadata(path)
+        for path in POSTGRES_BACKUP_DIR.glob('ztf-orchestrator-*.dump')
+        if path.is_file()
+    ]
+    return sorted(backups, key=lambda item: item['createdAt'], reverse=True)
+
+
+def _pg_dump_command(database_url: str, output_path: Path) -> tuple[list[str], dict[str, str]]:
+    parsed = urllib.parse.urlparse(database_url)
+    if parsed.scheme not in {'postgresql', 'postgres'}:
+        raise ValueError('ZTF_DATABASE_URL must use postgresql://')
+    if not parsed.hostname:
+        raise ValueError('ZTF_DATABASE_URL must include a host')
+    db_name = parsed.path.lstrip('/')
+    if not db_name:
+        raise ValueError('ZTF_DATABASE_URL must include a database name')
+
+    env = os.environ.copy()
+    env['PGCONNECT_TIMEOUT'] = env.get('PGCONNECT_TIMEOUT', '10')
+    if parsed.password:
+        env['PGPASSWORD'] = urllib.parse.unquote(parsed.password)
+
+    cmd = [
+        'pg_dump',
+        '--format=custom',
+        '--no-owner',
+        '--no-privileges',
+        '--file', str(output_path),
+        '--host', parsed.hostname,
+        '--port', str(parsed.port or 5432),
+        '--username', urllib.parse.unquote(parsed.username or 'ztf'),
+        db_name,
+    ]
+    return cmd, env
+
+
+def _create_postgres_backup(requested_by: str) -> dict:
+    if _storage.name != 'postgres':
+        raise RuntimeError('Database backups are only available when PostgreSQL storage is active')
+    database_url = os.environ.get('ZTF_DATABASE_URL', '').strip()
+    if not database_url:
+        raise RuntimeError('ZTF_DATABASE_URL is not configured')
+
+    _secure_mkdir(POSTGRES_BACKUP_DIR)
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')
+    output_path = POSTGRES_BACKUP_DIR / f'ztf-orchestrator-{timestamp}.dump'
+    cmd, env = _pg_dump_command(database_url, output_path)
+
+    try:
+        result = subprocess.run(
+            cmd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=int(os.environ.get('ZTF_BACKUP_TIMEOUT', '300')),
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError('pg_dump is not installed or not on PATH') from exc
+    except subprocess.TimeoutExpired as exc:
+        output_path.unlink(missing_ok=True)
+        raise RuntimeError('PostgreSQL backup timed out') from exc
+
+    if result.returncode != 0:
+        output_path.unlink(missing_ok=True)
+        err = (result.stderr or result.stdout or 'pg_dump failed').strip()
+        raise RuntimeError(err[:500])
+
+    try:
+        os.chmod(output_path, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError:
+        pass
+
+    metadata = _postgres_backup_metadata(output_path)
+    log.info('postgres_backup_created', extra={
+        'action': 'postgres_backup_created',
+        'user': requested_by,
+        'backupFile': metadata['filename'],
+        'size': metadata['size'],
+    })
+    return metadata
 
 # ─── Structured logging ───────────────────────────────────────────────────────
 
@@ -2502,6 +2606,57 @@ def run_retention_cleanup():
 
 
 # ─── Drift detection ─────────────────────────────────────────────────────────
+
+@app.route('/api/maintenance/database-backups')
+@require_role('admin')
+def list_database_backups():
+    """List PostgreSQL logical backups created by this appliance."""
+    return jsonify({
+        'enabled': _storage.name == 'postgres',
+        'storage': _storage.name,
+        'backups': _list_postgres_backups(),
+    })
+
+
+@app.route('/api/maintenance/database-backups', methods=['POST'])
+@require_role('admin')
+@limiter.limit('2 per hour')
+def create_database_backup():
+    """Create an on-demand PostgreSQL logical backup with pg_dump."""
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    try:
+        metadata = _create_postgres_backup(current_user)
+        return jsonify({'success': True, 'backup': metadata}), 201
+    except RuntimeError as exc:
+        log.warning('postgres_backup_failed', extra={
+            'action': 'postgres_backup_failed',
+            'user': current_user,
+            'error': str(exc),
+        })
+        return jsonify({'error': str(exc)}), 400
+
+
+@app.route('/api/maintenance/database-backups/<filename>')
+@require_role('admin')
+def download_database_backup(filename):
+    """Download a previously created PostgreSQL backup."""
+    safe_name = Path(filename).name
+    if safe_name != filename or not safe_name.startswith('ztf-orchestrator-') or not safe_name.endswith('.dump'):
+        return jsonify({'error': 'Invalid backup filename'}), 400
+    path = (POSTGRES_BACKUP_DIR / safe_name).resolve()
+    try:
+        path.relative_to(POSTGRES_BACKUP_DIR.resolve())
+    except ValueError:
+        return jsonify({'error': 'Invalid backup filename'}), 400
+    if not path.exists() or not path.is_file():
+        return jsonify({'error': 'Backup not found'}), 404
+    return send_file(
+        path,
+        mimetype='application/octet-stream',
+        as_attachment=True,
+        download_name=safe_name,
+    )
+
 
 @app.route('/api/drift')
 @require_role('admin', 'operator', 'viewer')

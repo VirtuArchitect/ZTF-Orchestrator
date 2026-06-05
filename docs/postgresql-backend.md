@@ -131,3 +131,29 @@ POST /api/maintenance/retention
 
 In PostgreSQL mode this removes expired sessions and old audit events. File mode
 continues to use existing per-document limits.
+
+## On-Demand Logical Backups
+
+Admins can create PostgreSQL logical backups from **Settings > Storage** or via:
+
+```text
+POST /api/maintenance/database-backups
+GET  /api/maintenance/database-backups
+GET  /api/maintenance/database-backups/<filename>
+```
+
+Backups are created with `pg_dump --format=custom --no-owner --no-privileges`
+and stored under:
+
+```text
+ZTF_DATA_DIR/backups/postgres/
+```
+
+The Docker image includes `postgresql-client` so `pg_dump` is available in the
+standard container deployment. For manual installations, ensure `pg_dump` is on
+the service `PATH`.
+
+These backups are intended for lab, Docker, and small-team deployments. For
+managed PostgreSQL, prefer platform-native automated backups and recovery
+policies. Restore remains a documented/manual operation because it is
+destructive and environment-specific.

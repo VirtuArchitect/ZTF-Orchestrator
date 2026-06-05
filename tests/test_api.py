@@ -2,6 +2,7 @@
 
 import json
 import socket
+from pathlib import Path
 import pytest
 
 
@@ -807,6 +808,72 @@ def test_audit_log_operator_forbidden(client, auth_headers):
 
 
 # ── Webhook helper ───────────────────────────────────────────────────────────
+
+def test_database_backup_list_file_backend(client, auth_headers):
+    """Database backup list is admin-only and reports disabled outside PostgreSQL mode."""
+    resp = client.get('/api/maintenance/database-backups', headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['enabled'] is False
+    assert data['storage'] == 'file'
+    assert data['backups'] == []
+
+
+def test_database_backup_create_requires_postgres(client, auth_headers):
+    resp = client.post('/api/maintenance/database-backups', headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'PostgreSQL storage' in resp.get_json()['error']
+
+
+def test_database_backup_operator_forbidden(client, auth_headers):
+    _create_user(client, auth_headers, 'op_backup', 'operator')
+    oh = _login(client, 'op_backup')
+    resp = client.get('/api/maintenance/database-backups', headers=oh)
+    assert resp.status_code == 403
+
+
+def test_database_backup_create_and_download(client, auth_headers, monkeypatch):
+    """Admin can create and download a pg_dump backup when PostgreSQL mode is active."""
+    import server
+
+    calls = []
+
+    class FakeResult:
+        returncode = 0
+        stdout = ''
+        stderr = ''
+
+    def fake_run(cmd, env=None, **kwargs):
+        calls.append({'cmd': cmd, 'env': env, 'kwargs': kwargs})
+        Path(cmd[cmd.index('--file') + 1]).write_bytes(b'PGDMP-test')
+        return FakeResult()
+
+    monkeypatch.setattr(server._storage, 'name', 'postgres')
+    monkeypatch.setenv('ZTF_DATABASE_URL', 'postgresql://ztf:secret@postgres:5432/ztf_orchestrator')
+    monkeypatch.setattr(server.subprocess, 'run', fake_run)
+
+    resp = client.post('/api/maintenance/database-backups', headers=auth_headers)
+    assert resp.status_code == 201
+    backup = resp.get_json()['backup']
+    assert backup['filename'].startswith('ztf-orchestrator-')
+    assert backup['filename'].endswith('.dump')
+    assert backup['size'] == len(b'PGDMP-test')
+    assert calls[0]['env']['PGPASSWORD'] == 'secret'
+    assert 'secret' not in calls[0]['cmd']
+
+    listing = client.get('/api/maintenance/database-backups', headers=auth_headers)
+    assert listing.status_code == 200
+    assert listing.get_json()['backups'][0]['filename'] == backup['filename']
+
+    download = client.get(f"/api/maintenance/database-backups/{backup['filename']}", headers=auth_headers)
+    assert download.status_code == 200
+    assert download.data == b'PGDMP-test'
+
+
+def test_database_backup_download_rejects_traversal(client, auth_headers):
+    resp = client.get('/api/maintenance/database-backups/..%2Fsecret.dump', headers=auth_headers)
+    assert resp.status_code in (400, 404)
+
 
 def test_fire_webhook_success(monkeypatch):
     """_fire_webhook POSTs JSON and silently succeeds."""
