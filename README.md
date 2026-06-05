@@ -5,6 +5,27 @@ A web-based installer and configuration orchestrator for the
 replacing GitHub-based configuration management with a visual interface.
 
 Unofficial community framework orchestration. This project is not affiliated with or supported by Nutanix.
+
+ZTF-Orchestrator turns ZeroTouch Framework into an internal operations console:
+teams can define connection settings, generate workflow YAML, submit execution
+jobs, track output, detect drift, schedule repeatable tasks, request approvals,
+and review audit history without every operator working directly in Git, YAML,
+and CLI commands.
+
+## Why It Exists
+
+ZeroTouch Framework is powerful automation. ZTF-Orchestrator makes that power
+easier to consume in day-to-day operations by adding:
+
+- Guided configuration instead of hand-written YAML for common workflows.
+- Durable job execution instead of browser-bound terminal sessions.
+- PostgreSQL-backed operational state for Docker deployments.
+- RBAC, approvals, audit logs, and validation status for governance.
+- Drift checks, schedules, pipelines, and parallel execution for repeatability.
+
+It complements Prism Central and Foundation Central. It does not replace them;
+it orchestrates repeatable ZeroTouch Framework workflows that call Nutanix APIs.
+
 ---
 
 ## Requirements
@@ -67,6 +88,8 @@ $env:ZTF_PORT = "8080"; .\install.ps1
 ```bash
 git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git
 cd ZTF-Orchestrator
+cp .env.example .env
+# Edit .env and set a unique POSTGRES_PASSWORD before first start.
 docker compose up -d
 docker compose logs -f   # admin password printed here on first run
 ```
@@ -341,8 +364,9 @@ Nutanix Infrastructure  (Prism Central · Prism Element · Foundation Central)
 
 ## Environment Variables
 
-All defaults work out of the box. Override via environment variables or a `.env`
-file (see `.env.example`).
+Manual/file-backed defaults work out of the box. PostgreSQL-backed Docker
+deployments require `POSTGRES_PASSWORD` in `.env` before first start. Override
+other settings via environment variables or a `.env` file (see `.env.example`).
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -350,11 +374,14 @@ file (see `.env.example`).
 | `ZTF_PATH` | `~/zerotouch-framework` | ZTF installation path |
 | `ZTF_PYTHON` | current Python | Python executable for running ZTF |
 | `ZTF_PORT` | `5001` | Flask listen port |
+| `ZTF_BIND_HOST` | `127.0.0.1` | Flask bind address for manual runs. Docker sets `0.0.0.0` inside the container. |
 | `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
 | `ZTF_EXEC_WORKERS` | `1` | Background execution worker count |
 | `ZTF_TOKEN_TTL` | `28800` | Session token lifetime (seconds, default 8 h) |
 | `ZTF_LOG_LEVEL` | `INFO` | Log level: DEBUG, INFO, WARNING, ERROR |
 | `ZTF_CONFIG_BACKUPS` | `5` | Config file backup versions to retain |
+| `ZTF_WEBHOOK_ALLOWED_HOSTS` | empty | Optional comma-separated webhook hostname allowlist |
+| `ZTF_WEBHOOK_ALLOW_INSECURE` | `false` | Lab-only option to allow HTTP webhooks |
 
 ---
 
@@ -362,6 +389,8 @@ file (see `.env.example`).
 
 ```bash
 # Build and start (first-run admin password printed to logs)
+cp .env.example .env
+# Edit .env and set a unique POSTGRES_PASSWORD.
 docker compose up -d
 docker compose logs -f
 

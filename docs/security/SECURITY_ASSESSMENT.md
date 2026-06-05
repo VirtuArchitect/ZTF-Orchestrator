@@ -54,7 +54,10 @@ Commands executed:
 npm audit --audit-level=moderate
 python -m pip_audit -r requirements.txt
 python -m bandit -r . -x .\venv,.\node_modules,.\dist,.\static,.\tests
+python -m bandit -r . -x .\venv,.\node_modules,.\dist,.\static,.\tests -q -ll
 python -m pytest tests/test_auth.py tests/test_storage_backend.py -q
+python -m pytest -q
+npm run build
 ```
 
 Additional manual review covered route decorators, role checks, subprocess
@@ -65,9 +68,8 @@ construction, Docker Compose defaults, and frontend HTML injection sinks.
 
 No critical findings were identified during this baseline review.
 
-The most meaningful hardening items are dependency updates, webhook destination
-validation, stronger database default-secret handling, and clearer production
-deployment boundaries.
+The most meaningful remaining hardening items are environment-specific
+validation, production secret rotation, and production backup/recovery testing.
 
 ## Findings
 
@@ -82,7 +84,8 @@ Recommendation:
 - Rebuild the frontend.
 - Regression test login, redirects, and route navigation.
 
-Status: open.
+Status: remediated in the current working tree by updating `react-router-dom`
+to 6.30.4.
 
 ### Medium: Webhook Destination Validation
 
@@ -102,7 +105,9 @@ Recommendation:
   specific lab override is enabled.
 - Add tests for rejected webhook destinations.
 
-Status: open.
+Status: remediated in the current working tree. Webhooks now require HTTPS by
+default, reject embedded credentials, block private/internal destinations, and
+support an explicit host allowlist for controlled environments.
 
 ### Medium: Default PostgreSQL Password in Docker Compose
 
@@ -115,7 +120,8 @@ Recommendation:
 - Document password rotation.
 - Avoid reusing the default in any persistent environment.
 
-Status: open.
+Status: remediated in the current working tree. Docker Compose now requires
+`POSTGRES_PASSWORD` to be supplied, normally through `.env`.
 
 ### Medium/Low: Direct Flask Bind Address
 
@@ -130,7 +136,9 @@ Recommendation:
 - Keep Docker deployment documented as localhost-published unless fronted by a
   TLS reverse proxy.
 
-Status: open.
+Status: remediated in the current working tree. Manual runs default to
+`ZTF_BIND_HOST=127.0.0.1`; Docker Compose sets `ZTF_BIND_HOST=0.0.0.0` inside
+the container while publishing only `127.0.0.1:5001` on the host.
 
 ### Low: Python Dependency Audit Could Not Complete
 
@@ -142,7 +150,8 @@ Recommendation:
 - Update `psycopg[binary]` to a current tested version.
 - Rerun `pip-audit`.
 
-Status: open.
+Status: remediated in the current working tree by updating `psycopg[binary]` to
+3.2.13. Rerun `pip-audit` in release validation.
 
 ### Low: PostgreSQL Audit Query Scanner Warning
 
@@ -186,6 +195,9 @@ Status: mitigated by current controls; ongoing operational risk.
 - YAML validation uses `safe_load`.
 - Security headers are applied to responses.
 - Docker Compose publishes the web port to localhost by default.
+- Manual Flask runs bind to localhost by default.
+- Webhook delivery requires HTTPS by default and blocks private/internal
+  destinations unless explicitly allowlisted.
 - Subprocess calls use argument arrays rather than `shell=True`.
 - Frontend YAML preview escapes content before injecting highlighting markup.
 
@@ -194,21 +206,26 @@ Status: mitigated by current controls; ongoing operational risk.
 Targeted local tests completed successfully:
 
 ```text
-10 passed, 1 skipped
+101 passed, 1 skipped
 ```
 
 The skipped test requires `ZTF_TEST_DATABASE_URL` and is intended for PostgreSQL
 integration validation when a test database is available.
 
+Dependency audits completed with no known vulnerabilities reported by `npm audit`
+or `pip-audit`. Bandit completed with no medium or high findings; remaining low
+findings are documented scanner noise around expected subprocess usage and
+cleanup exception handling.
+
 ## Recommended Next Steps
 
-1. Update React Router dependencies and rerun `npm audit`.
-2. Add webhook URL validation and tests.
-3. Replace default PostgreSQL credentials in shared deployments.
-4. Make manual Flask bind host configurable.
-5. Update `psycopg[binary]` and rerun `pip-audit`.
-6. Add a repeatable release security checklist for each version tag.
-7. Perform environment-specific UAT against real Nutanix infrastructure before
+1. Rerun `npm audit`, `pip-audit`, Bandit, pytest, and the frontend build for
+   each release.
+2. Rotate PostgreSQL and application secrets before shared or production-like
+   deployment.
+3. Validate PostgreSQL backup/restore in the target environment.
+4. Add a repeatable release security checklist for each version tag.
+5. Perform environment-specific UAT against real Nutanix infrastructure before
    representing the product as production validated.
 
 ## Assessment Statement

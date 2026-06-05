@@ -36,13 +36,14 @@ services:
       ZTF_DATA_DIR:       /var/lib/ztf-orchestrator
       ZTF_PATH:           /opt/zerotouch-framework
       ZTF_PORT:           "5001"
+      ZTF_BIND_HOST:      "0.0.0.0"
       ZTF_LOG_LEVEL:      ${ZTF_LOG_LEVEL:-INFO}
       ZTF_EXEC_TIMEOUT:   ${ZTF_EXEC_TIMEOUT:-3600}
       ZTF_EXEC_WORKERS:   ${ZTF_EXEC_WORKERS:-1}
       ZTF_TOKEN_TTL:      ${ZTF_TOKEN_TTL:-28800}
       ZTF_CONFIG_BACKUPS: ${ZTF_CONFIG_BACKUPS:-5}
       ZTF_STORAGE_BACKEND: ${ZTF_STORAGE_BACKEND:-postgres}
-      ZTF_DATABASE_URL:   ${ZTF_DATABASE_URL:-postgresql://ztf:${POSTGRES_PASSWORD:-ztf}@postgres:5432/ztf_orchestrator}
+      ZTF_DATABASE_URL:   ${ZTF_DATABASE_URL:-postgresql://ztf:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/ztf_orchestrator}
       ZTF_AUDIT_RETENTION_DAYS: ${ZTF_AUDIT_RETENTION_DAYS:-90}
       ZTF_EXECUTION_RETENTION_DAYS: ${ZTF_EXECUTION_RETENTION_DAYS:-180}
     healthcheck:
@@ -65,7 +66,7 @@ services:
     environment:
       POSTGRES_DB: ztf_orchestrator
       POSTGRES_USER: ztf
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ztf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - ztf-postgres:/var/lib/postgresql/data
     healthcheck:

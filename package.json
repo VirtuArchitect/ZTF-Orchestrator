@@ -2,6 +2,7 @@
   "name": "nutanix-zerotouch-framework-ui",
   "version": "1.2.7",
   "private": true,
+  "type": "module",
   "author": "John Goulden",
   "scripts": {
     "dev": "vite",
@@ -14,7 +15,7 @@
     "lucide-react": "^0.400.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.0",
+    "react-router-dom": "^6.30.4",
     "zustand": "^4.5.4"
   },
   "devDependencies": {

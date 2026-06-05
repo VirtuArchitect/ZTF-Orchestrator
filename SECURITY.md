@@ -36,6 +36,9 @@ The current security model includes:
 - YAML parsing through `safe_load`.
 - Security response headers.
 - Docker Compose localhost-only port publishing by default.
+- HTTPS-only webhook delivery by default, with private/internal destination
+  blocking unless explicitly allowlisted.
+- Manual Flask runs bind to `127.0.0.1` by default.
 
 For the latest repository-level security assessment, see
 [docs/security/SECURITY_ASSESSMENT.md](docs/security/SECURITY_ASSESSMENT.md).

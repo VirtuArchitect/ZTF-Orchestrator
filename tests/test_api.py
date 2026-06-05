@@ -1,6 +1,7 @@
 """Tests for API endpoint availability, RBAC, and config CRUD."""
 
 import json
+import socket
 import pytest
 
 
@@ -820,8 +821,10 @@ def test_fire_webhook_success(monkeypatch):
         calls.append({'url': req.full_url, 'data': req.data})
         return FakeResp()
 
+    monkeypatch.setattr('socket.getaddrinfo',
+                        lambda *a, **kw: [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('93.184.216.34', 443))])
     monkeypatch.setattr('urllib.request.urlopen', fake_urlopen)
-    server._fire_webhook('http://example.com/hook', {'status': 'success', 'workflow': 'test'})
+    server._fire_webhook('https://example.com/hook', {'status': 'success', 'workflow': 'test'})
     assert len(calls) == 1
     assert b'success' in calls[0]['data']
 
@@ -833,8 +836,32 @@ def test_fire_webhook_failure_silent(monkeypatch):
     def fake_urlopen(req, timeout=None):
         raise OSError('connection refused')
 
+    monkeypatch.setattr('socket.getaddrinfo',
+                        lambda *a, **kw: [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('93.184.216.34', 443))])
     monkeypatch.setattr('urllib.request.urlopen', fake_urlopen)
-    server._fire_webhook('http://unreachable/hook', {'status': 'failed'})
+    server._fire_webhook('https://unreachable.example/hook', {'status': 'failed'})
+
+
+def test_fire_webhook_rejects_insecure_scheme(monkeypatch):
+    """Webhook delivery rejects plain HTTP by default."""
+    import server
+    calls = []
+
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: calls.append(a))
+    server._fire_webhook('http://example.com/hook', {'status': 'success'})
+    assert calls == []
+
+
+def test_fire_webhook_rejects_private_resolution(monkeypatch):
+    """Webhook delivery blocks localhost/private destinations."""
+    import server
+    calls = []
+
+    monkeypatch.setattr('socket.getaddrinfo',
+                        lambda *a, **kw: [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('127.0.0.1', 443))])
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **kw: calls.append(a))
+    server._fire_webhook('https://internal.example/hook', {'status': 'success'})
+    assert calls == []
 
 
 # ── Security headers ─────────────────────────────────────────────────────────

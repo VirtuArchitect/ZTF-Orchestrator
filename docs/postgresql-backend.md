@@ -38,6 +38,8 @@ which keeps long-running workflows independent from the browser session.
 PostgreSQL-backed mode is the default:
 
 ```bash
+cp .env.example .env
+# Edit .env and set a unique POSTGRES_PASSWORD.
 docker compose up -d --build
 ```
 
@@ -47,17 +49,19 @@ File-backed mode uses the standalone Compose file:
 docker compose -f docker-compose.file.yml up -d --build
 ```
 
-Set a stronger database password before production use:
+`docker-compose.yml` requires `POSTGRES_PASSWORD` to be set. The recommended
+path is to copy `.env.example` to `.env`, set a unique password, then start the
+stack.
 
 ```bash
-POSTGRES_PASSWORD='change-me' docker compose up -d --build
+POSTGRES_PASSWORD='use-a-unique-value' docker compose up -d --build
 ```
 
 ## Environment Variables
 
 ```text
 ZTF_STORAGE_BACKEND=postgres
-ZTF_DATABASE_URL=postgresql://ztf:ztf@postgres:5432/ztf_orchestrator
+ZTF_DATABASE_URL=postgresql://ztf:<POSTGRES_PASSWORD>@postgres:5432/ztf_orchestrator
 ZTF_EXEC_WORKERS=1
 ```
 

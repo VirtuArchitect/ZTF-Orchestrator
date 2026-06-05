@@ -162,30 +162,27 @@ class PostgresStorage:
         user: str = '',
         action: str = '',
     ) -> list[dict]:
-        clauses = []
-        params: list[Any] = []
-        if level:
-            clauses.append('upper(level) = %s')
-            params.append(level.upper())
-        if user:
-            clauses.append('lower(username) = %s')
-            params.append(user.lower())
-        if action:
-            clauses.append("(lower(msg) like %s or lower(coalesce(action, '')) like %s)")
-            needle = f'%{action.lower()}%'
-            params.extend([needle, needle])
-        where = f"where {' and '.join(clauses)}" if clauses else ''
-        params.append(limit)
+        level_filter = level.upper()
+        user_filter = user.lower()
+        action_filter = action.lower()
+        action_needle = f'%{action_filter}%'
         with self._connect() as conn:
             rows = conn.execute(
-                f"""
+                """
                 select event
                 from ztf_audit_events
-                {where}
+                where (%s = '' or upper(level) = %s)
+                  and (%s = '' or lower(username) = %s)
+                  and (%s = '' or lower(msg) like %s or lower(coalesce(action, '')) like %s)
                 order by id desc
                 limit %s
                 """,
-                params,
+                (
+                    level_filter, level_filter,
+                    user_filter, user_filter,
+                    action_filter, action_needle, action_needle,
+                    limit,
+                ),
             ).fetchall()
         return [row['event'] for row in reversed(rows)]
 

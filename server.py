@@ -14,6 +14,7 @@ import stat
 import subprocess
 import sys
 import threading
+import urllib.parse
 import uuid
 from functools import wraps
 from pathlib import Path
@@ -33,9 +34,16 @@ CONFIG_DIR    = Path(os.environ.get('ZTF_DATA_DIR',    Path.home() / '.ztf-ui'))
 ZTF_DEFAULT   = os.environ.get('ZTF_PATH',             str(Path.home() / 'zerotouch-framework'))
 PYTHON_DEFAULT= os.environ.get('ZTF_PYTHON',           sys.executable)
 PORT          = int(os.environ.get('ZTF_PORT',          5001))
+BIND_HOST     = os.environ.get('ZTF_BIND_HOST',         '127.0.0.1')
 LOG_LEVEL     = os.environ.get('ZTF_LOG_LEVEL',        'INFO')
 EXEC_TIMEOUT  = int(os.environ.get('ZTF_EXEC_TIMEOUT',  3600))   # seconds
 EXEC_WORKERS  = max(1, int(os.environ.get('ZTF_EXEC_WORKERS', '1')))
+WEBHOOK_ALLOW_INSECURE = os.environ.get('ZTF_WEBHOOK_ALLOW_INSECURE', '').lower() in {'1', 'true', 'yes'}
+WEBHOOK_ALLOWED_HOSTS = {
+    host.strip().lower()
+    for host in os.environ.get('ZTF_WEBHOOK_ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+}
 TOKEN_TTL     = int(os.environ.get('ZTF_TOKEN_TTL',     28800))  # seconds (8 h)
 MAX_BODY      = int(os.environ.get('ZTF_MAX_BODY',      1048576)) # 1 MB
 CONFIG_BACKUPS= int(os.environ.get('ZTF_CONFIG_BACKUPS',5))
@@ -815,17 +823,77 @@ def _save_pipelines(pipelines: list[dict]) -> None:
     write_json(PIPELINES_FILE, pipelines)
 
 
+def _is_private_or_internal_ip(value: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(value)
+    except ValueError:
+        return True
+    return (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    )
+
+
+def _webhook_host_allowed(hostname: str) -> bool:
+    host = hostname.lower().rstrip('.')
+    for allowed in WEBHOOK_ALLOWED_HOSTS:
+        allowed = allowed.rstrip('.')
+        if host == allowed or host.endswith(f'.{allowed}'):
+            return True
+    return False
+
+
+def _validate_webhook_url(url: str) -> tuple[bool, str]:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in {'https'} and not (WEBHOOK_ALLOW_INSECURE and parsed.scheme == 'http'):
+        return False, 'webhook URL must use https'
+    if not parsed.hostname:
+        return False, 'webhook URL must include a hostname'
+    if parsed.username or parsed.password:
+        return False, 'webhook URL must not contain embedded credentials'
+
+    host = parsed.hostname.strip().lower()
+    if _webhook_host_allowed(host):
+        return True, ''
+
+    try:
+        ipaddress.ip_address(host)
+        addresses = [host]
+    except ValueError:
+        try:
+            infos = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == 'https' else 80), type=socket.SOCK_STREAM)
+            addresses = sorted({info[4][0] for info in infos})
+        except OSError:
+            return False, 'webhook hostname could not be resolved'
+
+    if not addresses:
+        return False, 'webhook hostname did not resolve to an address'
+    blocked = [addr for addr in addresses if _is_private_or_internal_ip(addr)]
+    if blocked:
+        return False, 'webhook URL resolves to a private or internal address'
+    return True, ''
+
+
 def _fire_webhook(url: str, payload: dict) -> None:
     """Best-effort webhook POST — runs in a daemon thread, never raises."""
     import urllib.request as _req
     try:
+        ok, reason = _validate_webhook_url(url)
+        if not ok:
+            log.warning('webhook_rejected', extra={'url': url, 'error': reason})
+            return
         body = json.dumps(payload).encode()
         req  = _req.Request(
             url, data=body,
-            headers={'Content-Type': 'application/json', 'User-Agent': 'ZTF-Orchestrator/1.2.0'},
+            headers={'Content-Type': 'application/json', 'User-Agent': 'ZTF-Orchestrator/1.2.7'},
             method='POST',
         )
-        with _req.urlopen(req, timeout=8):
+        # URL is scheme, host, credential, DNS, and private-range validated above.
+        with _req.urlopen(req, timeout=8):  # nosec B310
             pass
         log.info('webhook_fired', extra={'url': url, 'workflow': payload.get('workflow'), 'status': payload.get('status')})
     except Exception as exc:
@@ -2752,7 +2820,8 @@ if __name__ == '__main__':
     print('=' * 60)
     print('  ZeroTouch Enterprise Orchestrator  v1.2.7')
     print('=' * 60)
-    print(f'  URL:  http://localhost:{PORT}')
+    display_host = 'localhost' if BIND_HOST in {'127.0.0.1', '0.0.0.0', '::'} else BIND_HOST  # nosec B104
+    print(f'  URL:  http://{display_host}:{PORT}')
     print(f'  Logs: {LOG_FILE}')
     print('=' * 60, flush=True)
-    app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
+    app.run(host=BIND_HOST, port=PORT, debug=False, threaded=True)
