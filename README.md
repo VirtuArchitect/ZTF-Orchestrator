@@ -4,6 +4,7 @@ A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework),
 replacing GitHub-based configuration management with a visual interface.
 
+Unofficial community framework orchestration. This project is not affiliated with or supported by Nutanix.
 ---
 
 ## Requirements
@@ -20,6 +21,10 @@ replacing GitHub-based configuration management with a visual interface.
 
 > **Port note (Windows):** Hyper-V reserves ports 4940–5039. If the server fails to
 > start on the default port 5001, set `$env:ZTF_PORT = "8080"` before starting.
+
+<img width="1716" height="1268" alt="image" src="https://github.com/user-attachments/assets/35046ef7-caa0-46ad-95d3-8be7efc6e78d" />
+
+
 
 ---
 
