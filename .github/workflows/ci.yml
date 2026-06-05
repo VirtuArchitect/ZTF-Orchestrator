@@ -69,7 +69,11 @@ jobs:
 
       - name: Smoke test
         run: |
-          docker run -d --name smoke -p 5001:5001 ztf-orchestrator:${{ github.sha }}
+          docker run -d --name smoke \
+            -p 5001:5001 \
+            -e ZTF_STORAGE_BACKEND=file \
+            -e ZTF_BIND_HOST=0.0.0.0 \
+            ztf-orchestrator:${{ github.sha }}
           for i in {1..12}; do
             if curl -fsS http://localhost:5001/health; then
               docker stop smoke
