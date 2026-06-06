@@ -5,6 +5,15 @@
 This repository expects production-grade engineering by default. Follow these
 instructions for all code changes in this repo.
 
+## Companion Guides
+
+- For testing strategy, required checks, and smoke testing, follow
+  `TESTING_GUIDE.md`.
+- For security-sensitive work, follow `SECURITY_REVIEW.md`.
+- For code review tasks, follow `CODE_REVIEW.md`.
+- Before any penetration testing or vulnerability testing, define authorization
+  and scope with `PENTEST_SCOPE_TEMPLATE.md`.
+
 ## Project Context
 
 - Read the project README, package/build files, test configuration, and nearby
@@ -81,4 +90,3 @@ Include:
 - Smoke test performed.
 - Security notes if applicable.
 - Untested items or residual risk.
-
