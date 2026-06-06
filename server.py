@@ -1558,8 +1558,29 @@ def spa_fallback(path):
 
 # ─── Health (public — no auth) ────────────────────────────────────────────────
 
+def _bounded_int_arg(name: str, default: int, minimum: int, maximum: int):
+    raw = request.args.get(name, default)
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None, (jsonify({'error': f'{name} must be an integer'}), 400)
+    if value < minimum or value > maximum:
+        return None, (jsonify({'error': f'{name} must be between {minimum} and {maximum}'}), 400)
+    return value, None
+
 @app.route('/health')
 def health():
+    settings = get_settings()
+    ztf_ok = (Path(settings['ztfPath']) / 'main.py').exists()
+    status  = 'healthy' if ztf_ok else 'degraded'
+    return jsonify({
+        'status':  status,
+        'version': '1.2.7',
+    }), 200 if ztf_ok else 503
+
+@app.route('/api/health/details')
+@require_role('admin')
+def health_details():
     settings = get_settings()
     ztf_ok = (Path(settings['ztfPath']) / 'main.py').exists()
     status  = 'healthy' if ztf_ok else 'degraded'
@@ -2506,7 +2527,9 @@ def submit_job():
 @app.route('/api/jobs')
 @require_role('admin', 'operator', 'viewer')
 def list_jobs():
-    limit = min(int(request.args.get('limit', 200)), 1000)
+    limit, error = _bounded_int_arg('limit', 200, 1, 1000)
+    if error:
+        return error
     return jsonify(_job_manager.list_jobs(limit))
 
 
@@ -2523,7 +2546,9 @@ def get_job(job_id):
 @app.route('/api/jobs/<job_id>/stream')
 @require_role('admin', 'operator', 'viewer')
 def stream_job(job_id):
-    offset = int(request.args.get('offset', 0))
+    offset, error = _bounded_int_arg('offset', 0, 0, 1000000)
+    if error:
+        return error
     return Response(
         _job_manager.stream_events(job_id, offset),
         mimetype='text/event-stream',
@@ -2545,7 +2570,9 @@ def cancel_job(job_id):
 @require_role('admin')
 def get_audit_log():
     """Return the last N structured log entries from ztf-orchestrator.log."""
-    limit  = min(int(request.args.get('limit', 200)), 1000)
+    limit, error = _bounded_int_arg('limit', 200, 1, 1000)
+    if error:
+        return error
     level  = request.args.get('level', '').upper()
     user   = request.args.get('user', '').lower()
     action = request.args.get('action', '').lower()

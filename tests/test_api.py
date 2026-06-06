@@ -948,6 +948,43 @@ def test_health_returns_json(client):
     data = resp.get_json()
     assert 'status' in data
     assert 'version' in data
+    assert 'dataDir' not in data
+    assert 'database' not in data
+    assert 'jobs' not in data
+
+
+def test_health_details_requires_admin(client):
+    resp = client.get('/api/health/details')
+    assert resp.status_code == 401
+
+
+def test_health_details_returns_operational_data_for_admin(client, auth_headers):
+    resp = client.get('/api/health/details', headers=auth_headers)
+    assert resp.status_code in (200, 503)
+    data = resp.get_json()
+    assert 'status' in data
+    assert 'version' in data
+    assert 'dataDir' in data
+    assert 'database' in data
+    assert 'jobs' in data
+
+
+def test_jobs_limit_must_be_integer(client, auth_headers):
+    resp = client.get('/api/jobs?limit=abc', headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'limit' in resp.get_json()['error']
+
+
+def test_jobs_stream_offset_must_be_integer(client, auth_headers):
+    resp = client.get('/api/jobs/example/stream?offset=abc', headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'offset' in resp.get_json()['error']
+
+
+def test_audit_log_limit_must_be_integer(client, auth_headers):
+    resp = client.get('/api/audit-log?limit=abc', headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'limit' in resp.get_json()['error']
 
 
 def test_spa_deep_link_serves_react_app(client):
