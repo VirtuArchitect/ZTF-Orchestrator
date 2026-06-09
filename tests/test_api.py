@@ -391,7 +391,7 @@ def test_drift_check_viewer_forbidden(client, auth_headers):
     assert resp.status_code == 403
 
 
-# ── v1.2.7 feature endpoints ─────────────────────────────────────────────────
+# ── v1.2.8 feature endpoints ─────────────────────────────────────────────────
 
 def test_schedule_rejects_unknown_script(client, auth_headers):
     resp = client.post('/api/schedules',

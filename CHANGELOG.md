@@ -7,6 +7,27 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.8] - 2026-06-09
+
+### Summary
+Execution visibility release: workflow and script jobs now expose conservative,
+phase-based estimated progress in the live execution modal and Jobs / Queue.
+
+### Added
+- Estimated job progress metadata with phase, percentage, detail, and update
+  timestamp.
+- Live estimated progress bar in the execution modal.
+- Estimated progress display on Jobs / Queue rows and expanded job details.
+- Tests for queued, cancelled, completed, and output-derived progress states.
+
+### Changed
+- Job streams now emit updated job snapshots when progress changes.
+- Documentation clarifies that percentages are orchestration estimates based on
+  queue state, process launch, and observable ZTF output. Real Nutanix task IDs
+  remain a future enhancement if the underlying workflow output exposes them.
+
+---
+
 ## [1.2.7] - 2026-06-02
 
 ### Summary

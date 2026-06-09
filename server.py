@@ -993,7 +993,7 @@ def _fire_webhook(url: str, payload: dict) -> None:
         body = json.dumps(payload).encode()
         req  = _req.Request(
             url, data=body,
-            headers={'Content-Type': 'application/json', 'User-Agent': 'ZTF-Orchestrator/1.2.7'},
+            headers={'Content-Type': 'application/json', 'User-Agent': 'ZTF-Orchestrator/1.2.8'},
             method='POST',
         )
         # URL is scheme, host, credential, DNS, and private-range validated above.
@@ -1655,7 +1655,7 @@ def health():
     status  = 'healthy' if ztf_ok else 'degraded'
     return jsonify({
         'status':  status,
-        'version': '1.2.7',
+        'version': '1.2.8',
     }), 200 if ztf_ok else 503
 
 @app.route('/api/health/details')
@@ -1684,7 +1684,7 @@ def health_details():
             'running': sum(1 for job in jobs if job.get('status') in ('running', 'cancelling')),
             'recent': len(jobs),
         },
-        'version':       '1.2.7',
+        'version':       '1.2.8',
     }), 200 if ztf_ok else 503
 
 # ─── Auth endpoints ───────────────────────────────────────────────────────────
@@ -3080,7 +3080,7 @@ if __name__ == '__main__':
     _ensure_default_admin()
     _init_engines()
     print('=' * 60)
-    print('  ZeroTouch Enterprise Orchestrator  v1.2.7')
+    print('  ZeroTouch Enterprise Orchestrator  v1.2.8')
     print('=' * 60)
     display_host = 'localhost' if BIND_HOST in {'127.0.0.1', '0.0.0.0', '::'} else BIND_HOST  # nosec B104
     print(f'  URL:  http://{display_host}:{PORT}')
