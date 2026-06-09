@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
-import type { ExecutionJob, ExecutionJobStatus } from '../types'
+import type { ExecutionJob, ExecutionJobStatus, ExecutionProgress } from '../types'
 import { apiFetch } from '../utils/api'
 import clsx from 'clsx'
 
@@ -162,6 +162,11 @@ export default function Jobs() {
                     <span>user: {job.user || 'unknown'}</span>
                     <span className="font-mono">id: {job.id}</span>
                   </div>
+                  {job.progress && (
+                    <div className="mt-3 max-w-xl">
+                      <ProgressBar progress={job.progress} compact />
+                    </div>
+                  )}
                 </button>
                 {canCancel && isActive && (
                   <button
@@ -190,6 +195,7 @@ export default function Jobs() {
                     <Detail label="Return Code" value={job.returnCode === null || job.returnCode === undefined ? 'pending' : String(job.returnCode)} />
                     <Detail label="Log Events" value={String(logs.length)} />
                   </div>
+                  {job.progress && <ProgressBar progress={job.progress} />}
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -222,6 +228,33 @@ export default function Jobs() {
         })}
       </div>
     </Layout>
+  )
+}
+
+function ProgressBar({ progress, compact = false }: { progress: ExecutionProgress; compact?: boolean }) {
+  const percent = Math.max(0, Math.min(100, Number(progress.percent) || 0))
+  return (
+    <div className={compact ? '' : 'rounded-lg border border-border bg-gray-900/50 px-3 py-2'}>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className={clsx('truncate', compact ? 'text-gray-500' : 'font-medium text-gray-300')}>
+          {progress.phase || 'Preparing execution'}
+        </span>
+        <span className="text-gray-600 flex-shrink-0">{progress.estimated ? 'est.' : ''} {percent}%</span>
+      </div>
+      <div
+        className={clsx('mt-2 rounded-full bg-gray-950 overflow-hidden', compact ? 'h-1.5' : 'h-2')}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-label="Estimated job progress"
+      >
+        <div className="h-full rounded-full bg-nutanix-cyan transition-all duration-500" style={{ width: `${percent}%` }} />
+      </div>
+      {!compact && progress.detail && (
+        <p className="mt-2 text-xs text-gray-500 break-words">{progress.detail}</p>
+      )}
+    </div>
   )
 }
 

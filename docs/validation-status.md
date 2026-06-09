@@ -31,7 +31,7 @@ checks, static configuration checks, or local Docker checks:
 | Storage abstraction | File storage round-trip is tested. PostgreSQL storage document/session/audit behavior is testable when `ZTF_TEST_DATABASE_URL` is supplied. |
 | PostgreSQL backup controls | Admin-only backup list/create/download endpoints, path rejection, and command secret handling are tested. |
 | Docker Compose | Default PostgreSQL-backed compose and file-backed compose validate successfully. |
-| Durable execution jobs | Job submission, persisted logs, execution history integration, cancellation, and interrupted-job recovery logic are implemented and tested. |
+| Durable execution jobs | Job submission, persisted logs, estimated phase progress, execution history integration, cancellation, and interrupted-job recovery logic are implemented and tested. |
 | Dashboard and health | `/health` reports runtime, storage backend, database location, retention, and job queue counts. |
 | Pipelines | CRUD, viewer access, invalid workflows, empty steps, and streamed execution behavior are tested. |
 | Schedules | Schedule validation and configured config directory behavior are tested. |

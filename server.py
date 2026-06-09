@@ -1058,6 +1058,20 @@ class ExecutionJobManager:
     """Durable workflow/script queue backed by the configured storage backend."""
 
     TERMINAL = {'success', 'failed', 'cancelled', 'interrupted'}
+    TERMINAL_PROGRESS = {
+        'success': ('Completed', 100, 'Execution finished successfully'),
+        'failed': ('Failed', 100, 'Execution ended with an error; review the persisted log'),
+        'cancelled': ('Cancelled', 100, 'Execution was cancelled by an operator'),
+        'interrupted': ('Interrupted', 100, 'Execution was interrupted before completion'),
+    }
+    OUTPUT_MILESTONES = [
+        (('preflight', 'pre-flight', 'checking', 'validat', 'prerequisite'), 20, 'Running pre-flight checks'),
+        (('config', 'yaml', 'credential', 'settings'), 35, 'Preparing workflow configuration'),
+        (('connect', 'api', 'prism', 'foundation', 'nutanix'), 45, 'Connecting to Nutanix services'),
+        (('deploy', 'create', 'configure', 'cluster', 'workflow', 'task'), 65, 'Executing workflow steps'),
+        (('verify', 'poll', 'status', 'wait'), 75, 'Waiting for platform response'),
+        (('complete', 'success', 'finished', 'done'), 90, 'Collecting final output'),
+    ]
 
     def __init__(self, workers: int):
         self.workers = workers
@@ -1098,6 +1112,7 @@ class ExecutionJobManager:
             'returnCode': None,
             'payload': payload,
             'logs': [],
+            'progress': self._progress('Queued', 0, 'Waiting for an execution worker'),
         }
         with self._condition:
             jobs = self._load_jobs()
@@ -1132,6 +1147,7 @@ class ExecutionJobManager:
             else:
                 job['status'] = 'cancelling'
                 job['updatedAt'] = self._now()
+                self._set_progress(job, 'Cancelling', max(90, self._progress_percent(job)), 'Cancellation requested by operator')
             self._save_jobs(jobs)
             self._condition.notify_all()
         if proc and proc.poll() is None:
@@ -1141,7 +1157,7 @@ class ExecutionJobManager:
 
     def stream_events(self, job_id: str, start_offset: int = 0) -> Generator[str, None, None]:
         offset = max(0, start_offset)
-        sent_start = False
+        last_job_update = ''
         while True:
             with self._condition:
                 job = self.get_job(job_id, include_logs=True)
@@ -1149,9 +1165,10 @@ class ExecutionJobManager:
                     yield self._sse('error', 'Job not found', job_id)
                     return
                 logs = job.get('logs', [])
-                if not sent_start:
+                updated_at = job.get('updatedAt', '')
+                if updated_at != last_job_update:
                     yield self._sse('job', self._public_job(job, include_logs=False), job_id)
-                    sent_start = True
+                    last_job_update = updated_at
                 for event in logs[offset:]:
                     yield self._sse(event.get('type', 'stdout'), event.get('data', ''), job_id)
                 offset = len(logs)
@@ -1199,6 +1216,7 @@ class ExecutionJobManager:
             cfg_path = None
 
             if effective_config_content and config_file:
+                self._update_progress(job_id, 'Preparing configuration', 15, 'Validating and saving workflow YAML')
                 path = safe_config_path(config_file, configs_dir)
                 if path is None:
                     self._emit(job_id, 'error', 'Invalid config filename')
@@ -1223,6 +1241,7 @@ class ExecutionJobManager:
             if debug:    cmd_args.append('--debug')
 
             display = ' '.join(cmd_args[:4]) + (' ...' if len(cmd_args) > 4 else '')
+            self._update_progress(job_id, 'Starting ZTF process', 30, 'Launching ZeroTouch Framework CLI')
             self._emit(job_id, 'start', {'command': display, 'workingDir': ztf_path})
             log.info('execution_start', extra={
                 'user': user, 'workflow': workflow or script,
@@ -1235,6 +1254,7 @@ class ExecutionJobManager:
             )
             with self._condition:
                 self._active[job_id] = proc
+            self._update_progress(job_id, 'Executing workflow', 50, 'Streaming ZeroTouch Framework output')
 
             def _timeout_kill():
                 if proc.poll() is None:
@@ -1321,6 +1341,7 @@ class ExecutionJobManager:
             if not job:
                 return
             self._append_event(job, event_type, data)
+            self._advance_progress_from_event(job, event_type, data)
             self._save_jobs(jobs)
             self._condition.notify_all()
 
@@ -1341,6 +1362,7 @@ class ExecutionJobManager:
             current['status'] = 'running'
             current['startedAt'] = now
             current['updatedAt'] = now
+            self._set_progress(current, 'Starting execution', 10, 'Worker accepted the job')
             self._save_jobs(jobs)
             job.update(current)
 
@@ -1362,6 +1384,64 @@ class ExecutionJobManager:
         job['returnCode'] = return_code
         job['finishedAt'] = now
         job['updatedAt'] = now
+        phase, percent, detail = self.TERMINAL_PROGRESS.get(status, ('Finished', 100, 'Execution finished'))
+        self._set_progress(job, phase, percent, detail)
+
+    def _update_progress(self, job_id: str, phase: str, percent: int, detail: str) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return
+            if self._set_progress(job, phase, percent, detail):
+                self._save_jobs(jobs)
+                self._condition.notify_all()
+
+    def _advance_progress_from_event(self, job: dict, event_type: str, data) -> None:
+        if event_type == 'start':
+            self._set_progress(job, 'Starting ZTF process', 30, 'ZeroTouch Framework CLI launched')
+            return
+        if event_type not in {'stdout', 'stderr'} or not isinstance(data, str):
+            return
+        text = data.lower()
+        for tokens, percent, detail in self.OUTPUT_MILESTONES:
+            if any(token in text for token in tokens):
+                self._set_progress(job, detail, percent, data[:160])
+                break
+
+    def _set_progress(self, job: dict, phase: str, percent: int, detail: str) -> bool:
+        percent = max(0, min(100, int(percent)))
+        current = job.get('progress') if isinstance(job.get('progress'), dict) else {}
+        current_percent = self._progress_percent(job)
+        if percent < current_percent and job.get('status') not in self.TERMINAL:
+            return False
+        progress = self._progress(phase, percent, detail)
+        if (
+            current.get('phase') == progress['phase']
+            and current.get('percent') == progress['percent']
+            and current.get('detail') == progress['detail']
+            and current.get('estimated') == progress['estimated']
+        ):
+            return False
+        job['progress'] = progress
+        job['updatedAt'] = progress['updatedAt']
+        return True
+
+    def _progress_percent(self, job: dict) -> int:
+        progress = job.get('progress') if isinstance(job.get('progress'), dict) else {}
+        try:
+            return int(progress.get('percent', 0))
+        except (TypeError, ValueError):
+            return 0
+
+    def _progress(self, phase: str, percent: int, detail: str) -> dict:
+        return {
+            'phase': phase,
+            'percent': max(0, min(100, int(percent))),
+            'detail': detail,
+            'estimated': True,
+            'updatedAt': self._now(),
+        }
 
     def _load_jobs(self) -> list[dict]:
         jobs = read_json(JOBS_FILE, [])

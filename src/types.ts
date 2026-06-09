@@ -66,6 +66,14 @@ export interface ExecutionJobLogEvent {
   ts: string
 }
 
+export interface ExecutionProgress {
+  phase: string
+  percent: number
+  detail?: string
+  estimated: boolean
+  updatedAt?: string
+}
+
 export interface ExecutionJob {
   id: string
   status: ExecutionJobStatus
@@ -77,6 +85,7 @@ export interface ExecutionJob {
   startedAt?: string
   finishedAt?: string
   returnCode?: number | null
+  progress?: ExecutionProgress
   logs?: ExecutionJobLogEvent[]
 }
 

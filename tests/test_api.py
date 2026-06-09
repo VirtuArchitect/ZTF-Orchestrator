@@ -734,7 +734,7 @@ def test_job_submit_persists_status_logs_and_history(client, auth_headers, monke
 
     class FakeProc:
         returncode = 0
-        stdout = iter(['ok\n'])
+        stdout = iter(['Connecting to Prism Central\n', 'ok\n'])
         stderr = iter([])
         def wait(self): pass
         def kill(self): pass
@@ -756,6 +756,9 @@ def test_job_submit_persists_status_logs_and_history(client, auth_headers, monke
         time.sleep(0.05)
 
     assert job['status'] == 'success'
+    assert job['progress']['phase'] == 'Completed'
+    assert job['progress']['percent'] == 100
+    assert job['progress']['estimated'] is True
     assert any(event['type'] == 'stdout' and event['data'] == 'ok' for event in job['logs'])
 
     jobs = client.get('/api/jobs', headers=auth_headers).get_json()
@@ -778,10 +781,34 @@ def test_cancel_queued_job(client, auth_headers):
                        headers=auth_headers)
     assert resp.status_code == 202
     job_id = resp.get_json()['id']
+    assert resp.get_json()['progress']['phase'] == 'Queued'
+    assert resp.get_json()['progress']['percent'] == 0
 
     cancel = client.post(f'/api/jobs/{job_id}/cancel', headers=auth_headers)
     assert cancel.status_code == 200
     assert cancel.get_json()['status'] == 'cancelled'
+    assert cancel.get_json()['progress']['phase'] == 'Cancelled'
+    assert cancel.get_json()['progress']['percent'] == 100
+
+
+def test_job_progress_advances_from_ztf_output(client, auth_headers):
+    """Estimated phase progress advances conservatively from workflow output."""
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    server._job_manager._emit(job_id, 'stdout', 'Connecting to Prism Central API')
+    job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+    assert job['progress']['phase'] == 'Connecting to Nutanix services'
+    assert job['progress']['percent'] == 45
+    assert job['progress']['estimated'] is True
 
 
 def test_audit_log_returns_list(client, auth_headers):

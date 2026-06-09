@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Play } from 'lucide-react'
 import Terminal from './Terminal'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
+import type { ExecutionProgress } from '../types'
 
 interface ExecutionModalProps {
   onClose: () => void
@@ -16,6 +17,12 @@ interface ExecutionModalProps {
 export default function ExecutionModal({ onClose, workflow, configContent, configFile, extraParams, dryRun }: ExecutionModalProps) {
   const { runningExecution, startExecution, appendLog, finishExecution, addExecution } = useStore()
   const evtSourceRef = useRef<EventSource | null>(null)
+  const [progress, setProgress] = useState<ExecutionProgress>({
+    phase: dryRun ? 'Running pre-flight checks' : 'Queued',
+    percent: dryRun ? 20 : 0,
+    detail: dryRun ? 'No changes will be made' : 'Waiting for execution worker',
+    estimated: true,
+  })
 
   const execute = async () => {
     const id = Date.now().toString()
@@ -53,10 +60,20 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
         if (line.startsWith('data: ')) {
           try {
             const event = JSON.parse(line.slice(6))
-            appendLog(event.type, typeof event.data === 'string' ? event.data : JSON.stringify(event.data))
 
-            if (event.type === 'done') {
+            if (event.type === 'job' && event.data?.progress) {
+              setProgress(event.data.progress)
+            } else if (event.type === 'done') {
+              appendLog(event.type, typeof event.data === 'string' ? event.data : JSON.stringify(event.data))
               const status = event.data?.status === 'success' ? 'done' : 'error'
+              setProgress({
+                phase: event.data?.status === 'success' ? 'Completed' : 'Failed',
+                percent: 100,
+                detail: event.data?.status === 'success'
+                  ? 'Execution finished successfully'
+                  : 'Execution ended with an error; review the output',
+                estimated: true,
+              })
               finishExecution(status)
               addExecution({
                 id: event.executionId || id,
@@ -69,7 +86,16 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
                 configFile,
               })
             } else if (event.type === 'error') {
+              appendLog(event.type, typeof event.data === 'string' ? event.data : JSON.stringify(event.data))
+              setProgress({
+                phase: 'Failed',
+                percent: 100,
+                detail: typeof event.data === 'string' ? event.data : 'Execution failed',
+                estimated: true,
+              })
               finishExecution('error')
+            } else {
+              appendLog(event.type, typeof event.data === 'string' ? event.data : JSON.stringify(event.data))
             }
           } catch { /* ignore */ }
         }
@@ -107,6 +133,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
           )}
         </div>
         <div className="p-4">
+          <ProgressPanel progress={progress} />
           {runningExecution && (
             <Terminal
               logs={runningExecution.logs}
@@ -121,6 +148,31 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ProgressPanel({ progress }: { progress: ExecutionProgress }) {
+  const percent = Math.max(0, Math.min(100, Number(progress.percent) || 0))
+  return (
+    <div className="mb-4 rounded-lg border border-border bg-surface/70 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="font-medium text-gray-200">{progress.phase || 'Preparing execution'}</span>
+        <span className="text-gray-500">{progress.estimated ? 'Estimated progress' : 'Progress'} - {percent}%</span>
+      </div>
+      <div
+        className="mt-2 h-2 rounded-full bg-gray-900 overflow-hidden"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-label="Estimated execution progress"
+      >
+        <div className="h-full rounded-full bg-nutanix-cyan transition-all duration-500" style={{ width: `${percent}%` }} />
+      </div>
+      {progress.detail && (
+        <p className="mt-2 text-xs text-gray-500 break-words">{progress.detail}</p>
+      )}
     </div>
   )
 }

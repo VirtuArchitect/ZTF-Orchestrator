@@ -294,8 +294,11 @@ original stored config — no form re-entry required.
 ### Jobs / Queue
 View durable execution jobs created by workflow and script submissions. The page
 shows active, queued, running, failed, cancelled, and interrupted job counts,
-persisted job logs, worker timestamps, return codes, and cancellation controls
-for queued or running jobs.
+phase-based estimated progress, persisted job logs, worker timestamps, return
+codes, and cancellation controls for queued or running jobs. Progress percentages
+are orchestration estimates based on queue state, process launch, and observable
+ZTF output; future releases can replace or enrich this with real Nutanix task IDs
+if the underlying workflow output exposes them.
 
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from
