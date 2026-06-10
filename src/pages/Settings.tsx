@@ -314,7 +314,9 @@ export default function Settings() {
   const [backupsLoading, setBackupsLoading] = useState(false)
   const [backupRunning, setBackupRunning] = useState(false)
   const [backupError, setBackupError] = useState('')
+  const [backupStorage, setBackupStorage] = useState('')
   const isAdmin = user?.role === 'admin'
+  const storageBackend = health?.storage || backupStorage
 
   useEffect(() => {
     apiFetch('/api/settings').then(r => r.json()).then(data => {
@@ -327,8 +329,11 @@ export default function Settings() {
   const loadHealth = async () => {
     setHealthLoading(true)
     try {
-      const response = await fetch('/health')
-      if (response.ok) setHealth(await response.json())
+      const response = isAdmin
+        ? await apiFetch('/api/health/details')
+        : await fetch('/health')
+      const data = await response.json().catch(() => null)
+      if (data) setHealth(data)
     } finally {
       setHealthLoading(false)
     }
@@ -341,6 +346,7 @@ export default function Settings() {
       const response = await apiFetch('/api/maintenance/database-backups')
       if (response.ok) {
         const data = await response.json()
+        setBackupStorage(data.storage || '')
         setBackups(data.backups || [])
       }
     } finally {
@@ -348,9 +354,12 @@ export default function Settings() {
     }
   }
 
-  useEffect(() => { loadHealth() }, [])
+  useEffect(() => { loadHealth() }, [isAdmin])
   useEffect(() => {
-    if (activeTab === 'storage' && isAdmin) loadBackups()
+    if (activeTab === 'storage') {
+      loadHealth()
+      if (isAdmin) loadBackups()
+    }
   }, [activeTab, isAdmin])
 
   const profiles = form.connectionProfiles
@@ -545,12 +554,12 @@ export default function Settings() {
               <Section title="Storage Backend" subtitle="Current persistence mode and state location" icon={Database}>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ReadOnlyField label="Backend" value={health?.storage || 'loading'} />
+                    <ReadOnlyField label="Backend" value={storageBackend || 'loading'} />
                     <ReadOnlyField label="Status" value={health?.status || 'unknown'} />
                     <ReadOnlyField label="Data Directory" value={health?.dataDir || ''} mono />
                     <ReadOnlyField
                       label="Database Location"
-                      value={health?.database?.location || (health?.storage === 'postgres' ? 'configured' : 'not used')}
+                      value={health?.database?.location || (storageBackend === 'postgres' ? 'configured' : 'not used')}
                       mono
                     />
                   </div>
@@ -592,7 +601,7 @@ export default function Settings() {
                     </button>
                     <button
                       onClick={createBackup}
-                      disabled={!isAdmin || backupRunning || health?.storage !== 'postgres'}
+                      disabled={!isAdmin || backupRunning || storageBackend !== 'postgres'}
                       className="btn-primary gap-1.5"
                     >
                       <Database size={14} />
@@ -601,7 +610,7 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {health?.storage !== 'postgres' && (
+                {storageBackend !== 'postgres' && (
                   <div className="rounded-lg border border-amber-700/30 bg-amber-900/5 px-3 py-2 text-sm text-amber-400">
                     Database backups are available when the active storage backend is PostgreSQL.
                   </div>
