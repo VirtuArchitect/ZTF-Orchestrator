@@ -7,6 +7,22 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- Appliance distribution kit for Linux VM/AHV deployments, including an
+  appliance Compose file, first-boot scripts, systemd units, cloud-init
+  examples, and a reference Packer QCOW2 template.
+- GitHub workflow to publish the ZTF-Orchestrator container image to GitHub
+  Container Registry.
+- GitHub workflow to package appliance kit artifacts for release/tag/manual
+  runs.
+
+### Changed
+- Docker build context now excludes appliance build assets.
+
+---
+
 ## [1.2.8] - 2026-06-09
 
 ### Summary

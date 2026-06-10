@@ -1,0 +1,14 @@
+[Unit]
+Description=ZTF-Orchestrator first-boot bootstrap
+Documentation=https://github.com/VirtuArchitect/ZTF-Orchestrator
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+ConditionPathExists=!/opt/ztf-orchestrator/.env
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/ztf-orchestrator-appliance.env
+ExecStart=/usr/bin/bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
+
+[Install]
+WantedBy=multi-user.target

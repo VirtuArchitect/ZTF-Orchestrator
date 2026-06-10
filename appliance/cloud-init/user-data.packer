@@ -1,0 +1,22 @@
+#cloud-config
+hostname: ztf-orchestrator-appliance-build
+ssh_pwauth: true
+
+users:
+  - default
+
+chpasswd:
+  expire: false
+  users:
+    - name: ubuntu
+      password: packer
+      type: text
+
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - openssl
+
+final_message: "Packer build seed complete."

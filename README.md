@@ -129,7 +129,35 @@ repository-level security review and current hardening recommendations.
 
 Starter Kubernetes manifests are available in [k8s](k8s/).
 
-### Option D: Manual
+### Option D: Appliance Deployment
+
+For AHV or VM-based deployments, use the reproducible appliance kit in
+[appliance](appliance/). The kit is designed for a small Linux VM running Docker
+Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
+
+The repository does not store QCOW2 or OVA binaries. Large appliance images
+should be attached to versioned GitHub Releases. The repo contains:
+
+- a GHCR container publishing workflow;
+- an appliance Compose file that pulls `ghcr.io/virtuarchitect/ztf-orchestrator`;
+- first-boot scripts that generate local secrets on the VM;
+- a systemd unit for appliance lifecycle;
+- cloud-init examples;
+- a reference Packer template for AHV-importable QCOW2 builds.
+
+Quick start on a fresh Linux VM:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git curl ca-certificates
+git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source
+sudo bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
+```
+
+See [Appliance Kit](appliance/README.md) for AHV sizing, first-boot behavior,
+version pinning, and QCOW2 build guidance.
+
+### Option E: Manual
 
 **Step 1: Clone the repository**
 

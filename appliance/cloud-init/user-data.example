@@ -1,0 +1,27 @@
+#cloud-config
+hostname: ztf-orchestrator
+manage_etc_hosts: true
+
+package_update: true
+package_upgrade: true
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - openssl
+
+write_files:
+  - path: /etc/ztf-orchestrator-appliance.env
+    permissions: "0600"
+    owner: root:root
+    content: |
+      ZTF_SOURCE_REPO=https://github.com/VirtuArchitect/ZTF-Orchestrator.git
+      ZTF_SOURCE_REF=main
+      ZTF_ORCHESTRATOR_VERSION=latest
+      ZTF_HOST_BIND=0.0.0.0
+
+runcmd:
+  - [bash, -lc, "git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source"]
+  - [bash, -lc, "set -a; . /etc/ztf-orchestrator-appliance.env; set +a; bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh"]
+
+final_message: "ZTF-Orchestrator appliance bootstrap complete. Check systemctl status ztf-orchestrator."

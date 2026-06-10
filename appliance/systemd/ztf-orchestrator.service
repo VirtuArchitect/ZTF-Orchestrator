@@ -1,0 +1,17 @@
+[Unit]
+Description=ZTF-Orchestrator appliance
+Documentation=https://github.com/VirtuArchitect/ZTF-Orchestrator
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/ztf-orchestrator
+RemainAfterExit=yes
+ExecStart=/usr/bin/docker compose -f appliance/docker-compose.appliance.yml up -d
+ExecStop=/usr/bin/docker compose -f appliance/docker-compose.appliance.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
