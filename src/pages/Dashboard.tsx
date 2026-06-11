@@ -4,11 +4,12 @@ import {
   Server, CheckCircle, XCircle, Clock,
   Activity, AlertTriangle, Zap, Settings, Download,
   TrendingUp, Database, Cloud, RefreshCw, ShieldCheck,
-  FileCode, PlayCircle, ArrowRight, FileSearch
+  FileCode, PlayCircle, ArrowRight, FileSearch,
+  ListChecks, Shield, CalendarClock, HardDrive
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
-import type { DriftRun, Execution, SystemCheck } from '../types'
+import type { ApprovalRequest, DriftRun, Execution, ExecutionJob, Schedule, SystemCheck } from '../types'
 import { apiFetch } from '../utils/api'
 import clsx from 'clsx'
 
@@ -24,6 +25,18 @@ interface PlatformHealth {
     configured: boolean
     location: string
   }
+  jobs?: {
+    workers: number
+    queued: number
+    running: number
+    recent: number
+  }
+}
+
+interface DatabaseBackup {
+  filename: string
+  size: number
+  createdAt: string
 }
 
 const QUICK_ACTIONS = [
@@ -34,21 +47,30 @@ const QUICK_ACTIONS = [
 ]
 
 export default function Dashboard() {
-  const { setSystemChecks, ztfInstalled, systemChecks } = useStore()
+  const { setSystemChecks, ztfInstalled, systemChecks, user } = useStore()
   const [executions, setExecutions] = useState<Execution[]>([])
   const [driftRuns, setDriftRuns] = useState<DriftRun[]>([])
+  const [jobs, setJobs] = useState<ExecutionJob[]>([])
+  const [approvals, setApprovals] = useState<ApprovalRequest[]>([])
+  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [backups, setBackups] = useState<DatabaseBackup[]>([])
   const [health, setHealth] = useState<PlatformHealth | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const isAdmin = user?.role === 'admin'
 
   const refresh = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true)
     try {
-      const [sysResp, execResp, healthResp, driftResp] = await Promise.all([
+      const [sysResp, execResp, healthResp, driftResp, jobsResp, approvalsResp, schedulesResp, backupsResp] = await Promise.all([
         apiFetch('/api/system/check'),
         apiFetch('/api/executions'),
-        apiFetch('/health'),
+        isAdmin ? apiFetch('/api/health/details') : apiFetch('/health'),
         apiFetch('/api/drift'),
+        apiFetch('/api/jobs?limit=500'),
+        apiFetch('/api/approvals'),
+        apiFetch('/api/schedules'),
+        isAdmin ? apiFetch('/api/maintenance/database-backups') : Promise.resolve(null),
       ])
       if (sysResp.ok) {
         const data: SystemStatus = await sysResp.json()
@@ -62,6 +84,19 @@ export default function Dashboard() {
       }
       if (driftResp.ok) {
         setDriftRuns(await driftResp.json())
+      }
+      if (jobsResp.ok) {
+        setJobs(await jobsResp.json())
+      }
+      if (approvalsResp.ok) {
+        setApprovals(await approvalsResp.json())
+      }
+      if (schedulesResp.ok) {
+        setSchedules(await schedulesResp.json())
+      }
+      if (backupsResp?.ok) {
+        const data = await backupsResp.json()
+        setBackups(data.backups || [])
       }
     } finally {
       setLoading(false)
@@ -101,6 +136,42 @@ export default function Dashboard() {
   const driftStatusDetail = !latestDrift
     ? 'No drift checks recorded'
     : `${latestDrift.configFile} - ${new Date(latestDrift.timestamp).toLocaleString()}`
+  const activeJobStatuses = ['queued', 'running', 'cancelling']
+  const queuedJobs = jobs.filter(job => job.status === 'queued').length
+  const runningJobs = jobs.filter(job => job.status === 'running' || job.status === 'cancelling').length
+  const failedJobs = jobs.filter(job => job.status === 'failed' || job.status === 'interrupted').length
+  const longRunningJobs = jobs.filter(job => {
+    if (!activeJobStatuses.includes(job.status) || !job.startedAt) return false
+    const startedAt = new Date(job.startedAt).getTime()
+    return !Number.isNaN(startedAt) && Date.now() - startedAt > 30 * 60 * 1000
+  }).length
+  const pendingApprovals = approvals.filter(item => item.status === 'pending').length
+  const driftedChecks = driftRuns.filter(run => run.status === 'drifted').length
+  const unknownBaselines = driftRuns.filter(run => run.status === 'unknown').length
+  const enabledSchedules = schedules.filter(schedule => schedule.enabled).length
+  const scheduleDates = schedules
+    .filter(schedule => schedule.enabled && schedule.nextRun)
+    .map(schedule => new Date(schedule.nextRun as string))
+    .filter(date => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime())
+  const nextScheduleRun = scheduleDates[0]
+  const lastFailedSchedule = schedules
+    .filter(schedule => schedule.lastStatus === 'failed' || schedule.lastStatus === 'error')
+    .sort((a, b) => new Date(b.lastRun || 0).getTime() - new Date(a.lastRun || 0).getTime())[0]
+  const latestBackup = backups[0]
+  const latestBackupDate = latestBackup ? new Date(latestBackup.createdAt) : null
+  const backupAgeDays = latestBackupDate && !Number.isNaN(latestBackupDate.getTime())
+    ? Math.floor((Date.now() - latestBackupDate.getTime()) / 86_400_000)
+    : null
+  const backupWarning = storageBackend !== 'postgres'
+    ? 'PostgreSQL not active'
+    : !isAdmin
+      ? 'Admin only'
+      : !latestBackup
+        ? 'No backup'
+        : backupAgeDays !== null && backupAgeDays > 7
+          ? `${backupAgeDays} days old`
+          : 'OK'
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -186,6 +257,50 @@ export default function Dashboard() {
             </div>
           )
         })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <DashboardMiniSection
+          title="Operations Queue"
+          icon={ListChecks}
+          path="/jobs"
+          items={[
+            { label: 'Queued', value: queuedJobs, tone: queuedJobs ? 'warning' : 'neutral' },
+            { label: 'Running', value: runningJobs, tone: runningJobs ? 'good' : 'neutral' },
+            { label: 'Failed', value: failedJobs, tone: failedJobs ? 'bad' : 'neutral' },
+            { label: 'Long-running', value: longRunningJobs, tone: longRunningJobs ? 'warning' : 'neutral' },
+          ]}
+        />
+        <DashboardMiniSection
+          title="Governance"
+          icon={Shield}
+          path="/approvals"
+          items={[
+            { label: 'Pending approvals', value: pendingApprovals, tone: pendingApprovals ? 'warning' : 'neutral' },
+            { label: 'Drifted checks', value: driftedChecks, tone: driftedChecks ? 'bad' : 'neutral', path: '/drift' },
+            { label: 'Unknown baselines', value: unknownBaselines, tone: unknownBaselines ? 'warning' : 'neutral', path: '/drift' },
+          ]}
+        />
+        <DashboardMiniSection
+          title="Schedules"
+          icon={CalendarClock}
+          path="/schedules"
+          items={[
+            { label: 'Enabled', value: enabledSchedules, tone: enabledSchedules ? 'good' : 'neutral' },
+            { label: 'Next run', value: nextScheduleRun ? nextScheduleRun.toLocaleString() : 'None', tone: nextScheduleRun ? 'good' : 'neutral' },
+            { label: 'Last failed', value: lastFailedSchedule?.name || 'None', tone: lastFailedSchedule ? 'bad' : 'neutral' },
+          ]}
+        />
+        <DashboardMiniSection
+          title="Storage"
+          icon={HardDrive}
+          path="/settings"
+          items={[
+            { label: 'Backend', value: storageDisplay, tone: storageIssue ? 'bad' : storageBackend === 'postgres' ? 'good' : 'neutral' },
+            { label: 'Last DB backup', value: latestBackupDate && !Number.isNaN(latestBackupDate.getTime()) ? latestBackupDate.toLocaleString() : 'None', tone: latestBackup ? 'good' : 'neutral' },
+            { label: 'Backup warning', value: backupWarning, tone: backupWarning === 'OK' ? 'good' : backupWarning === 'Admin only' || backupWarning === 'PostgreSQL not active' ? 'neutral' : 'warning' },
+          ]}
+        />
       </div>
 
       {!loading && executions.length === 0 && (
@@ -399,4 +514,69 @@ function StatusDot({ status }: { status: string }) {
       'bg-gray-600'
     )} />
   )
+}
+
+type MiniTone = 'neutral' | 'good' | 'warning' | 'bad'
+
+interface MiniSectionItem {
+  label: string
+  value: string | number
+  tone?: MiniTone
+  path?: string
+}
+
+function DashboardMiniSection({
+  title,
+  icon: Icon,
+  items,
+  path,
+}: {
+  title: string
+  icon: typeof Activity
+  items: MiniSectionItem[]
+  path: string
+}) {
+  return (
+    <div className="card p-4">
+      <Link to={path} className="mb-3 flex items-center justify-between gap-3 group">
+        <h2 className="section-title flex items-center gap-2 mb-0 text-sm">
+          <Icon size={15} className="text-nutanix-cyan" />
+          {title}
+        </h2>
+        <ArrowRight size={14} className="text-gray-600 group-hover:text-nutanix-cyan transition-colors" />
+      </Link>
+      <div className="space-y-2">
+        {items.map(item => {
+          const content = (
+            <>
+              <span className="min-w-0 truncate text-gray-500">{item.label}</span>
+              <span className={clsx('max-w-[58%] truncate text-right font-semibold', miniToneClass(item.tone))} title={String(item.value)}>
+                {item.value}
+              </span>
+            </>
+          )
+          return item.path ? (
+            <Link
+              key={item.label}
+              to={item.path}
+              className="flex items-center justify-between gap-3 rounded-md bg-gray-900/35 px-3 py-2 text-xs hover:bg-gray-900/70 transition-colors"
+            >
+              {content}
+            </Link>
+          ) : (
+            <div key={item.label} className="flex items-center justify-between gap-3 rounded-md bg-gray-900/35 px-3 py-2 text-xs">
+              {content}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function miniToneClass(tone: MiniTone = 'neutral') {
+  if (tone === 'good') return 'text-nutanix-teal'
+  if (tone === 'warning') return 'text-yellow-300'
+  if (tone === 'bad') return 'text-red-300'
+  return 'text-gray-300'
 }
