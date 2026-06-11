@@ -4,11 +4,11 @@ import {
   Server, CheckCircle, XCircle, Clock,
   Activity, AlertTriangle, Zap, Settings, Download,
   TrendingUp, Database, Cloud, RefreshCw, ShieldCheck,
-  FileCode, PlayCircle, ArrowRight
+  FileCode, PlayCircle, ArrowRight, FileSearch
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
-import type { Execution, SystemCheck } from '../types'
+import type { DriftRun, Execution, SystemCheck } from '../types'
 import { apiFetch } from '../utils/api'
 import clsx from 'clsx'
 
@@ -36,6 +36,7 @@ const QUICK_ACTIONS = [
 export default function Dashboard() {
   const { setSystemChecks, ztfInstalled, systemChecks } = useStore()
   const [executions, setExecutions] = useState<Execution[]>([])
+  const [driftRuns, setDriftRuns] = useState<DriftRun[]>([])
   const [health, setHealth] = useState<PlatformHealth | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -43,10 +44,11 @@ export default function Dashboard() {
   const refresh = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true)
     try {
-      const [sysResp, execResp, healthResp] = await Promise.all([
+      const [sysResp, execResp, healthResp, driftResp] = await Promise.all([
         apiFetch('/api/system/check'),
         apiFetch('/api/executions'),
         apiFetch('/health'),
+        apiFetch('/api/drift'),
       ])
       if (sysResp.ok) {
         const data: SystemStatus = await sysResp.json()
@@ -57,6 +59,9 @@ export default function Dashboard() {
       }
       if (healthResp.ok) {
         setHealth(await healthResp.json())
+      }
+      if (driftResp.ok) {
+        setDriftRuns(await driftResp.json())
       }
     } finally {
       setLoading(false)
@@ -80,6 +85,11 @@ export default function Dashboard() {
   const storageIssue = storageBackend === 'postgres' && !databaseConfigured
   const healthIssueCount = healthFailures.length + (storageIssue ? 1 : 0)
   const lastRun = executions[0]
+  const latestDrift = driftRuns[0]
+  const showDriftAttention = latestDrift && latestDrift.status !== 'matched'
+  const latestDriftCount = latestDrift
+    ? latestDrift.summary.changed + latestDrift.summary.missing + latestDrift.summary.unexpected
+    : 0
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -197,6 +207,53 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {!loading && showDriftAttention && (
+        <Link
+          to="/drift"
+          className={clsx(
+            'mb-6 rounded-lg border p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2',
+            latestDrift.status === 'drifted'
+              ? 'border-red-700/40 bg-red-900/10 hover:border-red-500/60 focus:ring-red-500/30'
+              : 'border-yellow-700/40 bg-yellow-900/10 hover:border-yellow-500/60 focus:ring-yellow-500/30'
+          )}
+          aria-label="Review latest drift detection result"
+        >
+          <div className="flex items-start gap-3">
+            <div className={clsx(
+              'w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0',
+              latestDrift.status === 'drifted'
+                ? 'bg-red-900/20 border-red-700/40'
+                : 'bg-yellow-900/20 border-yellow-700/40'
+            )}>
+              {latestDrift.status === 'drifted'
+                ? <AlertTriangle size={18} className="text-red-300" />
+                : <FileSearch size={18} className="text-yellow-300" />
+              }
+            </div>
+            <div>
+              <p className={clsx('font-semibold', latestDrift.status === 'drifted' ? 'text-red-200' : 'text-yellow-200')}>
+                {latestDrift.status === 'drifted' ? 'Drift detected' : 'Drift baseline unavailable'}
+              </p>
+              <p className={clsx('text-sm mt-1', latestDrift.status === 'drifted' ? 'text-red-200/70' : 'text-yellow-200/70')}>
+                {latestDrift.configFile}
+                {latestDrift.workflow ? ` - ${latestDrift.workflow}` : ''}
+                {' - '}
+                {latestDrift.status === 'drifted'
+                  ? `${latestDriftCount} finding${latestDriftCount === 1 ? '' : 's'} need review`
+                  : latestDrift.message || 'No successful baseline was found for comparison'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Last checked {new Date(latestDrift.timestamp).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <span className="btn-secondary w-fit gap-1.5">
+            Review Drift
+            <ArrowRight size={14} />
+          </span>
+        </Link>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
