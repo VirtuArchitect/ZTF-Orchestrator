@@ -86,10 +86,21 @@ export default function Dashboard() {
   const healthIssueCount = healthFailures.length + (storageIssue ? 1 : 0)
   const lastRun = executions[0]
   const latestDrift = driftRuns[0]
-  const showDriftAttention = latestDrift && latestDrift.status !== 'matched'
-  const latestDriftCount = latestDrift
-    ? latestDrift.summary.changed + latestDrift.summary.missing + latestDrift.summary.unexpected
+  const driftAttention = driftRuns.find(run => run.status !== 'matched')
+  const showDriftAttention = Boolean(driftAttention)
+  const driftAttentionCount = driftAttention
+    ? driftAttention.summary.changed + driftAttention.summary.missing + driftAttention.summary.unexpected
     : 0
+  const driftStatusLabel = !latestDrift
+    ? 'Not checked'
+    : latestDrift.status === 'matched'
+      ? 'Matched'
+      : latestDrift.status === 'drifted'
+        ? 'Drifted'
+        : 'Unknown'
+  const driftStatusDetail = !latestDrift
+    ? 'No drift checks recorded'
+    : `${latestDrift.configFile} - ${new Date(latestDrift.timestamp).toLocaleString()}`
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -214,7 +225,7 @@ export default function Dashboard() {
           to="/drift"
           className={clsx(
             'mb-6 rounded-lg border p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2',
-            latestDrift.status === 'drifted'
+            driftAttention!.status === 'drifted'
               ? 'border-red-700/40 bg-red-900/10 hover:border-red-500/60 focus:ring-red-500/30'
               : 'border-yellow-700/40 bg-yellow-900/10 hover:border-yellow-500/60 focus:ring-yellow-500/30'
           )}
@@ -223,29 +234,29 @@ export default function Dashboard() {
           <div className="flex items-start gap-3">
             <div className={clsx(
               'w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0',
-              latestDrift.status === 'drifted'
+              driftAttention!.status === 'drifted'
                 ? 'bg-red-900/20 border-red-700/40'
                 : 'bg-yellow-900/20 border-yellow-700/40'
             )}>
-              {latestDrift.status === 'drifted'
+              {driftAttention!.status === 'drifted'
                 ? <AlertTriangle size={18} className="text-red-300" />
                 : <FileSearch size={18} className="text-yellow-300" />
               }
             </div>
             <div>
-              <p className={clsx('font-semibold', latestDrift.status === 'drifted' ? 'text-red-200' : 'text-yellow-200')}>
-                {latestDrift.status === 'drifted' ? 'Drift detected' : 'Drift baseline unavailable'}
+              <p className={clsx('font-semibold', driftAttention!.status === 'drifted' ? 'text-red-200' : 'text-yellow-200')}>
+                {driftAttention!.status === 'drifted' ? 'Drift detected' : 'Drift baseline unavailable'}
               </p>
-              <p className={clsx('text-sm mt-1', latestDrift.status === 'drifted' ? 'text-red-200/70' : 'text-yellow-200/70')}>
-                {latestDrift.configFile}
-                {latestDrift.workflow ? ` - ${latestDrift.workflow}` : ''}
+              <p className={clsx('text-sm mt-1', driftAttention!.status === 'drifted' ? 'text-red-200/70' : 'text-yellow-200/70')}>
+                {driftAttention!.configFile}
+                {driftAttention!.workflow ? ` - ${driftAttention!.workflow}` : ''}
                 {' - '}
-                {latestDrift.status === 'drifted'
-                  ? `${latestDriftCount} finding${latestDriftCount === 1 ? '' : 's'} need review`
-                  : latestDrift.message || 'No successful baseline was found for comparison'}
+                {driftAttention!.status === 'drifted'
+                  ? `${driftAttentionCount} finding${driftAttentionCount === 1 ? '' : 's'} need review`
+                  : driftAttention!.message || 'No successful baseline was found for comparison'}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Last checked {new Date(latestDrift.timestamp).toLocaleString()}
+                Last checked {new Date(driftAttention!.timestamp).toLocaleString()}
               </p>
             </div>
           </div>
@@ -283,6 +294,22 @@ export default function Dashboard() {
             {systemChecks.length === 0 && !loading && (
               <p className="text-sm text-gray-500">No status data. <Link to="/setup" className="text-nutanix-cyan hover:underline">Run check</Link></p>
             )}
+            <Link to="/drift" className="flex items-start gap-3 rounded-md bg-gray-900/40 px-3 py-2 hover:bg-gray-900/70 transition-colors">
+              {!latestDrift
+                ? <Clock size={14} className="text-gray-500 flex-shrink-0 mt-0.5" />
+                : latestDrift.status === 'matched'
+                  ? <CheckCircle size={14} className="text-nutanix-teal flex-shrink-0 mt-0.5" />
+                  : latestDrift.status === 'drifted'
+                    ? <AlertTriangle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    : <FileSearch size={14} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+              }
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-gray-300">Drift Detection</div>
+                <div className="text-xs text-gray-500 truncate" title={driftStatusDetail}>
+                  {driftStatusLabel} - {driftStatusDetail}
+                </div>
+              </div>
+            </Link>
             {systemChecks.map(check => (
               <div key={check.name} className="flex items-start gap-3 rounded-md bg-gray-900/40 px-3 py-2">
                 {check.ok
