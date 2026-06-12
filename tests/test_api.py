@@ -980,6 +980,19 @@ def test_health_returns_json(client):
     assert 'jobs' not in data
 
 
+def test_health_accepts_current_ztf_package_layout(client, auth_headers, tmp_path):
+    ztf_dir = tmp_path / 'zerotouch-framework'
+    (ztf_dir / 'ztf').mkdir(parents=True)
+    (ztf_dir / 'ztf' / 'main.py').write_text('print("ztf")\n')
+
+    resp = client.post('/api/settings', json={'ztfPath': str(ztf_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.get('/health')
+    assert resp.status_code == 200
+    assert resp.get_json()['status'] == 'healthy'
+
+
 def test_health_details_requires_admin(client):
     resp = client.get('/api/health/details')
     assert resp.status_code == 401

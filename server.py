@@ -88,6 +88,29 @@ def _now_iso() -> str:
     return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
 
 
+def _resolve_ztf_main(ztf_path: str | Path) -> Path | None:
+    """Return the ZeroTouch Framework CLI entrypoint for supported repo layouts."""
+    root = Path(ztf_path)
+    for candidate in (root / 'main.py', root / 'ztf' / 'main.py'):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _ztf_installed(ztf_path: str | Path) -> bool:
+    return _resolve_ztf_main(ztf_path) is not None
+
+
+def _ztf_main_arg(ztf_path: str | Path) -> str:
+    main = _resolve_ztf_main(ztf_path)
+    if main is None:
+        return 'main.py'
+    try:
+        return str(main.relative_to(Path(ztf_path)))
+    except ValueError:
+        return str(main)
+
+
 def _postgres_backup_metadata(path: Path) -> dict:
     stat_result = path.stat()
     return {
@@ -462,7 +485,7 @@ def _init_engines():
             config_path = safe_config_path(config_file, configs_dir)
             if config_path is None or not config_path.exists():
                 rc = -1
-                cmd = [python_path, 'main.py']
+                cmd = [python_path, _ztf_main_arg(ztf_path)]
                 status = 'failed'
                 entry = {
                     'id':         str(int(_t.time() * 1000)),
@@ -482,7 +505,7 @@ def _init_engines():
                 return status
             tf_path = str(config_path)
 
-        cmd = [python_path, 'main.py']
+        cmd = [python_path, _ztf_main_arg(ztf_path)]
         if workflow:
             cmd.append(f'--workflow={workflow}')
         if script:
@@ -1234,7 +1257,7 @@ class ExecutionJobManager:
                 _secure_write(path, effective_config_content)
                 cfg_path = str(path)
 
-            cmd_args = [python_path, 'main.py']
+            cmd_args = [python_path, _ztf_main_arg(ztf_path)]
             if workflow: cmd_args += ['--workflow', workflow]
             if script:   cmd_args += ['--script', script]
             if cfg_path: cmd_args += ['-f', cfg_path]
@@ -1651,7 +1674,7 @@ def _bounded_int_arg(name: str, default: int, minimum: int, maximum: int):
 @app.route('/health')
 def health():
     settings = get_settings()
-    ztf_ok = (Path(settings['ztfPath']) / 'main.py').exists()
+    ztf_ok = _ztf_installed(settings['ztfPath'])
     status  = 'healthy' if ztf_ok else 'degraded'
     return jsonify({
         'status':  status,
@@ -1662,7 +1685,7 @@ def health():
 @require_role('admin')
 def health_details():
     settings = get_settings()
-    ztf_ok = (Path(settings['ztfPath']) / 'main.py').exists()
+    ztf_ok = _ztf_installed(settings['ztfPath'])
     status  = 'healthy' if ztf_ok else 'degraded'
     jobs = _job_manager.list_jobs(1000)
     return jsonify({
@@ -1821,7 +1844,7 @@ def system_check():
         except Exception:
             return {'name': name, 'ok': False, 'value': 'check failed'}
 
-    ztf_installed = (Path(ztf_path) / 'main.py').exists()
+    ztf_installed = _ztf_installed(ztf_path)
     checks = [
         run_check('Python 3.9+', [python_path, '--version']),
         run_check('pip',          [python_path, '-m', 'pip', '--version']),
@@ -1892,7 +1915,7 @@ def install_ztf():
 
         try:
             ztf = Path(ztf_path)
-            if not (ztf / 'main.py').exists():
+            if not _ztf_installed(ztf):
                 yield from send('step', 'Cloning ZeroTouch Framework...')
                 yield from run_cmd(['git', 'clone', repo_url, ztf_path])
             elif is_git_checkout(ztf):
@@ -2196,7 +2219,7 @@ def run_pipeline(pipeline_id: str):
                 if path and path.exists():
                     cfg_path = str(path)
 
-            cmd_args = [python_path, 'main.py', '--workflow', workflow]
+            cmd_args = [python_path, _ztf_main_arg(ztf_path), '--workflow', workflow]
             if cfg_path:
                 cmd_args += ['-f', cfg_path]
 
@@ -2455,7 +2478,7 @@ def execute_workflow():
                 _secure_write(path, effective_config_content)
                 cfg_path = str(path)
 
-            cmd_args = [python_path, 'main.py']
+            cmd_args = [python_path, _ztf_main_arg(ztf_path)]
             if workflow: cmd_args += ['--workflow', workflow]
             if script:   cmd_args += ['--script',   script]
             if cfg_path: cmd_args += ['-f',          cfg_path]
