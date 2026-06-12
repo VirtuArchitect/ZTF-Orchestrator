@@ -207,15 +207,15 @@ export default function Setup() {
             </div>
             <div>
               <h3 className="font-semibold text-gray-100">Install ZeroTouch Framework</h3>
-              <p className="text-xs text-gray-500">Clone repo and install Python dependencies</p>
+              <p className="text-xs text-gray-500">Clone or update the repository and install Python dependencies</p>
             </div>
           </div>
 
           <div className="space-y-2 mb-4 text-sm text-gray-400">
             <p>This will:</p>
             <ul className="space-y-1 ml-4">
-              <li className="flex items-center gap-2"><span className="text-nutanix-cyan">1.</span> Clone the ZTF repository from GitHub</li>
-              <li className="flex items-center gap-2"><span className="text-nutanix-cyan">2.</span> Install required Python packages via pip</li>
+              <li className="flex items-center gap-2"><span className="text-nutanix-cyan">1.</span> Clone ZTF if missing, or pull updates from GitHub</li>
+              <li className="flex items-center gap-2"><span className="text-nutanix-cyan">2.</span> Reinstall required Python packages via pip</li>
               <li className="flex items-center gap-2"><span className="text-nutanix-cyan">3.</span> Verify the installation</li>
             </ul>
           </div>
