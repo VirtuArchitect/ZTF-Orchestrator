@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+No changes yet.
+
+---
+
+## [1.2.9] - 2026-06-13
+
 ### Added
 - Initial safe-phase NKP Framework integration for
   `VirtuArchitect/nkp-zerotouch-framework`, including settings, status,
@@ -38,9 +44,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   Container Registry.
 - GitHub workflow to package appliance kit artifacts for release/tag/manual
   runs.
+- Dashboard and health readiness signals for registered NKP binaries, including
+  available/default binary counts alongside ZTF and NKP framework status.
 
 ### Changed
 - Docker build context now excludes appliance build assets.
+- Version references, package metadata, appliance examples, and validation
+  documentation now reflect v1.2.9.
 
 ---
 

@@ -53,6 +53,7 @@ STORAGE_BACKEND = os.environ.get('ZTF_STORAGE_BACKEND', 'file').strip().lower() 
 AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
+APP_VERSION = '1.2.9'
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
@@ -1496,7 +1497,7 @@ def _fire_webhook(url: str, payload: dict) -> None:
         body = json.dumps(payload).encode()
         req  = _req.Request(
             url, data=body,
-            headers={'Content-Type': 'application/json', 'User-Agent': 'ZTF-Orchestrator/1.2.8'},
+            headers={'Content-Type': 'application/json', 'User-Agent': f'ZTF-Orchestrator/{APP_VERSION}'},
             method='POST',
         )
         # URL is scheme, host, credential, DNS, and private-range validated above.
@@ -2322,7 +2323,7 @@ def health():
     status  = 'healthy' if ztf_ok else 'degraded'
     return jsonify({
         'status':  status,
-        'version': '1.2.8',
+        'version': APP_VERSION,
     }), 200 if ztf_ok else 503
 
 
@@ -2338,6 +2339,9 @@ def operational_visibility_summary():
     approvals = _approval_manager.list_approvals()
     backups = _list_postgres_backups()
     profiles = _list_nkp_profiles()
+    binaries = _list_nkp_binaries()
+    available_binaries = [item for item in binaries if item.get('exists')]
+    default_binary = next((item for item in binaries if item.get('default')), None)
     configs_dir = get_configs_dir()
     generated_nkp_configs = [
         path.name for path in configs_dir.glob('nkp*.y*ml')
@@ -2411,6 +2415,9 @@ def operational_visibility_summary():
             'nkpInstalled': nkp_installed,
             'nkpProfiles': len(profiles),
             'generatedNkpConfigs': len(generated_nkp_configs),
+            'nkpBinaries': len(binaries),
+            'availableNkpBinaries': len(available_binaries),
+            'defaultNkpBinary': (default_binary or {}).get('name'),
         },
     })
 
@@ -2422,6 +2429,8 @@ def health_details():
     nkp_ok = _nkp_installed(settings.get('nkpPath') or NKP_DEFAULT)
     status  = 'healthy' if ztf_ok else 'degraded'
     jobs = _job_manager.list_jobs(1000)
+    binaries = _list_nkp_binaries()
+    available_binaries = [item for item in binaries if item.get('exists')]
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
@@ -2442,7 +2451,12 @@ def health_details():
             'running': sum(1 for job in jobs if job.get('status') in ('running', 'cancelling')),
             'recent': len(jobs),
         },
-        'version':       '1.2.8',
+        'nkpBinaries': {
+            'total': len(binaries),
+            'available': len(available_binaries),
+            'default': next((item.get('name') for item in binaries if item.get('default')), None),
+        },
+        'version':       APP_VERSION,
     }), 200 if ztf_ok else 503
 
 # ─── Auth endpoints ───────────────────────────────────────────────────────────
@@ -2582,12 +2596,19 @@ def system_check():
 
     ztf_installed = _ztf_installed(ztf_path)
     nkp_installed = _nkp_installed(nkp_path)
+    nkp_binaries = _list_nkp_binaries()
+    available_nkp_binaries = sum(1 for item in nkp_binaries if item.get('exists'))
     checks = [
         run_check('Python 3.9+', [python_path, '--version']),
         run_check('pip',          [python_path, '-m', 'pip', '--version']),
         run_check('git',          ['git', '--version']),
         {'name': 'ZTF Installed', 'ok': ztf_installed, 'value': 'found' if ztf_installed else ''},
         {'name': 'NKP Framework', 'ok': True, 'value': 'found' if nkp_installed else 'not installed (optional)'},
+        {
+            'name': 'NKP Binaries',
+            'ok': True,
+            'value': f'{available_nkp_binaries}/{len(nkp_binaries)} available' if nkp_binaries else 'none registered (optional)',
+        },
     ]
     if ztf_installed:
         # Use the same dynamic lookup as the install endpoint —
@@ -2598,7 +2619,12 @@ def system_check():
             'ok':    True,
             'value': req_file or 'not required - packaged install',
         })
-    return jsonify({'checks': checks, 'ztfInstalled': ztf_installed, 'nkpInstalled': nkp_installed})
+    return jsonify({
+        'checks': checks,
+        'ztfInstalled': ztf_installed,
+        'nkpInstalled': nkp_installed,
+        'nkpBinaries': {'total': len(nkp_binaries), 'available': available_nkp_binaries},
+    })
 
 # ─── Install ZTF ──────────────────────────────────────────────────────────────
 
@@ -4234,7 +4260,7 @@ if __name__ == '__main__':
     _ensure_default_admin()
     _init_engines()
     print('=' * 60)
-    print('  ZeroTouch Enterprise Orchestrator  v1.2.8')
+    print(f'  ZeroTouch Enterprise Orchestrator  v{APP_VERSION}')
     print('=' * 60)
     display_host = 'localhost' if BIND_HOST in {'127.0.0.1', '0.0.0.0', '::'} else BIND_HOST  # nosec B104
     print(f'  URL:  http://{display_host}:{PORT}')

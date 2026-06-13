@@ -71,6 +71,9 @@ interface OperationalVisibility {
     nkpInstalled: boolean
     nkpProfiles: number
     generatedNkpConfigs: number
+    nkpBinaries: number
+    availableNkpBinaries: number
+    defaultNkpBinary: string | null
   }
 }
 
@@ -215,6 +218,8 @@ export default function Dashboard() {
   const nkpInstalled = visibility?.deployment.nkpInstalled ?? systemChecks.some(check => check.name === 'NKP Framework' && check.value === 'found')
   const nkpProfiles = visibility?.deployment.nkpProfiles ?? 0
   const generatedNkpConfigs = visibility?.deployment.generatedNkpConfigs ?? 0
+  const nkpBinaries = visibility?.deployment.nkpBinaries ?? 0
+  const availableNkpBinaries = visibility?.deployment.availableNkpBinaries ?? 0
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -311,6 +316,7 @@ export default function Dashboard() {
             { label: 'ZTF', value: ztfInstalled ? 'Ready' : 'Missing', tone: ztfInstalled ? 'good' : 'bad', path: '/setup' },
             { label: 'NKP', value: nkpInstalled ? 'Ready' : 'Optional', tone: nkpInstalled ? 'good' : 'neutral', path: '/nkp' },
             { label: 'Profiles', value: nkpProfiles, tone: nkpProfiles ? 'good' : 'warning', path: '/nkp' },
+            { label: 'Binaries', value: `${availableNkpBinaries}/${nkpBinaries}`, tone: availableNkpBinaries ? 'good' : nkpBinaries ? 'bad' : 'warning', path: '/nkp' },
             { label: 'Generated configs', value: generatedNkpConfigs, tone: generatedNkpConfigs ? 'good' : 'neutral', path: '/configs' },
           ]}
         />

@@ -1403,10 +1403,13 @@ def test_system_check_accepts_packaged_ztf_without_requirements(client, auth_hea
 
     assert payload['ztfInstalled'] is True
     assert 'nkpInstalled' in payload
+    assert payload['nkpBinaries'] == {'total': 0, 'available': 0}
     assert checks['Requirements File']['ok'] is True
     assert checks['Requirements File']['value'] == 'not required - packaged install'
     assert checks['NKP Framework']['ok'] is True
     assert checks['NKP Framework']['value'] == 'not installed (optional)'
+    assert checks['NKP Binaries']['ok'] is True
+    assert checks['NKP Binaries']['value'] == 'none registered (optional)'
 
 
 def test_health_details_requires_admin(client):
