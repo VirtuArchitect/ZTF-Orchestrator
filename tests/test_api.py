@@ -22,6 +22,19 @@ def _login(client, username):
     return {'Authorization': 'Bearer ' + resp.get_json()['token']}
 
 
+def _wait_for_job(client, auth_headers, job_id, terminal_statuses=None, attempts=60, delay=0.1):
+    import time
+
+    terminal_statuses = terminal_statuses or {'success', 'failed', 'cancelled', 'interrupted'}
+    job = None
+    for _ in range(attempts):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] in terminal_statuses:
+            return job
+        time.sleep(delay)
+    return job
+
+
 def test_viewer_cannot_execute(client, auth_headers):
     _create_user(client, auth_headers, 'viewer1', 'viewer')
     viewer_headers = _login(client, 'viewer1')
@@ -921,13 +934,7 @@ def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypa
     assert resp.status_code == 202
     job_id = resp.get_json()['id']
 
-    import time
-    job = None
-    for _ in range(20):
-        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
-        if job['status'] == 'success':
-            break
-        time.sleep(0.05)
+    job = _wait_for_job(client, auth_headers, job_id, {'success'})
 
     assert job['status'] == 'success'
     assert job['type'] == 'nkp'
@@ -1009,13 +1016,7 @@ def test_nkp_controlled_phase_accepts_approved_gate(client, auth_headers, tmp_pa
     approval = client.get(f'/api/approvals/{approval_id}', headers=auth_headers).get_json()
     assert approval['jobId'] == job_id
 
-    import time
-    job = None
-    for _ in range(20):
-        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
-        if job['status'] == 'success':
-            break
-        time.sleep(0.05)
+    job = _wait_for_job(client, auth_headers, job_id, {'success'})
     assert job['status'] == 'success'
     assert job['taskIds'] == ['123e4567-e89b-12d3-a456-426614174000']
 
