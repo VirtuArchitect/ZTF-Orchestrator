@@ -83,6 +83,18 @@ class ApprovalManager:
         with self._lock:
             return next((a for a in self._load() if a['id'] == aid), None)
 
+    def link_job(self, aid: str, job_id: str) -> dict | None:
+        """Attach an execution job ID to an approval after submission."""
+        with self._lock:
+            approvals = self._load()
+            approval = next((a for a in approvals if a['id'] == aid), None)
+            if approval is None:
+                return None
+            approval['jobId'] = job_id
+            approval['linkedAt'] = _now_iso()
+            self._save(approvals)
+            return approval
+
     def create_request(
         self,
         workflow: str,
@@ -91,6 +103,7 @@ class ApprovalManager:
         requested_by: str,
         notes: str = '',
         pipeline_id: str | None = None,
+        metadata: dict | None = None,
     ) -> dict:
         """Create a new pending approval request."""
         aid = str(uuid.uuid4())
@@ -107,6 +120,8 @@ class ApprovalManager:
             'decidedAt':     None,
             'notes':         notes,
             'pipelineId':    pipeline_id,
+            'metadata':      metadata or {},
+            'jobId':         None,
         }
         event = threading.Event()
         with self._lock:

@@ -343,8 +343,8 @@ shows active, queued, running, failed, cancelled, and interrupted job counts,
 phase-based estimated progress, persisted job logs, worker timestamps, return
 codes, and cancellation controls for queued or running jobs. Progress percentages
 are orchestration estimates based on queue state, process launch, and observable
-ZTF output; future releases can replace or enrich this with real Nutanix task IDs
-if the underlying workflow output exposes them.
+ZTF output. When ZTF or NKP output includes Nutanix task UUIDs, the job captures
+and displays those task IDs for follow-up in Prism Central or Prism Element.
 
 ### NKP Framework
 Optional integration with
@@ -352,10 +352,12 @@ Optional integration with
 for Nutanix Kubernetes Platform automation. The first integration exposes
 install/update, framework status, and safe phases only: `validate`, `prepare`,
 `generate`, `registry`, `deploy`, `verify`, `kubeconfig`, `secrets`, `backup`,
-`runs`, and `ci`. Apply, registry push, upgrade, and destroy actions are
-blocked server-side until approval-gated live execution is explicitly added.
-NKP phase output is submitted through Jobs / Queue so logs, progress, history,
-and cancellation follow the same operational model as ZTF jobs.
+`runs`, and `ci`. Apply, registry push, upgrade, and destroy actions remain
+blocked server-side. Controlled NKP phases (`prepare`, `generate`, `registry`,
+and `deploy`) require an approved Approval Gate request before they can be
+queued. NKP phase output is submitted through Jobs / Queue so logs, estimated
+progress, detected task IDs, history, and cancellation follow the same
+operational model as ZTF jobs.
 
 The NKP page also includes a Deployment Profile Builder. Operators can define
 the NKP binary/source details, Prism Central endpoint, credential references,

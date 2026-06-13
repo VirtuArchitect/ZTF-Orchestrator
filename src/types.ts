@@ -88,6 +88,7 @@ export interface ExecutionJob {
   returnCode?: number | null
   progress?: ExecutionProgress
   logs?: ExecutionJobLogEvent[]
+  taskIds?: string[]
 }
 
 export interface SystemCheck {
@@ -367,6 +368,8 @@ export interface ApprovalRequest {
   decidedAt:     string | null
   notes:         string
   pipelineId:    string | null
+  metadata?:      Record<string, unknown>
+  jobId?:         string | null
 }
 
 export interface ClusterConfigSpec {

@@ -87,6 +87,8 @@ const PHASES = [
   { id: 'runs', label: 'Runs', hint: 'Summarise NKP ZeroTouch run artifacts' },
 ]
 
+const APPROVAL_REQUIRED_PHASES = new Set(['prepare', 'generate', 'registry', 'deploy'])
+
 const emptyProfile = (): NkpProfile => ({
   name: '',
   description: '',
@@ -114,6 +116,8 @@ export default function NKPFramework() {
   const [configContent, setConfigContent] = useState('')
   const [strict, setStrict] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [requestingApproval, setRequestingApproval] = useState(false)
+  const [approvalId, setApprovalId] = useState('')
   const [message, setMessage] = useState('')
   const [profiles, setProfiles] = useState<NkpProfile[]>([])
   const [profile, setProfile] = useState<NkpProfile>(emptyProfile)
@@ -210,6 +214,7 @@ export default function NKPFramework() {
           configFile,
           configContent,
           strict,
+          approvalId: approvalId.trim() || undefined,
         }),
       })
       const data = await resp.json().catch(() => ({}))
@@ -220,6 +225,36 @@ export default function NKPFramework() {
       setMessage(`Submitted NKP ${phase} job ${data.id}.`)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const requestApproval = async () => {
+    setRequestingApproval(true)
+    setMessage('')
+    try {
+      const resp = await apiFetch('/api/approvals', {
+        method: 'POST',
+        body: JSON.stringify({
+          workflow: `nkp:${phase}`,
+          configFile,
+          configContent,
+          notes: `NKP ${phase} execution request${readiness ? `; readiness ${readiness.status} (${readiness.score}%)` : ''}`,
+          metadata: {
+            framework: 'nkp',
+            phase,
+            readiness,
+          },
+        }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setMessage(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setApprovalId(data.id)
+      setMessage(`Approval request ${data.id} created. Submit after an admin approves it.`)
+    } finally {
+      setRequestingApproval(false)
     }
   }
 
@@ -424,6 +459,32 @@ export default function NKPFramework() {
                 placeholder="# Paste NKP environment YAML here to save/update the selected config file"
               />
             </div>
+
+            {APPROVAL_REQUIRED_PHASES.has(phase) && (
+              <div className="mt-4 rounded-lg border border-amber-700/30 bg-amber-950/20 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={18} className="text-amber-300 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-amber-100">Approval required for this NKP phase</p>
+                    <p className="text-xs text-amber-100/70 mt-1">
+                      Request approval, have an admin approve it in Approval Gates, then submit this phase with the approved ID.
+                    </p>
+                    <div className="mt-3 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2">
+                      <input
+                        className="input font-mono"
+                        value={approvalId}
+                        onChange={e => setApprovalId(e.target.value)}
+                        placeholder="Approved request ID"
+                      />
+                      <button onClick={requestApproval} disabled={requestingApproval || !canEdit} className="btn-secondary gap-1.5">
+                        {requestingApproval ? <Loader size={14} className="animate-spin" /> : <FilePlus size={14} />}
+                        Request Approval
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <label className="flex items-center gap-2 text-sm text-gray-400">

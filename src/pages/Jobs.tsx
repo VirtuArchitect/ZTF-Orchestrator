@@ -196,6 +196,16 @@ export default function Jobs() {
                     <Detail label="Log Events" value={String(logs.length)} />
                   </div>
                   {job.progress && <ProgressBar progress={job.progress} />}
+                  {job.taskIds && job.taskIds.length > 0 && (
+                    <div className="rounded-lg border border-border bg-gray-900/50 px-3 py-2">
+                      <p className="text-xs font-medium text-gray-500">Detected Nutanix Task IDs</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {job.taskIds.map(taskId => (
+                          <span key={taskId} className="badge badge-blue font-mono text-xs">{taskId}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex items-center justify-between mb-2">

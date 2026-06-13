@@ -470,6 +470,9 @@ def test_approval_create_and_decide_fire_configured_webhook(client, auth_headers
     import server
 
     events = []
+    _create_user(client, auth_headers, 'approval-op', 'operator')
+    op_headers = _login(client, 'approval-op')
+
     client.post('/api/settings',
                 json={'webhookUrl': 'http://example.com/hook'},
                 headers=auth_headers)
@@ -480,7 +483,7 @@ def test_approval_create_and_decide_fire_configured_webhook(client, auth_headers
     create_resp = client.post('/api/approvals',
                               json={'workflow': 'config-pc',
                                     'configContent': 'pc_ip: 10.0.0.1\n'},
-                              headers=auth_headers)
+                              headers=op_headers)
     assert create_resp.status_code == 201
     approval_id = create_resp.get_json()['id']
 
@@ -490,6 +493,21 @@ def test_approval_create_and_decide_fire_configured_webhook(client, auth_headers
     assert approve_resp.status_code == 200
     assert [event[1]['status'] for event in events] == ['pending', 'approved']
     assert all(event[0] == 'http://example.com/hook' for event in events)
+
+
+def test_approval_self_approval_is_rejected(client, auth_headers):
+    create_resp = client.post('/api/approvals',
+                              json={'workflow': 'config-pc',
+                                    'configContent': 'pc_ip: 10.0.0.1\n'},
+                              headers=auth_headers)
+    assert create_resp.status_code == 201
+    approval_id = create_resp.get_json()['id']
+
+    approve_resp = client.post(f'/api/approvals/{approval_id}/approve',
+                               json={'notes': 'approved'},
+                               headers=auth_headers)
+    assert approve_resp.status_code == 403
+    assert 'Self-approval' in approve_resp.get_json()['error']
 
 
 def test_parallel_submit_uses_configured_webhook_adapter(client, auth_headers, monkeypatch):
@@ -811,6 +829,26 @@ def test_job_progress_advances_from_ztf_output(client, auth_headers):
     assert job['progress']['estimated'] is True
 
 
+def test_job_captures_nutanix_task_ids_from_output(client, auth_headers):
+    """Framework output task UUIDs are promoted onto the job for operator follow-up."""
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    task_id = '123e4567-e89b-12d3-a456-426614174000'
+    server._job_manager._emit(job_id, 'stdout', f'Nutanix task id: {task_id}')
+    server._job_manager._emit(job_id, 'stdout', f'task_uuid={task_id}')
+    job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+    assert job['taskIds'] == [task_id]
+
+
 def test_nkp_status_reports_configured_framework(client, auth_headers, tmp_path):
     nkp_dir = tmp_path / 'nkp-zerotouch-framework'
     (nkp_dir / 'scripts').mkdir(parents=True)
@@ -896,6 +934,90 @@ def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypa
     assert job['framework'] == 'nkp'
     assert calls[0]['args'][0] == 'powershell'
     assert 'validate' in calls[0]['args']
+
+
+def test_nkp_controlled_phase_requires_approval(client, auth_headers):
+    resp = client.post('/api/nkp/jobs',
+                       json={
+                           'phase': 'deploy',
+                           'configFile': 'nkp-test.yaml',
+                           'configContent': 'environment:\n  name: lab\n',
+                       },
+                       headers=auth_headers)
+    assert resp.status_code == 403
+    data = resp.get_json()
+    assert data['approvalRequired'] is True
+    assert 'requires' in data['error']
+
+
+def test_nkp_controlled_phase_accepts_approved_gate(client, auth_headers, tmp_path, monkeypatch):
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+    server._job_manager.start()
+
+    _create_user(client, auth_headers, 'nkp-op', 'operator')
+    op_headers = _login(client, 'nkp-op')
+
+    nkp_dir = tmp_path / 'nkp-zerotouch-framework'
+    (nkp_dir / 'scripts').mkdir(parents=True)
+    (nkp_dir / 'scripts' / 'zt.ps1').write_text('Write-Host nkp\n')
+    resp = client.post('/api/settings', json={'nkpPath': str(nkp_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    class FakeStream:
+        def __iter__(self):
+            return iter(['Nutanix task id: 123e4567-e89b-12d3-a456-426614174000\n'])
+
+    class FakeProc:
+        returncode = 0
+        stdout = FakeStream()
+        stderr = FakeStream()
+        def poll(self): return 0
+        def wait(self): return 0
+        def kill(self): pass
+
+    monkeypatch.setattr(server.subprocess, 'Popen', lambda *args, **kwargs: FakeProc())
+
+    content = 'environment:\n  name: lab\n'
+    create_resp = client.post('/api/approvals',
+                              json={'workflow': 'nkp:deploy',
+                                    'configFile': 'nkp-test.yaml',
+                                    'configContent': content,
+                                    'metadata': {'framework': 'nkp', 'phase': 'deploy'}},
+                              headers=op_headers)
+    assert create_resp.status_code == 201
+    approval_id = create_resp.get_json()['id']
+
+    approve_resp = client.post(f'/api/approvals/{approval_id}/approve',
+                               json={'notes': 'approved'},
+                               headers=auth_headers)
+    assert approve_resp.status_code == 200
+
+    submit_resp = client.post('/api/nkp/jobs',
+                              json={
+                                  'phase': 'deploy',
+                                  'configFile': 'nkp-test.yaml',
+                                  'configContent': content,
+                                  'approvalId': approval_id,
+                              },
+                              headers=op_headers)
+    assert submit_resp.status_code == 202
+    job_id = submit_resp.get_json()['id']
+
+    approval = client.get(f'/api/approvals/{approval_id}', headers=auth_headers).get_json()
+    assert approval['jobId'] == job_id
+
+    import time
+    job = None
+    for _ in range(20):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] == 'success':
+            break
+        time.sleep(0.05)
+    assert job['status'] == 'success'
+    assert job['taskIds'] == ['123e4567-e89b-12d3-a456-426614174000']
 
 
 def _valid_nkp_profile():

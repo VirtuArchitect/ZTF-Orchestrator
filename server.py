@@ -490,6 +490,20 @@ def _parse_iso_datetime(value: str | None) -> datetime.datetime | None:
         return None
 
 
+def _extract_task_ids(text: str) -> list[str]:
+    """Return Nutanix task UUIDs from framework output lines that identify tasks."""
+    if not text or 'task' not in text.lower():
+        return []
+    seen: set[str] = set()
+    task_ids: list[str] = []
+    for match in TASK_ID_RE.finditer(text):
+        task_id = match.group(1).lower()
+        if task_id not in seen:
+            seen.add(task_id)
+            task_ids.append(task_id)
+    return task_ids
+
+
 def _pg_dump_command(database_url: str, output_path: Path) -> tuple[list[str], dict[str, str]]:
     parsed = urllib.parse.urlparse(database_url)
     if parsed.scheme not in {'postgresql', 'postgres'}:
@@ -672,6 +686,14 @@ ALLOWED_WORKFLOWS = {
     'lcm-update',
 }
 
+
+def _is_allowed_approval_workflow(workflow: str) -> bool:
+    if workflow in ALLOWED_WORKFLOWS:
+        return True
+    if workflow.startswith('nkp:'):
+        return workflow.split(':', 1)[1] in NKP_SAFE_PHASES
+    return False
+
 ALLOWED_SCRIPTS = {
     'AddAdServerPe','AddAdServerPc','CreateRoleMappingPe','CreateRoleMappingPc',
     'CreateLocalUser','DeleteLocalUser','AddSamlIdp',
@@ -704,6 +726,39 @@ NKP_SAFE_PHASES = {
     'validate', 'prepare', 'generate', 'registry', 'deploy',
     'verify', 'kubeconfig', 'secrets', 'backup', 'runs', 'ci',
 }
+
+NKP_APPROVAL_REQUIRED_PHASES = {
+    'prepare', 'generate', 'registry', 'deploy',
+}
+
+TASK_ID_RE = re.compile(
+    r'\b(?:task(?:_id| id)?|task_uuid|task uuid|nutanix task)\s*[:=]?\s*'
+    r'([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b'
+)
+
+
+def _nkp_approval_error(
+    approval: dict | None,
+    phase: str,
+    config_file: str,
+    config_content: str,
+) -> str | None:
+    if not approval:
+        return 'Approved NKP execution request was not found'
+    if approval.get('status') != 'approved':
+        return 'NKP execution request is not approved'
+    if approval.get('workflow') != f'nkp:{phase}':
+        return 'NKP execution approval does not match the requested phase'
+    expires = _parse_iso_datetime(approval.get('expiresAt'))
+    if expires and expires < datetime.datetime.now(datetime.timezone.utc):
+        return 'NKP execution approval has expired'
+    approved_config_file = str(approval.get('configFile') or '').strip()
+    if approved_config_file and config_file and approved_config_file != config_file:
+        return 'NKP execution approval does not match the requested config file'
+    approved_content = approval.get('configContent') or ''
+    if approved_content and config_content and approved_content != config_content:
+        return 'NKP execution approval does not match the requested YAML content'
+    return None
 
 # ─── Dry-run preflight definitions ───────────────────────────────────────────
 # required: top-level YAML keys that must be present and non-empty
@@ -1941,11 +1996,28 @@ class ExecutionJobManager:
             return
         if event_type not in {'stdout', 'stderr'} or not isinstance(data, str):
             return
+        self._record_task_ids_from_output(job, data)
         text = data.lower()
         for tokens, percent, detail in self.OUTPUT_MILESTONES:
             if any(token in text for token in tokens):
                 self._set_progress(job, detail, percent, data[:160])
                 break
+
+    def _record_task_ids_from_output(self, job: dict, data: str) -> None:
+        task_ids = _extract_task_ids(data)
+        if not task_ids:
+            return
+        existing = job.setdefault('taskIds', [])
+        if not isinstance(existing, list):
+            existing = []
+            job['taskIds'] = existing
+        changed = False
+        for task_id in task_ids:
+            if task_id not in existing:
+                existing.append(task_id)
+                changed = True
+        if changed:
+            job['updatedAt'] = self._now()
 
     def _set_progress(self, job: dict, phase: str, percent: int, detail: str) -> bool:
         percent = max(0, min(100, int(percent)))
@@ -2694,6 +2766,24 @@ def submit_nkp_job():
         if not ok:
             return jsonify({'error': f'Invalid NKP YAML: {err}'}), 400
 
+    approval_id = str(data.get('approvalId') or '').strip()
+    if phase in NKP_APPROVAL_REQUIRED_PHASES:
+        if not approval_id:
+            return jsonify({
+                'error': f'NKP phase "{phase}" requires an approved approval request',
+                'approvalRequired': True,
+                'requiredPhases': sorted(NKP_APPROVAL_REQUIRED_PHASES),
+            }), 403
+        _require_engines()
+        approval = _approval_manager.get_approval(approval_id)
+        approval_error = _nkp_approval_error(approval, phase, config_file, config_content)
+        if approval_error:
+            return jsonify({
+                'error': approval_error,
+                'approvalRequired': True,
+                'requiredPhases': sorted(NKP_APPROVAL_REQUIRED_PHASES),
+            }), 403
+
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     job = _job_manager.submit({
         'framework': 'nkp',
@@ -2702,7 +2792,11 @@ def submit_nkp_job():
         'configFile': config_file,
         'configContent': config_content,
         'strict': bool(data.get('strict', False)),
+        'approvalId': approval_id or None,
     }, current_user)
+    if approval_id:
+        _require_engines()
+        _approval_manager.link_job(approval_id, job['id'])
     return jsonify(job), 202
 
 
@@ -3877,8 +3971,9 @@ def create_approval():
     data = request.json or {}
     _require_engines()
     workflow = data.get('workflow', '')
-    if not workflow or workflow not in ALLOWED_WORKFLOWS:
+    if not workflow or not _is_allowed_approval_workflow(workflow):
         return jsonify({'error': 'Unknown workflow'}), 400
+    metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     approval = _approval_manager.create_request(
         workflow       = workflow,
@@ -3887,6 +3982,7 @@ def create_approval():
         requested_by   = current_user,
         notes          = data.get('notes', ''),
         pipeline_id    = data.get('pipelineId'),
+        metadata       = metadata,
     )
     return jsonify(approval), 201
 
@@ -3905,9 +4001,12 @@ def approve_request(aid):
     _require_engines()
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     notes = (request.json or {}).get('notes', '')
-    result = _approval_manager.decide(aid, 'approved', current_user, notes)
-    if not result:
+    approval = _approval_manager.get_approval(aid)
+    if not approval:
         return jsonify({'error': 'not found'}), 404
+    if approval.get('status') == 'pending' and approval.get('requestedBy') == current_user:
+        return jsonify({'error': 'Self-approval is not allowed'}), 403
+    result = _approval_manager.decide(aid, 'approved', current_user, notes)
     return jsonify(result)
 
 @app.route('/api/approvals/<aid>/reject', methods=['POST'])

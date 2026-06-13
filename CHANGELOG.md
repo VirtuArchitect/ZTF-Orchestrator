@@ -23,6 +23,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - NKP deployment readiness validation with profile scoring, pass/warning/fail
   checks, subnet and duplicate-IP validation, VLAN range checks, generated YAML
   parsing, and pre-queue YAML validation for NKP safe-phase jobs.
+- Approval-gated NKP execution for controlled phases (`prepare`, `generate`,
+  `registry`, and `deploy`), including request metadata, linked job IDs, and
+  self-approval prevention.
+- Nutanix task UUID extraction from observable ZTF/NKP output, surfaced in Jobs
+  / Queue job details when the underlying framework prints task IDs.
 - Appliance distribution kit for Linux VM/AHV deployments, including an
   appliance Compose file, first-boot scripts, systemd units, cloud-init
   examples, and a reference Packer QCOW2 template.
