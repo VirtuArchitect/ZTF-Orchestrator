@@ -78,7 +78,8 @@ export interface ExecutionJob {
   id: string
   status: ExecutionJobStatus
   workflow: string
-  type: 'workflow' | 'script'
+  type: 'workflow' | 'script' | 'nkp'
+  framework?: 'ztf' | 'nkp' | string
   user: string
   createdAt: string
   updatedAt: string
@@ -118,9 +119,11 @@ export interface PipelineStepResult {
 
 export interface Settings {
   ztfPath: string
+  nkpPath: string
   pythonPath: string
   configDir: string
   repoUrl: string
+  nkpRepoUrl: string
   webhookUrl: string
   activeProfileId: string
   connectionProfiles: ConnectionProfile[]

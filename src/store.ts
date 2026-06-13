@@ -117,9 +117,11 @@ export const useStore = create<AppState>()(
       // Settings
       settings: {
         ztfPath:    '',
+        nkpPath:    '',
         pythonPath: 'python3',
         configDir:  '',
         repoUrl:    'https://github.com/nutanixdev/zerotouch-framework.git',
+        nkpRepoUrl: 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git',
         webhookUrl: '',
         activeProfileId: 'default',
         connectionProfiles: [DEFAULT_CONNECTION_PROFILE],

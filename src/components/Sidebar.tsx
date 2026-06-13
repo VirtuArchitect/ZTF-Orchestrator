@@ -3,7 +3,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes
 } from 'lucide-react'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -41,6 +41,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/pipelines', icon: GitBranch, label: 'Pipelines', roles: ALL_ROLES },
       { path: '/schedules', icon: Clock, label: 'Schedules', roles: ALL_ROLES },
       { path: '/parallel', icon: Layers, label: 'Parallel Exec', roles: ALL_ROLES },
+      { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES },
     ],
   },
   {

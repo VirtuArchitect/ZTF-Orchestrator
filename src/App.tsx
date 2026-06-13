@@ -17,6 +17,7 @@ import DriftDetection    from './pages/DriftDetection'
 import Schedules         from './pages/Schedules'
 import ParallelExecution from './pages/ParallelExecution'
 import Approvals         from './pages/Approvals'
+import NKPFramework      from './pages/NKPFramework'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
 
@@ -104,6 +105,9 @@ export default function App() {
         } />
         <Route path="/parallel" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ParallelExecution /></RequireRole>
+        } />
+        <Route path="/nkp" element={
+          <RequireRole roles={['admin', 'operator', 'viewer']}><NKPFramework /></RequireRole>
         } />
         <Route path="/approvals" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Approvals /></RequireRole>

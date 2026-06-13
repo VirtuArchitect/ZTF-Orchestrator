@@ -10,6 +10,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Initial safe-phase NKP Framework integration for
+  `VirtuArchitect/nkp-zerotouch-framework`, including settings, status,
+  install/update, and Jobs / Queue submission for non-apply phases.
 - Appliance distribution kit for Linux VM/AHV deployments, including an
   appliance Compose file, first-boot scripts, systemd units, cloud-init
   examples, and a reference Packer QCOW2 template.
