@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle, Download, FilePlus, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Download, FilePlus, FileSearch, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
@@ -32,6 +32,12 @@ interface NkpProfile {
   name: string
   description: string
   environment: string
+  template: {
+    id: string
+    name: string
+    category: string
+    managementClusterRef: string
+  }
   nkp: {
     version: string
     binaryPath: string
@@ -97,10 +103,35 @@ interface NkpTemplatePack {
   category: string
   description: string
   recommendedUse: string
-  profileDefaults: NkpProfile
+  profileDefaults: Partial<NkpProfile>
   requiredFields: string[]
   optionalFields: string[]
   preflightChecklist: string[]
+}
+
+interface NkpExample {
+  name: string
+  path: string
+  environmentType: string
+  provider: string
+  clusterName: string
+  topLevelKeys: string[]
+}
+
+interface NkpSchema {
+  source: string
+  examples: Array<{ name: string; path: string; topLevelKeys: string[] }>
+  requiredTopLevel: string[]
+  optionalTopLevel: string[]
+  nestedRequired: Record<string, string[]>
+}
+
+interface NkpSchemaValidation {
+  status: 'pass' | 'warn' | 'fail'
+  missing: string[]
+  warnings: string[]
+  errors: string[]
+  schema?: NkpSchema
 }
 
 const PHASES = [
@@ -119,6 +150,7 @@ const emptyProfile = (): NkpProfile => ({
   name: '',
   description: '',
   environment: 'lab',
+  template: { id: '', name: '', category: '', managementClusterRef: '' },
   nkp: { version: '', binaryPath: '', registry: '', sshKeyRef: 'admin_cred' },
   prismCentral: { endpoint: '', credentialRef: 'pc_user' },
   cluster: { name: '', type: 'management', kubernetesVersion: '', vip: '' },
@@ -151,6 +183,7 @@ export default function NKPFramework() {
   const [profileErrors, setProfileErrors] = useState<string[]>([])
   const [savingProfile, setSavingProfile] = useState(false)
   const [checkingReadiness, setCheckingReadiness] = useState(false)
+  const [previewingYaml, setPreviewingYaml] = useState(false)
   const [readiness, setReadiness] = useState<ReadinessResult | null>(null)
   const [generatedYaml, setGeneratedYaml] = useState('')
   const [binaries, setBinaries] = useState<NkpBinary[]>([])
@@ -161,6 +194,10 @@ export default function NKPFramework() {
   const [binaryForm, setBinaryForm] = useState({ name: '', version: '', path: '' })
   const [templates, setTemplates] = useState<NkpTemplatePack[]>([])
   const [templateApplying, setTemplateApplying] = useState('')
+  const [examples, setExamples] = useState<NkpExample[]>([])
+  const [schema, setSchema] = useState<NkpSchema | null>(null)
+  const [schemaValidation, setSchemaValidation] = useState<NkpSchemaValidation | null>(null)
+  const [exampleImporting, setExampleImporting] = useState('')
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
@@ -201,11 +238,20 @@ export default function NKPFramework() {
     setTemplates(await resp.json())
   }
 
+  const loadExamples = async () => {
+    const resp = await apiFetch('/api/nkp/examples')
+    if (!resp.ok) return
+    const data = await resp.json()
+    setExamples(data.examples || [])
+    setSchema(data.schema || null)
+  }
+
   useEffect(() => {
     loadStatus()
     loadProfiles()
     loadBinaries()
     loadTemplates()
+    loadExamples()
   }, [])
 
   const runInstall = async () => {
@@ -306,7 +352,7 @@ export default function NKPFramework() {
     }
   }
 
-  const setProfileField = (path: string, value: string | string[]) => {
+  const setProfileField = (path: string, value: unknown) => {
     setProfile(prev => {
       const next = structuredClone(prev) as NkpProfile
       const parts = path.split('.')
@@ -405,8 +451,32 @@ export default function NKPFramework() {
     setConfigFile(data.filename)
     setGeneratedYaml(data.content || '')
     if (data.readiness) setReadiness(data.readiness)
+    if (data.schemaValidation) setSchemaValidation(data.schemaValidation)
     setProfileMessage(`Generated ${data.filename} in Config Files.`)
     await loadStatus()
+  }
+
+  const previewProfileConfig = async () => {
+    setPreviewingYaml(true)
+    setProfileErrors([])
+    setProfileMessage('')
+    try {
+      const resp = await apiFetch('/api/nkp/profiles/preview', {
+        method: 'POST',
+        body: JSON.stringify(profile),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setProfileErrors([data.error || `Server returned ${resp.status}`])
+        return
+      }
+      setGeneratedYaml(data.content || '')
+      if (data.readiness) setReadiness(data.readiness)
+      if (data.schemaValidation) setSchemaValidation(data.schemaValidation)
+      setProfileMessage('Preview generated. Review the YAML before saving or generating a config file.')
+    } finally {
+      setPreviewingYaml(false)
+    }
   }
 
   const registerBinary = async () => {
@@ -517,9 +587,35 @@ export default function NKPFramework() {
       }
       setProfile(data.profile)
       setReadiness(data.readiness || null)
+      setSchemaValidation(data.generatedSchemaValidation || null)
       setProfileMessage(`${template.name} template applied. Review target-specific values, then save the profile.`)
     } finally {
       setTemplateApplying('')
+    }
+  }
+
+  const importExample = async (example: NkpExample) => {
+    setExampleImporting(example.path)
+    setProfileErrors([])
+    setProfileMessage('')
+    setGeneratedYaml('')
+    try {
+      const resp = await apiFetch('/api/nkp/examples/import', {
+        method: 'POST',
+        body: JSON.stringify({ path: example.path }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setProfileErrors([data.error || `Server returned ${resp.status}`])
+        return
+      }
+      setProfile(data.profile)
+      setReadiness(data.readiness || null)
+      setGeneratedYaml(data.generatedContent || '')
+      setSchemaValidation(data.generatedSchemaValidation || null)
+      setProfileMessage(`Imported ${example.name}. Review required site values, then save the profile.`)
+    } finally {
+      setExampleImporting('')
     }
   }
 
@@ -674,6 +770,70 @@ export default function NKPFramework() {
         {logs.length > 0 && (
           <Terminal logs={logs} status={installStatus} title="NKP Framework Installation Output" />
         )}
+
+        <div className="card">
+          <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-nutanix-blue/20 border border-nutanix-blue/30 text-nutanix-cyan flex items-center justify-center">
+                <FileSearch size={18} />
+              </div>
+              <div>
+                <h2 className="font-semibold text-gray-100">NKP Example Schema Alignment</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Discover installed NKP example YAML, infer the expected shape, and import examples into editable profiles.
+                </p>
+              </div>
+            </div>
+            <button onClick={loadExamples} className="btn-secondary gap-1.5">
+              <RefreshCw size={14} />
+              Refresh
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-4">
+            <div className="rounded-lg border border-border bg-gray-950/40 p-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Inferred Schema</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className={clsx('badge text-xs', schema?.source === 'installed_examples' ? 'badge-green' : 'badge-yellow')}>
+                  {schema?.source === 'installed_examples' ? 'installed examples' : 'fallback schema'}
+                </span>
+                <span className="badge badge-gray text-xs">{examples.length} examples</span>
+              </div>
+              <div className="mt-3 text-xs text-gray-500">Required top-level keys</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(schema?.requiredTopLevel || ['environment', 'nkp', 'nutanix', 'cluster']).map(key => (
+                  <span key={key} className="badge badge-blue text-xs">{key}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {examples.length === 0 ? (
+                <div className="rounded-lg border border-border bg-gray-950/40 px-4 py-6 text-center text-sm text-gray-500">
+                  No NKP examples found. Install or update the NKP framework to discover configs/environments examples.
+                </div>
+              ) : examples.map(example => (
+                <div key={example.path} className="rounded-lg border border-border bg-gray-950/40 p-4">
+                  <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-gray-100">{example.name}</h3>
+                        {example.environmentType && <span className="badge badge-blue text-xs">{example.environmentType}</span>}
+                        {example.provider && <span className="badge badge-gray text-xs">{example.provider}</span>}
+                      </div>
+                      <p className="font-mono text-xs text-gray-500 mt-2 break-all">{example.path}</p>
+                      {example.clusterName && <p className="text-xs text-gray-500 mt-1">Cluster: {example.clusterName}</p>}
+                    </div>
+                    <button onClick={() => importExample(example)} disabled={!canEdit || exampleImporting === example.path} className="btn-secondary gap-1.5">
+                      {exampleImporting === example.path ? <Loader size={14} className="animate-spin" /> : <Download size={14} />}
+                      Import Profile
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
@@ -881,6 +1041,10 @@ export default function NKPFramework() {
                 <FilePlus size={14} />
                 Generate YAML
               </button>
+              <button className="btn-secondary gap-1.5" onClick={previewProfileConfig} disabled={previewingYaml}>
+                {previewingYaml ? <Loader size={14} className="animate-spin" /> : <FilePlus size={14} />}
+                Preview YAML
+              </button>
               <button className="btn-secondary gap-1.5" onClick={() => checkReadiness()} disabled={checkingReadiness}>
                 {checkingReadiness ? <Loader size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
                 Check Readiness
@@ -956,9 +1120,36 @@ export default function NKPFramework() {
           )}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            {profile.template.id && (
+              <div className="xl:col-span-3 rounded-lg border border-border bg-gray-950/40 px-4 py-3">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Template Pack</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-gray-100">{profile.template.name || profile.template.id}</span>
+                      {profile.template.category && (
+                        <span className={clsx('badge text-xs', profile.template.category === 'Restricted' ? 'badge-yellow' : 'badge-blue')}>
+                          {profile.template.category}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    className="btn-secondary gap-1.5"
+                    onClick={() => setProfileField('template', { id: '', name: '', category: '', managementClusterRef: '' })}
+                    disabled={!canEdit}
+                  >
+                    Clear Template
+                  </button>
+                </div>
+              </div>
+            )}
             <ProfileField label="Profile Name" value={profile.name} onChange={value => setProfileField('name', value)} disabled={!canEdit} />
             <ProfileField label="Environment" value={profile.environment} onChange={value => setProfileField('environment', value)} disabled={!canEdit} />
             <ProfileField label="Description" value={profile.description} onChange={value => setProfileField('description', value)} disabled={!canEdit} />
+            {profile.template.id === 'workload-cluster' && (
+              <ProfileField label="Management Cluster Ref" value={profile.template.managementClusterRef} onChange={value => setProfileField('template.managementClusterRef', value)} disabled={!canEdit} />
+            )}
             <ProfileField label="NKP Version" value={profile.nkp.version} onChange={value => setProfileField('nkp.version', value)} disabled={!canEdit} />
             <ProfileField label="NKP Binary Path" value={profile.nkp.binaryPath} onChange={value => setProfileField('nkp.binaryPath', value)} disabled={!canEdit} mono />
             <ProfileField label="Registry" value={profile.nkp.registry} onChange={value => setProfileField('nkp.registry', value)} disabled={!canEdit} />
@@ -1004,9 +1195,24 @@ export default function NKPFramework() {
           {generatedYaml && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-100">Generated YAML Preview</h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold text-gray-100">Generated YAML Preview</h3>
+                  {schemaValidation && (
+                    <span className={clsx(
+                      'badge text-xs',
+                      schemaValidation.status === 'pass' ? 'badge-green' : schemaValidation.status === 'warn' ? 'badge-yellow' : 'badge-red'
+                    )}>
+                      schema {schemaValidation.status}
+                    </span>
+                  )}
+                </div>
                 <Link to="/configs" className="text-sm text-nutanix-cyan hover:text-nutanix-teal">Open Config Files</Link>
               </div>
+              {schemaValidation && schemaValidation.status !== 'pass' && (
+                <div className="mb-3 rounded-lg border border-amber-700/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-100">
+                  {[...(schemaValidation.missing || []), ...(schemaValidation.warnings || []), ...(schemaValidation.errors || [])].join('; ')}
+                </div>
+              )}
               <pre className="rounded-lg border border-border bg-gray-950 p-4 text-xs text-gray-300 overflow-auto max-h-80">{generatedYaml}</pre>
             </div>
           )}

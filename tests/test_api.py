@@ -1147,9 +1147,119 @@ def test_nkp_template_packs_list_and_apply(client, auth_headers):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data['template']['id'] == 'management-cluster'
+    assert data['profile']['template']['id'] == 'management-cluster'
+    assert data['profile']['template']['name'] == 'Management Cluster'
     assert data['profile']['cluster']['type'] == 'management'
     assert data['profile']['prismCentral']['endpoint'] == '10.42.1.10'
     assert data['readiness']['score'] >= 80
+
+
+def test_nkp_template_specific_readiness_and_preview(client, auth_headers):
+    profile = _valid_nkp_profile()
+    profile['template'] = {
+        'id': 'workload-cluster',
+        'name': 'Workload Cluster',
+        'category': 'Connected',
+        'managementClusterRef': '',
+    }
+    profile['cluster']['type'] = 'workload'
+
+    preview = client.post('/api/nkp/profiles/preview', json=profile, headers=auth_headers)
+    assert preview.status_code == 200
+    data = preview.get_json()
+    assert 'environment:' in data['content']
+    assert 'nutanix:' in data['content']
+    assert 'managementCluster:' in data['content']
+    assert data['schemaValidation']['status'] in {'pass', 'warn'}
+    assert data['template']['id'] == 'workload-cluster'
+    failed = {item['id'] for item in data['readiness']['checks'] if item['status'] == 'fail'}
+    assert 'template_workload_management_ref' in failed
+
+    profile['template']['managementClusterRef'] = 'nkp-mgmt'
+    preview = client.post('/api/nkp/profiles/preview', json=profile, headers=auth_headers)
+    checks = {item['id']: item for item in preview.get_json()['readiness']['checks']}
+    assert checks['template_workload_management_ref']['status'] == 'pass'
+
+
+def test_nkp_airgapped_template_requires_registry_and_binary(client, auth_headers):
+    profile = _valid_nkp_profile()
+    profile['template'] = {
+        'id': 'airgapped-local-registry',
+        'name': 'Air-Gapped / Local Registry',
+        'category': 'Restricted',
+        'managementClusterRef': '',
+    }
+    profile['nkp']['registry'] = ''
+    profile['nkp']['binaryPath'] = ''
+
+    resp = client.post('/api/nkp/profiles/preview', json=profile, headers=auth_headers)
+    assert resp.status_code == 200
+    failed = {item['id'] for item in resp.get_json()['readiness']['checks'] if item['status'] == 'fail'}
+    assert 'template_airgap_registry' in failed
+    assert 'template_airgap_local_binary' in failed
+    assert 'registry:' in resp.get_json()['content']
+
+
+def test_nkp_examples_list_schema_validate_and_import(client, auth_headers, tmp_path):
+    nkp_dir = tmp_path / 'nkp-zerotouch-framework'
+    examples = nkp_dir / 'configs' / 'environments'
+    examples.mkdir(parents=True)
+    example_content = '''environment:
+  name: lab-connected
+  type: connected
+  provider: nutanix-ahv
+nkp:
+  version: v2.17.1
+  bundleType: standard
+  bundlePath: /opt/nkp-v2.17.1
+  cliPath: /opt/nkp-v2.17.1/cli/nkp
+nutanix:
+  prismCentralEndpoint: https://prism-central.example.com:9440
+  clusterName: nutanix-cluster
+  subnetName: vlan-k8s
+  imageName: nkp-node-image
+  storageContainer: default-container
+  project: default
+cluster:
+  name: nkp-mgmt-connected
+  kubernetesVersion: 1.34.3
+  controlPlaneEndpointIp: 10.10.10.50
+  controlPlaneEndpointPort: 6443
+  controlPlaneReplicas: 3
+  workerReplicas: 3
+  podCidr: 192.168.0.0/16
+  serviceCidr: 10.96.0.0/12
+  loadBalancerIpRange: 10.10.10.100-10.10.10.120
+  ntpServers:
+    - 0.pool.ntp.org
+  sshPublicKeyFile: /home/nkp/.ssh/id_rsa.pub
+  sshUsername: nutanix
+'''
+    (examples / 'connected.example.yaml').write_text(example_content)
+    resp = client.post('/api/settings', json={'nkpPath': str(nkp_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    listing = client.get('/api/nkp/examples', headers=auth_headers)
+    assert listing.status_code == 200
+    data = listing.get_json()
+    assert data['schema']['source'] == 'installed_examples'
+    assert data['examples'][0]['path'] == 'connected.example.yaml'
+    assert 'environment' in data['schema']['requiredTopLevel']
+
+    validation = client.post('/api/nkp/schema/validate',
+                             json={'content': example_content},
+                             headers=auth_headers)
+    assert validation.status_code == 200
+    assert validation.get_json()['status'] == 'pass'
+
+    imported = client.post('/api/nkp/examples/import',
+                           json={'path': 'connected.example.yaml'},
+                           headers=auth_headers)
+    assert imported.status_code == 200
+    payload = imported.get_json()
+    assert payload['profile']['cluster']['name'] == 'nkp-mgmt-connected'
+    assert payload['profile']['nkp']['binaryPath'] == '/opt/nkp-v2.17.1'
+    assert payload['generatedSchemaValidation']['status'] in {'pass', 'warn'}
 
 
 def test_nkp_template_apply_restricted_for_viewer(client, auth_headers):
@@ -1181,8 +1291,10 @@ def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, i
     assert generated.status_code == 200
     payload = generated.get_json()
     assert payload['filename'] == 'nkp-lab-management.yaml'
-    assert 'prism_central:' in payload['content']
+    assert 'nutanix:' in payload['content']
+    assert 'environment:' in payload['content']
     assert 'nkp-mgmt-lab' in payload['content']
+    assert payload['schemaValidation']['status'] in {'pass', 'warn'}
     assert payload['readiness']['score'] >= 80
     assert (isolated_data_dir / 'configs' / 'nkp-lab-management.yaml').exists()
 

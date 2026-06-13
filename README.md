@@ -363,9 +363,10 @@ The NKP page also includes a Deployment Profile Builder. Operators can define
 the NKP binary/source details, Prism Central endpoint, credential references,
 cluster type/version/VIP, DNS/NTP/gateway/subnet information, VLAN/domain
 settings, and node inventory with host/CVM/IPMI addresses. Saved profiles can be
-validated and rendered into YAML in the existing Config Files area, then used by
-the safe-phase launcher. The generated YAML is intentionally transparent and
-editable so teams can align it with the exact NKP ZeroTouch schema they adopt.
+validated and rendered into NKP example-style YAML in the existing Config Files
+area, then used by the safe-phase launcher. The generated YAML is intentionally
+transparent and editable so teams can align it with the exact NKP ZeroTouch
+schema they adopt.
 
 NKP Deployment Template Packs provide guided starting points for common
 deployment patterns: **Management Cluster**, **Workload Cluster**, and
@@ -374,6 +375,20 @@ fields, optional fields, and a preflight checklist. Applying a template prepares
 an editable profile draft; operators still review, fill in site-specific values,
 check readiness, and save before generating YAML or submitting approval-gated
 phases.
+
+Template metadata is stored with the profile and included in generated YAML.
+The preview action lets operators inspect template-specific YAML before saving
+or writing a config file. Readiness checks also adapt to the selected pack:
+management clusters warn when undersized, workload clusters require a
+management-cluster reference, and air-gapped profiles require a local registry
+and staged NKP binary path.
+
+The NKP page also discovers installed examples from `configs/environments` in
+the configured NKP framework path. ZTF-Orchestrator infers the expected YAML
+shape from those examples, validates previews against that shape, and can import
+an example into an editable deployment profile. This keeps generated YAML
+aligned with the NKP framework installed on the appliance instead of relying on
+a static, guessed schema.
 
 The NKP Binary Manager lets operators register NKP binaries or bundles already
 staged on the Orchestrator host, upload smaller bundles into the Orchestrator

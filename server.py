@@ -415,6 +415,21 @@ def _public_nkp_template_pack(template: dict) -> dict:
     return deepcopy(template)
 
 
+def _nkp_template_summary(template: dict | None) -> dict:
+    if not template:
+        return {'id': '', 'name': '', 'category': '', 'managementClusterRef': ''}
+    return {
+        'id': str(template.get('id') or '').strip(),
+        'name': str(template.get('name') or '').strip(),
+        'category': str(template.get('category') or '').strip(),
+        'managementClusterRef': str(template.get('managementClusterRef') or '').strip(),
+    }
+
+
+def _nkp_template_by_id(template_id: str) -> dict | None:
+    return next((item for item in NKP_TEMPLATE_PACKS if item.get('id') == template_id), None)
+
+
 def _meaningful_nkp_node(node: dict) -> bool:
     if not isinstance(node, dict):
         return False
@@ -444,6 +459,201 @@ def _merge_profile_template(defaults: dict, overrides: dict) -> dict:
         return target
 
     return merge_dict(merged, overrides or {})
+
+
+def _nkp_profile_template_pack(profile: dict) -> dict | None:
+    template_id = str((profile.get('template') or {}).get('id') or '').strip()
+    return _nkp_template_by_id(template_id)
+
+
+NKP_EXAMPLE_REQUIRED_FALLBACK = {
+    'environment': ['name', 'type', 'provider'],
+    'nkp': ['version', 'bundlePath', 'cliPath'],
+    'nutanix': ['prismCentralEndpoint', 'clusterName', 'subnetName', 'imageName', 'storageContainer', 'project'],
+    'cluster': [
+        'name', 'kubernetesVersion', 'controlPlaneEndpointIp',
+        'controlPlaneEndpointPort', 'controlPlaneReplicas', 'workerReplicas',
+        'podCidr', 'serviceCidr', 'ntpServers', 'sshPublicKeyFile', 'sshUsername',
+    ],
+}
+
+
+def _nkp_examples_root(nkp_path: str | Path) -> Path:
+    return Path(nkp_path) / 'configs' / 'environments'
+
+
+def _nkp_example_files(nkp_path: str | Path) -> list[Path]:
+    root = _nkp_examples_root(nkp_path)
+    if not root.is_dir():
+        return []
+    files = [
+        path for path in root.rglob('*')
+        if path.is_file() and path.suffix.lower() in {'.yaml', '.yml'}
+    ]
+    return sorted(files, key=lambda item: item.name)[:100]
+
+
+def _nkp_example_relpath(path: Path, nkp_path: str | Path) -> str:
+    return path.resolve().relative_to(_nkp_examples_root(nkp_path).resolve()).as_posix()
+
+
+def _safe_nkp_example_path(nkp_path: str | Path, relpath: str) -> Path | None:
+    root = _nkp_examples_root(nkp_path).resolve()
+    candidate = (root / str(relpath or '')).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return None
+    if candidate.suffix.lower() not in {'.yaml', '.yml'} or not candidate.is_file():
+        return None
+    return candidate
+
+
+def _nkp_schema_from_examples(nkp_path: str | Path) -> dict:
+    examples = []
+    top_level_sets: list[set[str]] = []
+    nested: dict[str, list[set[str]]] = {}
+    for path in _nkp_example_files(nkp_path):
+        try:
+            data = yaml.safe_load(path.read_text(encoding='utf-8')) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        keys = {str(key) for key in data.keys()}
+        top_level_sets.append(keys)
+        for key, value in data.items():
+            if isinstance(value, dict):
+                nested.setdefault(str(key), []).append({str(item) for item in value.keys()})
+        examples.append({
+            'name': path.name,
+            'path': _nkp_example_relpath(path, nkp_path),
+            'topLevelKeys': sorted(keys),
+        })
+
+    if top_level_sets:
+        required_top_level = sorted(set.intersection(*top_level_sets))
+        optional_top_level = sorted(set.union(*top_level_sets) - set(required_top_level))
+    else:
+        required_top_level = sorted(NKP_EXAMPLE_REQUIRED_FALLBACK.keys())
+        optional_top_level = ['registry']
+
+    nested_required = {}
+    for key in required_top_level:
+        if nested.get(key):
+            nested_required[key] = sorted(set.intersection(*nested[key]))
+        else:
+            nested_required[key] = NKP_EXAMPLE_REQUIRED_FALLBACK.get(key, [])
+    for key, fields in NKP_EXAMPLE_REQUIRED_FALLBACK.items():
+        nested_required.setdefault(key, fields)
+
+    return {
+        'source': 'installed_examples' if examples else 'fallback',
+        'examples': examples,
+        'requiredTopLevel': required_top_level,
+        'optionalTopLevel': optional_top_level,
+        'nestedRequired': nested_required,
+    }
+
+
+def _nkp_schema_validate_content(content: str, nkp_path: str | Path | None = None) -> dict:
+    nkp_path = nkp_path or (get_settings().get('nkpPath') or NKP_DEFAULT)
+    schema = _nkp_schema_from_examples(nkp_path)
+    try:
+        data = yaml.safe_load(content) or {}
+    except yaml.YAMLError as exc:
+        return {
+            'status': 'fail',
+            'schema': schema,
+            'missing': [],
+            'warnings': [],
+            'errors': [f'YAML parse error: {exc}'],
+        }
+    if not isinstance(data, dict):
+        return {
+            'status': 'fail',
+            'schema': schema,
+            'missing': [],
+            'warnings': [],
+            'errors': ['NKP YAML must be a mapping at the document root'],
+        }
+
+    missing = []
+    warnings = []
+    for key in schema.get('requiredTopLevel', []):
+        if key not in data:
+            missing.append(key)
+    for key, fields in (schema.get('nestedRequired') or {}).items():
+        if key not in data or not isinstance(data.get(key), dict):
+            continue
+        for field in fields:
+            value = data[key].get(field)
+            if value in (None, '', []):
+                missing.append(f'{key}.{field}')
+
+    known = set(schema.get('requiredTopLevel', [])) | set(schema.get('optionalTopLevel', []))
+    extras = sorted(str(key) for key in data.keys() if str(key) not in known)
+    if extras:
+        warnings.append(f'Extra top-level keys not observed in NKP examples: {", ".join(extras)}')
+
+    env_type = str(((data.get('environment') or {}) if isinstance(data.get('environment'), dict) else {}).get('type') or '').lower()
+    if env_type in {'air-gapped', 'airgapped'} and not isinstance(data.get('registry'), dict):
+        missing.append('registry')
+
+    status = 'fail' if missing else 'warn' if warnings else 'pass'
+    return {
+        'status': status,
+        'schema': schema,
+        'missing': missing,
+        'warnings': warnings,
+        'errors': [],
+    }
+
+
+def _nkp_profile_from_example(data: dict, source_name: str = '') -> dict:
+    environment = data.get('environment') if isinstance(data.get('environment'), dict) else {}
+    nkp = data.get('nkp') if isinstance(data.get('nkp'), dict) else {}
+    nutanix = data.get('nutanix') if isinstance(data.get('nutanix'), dict) else {}
+    cluster = data.get('cluster') if isinstance(data.get('cluster'), dict) else {}
+    registry = data.get('registry') if isinstance(data.get('registry'), dict) else {}
+    env_type = str(environment.get('type') or '').lower()
+    template_id = (
+        'airgapped-local-registry' if env_type in {'air-gapped', 'airgapped'}
+        else 'management-cluster'
+    )
+    template = _nkp_template_by_id(template_id)
+    profile = {
+        'name': str(cluster.get('name') or environment.get('name') or Path(source_name).stem or 'NKP Imported Profile'),
+        'description': f'Imported from NKP example {source_name}'.strip(),
+        'environment': str(environment.get('name') or env_type or 'lab'),
+        'template': _nkp_template_summary(template),
+        'nkp': {
+            'version': str(nkp.get('version') or ''),
+            'binaryPath': str(nkp.get('bundlePath') or nkp.get('cliPath') or ''),
+            'registry': str(registry.get('endpoint') or ''),
+            'sshKeyRef': 'admin_cred',
+        },
+        'prismCentral': {
+            'endpoint': str(nutanix.get('prismCentralEndpoint') or ''),
+            'credentialRef': 'pc_user',
+        },
+        'cluster': {
+            'name': str(cluster.get('name') or ''),
+            'type': 'management',
+            'kubernetesVersion': str(cluster.get('kubernetesVersion') or ''),
+            'vip': str(cluster.get('controlPlaneEndpointIp') or ''),
+        },
+        'network': {
+            'subnet': str(cluster.get('loadBalancerIpRange') or ''),
+            'gateway': '',
+            'dnsServers': [],
+            'ntpServers': cluster.get('ntpServers') if isinstance(cluster.get('ntpServers'), list) else [],
+            'domain': '',
+            'vlanId': '',
+        },
+        'nodes': [{'name': 'node-1', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''}],
+    }
+    return _normalize_nkp_profile(profile)
 
 
 def _valid_ip(value: str) -> bool:
@@ -633,9 +843,52 @@ def _nkp_profile_readiness(profile: dict, check_connectivity: bool = False) -> d
     else:
         add('nkp_binary_source', 'NKP binary/source path', 'warn', 'No NKP binary/source path supplied')
 
+    template = profile.get('template') or {}
+    template_id = str(template.get('id') or '').strip()
+    nodes = profile.get('nodes') if isinstance(profile.get('nodes'), list) else []
+    if template_id == 'management-cluster':
+        add(
+            'template_management_node_count',
+            'Management cluster node count',
+            'pass' if len(nodes) >= 3 else 'warn',
+            f'{len(nodes)} node(s) defined; three or more nodes are recommended for management clusters',
+        )
+    elif template_id == 'workload-cluster':
+        management_ref = str(template.get('managementClusterRef') or '').strip()
+        add(
+            'template_workload_management_ref',
+            'Management cluster reference',
+            'pass' if management_ref else 'fail',
+            f'Workload cluster targets management cluster {management_ref}' if management_ref else 'Workload cluster templates require a management cluster reference before execution',
+        )
+    elif template_id == 'airgapped-local-registry':
+        registry = str(nkp.get('registry') or '').strip()
+        add(
+            'template_airgap_registry',
+            'Air-gapped registry',
+            'pass' if registry else 'fail',
+            f'Private registry configured: {registry}' if registry else 'Air-gapped template requires a private/local registry endpoint',
+        )
+        add(
+            'template_airgap_local_binary',
+            'Air-gapped local NKP binary',
+            'pass' if binary_path else 'fail',
+            'NKP binary/source path is configured for local staging' if binary_path else 'Air-gapped template requires a staged NKP binary path',
+        )
+
     try:
-        yaml.safe_load(_nkp_profile_to_yaml(profile))
+        generated_content = _nkp_profile_to_yaml(profile)
+        yaml.safe_load(generated_content)
         add('generated_yaml', 'Generated YAML parse check', 'pass', 'Generated YAML is syntactically valid')
+        schema_result = _nkp_schema_validate_content(generated_content)
+        add(
+            'nkp_example_schema',
+            'NKP example schema alignment',
+            'pass' if schema_result['status'] == 'pass' else 'warn' if schema_result['status'] == 'warn' else 'fail',
+            'Generated YAML matches installed NKP example shape'
+            if schema_result['status'] == 'pass'
+            else '; '.join(schema_result.get('missing') or schema_result.get('warnings') or schema_result.get('errors') or ['Schema alignment needs review']),
+        )
     except yaml.YAMLError as exc:
         add('generated_yaml', 'Generated YAML parse check', 'fail', str(exc))
 
@@ -656,11 +909,21 @@ def _normalize_nkp_profile(data: dict, existing: dict | None = None) -> dict:
     now = _now_iso()
     existing = existing or {}
     profile_id = str(data.get('id') or existing.get('id') or uuid.uuid4())
+    data_template = data.get('template') if isinstance(data.get('template'), dict) else {}
+    existing_template = existing.get('template') if isinstance(existing.get('template'), dict) else {}
+    template_id = str(data_template.get('id') or existing_template.get('id') or '').strip()
+    known_template = _nkp_template_by_id(template_id)
     profile = {
         'id': profile_id,
         'name': str(data.get('name') or existing.get('name') or '').strip(),
         'description': str(data.get('description') or existing.get('description') or '').strip(),
         'environment': str(data.get('environment') or existing.get('environment') or 'lab').strip() or 'lab',
+        'template': {
+            'id': template_id,
+            'name': str(data_template.get('name') or existing_template.get('name') or (known_template or {}).get('name') or '').strip(),
+            'category': str(data_template.get('category') or existing_template.get('category') or (known_template or {}).get('category') or '').strip(),
+            'managementClusterRef': str(data_template.get('managementClusterRef') or existing_template.get('managementClusterRef') or '').strip(),
+        },
         'nkp': {
             'version': str(((data.get('nkp') or {}).get('version')) or ((existing.get('nkp') or {}).get('version')) or '').strip(),
             'binaryPath': str(((data.get('nkp') or {}).get('binaryPath')) or ((existing.get('nkp') or {}).get('binaryPath')) or '').strip(),
@@ -705,23 +968,75 @@ def _normalize_nkp_profile(data: dict, existing: dict | None = None) -> dict:
 
 
 def _nkp_profile_to_yaml(profile: dict) -> str:
+    template_summary = _nkp_template_summary(profile.get('template') or {})
+    template_id = template_summary.get('id')
+    cluster = profile.get('cluster') or {}
+    nkp = profile.get('nkp') or {}
+    network = profile.get('network') or {}
+    pc_endpoint = str((profile.get('prismCentral') or {}).get('endpoint') or '')
+    if pc_endpoint and '://' not in pc_endpoint:
+        pc_endpoint = f'https://{pc_endpoint}:9440'
+    elif pc_endpoint and ':' not in urllib.parse.urlparse(pc_endpoint).netloc:
+        parsed = urllib.parse.urlparse(pc_endpoint)
+        if parsed.hostname:
+            pc_endpoint = f'{parsed.scheme}://{parsed.hostname}:9440'
+    binary_path = str(nkp.get('binaryPath') or '')
+    env_type = 'air-gapped' if template_id == 'airgapped-local-registry' else 'connected'
+    provider = 'air-gapped-ahv' if template_id == 'airgapped-local-registry' else 'nutanix-ahv'
+    control_planes = 3 if template_id in {'management-cluster', 'airgapped-local-registry'} else 1
+    worker_replicas = max(len(profile.get('nodes') if isinstance(profile.get('nodes'), list) else []) - control_planes, 0)
     payload = {
-        'metadata': {
-            'name': profile['name'],
-            'description': profile.get('description', ''),
-            'environment': profile.get('environment', 'lab'),
-            'generated_by': 'ZTF-Orchestrator',
-            'generated_at': _now_iso(),
+        'environment': {
+            'name': profile.get('environment') or _slugify(profile.get('name', ''), 'nkp-environment'),
+            'type': env_type,
+            'provider': provider,
         },
-        'nkp': profile.get('nkp', {}),
-        'prism_central': {
-            'endpoint': profile.get('prismCentral', {}).get('endpoint', ''),
-            'credential_ref': profile.get('prismCentral', {}).get('credentialRef', ''),
+        'nkp': {
+            'version': nkp.get('version', ''),
+            'bundleType': 'air-gapped' if template_id == 'airgapped-local-registry' else 'standard',
+            'bundlePath': binary_path,
+            'cliPath': str(Path(binary_path) / 'cli' / 'nkp') if binary_path and not binary_path.endswith('nkp') else binary_path,
+            'kubectlPath': str(Path(binary_path) / 'kubectl') if binary_path and not binary_path.endswith('kubectl') else '',
         },
-        'cluster': profile.get('cluster', {}),
-        'network': profile.get('network', {}),
-        'nodes': profile.get('nodes', []),
+        'nutanix': {
+            'prismCentralEndpoint': pc_endpoint,
+            'clusterName': cluster.get('name', ''),
+            'subnetName': network.get('vlanId') or network.get('subnet') or '',
+            'imageName': 'nkp-node-image',
+            'storageContainer': 'default-container',
+            'project': 'default',
+            'credentialRef': (profile.get('prismCentral') or {}).get('credentialRef', ''),
+        },
+        'cluster': {
+            'name': cluster.get('name', ''),
+            'kubernetesVersion': cluster.get('kubernetesVersion', ''),
+            'controlPlaneEndpointIp': cluster.get('vip', ''),
+            'controlPlaneEndpointPort': 6443,
+            'controlPlaneReplicas': control_planes,
+            'workerReplicas': worker_replicas,
+            'podCidr': '192.168.0.0/16',
+            'serviceCidr': '10.96.0.0/12',
+            'loadBalancerIpRange': network.get('subnet', ''),
+            'ntpServers': network.get('ntpServers', []),
+            'sshPublicKeyFile': nkp.get('sshKeyRef', ''),
+            'sshUsername': 'nutanix',
+            'selfManaged': True,
+            'fips': False,
+        },
     }
+    if template_id == 'workload-cluster':
+        payload['managementCluster'] = {
+            'reference': template_summary.get('managementClusterRef', ''),
+        }
+    if template_id == 'airgapped-local-registry':
+        payload['registry'] = {
+            'endpoint': nkp.get('registry', ''),
+            'namespace': 'nkp',
+            'insecure': False,
+            'caCert': '',
+            'pushConcurrency': 2,
+            'onExistingTag': 'skip',
+        }
     return yaml.safe_dump(payload, sort_keys=False)
 
 
@@ -3238,10 +3553,106 @@ def apply_nkp_template(template_id):
     payload = request.json or {}
     overrides = payload.get('overrides') if isinstance(payload.get('overrides'), dict) else {}
     merged = _merge_profile_template(template.get('profileDefaults') or {}, overrides)
+    merged['template'] = _nkp_template_summary(template)
     profile = _normalize_nkp_profile(merged)
     return jsonify({
         'template': _public_nkp_template_pack(template),
         'profile': profile,
+        'readiness': _nkp_profile_readiness(profile),
+    })
+
+
+@app.route('/api/nkp/profiles/preview', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def preview_nkp_profile_config():
+    profile = _normalize_nkp_profile(request.json or {})
+    content = _nkp_profile_to_yaml(profile)
+    readiness = _nkp_profile_readiness(profile)
+    return jsonify({
+        'content': content,
+        'readiness': readiness,
+        'schemaValidation': _nkp_schema_validate_content(content),
+        'template': _nkp_template_summary(profile.get('template') or {}),
+    })
+
+
+@app.route('/api/nkp/schema')
+@require_role('admin', 'operator', 'viewer')
+def get_nkp_schema():
+    settings = get_settings()
+    nkp_path = settings.get('nkpPath') or NKP_DEFAULT
+    return jsonify(_nkp_schema_from_examples(nkp_path))
+
+
+@app.route('/api/nkp/schema/validate', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def validate_nkp_schema():
+    data = request.json or {}
+    if isinstance(data.get('profile'), dict):
+        content = _nkp_profile_to_yaml(_normalize_nkp_profile(data['profile']))
+    else:
+        content = str(data.get('content') or '')
+    if not content.strip():
+        return jsonify({'error': 'content or profile is required'}), 400
+    return jsonify(_nkp_schema_validate_content(content))
+
+
+@app.route('/api/nkp/examples')
+@require_role('admin', 'operator', 'viewer')
+def list_nkp_examples():
+    settings = get_settings()
+    nkp_path = settings.get('nkpPath') or NKP_DEFAULT
+    examples = []
+    for path in _nkp_example_files(nkp_path):
+        try:
+            data = yaml.safe_load(path.read_text(encoding='utf-8')) or {}
+        except (OSError, yaml.YAMLError):
+            data = {}
+        environment = data.get('environment') if isinstance(data, dict) and isinstance(data.get('environment'), dict) else {}
+        cluster = data.get('cluster') if isinstance(data, dict) and isinstance(data.get('cluster'), dict) else {}
+        examples.append({
+            'name': path.name,
+            'path': _nkp_example_relpath(path, nkp_path),
+            'environmentType': environment.get('type', ''),
+            'provider': environment.get('provider', ''),
+            'clusterName': cluster.get('name', ''),
+            'topLevelKeys': sorted(str(key) for key in data.keys()) if isinstance(data, dict) else [],
+        })
+    return jsonify({
+        'root': str(_nkp_examples_root(nkp_path)),
+        'examples': examples,
+        'schema': _nkp_schema_from_examples(nkp_path),
+    })
+
+
+@app.route('/api/nkp/examples/import', methods=['POST'])
+@require_role('admin', 'operator')
+def import_nkp_example():
+    settings = get_settings()
+    nkp_path = settings.get('nkpPath') or NKP_DEFAULT
+    relpath = str((request.json or {}).get('path') or '').strip()
+    path = _safe_nkp_example_path(nkp_path, relpath)
+    if path is None:
+        return jsonify({'error': 'NKP example was not found'}), 404
+    try:
+        content = path.read_text(encoding='utf-8')
+        data = yaml.safe_load(content) or {}
+    except (OSError, yaml.YAMLError) as exc:
+        return jsonify({'error': f'Could not read NKP example: {exc}'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'error': 'NKP example must contain a YAML mapping'}), 400
+    profile = _nkp_profile_from_example(data, path.name)
+    generated = _nkp_profile_to_yaml(profile)
+    return jsonify({
+        'example': {
+            'name': path.name,
+            'path': _nkp_example_relpath(path, nkp_path),
+            'content': content,
+        },
+        'profile': profile,
+        'generatedContent': generated,
+        'sourceSchemaValidation': _nkp_schema_validate_content(content, nkp_path),
+        'generatedSchemaValidation': _nkp_schema_validate_content(generated, nkp_path),
         'readiness': _nkp_profile_readiness(profile),
     })
 
@@ -3370,7 +3781,13 @@ def generate_nkp_profile_config(profile_id):
         'profileId': profile_id,
         'configFile': path.name,
     })
-    return jsonify({'success': True, 'filename': path.name, 'content': content, 'readiness': readiness})
+    return jsonify({
+        'success': True,
+        'filename': path.name,
+        'content': content,
+        'readiness': readiness,
+        'schemaValidation': _nkp_schema_validate_content(content),
+    })
 
 # ─── Config files ─────────────────────────────────────────────────────────────
 

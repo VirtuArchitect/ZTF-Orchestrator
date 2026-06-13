@@ -13,6 +13,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - NKP Deployment Template Packs for Management Cluster, Workload Cluster, and
   Air-Gapped / Local Registry profile starts, including required fields,
   optional fields, and operator preflight checklists.
+- Template-aware NKP YAML previews, persisted template metadata, and readiness
+  rules for management, workload, and air-gapped deployment packs.
+- NKP example discovery, schema inference from installed `configs/environments`
+  examples, schema validation for generated YAML, and example-to-profile import.
 
 ---
 
