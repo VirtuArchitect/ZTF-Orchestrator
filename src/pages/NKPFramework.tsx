@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle, Download, Loader, Play, RefreshCw, ShieldCheck, XCircle } from 'lucide-react'
+import { CheckCircle, Download, FilePlus, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
 import { apiFetch } from '../utils/api'
+import { useStore } from '../store'
 import clsx from 'clsx'
 
 interface LogLine { type: string; data: string; ts: number }
@@ -17,6 +18,47 @@ interface NkpStatus {
   configs: string[]
 }
 
+interface NkpNode {
+  name: string
+  serial: string
+  hostIp: string
+  cvmIp: string
+  ipmiIp: string
+  rack: string
+}
+
+interface NkpProfile {
+  id?: string
+  name: string
+  description: string
+  environment: string
+  nkp: {
+    version: string
+    binaryPath: string
+    registry: string
+    sshKeyRef: string
+  }
+  prismCentral: {
+    endpoint: string
+    credentialRef: string
+  }
+  cluster: {
+    name: string
+    type: string
+    kubernetesVersion: string
+    vip: string
+  }
+  network: {
+    subnet: string
+    gateway: string
+    dnsServers: string[]
+    ntpServers: string[]
+    domain: string
+    vlanId: string
+  }
+  nodes: NkpNode[]
+}
+
 const PHASES = [
   { id: 'validate', label: 'Validate', hint: 'Schema, bundle, endpoint, and tool checks' },
   { id: 'prepare', label: 'Prepare', hint: 'Stage NKP tools and workspace metadata' },
@@ -27,7 +69,23 @@ const PHASES = [
   { id: 'runs', label: 'Runs', hint: 'Summarise NKP ZeroTouch run artifacts' },
 ]
 
+const emptyProfile = (): NkpProfile => ({
+  name: '',
+  description: '',
+  environment: 'lab',
+  nkp: { version: '', binaryPath: '', registry: '', sshKeyRef: 'admin_cred' },
+  prismCentral: { endpoint: '', credentialRef: 'pc_user' },
+  cluster: { name: '', type: 'management', kubernetesVersion: '', vip: '' },
+  network: { subnet: '', gateway: '', dnsServers: [], ntpServers: [], domain: '', vlanId: '' },
+  nodes: [{ name: 'node-1', serial: '', hostIp: '', cvmIp: '', ipmiIp: '', rack: '' }],
+})
+
+const toCsv = (items: string[]) => (items || []).join(', ')
+const fromCsv = (value: string) => value.split(',').map(item => item.trim()).filter(Boolean)
+
 export default function NKPFramework() {
+  const user = useStore(s => s.user)
+  const canEdit = user?.role === 'admin' || user?.role === 'operator'
   const [status, setStatus] = useState<NkpStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [installing, setInstalling] = useState(false)
@@ -39,6 +97,12 @@ export default function NKPFramework() {
   const [strict, setStrict] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+  const [profiles, setProfiles] = useState<NkpProfile[]>([])
+  const [profile, setProfile] = useState<NkpProfile>(emptyProfile)
+  const [profileMessage, setProfileMessage] = useState('')
+  const [profileErrors, setProfileErrors] = useState<string[]>([])
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [generatedYaml, setGeneratedYaml] = useState('')
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
@@ -59,7 +123,18 @@ export default function NKPFramework() {
     }
   }
 
-  useEffect(() => { loadStatus() }, [])
+  const loadProfiles = async () => {
+    const resp = await apiFetch('/api/nkp/profiles')
+    if (!resp.ok) return
+    const data = await resp.json()
+    setProfiles(data)
+    if (!profile.id && data.length) setProfile(data[0])
+  }
+
+  useEffect(() => {
+    loadStatus()
+    loadProfiles()
+  }, [])
 
   const runInstall = async () => {
     setInstalling(true)
@@ -126,6 +201,84 @@ export default function NKPFramework() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const setProfileField = (path: string, value: string | string[]) => {
+    setProfile(prev => {
+      const next = structuredClone(prev) as NkpProfile
+      const parts = path.split('.')
+      let current: Record<string, unknown> = next as unknown as Record<string, unknown>
+      for (const part of parts.slice(0, -1)) {
+        current = current[part] as Record<string, unknown>
+      }
+      current[parts[parts.length - 1]] = value
+      return next
+    })
+  }
+
+  const updateNode = (index: number, key: keyof NkpNode, value: string) => {
+    setProfile(prev => ({
+      ...prev,
+      nodes: prev.nodes.map((node, idx) => idx === index ? { ...node, [key]: value } : node),
+    }))
+  }
+
+  const addNode = () => {
+    setProfile(prev => ({
+      ...prev,
+      nodes: [...prev.nodes, { name: `node-${prev.nodes.length + 1}`, serial: '', hostIp: '', cvmIp: '', ipmiIp: '', rack: '' }],
+    }))
+  }
+
+  const removeNode = (index: number) => {
+    setProfile(prev => ({
+      ...prev,
+      nodes: prev.nodes.filter((_, idx) => idx !== index),
+    }))
+  }
+
+  const saveProfile = async () => {
+    setSavingProfile(true)
+    setProfileErrors([])
+    setProfileMessage('')
+    try {
+      const resp = await apiFetch(profile.id ? `/api/nkp/profiles/${profile.id}` : '/api/nkp/profiles', {
+        method: profile.id ? 'PUT' : 'POST',
+        body: JSON.stringify(profile),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setProfileErrors(data.validation || [data.error || `Server returned ${resp.status}`])
+        return
+      }
+      setProfile(data)
+      setProfileMessage('Deployment profile saved.')
+      await loadProfiles()
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const generateProfileConfig = async () => {
+    if (!profile.id) {
+      setProfileErrors(['Save the deployment profile before generating YAML.'])
+      return
+    }
+    setProfileErrors([])
+    setProfileMessage('')
+    const resp = await apiFetch(`/api/nkp/profiles/${profile.id}/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ filename: `${profile.name || 'nkp-deployment'}.yaml` }),
+    })
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok) {
+      setProfileErrors(data.validation || [data.error || `Server returned ${resp.status}`])
+      return
+    }
+    setConfigFile(data.filename)
+    setGeneratedYaml(data.content || '')
+    setProfileMessage(`Generated ${data.filename} in Config Files.`)
+    await loadStatus()
   }
 
   return (
@@ -253,6 +406,112 @@ export default function NKPFramework() {
         {logs.length > 0 && (
           <Terminal logs={logs} status={installStatus} title="NKP Framework Installation Output" />
         )}
+
+        <div className="card">
+          <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
+            <div>
+              <h2 className="font-semibold text-gray-100">NKP Deployment Profile Builder</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Define the deployment target, network, binaries, credentials, and node inventory, then generate NKP YAML for safe-phase execution.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                className="input min-w-56"
+                value={profile.id || ''}
+                onChange={e => {
+                  const selected = profiles.find(item => item.id === e.target.value)
+                  setProfile(selected || emptyProfile())
+                  setGeneratedYaml('')
+                  setProfileErrors([])
+                  setProfileMessage('')
+                }}
+              >
+                <option value="">New deployment profile</option>
+                {profiles.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+              <button className="btn-secondary gap-1.5" onClick={() => setProfile(emptyProfile())}>
+                <Plus size={14} />
+                New
+              </button>
+              <button className="btn-primary gap-1.5" onClick={saveProfile} disabled={!canEdit || savingProfile}>
+                {savingProfile ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
+                Save Profile
+              </button>
+              <button className="btn-secondary gap-1.5" onClick={generateProfileConfig} disabled={!canEdit || !profile.id}>
+                <FilePlus size={14} />
+                Generate YAML
+              </button>
+            </div>
+          </div>
+
+          {profileErrors.length > 0 && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-950/20 px-4 py-3 text-sm text-red-200">
+              {profileErrors.map(error => <div key={error}>{error}</div>)}
+            </div>
+          )}
+          {profileMessage && (
+            <div className="mb-4 rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-4 py-3 text-sm text-nutanix-teal">
+              {profileMessage}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <ProfileField label="Profile Name" value={profile.name} onChange={value => setProfileField('name', value)} disabled={!canEdit} />
+            <ProfileField label="Environment" value={profile.environment} onChange={value => setProfileField('environment', value)} disabled={!canEdit} />
+            <ProfileField label="Description" value={profile.description} onChange={value => setProfileField('description', value)} disabled={!canEdit} />
+            <ProfileField label="NKP Version" value={profile.nkp.version} onChange={value => setProfileField('nkp.version', value)} disabled={!canEdit} />
+            <ProfileField label="NKP Binary Path" value={profile.nkp.binaryPath} onChange={value => setProfileField('nkp.binaryPath', value)} disabled={!canEdit} mono />
+            <ProfileField label="Registry" value={profile.nkp.registry} onChange={value => setProfileField('nkp.registry', value)} disabled={!canEdit} />
+            <ProfileField label="Prism Central Endpoint" value={profile.prismCentral.endpoint} onChange={value => setProfileField('prismCentral.endpoint', value)} disabled={!canEdit} />
+            <ProfileField label="PC Credential Ref" value={profile.prismCentral.credentialRef} onChange={value => setProfileField('prismCentral.credentialRef', value)} disabled={!canEdit} mono />
+            <ProfileField label="SSH Key Ref" value={profile.nkp.sshKeyRef} onChange={value => setProfileField('nkp.sshKeyRef', value)} disabled={!canEdit} mono />
+            <ProfileField label="Cluster Name" value={profile.cluster.name} onChange={value => setProfileField('cluster.name', value)} disabled={!canEdit} />
+            <ProfileField label="Cluster Type" value={profile.cluster.type} onChange={value => setProfileField('cluster.type', value)} disabled={!canEdit} />
+            <ProfileField label="Kubernetes Version" value={profile.cluster.kubernetesVersion} onChange={value => setProfileField('cluster.kubernetesVersion', value)} disabled={!canEdit} />
+            <ProfileField label="Cluster VIP" value={profile.cluster.vip} onChange={value => setProfileField('cluster.vip', value)} disabled={!canEdit} />
+            <ProfileField label="Subnet CIDR" value={profile.network.subnet} onChange={value => setProfileField('network.subnet', value)} disabled={!canEdit} />
+            <ProfileField label="Gateway" value={profile.network.gateway} onChange={value => setProfileField('network.gateway', value)} disabled={!canEdit} />
+            <ProfileField label="DNS Servers" value={toCsv(profile.network.dnsServers)} onChange={value => setProfileField('network.dnsServers', fromCsv(value))} disabled={!canEdit} />
+            <ProfileField label="NTP Servers" value={toCsv(profile.network.ntpServers)} onChange={value => setProfileField('network.ntpServers', fromCsv(value))} disabled={!canEdit} />
+            <ProfileField label="Domain" value={profile.network.domain} onChange={value => setProfileField('network.domain', value)} disabled={!canEdit} />
+            <ProfileField label="VLAN ID" value={profile.network.vlanId} onChange={value => setProfileField('network.vlanId', value)} disabled={!canEdit} />
+          </div>
+
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-100">Node Inventory</h3>
+              <button className="btn-secondary gap-1.5" onClick={addNode} disabled={!canEdit}>
+                <Plus size={14} />
+                Add Node
+              </button>
+            </div>
+            <div className="space-y-3">
+              {profile.nodes.map((node, index) => (
+                <div key={index} className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr_44px] gap-3 rounded-lg border border-border bg-gray-950/40 p-3">
+                  <ProfileField label="Name" value={node.name} onChange={value => updateNode(index, 'name', value)} disabled={!canEdit} />
+                  <ProfileField label="Host IP" value={node.hostIp} onChange={value => updateNode(index, 'hostIp', value)} disabled={!canEdit} />
+                  <ProfileField label="CVM IP" value={node.cvmIp} onChange={value => updateNode(index, 'cvmIp', value)} disabled={!canEdit} />
+                  <ProfileField label="IPMI IP" value={node.ipmiIp} onChange={value => updateNode(index, 'ipmiIp', value)} disabled={!canEdit} />
+                  <ProfileField label="Serial / Rack" value={node.serial || node.rack} onChange={value => updateNode(index, 'serial', value)} disabled={!canEdit} />
+                  <button className="btn-secondary self-end h-10 justify-center" onClick={() => removeNode(index)} disabled={!canEdit || profile.nodes.length === 1} title="Remove node">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {generatedYaml && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-100">Generated YAML Preview</h3>
+                <Link to="/configs" className="text-sm text-nutanix-cyan hover:text-nutanix-teal">Open Config Files</Link>
+              </div>
+              <pre className="rounded-lg border border-border bg-gray-950 p-4 text-xs text-gray-300 overflow-auto max-h-80">{generatedYaml}</pre>
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   )
@@ -266,5 +525,31 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
         {value || 'not configured'}
       </div>
     </div>
+  )
+}
+
+function ProfileField({
+  label,
+  value,
+  onChange,
+  disabled,
+  mono = false,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  disabled?: boolean
+  mono?: boolean
+}) {
+  return (
+    <label className="block">
+      <span className="label">{label}</span>
+      <input
+        className={clsx('input', mono && 'font-mono')}
+        value={value || ''}
+        disabled={disabled}
+        onChange={e => onChange(e.target.value)}
+      />
+    </label>
   )
 }

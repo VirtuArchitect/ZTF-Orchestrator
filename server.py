@@ -61,6 +61,7 @@ SCHEDULES_FILE = CONFIG_DIR / 'schedules.json'
 PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
 JOBS_FILE      = CONFIG_DIR / 'jobs.json'
+NKP_PROFILES_FILE = CONFIG_DIR / 'nkp_profiles.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 
@@ -156,6 +157,169 @@ def _nkp_command(nkp_path: str | Path, phase: str, config_path: str, strict: boo
     if strict:
         cmd.append('--strict')
     return cmd
+
+
+def _list_nkp_profiles() -> list[dict]:
+    profiles = read_json(NKP_PROFILES_FILE, [])
+    return profiles if isinstance(profiles, list) else []
+
+
+def _save_nkp_profiles(profiles: list[dict]) -> None:
+    write_json(NKP_PROFILES_FILE, profiles)
+
+
+def _slugify(value: str, fallback: str = 'nkp-profile') -> str:
+    slug = re.sub(r'[^a-z0-9-]+', '-', (value or '').strip().lower()).strip('-')
+    return slug or fallback
+
+
+def _split_csv(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return [item.strip() for item in str(value or '').split(',') if item.strip()]
+
+
+def _valid_ip(value: str) -> bool:
+    try:
+        ipaddress.ip_address(str(value).strip())
+        return True
+    except ValueError:
+        return False
+
+
+def _validate_nkp_profile(profile: dict) -> list[str]:
+    errors: list[str] = []
+
+    def require(path: str, label: str) -> str:
+        current = profile
+        for part in path.split('.'):
+            if not isinstance(current, dict):
+                current = {}
+                break
+            current = current.get(part)
+        value = str(current or '').strip()
+        if not value:
+            errors.append(f'{label} is required')
+        return value
+
+    name = require('name', 'Profile name')
+    require('cluster.name', 'Cluster name')
+    require('prismCentral.endpoint', 'Prism Central endpoint')
+    gateway = require('network.gateway', 'Network gateway')
+    subnet = require('network.subnet', 'Network subnet')
+
+    if gateway and not _valid_ip(gateway):
+        errors.append('Network gateway must be a valid IP address')
+    if subnet:
+        try:
+            ipaddress.ip_network(subnet, strict=False)
+        except ValueError:
+            errors.append('Network subnet must be a valid CIDR, for example 10.42.10.0/24')
+
+    dns = _split_csv((profile.get('network') or {}).get('dnsServers'))
+    ntp = _split_csv((profile.get('network') or {}).get('ntpServers'))
+    if not dns:
+        errors.append('At least one DNS server is required')
+    if not ntp:
+        errors.append('At least one NTP server is required')
+    for item in dns:
+        if not _valid_ip(item):
+            errors.append(f'DNS server {item} must be a valid IP address')
+
+    nodes = profile.get('nodes') if isinstance(profile.get('nodes'), list) else []
+    if not nodes:
+        errors.append('At least one node is required')
+    for index, node in enumerate(nodes, start=1):
+        if not isinstance(node, dict):
+            errors.append(f'Node {index} must be an object')
+            continue
+        node_label = node.get('name') or f'Node {index}'
+        for key, label in [('hostIp', 'host IP'), ('cvmIp', 'CVM IP')]:
+            value = str(node.get(key) or '').strip()
+            if not value:
+                errors.append(f'{node_label} {label} is required')
+            elif not _valid_ip(value):
+                errors.append(f'{node_label} {label} must be a valid IP address')
+        ipmi_ip = str(node.get('ipmiIp') or '').strip()
+        if ipmi_ip and not _valid_ip(ipmi_ip):
+            errors.append(f'{node_label} IPMI IP must be a valid IP address')
+
+    if not name:
+        errors.append('A profile cannot be saved without a name')
+    return errors
+
+
+def _normalize_nkp_profile(data: dict, existing: dict | None = None) -> dict:
+    now = _now_iso()
+    existing = existing or {}
+    profile_id = str(data.get('id') or existing.get('id') or uuid.uuid4())
+    profile = {
+        'id': profile_id,
+        'name': str(data.get('name') or existing.get('name') or '').strip(),
+        'description': str(data.get('description') or existing.get('description') or '').strip(),
+        'environment': str(data.get('environment') or existing.get('environment') or 'lab').strip() or 'lab',
+        'nkp': {
+            'version': str(((data.get('nkp') or {}).get('version')) or ((existing.get('nkp') or {}).get('version')) or '').strip(),
+            'binaryPath': str(((data.get('nkp') or {}).get('binaryPath')) or ((existing.get('nkp') or {}).get('binaryPath')) or '').strip(),
+            'registry': str(((data.get('nkp') or {}).get('registry')) or ((existing.get('nkp') or {}).get('registry')) or '').strip(),
+            'sshKeyRef': str(((data.get('nkp') or {}).get('sshKeyRef')) or ((existing.get('nkp') or {}).get('sshKeyRef')) or '').strip(),
+        },
+        'prismCentral': {
+            'endpoint': str(((data.get('prismCentral') or {}).get('endpoint')) or ((existing.get('prismCentral') or {}).get('endpoint')) or '').strip(),
+            'credentialRef': str(((data.get('prismCentral') or {}).get('credentialRef')) or ((existing.get('prismCentral') or {}).get('credentialRef')) or 'pc_user').strip(),
+        },
+        'cluster': {
+            'name': str(((data.get('cluster') or {}).get('name')) or ((existing.get('cluster') or {}).get('name')) or '').strip(),
+            'type': str(((data.get('cluster') or {}).get('type')) or ((existing.get('cluster') or {}).get('type')) or 'management').strip(),
+            'kubernetesVersion': str(((data.get('cluster') or {}).get('kubernetesVersion')) or ((existing.get('cluster') or {}).get('kubernetesVersion')) or '').strip(),
+            'vip': str(((data.get('cluster') or {}).get('vip')) or ((existing.get('cluster') or {}).get('vip')) or '').strip(),
+        },
+        'network': {
+            'subnet': str(((data.get('network') or {}).get('subnet')) or ((existing.get('network') or {}).get('subnet')) or '').strip(),
+            'gateway': str(((data.get('network') or {}).get('gateway')) or ((existing.get('network') or {}).get('gateway')) or '').strip(),
+            'dnsServers': _split_csv(((data.get('network') or {}).get('dnsServers')) or ((existing.get('network') or {}).get('dnsServers'))),
+            'ntpServers': _split_csv(((data.get('network') or {}).get('ntpServers')) or ((existing.get('network') or {}).get('ntpServers'))),
+            'domain': str(((data.get('network') or {}).get('domain')) or ((existing.get('network') or {}).get('domain')) or '').strip(),
+            'vlanId': str(((data.get('network') or {}).get('vlanId')) or ((existing.get('network') or {}).get('vlanId')) or '').strip(),
+        },
+        'nodes': [],
+        'createdAt': existing.get('createdAt') or now,
+        'updatedAt': now,
+    }
+
+    for node in data.get('nodes') if isinstance(data.get('nodes'), list) else existing.get('nodes', []):
+        if not isinstance(node, dict):
+            continue
+        profile['nodes'].append({
+            'name': str(node.get('name') or '').strip(),
+            'serial': str(node.get('serial') or '').strip(),
+            'hostIp': str(node.get('hostIp') or '').strip(),
+            'cvmIp': str(node.get('cvmIp') or '').strip(),
+            'ipmiIp': str(node.get('ipmiIp') or '').strip(),
+            'rack': str(node.get('rack') or '').strip(),
+        })
+    return profile
+
+
+def _nkp_profile_to_yaml(profile: dict) -> str:
+    payload = {
+        'metadata': {
+            'name': profile['name'],
+            'description': profile.get('description', ''),
+            'environment': profile.get('environment', 'lab'),
+            'generated_by': 'ZTF-Orchestrator',
+            'generated_at': _now_iso(),
+        },
+        'nkp': profile.get('nkp', {}),
+        'prism_central': {
+            'endpoint': profile.get('prismCentral', {}).get('endpoint', ''),
+            'credential_ref': profile.get('prismCentral', {}).get('credentialRef', ''),
+        },
+        'cluster': profile.get('cluster', {}),
+        'network': profile.get('network', {}),
+        'nodes': profile.get('nodes', []),
+    }
+    return yaml.safe_dump(payload, sort_keys=False)
 
 
 def _postgres_backup_metadata(path: Path) -> dict:
@@ -2295,6 +2459,114 @@ def submit_nkp_job():
         'strict': bool(data.get('strict', False)),
     }, current_user)
     return jsonify(job), 202
+
+
+@app.route('/api/nkp/profiles')
+@require_role('admin', 'operator', 'viewer')
+def list_nkp_profiles():
+    return jsonify(_list_nkp_profiles())
+
+
+@app.route('/api/nkp/profiles', methods=['POST'])
+@require_role('admin', 'operator')
+def create_nkp_profile():
+    profile = _normalize_nkp_profile(request.json or {})
+    errors = _validate_nkp_profile(profile)
+    if errors:
+        return jsonify({'error': 'NKP deployment profile is incomplete', 'validation': errors}), 400
+    profiles = _list_nkp_profiles()
+    if any(item.get('name', '').lower() == profile['name'].lower() for item in profiles):
+        return jsonify({'error': 'An NKP deployment profile with this name already exists'}), 400
+    profiles.insert(0, profile)
+    _save_nkp_profiles(profiles)
+    log.info('nkp_profile_created', extra={
+        'event': 'nkp_profile_created',
+        'action': 'create_nkp_profile',
+        'user': (request.current_user or {}).get('username'),
+        'profileId': profile['id'],
+    })
+    return jsonify(profile), 201
+
+
+@app.route('/api/nkp/profiles/<profile_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_nkp_profile(profile_id):
+    profile = next((item for item in _list_nkp_profiles() if item.get('id') == profile_id), None)
+    if not profile:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(profile)
+
+
+@app.route('/api/nkp/profiles/<profile_id>', methods=['PUT'])
+@require_role('admin', 'operator')
+def update_nkp_profile(profile_id):
+    profiles = _list_nkp_profiles()
+    idx = next((i for i, item in enumerate(profiles) if item.get('id') == profile_id), None)
+    if idx is None:
+        return jsonify({'error': 'Not found'}), 404
+    profile = _normalize_nkp_profile({**(request.json or {}), 'id': profile_id}, profiles[idx])
+    errors = _validate_nkp_profile(profile)
+    if errors:
+        return jsonify({'error': 'NKP deployment profile is incomplete', 'validation': errors}), 400
+    if any(item.get('id') != profile_id and item.get('name', '').lower() == profile['name'].lower() for item in profiles):
+        return jsonify({'error': 'An NKP deployment profile with this name already exists'}), 400
+    profiles[idx] = profile
+    _save_nkp_profiles(profiles)
+    log.info('nkp_profile_updated', extra={
+        'event': 'nkp_profile_updated',
+        'action': 'update_nkp_profile',
+        'user': (request.current_user or {}).get('username'),
+        'profileId': profile_id,
+    })
+    return jsonify(profile)
+
+
+@app.route('/api/nkp/profiles/<profile_id>', methods=['DELETE'])
+@require_role('admin', 'operator')
+def delete_nkp_profile(profile_id):
+    profiles = _list_nkp_profiles()
+    updated = [item for item in profiles if item.get('id') != profile_id]
+    if len(updated) == len(profiles):
+        return jsonify({'error': 'Not found'}), 404
+    _save_nkp_profiles(updated)
+    log.info('nkp_profile_deleted', extra={
+        'event': 'nkp_profile_deleted',
+        'action': 'delete_nkp_profile',
+        'user': (request.current_user or {}).get('username'),
+        'profileId': profile_id,
+    })
+    return jsonify({'success': True})
+
+
+@app.route('/api/nkp/profiles/<profile_id>/generate', methods=['POST'])
+@require_role('admin', 'operator')
+def generate_nkp_profile_config(profile_id):
+    profile = next((item for item in _list_nkp_profiles() if item.get('id') == profile_id), None)
+    if not profile:
+        return jsonify({'error': 'Not found'}), 404
+    errors = _validate_nkp_profile(profile)
+    if errors:
+        return jsonify({'error': 'NKP deployment profile is incomplete', 'validation': errors}), 400
+
+    filename = str((request.json or {}).get('filename') or f"{_slugify(profile['name'], 'nkp-deployment')}.yaml").strip()
+    if Path(filename).name != filename:
+        return jsonify({'error': 'Invalid config filename'}), 400
+    if not filename.lower().endswith(('.yaml', '.yml')):
+        filename = f'{filename}.yaml'
+    path = safe_config_path(filename, get_configs_dir())
+    if path is None:
+        return jsonify({'error': 'Invalid config filename'}), 400
+
+    content = _nkp_profile_to_yaml(profile)
+    _secure_write(path, content)
+    log.info('nkp_profile_config_generated', extra={
+        'event': 'nkp_profile_config_generated',
+        'action': 'generate_nkp_profile_config',
+        'user': (request.current_user or {}).get('username'),
+        'profileId': profile_id,
+        'configFile': path.name,
+    })
+    return jsonify({'success': True, 'filename': path.name, 'content': content})
 
 # ─── Config files ─────────────────────────────────────────────────────────────
 

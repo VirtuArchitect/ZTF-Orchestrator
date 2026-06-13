@@ -13,6 +13,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Initial safe-phase NKP Framework integration for
   `VirtuArchitect/nkp-zerotouch-framework`, including settings, status,
   install/update, and Jobs / Queue submission for non-apply phases.
+- NKP Deployment Profile Builder with Prism Central, NKP binary, cluster,
+  network, DNS/NTP, credential reference, and node inventory fields.
+- NKP profile validation and YAML generation into the existing Config Files
+  workflow for safe-phase execution.
 - Appliance distribution kit for Linux VM/AHV deployments, including an
   appliance Compose file, first-boot scripts, systemd units, cloud-init
   examples, and a reference Packer QCOW2 template.

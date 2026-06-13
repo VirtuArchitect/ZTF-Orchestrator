@@ -351,6 +351,14 @@ blocked server-side until approval-gated live execution is explicitly added.
 NKP phase output is submitted through Jobs / Queue so logs, progress, history,
 and cancellation follow the same operational model as ZTF jobs.
 
+The NKP page also includes a Deployment Profile Builder. Operators can define
+the NKP binary/source details, Prism Central endpoint, credential references,
+cluster type/version/VIP, DNS/NTP/gateway/subnet information, VLAN/domain
+settings, and node inventory with host/CVM/IPMI addresses. Saved profiles can be
+validated and rendered into YAML in the existing Config Files area, then used by
+the safe-phase launcher. The generated YAML is intentionally transparent and
+editable so teams can align it with the exact NKP ZeroTouch schema they adopt.
+
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from
 `ztf-orchestrator.log` — timestamp, level badge, message, user, IP, and status.

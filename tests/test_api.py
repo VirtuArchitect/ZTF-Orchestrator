@@ -898,6 +898,86 @@ def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypa
     assert 'validate' in calls[0]['args']
 
 
+def _valid_nkp_profile():
+    return {
+        'name': 'Lab NKP Management',
+        'description': 'Lab management cluster profile',
+        'environment': 'lab',
+        'nkp': {
+            'version': '2.15',
+            'binaryPath': '/opt/nkp',
+            'registry': 'registry.lab.local',
+            'sshKeyRef': 'admin_cred',
+        },
+        'prismCentral': {
+            'endpoint': '10.42.1.10',
+            'credentialRef': 'pc_user',
+        },
+        'cluster': {
+            'name': 'nkp-mgmt-lab',
+            'type': 'management',
+            'kubernetesVersion': '1.30',
+            'vip': '10.42.10.50',
+        },
+        'network': {
+            'subnet': '10.42.10.0/24',
+            'gateway': '10.42.10.1',
+            'dnsServers': ['10.42.1.20', '10.42.1.21'],
+            'ntpServers': ['10.42.1.30'],
+            'domain': 'lab.local',
+            'vlanId': '120',
+        },
+        'nodes': [
+            {
+                'name': 'node-1',
+                'serial': 'ABC123',
+                'hostIp': '10.42.10.11',
+                'cvmIp': '10.42.10.21',
+                'ipmiIp': '10.42.10.31',
+                'rack': 'rack-a',
+            },
+        ],
+    }
+
+
+def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, isolated_data_dir):
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    assert create.status_code == 201
+    profile = create.get_json()
+    assert profile['name'] == 'Lab NKP Management'
+
+    listing = client.get('/api/nkp/profiles', headers=auth_headers)
+    assert listing.status_code == 200
+    assert listing.get_json()[0]['id'] == profile['id']
+
+    generated = client.post(f"/api/nkp/profiles/{profile['id']}/generate",
+                            json={'filename': 'nkp-lab-management.yaml'},
+                            headers=auth_headers)
+    assert generated.status_code == 200
+    payload = generated.get_json()
+    assert payload['filename'] == 'nkp-lab-management.yaml'
+    assert 'prism_central:' in payload['content']
+    assert 'nkp-mgmt-lab' in payload['content']
+    assert (isolated_data_dir / 'configs' / 'nkp-lab-management.yaml').exists()
+
+
+def test_nkp_profile_rejects_missing_required_fields(client, auth_headers):
+    resp = client.post('/api/nkp/profiles', json={'name': 'Incomplete'}, headers=auth_headers)
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert data['validation']
+    assert any('Cluster name' in item for item in data['validation'])
+
+
+def test_nkp_profile_generate_rejects_path_traversal(client, auth_headers):
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    profile = create.get_json()
+    resp = client.post(f"/api/nkp/profiles/{profile['id']}/generate",
+                       json={'filename': '../evil.yaml'},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+
+
 def test_audit_log_returns_list(client, auth_headers):
     """Audit log endpoint returns a list (may be empty if log file absent)."""
     resp = client.get('/api/audit-log', headers=auth_headers)
