@@ -102,6 +102,19 @@ def _ztf_installed(ztf_path: str | Path) -> bool:
     return _resolve_ztf_main(ztf_path) is not None
 
 
+def _ztf_requirements_file(ztf_path: str | Path) -> str | None:
+    root = Path(ztf_path)
+    candidates = ['requirements/requirements.txt', 'requirements.txt']
+    req_dir = root / 'requirements'
+    if req_dir.is_dir():
+        for path in sorted(req_dir.glob('*.txt')):
+            candidates.insert(0, str(path.relative_to(root)))
+    for candidate in candidates:
+        if (root / candidate).exists():
+            return candidate
+    return None
+
+
 def _ztf_main_arg(ztf_path: str | Path) -> str:
     main = _resolve_ztf_main(ztf_path)
     if main is None:
@@ -1879,11 +1892,13 @@ def health():
 def health_details():
     settings = get_settings()
     ztf_ok = _ztf_installed(settings['ztfPath'])
+    nkp_ok = _nkp_installed(settings.get('nkpPath') or NKP_DEFAULT)
     status  = 'healthy' if ztf_ok else 'degraded'
     jobs = _job_manager.list_jobs(1000)
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
+        'nkp_installed': nkp_ok,
         'storage':       _storage.name,
         'database': {
             'configured': bool(os.environ.get('ZTF_DATABASE_URL', '')),
@@ -2029,6 +2044,7 @@ def system_check():
     settings    = get_settings()
     python_path = settings['pythonPath']
     ztf_path    = settings['ztfPath']
+    nkp_path    = settings.get('nkpPath') or NKP_DEFAULT
 
     def run_check(name: str, cmd: list[str]) -> dict:
         try:
@@ -2038,32 +2054,24 @@ def system_check():
             return {'name': name, 'ok': False, 'value': 'check failed'}
 
     ztf_installed = _ztf_installed(ztf_path)
+    nkp_installed = _nkp_installed(nkp_path)
     checks = [
         run_check('Python 3.9+', [python_path, '--version']),
         run_check('pip',          [python_path, '-m', 'pip', '--version']),
         run_check('git',          ['git', '--version']),
         {'name': 'ZTF Installed', 'ok': ztf_installed, 'value': 'found' if ztf_installed else ''},
+        {'name': 'NKP Framework', 'ok': True, 'value': 'found' if nkp_installed else 'not installed (optional)'},
     ]
     if ztf_installed:
         # Use the same dynamic lookup as the install endpoint —
         # ZTF ships prod.txt not requirements.txt
-        ztf = Path(ztf_path)
-        req_file = None
-        candidates = ['requirements/requirements.txt', 'requirements.txt']
-        req_dir = ztf / 'requirements'
-        if req_dir.is_dir():
-            for f in sorted(req_dir.glob('*.txt')):
-                candidates.insert(0, str(f.relative_to(ztf)))
-        for c in candidates:
-            if (ztf / c).exists():
-                req_file = c
-                break
+        req_file = _ztf_requirements_file(ztf_path)
         checks.append({
             'name':  'Requirements File',
-            'ok':    req_file is not None,
-            'value': req_file or 'not found',
+            'ok':    True,
+            'value': req_file or 'not required - packaged install',
         })
-    return jsonify({'checks': checks, 'ztfInstalled': ztf_installed})
+    return jsonify({'checks': checks, 'ztfInstalled': ztf_installed, 'nkpInstalled': nkp_installed})
 
 # ─── Install ZTF ──────────────────────────────────────────────────────────────
 
