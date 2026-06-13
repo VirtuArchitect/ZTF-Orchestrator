@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle, Download, FilePlus, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Trash2, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Download, FilePlus, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
@@ -59,6 +59,24 @@ interface NkpProfile {
   nodes: NkpNode[]
 }
 
+interface ReadinessCheck {
+  id: string
+  label: string
+  status: 'pass' | 'warn' | 'fail'
+  detail: string
+}
+
+interface ReadinessResult {
+  status: 'ready' | 'needs_attention' | 'blocked'
+  score: number
+  summary: {
+    passed: number
+    warnings: number
+    failed: number
+  }
+  checks: ReadinessCheck[]
+}
+
 const PHASES = [
   { id: 'validate', label: 'Validate', hint: 'Schema, bundle, endpoint, and tool checks' },
   { id: 'prepare', label: 'Prepare', hint: 'Stage NKP tools and workspace metadata' },
@@ -102,6 +120,8 @@ export default function NKPFramework() {
   const [profileMessage, setProfileMessage] = useState('')
   const [profileErrors, setProfileErrors] = useState<string[]>([])
   const [savingProfile, setSavingProfile] = useState(false)
+  const [checkingReadiness, setCheckingReadiness] = useState(false)
+  const [readiness, setReadiness] = useState<ReadinessResult | null>(null)
   const [generatedYaml, setGeneratedYaml] = useState('')
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
@@ -254,8 +274,32 @@ export default function NKPFramework() {
       setProfile(data)
       setProfileMessage('Deployment profile saved.')
       await loadProfiles()
+      await checkReadiness(data)
     } finally {
       setSavingProfile(false)
+    }
+  }
+
+  const checkReadiness = async (profileOverride?: NkpProfile) => {
+    setCheckingReadiness(true)
+    setProfileErrors([])
+    setProfileMessage('')
+    try {
+      const target = profileOverride || profile
+      const resp = target.id
+        ? await apiFetch(`/api/nkp/profiles/${target.id}/readiness`)
+        : await apiFetch('/api/nkp/profiles/readiness', {
+            method: 'POST',
+            body: JSON.stringify(target),
+          })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setProfileErrors([data.error || `Server returned ${resp.status}`])
+        return
+      }
+      setReadiness(data)
+    } finally {
+      setCheckingReadiness(false)
     }
   }
 
@@ -277,6 +321,7 @@ export default function NKPFramework() {
     }
     setConfigFile(data.filename)
     setGeneratedYaml(data.content || '')
+    if (data.readiness) setReadiness(data.readiness)
     setProfileMessage(`Generated ${data.filename} in Config Files.`)
     await loadStatus()
   }
@@ -425,12 +470,13 @@ export default function NKPFramework() {
                   setGeneratedYaml('')
                   setProfileErrors([])
                   setProfileMessage('')
+                  setReadiness(null)
                 }}
               >
                 <option value="">New deployment profile</option>
                 {profiles.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
-              <button className="btn-secondary gap-1.5" onClick={() => setProfile(emptyProfile())}>
+              <button className="btn-secondary gap-1.5" onClick={() => { setProfile(emptyProfile()); setReadiness(null); setGeneratedYaml('') }}>
                 <Plus size={14} />
                 New
               </button>
@@ -441,6 +487,10 @@ export default function NKPFramework() {
               <button className="btn-secondary gap-1.5" onClick={generateProfileConfig} disabled={!canEdit || !profile.id}>
                 <FilePlus size={14} />
                 Generate YAML
+              </button>
+              <button className="btn-secondary gap-1.5" onClick={() => checkReadiness()} disabled={checkingReadiness}>
+                {checkingReadiness ? <Loader size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                Check Readiness
               </button>
             </div>
           </div>
@@ -453,6 +503,62 @@ export default function NKPFramework() {
           {profileMessage && (
             <div className="mb-4 rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-4 py-3 text-sm text-nutanix-teal">
               {profileMessage}
+            </div>
+          )}
+
+          {readiness && (
+            <div className={clsx(
+              'mb-5 rounded-lg border p-4',
+              readiness.status === 'ready'
+                ? 'border-nutanix-teal/30 bg-nutanix-teal/10'
+                : readiness.status === 'blocked'
+                  ? 'border-red-500/30 bg-red-950/20'
+                  : 'border-yellow-500/30 bg-yellow-950/20'
+            )}>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className={clsx(
+                    'mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border',
+                    readiness.status === 'ready'
+                      ? 'border-nutanix-teal/30 text-nutanix-teal'
+                      : readiness.status === 'blocked'
+                        ? 'border-red-500/30 text-red-300'
+                        : 'border-yellow-500/30 text-yellow-300'
+                  )}>
+                    {readiness.status === 'ready'
+                      ? <CheckCircle size={18} />
+                      : readiness.status === 'blocked'
+                        ? <XCircle size={18} />
+                        : <AlertTriangle size={18} />}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-100">
+                      Readiness {readiness.status === 'ready' ? 'ready' : readiness.status === 'blocked' ? 'blocked' : 'needs attention'}
+                    </h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {readiness.summary.passed} passed, {readiness.summary.warnings} warnings, {readiness.summary.failed} failed.
+                    </p>
+                  </div>
+                </div>
+                <div className="text-3xl font-bold text-gray-100">{readiness.score}%</div>
+              </div>
+              <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-2">
+                {readiness.checks.map(check => (
+                  <div key={check.id} className="rounded-md border border-border bg-gray-950/50 px-3 py-2">
+                    <div className="flex items-start gap-2">
+                      {check.status === 'pass'
+                        ? <CheckCircle size={14} className="text-nutanix-teal mt-0.5 flex-shrink-0" />
+                        : check.status === 'fail'
+                          ? <XCircle size={14} className="text-red-300 mt-0.5 flex-shrink-0" />
+                          : <AlertTriangle size={14} className="text-yellow-300 mt-0.5 flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-200">{check.label}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{check.detail}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

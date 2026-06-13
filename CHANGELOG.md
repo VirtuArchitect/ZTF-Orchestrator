@@ -20,6 +20,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Operational visibility summary API and Dashboard deployment-readiness panel
   covering ZTF/NKP readiness, NKP profiles, generated configs, queue pressure,
   governance attention, schedules, storage backend, and backup posture.
+- NKP deployment readiness validation with profile scoring, pass/warning/fail
+  checks, subnet and duplicate-IP validation, VLAN range checks, generated YAML
+  parsing, and pre-queue YAML validation for NKP safe-phase jobs.
 - Appliance distribution kit for Linux VM/AHV deployments, including an
   appliance Compose file, first-boot scripts, systemd units, cloud-init
   examples, and a reference Packer QCOW2 template.

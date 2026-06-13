@@ -958,6 +958,7 @@ def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, i
     assert payload['filename'] == 'nkp-lab-management.yaml'
     assert 'prism_central:' in payload['content']
     assert 'nkp-mgmt-lab' in payload['content']
+    assert payload['readiness']['score'] >= 80
     assert (isolated_data_dir / 'configs' / 'nkp-lab-management.yaml').exists()
 
 
@@ -976,6 +977,42 @@ def test_nkp_profile_generate_rejects_path_traversal(client, auth_headers):
                        json={'filename': '../evil.yaml'},
                        headers=auth_headers)
     assert resp.status_code == 400
+
+
+def test_nkp_profile_readiness_reports_ready_with_warnings(client, auth_headers):
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    profile = create.get_json()
+    resp = client.get(f"/api/nkp/profiles/{profile['id']}/readiness", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['status'] in ('ready', 'needs_attention')
+    assert data['score'] >= 80
+    check_ids = {item['id'] for item in data['checks']}
+    assert 'unique_ips' in check_ids
+    assert 'generated_yaml' in check_ids
+
+
+def test_nkp_profile_readiness_blocks_duplicate_and_outside_ips(client, auth_headers):
+    profile = _valid_nkp_profile()
+    profile['network']['subnet'] = '10.42.10.0/24'
+    profile['cluster']['vip'] = '10.99.10.50'
+    profile['nodes'][0]['hostIp'] = '10.42.10.21'
+    profile['nodes'][0]['cvmIp'] = '10.42.10.21'
+    resp = client.post('/api/nkp/profiles/readiness', json=profile, headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['status'] == 'blocked'
+    failed = {item['id'] for item in data['checks'] if item['status'] == 'fail'}
+    assert 'subnet_membership' in failed
+    assert 'unique_ips' in failed
+
+
+def test_nkp_job_rejects_invalid_yaml_before_queue(client, auth_headers):
+    resp = client.post('/api/nkp/jobs',
+                       json={'phase': 'validate', 'configFile': 'bad.yaml', 'configContent': 'not: [valid'},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'Invalid NKP YAML' in resp.get_json()['error']
 
 
 def test_audit_log_returns_list(client, auth_headers):

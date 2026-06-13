@@ -187,6 +187,14 @@ def _valid_ip(value: str) -> bool:
         return False
 
 
+def _endpoint_host(value: str) -> str:
+    text = str(value or '').strip()
+    if not text:
+        return ''
+    parsed = urllib.parse.urlparse(text if '://' in text else f'https://{text}')
+    return parsed.hostname or ''
+
+
 def _validate_nkp_profile(profile: dict) -> list[str]:
     errors: list[str] = []
 
@@ -247,6 +255,134 @@ def _validate_nkp_profile(profile: dict) -> list[str]:
     if not name:
         errors.append('A profile cannot be saved without a name')
     return errors
+
+
+def _nkp_profile_readiness(profile: dict, check_connectivity: bool = False) -> dict:
+    checks: list[dict] = []
+
+    def add(check_id: str, label: str, status: str, detail: str) -> None:
+        checks.append({'id': check_id, 'label': label, 'status': status, 'detail': detail})
+
+    required_errors = _validate_nkp_profile(profile)
+    add(
+        'required_fields',
+        'Required deployment fields',
+        'fail' if required_errors else 'pass',
+        '; '.join(required_errors) if required_errors else 'All required profile fields are populated',
+    )
+
+    pc_endpoint = (profile.get('prismCentral') or {}).get('endpoint', '')
+    pc_host = _endpoint_host(pc_endpoint)
+    if not pc_host:
+        add('prism_central_endpoint', 'Prism Central endpoint format', 'fail', 'Prism Central endpoint must include a host')
+    else:
+        add('prism_central_endpoint', 'Prism Central endpoint format', 'pass', f'Host resolved from profile: {pc_host}')
+        if check_connectivity:
+            reachable, latency = _tcp_check(pc_host, 9440, timeout=3.0)
+            add(
+                'prism_central_connectivity',
+                'Prism Central API reachability',
+                'pass' if reachable else 'warn',
+                f'Reachable on TCP/9440 in {latency:.0f} ms' if reachable else 'TCP/9440 was not reachable from the Orchestrator host',
+            )
+    if not check_connectivity:
+        add(
+            'prism_central_connectivity',
+            'Prism Central API reachability',
+            'warn',
+            'Connectivity check not run; use it only from a network that can reach the deployment target',
+        )
+
+    network = profile.get('network') or {}
+    subnet_text = str(network.get('subnet') or '').strip()
+    subnet = None
+    try:
+        subnet = ipaddress.ip_network(subnet_text, strict=False)
+    except ValueError:
+        pass
+
+    ip_values: list[tuple[str, str]] = []
+    cluster_vip = str((profile.get('cluster') or {}).get('vip') or '').strip()
+    if cluster_vip:
+        ip_values.append(('Cluster VIP', cluster_vip))
+    gateway = str(network.get('gateway') or '').strip()
+    if gateway:
+        ip_values.append(('Gateway', gateway))
+    for index, node in enumerate(profile.get('nodes') if isinstance(profile.get('nodes'), list) else [], start=1):
+        label = node.get('name') or f'Node {index}'
+        for key, name in (('hostIp', 'host'), ('cvmIp', 'CVM'), ('ipmiIp', 'IPMI')):
+            value = str(node.get(key) or '').strip()
+            if value:
+                ip_values.append((f'{label} {name}', value))
+
+    if subnet:
+        outside = []
+        for label, value in ip_values:
+            try:
+                if ipaddress.ip_address(value) not in subnet:
+                    outside.append(f'{label} {value}')
+            except ValueError:
+                outside.append(f'{label} {value}')
+        add(
+            'subnet_membership',
+            'IP addresses within subnet',
+            'fail' if outside else 'pass',
+            '; '.join(outside) if outside else f'All profile IPs are inside {subnet}',
+        )
+
+    seen: dict[str, list[str]] = {}
+    for label, value in ip_values:
+        if _valid_ip(value):
+            seen.setdefault(value, []).append(label)
+    duplicates = [f"{ip} ({', '.join(labels)})" for ip, labels in seen.items() if len(labels) > 1]
+    add(
+        'unique_ips',
+        'Unique node and service IPs',
+        'fail' if duplicates else 'pass',
+        '; '.join(duplicates) if duplicates else 'No duplicate IP addresses found',
+    )
+
+    vlan = str(network.get('vlanId') or '').strip()
+    if vlan:
+        try:
+            vlan_id = int(vlan)
+            vlan_ok = 1 <= vlan_id <= 4094
+        except ValueError:
+            vlan_ok = False
+        add('vlan_id', 'VLAN ID range', 'pass' if vlan_ok else 'fail', 'Valid VLAN ID' if vlan_ok else 'VLAN ID must be between 1 and 4094')
+    else:
+        add('vlan_id', 'VLAN ID range', 'warn', 'No VLAN ID supplied; confirm this is intentional')
+
+    nkp = profile.get('nkp') or {}
+    binary_path = str(nkp.get('binaryPath') or '').strip()
+    if binary_path:
+        exists = Path(binary_path).exists()
+        add(
+            'nkp_binary_source',
+            'NKP binary/source path',
+            'pass' if exists else 'warn',
+            'Path exists on the Orchestrator host' if exists else 'Path was supplied but does not exist on the Orchestrator host',
+        )
+    else:
+        add('nkp_binary_source', 'NKP binary/source path', 'warn', 'No NKP binary/source path supplied')
+
+    try:
+        yaml.safe_load(_nkp_profile_to_yaml(profile))
+        add('generated_yaml', 'Generated YAML parse check', 'pass', 'Generated YAML is syntactically valid')
+    except yaml.YAMLError as exc:
+        add('generated_yaml', 'Generated YAML parse check', 'fail', str(exc))
+
+    weights = {'pass': 1.0, 'warn': 0.5, 'fail': 0.0}
+    score = round((sum(weights.get(item['status'], 0.0) for item in checks) / max(len(checks), 1)) * 100)
+    failed = sum(1 for item in checks if item['status'] == 'fail')
+    warnings = sum(1 for item in checks if item['status'] == 'warn')
+    status = 'blocked' if failed else 'ready' if warnings == 0 else 'needs_attention'
+    return {
+        'status': status,
+        'score': score,
+        'summary': {'passed': sum(1 for item in checks if item['status'] == 'pass'), 'warnings': warnings, 'failed': failed},
+        'checks': checks,
+    }
 
 
 def _normalize_nkp_profile(data: dict, existing: dict | None = None) -> dict:
@@ -2546,6 +2682,17 @@ def submit_nkp_job():
     config_content = data.get('configContent') or ''
     if not config_file and not config_content:
         return jsonify({'error': 'configFile or configContent is required'}), 400
+    if config_content:
+        ok, err = validate_yaml(config_content)
+        if not ok:
+            return jsonify({'error': f'Invalid NKP YAML: {err}'}), 400
+    elif config_file:
+        path = safe_config_path(config_file, get_configs_dir())
+        if path is None or not path.exists():
+            return jsonify({'error': 'NKP config file was not found'}), 400
+        ok, err = validate_yaml(path.read_text(encoding='utf-8'))
+        if not ok:
+            return jsonify({'error': f'Invalid NKP YAML: {err}'}), 400
 
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     job = _job_manager.submit({
@@ -2586,6 +2733,14 @@ def create_nkp_profile():
     return jsonify(profile), 201
 
 
+@app.route('/api/nkp/profiles/readiness', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def check_nkp_profile_readiness_draft():
+    profile = _normalize_nkp_profile(request.json or {})
+    check_connectivity = str(request.args.get('connectivity', '')).lower() in {'1', 'true', 'yes'}
+    return jsonify(_nkp_profile_readiness(profile, check_connectivity=check_connectivity))
+
+
 @app.route('/api/nkp/profiles/<profile_id>')
 @require_role('admin', 'operator', 'viewer')
 def get_nkp_profile(profile_id):
@@ -2593,6 +2748,16 @@ def get_nkp_profile(profile_id):
     if not profile:
         return jsonify({'error': 'Not found'}), 404
     return jsonify(profile)
+
+
+@app.route('/api/nkp/profiles/<profile_id>/readiness')
+@require_role('admin', 'operator', 'viewer')
+def check_nkp_profile_readiness(profile_id):
+    profile = next((item for item in _list_nkp_profiles() if item.get('id') == profile_id), None)
+    if not profile:
+        return jsonify({'error': 'Not found'}), 404
+    check_connectivity = str(request.args.get('connectivity', '')).lower() in {'1', 'true', 'yes'}
+    return jsonify(_nkp_profile_readiness(profile, check_connectivity=check_connectivity))
 
 
 @app.route('/api/nkp/profiles/<profile_id>', methods=['PUT'])
@@ -2657,6 +2822,7 @@ def generate_nkp_profile_config(profile_id):
 
     content = _nkp_profile_to_yaml(profile)
     _secure_write(path, content)
+    readiness = _nkp_profile_readiness(profile)
     log.info('nkp_profile_config_generated', extra={
         'event': 'nkp_profile_config_generated',
         'action': 'generate_nkp_profile_config',
@@ -2664,7 +2830,7 @@ def generate_nkp_profile_config(profile_id):
         'profileId': profile_id,
         'configFile': path.name,
     })
-    return jsonify({'success': True, 'filename': path.name, 'content': content})
+    return jsonify({'success': True, 'filename': path.name, 'content': content, 'readiness': readiness})
 
 # ─── Config files ─────────────────────────────────────────────────────────────
 

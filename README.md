@@ -365,6 +365,13 @@ validated and rendered into YAML in the existing Config Files area, then used by
 the safe-phase launcher. The generated YAML is intentionally transparent and
 editable so teams can align it with the exact NKP ZeroTouch schema they adopt.
 
+Deployment readiness validation scores each NKP profile before execution. The
+readiness check verifies required fields, Prism Central endpoint format,
+optional API reachability, subnet membership, duplicate IPs, VLAN range, NKP
+binary/source path hints, and generated YAML syntax. Profiles are marked
+**ready**, **needs attention**, or **blocked** with pass/warning/fail details.
+Pasted NKP YAML is parsed before a safe-phase job is queued.
+
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from
 `ztf-orchestrator.log` — timestamp, level badge, message, user, IP, and status.
