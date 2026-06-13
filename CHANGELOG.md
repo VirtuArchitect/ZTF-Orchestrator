@@ -28,6 +28,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   self-approval prevention.
 - Nutanix task UUID extraction from observable ZTF/NKP output, surfaced in Jobs
   / Queue job details when the underlying framework prints task IDs.
+- NKP Binary Manager for registering staged NKP binary paths, uploading smaller
+  binary bundles, tracking version/source/checksum/default status, and applying
+  managed binary paths to deployment profiles.
 - Appliance distribution kit for Linux VM/AHV deployments, including an
   appliance Compose file, first-boot scripts, systemd units, cloud-init
   examples, and a reference Packer QCOW2 template.

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle, Download, FilePlus, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Trash2, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Download, FilePlus, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
-import { apiFetch } from '../utils/api'
+import { apiFetch, authHeaders } from '../utils/api'
 import { useStore } from '../store'
 import clsx from 'clsx'
 
@@ -77,6 +77,20 @@ interface ReadinessResult {
   checks: ReadinessCheck[]
 }
 
+interface NkpBinary {
+  id: string
+  name: string
+  version: string
+  path: string
+  source: 'registered' | 'uploaded' | string
+  checksum?: string
+  size?: number | null
+  default?: boolean
+  exists?: boolean
+  status?: 'available' | 'missing' | string
+  createdAt?: string
+}
+
 const PHASES = [
   { id: 'validate', label: 'Validate', hint: 'Schema, bundle, endpoint, and tool checks' },
   { id: 'prepare', label: 'Prepare', hint: 'Stage NKP tools and workspace metadata' },
@@ -127,6 +141,12 @@ export default function NKPFramework() {
   const [checkingReadiness, setCheckingReadiness] = useState(false)
   const [readiness, setReadiness] = useState<ReadinessResult | null>(null)
   const [generatedYaml, setGeneratedYaml] = useState('')
+  const [binaries, setBinaries] = useState<NkpBinary[]>([])
+  const [binaryMessage, setBinaryMessage] = useState('')
+  const [binaryError, setBinaryError] = useState('')
+  const [binarySaving, setBinarySaving] = useState(false)
+  const [binaryUploadFile, setBinaryUploadFile] = useState<File | null>(null)
+  const [binaryForm, setBinaryForm] = useState({ name: '', version: '', path: '' })
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
@@ -155,9 +175,16 @@ export default function NKPFramework() {
     if (!profile.id && data.length) setProfile(data[0])
   }
 
+  const loadBinaries = async () => {
+    const resp = await apiFetch('/api/nkp/binaries')
+    if (!resp.ok) return
+    setBinaries(await resp.json())
+  }
+
   useEffect(() => {
     loadStatus()
     loadProfiles()
+    loadBinaries()
   }, [])
 
   const runInstall = async () => {
@@ -361,6 +388,97 @@ export default function NKPFramework() {
     await loadStatus()
   }
 
+  const registerBinary = async () => {
+    setBinarySaving(true)
+    setBinaryError('')
+    setBinaryMessage('')
+    try {
+      const resp = await apiFetch('/api/nkp/binaries', {
+        method: 'POST',
+        body: JSON.stringify(binaryForm),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setBinaryError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setBinaryForm({ name: '', version: '', path: '' })
+      setBinaryMessage(`Registered ${data.name}.`)
+      await loadBinaries()
+    } finally {
+      setBinarySaving(false)
+    }
+  }
+
+  const uploadBinary = async () => {
+    if (!binaryUploadFile) {
+      setBinaryError('Choose a binary or bundle file to upload.')
+      return
+    }
+    setBinarySaving(true)
+    setBinaryError('')
+    setBinaryMessage('')
+    try {
+      const body = new FormData()
+      body.append('file', binaryUploadFile)
+      body.append('name', binaryForm.name || binaryUploadFile.name)
+      body.append('version', binaryForm.version)
+      const resp = await fetch('/api/nkp/binaries/upload', {
+        method: 'POST',
+        headers: authHeaders(),
+        body,
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setBinaryError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setBinaryUploadFile(null)
+      setBinaryForm({ name: '', version: '', path: '' })
+      setBinaryMessage(`Uploaded ${data.name}.`)
+      await loadBinaries()
+    } finally {
+      setBinarySaving(false)
+    }
+  }
+
+  const setDefaultBinary = async (binary: NkpBinary) => {
+    setBinaryError('')
+    const resp = await apiFetch(`/api/nkp/binaries/${binary.id}/default`, { method: 'POST' })
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}))
+      setBinaryError(data.error || `Server returned ${resp.status}`)
+      return
+    }
+    setBinaryMessage(`${binary.name} is now the default NKP binary.`)
+    await loadBinaries()
+  }
+
+  const deleteBinary = async (binary: NkpBinary) => {
+    if (!confirm(`Delete NKP binary reference ${binary.name}?`)) return
+    setBinaryError('')
+    const resp = await apiFetch(`/api/nkp/binaries/${binary.id}`, { method: 'DELETE' })
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}))
+      setBinaryError(data.error || `Server returned ${resp.status}`)
+      return
+    }
+    setBinaryMessage(`${binary.name} removed.`)
+    await loadBinaries()
+  }
+
+  const applyBinaryToProfile = (binary: NkpBinary) => {
+    setProfile(prev => ({
+      ...prev,
+      nkp: {
+        ...prev.nkp,
+        version: binary.version || prev.nkp.version,
+        binaryPath: binary.path,
+      },
+    }))
+    setBinaryMessage(`${binary.name} applied to the deployment profile.`)
+  }
+
   return (
     <Layout
       title="NKP Framework"
@@ -512,6 +630,113 @@ export default function NKPFramework() {
         {logs.length > 0 && (
           <Terminal logs={logs} status={installStatus} title="NKP Framework Installation Output" />
         )}
+
+        <div className="card">
+          <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
+            <div>
+              <h2 className="font-semibold text-gray-100">NKP Binary Manager</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Register staged NKP tooling or upload smaller bundles, then apply a managed path to deployment profiles.
+              </p>
+            </div>
+            <button onClick={loadBinaries} className="btn-secondary gap-1.5">
+              <RefreshCw size={14} />
+              Refresh
+            </button>
+          </div>
+
+          {binaryError && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-950/20 px-4 py-3 text-sm text-red-200">{binaryError}</div>
+          )}
+          {binaryMessage && (
+            <div className="mb-4 rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-4 py-3 text-sm text-nutanix-teal">{binaryMessage}</div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
+            <div className="rounded-lg border border-border bg-gray-950/30 p-4">
+              <h3 className="font-semibold text-gray-100">Register Existing Path</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Use this when NKP binaries are already staged on the Orchestrator VM or appliance.
+              </p>
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <ProfileField label="Name" value={binaryForm.name} onChange={value => setBinaryForm(prev => ({ ...prev, name: value }))} disabled={!canEdit} />
+                <ProfileField label="Version" value={binaryForm.version} onChange={value => setBinaryForm(prev => ({ ...prev, version: value }))} disabled={!canEdit} />
+                <ProfileField label="Server Path" value={binaryForm.path} onChange={value => setBinaryForm(prev => ({ ...prev, path: value }))} disabled={!canEdit} mono />
+              </div>
+              <button onClick={registerBinary} disabled={!canEdit || binarySaving || !binaryForm.path} className="btn-primary mt-4 gap-1.5">
+                {binarySaving ? <Loader size={14} className="animate-spin" /> : <Plus size={14} />}
+                Register Path
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-border bg-gray-950/30 p-4">
+              <h3 className="font-semibold text-gray-100">Upload Bundle</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Uploads are stored under the Orchestrator data directory with a SHA-256 checksum.
+              </p>
+              <div className="mt-4 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-3">
+                <input
+                  type="file"
+                  className="input"
+                  disabled={!canEdit}
+                  onChange={event => setBinaryUploadFile(event.target.files?.[0] || null)}
+                />
+                <button onClick={uploadBinary} disabled={!canEdit || binarySaving || !binaryUploadFile} className="btn-primary gap-1.5">
+                  {binarySaving ? <Loader size={14} className="animate-spin" /> : <Upload size={14} />}
+                  Upload
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                For very large production payloads, stage the file on the VM and register its path.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {binaries.length === 0 ? (
+              <div className="rounded-lg border border-border bg-gray-950/40 px-4 py-6 text-center text-sm text-gray-500">
+                No NKP binaries registered yet.
+              </div>
+            ) : (
+              binaries.map(binary => (
+                <div key={binary.id} className="rounded-lg border border-border bg-gray-950/40 p-4">
+                  <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-gray-100">{binary.name}</h3>
+                        {binary.version && <span className="badge badge-blue text-xs">{binary.version}</span>}
+                        {binary.default && <span className="badge badge-green text-xs">default</span>}
+                        <span className={clsx('badge text-xs', binary.exists ? 'badge-green' : 'badge-red')}>
+                          {binary.status || (binary.exists ? 'available' : 'missing')}
+                        </span>
+                        <span className="badge badge-gray text-xs">{binary.source}</span>
+                      </div>
+                      <p className="font-mono text-xs text-gray-500 mt-2 break-all">{binary.path}</p>
+                      <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-600">
+                        {binary.size !== undefined && binary.size !== null && <span>{formatBytes(binary.size)}</span>}
+                        {binary.checksum && <span className="font-mono">sha256 {binary.checksum.slice(0, 16)}...</span>}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => applyBinaryToProfile(binary)} disabled={!canEdit || !binary.exists} className="btn-secondary gap-1.5">
+                        <Download size={14} />
+                        Use in Profile
+                      </button>
+                      <button onClick={() => setDefaultBinary(binary)} disabled={!canEdit || binary.default} className="btn-secondary gap-1.5">
+                        <Star size={14} />
+                        Default
+                      </button>
+                      <button onClick={() => deleteBinary(binary)} disabled={!canEdit} className="btn-danger gap-1.5">
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
@@ -693,6 +918,18 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
       </div>
     </div>
   )
+}
+
+function formatBytes(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  let size = value
+  let unit = 0
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024
+    unit += 1
+  }
+  return `${size.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`
 }
 
 function ProfileField({

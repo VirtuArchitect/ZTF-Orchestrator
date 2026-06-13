@@ -367,6 +367,13 @@ validated and rendered into YAML in the existing Config Files area, then used by
 the safe-phase launcher. The generated YAML is intentionally transparent and
 editable so teams can align it with the exact NKP ZeroTouch schema they adopt.
 
+The NKP Binary Manager lets operators register NKP binaries or bundles already
+staged on the Orchestrator host, upload smaller bundles into the Orchestrator
+data directory, record version/source/checksum/default metadata, and apply a
+managed binary path directly to a deployment profile. Large production bundles
+are best staged on the VM/appliance and registered by path rather than uploaded
+through the browser.
+
 Deployment readiness validation scores each NKP profile before execution. The
 readiness check verifies required fields, Prism Central endpoint format,
 optional API reachability, subnet membership, duplicate IPs, VLAN range, NKP
@@ -473,6 +480,7 @@ other settings via environment variables or a `.env` file (see `.env.example`).
 | `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
 | `ZTF_EXEC_WORKERS` | `1` | Background execution worker count |
 | `ZTF_BACKUP_TIMEOUT` | `300` | Max PostgreSQL backup runtime (seconds) |
+| `ZTF_NKP_BINARY_MAX_UPLOAD` | `536870912` | Max NKP binary upload size in bytes |
 | `ZTF_TOKEN_TTL` | `28800` | Session token lifetime (seconds, default 8 h) |
 | `ZTF_LOG_LEVEL` | `INFO` | Log level: DEBUG, INFO, WARNING, ERROR |
 | `ZTF_CONFIG_BACKUPS` | `5` | Config file backup versions to retain |

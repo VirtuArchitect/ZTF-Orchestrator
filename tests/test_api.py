@@ -1,5 +1,6 @@
 """Tests for API endpoint availability, RBAC, and config CRUD."""
 
+import io
 import json
 import socket
 from pathlib import Path
@@ -1019,6 +1020,73 @@ def test_nkp_controlled_phase_accepts_approved_gate(client, auth_headers, tmp_pa
     job = _wait_for_job(client, auth_headers, job_id, {'success'})
     assert job['status'] == 'success'
     assert job['taskIds'] == ['123e4567-e89b-12d3-a456-426614174000']
+
+
+def test_nkp_binary_register_list_default_and_delete(client, auth_headers, tmp_path):
+    staged = tmp_path / 'nkp'
+    staged.write_text('binary placeholder')
+
+    create = client.post('/api/nkp/binaries',
+                         json={'name': 'NKP CLI', 'version': '2.15', 'path': str(staged)},
+                         headers=auth_headers)
+    assert create.status_code == 201
+    binary = create.get_json()
+    assert binary['exists'] is True
+    assert binary['default'] is True
+
+    second = tmp_path / 'nkp-new'
+    second.write_text('new binary placeholder')
+    create2 = client.post('/api/nkp/binaries',
+                          json={'name': 'NKP CLI New', 'version': '2.16', 'path': str(second)},
+                          headers=auth_headers)
+    assert create2.status_code == 201
+    second_id = create2.get_json()['id']
+
+    set_default = client.post(f'/api/nkp/binaries/{second_id}/default', headers=auth_headers)
+    assert set_default.status_code == 200
+    assert set_default.get_json()['default'] is True
+
+    listing = client.get('/api/nkp/binaries', headers=auth_headers)
+    assert listing.status_code == 200
+    binaries = listing.get_json()
+    assert len(binaries) == 2
+    assert sum(1 for item in binaries if item['default']) == 1
+
+    delete = client.delete(f"/api/nkp/binaries/{binary['id']}", headers=auth_headers)
+    assert delete.status_code == 200
+    remaining = client.get('/api/nkp/binaries', headers=auth_headers).get_json()
+    assert len(remaining) == 1
+
+
+def test_nkp_binary_upload_stores_checksum_and_file(client, auth_headers, isolated_data_dir):
+    resp = client.post('/api/nkp/binaries/upload',
+                       data={
+                           'name': 'NKP Bundle',
+                           'version': '2.15',
+                           'file': (io.BytesIO(b'nkp-binary-content'), 'nkp.tar.gz'),
+                       },
+                       content_type='multipart/form-data',
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    binary = resp.get_json()
+    assert binary['source'] == 'uploaded'
+    assert binary['checksum']
+    assert binary['exists'] is True
+    assert Path(binary['path']).exists()
+    assert isolated_data_dir in Path(binary['path']).parents
+
+
+def test_nkp_binary_viewer_can_list_but_not_write(client, auth_headers):
+    _create_user(client, auth_headers, 'nkp-viewer', 'viewer')
+    viewer_headers = _login(client, 'nkp-viewer')
+
+    listing = client.get('/api/nkp/binaries', headers=viewer_headers)
+    assert listing.status_code == 200
+
+    create = client.post('/api/nkp/binaries',
+                         json={'name': 'Denied', 'path': '/tmp/nkp'},
+                         headers=viewer_headers)
+    assert create.status_code == 403
 
 
 def _valid_nkp_profile():

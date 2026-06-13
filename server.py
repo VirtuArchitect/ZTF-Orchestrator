@@ -2,6 +2,7 @@
 """ZeroTouch Enterprise Orchestrator — Flask Backend (production-hardened)"""
 
 import datetime
+import hashlib
 import ipaddress
 import json
 import logging
@@ -51,6 +52,7 @@ CONFIG_BACKUPS= int(os.environ.get('ZTF_CONFIG_BACKUPS',5))
 STORAGE_BACKEND = os.environ.get('ZTF_STORAGE_BACKEND', 'file').strip().lower() or 'file'
 AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
+NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
@@ -62,8 +64,10 @@ PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
 JOBS_FILE      = CONFIG_DIR / 'jobs.json'
 NKP_PROFILES_FILE = CONFIG_DIR / 'nkp_profiles.json'
+NKP_BINARIES_FILE = CONFIG_DIR / 'nkp_binaries.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
+NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
 
 ALLOWED_ORIGINS = [
     f'http://localhost:{PORT}',    f'http://127.0.0.1:{PORT}',
@@ -166,6 +170,58 @@ def _list_nkp_profiles() -> list[dict]:
 
 def _save_nkp_profiles(profiles: list[dict]) -> None:
     write_json(NKP_PROFILES_FILE, profiles)
+
+
+def _list_nkp_binaries() -> list[dict]:
+    binaries = read_json(NKP_BINARIES_FILE, [])
+    if not isinstance(binaries, list):
+        return []
+    return [_with_nkp_binary_status(item) for item in binaries if isinstance(item, dict)]
+
+
+def _save_nkp_binaries(binaries: list[dict]) -> None:
+    write_json(NKP_BINARIES_FILE, binaries)
+
+
+def _safe_nkp_binary_filename(name: str) -> str:
+    filename = Path(name or '').name
+    filename = re.sub(r'[^A-Za-z0-9._-]+', '-', filename).strip('.-')
+    if not filename:
+        filename = f'nkp-binary-{uuid.uuid4().hex[:8]}'
+    return filename[:180]
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open('rb') as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _with_nkp_binary_status(binary: dict) -> dict:
+    item = dict(binary)
+    path = Path(str(item.get('path') or ''))
+    exists = path.exists()
+    item['exists'] = exists
+    item['status'] = 'available' if exists else 'missing'
+    if exists:
+        try:
+            item['size'] = path.stat().st_size if path.is_file() else None
+        except OSError:
+            item['size'] = item.get('size')
+    return item
+
+
+def _set_default_nkp_binary(binaries: list[dict], binary_id: str) -> bool:
+    found = False
+    for item in binaries:
+        is_target = item.get('id') == binary_id
+        item['default'] = is_target
+        if is_target:
+            item['updatedAt'] = _now_iso()
+            found = True
+    return found
 
 
 def _slugify(value: str, fallback: str = 'nkp-profile') -> str:
@@ -1134,7 +1190,8 @@ def require_role(*roles):
 
 @app.before_request
 def check_body_size():
-    if request.content_length and request.content_length > MAX_BODY:
+    max_body = NKP_BINARY_MAX_UPLOAD if request.path == '/api/nkp/binaries/upload' else MAX_BODY
+    if request.content_length and request.content_length > max_body:
         return jsonify({'error': 'Request body too large'}), 413
 
 @app.before_request
@@ -2798,6 +2855,136 @@ def submit_nkp_job():
         _require_engines()
         _approval_manager.link_job(approval_id, job['id'])
     return jsonify(job), 202
+
+
+@app.route('/api/nkp/binaries')
+@require_role('admin', 'operator', 'viewer')
+def list_nkp_binaries():
+    return jsonify(_list_nkp_binaries())
+
+
+@app.route('/api/nkp/binaries', methods=['POST'])
+@require_role('admin', 'operator')
+def register_nkp_binary():
+    data = request.json or {}
+    path_text = str(data.get('path') or '').strip()
+    if not path_text:
+        return jsonify({'error': 'Binary path is required'}), 400
+    name = str(data.get('name') or Path(path_text).name or 'NKP binary').strip()
+    now = _now_iso()
+    binaries = read_json(NKP_BINARIES_FILE, [])
+    if not isinstance(binaries, list):
+        binaries = []
+    binary = {
+        'id': str(uuid.uuid4()),
+        'name': name,
+        'version': str(data.get('version') or '').strip(),
+        'path': path_text,
+        'source': 'registered',
+        'checksum': str(data.get('checksum') or '').strip(),
+        'size': None,
+        'default': bool(data.get('default')) or not binaries,
+        'createdAt': now,
+        'updatedAt': now,
+        'createdBy': getattr(request, 'current_user', {}).get('username', 'unknown'),
+    }
+    if binary['default']:
+        for item in binaries:
+            item['default'] = False
+    binaries.insert(0, binary)
+    _save_nkp_binaries(binaries)
+    log.info('nkp_binary_registered', extra={
+        'event': 'nkp_binary_registered',
+        'action': 'register_nkp_binary',
+        'user': (request.current_user or {}).get('username'),
+        'binaryId': binary['id'],
+    })
+    return jsonify(_with_nkp_binary_status(binary)), 201
+
+
+@app.route('/api/nkp/binaries/upload', methods=['POST'])
+@require_role('admin', 'operator')
+def upload_nkp_binary():
+    uploaded = request.files.get('file')
+    if not uploaded or not uploaded.filename:
+        return jsonify({'error': 'Binary file is required'}), 400
+    filename = _safe_nkp_binary_filename(uploaded.filename)
+    _secure_mkdir(NKP_BINARIES_DIR)
+    target = NKP_BINARIES_DIR / f'{uuid.uuid4().hex[:8]}-{filename}'
+    uploaded.save(target)
+    try:
+        os.chmod(target, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError:
+        pass
+    now = _now_iso()
+    binaries = read_json(NKP_BINARIES_FILE, [])
+    if not isinstance(binaries, list):
+        binaries = []
+    binary = {
+        'id': str(uuid.uuid4()),
+        'name': str(request.form.get('name') or Path(filename).stem or filename).strip(),
+        'version': str(request.form.get('version') or '').strip(),
+        'path': str(target),
+        'source': 'uploaded',
+        'checksum': _sha256_file(target),
+        'size': target.stat().st_size,
+        'default': str(request.form.get('default') or '').lower() in {'1', 'true', 'yes'} or not binaries,
+        'createdAt': now,
+        'updatedAt': now,
+        'createdBy': getattr(request, 'current_user', {}).get('username', 'unknown'),
+    }
+    if binary['default']:
+        for item in binaries:
+            item['default'] = False
+    binaries.insert(0, binary)
+    _save_nkp_binaries(binaries)
+    log.info('nkp_binary_uploaded', extra={
+        'event': 'nkp_binary_uploaded',
+        'action': 'upload_nkp_binary',
+        'user': (request.current_user or {}).get('username'),
+        'binaryId': binary['id'],
+    })
+    return jsonify(_with_nkp_binary_status(binary)), 201
+
+
+@app.route('/api/nkp/binaries/<binary_id>/default', methods=['POST'])
+@require_role('admin', 'operator')
+def default_nkp_binary(binary_id):
+    binaries = read_json(NKP_BINARIES_FILE, [])
+    if not isinstance(binaries, list) or not _set_default_nkp_binary(binaries, binary_id):
+        return jsonify({'error': 'Not found'}), 404
+    _save_nkp_binaries(binaries)
+    return jsonify(next(_with_nkp_binary_status(item) for item in binaries if item.get('id') == binary_id))
+
+
+@app.route('/api/nkp/binaries/<binary_id>', methods=['DELETE'])
+@require_role('admin', 'operator')
+def delete_nkp_binary(binary_id):
+    binaries = read_json(NKP_BINARIES_FILE, [])
+    if not isinstance(binaries, list):
+        return jsonify({'error': 'Not found'}), 404
+    target = next((item for item in binaries if item.get('id') == binary_id), None)
+    if not target:
+        return jsonify({'error': 'Not found'}), 404
+    updated = [item for item in binaries if item.get('id') != binary_id]
+    if target.get('default') and updated:
+        updated[0]['default'] = True
+        updated[0]['updatedAt'] = _now_iso()
+    _save_nkp_binaries(updated)
+    if target.get('source') == 'uploaded':
+        try:
+            path = Path(str(target.get('path') or ''))
+            if path.exists() and path.resolve().is_relative_to(NKP_BINARIES_DIR.resolve()):
+                path.unlink()
+        except OSError:
+            pass
+    log.info('nkp_binary_deleted', extra={
+        'event': 'nkp_binary_deleted',
+        'action': 'delete_nkp_binary',
+        'user': (request.current_user or {}).get('username'),
+        'binaryId': binary_id,
+    })
+    return jsonify({'success': True})
 
 
 @app.route('/api/nkp/profiles')
