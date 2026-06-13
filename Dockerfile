@@ -10,6 +10,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV ZTF_DATA_DIR=/var/lib/ztf-orchestrator
 ENV ZTF_PATH=/opt/zerotouch-framework
+ENV ZTF_NKP_PATH=/var/lib/ztf-orchestrator/nkp-zerotouch-framework
 ENV ZTF_PORT=5001
 
 # ============================================================================

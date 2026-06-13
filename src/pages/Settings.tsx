@@ -113,6 +113,8 @@ function normalizeSettings(settings: AppSettings): AppSettings {
     : profiles[0].id
   return {
     ...settings,
+    nkpPath: settings.nkpPath || '',
+    nkpRepoUrl: settings.nkpRepoUrl || 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git',
     activeProfileId,
     connectionProfiles: profiles,
   }
@@ -528,6 +530,9 @@ export default function Settings() {
                 <Field label="ZTF Installation Path" value={form.ztfPath} disabled={!isAdmin} mono
                   placeholder="/home/user/zerotouch-framework"
                   onChange={value => setForm(p => ({ ...p, ztfPath: value }))} />
+                <Field label="NKP Framework Path" value={form.nkpPath} disabled={!isAdmin} mono
+                  placeholder="/home/user/nkp-zerotouch-framework"
+                  onChange={value => setForm(p => ({ ...p, nkpPath: value }))} />
                 <Field label="Python Executable" value={form.pythonPath} disabled={!isAdmin} mono
                   placeholder="python3"
                   onChange={value => setForm(p => ({ ...p, pythonPath: value }))} />
@@ -541,8 +546,13 @@ export default function Settings() {
               <Field label="ZTF Repository URL" value={form.repoUrl} disabled={!isAdmin} mono
                 placeholder="https://github.com/nutanixdev/zerotouch-framework.git"
                 onChange={value => setForm(p => ({ ...p, repoUrl: value }))} />
+              <div className="mt-4">
+                <Field label="NKP Repository URL" value={form.nkpRepoUrl} disabled={!isAdmin} mono
+                  placeholder="https://github.com/VirtuArchitect/nkp-zerotouch-framework.git"
+                  onChange={value => setForm(p => ({ ...p, nkpRepoUrl: value }))} />
+              </div>
               <p className="text-xs text-gray-500 mt-3">
-                Used during Setup & Install. Use the official ZTF repository or an approved internal mirror.
+                Used during Setup & Install and NKP Framework setup. Use approved repositories or internal mirrors.
               </p>
             </Section>
           </div>

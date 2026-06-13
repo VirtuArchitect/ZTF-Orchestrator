@@ -340,6 +340,17 @@ are orchestration estimates based on queue state, process launch, and observable
 ZTF output; future releases can replace or enrich this with real Nutanix task IDs
 if the underlying workflow output exposes them.
 
+### NKP Framework
+Optional integration with
+[`VirtuArchitect/nkp-zerotouch-framework`](https://github.com/VirtuArchitect/nkp-zerotouch-framework)
+for Nutanix Kubernetes Platform automation. The first integration exposes
+install/update, framework status, and safe phases only: `validate`, `prepare`,
+`generate`, `registry`, `deploy`, `verify`, `kubeconfig`, `secrets`, `backup`,
+`runs`, and `ci`. Apply, registry push, upgrade, and destroy actions are
+blocked server-side until approval-gated live execution is explicitly added.
+NKP phase output is submitted through Jobs / Queue so logs, progress, history,
+and cancellation follow the same operational model as ZTF jobs.
+
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from
 `ztf-orchestrator.log` — timestamp, level badge, message, user, IP, and status.
@@ -432,6 +443,7 @@ other settings via environment variables or a `.env` file (see `.env.example`).
 |---|---|---|
 | `ZTF_DATA_DIR` | `~/.ztf-ui` | Persistent data directory |
 | `ZTF_PATH` | `~/zerotouch-framework` | ZTF installation path |
+| `ZTF_NKP_PATH` | `~/nkp-zerotouch-framework` | Optional NKP ZeroTouch Framework path |
 | `ZTF_PYTHON` | current Python | Python executable for running ZTF |
 | `ZTF_PORT` | `5001` | Flask listen port |
 | `ZTF_BIND_HOST` | `127.0.0.1` | Flask bind address for manual runs. Docker sets `0.0.0.0` inside the container. |

@@ -32,6 +32,7 @@ from storage_backend import StorageError, create_storage
 
 CONFIG_DIR    = Path(os.environ.get('ZTF_DATA_DIR',    Path.home() / '.ztf-ui'))
 ZTF_DEFAULT   = os.environ.get('ZTF_PATH',             str(Path.home() / 'zerotouch-framework'))
+NKP_DEFAULT   = os.environ.get('ZTF_NKP_PATH',         str(Path.home() / 'nkp-zerotouch-framework'))
 PYTHON_DEFAULT= os.environ.get('ZTF_PYTHON',           sys.executable)
 PORT          = int(os.environ.get('ZTF_PORT',          5001))
 BIND_HOST     = os.environ.get('ZTF_BIND_HOST',         '127.0.0.1')
@@ -109,6 +110,39 @@ def _ztf_main_arg(ztf_path: str | Path) -> str:
         return str(main.relative_to(Path(ztf_path)))
     except ValueError:
         return str(main)
+
+
+def _nkp_script(nkp_path: str | Path) -> Path | None:
+    root = Path(nkp_path)
+    candidates = (
+        [root / 'scripts' / 'zt.ps1', root / 'scripts' / 'zt.sh']
+        if os.name == 'nt'
+        else [root / 'scripts' / 'zt.sh', root / 'scripts' / 'zt.ps1']
+    )
+    return next((candidate for candidate in candidates if candidate.exists()), None)
+
+
+def _nkp_installed(nkp_path: str | Path) -> bool:
+    return _nkp_script(nkp_path) is not None
+
+
+def _nkp_command(nkp_path: str | Path, phase: str, config_path: str, strict: bool = False) -> list[str]:
+    script = _nkp_script(nkp_path)
+    if script is None:
+        raise RuntimeError('NKP ZeroTouch Framework script was not found')
+    if phase not in NKP_SAFE_PHASES:
+        raise ValueError('NKP phase is not allowed')
+
+    if script.suffix.lower() == '.ps1':
+        cmd = ['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(script), phase, '-Config', config_path]
+        if strict:
+            cmd.append('-Strict')
+        return cmd
+
+    cmd = ['bash', str(script), phase, '--config', config_path]
+    if strict:
+        cmd.append('--strict')
+    return cmd
 
 
 def _postgres_backup_metadata(path: Path) -> dict:
@@ -339,6 +373,16 @@ ALLOWED_REPOS = {
     'https://github.com/nutanixdev/zerotouch-framework',
 }
 
+ALLOWED_NKP_REPOS = {
+    'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git',
+    'https://github.com/VirtuArchitect/nkp-zerotouch-framework',
+}
+
+NKP_SAFE_PHASES = {
+    'validate', 'prepare', 'generate', 'registry', 'deploy',
+    'verify', 'kubeconfig', 'secrets', 'backup', 'runs', 'ci',
+}
+
 # ─── Dry-run preflight definitions ───────────────────────────────────────────
 # required: top-level YAML keys that must be present and non-empty
 # ip_fields: keys whose values must be valid IP addresses
@@ -440,7 +484,7 @@ def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[s
     return yaml.safe_dump(normalized, sort_keys=False), True
 
 ALLOWED_SETTINGS_KEYS = {
-    'ztfPath', 'pythonPath', 'configDir', 'repoUrl', 'webhookUrl',
+    'ztfPath', 'nkpPath', 'pythonPath', 'configDir', 'repoUrl', 'nkpRepoUrl', 'webhookUrl',
     'activeProfileId', 'connectionProfiles',
 }
 
@@ -816,9 +860,11 @@ def get_settings() -> dict:
     }
     defaults = {
         'ztfPath':    ZTF_DEFAULT,
+        'nkpPath':    NKP_DEFAULT,
         'pythonPath': PYTHON_DEFAULT,
         'configDir':  str(CONFIG_DIR / 'configs'),
         'repoUrl':    'https://github.com/nutanixdev/zerotouch-framework.git',
+        'nkpRepoUrl': 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git',
         'webhookUrl': '',
         'activeProfileId': 'default',
         'connectionProfiles': [default_profile],
@@ -1122,11 +1168,14 @@ class ExecutionJobManager:
 
     def submit(self, payload: dict, user: str) -> dict:
         now = self._now()
+        job_type = payload.get('type') or ('workflow' if payload.get('workflow') else 'script')
+        workflow_name = payload.get('workflow') or payload.get('script') or payload.get('nkpPhase') or ''
         job = {
             'id': str(int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)),
             'status': 'queued',
-            'workflow': payload.get('workflow') or payload.get('script') or '',
-            'type': 'workflow' if payload.get('workflow') else 'script',
+            'workflow': workflow_name,
+            'type': job_type,
+            'framework': payload.get('framework') or 'ztf',
             'user': user,
             'createdAt': now,
             'updatedAt': now,
@@ -1221,6 +1270,10 @@ class ExecutionJobManager:
             self._run_job(job_id, payload, job.get('user', 'unknown'))
 
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('framework') == 'nkp':
+            self._run_nkp_job(job_id, payload, user)
+            return
+
         proc = None
         kill_timer = None
         workflow = payload.get('workflow')
@@ -1343,6 +1396,146 @@ class ExecutionJobManager:
                 user=user,
                 execution_id=job_id,
                 execution_type='workflow' if workflow else 'script',
+            )
+
+    def _run_nkp_job(self, job_id: str, payload: dict, user: str) -> None:
+        proc = None
+        kill_timer = None
+        phase = str(payload.get('nkpPhase') or '').strip()
+        config_file = str(payload.get('configFile') or '').strip()
+        config_content = payload.get('configContent') or ''
+        strict = bool(payload.get('strict', False))
+        status = 'failed'
+        return_code = -1
+        cfg_path = None
+
+        try:
+            if phase not in NKP_SAFE_PHASES:
+                self._emit(job_id, 'error', 'NKP phase is not allowed by this integration')
+                return
+            if payload.get('apply') or payload.get('confirmDestroy'):
+                self._emit(job_id, 'error', 'NKP apply and destructive operations are not enabled in this release')
+                return
+
+            settings = get_settings()
+            nkp_path = settings.get('nkpPath') or NKP_DEFAULT
+            python_path = settings.get('pythonPath') or PYTHON_DEFAULT
+            configs_dir = get_configs_dir()
+
+            if not _nkp_installed(nkp_path):
+                self._emit(job_id, 'error', 'NKP ZeroTouch Framework is not installed or the script path is invalid')
+                return
+
+            self._update_progress(job_id, 'Preparing NKP phase', 15, 'Validating NKP phase and configuration')
+            if config_content:
+                if not config_file:
+                    config_file = f'nkp-{phase}.yaml'
+                path = safe_config_path(config_file, configs_dir)
+                if path is None or path.suffix not in ('.yml', '.yaml'):
+                    self._emit(job_id, 'error', 'Invalid NKP config filename')
+                    return
+                ok, err = validate_yaml(config_content)
+                if not ok:
+                    self._emit(job_id, 'error', f'Invalid YAML: {err}')
+                    return
+                backup_config(path)
+                _secure_write(path, config_content)
+                cfg_path = str(path)
+            elif config_file:
+                path = safe_config_path(config_file, configs_dir)
+                if path is None or not path.exists():
+                    example_path = safe_config_path(config_file, Path(nkp_path) / 'configs' / 'environments')
+                    path = example_path if example_path and example_path.exists() else path
+                if path is None or not path.exists() or path.suffix not in ('.yml', '.yaml'):
+                    self._emit(job_id, 'error', 'NKP config file was not found')
+                    return
+                cfg_path = str(path)
+            else:
+                self._emit(job_id, 'error', 'NKP config file or YAML content is required')
+                return
+
+            cmd_args = _nkp_command(nkp_path, phase, cfg_path, strict)
+            display = ' '.join(str(arg) for arg in cmd_args[:6]) + (' ...' if len(cmd_args) > 6 else '')
+            self._update_progress(job_id, f'Running NKP {phase}', 30, 'Launching NKP ZeroTouch Framework')
+            self._emit(job_id, 'start', {'command': display, 'workingDir': nkp_path})
+            log.info('nkp_execution_start', extra={
+                'user': user, 'workflow': f'nkp:{phase}',
+                'action': 'execute', 'status': 'started', 'jobId': job_id,
+            })
+
+            env = os.environ.copy()
+            env['PYTHON_BIN'] = python_path
+            proc = subprocess.Popen(
+                cmd_args, cwd=nkp_path, env=env,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            )
+            with self._condition:
+                self._active[job_id] = proc
+            self._update_progress(job_id, f'NKP {phase} in progress', 50, 'Streaming NKP framework output')
+
+            def _timeout_kill():
+                if proc.poll() is None:
+                    proc.kill()
+                    self._emit(job_id, 'stderr', f'Execution timed out after {EXEC_TIMEOUT} seconds')
+                    log.warning('nkp_execution_timeout', extra={'user': user, 'workflow': f'nkp:{phase}', 'jobId': job_id})
+
+            kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
+            kill_timer.start()
+
+            combined: queue.Queue = queue.Queue()
+
+            def _reader(stream, label):
+                for line in stream:
+                    combined.put((label, line.rstrip()))
+                combined.put(None)
+
+            threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True).start()
+            threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True).start()
+
+            done = 0
+            while done < 2:
+                item = combined.get()
+                if item is None:
+                    done += 1
+                else:
+                    label, line = item
+                    self._emit(job_id, label, line)
+
+            proc.wait()
+            return_code = proc.returncode
+            current = self.get_job(job_id, include_logs=False) or {}
+            status = 'cancelled' if current.get('status') == 'cancelling' else ('success' if return_code == 0 else 'failed')
+        except Exception:
+            log.exception('nkp_execution_error', extra={'user': user, 'workflow': f'nkp:{phase}', 'jobId': job_id})
+            self._emit(job_id, 'error', 'NKP execution failed. Check server logs for details.')
+            status = 'failed'
+            return_code = -1
+        finally:
+            if kill_timer:
+                kill_timer.cancel()
+            with self._condition:
+                self._active.pop(job_id, None)
+            _record_execution_history(
+                execution_id=job_id,
+                workflow_or_script=f'nkp:{phase or "unknown"}',
+                execution_type='nkp',
+                status=status,
+                user=user,
+                config_file=config_file,
+                config_content=config_content,
+            )
+            self._complete(job_id, status, return_code)
+            log.info('nkp_execution_complete', extra={
+                'user': user, 'workflow': f'nkp:{phase}',
+                'action': 'execute', 'status': status, 'jobId': job_id,
+            })
+            _fire_configured_webhook(
+                workflow=f'nkp:{phase or "unknown"}',
+                status=status,
+                return_code=return_code,
+                user=user,
+                execution_id=job_id,
+                execution_type='nkp',
             )
 
     def _recover_interrupted_jobs(self) -> None:
@@ -1986,6 +2179,114 @@ def install_ztf():
 
     return Response(generate(), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
+
+
+@app.route('/api/nkp/status')
+@require_role('admin', 'operator', 'viewer')
+def nkp_status():
+    settings = get_settings()
+    nkp_path = settings.get('nkpPath') or NKP_DEFAULT
+    script = _nkp_script(nkp_path)
+    examples_dir = Path(nkp_path) / 'configs' / 'environments'
+    configs = []
+    if examples_dir.is_dir():
+        configs = sorted(path.name for path in examples_dir.glob('*.yaml') if path.is_file())
+    return jsonify({
+        'installed': script is not None,
+        'path': nkp_path,
+        'repoUrl': settings.get('nkpRepoUrl') or '',
+        'script': str(script) if script else '',
+        'safePhases': sorted(NKP_SAFE_PHASES),
+        'configs': configs,
+    })
+
+
+@app.route('/api/nkp/install', methods=['POST'])
+@require_role('admin')
+@limiter.limit('2 per minute')
+def install_nkp():
+    settings = get_settings()
+    nkp_path = settings.get('nkpPath') or NKP_DEFAULT
+    repo_url = settings.get('nkpRepoUrl') or ''
+
+    if repo_url not in ALLOWED_NKP_REPOS:
+        return jsonify({'error': 'NKP repository URL not allowed'}), 400
+
+    def generate() -> Generator[str, None, None]:
+        def send(t, d):
+            yield f"data: {json.dumps({'type': t, 'data': d})}\n\n"
+
+        def run_cmd(args: list, cwd=None):
+            yield from send('log', '$ ' + ' '.join(str(a) for a in args))
+            proc = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in proc.stdout:
+                yield from send('stdout', line.rstrip())
+            proc.wait()
+            if proc.returncode != 0:
+                raise RuntimeError(f'Command failed (exit {proc.returncode})')
+
+        def is_git_checkout(path: Path) -> bool:
+            try:
+                result = subprocess.run(
+                    ['git', '-C', str(path), 'rev-parse', '--is-inside-work-tree'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=10,
+                )
+                return result.returncode == 0 and result.stdout.strip() == 'true'
+            except Exception:
+                return False
+
+        try:
+            nkp = Path(nkp_path)
+            if not _nkp_installed(nkp):
+                yield from send('step', 'Cloning NKP ZeroTouch Framework...')
+                yield from run_cmd(['git', 'clone', repo_url, nkp_path])
+            elif is_git_checkout(nkp):
+                yield from send('step', 'Updating existing NKP ZeroTouch Framework...')
+                yield from run_cmd(['git', 'pull', '--ff-only'], cwd=nkp_path)
+            else:
+                yield from send('step', 'Existing NKP framework is not a git checkout; skipping source update.')
+
+            if not _nkp_installed(nkp):
+                raise RuntimeError('NKP framework script was not found after install')
+            yield from send('done', 'NKP ZeroTouch Framework installed successfully!')
+        except GeneratorExit:
+            return
+        except Exception:
+            log.exception('nkp_install_error')
+            yield from send('error', 'NKP installation failed. Check server logs for details.')
+
+    return Response(generate(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
+
+
+@app.route('/api/nkp/jobs', methods=['POST'])
+@require_role('admin', 'operator')
+def submit_nkp_job():
+    data = request.json or {}
+    phase = str(data.get('phase') or '').strip()
+    if phase not in NKP_SAFE_PHASES:
+        return jsonify({'error': 'NKP phase is not allowed'}), 400
+    if data.get('apply') or data.get('confirmDestroy'):
+        return jsonify({'error': 'NKP apply and destructive operations are not enabled in this release'}), 400
+
+    config_file = str(data.get('configFile') or '').strip()
+    config_content = data.get('configContent') or ''
+    if not config_file and not config_content:
+        return jsonify({'error': 'configFile or configContent is required'}), 400
+
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    job = _job_manager.submit({
+        'framework': 'nkp',
+        'type': 'nkp',
+        'nkpPhase': phase,
+        'configFile': config_file,
+        'configContent': config_content,
+        'strict': bool(data.get('strict', False)),
+    }, current_user)
+    return jsonify(job), 202
 
 # ─── Config files ─────────────────────────────────────────────────────────────
 

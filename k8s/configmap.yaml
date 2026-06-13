@@ -6,6 +6,7 @@ metadata:
 data:
   ZTF_DATA_DIR: /var/lib/ztf-orchestrator
   ZTF_PATH: /opt/zerotouch-framework
+  ZTF_NKP_PATH: /var/lib/ztf-orchestrator/nkp-zerotouch-framework
   ZTF_PORT: "5001"
   ZTF_LOG_LEVEL: INFO
   ZTF_EXEC_TIMEOUT: "3600"

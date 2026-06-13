@@ -811,6 +811,93 @@ def test_job_progress_advances_from_ztf_output(client, auth_headers):
     assert job['progress']['estimated'] is True
 
 
+def test_nkp_status_reports_configured_framework(client, auth_headers, tmp_path):
+    nkp_dir = tmp_path / 'nkp-zerotouch-framework'
+    (nkp_dir / 'scripts').mkdir(parents=True)
+    (nkp_dir / 'scripts' / 'zt.ps1').write_text('Write-Host nkp\n')
+    (nkp_dir / 'configs' / 'environments').mkdir(parents=True)
+    (nkp_dir / 'configs' / 'environments' / 'connected.example.yaml').write_text('environment:\n  name: lab\n')
+
+    resp = client.post('/api/settings', json={'nkpPath': str(nkp_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    status = client.get('/api/nkp/status', headers=auth_headers)
+    assert status.status_code == 200
+    data = status.get_json()
+    assert data['installed'] is True
+    assert data['script'].endswith('zt.ps1')
+    assert 'connected.example.yaml' in data['configs']
+    assert 'validate' in data['safePhases']
+
+
+def test_nkp_job_rejects_apply_and_unknown_phase(client, auth_headers):
+    apply_resp = client.post('/api/nkp/jobs',
+                             json={'phase': 'deploy', 'configFile': 'nkp.yaml', 'apply': True},
+                             headers=auth_headers)
+    assert apply_resp.status_code == 400
+    assert 'apply' in apply_resp.get_json()['error']
+
+    phase_resp = client.post('/api/nkp/jobs',
+                             json={'phase': 'destroy', 'configFile': 'nkp.yaml'},
+                             headers=auth_headers)
+    assert phase_resp.status_code == 400
+    assert 'not allowed' in phase_resp.get_json()['error']
+
+
+def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypatch):
+    import server
+
+    nkp_dir = tmp_path / 'nkp-zerotouch-framework'
+    (nkp_dir / 'scripts').mkdir(parents=True)
+    (nkp_dir / 'scripts' / 'zt.ps1').write_text('Write-Host nkp\n')
+
+    resp = client.post('/api/settings', json={'nkpPath': str(nkp_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    class FakeStream:
+        def __iter__(self):
+            return iter(['[PASS] validate\n'])
+
+    class FakeProc:
+        returncode = 0
+        stdout = FakeStream()
+        stderr = FakeStream()
+        def poll(self): return 0
+        def wait(self): return 0
+        def kill(self): pass
+
+    calls = []
+    def fake_popen(args, **kwargs):
+        calls.append({'args': args, 'kwargs': kwargs})
+        return FakeProc()
+
+    monkeypatch.setattr(server.subprocess, 'Popen', fake_popen)
+
+    resp = client.post('/api/nkp/jobs',
+                       json={
+                           'phase': 'validate',
+                           'configFile': 'nkp-test.yaml',
+                           'configContent': 'environment:\n  name: lab\n',
+                       },
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    import time
+    job = None
+    for _ in range(20):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] == 'success':
+            break
+        time.sleep(0.05)
+
+    assert job['status'] == 'success'
+    assert job['type'] == 'nkp'
+    assert job['framework'] == 'nkp'
+    assert calls[0]['args'][0] == 'powershell'
+    assert 'validate' in calls[0]['args']
+
+
 def test_audit_log_returns_list(client, auth_headers):
     """Audit log endpoint returns a list (may be empty if log file absent)."""
     resp = client.get('/api/audit-log', headers=auth_headers)
