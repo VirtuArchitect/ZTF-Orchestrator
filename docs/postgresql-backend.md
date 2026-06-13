@@ -57,6 +57,18 @@ stack.
 POSTGRES_PASSWORD='use-a-unique-value' docker compose up -d --build
 ```
 
+For one-off Windows PowerShell usage:
+
+```powershell
+$env:POSTGRES_PASSWORD="use-a-unique-value"
+$env:ZTF_DATABASE_URL="postgresql://ztf:use-a-unique-value@postgres:5432/ztf_orchestrator"
+docker compose up -d --build
+```
+
+The password embedded in `ZTF_DATABASE_URL` must match `POSTGRES_PASSWORD`.
+For repeatable starts, place both values in `.env` instead of setting them only
+for the current PowerShell session.
+
 ## Environment Variables
 
 ```text

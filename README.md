@@ -109,6 +109,18 @@ docker compose up -d
 docker compose logs -f   # admin password printed here on first run
 ```
 
+For one-off Windows PowerShell testing, the PostgreSQL password and database URL
+must use the same password:
+
+```powershell
+$env:POSTGRES_PASSWORD="use-a-unique-value"
+$env:ZTF_DATABASE_URL="postgresql://ztf:use-a-unique-value@postgres:5432/ztf_orchestrator"
+docker compose up -d --build
+```
+
+For repeatable starts, put those values in `.env` instead of setting them only
+for the current PowerShell session.
+
 ZTF is cloned and installed inside the image at build time - no separate volume mount required.
 PostgreSQL is started by default and stores users, sessions, execution history,
 approvals, schedules, drift results, execution jobs, and audit events. Workflow
