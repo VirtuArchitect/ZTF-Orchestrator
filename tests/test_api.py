@@ -1198,6 +1198,50 @@ def test_health_details_returns_operational_data_for_admin(client, auth_headers)
     assert 'nkp_installed' in data
 
 
+def test_operational_visibility_summary_returns_dashboard_counts(client, auth_headers, isolated_data_dir):
+    import server
+
+    now = server._now_iso()
+    old = '2026-01-01T00:00:00.000000Z'
+    server.write_json(server.JOBS_FILE, [
+        {'id': 'job-running', 'status': 'running', 'createdAt': old, 'startedAt': old, 'workflow': 'nkp:validate'},
+        {'id': 'job-queued', 'status': 'queued', 'createdAt': now, 'workflow': 'cluster-create'},
+        {'id': 'job-failed', 'status': 'failed', 'createdAt': now, 'workflow': 'deploy-pc'},
+    ])
+    server.write_json(server.APPROVALS_FILE, [
+        {'id': 'approval-1', 'status': 'pending', 'workflow': 'deploy-pc'},
+        {'id': 'approval-2', 'status': 'approved', 'workflow': 'config-pc'},
+    ])
+    server.write_json(server.SCHEDULES_FILE, [
+        {'id': 'schedule-1', 'name': 'Nightly Drift', 'enabled': True, 'nextRun': '2026-12-01T01:00:00.000000Z', 'lastStatus': None},
+        {'id': 'schedule-2', 'name': 'Failed Backup', 'enabled': True, 'nextRun': None, 'lastRun': now, 'lastStatus': 'failed'},
+    ])
+    server._save_drift_runs([
+        {'id': 'drift-1', 'status': 'drifted', 'configFile': 'a.yaml', 'summary': {'changed': 1, 'missing': 0, 'unexpected': 0}},
+        {'id': 'drift-2', 'status': 'unknown', 'configFile': 'b.yaml', 'summary': {'changed': 0, 'missing': 0, 'unexpected': 0}},
+    ])
+    server._save_nkp_profiles([_valid_nkp_profile()])
+    configs_dir = isolated_data_dir / 'configs'
+    configs_dir.mkdir(exist_ok=True)
+    (configs_dir / 'nkp-lab.yaml').write_text('metadata:\n  name: lab\n')
+
+    resp = client.get('/api/visibility/summary', headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['operations']['queued'] == 1
+    assert data['operations']['running'] == 1
+    assert data['operations']['failed'] == 1
+    assert data['operations']['longRunning'] == 1
+    assert data['governance']['pendingApprovals'] == 1
+    assert data['governance']['driftedChecks'] == 1
+    assert data['governance']['unknownBaselines'] == 1
+    assert data['schedules']['enabled'] == 2
+    assert data['schedules']['lastFailed'] == 'Failed Backup'
+    assert data['storage']['backend'] == 'file'
+    assert data['deployment']['nkpProfiles'] == 1
+    assert data['deployment']['generatedNkpConfigs'] == 1
+
+
 def test_jobs_limit_must_be_integer(client, auth_headers):
     resp = client.get('/api/jobs?limit=abc', headers=auth_headers)
     assert resp.status_code == 400

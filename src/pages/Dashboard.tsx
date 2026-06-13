@@ -5,7 +5,7 @@ import {
   Activity, AlertTriangle, Zap, Settings, Download,
   TrendingUp, Database, Cloud, RefreshCw, ShieldCheck,
   FileCode, PlayCircle, ArrowRight, FileSearch,
-  ListChecks, Shield, CalendarClock, HardDrive
+  ListChecks, Shield, CalendarClock, HardDrive, Boxes
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -39,6 +39,41 @@ interface DatabaseBackup {
   createdAt: string
 }
 
+interface OperationalVisibility {
+  operations: {
+    queued: number
+    running: number
+    failed: number
+    longRunning: number
+    totalJobs: number
+  }
+  governance: {
+    pendingApprovals: number
+    driftedChecks: number
+    unknownBaselines: number
+    latestDriftStatus: string
+  }
+  schedules: {
+    enabled: number
+    total: number
+    nextRun: string | null
+    lastFailed: string | null
+  }
+  storage: {
+    backend: string
+    databaseConfigured: boolean
+    databaseLocation: string
+    lastBackup: DatabaseBackup | null
+    backupWarning: string
+  }
+  deployment: {
+    ztfInstalled: boolean
+    nkpInstalled: boolean
+    nkpProfiles: number
+    generatedNkpConfigs: number
+  }
+}
+
 const QUICK_ACTIONS = [
   { label: 'Deploy Prism Central', icon: Cloud, path: '/workflows/deploy-pc', color: 'text-blue-400' },
   { label: 'Cluster Create', icon: Server, path: '/workflows/cluster-create', color: 'text-emerald-400' },
@@ -55,6 +90,7 @@ export default function Dashboard() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [backups, setBackups] = useState<DatabaseBackup[]>([])
   const [health, setHealth] = useState<PlatformHealth | null>(null)
+  const [visibility, setVisibility] = useState<OperationalVisibility | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const isAdmin = user?.role === 'admin'
@@ -62,7 +98,7 @@ export default function Dashboard() {
   const refresh = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true)
     try {
-      const [sysResp, execResp, healthResp, driftResp, jobsResp, approvalsResp, schedulesResp, backupsResp] = await Promise.all([
+      const [sysResp, execResp, healthResp, driftResp, jobsResp, approvalsResp, schedulesResp, backupsResp, visibilityResp] = await Promise.all([
         apiFetch('/api/system/check'),
         apiFetch('/api/executions'),
         isAdmin ? apiFetch('/api/health/details') : apiFetch('/health'),
@@ -71,6 +107,7 @@ export default function Dashboard() {
         apiFetch('/api/approvals'),
         apiFetch('/api/schedules'),
         isAdmin ? apiFetch('/api/maintenance/database-backups') : Promise.resolve(null),
+        apiFetch('/api/visibility/summary'),
       ])
       if (sysResp.ok) {
         const data: SystemStatus = await sysResp.json()
@@ -98,6 +135,9 @@ export default function Dashboard() {
         const data = await backupsResp.json()
         setBackups(data.backups || [])
       }
+      if (visibilityResp.ok) {
+        setVisibility(await visibilityResp.json())
+      }
     } finally {
       setLoading(false)
       if (showSpinner) setRefreshing(false)
@@ -113,10 +153,10 @@ export default function Dashboard() {
   const successCount = executions.filter(e => e.status === 'success').length
   const failCount = executions.filter(e => e.status === 'failed').length
   const healthFailures = systemChecks.filter(check => !check.ok)
-  const storageBackend = health?.storage || 'unknown'
+  const storageBackend = visibility?.storage.backend || health?.storage || 'unknown'
   const storageDisplay = storageBackend === 'postgres' ? 'PostgreSQL' : storageBackend === 'file' ? 'File-backed' : storageBackend
-  const databaseConfigured = health?.database?.configured ?? storageBackend !== 'postgres'
-  const databaseLocation = health?.database?.location || (storageBackend === 'postgres' ? 'not configured' : 'not used')
+  const databaseConfigured = visibility?.storage.databaseConfigured ?? health?.database?.configured ?? storageBackend !== 'postgres'
+  const databaseLocation = visibility?.storage.databaseLocation || health?.database?.location || (storageBackend === 'postgres' ? 'not configured' : 'not used')
   const storageIssue = storageBackend === 'postgres' && !databaseConfigured
   const healthIssueCount = healthFailures.length + (storageIssue ? 1 : 0)
   const lastRun = executions[0]
@@ -137,33 +177,33 @@ export default function Dashboard() {
     ? 'No drift checks recorded'
     : `${latestDrift.configFile} - ${new Date(latestDrift.timestamp).toLocaleString()}`
   const activeJobStatuses = ['queued', 'running', 'cancelling']
-  const queuedJobs = jobs.filter(job => job.status === 'queued').length
-  const runningJobs = jobs.filter(job => job.status === 'running' || job.status === 'cancelling').length
-  const failedJobs = jobs.filter(job => job.status === 'failed' || job.status === 'interrupted').length
-  const longRunningJobs = jobs.filter(job => {
+  const queuedJobs = visibility?.operations.queued ?? jobs.filter(job => job.status === 'queued').length
+  const runningJobs = visibility?.operations.running ?? jobs.filter(job => job.status === 'running' || job.status === 'cancelling').length
+  const failedJobs = visibility?.operations.failed ?? jobs.filter(job => job.status === 'failed' || job.status === 'interrupted').length
+  const longRunningJobs = visibility?.operations.longRunning ?? jobs.filter(job => {
     if (!activeJobStatuses.includes(job.status) || !job.startedAt) return false
     const startedAt = new Date(job.startedAt).getTime()
     return !Number.isNaN(startedAt) && Date.now() - startedAt > 30 * 60 * 1000
   }).length
-  const pendingApprovals = approvals.filter(item => item.status === 'pending').length
-  const driftedChecks = driftRuns.filter(run => run.status === 'drifted').length
-  const unknownBaselines = driftRuns.filter(run => run.status === 'unknown').length
-  const enabledSchedules = schedules.filter(schedule => schedule.enabled).length
+  const pendingApprovals = visibility?.governance.pendingApprovals ?? approvals.filter(item => item.status === 'pending').length
+  const driftedChecks = visibility?.governance.driftedChecks ?? driftRuns.filter(run => run.status === 'drifted').length
+  const unknownBaselines = visibility?.governance.unknownBaselines ?? driftRuns.filter(run => run.status === 'unknown').length
+  const enabledSchedules = visibility?.schedules.enabled ?? schedules.filter(schedule => schedule.enabled).length
   const scheduleDates = schedules
     .filter(schedule => schedule.enabled && schedule.nextRun)
     .map(schedule => new Date(schedule.nextRun as string))
     .filter(date => !Number.isNaN(date.getTime()))
     .sort((a, b) => a.getTime() - b.getTime())
-  const nextScheduleRun = scheduleDates[0]
+  const nextScheduleRun = visibility?.schedules.nextRun ? new Date(visibility.schedules.nextRun) : scheduleDates[0]
   const lastFailedSchedule = schedules
     .filter(schedule => schedule.lastStatus === 'failed' || schedule.lastStatus === 'error')
     .sort((a, b) => new Date(b.lastRun || 0).getTime() - new Date(a.lastRun || 0).getTime())[0]
-  const latestBackup = backups[0]
+  const latestBackup = visibility?.storage.lastBackup ?? backups[0]
   const latestBackupDate = latestBackup ? new Date(latestBackup.createdAt) : null
   const backupAgeDays = latestBackupDate && !Number.isNaN(latestBackupDate.getTime())
     ? Math.floor((Date.now() - latestBackupDate.getTime()) / 86_400_000)
     : null
-  const backupWarning = storageBackend !== 'postgres'
+  const backupWarning = visibility?.storage.backupWarning ?? (storageBackend !== 'postgres'
     ? 'PostgreSQL not active'
     : !isAdmin
       ? 'Admin only'
@@ -171,7 +211,10 @@ export default function Dashboard() {
         ? 'No backup'
         : backupAgeDays !== null && backupAgeDays > 7
           ? `${backupAgeDays} days old`
-          : 'OK'
+          : 'OK')
+  const nkpInstalled = visibility?.deployment.nkpInstalled ?? systemChecks.some(check => check.name === 'NKP Framework' && check.value === 'found')
+  const nkpProfiles = visibility?.deployment.nkpProfiles ?? 0
+  const generatedNkpConfigs = visibility?.deployment.generatedNkpConfigs ?? 0
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -259,7 +302,18 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-5 gap-4 mb-6">
+        <DashboardMiniSection
+          title="Deployment Readiness"
+          icon={Boxes}
+          path="/nkp"
+          items={[
+            { label: 'ZTF', value: ztfInstalled ? 'Ready' : 'Missing', tone: ztfInstalled ? 'good' : 'bad', path: '/setup' },
+            { label: 'NKP', value: nkpInstalled ? 'Ready' : 'Optional', tone: nkpInstalled ? 'good' : 'neutral', path: '/nkp' },
+            { label: 'Profiles', value: nkpProfiles, tone: nkpProfiles ? 'good' : 'warning', path: '/nkp' },
+            { label: 'Generated configs', value: generatedNkpConfigs, tone: generatedNkpConfigs ? 'good' : 'neutral', path: '/configs' },
+          ]}
+        />
         <DashboardMiniSection
           title="Operations Queue"
           icon={ListChecks}

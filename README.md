@@ -251,8 +251,14 @@ python server.py
 ## Features
 
 ### Dashboard
-System health overview, recent execution history, and quick-action buttons.
-Polls every 30 seconds and includes a manual **Refresh** button.
+System health overview, recent execution history, quick-action buttons, and
+operational visibility panels. Polls every 30 seconds and includes a manual
+**Refresh** button. Compact sections show deployment readiness, queue pressure,
+governance attention, schedule state, and storage/backup posture:
+ZTF/NKP readiness, NKP deployment profile count, generated NKP configs, queued /
+running / failed / long-running jobs, pending approvals, drifted checks, unknown
+baselines, enabled schedules, next schedule run, last failed schedule, storage
+backend, latest database backup, and backup warnings.
 
 ### Setup & Install
 One-click ZTF installation — clones the framework from GitHub (or an internal

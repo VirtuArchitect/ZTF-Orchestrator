@@ -345,6 +345,15 @@ def _list_postgres_backups() -> list[dict]:
     return sorted(backups, key=lambda item: item['createdAt'], reverse=True)
 
 
+def _parse_iso_datetime(value: str | None) -> datetime.datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
+
+
 def _pg_dump_command(database_url: str, output_path: Path) -> tuple[list[str], dict[str, str]]:
     parsed = urllib.parse.urlparse(database_url)
     if parsed.scheme not in {'postgresql', 'postgres'}:
@@ -2050,6 +2059,95 @@ def health():
         'status':  status,
         'version': '1.2.8',
     }), 200 if ztf_ok else 503
+
+
+@app.route('/api/visibility/summary')
+@require_role('admin', 'operator', 'viewer')
+def operational_visibility_summary():
+    _init_engines()
+    settings = get_settings()
+    now = datetime.datetime.now(datetime.timezone.utc)
+    jobs = _job_manager.list_jobs(1000)
+    drift_runs = _load_drift_runs()
+    schedules = _schedule_engine.list_schedules()
+    approvals = _approval_manager.list_approvals()
+    backups = _list_postgres_backups()
+    profiles = _list_nkp_profiles()
+    configs_dir = get_configs_dir()
+    generated_nkp_configs = [
+        path.name for path in configs_dir.glob('nkp*.y*ml')
+        if path.is_file() and path.suffix.lower() in ('.yaml', '.yml')
+    ]
+
+    long_running = 0
+    for job in jobs:
+        if job.get('status') not in {'queued', 'running', 'cancelling'}:
+            continue
+        started = _parse_iso_datetime(job.get('startedAt') or job.get('createdAt'))
+        if started and now - started > datetime.timedelta(minutes=30):
+            long_running += 1
+
+    enabled_schedules = [item for item in schedules if item.get('enabled')]
+    schedule_dates = [
+        parsed for parsed in (_parse_iso_datetime(item.get('nextRun')) for item in enabled_schedules)
+        if parsed is not None
+    ]
+    next_run = min(schedule_dates).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z' if schedule_dates else None
+    failed_schedules = [
+        item for item in schedules
+        if item.get('lastStatus') in {'failed', 'error'}
+    ]
+    failed_schedules.sort(key=lambda item: item.get('lastRun') or '', reverse=True)
+
+    latest_backup = backups[0] if backups else None
+    backup_warning = 'PostgreSQL not active'
+    if _storage.name == 'postgres':
+        if not latest_backup:
+            backup_warning = 'No backup'
+        else:
+            backup_time = _parse_iso_datetime(latest_backup.get('createdAt'))
+            if backup_time and now - backup_time > datetime.timedelta(days=7):
+                backup_warning = f'{(now - backup_time).days} days old'
+            else:
+                backup_warning = 'OK'
+
+    ztf_installed = _ztf_installed(settings['ztfPath'])
+    nkp_installed = _nkp_installed(settings.get('nkpPath') or NKP_DEFAULT)
+    return jsonify({
+        'generatedAt': _now_iso(),
+        'operations': {
+            'queued': sum(1 for job in jobs if job.get('status') == 'queued'),
+            'running': sum(1 for job in jobs if job.get('status') in {'running', 'cancelling'}),
+            'failed': sum(1 for job in jobs if job.get('status') in {'failed', 'interrupted'}),
+            'longRunning': long_running,
+            'totalJobs': len(jobs),
+        },
+        'governance': {
+            'pendingApprovals': sum(1 for item in approvals if item.get('status') == 'pending'),
+            'driftedChecks': sum(1 for item in drift_runs if item.get('status') == 'drifted'),
+            'unknownBaselines': sum(1 for item in drift_runs if item.get('status') == 'unknown'),
+            'latestDriftStatus': drift_runs[0].get('status') if drift_runs else 'not_checked',
+        },
+        'schedules': {
+            'enabled': len(enabled_schedules),
+            'total': len(schedules),
+            'nextRun': next_run,
+            'lastFailed': failed_schedules[0].get('name') if failed_schedules else None,
+        },
+        'storage': {
+            'backend': _storage.name,
+            'databaseConfigured': bool(os.environ.get('ZTF_DATABASE_URL', '')),
+            'databaseLocation': _database_location(os.environ.get('ZTF_DATABASE_URL', '')),
+            'lastBackup': latest_backup,
+            'backupWarning': backup_warning,
+        },
+        'deployment': {
+            'ztfInstalled': ztf_installed,
+            'nkpInstalled': nkp_installed,
+            'nkpProfiles': len(profiles),
+            'generatedNkpConfigs': len(generated_nkp_configs),
+        },
+    })
 
 @app.route('/api/health/details')
 @require_role('admin')
