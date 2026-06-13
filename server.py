@@ -17,6 +17,7 @@ import sys
 import threading
 import urllib.parse
 import uuid
+from copy import deepcopy
 from functools import wraps
 from pathlib import Path
 from typing import Generator
@@ -234,6 +235,215 @@ def _split_csv(value) -> list[str]:
     if isinstance(value, list):
         return [str(item).strip() for item in value if str(item).strip()]
     return [item.strip() for item in str(value or '').split(',') if item.strip()]
+
+
+NKP_TEMPLATE_PACKS = [
+    {
+        'id': 'management-cluster',
+        'name': 'Management Cluster',
+        'category': 'Connected',
+        'description': 'Baseline NKP management cluster profile for a connected site with Prism Central access.',
+        'recommendedUse': 'Use first when standing up the management plane that will own or coordinate workload clusters.',
+        'profileDefaults': {
+            'name': 'NKP Management Cluster',
+            'description': 'Management cluster deployment profile generated from the ZTF-Orchestrator template pack.',
+            'environment': 'production',
+            'nkp': {
+                'version': '',
+                'binaryPath': '',
+                'registry': '',
+                'sshKeyRef': 'admin_cred',
+            },
+            'prismCentral': {
+                'endpoint': '',
+                'credentialRef': 'pc_user',
+            },
+            'cluster': {
+                'name': 'nkp-mgmt',
+                'type': 'management',
+                'kubernetesVersion': '',
+                'vip': '',
+            },
+            'network': {
+                'subnet': '',
+                'gateway': '',
+                'dnsServers': [],
+                'ntpServers': [],
+                'domain': '',
+                'vlanId': '',
+            },
+            'nodes': [
+                {'name': 'mgmt-node-1', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+                {'name': 'mgmt-node-2', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+                {'name': 'mgmt-node-3', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+            ],
+        },
+        'requiredFields': [
+            'Prism Central endpoint and credential reference',
+            'NKP binary path or registered default binary',
+            'Cluster name, Kubernetes version, and cluster VIP',
+            'Subnet, gateway, DNS, NTP, domain, and VLAN',
+            'At least three management node host/CVM/IPMI addresses',
+        ],
+        'optionalFields': [
+            'Private registry endpoint for image mirroring',
+            'Rack or serial metadata for site traceability',
+        ],
+        'preflightChecklist': [
+            'Confirm Prism Central API reachability on TCP/9440 from the Orchestrator host.',
+            'Confirm DNS and NTP services are reachable from the deployment network.',
+            'Confirm all node, CVM, IPMI, VIP, and gateway addresses are unique.',
+            'Confirm the NKP binary exists on the Orchestrator host or appliance.',
+        ],
+    },
+    {
+        'id': 'workload-cluster',
+        'name': 'Workload Cluster',
+        'category': 'Connected',
+        'description': 'Workload cluster profile intended to be deployed after a management cluster is available.',
+        'recommendedUse': 'Use for application or tenant clusters that should inherit site networking and PC defaults.',
+        'profileDefaults': {
+            'name': 'NKP Workload Cluster',
+            'description': 'Workload cluster deployment profile generated from the ZTF-Orchestrator template pack.',
+            'environment': 'production',
+            'nkp': {
+                'version': '',
+                'binaryPath': '',
+                'registry': '',
+                'sshKeyRef': 'admin_cred',
+            },
+            'prismCentral': {
+                'endpoint': '',
+                'credentialRef': 'pc_user',
+            },
+            'cluster': {
+                'name': 'nkp-workload',
+                'type': 'workload',
+                'kubernetesVersion': '',
+                'vip': '',
+            },
+            'network': {
+                'subnet': '',
+                'gateway': '',
+                'dnsServers': [],
+                'ntpServers': [],
+                'domain': '',
+                'vlanId': '',
+            },
+            'nodes': [
+                {'name': 'worker-node-1', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+                {'name': 'worker-node-2', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+            ],
+        },
+        'requiredFields': [
+            'Existing management cluster context outside this profile',
+            'Prism Central endpoint and credential reference',
+            'Workload cluster name, Kubernetes version, and cluster VIP',
+            'Worker node host/CVM/IPMI addresses',
+        ],
+        'optionalFields': [
+            'Registry endpoint if the workload cluster uses a mirrored image source',
+            'Environment label for chargeback or lifecycle grouping',
+        ],
+        'preflightChecklist': [
+            'Confirm the target management cluster is healthy before workload deployment.',
+            'Confirm workload subnet routing, DNS, NTP, and gateway are correct.',
+            'Confirm worker node addresses are unique and inside the workload CIDR.',
+        ],
+    },
+    {
+        'id': 'airgapped-local-registry',
+        'name': 'Air-Gapped / Local Registry',
+        'category': 'Restricted',
+        'description': 'Profile pack for environments that use staged NKP binaries and a private/local image registry.',
+        'recommendedUse': 'Use for disconnected, dark-site, or tightly controlled networks where internet pulls are not allowed.',
+        'profileDefaults': {
+            'name': 'NKP Air-Gapped Cluster',
+            'description': 'Air-gapped deployment profile generated from the ZTF-Orchestrator template pack.',
+            'environment': 'restricted',
+            'nkp': {
+                'version': '',
+                'binaryPath': '',
+                'registry': 'registry.local:5000',
+                'sshKeyRef': 'admin_cred',
+            },
+            'prismCentral': {
+                'endpoint': '',
+                'credentialRef': 'pc_user',
+            },
+            'cluster': {
+                'name': 'nkp-restricted',
+                'type': 'management',
+                'kubernetesVersion': '',
+                'vip': '',
+            },
+            'network': {
+                'subnet': '',
+                'gateway': '',
+                'dnsServers': [],
+                'ntpServers': [],
+                'domain': 'local',
+                'vlanId': '',
+            },
+            'nodes': [
+                {'name': 'restricted-node-1', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+                {'name': 'restricted-node-2', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+                {'name': 'restricted-node-3', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''},
+            ],
+        },
+        'requiredFields': [
+            'Registered NKP binary path on persistent Orchestrator storage',
+            'Private registry endpoint and image mirror readiness',
+            'Prism Central endpoint reachable from the restricted network',
+            'DNS/NTP services that do not depend on public internet access',
+        ],
+        'optionalFields': [
+            'Registry credential reference if the local registry requires authentication',
+            'Site/rack metadata for offline audit trails',
+        ],
+        'preflightChecklist': [
+            'Confirm all NKP artifacts are staged locally before execution.',
+            'Confirm the private registry contains required NKP images.',
+            'Confirm no deployment step depends on public DNS or internet routing.',
+            'Confirm backup and rollback artifacts are available in the same restricted site.',
+        ],
+    },
+]
+
+
+def _public_nkp_template_pack(template: dict) -> dict:
+    return deepcopy(template)
+
+
+def _meaningful_nkp_node(node: dict) -> bool:
+    if not isinstance(node, dict):
+        return False
+    return any(str(node.get(key) or '').strip() for key in ('serial', 'hostIp', 'cvmIp', 'ipmiIp', 'rack'))
+
+
+def _merge_profile_template(defaults: dict, overrides: dict) -> dict:
+    merged = deepcopy(defaults)
+
+    def merge_dict(target: dict, source: dict) -> dict:
+        for key, value in source.items():
+            if key in {'id', 'createdAt', 'updatedAt'}:
+                continue
+            if key == 'nodes' and isinstance(value, list):
+                if any(_meaningful_nkp_node(item) for item in value):
+                    target[key] = deepcopy(value)
+                continue
+            if isinstance(value, dict) and isinstance(target.get(key), dict):
+                merge_dict(target[key], value)
+                continue
+            if isinstance(value, list):
+                if value:
+                    target[key] = deepcopy(value)
+                continue
+            if value is not None and str(value).strip():
+                target[key] = value
+        return target
+
+    return merge_dict(merged, overrides or {})
 
 
 def _valid_ip(value: str) -> bool:
@@ -3011,6 +3221,29 @@ def delete_nkp_binary(binary_id):
         'binaryId': binary_id,
     })
     return jsonify({'success': True})
+
+
+@app.route('/api/nkp/templates')
+@require_role('admin', 'operator', 'viewer')
+def list_nkp_templates():
+    return jsonify([_public_nkp_template_pack(item) for item in NKP_TEMPLATE_PACKS])
+
+
+@app.route('/api/nkp/templates/<template_id>/apply', methods=['POST'])
+@require_role('admin', 'operator')
+def apply_nkp_template(template_id):
+    template = next((item for item in NKP_TEMPLATE_PACKS if item.get('id') == template_id), None)
+    if not template:
+        return jsonify({'error': 'NKP template pack not found'}), 404
+    payload = request.json or {}
+    overrides = payload.get('overrides') if isinstance(payload.get('overrides'), dict) else {}
+    merged = _merge_profile_template(template.get('profileDefaults') or {}, overrides)
+    profile = _normalize_nkp_profile(merged)
+    return jsonify({
+        'template': _public_nkp_template_pack(template),
+        'profile': profile,
+        'readiness': _nkp_profile_readiness(profile),
+    })
 
 
 @app.route('/api/nkp/profiles')

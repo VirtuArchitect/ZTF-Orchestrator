@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle, Download, FilePlus, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Download, FilePlus, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
@@ -91,6 +91,18 @@ interface NkpBinary {
   createdAt?: string
 }
 
+interface NkpTemplatePack {
+  id: string
+  name: string
+  category: string
+  description: string
+  recommendedUse: string
+  profileDefaults: NkpProfile
+  requiredFields: string[]
+  optionalFields: string[]
+  preflightChecklist: string[]
+}
+
 const PHASES = [
   { id: 'validate', label: 'Validate', hint: 'Schema, bundle, endpoint, and tool checks' },
   { id: 'prepare', label: 'Prepare', hint: 'Stage NKP tools and workspace metadata' },
@@ -147,6 +159,8 @@ export default function NKPFramework() {
   const [binarySaving, setBinarySaving] = useState(false)
   const [binaryUploadFile, setBinaryUploadFile] = useState<File | null>(null)
   const [binaryForm, setBinaryForm] = useState({ name: '', version: '', path: '' })
+  const [templates, setTemplates] = useState<NkpTemplatePack[]>([])
+  const [templateApplying, setTemplateApplying] = useState('')
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
@@ -181,10 +195,17 @@ export default function NKPFramework() {
     setBinaries(await resp.json())
   }
 
+  const loadTemplates = async () => {
+    const resp = await apiFetch('/api/nkp/templates')
+    if (!resp.ok) return
+    setTemplates(await resp.json())
+  }
+
   useEffect(() => {
     loadStatus()
     loadProfiles()
     loadBinaries()
+    loadTemplates()
   }, [])
 
   const runInstall = async () => {
@@ -479,6 +500,29 @@ export default function NKPFramework() {
     setBinaryMessage(`${binary.name} applied to the deployment profile.`)
   }
 
+  const applyTemplate = async (template: NkpTemplatePack) => {
+    setTemplateApplying(template.id)
+    setProfileErrors([])
+    setProfileMessage('')
+    setGeneratedYaml('')
+    try {
+      const resp = await apiFetch(`/api/nkp/templates/${template.id}/apply`, {
+        method: 'POST',
+        body: JSON.stringify({ overrides: profile }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setProfileErrors([data.error || `Server returned ${resp.status}`])
+        return
+      }
+      setProfile(data.profile)
+      setReadiness(data.readiness || null)
+      setProfileMessage(`${template.name} template applied. Review target-specific values, then save the profile.`)
+    } finally {
+      setTemplateApplying('')
+    }
+  }
+
   return (
     <Layout
       title="NKP Framework"
@@ -630,6 +674,69 @@ export default function NKPFramework() {
         {logs.length > 0 && (
           <Terminal logs={logs} status={installStatus} title="NKP Framework Installation Output" />
         )}
+
+        <div className="card">
+          <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-nutanix-blue/20 border border-nutanix-blue/30 text-nutanix-cyan flex items-center justify-center">
+                <Layers size={18} />
+              </div>
+              <div>
+                <h2 className="font-semibold text-gray-100">NKP Deployment Template Packs</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Start from a guided profile for common NKP deployment patterns, then fill in site-specific values before saving.
+                </p>
+              </div>
+            </div>
+            <button onClick={loadTemplates} className="btn-secondary gap-1.5">
+              <RefreshCw size={14} />
+              Refresh
+            </button>
+          </div>
+
+          {templates.length === 0 ? (
+            <div className="rounded-lg border border-border bg-gray-950/40 px-4 py-6 text-center text-sm text-gray-500">
+              No NKP template packs are available.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              {templates.map(template => (
+                <div key={template.id} className="rounded-lg border border-border bg-gray-950/40 p-4 flex flex-col min-h-full">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-gray-100">{template.name}</h3>
+                        <span className={clsx('badge text-xs', template.category === 'Restricted' ? 'badge-yellow' : 'badge-blue')}>
+                          {template.category}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">{template.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-md border border-border bg-gray-950/50 px-3 py-2">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Best for</div>
+                    <p className="text-sm text-gray-300 mt-1">{template.recommendedUse}</p>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
+                    <TemplateList title="Required" items={template.requiredFields} />
+                    <TemplateList title="Preflight" items={template.preflightChecklist} />
+                  </div>
+
+                  <button
+                    onClick={() => applyTemplate(template)}
+                    disabled={!canEdit || templateApplying === template.id}
+                    className="btn-primary mt-4 justify-center gap-1.5"
+                  >
+                    {templateApplying === template.id ? <Loader size={14} className="animate-spin" /> : <Download size={14} />}
+                    Apply Template
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
@@ -916,6 +1023,22 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
       <div className="mt-1 rounded-md border border-border bg-gray-950 px-3 py-2 font-mono text-xs text-gray-300 break-all">
         {value || 'not configured'}
       </div>
+    </div>
+  )
+}
+
+function TemplateList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</div>
+      <ul className="mt-2 space-y-1.5">
+        {items.slice(0, 4).map(item => (
+          <li key={item} className="flex items-start gap-2 text-xs text-gray-400">
+            <CheckCircle size={12} className="mt-0.5 flex-shrink-0 text-nutanix-teal" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

@@ -367,6 +367,14 @@ validated and rendered into YAML in the existing Config Files area, then used by
 the safe-phase launcher. The generated YAML is intentionally transparent and
 editable so teams can align it with the exact NKP ZeroTouch schema they adopt.
 
+NKP Deployment Template Packs provide guided starting points for common
+deployment patterns: **Management Cluster**, **Workload Cluster**, and
+**Air-Gapped / Local Registry**. Each pack includes profile defaults, required
+fields, optional fields, and a preflight checklist. Applying a template prepares
+an editable profile draft; operators still review, fill in site-specific values,
+check readiness, and save before generating YAML or submitting approval-gated
+phases.
+
 The NKP Binary Manager lets operators register NKP binaries or bundles already
 staged on the Orchestrator host, upload smaller bundles into the Orchestrator
 data directory, record version/source/checksum/default metadata, and apply a

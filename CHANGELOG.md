@@ -9,7 +9,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+- NKP Deployment Template Packs for Management Cluster, Workload Cluster, and
+  Air-Gapped / Local Registry profile starts, including required fields,
+  optional fields, and operator preflight checklists.
 
 ---
 

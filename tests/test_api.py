@@ -1131,6 +1131,40 @@ def _valid_nkp_profile():
     }
 
 
+def test_nkp_template_packs_list_and_apply(client, auth_headers):
+    listing = client.get('/api/nkp/templates', headers=auth_headers)
+    assert listing.status_code == 200
+    templates = listing.get_json()
+    ids = {item['id'] for item in templates}
+    assert {'management-cluster', 'workload-cluster', 'airgapped-local-registry'} <= ids
+    management = next(item for item in templates if item['id'] == 'management-cluster')
+    assert management['requiredFields']
+    assert management['preflightChecklist']
+
+    resp = client.post('/api/nkp/templates/management-cluster/apply',
+                       json={'overrides': _valid_nkp_profile()},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['template']['id'] == 'management-cluster'
+    assert data['profile']['cluster']['type'] == 'management'
+    assert data['profile']['prismCentral']['endpoint'] == '10.42.1.10'
+    assert data['readiness']['score'] >= 80
+
+
+def test_nkp_template_apply_restricted_for_viewer(client, auth_headers):
+    _create_user(client, auth_headers, 'template-viewer', 'viewer')
+    viewer_headers = _login(client, 'template-viewer')
+
+    listing = client.get('/api/nkp/templates', headers=viewer_headers)
+    assert listing.status_code == 200
+
+    apply_resp = client.post('/api/nkp/templates/workload-cluster/apply',
+                             json={'overrides': {}},
+                             headers=viewer_headers)
+    assert apply_resp.status_code == 403
+
+
 def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, isolated_data_dir):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     assert create.status_code == 201
