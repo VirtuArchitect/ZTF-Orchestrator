@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, Ban, CheckCircle, ChevronDown, ChevronUp, Clock,
-  ListChecks, Loader, RefreshCw, Terminal, XCircle
+  ListChecks, Loader, RefreshCw, Terminal, Trash2, XCircle
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -32,8 +32,11 @@ export default function Jobs() {
   const [filter, setFilter] = useState<JobFilter>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const canCancel = user?.role === 'admin' || user?.role === 'operator'
+  const canDelete = user?.role === 'admin'
 
   const load = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true)
@@ -73,6 +76,7 @@ export default function Jobs() {
   const cancelJob = async (job: ExecutionJob) => {
     if (!canCancel || !ACTIVE_STATUSES.includes(job.status)) return
     if (!confirm(`Cancel job ${job.workflow}?`)) return
+    setError('')
     setCancelling(job.id)
     try {
       const resp = await apiFetch(`/api/jobs/${encodeURIComponent(job.id)}/cancel`, { method: 'POST' })
@@ -83,6 +87,26 @@ export default function Jobs() {
       await load()
     } finally {
       setCancelling(null)
+    }
+  }
+
+  const deleteJob = async (job: ExecutionJob) => {
+    if (!canDelete || ACTIVE_STATUSES.includes(job.status)) return
+    if (!confirm(`Delete job ${job.workflow || job.id} from the durable queue? Execution history and audit logs are not removed.`)) return
+    setError('')
+    setDeleting(job.id)
+    try {
+      const resp = await apiFetch(`/api/jobs/${encodeURIComponent(job.id)}`, { method: 'DELETE' })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setJobs(prev => prev.filter(item => item.id !== job.id))
+      if (expanded === job.id) setExpanded(null)
+      await load()
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -120,6 +144,12 @@ export default function Jobs() {
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-950/20 px-4 py-3 text-sm text-red-200">
+          {error}
+        </div>
+      )}
 
       {loading && (
         <div className="flex items-center justify-center py-16 text-gray-500">
@@ -178,6 +208,17 @@ export default function Jobs() {
                     {cancelling === job.id ? 'Cancelling' : 'Cancel'}
                   </button>
                 )}
+                {canDelete && !isActive && (
+                  <button
+                    onClick={() => deleteJob(job)}
+                    disabled={deleting === job.id}
+                    className="btn-danger text-xs gap-1.5"
+                    title="Delete this queue record"
+                  >
+                    {deleting === job.id ? <Loader size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                    Delete
+                  </button>
+                )}
                 <button
                   onClick={() => setExpanded(expanded === job.id ? null : job.id)}
                   className="btn-ghost p-2"
@@ -196,6 +237,31 @@ export default function Jobs() {
                     <Detail label="Log Events" value={String(logs.length)} />
                   </div>
                   {job.progress && <ProgressBar progress={job.progress} />}
+                  {job.trace && (
+                    <div className="rounded-lg border border-border bg-gray-900/50 px-3 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <p className="text-xs font-medium text-gray-500">Execution Trace</p>
+                        {job.trace.schemaStatus && (
+                          <span className={clsx(
+                            'badge text-xs',
+                            job.trace.schemaStatus === 'pass' ? 'badge-green' : job.trace.schemaStatus === 'warn' ? 'badge-yellow' : 'badge-red'
+                          )}>
+                            schema {job.trace.schemaStatus}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                        <Detail label="Framework / Phase" value={`${job.trace.framework || job.framework || 'unknown'}${job.trace.phase ? ` / ${job.trace.phase}` : ''}`} />
+                        <Detail label="Profile" value={job.trace.profileName ? `${job.trace.profileName} rev ${job.trace.profileRevision || '?'}` : 'not linked'} />
+                        <Detail label="Template" value={job.trace.templateName || job.trace.templateId || 'not linked'} />
+                        <Detail label="Approval" value={job.trace.approvalId || 'not required'} />
+                        <Detail label="Config" value={job.trace.generatedConfigFile || job.trace.configFile || 'not recorded'} />
+                        <Detail label="Config Source" value={job.trace.configSource || 'not recorded'} />
+                        <Detail label="Profile ID" value={job.trace.profileId || 'not linked'} />
+                        <Detail label="Schema Notes" value={[...(job.trace.schemaMissing || []), ...(job.trace.schemaWarnings || [])].join('; ') || 'none'} />
+                      </div>
+                    </div>
+                  )}
                   {job.taskIds && job.taskIds.length > 0 && (
                     <div className="rounded-lg border border-border bg-gray-900/50 px-3 py-2">
                       <p className="text-xs font-medium text-gray-500">Detected Nutanix Task IDs</p>

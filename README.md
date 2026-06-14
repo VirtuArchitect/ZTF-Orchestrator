@@ -136,6 +136,9 @@ docker compose -f docker-compose.file.yml up -d --build
 See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
 See [Validation Status](docs/validation-status.md) for what has been locally
 validated and what still requires infrastructure UAT.
+See [NKP v2.17 Alignment](docs/nkp-v217-alignment.md) for a traceability matrix
+between the NKP guide, the NKP framework, and the current ZTF-Orchestrator
+integration.
 See [Security Assessment](docs/security/SECURITY_ASSESSMENT.md) for the latest
 repository-level security review and current hardening recommendations.
 
@@ -341,10 +344,12 @@ original stored config — no form re-entry required.
 View durable execution jobs created by workflow and script submissions. The page
 shows active, queued, running, failed, cancelled, and interrupted job counts,
 phase-based estimated progress, persisted job logs, worker timestamps, return
-codes, and cancellation controls for queued or running jobs. Progress percentages
-are orchestration estimates based on queue state, process launch, and observable
-ZTF output. When ZTF or NKP output includes Nutanix task UUIDs, the job captures
-and displays those task IDs for follow-up in Prism Central or Prism Element.
+codes, and cancellation controls for queued or running jobs. Admins can delete
+terminal queue records after review; queued and running records must be
+cancelled or completed before deletion. Progress percentages are orchestration
+estimates based on queue state, process launch, and observable ZTF output. When
+ZTF or NKP output includes Nutanix task UUIDs, the job captures and displays
+those task IDs for follow-up in Prism Central or Prism Element.
 
 ### NKP Framework
 Optional integration with
@@ -367,6 +372,15 @@ validated and rendered into NKP example-style YAML in the existing Config Files
 area, then used by the safe-phase launcher. The generated YAML is intentionally
 transparent and editable so teams can align it with the exact NKP ZeroTouch
 schema they adopt.
+
+Saved NKP profiles are versioned. Each create, update, and restore action writes
+an append-only profile revision entry with the operator, timestamp, revision
+number, and full profile snapshot. Restoring an older profile creates a new
+revision rather than rewriting history. When an NKP safe-phase job is submitted
+from a saved profile, the queue record stores trace metadata including profile
+ID, profile name, profile revision, template, generated config file, approval ID,
+and schema validation status. If a stale profile revision is submitted, the API
+rejects it and asks the operator to refresh before launching.
 
 NKP Deployment Template Packs provide guided starting points for common
 deployment patterns: **Management Cluster**, **Workload Cluster**, and
@@ -643,6 +657,7 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 
 | Guide | Description |
 |---|---|
+| [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
 | [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
 | [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
 

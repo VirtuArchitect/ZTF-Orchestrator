@@ -29,6 +29,7 @@ interface NkpNode {
 
 interface NkpProfile {
   id?: string
+  revision?: number
   name: string
   description: string
   environment: string
@@ -63,6 +64,19 @@ interface NkpProfile {
     vlanId: string
   }
   nodes: NkpNode[]
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface NkpProfileRevision {
+  id: string
+  profileId: string
+  profileName: string
+  revision: number
+  action: string
+  createdAt: string
+  createdBy: string
+  profile: NkpProfile
 }
 
 interface ReadinessCheck {
@@ -178,6 +192,7 @@ export default function NKPFramework() {
   const [approvalId, setApprovalId] = useState('')
   const [message, setMessage] = useState('')
   const [profiles, setProfiles] = useState<NkpProfile[]>([])
+  const [profileRevisions, setProfileRevisions] = useState<NkpProfileRevision[]>([])
   const [profile, setProfile] = useState<NkpProfile>(emptyProfile)
   const [profileMessage, setProfileMessage] = useState('')
   const [profileErrors, setProfileErrors] = useState<string[]>([])
@@ -223,7 +238,23 @@ export default function NKPFramework() {
     if (!resp.ok) return
     const data = await resp.json()
     setProfiles(data)
-    if (!profile.id && data.length) setProfile(data[0])
+    if (!profile.id && data.length) {
+      setProfile(data[0])
+      await loadProfileRevisions(data[0].id)
+    }
+  }
+
+  const loadProfileRevisions = async (profileId?: string) => {
+    if (!profileId) {
+      setProfileRevisions([])
+      return
+    }
+    const resp = await apiFetch(`/api/nkp/profiles/${profileId}/revisions`)
+    if (!resp.ok) {
+      setProfileRevisions([])
+      return
+    }
+    setProfileRevisions(await resp.json())
   }
 
   const loadBinaries = async () => {
@@ -309,6 +340,11 @@ export default function NKPFramework() {
           configContent,
           strict,
           approvalId: approvalId.trim() || undefined,
+          profileId: profile.id || undefined,
+          profileName: profile.name || undefined,
+          profileRevision: profile.revision || undefined,
+          schemaValidation: schemaValidation || undefined,
+          generatedConfigFile: configFile || undefined,
         }),
       })
       const data = await resp.json().catch(() => ({}))
@@ -336,6 +372,12 @@ export default function NKPFramework() {
           metadata: {
             framework: 'nkp',
             phase,
+            profileId: profile.id || undefined,
+            profileName: profile.name || undefined,
+            profileRevision: profile.revision || undefined,
+            template: profile.template,
+            configFile,
+            schemaValidation,
             readiness,
           },
         }),
@@ -403,6 +445,7 @@ export default function NKPFramework() {
       setProfile(data)
       setProfileMessage('Deployment profile saved.')
       await loadProfiles()
+      await loadProfileRevisions(data.id)
       await checkReadiness(data)
     } finally {
       setSavingProfile(false)
@@ -453,6 +496,9 @@ export default function NKPFramework() {
     if (data.readiness) setReadiness(data.readiness)
     if (data.schemaValidation) setSchemaValidation(data.schemaValidation)
     setProfileMessage(`Generated ${data.filename} in Config Files.`)
+    if (data.trace?.profileRevision) {
+      setProfile(prev => ({ ...prev, revision: data.trace.profileRevision }))
+    }
     await loadStatus()
   }
 
@@ -568,6 +614,24 @@ export default function NKPFramework() {
       },
     }))
     setBinaryMessage(`${binary.name} applied to the deployment profile.`)
+  }
+
+  const restoreProfileRevision = async (revision: NkpProfileRevision) => {
+    if (!profile.id) return
+    if (!confirm(`Restore ${profile.name} from revision ${revision.revision}? This creates a new revision.`)) return
+    setProfileErrors([])
+    setProfileMessage('')
+    const resp = await apiFetch(`/api/nkp/profiles/${profile.id}/revisions/${revision.revision}/restore`, { method: 'POST' })
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok) {
+      setProfileErrors(data.validation || [data.error || `Server returned ${resp.status}`])
+      return
+    }
+    setProfile(data)
+    setProfileMessage(`Restored from revision ${revision.revision}; current revision is ${data.revision}.`)
+    await loadProfiles()
+    await loadProfileRevisions(data.id)
+    await checkReadiness(data)
   }
 
   const applyTemplate = async (template: NkpTemplatePack) => {
@@ -1020,6 +1084,7 @@ export default function NKPFramework() {
                 onChange={e => {
                   const selected = profiles.find(item => item.id === e.target.value)
                   setProfile(selected || emptyProfile())
+                  loadProfileRevisions(selected?.id)
                   setGeneratedYaml('')
                   setProfileErrors([])
                   setProfileMessage('')
@@ -1029,7 +1094,7 @@ export default function NKPFramework() {
                 <option value="">New deployment profile</option>
                 {profiles.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
-              <button className="btn-secondary gap-1.5" onClick={() => { setProfile(emptyProfile()); setReadiness(null); setGeneratedYaml('') }}>
+              <button className="btn-secondary gap-1.5" onClick={() => { setProfile(emptyProfile()); setProfileRevisions([]); setReadiness(null); setGeneratedYaml('') }}>
                 <Plus size={14} />
                 New
               </button>
@@ -1060,6 +1125,49 @@ export default function NKPFramework() {
           {profileMessage && (
             <div className="mb-4 rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-4 py-3 text-sm text-nutanix-teal">
               {profileMessage}
+            </div>
+          )}
+
+          {profile.id && (
+            <div className="mb-5 rounded-lg border border-border bg-gray-950/40 p-4">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Profile Versioning</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-gray-100">{profile.name}</span>
+                    <span className="badge badge-blue text-xs">revision {profile.revision || 1}</span>
+                    {profile.updatedAt && <span className="text-xs text-gray-500">updated {new Date(profile.updatedAt).toLocaleString()}</span>}
+                  </div>
+                </div>
+                <button className="btn-secondary gap-1.5" onClick={() => loadProfileRevisions(profile.id)}>
+                  <RefreshCw size={14} />
+                  Refresh Versions
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-1 xl:grid-cols-3 gap-3">
+                {profileRevisions.length === 0 ? (
+                  <div className="xl:col-span-3 rounded-md border border-border bg-gray-900/50 px-3 py-3 text-sm text-gray-500">
+                    No profile revision entries recorded yet.
+                  </div>
+                ) : profileRevisions.slice(0, 6).map(revision => (
+                  <div key={revision.id} className="rounded-md border border-border bg-gray-900/50 px-3 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-semibold text-gray-200">Revision {revision.revision}</div>
+                        <div className="text-xs text-gray-500 mt-1">{revision.action} by {revision.createdBy || 'unknown'}</div>
+                        <div className="text-xs text-gray-600 mt-1">{new Date(revision.createdAt).toLocaleString()}</div>
+                      </div>
+                      <button
+                        className="btn-secondary text-xs"
+                        onClick={() => restoreProfileRevision(revision)}
+                        disabled={!canEdit || revision.revision === profile.revision}
+                      >
+                        Restore
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

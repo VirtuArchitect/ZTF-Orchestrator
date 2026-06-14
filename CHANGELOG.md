@@ -17,6 +17,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   rules for management, workload, and air-gapped deployment packs.
 - NKP example discovery, schema inference from installed `configs/environments`
   examples, schema validation for generated YAML, and example-to-profile import.
+- NKP deployment profile versioning with append-only revision history and
+  restore-to-new-revision support.
+- Execution traceability for NKP jobs, linking queue records to profile ID,
+  profile revision, template, generated config, approval ID, schema status, and
+  detected Nutanix task IDs where available.
+- Admin delete action for terminal Jobs / Queue records, with active queued or
+  running jobs protected from deletion.
+- NKP v2.17 alignment matrix documenting supported areas, partial areas,
+  planned gaps, and required infrastructure UAT before production claims.
 
 ---
 

@@ -66,6 +66,7 @@ PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
 JOBS_FILE      = CONFIG_DIR / 'jobs.json'
 NKP_PROFILES_FILE = CONFIG_DIR / 'nkp_profiles.json'
+NKP_PROFILE_REVISIONS_FILE = CONFIG_DIR / 'nkp_profile_revisions.json'
 NKP_BINARIES_FILE = CONFIG_DIR / 'nkp_binaries.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
@@ -172,6 +173,104 @@ def _list_nkp_profiles() -> list[dict]:
 
 def _save_nkp_profiles(profiles: list[dict]) -> None:
     write_json(NKP_PROFILES_FILE, profiles)
+
+
+def _list_nkp_profile_revisions(profile_id: str | None = None) -> list[dict]:
+    revisions = read_json(NKP_PROFILE_REVISIONS_FILE, [])
+    if not isinstance(revisions, list):
+        return []
+    if profile_id:
+        revisions = [item for item in revisions if isinstance(item, dict) and item.get('profileId') == profile_id]
+    return sorted(
+        [item for item in revisions if isinstance(item, dict)],
+        key=lambda item: (str(item.get('profileId') or ''), int(item.get('revision') or 0), str(item.get('createdAt') or '')),
+        reverse=True,
+    )
+
+
+def _save_nkp_profile_revisions(revisions: list[dict]) -> None:
+    write_json(NKP_PROFILE_REVISIONS_FILE, revisions[:2000])
+
+
+def _profile_revision_value(profile: dict | None) -> int:
+    try:
+        return max(1, int((profile or {}).get('revision') or 1))
+    except (TypeError, ValueError):
+        return 1
+
+
+def _record_nkp_profile_revision(profile: dict, action: str, user: str) -> dict:
+    snapshot = json.loads(json.dumps(profile))
+    revision = _profile_revision_value(profile)
+    entry = {
+        'id': str(uuid.uuid4()),
+        'profileId': profile.get('id'),
+        'profileName': profile.get('name', ''),
+        'revision': revision,
+        'action': action,
+        'createdAt': _now_iso(),
+        'createdBy': user or 'unknown',
+        'profile': snapshot,
+    }
+    revisions = _list_nkp_profile_revisions()
+    revisions.insert(0, entry)
+    _save_nkp_profile_revisions(revisions)
+    return entry
+
+
+def _build_nkp_execution_trace(data: dict, phase: str, config_file: str, config_content: str, approval_id: str) -> tuple[dict, tuple[dict, int] | None]:
+    trace = {
+        'framework': 'nkp',
+        'phase': phase,
+        'configFile': config_file,
+        'configSource': 'inline' if config_content else 'file',
+        'approvalId': approval_id or '',
+    }
+    profile_id = str(data.get('profileId') or '').strip()
+    if profile_id:
+        profile = next((item for item in _list_nkp_profiles() if item.get('id') == profile_id), None)
+        if not profile:
+            return trace, ({'error': 'NKP deployment profile was not found'}, 404)
+        current_revision = _profile_revision_value(profile)
+        requested_revision = data.get('profileRevision')
+        if requested_revision not in (None, ''):
+            try:
+                requested_revision_int = int(requested_revision)
+            except (TypeError, ValueError):
+                return trace, ({'error': 'profileRevision must be an integer'}, 400)
+            if requested_revision_int != current_revision:
+                return trace, ({
+                    'error': 'NKP deployment profile revision has changed; refresh before submitting',
+                    'currentRevision': current_revision,
+                    'requestedRevision': requested_revision_int,
+                }, 409)
+        trace.update({
+            'profileId': profile_id,
+            'profileName': profile.get('name', ''),
+            'profileRevision': current_revision,
+            'templateId': ((profile.get('template') or {}).get('id') or ''),
+            'templateName': ((profile.get('template') or {}).get('name') or ''),
+        })
+    elif data.get('profileName'):
+        trace['profileName'] = str(data.get('profileName') or '').strip()
+
+    schema_validation = {}
+    if config_content:
+        schema_validation = _nkp_schema_validate_content(config_content)
+    elif config_file:
+        path = safe_config_path(config_file, get_configs_dir())
+        if path and path.exists():
+            try:
+                schema_validation = _nkp_schema_validate_content(path.read_text(encoding='utf-8'))
+            except OSError:
+                schema_validation = {}
+    if schema_validation:
+        trace['schemaStatus'] = schema_validation.get('status', '')
+        trace['schemaMissing'] = schema_validation.get('missing', [])
+        trace['schemaWarnings'] = schema_validation.get('warnings', [])
+    if data.get('generatedConfigFile'):
+        trace['generatedConfigFile'] = str(data.get('generatedConfigFile') or '').strip()
+    return trace, None
 
 
 def _list_nkp_binaries() -> list[dict]:
@@ -949,6 +1048,7 @@ def _normalize_nkp_profile(data: dict, existing: dict | None = None) -> dict:
             'vlanId': str(((data.get('network') or {}).get('vlanId')) or ((existing.get('network') or {}).get('vlanId')) or '').strip(),
         },
         'nodes': [],
+        'revision': _profile_revision_value(data) if data.get('revision') is not None else _profile_revision_value(existing),
         'createdAt': existing.get('createdAt') or now,
         'updatedAt': now,
     }
@@ -2146,6 +2246,8 @@ class ExecutionJobManager:
             'logs': [],
             'progress': self._progress('Queued', 0, 'Waiting for an execution worker'),
         }
+        if isinstance(payload.get('trace'), dict):
+            job['trace'] = payload['trace']
         with self._condition:
             jobs = self._load_jobs()
             jobs.insert(0, job)
@@ -2186,6 +2288,20 @@ class ExecutionJobManager:
             proc.kill()
         log.info('job_cancel_requested', extra={'user': user, 'jobId': job_id})
         return self.get_job(job_id)
+
+    def delete(self, job_id: str, user: str) -> tuple[dict | None, str | None]:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return None, 'not_found'
+            if job.get('status') not in self.TERMINAL:
+                return self._public_job(job), 'active'
+            updated = [item for item in jobs if item.get('id') != job_id]
+            self._save_jobs(updated)
+            self._condition.notify_all()
+        log.info('job_deleted', extra={'user': user, 'jobId': job_id, 'workflow': job.get('workflow')})
+        return self._public_job(job), None
 
     def stream_events(self, job_id: str, start_offset: int = 0) -> Generator[str, None, None]:
         offset = max(0, start_offset)
@@ -3393,6 +3509,10 @@ def submit_nkp_job():
             }), 403
 
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    trace, trace_error = _build_nkp_execution_trace(data, phase, config_file, config_content, approval_id)
+    if trace_error:
+        body, status_code = trace_error
+        return jsonify(body), status_code
     job = _job_manager.submit({
         'framework': 'nkp',
         'type': 'nkp',
@@ -3401,6 +3521,7 @@ def submit_nkp_job():
         'configContent': config_content,
         'strict': bool(data.get('strict', False)),
         'approvalId': approval_id or None,
+        'trace': trace,
     }, current_user)
     if approval_id:
         _require_engines()
@@ -3667,6 +3788,7 @@ def list_nkp_profiles():
 @require_role('admin', 'operator')
 def create_nkp_profile():
     profile = _normalize_nkp_profile(request.json or {})
+    profile['revision'] = 1
     errors = _validate_nkp_profile(profile)
     if errors:
         return jsonify({'error': 'NKP deployment profile is incomplete', 'validation': errors}), 400
@@ -3675,6 +3797,7 @@ def create_nkp_profile():
         return jsonify({'error': 'An NKP deployment profile with this name already exists'}), 400
     profiles.insert(0, profile)
     _save_nkp_profiles(profiles)
+    _record_nkp_profile_revision(profile, 'created', (request.current_user or {}).get('username') or 'unknown')
     log.info('nkp_profile_created', extra={
         'event': 'nkp_profile_created',
         'action': 'create_nkp_profile',
@@ -3724,8 +3847,10 @@ def update_nkp_profile(profile_id):
         return jsonify({'error': 'NKP deployment profile is incomplete', 'validation': errors}), 400
     if any(item.get('id') != profile_id and item.get('name', '').lower() == profile['name'].lower() for item in profiles):
         return jsonify({'error': 'An NKP deployment profile with this name already exists'}), 400
+    profile['revision'] = _profile_revision_value(profiles[idx]) + 1
     profiles[idx] = profile
     _save_nkp_profiles(profiles)
+    _record_nkp_profile_revision(profile, 'updated', (request.current_user or {}).get('username') or 'unknown')
     log.info('nkp_profile_updated', extra={
         'event': 'nkp_profile_updated',
         'action': 'update_nkp_profile',
@@ -3733,6 +3858,46 @@ def update_nkp_profile(profile_id):
         'profileId': profile_id,
     })
     return jsonify(profile)
+
+
+@app.route('/api/nkp/profiles/<profile_id>/revisions')
+@require_role('admin', 'operator', 'viewer')
+def list_nkp_profile_revisions(profile_id):
+    profile = next((item for item in _list_nkp_profiles() if item.get('id') == profile_id), None)
+    if not profile:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(_list_nkp_profile_revisions(profile_id))
+
+
+@app.route('/api/nkp/profiles/<profile_id>/revisions/<int:revision>/restore', methods=['POST'])
+@require_role('admin', 'operator')
+def restore_nkp_profile_revision(profile_id, revision):
+    profiles = _list_nkp_profiles()
+    idx = next((i for i, item in enumerate(profiles) if item.get('id') == profile_id), None)
+    if idx is None:
+        return jsonify({'error': 'Not found'}), 404
+    entry = next((item for item in _list_nkp_profile_revisions(profile_id) if int(item.get('revision') or 0) == revision), None)
+    if not entry or not isinstance(entry.get('profile'), dict):
+        return jsonify({'error': 'Revision not found'}), 404
+    restored = _normalize_nkp_profile(entry['profile'])
+    restored['id'] = profile_id
+    restored['createdAt'] = profiles[idx].get('createdAt') or restored.get('createdAt') or _now_iso()
+    restored['revision'] = _profile_revision_value(profiles[idx]) + 1
+    restored['updatedAt'] = _now_iso()
+    errors = _validate_nkp_profile(restored)
+    if errors:
+        return jsonify({'error': 'Stored NKP profile revision is incomplete', 'validation': errors}), 400
+    profiles[idx] = restored
+    _save_nkp_profiles(profiles)
+    _record_nkp_profile_revision(restored, f'restored_from_{revision}', (request.current_user or {}).get('username') or 'unknown')
+    log.info('nkp_profile_revision_restored', extra={
+        'event': 'nkp_profile_revision_restored',
+        'action': 'restore_nkp_profile_revision',
+        'user': (request.current_user or {}).get('username'),
+        'profileId': profile_id,
+        'revision': revision,
+    })
+    return jsonify(restored)
 
 
 @app.route('/api/nkp/profiles/<profile_id>', methods=['DELETE'])
@@ -3774,6 +3939,7 @@ def generate_nkp_profile_config(profile_id):
     content = _nkp_profile_to_yaml(profile)
     _secure_write(path, content)
     readiness = _nkp_profile_readiness(profile)
+    schema_validation = _nkp_schema_validate_content(content)
     log.info('nkp_profile_config_generated', extra={
         'event': 'nkp_profile_config_generated',
         'action': 'generate_nkp_profile_config',
@@ -3786,7 +3952,17 @@ def generate_nkp_profile_config(profile_id):
         'filename': path.name,
         'content': content,
         'readiness': readiness,
-        'schemaValidation': _nkp_schema_validate_content(content),
+        'schemaValidation': schema_validation,
+        'trace': {
+            'framework': 'nkp',
+            'profileId': profile.get('id'),
+            'profileName': profile.get('name', ''),
+            'profileRevision': _profile_revision_value(profile),
+            'templateId': ((profile.get('template') or {}).get('id') or ''),
+            'templateName': ((profile.get('template') or {}).get('name') or ''),
+            'generatedConfigFile': path.name,
+            'schemaStatus': schema_validation.get('status', ''),
+        },
     })
 
 # ─── Config files ─────────────────────────────────────────────────────────────
@@ -4469,6 +4645,18 @@ def cancel_job(job_id):
     if not job:
         return jsonify({'error': 'not found'}), 404
     return jsonify(job)
+
+
+@app.route('/api/jobs/<job_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_job(job_id):
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    job, error = _job_manager.delete(job_id, current_user)
+    if error == 'not_found':
+        return jsonify({'error': 'not found'}), 404
+    if error == 'active':
+        return jsonify({'error': 'Active jobs must be cancelled or completed before deletion', 'job': job}), 409
+    return jsonify({'success': True, 'deleted': job})
 
 
 @app.route('/api/audit-log')

@@ -89,6 +89,22 @@ export interface ExecutionJob {
   progress?: ExecutionProgress
   logs?: ExecutionJobLogEvent[]
   taskIds?: string[]
+  trace?: {
+    framework?: string
+    phase?: string
+    configFile?: string
+    configSource?: string
+    generatedConfigFile?: string
+    approvalId?: string
+    profileId?: string
+    profileName?: string
+    profileRevision?: number
+    templateId?: string
+    templateName?: string
+    schemaStatus?: string
+    schemaMissing?: string[]
+    schemaWarnings?: string[]
+  }
 }
 
 export interface SystemCheck {

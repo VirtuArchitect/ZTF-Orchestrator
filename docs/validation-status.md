@@ -32,9 +32,9 @@ checks, static configuration checks, or local Docker checks:
 | PostgreSQL backup controls | Admin-only backup list/create/download endpoints, path rejection, and command secret handling are tested. |
 | Docker Compose | Default PostgreSQL-backed compose and file-backed compose validate successfully. |
 | Appliance kit | Appliance Compose file, first-boot scripts, cloud-init examples, and release packaging workflow are included. Local validation covers Compose rendering and script syntax only; QCOW2 image build and AHV import require infrastructure UAT. |
-| Durable execution jobs | Job submission, persisted logs, estimated phase progress, execution history integration, cancellation, and interrupted-job recovery logic are implemented and tested. |
+| Durable execution jobs | Job submission, persisted logs, estimated phase progress, execution history integration, cancellation, terminal job deletion controls, and interrupted-job recovery logic are implemented and tested. |
 | Dashboard and health | `/health` reports runtime, storage backend, database location, retention, job queue counts, and NKP binary readiness. |
-| NKP integration | Safe-phase install/update, template-aware profile packs, installed-example schema inference, example import, YAML preview/generation, profile validation, approval-gated execution, task ID extraction, and NKP binary registration/upload flows are implemented and covered by repository-level tests. |
+| NKP integration | Safe-phase install/update, template-aware profile packs, installed-example schema inference, example import, YAML preview/generation, profile validation, profile revisioning/restoration, execution trace metadata, approval-gated execution, task ID extraction, and NKP binary registration/upload flows are implemented and covered by repository-level tests. |
 | Pipelines | CRUD, viewer access, invalid workflows, empty steps, and streamed execution behavior are tested. |
 | Schedules | Schedule validation and configured config directory behavior are tested. |
 | Approvals | Create/approve/reject behavior and webhook integration are tested. |

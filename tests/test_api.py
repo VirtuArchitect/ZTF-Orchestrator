@@ -863,6 +863,52 @@ def test_job_captures_nutanix_task_ids_from_output(client, auth_headers):
     assert job['taskIds'] == [task_id]
 
 
+def test_admin_can_delete_terminal_job_but_not_active_job(client, auth_headers):
+    """Job queue records can be removed only after they are terminal."""
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    active_delete = client.delete(f'/api/jobs/{job_id}', headers=auth_headers)
+    assert active_delete.status_code == 409
+
+    cancel = client.post(f'/api/jobs/{job_id}/cancel', headers=auth_headers)
+    assert cancel.status_code == 200
+    assert cancel.get_json()['status'] == 'cancelled'
+
+    delete = client.delete(f'/api/jobs/{job_id}', headers=auth_headers)
+    assert delete.status_code == 200
+    assert delete.get_json()['deleted']['id'] == job_id
+
+    missing = client.get(f'/api/jobs/{job_id}', headers=auth_headers)
+    assert missing.status_code == 404
+
+
+def test_operator_cannot_delete_job_queue_record(client, auth_headers):
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+    _create_user(client, auth_headers, 'job-delete-op', 'operator')
+    op_headers = _login(client, 'job-delete-op')
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    job_id = resp.get_json()['id']
+    client.post(f'/api/jobs/{job_id}/cancel', headers=auth_headers)
+
+    delete = client.delete(f'/api/jobs/{job_id}', headers=op_headers)
+    assert delete.status_code == 403
+
+
 def test_nkp_status_reports_configured_framework(client, auth_headers, tmp_path):
     nkp_dir = tmp_path / 'nkp-zerotouch-framework'
     (nkp_dir / 'scripts').mkdir(parents=True)
@@ -942,6 +988,52 @@ def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypa
     assert job['framework'] == 'nkp'
     assert calls[0]['args'][0] == 'powershell'
     assert 'validate' in calls[0]['args']
+
+
+def test_nkp_job_records_trace_and_rejects_stale_profile_revision(client, auth_headers):
+    import server
+
+    server._job_manager.stop()
+    server._job_manager = server.ExecutionJobManager(1)
+
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    assert create.status_code == 201
+    profile = create.get_json()
+
+    update_body = {**profile, 'description': 'revision 2'}
+    update = client.put(f"/api/nkp/profiles/{profile['id']}", json=update_body, headers=auth_headers)
+    assert update.status_code == 200
+    profile = update.get_json()
+    assert profile['revision'] == 2
+
+    stale = client.post('/api/nkp/jobs',
+                        json={
+                            'phase': 'validate',
+                            'configFile': 'nkp-test.yaml',
+                            'configContent': 'environment:\n  name: lab\n',
+                            'profileId': profile['id'],
+                            'profileRevision': 1,
+                        },
+                        headers=auth_headers)
+    assert stale.status_code == 409
+    assert stale.get_json()['currentRevision'] == 2
+
+    submit = client.post('/api/nkp/jobs',
+                         json={
+                             'phase': 'validate',
+                             'configFile': 'nkp-test.yaml',
+                             'configContent': 'environment:\n  name: lab\n',
+                             'profileId': profile['id'],
+                             'profileRevision': 2,
+                             'schemaValidation': {'status': 'pass', 'missing': [], 'warnings': []},
+                         },
+                         headers=auth_headers)
+    assert submit.status_code == 202
+    job = submit.get_json()
+    assert job['trace']['profileId'] == profile['id']
+    assert job['trace']['profileRevision'] == 2
+    assert job['trace']['schemaStatus'] == 'fail'
+    assert 'cluster' in job['trace']['schemaMissing']
 
 
 def test_nkp_controlled_phase_requires_approval(client, auth_headers):
@@ -1280,10 +1372,29 @@ def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, i
     assert create.status_code == 201
     profile = create.get_json()
     assert profile['name'] == 'Lab NKP Management'
+    assert profile['revision'] == 1
 
     listing = client.get('/api/nkp/profiles', headers=auth_headers)
     assert listing.status_code == 200
     assert listing.get_json()[0]['id'] == profile['id']
+
+    updated_profile = {**profile, 'description': 'Updated for revision test'}
+    update = client.put(f"/api/nkp/profiles/{profile['id']}", json=updated_profile, headers=auth_headers)
+    assert update.status_code == 200
+    profile = update.get_json()
+    assert profile['revision'] == 2
+
+    revisions = client.get(f"/api/nkp/profiles/{profile['id']}/revisions", headers=auth_headers)
+    assert revisions.status_code == 200
+    revision_body = revisions.get_json()
+    assert [item['revision'] for item in revision_body[:2]] == [2, 1]
+    assert revision_body[0]['profile']['description'] == 'Updated for revision test'
+
+    restore = client.post(f"/api/nkp/profiles/{profile['id']}/revisions/1/restore", headers=auth_headers)
+    assert restore.status_code == 200
+    profile = restore.get_json()
+    assert profile['revision'] == 3
+    assert profile['description'] == _valid_nkp_profile()['description']
 
     generated = client.post(f"/api/nkp/profiles/{profile['id']}/generate",
                             json={'filename': 'nkp-lab-management.yaml'},
@@ -1296,6 +1407,8 @@ def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, i
     assert 'nkp-mgmt-lab' in payload['content']
     assert payload['schemaValidation']['status'] in {'pass', 'warn'}
     assert payload['readiness']['score'] >= 80
+    assert payload['trace']['profileId'] == profile['id']
+    assert payload['trace']['profileRevision'] == 3
     assert (isolated_data_dir / 'configs' / 'nkp-lab-management.yaml').exists()
 
 
