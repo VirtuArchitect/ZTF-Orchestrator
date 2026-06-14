@@ -1767,6 +1767,70 @@ def test_database_backup_restore_creates_safety_backup_and_runs_pg_restore(clien
     assert 'secret' not in calls[1]['cmd']
 
 
+def test_maintenance_lock_blocks_execution_submissions(client, auth_headers):
+    import server
+
+    assert server._enter_maintenance('database restore', 'test') is True
+    try:
+        job_resp = client.post('/api/jobs',
+                               json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                               headers=auth_headers)
+        execute_resp = client.post('/api/execute',
+                                   json={'script': 'AddAdServerPe', 'configFile': 'test.yml'},
+                                   headers=auth_headers)
+        nkp_resp = client.post('/api/nkp/jobs',
+                               json={'phase': 'validate', 'configContent': 'cluster: test\n'},
+                               headers=auth_headers)
+    finally:
+        server._exit_maintenance()
+
+    for resp in (job_resp, execute_resp, nkp_resp):
+        assert resp.status_code == 503
+        body = resp.get_json()
+        assert body['maintenance']['active'] is True
+        assert 'database restore' in body['error']
+
+
+def test_database_restore_rejects_running_jobs_and_releases_lock(client, auth_headers, monkeypatch):
+    import server
+
+    monkeypatch.setattr(server._storage, 'name', 'postgres')
+    monkeypatch.setattr(server._job_manager, 'active_count', lambda: 1)
+
+    resp = client.post('/api/maintenance/database-backups/ztf-orchestrator-20260614-120000-000001.dump/restore',
+                       json={'confirmation': 'RESTORE'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 409
+    assert 'running or cancelling' in resp.get_json()['error']
+    assert server._maintenance_active() is False
+
+
+def test_database_restore_maintenance_lock_blocks_jobs_during_restore(client, auth_headers, monkeypatch):
+    import server
+
+    monkeypatch.setattr(server._storage, 'name', 'postgres')
+    monkeypatch.setattr(server._job_manager, 'active_count', lambda: 0)
+
+    def fake_restore(filename, requested_by):
+        assert server._maintenance_active() is True
+        with pytest.raises(RuntimeError, match='maintenance'):
+            server._job_manager.submit({'script': 'AddAdServerPe', 'configFile': 'test.yml'}, requested_by)
+        return {
+            'restored': {'filename': filename, 'size': 1, 'createdAt': '2026-06-14T00:00:00.000000Z'},
+            'safetyBackup': {'filename': 'ztf-orchestrator-safety.dump', 'size': 1, 'createdAt': '2026-06-14T00:00:01.000000Z'},
+        }
+
+    monkeypatch.setattr(server, '_restore_postgres_backup', fake_restore)
+
+    resp = client.post('/api/maintenance/database-backups/ztf-orchestrator-20260614-120000-000001.dump/restore',
+                       json={'confirmation': 'RESTORE'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    assert server._maintenance_active() is False
+
+
 def test_database_backup_restore_operator_forbidden(client, auth_headers):
     _create_user(client, auth_headers, 'op_restore', 'operator')
     oh = _login(client, 'op_restore')

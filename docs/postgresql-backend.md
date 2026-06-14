@@ -174,5 +174,7 @@ Admin restore is available from **Settings > Storage**. The restore flow require
 a typed `RESTORE` confirmation, creates a safety backup first, runs
 `pg_restore --clean --if-exists --single-transaction`, records the event in the
 audit log, and recommends an application restart afterwards so in-memory
-sessions and workers reload restored state. Treat restore as a recovery action,
-not a routine operational button.
+sessions and workers reload restored state. During restore, the execution queue
+is locked: new workflow/NKP job submissions are rejected, queued jobs are not
+started, and restore is refused if jobs are already running or cancelling. Treat
+restore as a recovery action, not a routine operational button.

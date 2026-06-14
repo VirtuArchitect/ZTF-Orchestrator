@@ -2205,6 +2205,54 @@ def _schedule_validation_error(data: dict, existing: dict | None = None) -> str:
 
 _RUNNING: set[str] = set()
 _RUNNING_LOCK = threading.Lock()
+_MAINTENANCE_LOCK = threading.RLock()
+_MAINTENANCE = {
+    'active': False,
+    'reason': '',
+    'startedAt': '',
+    'startedBy': '',
+}
+
+
+def _maintenance_state() -> dict:
+    with _MAINTENANCE_LOCK:
+        return dict(_MAINTENANCE)
+
+
+def _maintenance_active() -> bool:
+    return bool(_maintenance_state().get('active'))
+
+
+def _enter_maintenance(reason: str, user: str) -> bool:
+    with _MAINTENANCE_LOCK:
+        if _MAINTENANCE['active']:
+            return False
+        _MAINTENANCE.update({
+            'active': True,
+            'reason': reason,
+            'startedAt': _now_iso(),
+            'startedBy': user,
+        })
+        return True
+
+
+def _exit_maintenance() -> None:
+    with _MAINTENANCE_LOCK:
+        _MAINTENANCE.update({
+            'active': False,
+            'reason': '',
+            'startedAt': '',
+            'startedBy': '',
+        })
+
+
+def _maintenance_error() -> tuple[dict, int]:
+    state = _maintenance_state()
+    reason = state.get('reason') or 'maintenance'
+    return {
+        'error': f'Execution queue is locked for {reason}',
+        'maintenance': state,
+    }, 503
 
 # ─── User & session management ────────────────────────────────────────────────
 
@@ -2727,6 +2775,8 @@ class ExecutionJobManager:
             self._condition.notify_all()
 
     def submit(self, payload: dict, user: str) -> dict:
+        if _maintenance_active():
+            raise RuntimeError('Execution queue is locked for maintenance')
         now = self._now()
         job_type = payload.get('type') or ('workflow' if payload.get('workflow') else 'script')
         workflow_name = payload.get('workflow') or payload.get('script') or payload.get('nkpPhase') or ''
@@ -2803,6 +2853,10 @@ class ExecutionJobManager:
         log.info('job_deleted', extra={'user': user, 'jobId': job_id, 'workflow': job.get('workflow')})
         return self._public_job(job), None
 
+    def active_count(self) -> int:
+        with self._condition:
+            return sum(1 for job in self._load_jobs() if job.get('status') in {'running', 'cancelling'})
+
     def stream_events(self, job_id: str, start_offset: int = 0) -> Generator[str, None, None]:
         offset = max(0, start_offset)
         last_job_update = ''
@@ -2833,11 +2887,11 @@ class ExecutionJobManager:
         while True:
             with self._condition:
                 job = self._next_queued_job()
-                while not job:
+                while not job or _maintenance_active():
                     if self._stop:
                         return
-                    self._condition.wait()
-                    job = self._next_queued_job()
+                    self._condition.wait(timeout=1.0)
+                    job = None if _maintenance_active() else self._next_queued_job()
                 if self._stop:
                     return
                 self._mark_running(job)
@@ -3979,6 +4033,9 @@ def install_nkp():
 @require_role('admin', 'operator')
 def submit_nkp_job():
     data = request.json or {}
+    if _maintenance_active():
+        body, status_code = _maintenance_error()
+        return jsonify(body), status_code
     phase = str(data.get('phase') or '').strip()
     if phase not in NKP_SAFE_PHASES:
         return jsonify({'error': 'NKP phase is not allowed'}), 400
@@ -4939,6 +4996,9 @@ def run_pipeline(pipeline_id: str):
 @limiter.limit('10 per minute')
 def execute_workflow():
     data           = request.json or {}
+    if _maintenance_active():
+        body, status_code = _maintenance_error()
+        return jsonify(body), status_code
     workflow       = data.get('workflow')
     config_content = data.get('configContent')
     config_file    = data.get('configFile')
@@ -5172,6 +5232,9 @@ def execute_workflow():
 @limiter.limit('10 per minute')
 def submit_job():
     data = request.json or {}
+    if _maintenance_active():
+        body, status_code = _maintenance_error()
+        return jsonify(body), status_code
     workflow = data.get('workflow')
     raw_script = data.get('script')
     if isinstance(raw_script, list):
@@ -5379,7 +5442,15 @@ def restore_database_backup(filename):
     data = request.json or {}
     if data.get('confirmation') != 'RESTORE':
         return jsonify({'error': 'Type RESTORE to confirm database restore'}), 400
+    if not _enter_maintenance('database restore', current_user):
+        body, status_code = _maintenance_error()
+        return jsonify(body), status_code
     try:
+        if _job_manager.active_count():
+            return jsonify({
+                'error': 'Cannot restore while execution jobs are running or cancelling',
+                'maintenance': _maintenance_state(),
+            }), 409
         result = _restore_postgres_backup(filename, current_user)
         return jsonify({
             'success': True,
@@ -5398,6 +5469,8 @@ def restore_database_backup(filename):
             'error': str(exc),
         })
         return jsonify({'error': str(exc)}), 400
+    finally:
+        _exit_maintenance()
 
 
 @app.route('/api/drift')

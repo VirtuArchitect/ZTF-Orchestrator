@@ -29,7 +29,7 @@ checks, static configuration checks, or local Docker checks:
 | Config file management | Create, read, update, delete, backup, restore, path traversal rejection, extension validation, and oversized body handling are tested. |
 | Workflow validation | Unknown workflow/script rejection, YAML validation, dry-run checks, and legacy `fc_ip` normalization are tested. |
 | Storage abstraction | File storage round-trip is tested. PostgreSQL storage document/session/audit behavior is testable when `ZTF_TEST_DATABASE_URL` is supplied. |
-| PostgreSQL backup controls | Admin-only backup list/create/download/restore endpoints, restore confirmation, safety-backup creation, path rejection, and command secret handling are tested. |
+| PostgreSQL backup controls | Admin-only backup list/create/download/restore endpoints, restore confirmation, safety-backup creation, restore maintenance locking, path rejection, and command secret handling are tested. |
 | Docker Compose | Default PostgreSQL-backed compose and file-backed compose validate successfully. |
 | Appliance kit | Appliance Compose file, first-boot scripts, cloud-init examples, and release packaging workflow are included. Local validation covers Compose rendering and script syntax only; QCOW2 image build and AHV import require infrastructure UAT. |
 | Durable execution jobs | Job submission, persisted logs, estimated phase progress, execution history integration, cancellation, terminal job deletion controls, and interrupted-job recovery logic are implemented and tested. |

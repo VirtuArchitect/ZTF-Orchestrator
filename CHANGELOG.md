@@ -39,6 +39,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   latest run, and records needing review.
 - Admin-only PostgreSQL backup restore flow with typed confirmation, automatic
   pre-restore safety backup, audit logging, and restart guidance.
+- Restore maintenance lock that rejects new workflow/NKP job submissions,
+  prevents queued jobs from starting during restore, and refuses restore while
+  jobs are already running or cancelling.
 
 ---
 
