@@ -3,6 +3,7 @@
 import io
 import json
 import socket
+import zipfile
 from pathlib import Path
 import pytest
 
@@ -1557,6 +1558,55 @@ def test_nkp_profile_readiness_blocks_duplicate_and_outside_ips(client, auth_hea
     failed = {item['id'] for item in data['checks'] if item['status'] == 'fail'}
     assert 'subnet_membership' in failed
     assert 'unique_ips' in failed
+
+
+def test_validation_evidence_create_list_download_delete(client, auth_headers):
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    assert create.status_code == 201
+    profile = create.get_json()
+
+    evidence = client.post('/api/validation-evidence',
+                           json={'profileId': profile['id'], 'notes': 'lab validation checkpoint'},
+                           headers=auth_headers)
+    assert evidence.status_code == 201
+    record = evidence.get_json()
+    assert record['profileId'] == profile['id']
+    assert record['profileName'] == profile['name']
+    assert record['generatedYaml']
+    assert record['readiness']['score'] >= 80
+    assert record['schemaValidation']['status'] in {'pass', 'warn'}
+
+    listing = client.get('/api/validation-evidence', headers=auth_headers)
+    assert listing.status_code == 200
+    assert listing.get_json()[0]['id'] == record['id']
+
+    download = client.get(f"/api/validation-evidence/{record['id']}/download", headers=auth_headers)
+    assert download.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(download.data)) as zf:
+        names = set(zf.namelist())
+        assert any(name.endswith('/evidence.json') for name in names)
+        assert any(name.endswith('/summary.md') for name in names)
+        assert any(name.endswith('/generated.yaml') for name in names)
+
+    delete = client.delete(f"/api/validation-evidence/{record['id']}", headers=auth_headers)
+    assert delete.status_code == 200
+    assert client.get(f"/api/validation-evidence/{record['id']}", headers=auth_headers).status_code == 404
+
+
+def test_validation_evidence_viewer_can_read_not_create_or_delete(client, auth_headers):
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    profile = create.get_json()
+    evidence = client.post('/api/validation-evidence',
+                           json={'profileId': profile['id']},
+                           headers=auth_headers).get_json()
+
+    _create_user(client, auth_headers, 'evidence-viewer', 'viewer')
+    viewer_headers = _login(client, 'evidence-viewer')
+
+    assert client.get('/api/validation-evidence', headers=viewer_headers).status_code == 200
+    assert client.get(f"/api/validation-evidence/{evidence['id']}/download", headers=viewer_headers).status_code == 200
+    assert client.post('/api/validation-evidence', json={'profileId': profile['id']}, headers=viewer_headers).status_code == 403
+    assert client.delete(f"/api/validation-evidence/{evidence['id']}", headers=viewer_headers).status_code == 403
 
 
 def test_nkp_job_rejects_invalid_yaml_before_queue(client, auth_headers):

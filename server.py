@@ -17,8 +17,10 @@ import sys
 import threading
 import urllib.parse
 import uuid
+import zipfile
 from copy import deepcopy
 from functools import wraps
+from io import BytesIO
 from pathlib import Path
 from typing import Generator
 
@@ -68,6 +70,7 @@ JOBS_FILE      = CONFIG_DIR / 'jobs.json'
 NKP_PROFILES_FILE = CONFIG_DIR / 'nkp_profiles.json'
 NKP_PROFILE_REVISIONS_FILE = CONFIG_DIR / 'nkp_profile_revisions.json'
 NKP_BINARIES_FILE = CONFIG_DIR / 'nkp_binaries.json'
+VALIDATION_EVIDENCE_FILE = CONFIG_DIR / 'validation_evidence.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
@@ -436,6 +439,176 @@ def _nkp_cli_compatibility(path_text: str, timeout: int = 8) -> dict:
         },
         'checks': checks,
     }
+
+
+def _list_validation_evidence() -> list[dict]:
+    evidence = read_json(VALIDATION_EVIDENCE_FILE, [])
+    if not isinstance(evidence, list):
+        return []
+    return sorted(
+        [item for item in evidence if isinstance(item, dict)],
+        key=lambda item: str(item.get('createdAt') or ''),
+        reverse=True,
+    )
+
+
+def _save_validation_evidence(evidence: list[dict]) -> None:
+    write_json(VALIDATION_EVIDENCE_FILE, evidence[:500])
+
+
+def _redact_command_output(text: str) -> str:
+    value = str(text or '')
+    value = re.sub(r'(?i)(password|token|secret|apikey|api_key)\s*[:=]\s*\S+', r'\1=<redacted>', value)
+    value = re.sub(r'postgresql://([^:\s/]+):([^@\s]+)@', r'postgresql://\1:<redacted>@', value)
+    return value[:12000]
+
+
+def _evidence_summary_status(readiness: dict, compatibility: dict | None, schema_validation: dict | None = None) -> str:
+    if readiness.get('status') == 'blocked':
+        return 'blocked'
+    if compatibility and compatibility.get('status') == 'blocked':
+        return 'blocked'
+    if schema_validation and schema_validation.get('status') == 'fail':
+        return 'blocked'
+    if readiness.get('status') == 'needs_attention' or (compatibility and compatibility.get('status') == 'needs_review'):
+        return 'needs_review'
+    if schema_validation and schema_validation.get('status') == 'warn':
+        return 'needs_review'
+    return 'ready'
+
+
+def _build_validation_evidence(data: dict, user: str) -> dict:
+    profile_id = str(data.get('profileId') or '').strip()
+    profile = None
+    if profile_id:
+        profile = next((item for item in _list_nkp_profiles() if item.get('id') == profile_id), None)
+        if not profile:
+            raise ValueError('NKP deployment profile was not found')
+    elif isinstance(data.get('profile'), dict):
+        profile = _normalize_nkp_profile(data['profile'])
+
+    generated_yaml = str(data.get('generatedYaml') or '')
+    readiness = data.get('readiness') if isinstance(data.get('readiness'), dict) else {}
+    schema_validation = data.get('schemaValidation') if isinstance(data.get('schemaValidation'), dict) else {}
+    compatibility = data.get('compatibility') if isinstance(data.get('compatibility'), dict) else None
+
+    if profile:
+        generated_yaml = generated_yaml or _nkp_profile_to_yaml(profile)
+        readiness = readiness or _nkp_profile_readiness(profile)
+        schema_validation = schema_validation or _nkp_schema_validate_content(generated_yaml)
+        if data.get('includeCompatibility'):
+            binary_path = str(((profile.get('nkp') or {}).get('binaryPath')) or '').strip()
+            if binary_path:
+                compatibility = _nkp_cli_compatibility(binary_path)
+
+    if not generated_yaml and data.get('configFile'):
+        path = safe_config_path(str(data.get('configFile') or ''), get_configs_dir())
+        if path and path.exists():
+            generated_yaml = path.read_text(encoding='utf-8')
+            schema_validation = schema_validation or _nkp_schema_validate_content(generated_yaml)
+
+    if not generated_yaml:
+        raise ValueError('generatedYaml, configFile, profileId, or profile is required')
+
+    if not readiness:
+        readiness = {'status': 'unknown', 'score': 0, 'summary': {'passed': 0, 'warnings': 0, 'failed': 0}, 'checks': []}
+    if not schema_validation:
+        schema_validation = _nkp_schema_validate_content(generated_yaml)
+
+    job_id = str(data.get('jobId') or '').strip()
+    job = _job_manager.get_job(job_id) if job_id else None
+    output_excerpt = _redact_command_output(data.get('output') or '')
+    if job and not output_excerpt:
+        output_excerpt = _redact_command_output('\n'.join(
+            str(event.get('data') or '') for event in job.get('logs', [])[-80:]
+        ))
+
+    created_at = _now_iso()
+    record = {
+        'id': str(uuid.uuid4()),
+        'type': str(data.get('type') or 'nkp-validation'),
+        'status': _evidence_summary_status(readiness, compatibility, schema_validation),
+        'createdAt': created_at,
+        'createdBy': user or 'unknown',
+        'notes': str(data.get('notes') or '').strip(),
+        'profileId': (profile or {}).get('id') or profile_id,
+        'profileName': (profile or {}).get('name') or str(data.get('profileName') or '').strip(),
+        'profileRevision': _profile_revision_value(profile) if profile else data.get('profileRevision'),
+        'configFile': str(data.get('configFile') or '').strip(),
+        'approvalId': str(data.get('approvalId') or '').strip(),
+        'jobId': job_id,
+        'taskIds': job.get('taskIds', []) if job else data.get('taskIds', []),
+        'readiness': readiness,
+        'schemaValidation': schema_validation,
+        'compatibility': compatibility,
+        'generatedYaml': generated_yaml,
+        'outputExcerpt': output_excerpt,
+        'metadata': data.get('metadata') if isinstance(data.get('metadata'), dict) else {},
+    }
+    evidence = _list_validation_evidence()
+    evidence.insert(0, record)
+    _save_validation_evidence(evidence)
+    log.info('validation_evidence_created', extra={
+        'event': 'validation_evidence_created',
+        'action': 'create_validation_evidence',
+        'user': user,
+        'evidenceId': record['id'],
+        'status': record['status'],
+        'profileId': record.get('profileId'),
+    })
+    return record
+
+
+def _validation_evidence_markdown(record: dict) -> str:
+    lines = [
+        f"# Validation Evidence - {record.get('profileName') or record.get('id')}",
+        '',
+        f"- Status: {record.get('status')}",
+        f"- Created: {record.get('createdAt')}",
+        f"- Created by: {record.get('createdBy')}",
+        f"- Profile: {record.get('profileName') or 'n/a'}",
+        f"- Profile revision: {record.get('profileRevision') or 'n/a'}",
+        f"- Config file: {record.get('configFile') or 'n/a'}",
+        f"- Approval ID: {record.get('approvalId') or 'n/a'}",
+        f"- Job ID: {record.get('jobId') or 'n/a'}",
+        f"- Task IDs: {', '.join(record.get('taskIds') or []) or 'n/a'}",
+        '',
+        '## Readiness',
+        '',
+        f"- Status: {(record.get('readiness') or {}).get('status', 'unknown')}",
+        f"- Score: {(record.get('readiness') or {}).get('score', 0)}%",
+        '',
+    ]
+    for check in (record.get('readiness') or {}).get('checks', []):
+        lines.append(f"- {check.get('status', '').upper()}: {check.get('label')} - {check.get('detail')}")
+    lines += ['', '## Schema Validation', '', f"- Status: {(record.get('schemaValidation') or {}).get('status', 'unknown')}"]
+    missing = (record.get('schemaValidation') or {}).get('missing') or []
+    warnings = (record.get('schemaValidation') or {}).get('warnings') or []
+    if missing:
+        lines.append(f"- Missing: {', '.join(missing)}")
+    if warnings:
+        lines.append(f"- Warnings: {'; '.join(warnings)}")
+    compatibility = record.get('compatibility') or {}
+    if compatibility:
+        lines += ['', '## NKP CLI Compatibility', '', f"- Status: {compatibility.get('status', 'unknown')}"]
+        for check in compatibility.get('checks', []):
+            lines.append(f"- {check.get('status', '').upper()}: {check.get('label')} - {check.get('detail')}")
+    lines += ['', '## Notes', '', record.get('notes') or 'No notes supplied.', '']
+    return '\n'.join(lines)
+
+
+def _validation_evidence_zip(record: dict) -> BytesIO:
+    buffer = BytesIO()
+    safe_id = _safe_nkp_binary_filename(record.get('id') or 'validation-evidence')
+    with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(f'{safe_id}/evidence.json', json.dumps(record, indent=2))
+        zf.writestr(f'{safe_id}/summary.md', _validation_evidence_markdown(record))
+        if record.get('generatedYaml'):
+            zf.writestr(f'{safe_id}/generated.yaml', record.get('generatedYaml'))
+        if record.get('outputExcerpt'):
+            zf.writestr(f'{safe_id}/output.txt', record.get('outputExcerpt'))
+    buffer.seek(0)
+    return buffer
 
 
 def _set_default_nkp_binary(binaries: list[dict], binary_id: str) -> bool:
@@ -3222,6 +3395,8 @@ def operational_visibility_summary():
     backups = _list_postgres_backups()
     profiles = _list_nkp_profiles()
     binaries = _list_nkp_binaries()
+    evidence = _list_validation_evidence()
+    latest_evidence = evidence[0] if evidence else None
     available_binaries = [item for item in binaries if item.get('exists')]
     default_binary = next((item for item in binaries if item.get('default')), None)
     configs_dir = get_configs_dir()
@@ -3300,6 +3475,15 @@ def operational_visibility_summary():
             'nkpBinaries': len(binaries),
             'availableNkpBinaries': len(available_binaries),
             'defaultNkpBinary': (default_binary or {}).get('name'),
+        },
+        'evidence': {
+            'total': len(evidence),
+            'latestStatus': latest_evidence.get('status') if latest_evidence else 'missing',
+            'latestAt': latest_evidence.get('createdAt') if latest_evidence else None,
+            'latestProfile': latest_evidence.get('profileName') if latest_evidence else None,
+            'ready': sum(1 for item in evidence if item.get('status') == 'ready'),
+            'blocked': sum(1 for item in evidence if item.get('status') == 'blocked'),
+            'needsReview': sum(1 for item in evidence if item.get('status') == 'needs_review'),
         },
     })
 
@@ -4235,6 +4419,63 @@ def generate_nkp_profile_config(profile_id):
     })
 
 # ─── Config files ─────────────────────────────────────────────────────────────
+
+@app.route('/api/validation-evidence')
+@require_role('admin', 'operator', 'viewer')
+def list_validation_evidence():
+    try:
+        limit = int(request.args.get('limit', '200'))
+    except ValueError:
+        return jsonify({'error': 'limit must be an integer'}), 400
+    return jsonify(_list_validation_evidence()[:max(1, min(limit, 500))])
+
+
+@app.route('/api/validation-evidence', methods=['POST'])
+@require_role('admin', 'operator')
+def create_validation_evidence():
+    try:
+        record = _build_validation_evidence(request.json or {}, (request.current_user or {}).get('username', 'unknown'))
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    return jsonify(record), 201
+
+
+@app.route('/api/validation-evidence/<evidence_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_validation_evidence(evidence_id):
+    record = next((item for item in _list_validation_evidence() if item.get('id') == evidence_id), None)
+    if not record:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(record)
+
+
+@app.route('/api/validation-evidence/<evidence_id>/download')
+@require_role('admin', 'operator', 'viewer')
+def download_validation_evidence(evidence_id):
+    record = next((item for item in _list_validation_evidence() if item.get('id') == evidence_id), None)
+    if not record:
+        return jsonify({'error': 'Not found'}), 404
+    bundle = _validation_evidence_zip(record)
+    filename = f"ztf-validation-evidence-{_safe_nkp_binary_filename(evidence_id)}.zip"
+    return send_file(bundle, mimetype='application/zip', as_attachment=True, download_name=filename)
+
+
+@app.route('/api/validation-evidence/<evidence_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_validation_evidence(evidence_id):
+    evidence = _list_validation_evidence()
+    updated = [item for item in evidence if item.get('id') != evidence_id]
+    if len(updated) == len(evidence):
+        return jsonify({'error': 'Not found'}), 404
+    _save_validation_evidence(updated)
+    log.info('validation_evidence_deleted', extra={
+        'event': 'validation_evidence_deleted',
+        'action': 'delete_validation_evidence',
+        'user': (request.current_user or {}).get('username'),
+        'evidenceId': evidence_id,
+    })
+    return jsonify({'success': True})
+
 
 @app.route('/api/configs')
 @require_role('admin', 'operator', 'viewer')

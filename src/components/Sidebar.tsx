@@ -3,7 +3,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive
 } from 'lucide-react'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -48,6 +48,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Govern',
     items: [
       { path: '/approvals', icon: ShieldCheck, label: 'Approvals', roles: ALL_ROLES },
+      { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
       { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
       { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
     ],

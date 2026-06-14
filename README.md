@@ -13,9 +13,9 @@ Unofficial community framework orchestration. This project is not affiliated wit
 ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
 an internal operations console: teams can define connection settings, generate
 workflow or NKP profile YAML, register NKP binaries, check CLI compatibility,
-submit execution jobs, track output, detect drift, schedule repeatable tasks,
-request approvals, and review audit history without every operator working
-directly in Git, YAML, and CLI commands.
+submit execution jobs, capture validation evidence, track output, detect drift,
+schedule repeatable tasks, request approvals, and review audit history without
+every operator working directly in Git, YAML, and CLI commands.
 
 ## Engineering Quality
 
@@ -424,6 +424,14 @@ binary/source path hints, and generated YAML syntax. Profiles are marked
 **ready**, **needs attention**, or **blocked** with pass/warning/fail details.
 Pasted NKP YAML is parsed before a safe-phase job is queued.
 
+### Validation Evidence
+Timestamped evidence records for NKP deployment readiness. Admins and operators
+can create an evidence run from a saved NKP profile; viewers can read and
+download existing records. Each bundle captures readiness scoring, generated
+YAML, schema validation, optional NKP CLI compatibility output, notes, linked
+approval/job/task references where available, and a Markdown summary. Downloads
+are ZIP bundles intended for change records, customer UAT, and handover packs.
+
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from
 `ztf-orchestrator.log` — timestamp, level badge, message, user, IP, and status.
@@ -577,6 +585,7 @@ all files within use 0600.
 | `schedules.json` | Scheduled execution definitions |
 | `parallel_runs.json` | Parallel multi-site run results (last 100) |
 | `approvals.json` | Approval request records (last 200) |
+| `validation_evidence.json` | Timestamped NKP validation evidence and export metadata |
 | `ztf-orchestrator.log` | Structured JSON application log (Audit Log source) |
 | `configs/` | User-generated YAML/JSON workflow config files |
 | `configs/*.yml.bak.N` | Automatic backups — last 5 versions per file |

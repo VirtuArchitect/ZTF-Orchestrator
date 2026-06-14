@@ -5,7 +5,7 @@ import {
   Activity, AlertTriangle, Zap, Settings, Download,
   TrendingUp, Database, Cloud, RefreshCw, ShieldCheck,
   FileCode, PlayCircle, ArrowRight, FileSearch,
-  ListChecks, Shield, CalendarClock, HardDrive, Boxes
+  ListChecks, Shield, CalendarClock, HardDrive, Boxes, FileArchive
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -74,6 +74,15 @@ interface OperationalVisibility {
     nkpBinaries: number
     availableNkpBinaries: number
     defaultNkpBinary: string | null
+  }
+  evidence: {
+    total: number
+    latestStatus: string
+    latestAt: string | null
+    latestProfile: string | null
+    ready: number
+    blocked: number
+    needsReview: number
   }
 }
 
@@ -220,6 +229,10 @@ export default function Dashboard() {
   const generatedNkpConfigs = visibility?.deployment.generatedNkpConfigs ?? 0
   const nkpBinaries = visibility?.deployment.nkpBinaries ?? 0
   const availableNkpBinaries = visibility?.deployment.availableNkpBinaries ?? 0
+  const evidenceTotal = visibility?.evidence.total ?? 0
+  const latestEvidenceStatus = visibility?.evidence.latestStatus ?? 'missing'
+  const latestEvidenceAt = visibility?.evidence.latestAt ? new Date(visibility.evidence.latestAt) : null
+  const evidenceNeedsAttention = (visibility?.evidence.blocked ?? 0) + (visibility?.evidence.needsReview ?? 0)
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -307,7 +320,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-6 gap-4 mb-6">
         <DashboardMiniSection
           title="Deployment Readiness"
           icon={Boxes}
@@ -339,6 +352,17 @@ export default function Dashboard() {
             { label: 'Pending approvals', value: pendingApprovals, tone: pendingApprovals ? 'warning' : 'neutral' },
             { label: 'Drifted checks', value: driftedChecks, tone: driftedChecks ? 'bad' : 'neutral', path: '/drift' },
             { label: 'Unknown baselines', value: unknownBaselines, tone: unknownBaselines ? 'warning' : 'neutral', path: '/drift' },
+          ]}
+        />
+        <DashboardMiniSection
+          title="Validation Evidence"
+          icon={FileArchive}
+          path="/validation-evidence"
+          items={[
+            { label: 'Records', value: evidenceTotal, tone: evidenceTotal ? 'good' : 'warning' },
+            { label: 'Latest status', value: latestEvidenceStatus.replace('_', ' '), tone: latestEvidenceStatus === 'ready' ? 'good' : latestEvidenceStatus === 'blocked' ? 'bad' : 'warning' },
+            { label: 'Needs review', value: evidenceNeedsAttention, tone: evidenceNeedsAttention ? 'warning' : 'neutral' },
+            { label: 'Latest run', value: latestEvidenceAt && !Number.isNaN(latestEvidenceAt.getTime()) ? latestEvidenceAt.toLocaleString() : 'None', tone: latestEvidenceAt ? 'good' : 'neutral' },
           ]}
         />
         <DashboardMiniSection

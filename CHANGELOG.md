@@ -32,6 +32,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   metadata, and Nutanix Image Builder planning fields.
 - Readiness checks for proxy no-proxy coverage, air-gapped registry TLS/CA
   handling, and Image Builder input completeness.
+- Validation Evidence page and APIs for timestamped NKP readiness evidence,
+  generated YAML snapshots, schema validation, optional CLI compatibility
+  output, approval/job/task references, and downloadable ZIP bundles.
+- Dashboard validation evidence signals showing total records, latest status,
+  latest run, and records needing review.
 
 ---
 
