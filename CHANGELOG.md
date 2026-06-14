@@ -37,6 +37,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   output, approval/job/task references, and downloadable ZIP bundles.
 - Dashboard validation evidence signals showing total records, latest status,
   latest run, and records needing review.
+- Admin-only PostgreSQL backup restore flow with typed confirmation, automatic
+  pre-restore safety backup, audit logging, and restart guidance.
 
 ---
 

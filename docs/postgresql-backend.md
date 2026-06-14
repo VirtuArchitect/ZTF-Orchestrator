@@ -152,6 +152,7 @@ Admins can create PostgreSQL logical backups from **Settings > Storage** or via:
 POST /api/maintenance/database-backups
 GET  /api/maintenance/database-backups
 GET  /api/maintenance/database-backups/<filename>
+POST /api/maintenance/database-backups/<filename>/restore
 ```
 
 Backups are created with `pg_dump --format=custom --no-owner --no-privileges`
@@ -161,11 +162,17 @@ and stored under:
 ZTF_DATA_DIR/backups/postgres/
 ```
 
-The Docker image includes `postgresql-client` so `pg_dump` is available in the
-standard container deployment. For manual installations, ensure `pg_dump` is on
-the service `PATH`.
+The Docker image includes `postgresql-client` so `pg_dump` and `pg_restore` are
+available in the standard container deployment. For manual installations,
+ensure both commands are on the service `PATH`.
 
 These backups are intended for lab, Docker, and small-team deployments. For
 managed PostgreSQL, prefer platform-native automated backups and recovery
-policies. Restore remains a documented/manual operation because it is
-destructive and environment-specific.
+policies.
+
+Admin restore is available from **Settings > Storage**. The restore flow requires
+a typed `RESTORE` confirmation, creates a safety backup first, runs
+`pg_restore --clean --if-exists --single-transaction`, records the event in the
+audit log, and recommends an application restart afterwards so in-memory
+sessions and workers reload restored state. Treat restore as a recovery action,
+not a routine operational button.

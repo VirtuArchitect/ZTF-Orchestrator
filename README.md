@@ -451,7 +451,9 @@ Three roles are available:
 ### Settings
 ZTF path, Python executable, config directory. Write access is admin-only.
 **Storage:** view active backend, database location, retention windows, and
-create/download admin-only PostgreSQL logical backups.
+create/download admin-only PostgreSQL logical backups. Admins can also restore
+a backup from Settings after a guarded confirmation flow; the app creates a
+safety backup first and recommends a service restart after restore.
 **Notifications:** set a Webhook URL to receive a `POST` on every workflow or
 script completion (payload: `workflow`, `status`, `returnCode`, `user`,
 `timestamp`, `executionId`).

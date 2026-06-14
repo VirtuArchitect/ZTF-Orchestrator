@@ -1577,6 +1577,18 @@ def _list_postgres_backups() -> list[dict]:
     return sorted(backups, key=lambda item: item['createdAt'], reverse=True)
 
 
+def _postgres_backup_path(filename: str) -> Path | None:
+    safe_name = Path(filename).name
+    if safe_name != filename or not safe_name.startswith('ztf-orchestrator-') or not safe_name.endswith('.dump'):
+        return None
+    path = (POSTGRES_BACKUP_DIR / safe_name).resolve()
+    try:
+        path.relative_to(POSTGRES_BACKUP_DIR.resolve())
+    except ValueError:
+        return None
+    return path
+
+
 def _parse_iso_datetime(value: str | None) -> datetime.datetime | None:
     if not value:
         return None
@@ -1629,6 +1641,37 @@ def _pg_dump_command(database_url: str, output_path: Path) -> tuple[list[str], d
     return cmd, env
 
 
+def _pg_restore_command(database_url: str, input_path: Path) -> tuple[list[str], dict[str, str]]:
+    parsed = urllib.parse.urlparse(database_url)
+    if parsed.scheme not in {'postgresql', 'postgres'}:
+        raise ValueError('ZTF_DATABASE_URL must use postgresql://')
+    if not parsed.hostname:
+        raise ValueError('ZTF_DATABASE_URL must include a host')
+    db_name = parsed.path.lstrip('/')
+    if not db_name:
+        raise ValueError('ZTF_DATABASE_URL must include a database name')
+
+    env = os.environ.copy()
+    env['PGCONNECT_TIMEOUT'] = env.get('PGCONNECT_TIMEOUT', '10')
+    if parsed.password:
+        env['PGPASSWORD'] = urllib.parse.unquote(parsed.password)
+
+    cmd = [
+        'pg_restore',
+        '--clean',
+        '--if-exists',
+        '--no-owner',
+        '--no-privileges',
+        '--single-transaction',
+        '--host', parsed.hostname,
+        '--port', str(parsed.port or 5432),
+        '--username', urllib.parse.unquote(parsed.username or 'ztf'),
+        '--dbname', db_name,
+        str(input_path),
+    ]
+    return cmd, env
+
+
 def _create_postgres_backup(requested_by: str) -> dict:
     if _storage.name != 'postgres':
         raise RuntimeError('Database backups are only available when PostgreSQL storage is active')
@@ -1637,7 +1680,7 @@ def _create_postgres_backup(requested_by: str) -> dict:
         raise RuntimeError('ZTF_DATABASE_URL is not configured')
 
     _secure_mkdir(POSTGRES_BACKUP_DIR)
-    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S-%f')
     output_path = POSTGRES_BACKUP_DIR / f'ztf-orchestrator-{timestamp}.dump'
     cmd, env = _pg_dump_command(database_url, output_path)
 
@@ -1676,6 +1719,49 @@ def _create_postgres_backup(requested_by: str) -> dict:
     return metadata
 
 # ─── Structured logging ───────────────────────────────────────────────────────
+
+def _restore_postgres_backup(filename: str, requested_by: str) -> dict:
+    if _storage.name != 'postgres':
+        raise RuntimeError('Database restore is only available when PostgreSQL storage is active')
+    database_url = os.environ.get('ZTF_DATABASE_URL', '').strip()
+    if not database_url:
+        raise RuntimeError('ZTF_DATABASE_URL is not configured')
+
+    backup_path = _postgres_backup_path(filename)
+    if not backup_path or not backup_path.exists() or not backup_path.is_file():
+        raise FileNotFoundError('Backup not found')
+
+    safety_backup = _create_postgres_backup(requested_by)
+    cmd, env = _pg_restore_command(database_url, backup_path)
+
+    try:
+        result = subprocess.run(
+            cmd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=int(os.environ.get('ZTF_RESTORE_TIMEOUT', os.environ.get('ZTF_BACKUP_TIMEOUT', '300'))),
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError('pg_restore is not installed or not on PATH') from exc
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError('PostgreSQL restore timed out') from exc
+
+    if result.returncode != 0:
+        err = (result.stderr or result.stdout or 'pg_restore failed').strip()
+        raise RuntimeError(err[:500])
+
+    restored = _postgres_backup_metadata(backup_path)
+    log.warning('postgres_backup_restored', extra={
+        'action': 'postgres_backup_restored',
+        'user': requested_by,
+        'backupFile': restored['filename'],
+        'safetyBackupFile': safety_backup['filename'],
+        'status': 'success',
+    })
+    return {'restored': restored, 'safetyBackup': safety_backup}
+
 
 class JSONFormatter(logging.Formatter):
     _standard_attrs = {
@@ -5270,13 +5356,8 @@ def create_database_backup():
 @require_role('admin')
 def download_database_backup(filename):
     """Download a previously created PostgreSQL backup."""
-    safe_name = Path(filename).name
-    if safe_name != filename or not safe_name.startswith('ztf-orchestrator-') or not safe_name.endswith('.dump'):
-        return jsonify({'error': 'Invalid backup filename'}), 400
-    path = (POSTGRES_BACKUP_DIR / safe_name).resolve()
-    try:
-        path.relative_to(POSTGRES_BACKUP_DIR.resolve())
-    except ValueError:
+    path = _postgres_backup_path(filename)
+    if not path:
         return jsonify({'error': 'Invalid backup filename'}), 400
     if not path.exists() or not path.is_file():
         return jsonify({'error': 'Backup not found'}), 404
@@ -5284,8 +5365,39 @@ def download_database_backup(filename):
         path,
         mimetype='application/octet-stream',
         as_attachment=True,
-        download_name=safe_name,
+        download_name=path.name,
     )
+
+
+@app.route('/api/maintenance/database-backups/<filename>/restore', methods=['POST'])
+@app.route('/api/maintenance/database-backups/<path:filename>/restore', methods=['POST'])
+@require_role('admin')
+@limiter.limit('1 per hour')
+def restore_database_backup(filename):
+    """Restore a PostgreSQL logical backup after explicit admin confirmation."""
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    data = request.json or {}
+    if data.get('confirmation') != 'RESTORE':
+        return jsonify({'error': 'Type RESTORE to confirm database restore'}), 400
+    try:
+        result = _restore_postgres_backup(filename, current_user)
+        return jsonify({
+            'success': True,
+            'restored': result['restored'],
+            'safetyBackup': result['safetyBackup'],
+            'restartRecommended': True,
+            'message': 'Database restore completed. Restart the application service so in-memory sessions and workers reload restored state.',
+        })
+    except FileNotFoundError:
+        return jsonify({'error': 'Backup not found'}), 404
+    except RuntimeError as exc:
+        log.warning('postgres_restore_failed', extra={
+            'action': 'postgres_restore_failed',
+            'user': current_user,
+            'backupFile': filename,
+            'error': str(exc),
+        })
+        return jsonify({'error': str(exc)}), 400
 
 
 @app.route('/api/drift')

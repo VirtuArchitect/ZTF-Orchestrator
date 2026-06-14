@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
-  Bell, Copy, Database, Download, FolderOpen, Globe2, HardDrive, Network,
-  Plus, Save, Server, ShieldCheck, Trash2, RefreshCw,
+  AlertTriangle, Bell, Copy, Database, Download, FolderOpen, Globe2, HardDrive, Network,
+  Plus, RotateCcw, Save, Server, ShieldCheck, Trash2, RefreshCw, X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import Layout from '../components/Layout'
@@ -316,7 +316,12 @@ export default function Settings() {
   const [backupsLoading, setBackupsLoading] = useState(false)
   const [backupRunning, setBackupRunning] = useState(false)
   const [backupError, setBackupError] = useState('')
+  const [backupMessage, setBackupMessage] = useState('')
   const [backupStorage, setBackupStorage] = useState('')
+  const [restoreTarget, setRestoreTarget] = useState<DatabaseBackup | null>(null)
+  const [restoreConfirm, setRestoreConfirm] = useState('')
+  const [restoreUnderstood, setRestoreUnderstood] = useState(false)
+  const [restoreRunning, setRestoreRunning] = useState(false)
   const isAdmin = user?.role === 'admin'
   const storageBackend = health?.storage || backupStorage
 
@@ -450,6 +455,7 @@ export default function Settings() {
 
   const createBackup = async () => {
     setBackupError('')
+    setBackupMessage('')
     setBackupRunning(true)
     try {
       const response = await apiFetch('/api/maintenance/database-backups', { method: 'POST' })
@@ -458,6 +464,7 @@ export default function Settings() {
         setBackupError(data.error || 'Database backup failed')
         return
       }
+      setBackupMessage(`Backup created: ${data.backup?.filename || 'completed'}`)
       setBackups(prev => [data.backup, ...prev.filter(item => item.filename !== data.backup.filename)])
       await loadBackups()
     } finally {
@@ -466,6 +473,7 @@ export default function Settings() {
   }
 
   const downloadBackup = async (backup: DatabaseBackup) => {
+    setBackupError('')
     const response = await apiFetch(`/api/maintenance/database-backups/${encodeURIComponent(backup.filename)}`)
     if (!response.ok) {
       setBackupError('Backup download failed')
@@ -478,6 +486,40 @@ export default function Settings() {
     link.download = backup.filename
     link.click()
     URL.revokeObjectURL(url)
+  }
+
+  const openRestore = (backup: DatabaseBackup) => {
+    setBackupError('')
+    setBackupMessage('')
+    setRestoreTarget(backup)
+    setRestoreConfirm('')
+    setRestoreUnderstood(false)
+  }
+
+  const restoreBackup = async () => {
+    if (!restoreTarget || restoreConfirm !== 'RESTORE' || !restoreUnderstood) return
+    setRestoreRunning(true)
+    setBackupError('')
+    setBackupMessage('')
+    try {
+      const response = await apiFetch(`/api/maintenance/database-backups/${encodeURIComponent(restoreTarget.filename)}/restore`, {
+        method: 'POST',
+        body: JSON.stringify({ confirmation: restoreConfirm }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setBackupError(data.error || 'Database restore failed')
+        return
+      }
+      setBackupMessage(data.message || `Restored ${restoreTarget.filename}. Restart the service to reload restored state.`)
+      setRestoreTarget(null)
+      setRestoreConfirm('')
+      setRestoreUnderstood(false)
+      await loadBackups()
+      await loadHealth()
+    } finally {
+      setRestoreRunning(false)
+    }
   }
 
   const tabs = [
@@ -632,6 +674,12 @@ export default function Settings() {
                   </div>
                 )}
 
+                {backupMessage && (
+                  <div className="rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-3 py-2 text-sm text-nutanix-teal">
+                    {backupMessage}
+                  </div>
+                )}
+
                 <div className="rounded-lg border border-border overflow-hidden">
                   {backups.length === 0 ? (
                     <div className="px-4 py-8 text-center text-sm text-gray-500">
@@ -645,10 +693,20 @@ export default function Settings() {
                           {formatDate(backup.createdAt)} · {formatBytes(backup.size)}
                         </div>
                       </div>
-                      <button onClick={() => downloadBackup(backup)} className="btn-secondary gap-1.5 w-fit">
-                        <Download size={14} />
-                        Download
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => downloadBackup(backup)} className="btn-secondary gap-1.5 w-fit">
+                          <Download size={14} />
+                          Download
+                        </button>
+                        <button
+                          onClick={() => openRestore(backup)}
+                          disabled={!isAdmin || restoreRunning || storageBackend !== 'postgres'}
+                          className="btn-danger gap-1.5 w-fit"
+                        >
+                          <RotateCcw size={14} />
+                          Restore
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -916,6 +974,76 @@ export default function Settings() {
           </div>
         )}
       </div>
+
+      {restoreTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-xl rounded-xl border border-border bg-surface p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-lg border border-red-500/30 bg-red-950/30 p-2">
+                  <AlertTriangle size={20} className="text-red-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-100">Restore PostgreSQL Backup</h3>
+                  <p className="mt-1 text-sm text-gray-400">
+                    Restoring this backup will overwrite the current database state. A safety backup is created first.
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setRestoreTarget(null)} disabled={restoreRunning} className="text-gray-500 hover:text-gray-200">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-lg border border-border bg-gray-950/50 p-4">
+              <div className="font-mono text-sm text-gray-100 break-all">{restoreTarget.filename}</div>
+              <div className="mt-1 text-xs text-gray-500">{formatDate(restoreTarget.createdAt)} · {formatBytes(restoreTarget.size)}</div>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-amber-700/30 bg-amber-900/10 px-3 py-2 text-sm text-amber-300">
+              Current users, sessions, settings, jobs, approvals, evidence records, and audit data may roll back to the selected backup. Restart the application after restore.
+            </div>
+
+            <label className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-gray-950/40 px-3 py-3">
+              <input
+                type="checkbox"
+                checked={restoreUnderstood}
+                disabled={restoreRunning}
+                onChange={event => setRestoreUnderstood(event.target.checked)}
+                className="mt-1 h-4 w-4 accent-red-500"
+              />
+              <span className="text-sm text-gray-300">
+                I understand this restore will overwrite the active PostgreSQL database and that a service restart is recommended afterwards.
+              </span>
+            </label>
+
+            <div className="mt-4">
+              <label className="label">Type RESTORE to confirm</label>
+              <input
+                className="input font-mono"
+                value={restoreConfirm}
+                disabled={restoreRunning}
+                onChange={event => setRestoreConfirm(event.target.value)}
+                placeholder="RESTORE"
+              />
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <button onClick={() => setRestoreTarget(null)} disabled={restoreRunning} className="btn-secondary">
+                Cancel
+              </button>
+              <button
+                onClick={restoreBackup}
+                disabled={restoreRunning || !restoreUnderstood || restoreConfirm !== 'RESTORE'}
+                className="btn-danger gap-1.5"
+              >
+                <RotateCcw size={14} />
+                {restoreRunning ? 'Restoring...' : 'Create Safety Backup and Restore'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }

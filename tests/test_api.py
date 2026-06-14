@@ -1703,8 +1703,88 @@ def test_database_backup_create_and_download(client, auth_headers, monkeypatch):
     assert download.data == b'PGDMP-test'
 
 
+def test_database_backup_restore_requires_confirmation(client, auth_headers, monkeypatch):
+    import server
+
+    monkeypatch.setattr(server._storage, 'name', 'postgres')
+    backup_dir = server.POSTGRES_BACKUP_DIR
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup = backup_dir / 'ztf-orchestrator-20260614-120000-000001.dump'
+    backup.write_bytes(b'PGDMP-test')
+
+    resp = client.post(f"/api/maintenance/database-backups/{backup.name}/restore",
+                       json={'confirmation': 'restore'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    assert 'RESTORE' in resp.get_json()['error']
+
+
+def test_database_backup_restore_creates_safety_backup_and_runs_pg_restore(client, auth_headers, monkeypatch):
+    """Admin restore creates a safety pg_dump before running pg_restore."""
+    import server
+
+    calls = []
+
+    class FakeResult:
+        returncode = 0
+        stdout = ''
+        stderr = ''
+
+    def fake_run(cmd, env=None, **kwargs):
+        calls.append({'cmd': cmd, 'env': env, 'kwargs': kwargs})
+        if cmd[0] == 'pg_dump':
+            Path(cmd[cmd.index('--file') + 1]).write_bytes(b'PGDMP-safety')
+        return FakeResult()
+
+    monkeypatch.setattr(server._storage, 'name', 'postgres')
+    monkeypatch.setenv('ZTF_DATABASE_URL', 'postgresql://ztf:secret@postgres:5432/ztf_orchestrator')
+    monkeypatch.setattr(server.subprocess, 'run', fake_run)
+
+    backup_dir = server.POSTGRES_BACKUP_DIR
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup = backup_dir / 'ztf-orchestrator-20260614-120000-000001.dump'
+    backup.write_bytes(b'PGDMP-target')
+
+    resp = client.post(f"/api/maintenance/database-backups/{backup.name}/restore",
+                       json={'confirmation': 'RESTORE'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['success'] is True
+    assert data['restored']['filename'] == backup.name
+    assert data['safetyBackup']['filename'].startswith('ztf-orchestrator-')
+    assert data['safetyBackup']['filename'] != backup.name
+    assert data['restartRecommended'] is True
+
+    assert calls[0]['cmd'][0] == 'pg_dump'
+    assert calls[1]['cmd'][0] == 'pg_restore'
+    assert '--clean' in calls[1]['cmd']
+    assert '--single-transaction' in calls[1]['cmd']
+    assert str(backup) in calls[1]['cmd']
+    assert calls[1]['env']['PGPASSWORD'] == 'secret'
+    assert 'secret' not in calls[1]['cmd']
+
+
+def test_database_backup_restore_operator_forbidden(client, auth_headers):
+    _create_user(client, auth_headers, 'op_restore', 'operator')
+    oh = _login(client, 'op_restore')
+    resp = client.post('/api/maintenance/database-backups/ztf-orchestrator-20260614-120000-000001.dump/restore',
+                       json={'confirmation': 'RESTORE'},
+                       headers=oh)
+    assert resp.status_code == 403
+
+
 def test_database_backup_download_rejects_traversal(client, auth_headers):
     resp = client.get('/api/maintenance/database-backups/..%2Fsecret.dump', headers=auth_headers)
+    assert resp.status_code in (400, 404)
+
+
+def test_database_backup_restore_rejects_traversal(client, auth_headers):
+    resp = client.post('/api/maintenance/database-backups/..%2Fsecret.dump/restore',
+                       json={'confirmation': 'RESTORE'},
+                       headers=auth_headers)
     assert resp.status_code in (400, 404)
 
 
