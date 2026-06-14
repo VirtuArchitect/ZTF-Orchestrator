@@ -9,6 +9,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Changes in this section are present on `main` after v1.2.9 and should be moved
+into the next numbered release section when the next version is cut.
+
 ### Added
 - NKP Deployment Template Packs for Management Cluster, Workload Cluster, and
   Air-Gapped / Local Registry profile starts, including required fields,
@@ -42,6 +45,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Restore maintenance lock that rejects new workflow/NKP job submissions,
   prevents queued jobs from starting during restore, and refuses restore while
   jobs are already running or cancelling.
+
+### Documentation
+- Refreshed NKP v2.17 alignment notes after local validation with real NKP
+  v2.17.1 bundles staged under `C:\Share`.
+- Refreshed the repository security assessment notes to cover PostgreSQL
+  restore, NKP safe-phase execution, and current release-validation scope.
 
 ---
 

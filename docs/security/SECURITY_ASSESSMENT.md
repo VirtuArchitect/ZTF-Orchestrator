@@ -2,16 +2,21 @@
 
 Assessment date: 2026-06-05
 
+Documentation refresh: 2026-06-14
+
 Repository reviewed: `VirtuArchitect/ZTF-Orchestrator`
 
 Local path reviewed:
 `C:\Users\john\OneDrive\09 Profile\Documents\GitHub\ZTF-Orchestrator`
 
-Branch and commit reviewed: `main`, `a620303`
+Branch and commit reviewed for the original assessment: `main`, `a620303`
 
-Repository state note: the local checkout was behind `origin/main` by 2 commits
-at the time of review. Findings therefore apply to the local checkout reviewed,
-not necessarily every commit currently available on GitHub.
+Documentation refresh commit: `main`, `062dc02`
+
+Repository state note: the original review was performed against a historical
+checkout. This document has since been refreshed to describe the current
+security posture and known scope boundaries, but the full command set below
+should still be rerun for every release candidate.
 
 ## Assessment Type
 
@@ -31,7 +36,9 @@ In scope:
 - Authentication, session, and role enforcement review.
 - Workflow/job execution path review.
 - PostgreSQL and file storage review.
+- PostgreSQL backup and restore control review.
 - Docker Compose deployment review.
+- NKP safe-phase integration and approval-gating review.
 - Dependency and static-analysis checks.
 - Limited local automated test execution.
 
@@ -40,6 +47,7 @@ Out of scope:
 - Live Nutanix workflow execution.
 - Prism Central, Foundation Central, or Prism Element attack simulation.
 - Production PostgreSQL backup and restore validation.
+- Live NKP deployment, image creation, registry push, or Kommander installation.
 - Kubernetes runtime validation.
 - Load balancing and multi-instance runtime testing.
 - CDN or cache-layer validation.
@@ -70,6 +78,9 @@ No critical findings were identified during this baseline review.
 
 The most meaningful remaining hardening items are environment-specific
 validation, production secret rotation, and production backup/recovery testing.
+PostgreSQL backup/restore, NKP safe-phase execution, approval gates, and
+maintenance locking have since been added to the codebase and should be included
+in each release security review.
 
 ## Findings
 
@@ -167,6 +178,49 @@ Recommendation:
 
 Status: review recommended.
 
+### Low: PostgreSQL Restore Is a Powerful Admin Operation
+
+The application now includes admin-only PostgreSQL logical backup and restore.
+The restore flow requires typed confirmation, creates a safety backup first,
+locks job submission/workers during restore, and records audit events.
+
+Risk:
+
+- A mistaken restore can intentionally roll back users, sessions, settings,
+  jobs, approvals, evidence records, and audit data to an earlier point.
+
+Recommendation:
+
+- Treat restore as a recovery operation.
+- Restrict it to trusted admins.
+- Keep external database or VM-level backups for production environments.
+- Test restore in the target deployment model before relying on it.
+
+Status: mitigated by confirmation, safety backup, audit logging, and
+maintenance locking; production recovery validation is still required.
+
+### Low: NKP Execution Is Constrained But High Impact
+
+NKP integration intentionally runs only allowlisted safe phases and uses
+approval gates for controlled phases. Apply/destructive operations remain
+constrained by design.
+
+Risk:
+
+- Incorrect NKP profiles or credentials could still affect deployment planning,
+  generated YAML, registry preparation, or approved execution paths.
+
+Recommendation:
+
+- Keep NKP apply/destructive behavior disabled unless there is a dedicated,
+  reviewed release.
+- Require approvals for registry/deploy phases.
+- Store validation evidence before running against real infrastructure.
+- Restrict NKP binary and framework path settings to admins.
+
+Status: mitigated by allowlists, approvals, profile validation, execution
+traceability, and job audit records; live infrastructure UAT remains required.
+
 ### Low: Powerful Execution Surface by Design
 
 ZTF-Orchestrator intentionally launches ZeroTouch Framework workflows through
@@ -200,10 +254,14 @@ Status: mitigated by current controls; ongoing operational risk.
   destinations unless explicitly allowlisted.
 - Subprocess calls use argument arrays rather than `shell=True`.
 - Frontend YAML preview escapes content before injecting highlighting markup.
+- PostgreSQL restore is admin-only, creates a safety backup first, and locks job
+  execution while active.
+- NKP execution uses safe-phase allowlists, approval gates for controlled
+  phases, profile version traceability, and persisted job logs.
 
 ## Test Results
 
-Targeted local tests completed successfully:
+Original targeted local tests completed successfully:
 
 ```text
 106 passed, 1 skipped
@@ -216,6 +274,10 @@ Dependency audits completed with no known vulnerabilities reported by `npm audit
 or `pip-audit`. Bandit completed with no medium or high findings; remaining low
 findings are documented scanner noise around expected subprocess usage and
 cleanup exception handling.
+
+Current release validation should rerun the above commands before tagging or
+publishing. The current repository documentation also records local validation
+coverage in [Validation Status](../validation-status.md).
 
 ## Recommended Next Steps
 
