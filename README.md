@@ -1,16 +1,21 @@
 # ZTF-Orchestrator · v1.2.9
 
 A web-based installer and configuration orchestrator for the
-[Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework),
-replacing GitHub-based configuration management with a visual interface.
+[Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
+and guided
+[Nutanix Kubernetes Platform](https://www.nutanix.com/products/cloud-native/kubernetes-platform)
+automation via the optional
+[NKP ZeroTouch Framework](https://github.com/VirtuArchitect/nkp-zerotouch-framework)
+integration.
 
 Unofficial community framework orchestration. This project is not affiliated with or supported by Nutanix.
 
-ZTF-Orchestrator turns ZeroTouch Framework into an internal operations console:
-teams can define connection settings, generate workflow YAML, submit execution
-jobs, track output, detect drift, schedule repeatable tasks, request approvals,
-and review audit history without every operator working directly in Git, YAML,
-and CLI commands.
+ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
+an internal operations console: teams can define connection settings, generate
+workflow or NKP profile YAML, register NKP binaries, check CLI compatibility,
+submit execution jobs, track output, detect drift, schedule repeatable tasks,
+request approvals, and review audit history without every operator working
+directly in Git, YAML, and CLI commands.
 
 ## Engineering Quality
 

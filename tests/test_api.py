@@ -1181,6 +1181,38 @@ def test_nkp_binary_viewer_can_list_but_not_write(client, auth_headers):
     assert create.status_code == 403
 
 
+def test_nkp_cli_compatibility_runs_registered_binary_checks(client, auth_headers, tmp_path, monkeypatch):
+    import server
+
+    nkp_cli = tmp_path / 'nkp'
+    nkp_cli.write_text('fake nkp')
+
+    def fake_run(cmd, **kwargs):
+        class Result:
+            returncode = 0
+            stdout = 'create cluster nutanix endpoint control-plane worker create image nutanix cluster subnet push bundle image-bundle registry'
+        assert cmd[0] == str(nkp_cli)
+        return Result()
+
+    monkeypatch.setattr(server.subprocess, 'run', fake_run)
+
+    resp = client.post('/api/nkp/compatibility', json={'path': str(nkp_cli)}, headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['status'] == 'compatible'
+    assert data['cliPath'] == str(nkp_cli)
+    assert data['summary']['failed'] == 0
+    assert {item['id'] for item in data['checks']} >= {'nkp_version', 'nutanix_cluster_create_help'}
+
+
+def test_nkp_cli_compatibility_blocks_missing_path(client, auth_headers):
+    resp = client.post('/api/nkp/compatibility', json={'path': '/not/a/real/nkp'}, headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['status'] == 'blocked'
+    assert data['summary']['failed'] == 1
+
+
 def _valid_nkp_profile():
     return {
         'name': 'Lab NKP Management',
@@ -1209,6 +1241,30 @@ def _valid_nkp_profile():
             'ntpServers': ['10.42.1.30'],
             'domain': 'lab.local',
             'vlanId': '120',
+        },
+        'proxy': {
+            'httpProxy': '',
+            'httpsProxy': '',
+            'noProxy': [],
+        },
+        'registry': {
+            'endpoint': 'registry.lab.local',
+            'namespace': 'nkp',
+            'credentialRef': 'registry_cred',
+            'caCert': '',
+            'insecure': False,
+        },
+        'imageBuilder': {
+            'enabled': False,
+            'prismElementCluster': '',
+            'subnet': '',
+            'sourceImage': '',
+            'artifactBundle': '',
+            'imageName': 'nkp-node-image',
+            'bastionHost': '',
+            'gpuProfile': '',
+            'fips': False,
+            'insecure': False,
         },
         'nodes': [
             {
@@ -1283,6 +1339,7 @@ def test_nkp_airgapped_template_requires_registry_and_binary(client, auth_header
     }
     profile['nkp']['registry'] = ''
     profile['nkp']['binaryPath'] = ''
+    profile['registry']['endpoint'] = ''
 
     resp = client.post('/api/nkp/profiles/preview', json=profile, headers=auth_headers)
     assert resp.status_code == 200
@@ -1290,6 +1347,51 @@ def test_nkp_airgapped_template_requires_registry_and_binary(client, auth_header
     assert 'template_airgap_registry' in failed
     assert 'template_airgap_local_binary' in failed
     assert 'registry:' in resp.get_json()['content']
+
+
+def test_nkp_profile_preview_includes_proxy_registry_and_image_builder(client, auth_headers):
+    profile = _valid_nkp_profile()
+    profile['template'] = {
+        'id': 'airgapped-local-registry',
+        'name': 'Air-Gapped / Local Registry',
+        'category': 'Restricted',
+        'managementClusterRef': '',
+    }
+    profile['proxy'] = {
+        'httpProxy': 'http://proxy.lab.local:8080',
+        'httpsProxy': 'http://proxy.lab.local:8080',
+        'noProxy': ['10.42.0.0/16', 'registry.lab.local'],
+    }
+    profile['registry'] = {
+        'endpoint': 'registry.lab.local:5000',
+        'namespace': 'nkp',
+        'credentialRef': 'registry_cred',
+        'caCert': '/etc/pki/registry-ca.pem',
+        'insecure': False,
+    }
+    profile['imageBuilder'] = {
+        'enabled': True,
+        'prismElementCluster': 'pe-cluster-a',
+        'subnet': 'vlan-k8s',
+        'sourceImage': 'ubuntu-22.04',
+        'artifactBundle': '/opt/nkp/artifacts',
+        'imageName': 'nkp-node-image-v217',
+        'bastionHost': 'bastion.lab.local',
+        'gpuProfile': '',
+        'fips': True,
+        'insecure': False,
+    }
+
+    resp = client.post('/api/nkp/profiles/preview', json=profile, headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert 'proxy:' in data['content']
+    assert 'imageBuilder:' in data['content']
+    assert 'registry.lab.local:5000' in data['content']
+    checks = {item['id']: item for item in data['readiness']['checks']}
+    assert checks['proxy_no_proxy']['status'] == 'pass'
+    assert checks['image_builder_inputs']['status'] == 'pass'
+    assert checks['template_airgap_registry_ca']['status'] == 'pass'
 
 
 def test_nkp_examples_list_schema_validate_and_import(client, auth_headers, tmp_path):

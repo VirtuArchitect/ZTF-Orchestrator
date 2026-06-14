@@ -26,6 +26,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   running jobs protected from deletion.
 - NKP v2.17 alignment matrix documenting supported areas, partial areas,
   planned gaps, and required infrastructure UAT before production claims.
+- NKP CLI compatibility checker for registered binaries, including version,
+  Nutanix cluster creation help, Image Builder help, and bundle push help.
+- Expanded NKP deployment profiles with proxy/no-proxy, air-gapped registry
+  metadata, and Nutanix Image Builder planning fields.
+- Readiness checks for proxy no-proxy coverage, air-gapped registry TLS/CA
+  handling, and Image Builder input completeness.
 
 ---
 

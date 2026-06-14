@@ -63,6 +63,30 @@ interface NkpProfile {
     domain: string
     vlanId: string
   }
+  proxy: {
+    httpProxy: string
+    httpsProxy: string
+    noProxy: string[]
+  }
+  registry: {
+    endpoint: string
+    namespace: string
+    credentialRef: string
+    caCert: string
+    insecure: boolean
+  }
+  imageBuilder: {
+    enabled: boolean
+    prismElementCluster: string
+    subnet: string
+    sourceImage: string
+    artifactBundle: string
+    imageName: string
+    bastionHost: string
+    gpuProfile: string
+    fips: boolean
+    insecure: boolean
+  }
   nodes: NkpNode[]
   createdAt?: string
   updatedAt?: string
@@ -109,6 +133,26 @@ interface NkpBinary {
   exists?: boolean
   status?: 'available' | 'missing' | string
   createdAt?: string
+}
+
+interface NkpCompatibilityCheck {
+  id: string
+  label: string
+  status: 'pass' | 'warn' | 'fail'
+  detail: string
+  command: string
+  output: string
+}
+
+interface NkpCompatibilityResult {
+  status: 'compatible' | 'needs_review' | 'blocked'
+  cliPath: string
+  summary: {
+    passed: number
+    warnings: number
+    failed: number
+  }
+  checks: NkpCompatibilityCheck[]
 }
 
 interface NkpTemplatePack {
@@ -169,6 +213,20 @@ const emptyProfile = (): NkpProfile => ({
   prismCentral: { endpoint: '', credentialRef: 'pc_user' },
   cluster: { name: '', type: 'management', kubernetesVersion: '', vip: '' },
   network: { subnet: '', gateway: '', dnsServers: [], ntpServers: [], domain: '', vlanId: '' },
+  proxy: { httpProxy: '', httpsProxy: '', noProxy: [] },
+  registry: { endpoint: '', namespace: 'nkp', credentialRef: '', caCert: '', insecure: false },
+  imageBuilder: {
+    enabled: false,
+    prismElementCluster: '',
+    subnet: '',
+    sourceImage: '',
+    artifactBundle: '',
+    imageName: 'nkp-node-image',
+    bastionHost: '',
+    gpuProfile: '',
+    fips: false,
+    insecure: false,
+  },
   nodes: [{ name: 'node-1', serial: '', hostIp: '', cvmIp: '', ipmiIp: '', rack: '' }],
 })
 
@@ -205,6 +263,8 @@ export default function NKPFramework() {
   const [binaryMessage, setBinaryMessage] = useState('')
   const [binaryError, setBinaryError] = useState('')
   const [binarySaving, setBinarySaving] = useState(false)
+  const [compatibility, setCompatibility] = useState<NkpCompatibilityResult | null>(null)
+  const [compatibilityChecking, setCompatibilityChecking] = useState(false)
   const [binaryUploadFile, setBinaryUploadFile] = useState<File | null>(null)
   const [binaryForm, setBinaryForm] = useState({ name: '', version: '', path: '' })
   const [templates, setTemplates] = useState<NkpTemplatePack[]>([])
@@ -616,6 +676,30 @@ export default function NKPFramework() {
     setBinaryMessage(`${binary.name} applied to the deployment profile.`)
   }
 
+  const checkCompatibility = async (binary?: NkpBinary) => {
+    setCompatibilityChecking(true)
+    setBinaryError('')
+    setBinaryMessage('')
+    try {
+      const body = binary
+        ? { binaryId: binary.id }
+        : { path: binaryForm.path || profile.nkp.binaryPath }
+      const resp = await apiFetch('/api/nkp/compatibility', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setBinaryError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setCompatibility(data)
+      setBinaryMessage(`Compatibility check ${data.status === 'compatible' ? 'passed' : data.status === 'blocked' ? 'blocked' : 'needs review'}.`)
+    } finally {
+      setCompatibilityChecking(false)
+    }
+  }
+
   const restoreProfileRevision = async (revision: NkpProfileRevision) => {
     if (!profile.id) return
     if (!confirm(`Restore ${profile.name} from revision ${revision.revision}? This creates a new revision.`)) return
@@ -998,6 +1082,10 @@ export default function NKPFramework() {
                 {binarySaving ? <Loader size={14} className="animate-spin" /> : <Plus size={14} />}
                 Register Path
               </button>
+              <button onClick={() => checkCompatibility()} disabled={compatibilityChecking || (!binaryForm.path && !profile.nkp.binaryPath)} className="btn-secondary mt-2 gap-1.5">
+                {compatibilityChecking ? <Loader size={14} className="animate-spin" /> : <FileSearch size={14} />}
+                Check CLI Compatibility
+              </button>
             </div>
 
             <div className="rounded-lg border border-border bg-gray-950/30 p-4">
@@ -1053,6 +1141,10 @@ export default function NKPFramework() {
                         <Download size={14} />
                         Use in Profile
                       </button>
+                      <button onClick={() => checkCompatibility(binary)} disabled={compatibilityChecking || !binary.exists} className="btn-secondary gap-1.5">
+                        {compatibilityChecking ? <Loader size={14} className="animate-spin" /> : <FileSearch size={14} />}
+                        Check
+                      </button>
                       <button onClick={() => setDefaultBinary(binary)} disabled={!canEdit || binary.default} className="btn-secondary gap-1.5">
                         <Star size={14} />
                         Default
@@ -1067,6 +1159,51 @@ export default function NKPFramework() {
               ))
             )}
           </div>
+
+          {compatibility && (
+            <div className={clsx(
+              'mt-5 rounded-lg border p-4',
+              compatibility.status === 'compatible'
+                ? 'border-nutanix-teal/30 bg-nutanix-teal/10'
+                : compatibility.status === 'blocked'
+                  ? 'border-red-500/30 bg-red-950/20'
+                  : 'border-yellow-500/30 bg-yellow-950/20'
+            )}>
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-gray-100">NKP CLI Compatibility</h3>
+                  <p className="mt-1 text-sm text-gray-400">
+                    {compatibility.summary.passed} passed, {compatibility.summary.warnings} warnings, {compatibility.summary.failed} failed.
+                  </p>
+                  <p className="mt-1 font-mono text-xs text-gray-500 break-all">{compatibility.cliPath || 'no executable resolved'}</p>
+                </div>
+                <span className={clsx(
+                  'badge text-xs',
+                  compatibility.status === 'compatible' ? 'badge-green' : compatibility.status === 'blocked' ? 'badge-red' : 'badge-yellow'
+                )}>
+                  {compatibility.status.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-2">
+                {compatibility.checks.map(check => (
+                  <div key={check.id} className="rounded-md border border-border bg-gray-950/60 px-3 py-2">
+                    <div className="flex items-start gap-2">
+                      {check.status === 'pass'
+                        ? <CheckCircle size={14} className="text-nutanix-teal mt-0.5 flex-shrink-0" />
+                        : check.status === 'fail'
+                          ? <XCircle size={14} className="text-red-300 mt-0.5 flex-shrink-0" />
+                          : <AlertTriangle size={14} className="text-yellow-300 mt-0.5 flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-200">{check.label}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{check.detail}</div>
+                        <div className="mt-1 font-mono text-[11px] text-gray-600 break-all">{check.command}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="card">
@@ -1274,6 +1411,79 @@ export default function NKPFramework() {
             <ProfileField label="NTP Servers" value={toCsv(profile.network.ntpServers)} onChange={value => setProfileField('network.ntpServers', fromCsv(value))} disabled={!canEdit} />
             <ProfileField label="Domain" value={profile.network.domain} onChange={value => setProfileField('network.domain', value)} disabled={!canEdit} />
             <ProfileField label="VLAN ID" value={profile.network.vlanId} onChange={value => setProfileField('network.vlanId', value)} disabled={!canEdit} />
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div className="xl:col-span-3">
+              <h3 className="font-semibold text-gray-100">Proxy & Air-Gapped Registry</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Capture proxy/no-proxy and local registry metadata required by proxied or air-gapped NKP deployments.
+              </p>
+            </div>
+            <ProfileField label="HTTP Proxy" value={profile.proxy.httpProxy} onChange={value => setProfileField('proxy.httpProxy', value)} disabled={!canEdit} />
+            <ProfileField label="HTTPS Proxy" value={profile.proxy.httpsProxy} onChange={value => setProfileField('proxy.httpsProxy', value)} disabled={!canEdit} />
+            <ProfileField label="No Proxy" value={toCsv(profile.proxy.noProxy)} onChange={value => setProfileField('proxy.noProxy', fromCsv(value))} disabled={!canEdit} />
+            <ProfileField label="Registry Endpoint" value={profile.registry.endpoint} onChange={value => setProfileField('registry.endpoint', value)} disabled={!canEdit} />
+            <ProfileField label="Registry Namespace" value={profile.registry.namespace} onChange={value => setProfileField('registry.namespace', value)} disabled={!canEdit} />
+            <ProfileField label="Registry Credential Ref" value={profile.registry.credentialRef} onChange={value => setProfileField('registry.credentialRef', value)} disabled={!canEdit} mono />
+            <ProfileField label="Registry CA Cert Path" value={profile.registry.caCert} onChange={value => setProfileField('registry.caCert', value)} disabled={!canEdit} mono />
+            <label className="flex items-center gap-3 rounded-lg border border-border bg-gray-950/40 px-3 py-3">
+              <input
+                type="checkbox"
+                checked={profile.registry.insecure}
+                disabled={!canEdit}
+                onChange={event => setProfileField('registry.insecure', event.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-medium text-gray-200">Registry allows insecure TLS</span>
+                <span className="block text-xs text-gray-500">Use only when the target registry intentionally does not validate TLS.</span>
+              </span>
+            </label>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div className="xl:col-span-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-100">Nutanix Image Builder Planning</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Record the inputs needed for NKP image creation. Live image creation still requires CLI and infrastructure validation.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 rounded-lg border border-border bg-gray-950/40 px-3 py-2 text-sm text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={profile.imageBuilder.enabled}
+                  disabled={!canEdit}
+                  onChange={event => setProfileField('imageBuilder.enabled', event.target.checked)}
+                />
+                Enable Image Builder checks
+              </label>
+            </div>
+            <ProfileField label="PE Cluster" value={profile.imageBuilder.prismElementCluster} onChange={value => setProfileField('imageBuilder.prismElementCluster', value)} disabled={!canEdit} />
+            <ProfileField label="Image Subnet" value={profile.imageBuilder.subnet} onChange={value => setProfileField('imageBuilder.subnet', value)} disabled={!canEdit} />
+            <ProfileField label="Source/Base Image" value={profile.imageBuilder.sourceImage} onChange={value => setProfileField('imageBuilder.sourceImage', value)} disabled={!canEdit} />
+            <ProfileField label="Artifact Bundle" value={profile.imageBuilder.artifactBundle} onChange={value => setProfileField('imageBuilder.artifactBundle', value)} disabled={!canEdit} mono />
+            <ProfileField label="Target Image Name" value={profile.imageBuilder.imageName} onChange={value => setProfileField('imageBuilder.imageName', value)} disabled={!canEdit} />
+            <ProfileField label="Bastion Host" value={profile.imageBuilder.bastionHost} onChange={value => setProfileField('imageBuilder.bastionHost', value)} disabled={!canEdit} />
+            <ProfileField label="GPU / vGPU Profile" value={profile.imageBuilder.gpuProfile} onChange={value => setProfileField('imageBuilder.gpuProfile', value)} disabled={!canEdit} />
+            <label className="flex items-center gap-3 rounded-lg border border-border bg-gray-950/40 px-3 py-3">
+              <input
+                type="checkbox"
+                checked={profile.imageBuilder.fips}
+                disabled={!canEdit}
+                onChange={event => setProfileField('imageBuilder.fips', event.target.checked)}
+              />
+              <span className="text-sm font-medium text-gray-200">FIPS image</span>
+            </label>
+            <label className="flex items-center gap-3 rounded-lg border border-border bg-gray-950/40 px-3 py-3">
+              <input
+                type="checkbox"
+                checked={profile.imageBuilder.insecure}
+                disabled={!canEdit}
+                onChange={event => setProfileField('imageBuilder.insecure', event.target.checked)}
+              />
+              <span className="text-sm font-medium text-gray-200">Allow insecure Prism TLS</span>
+            </label>
           </div>
 
           <div className="mt-6">

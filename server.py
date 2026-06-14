@@ -168,7 +168,9 @@ def _nkp_command(nkp_path: str | Path, phase: str, config_path: str, strict: boo
 
 def _list_nkp_profiles() -> list[dict]:
     profiles = read_json(NKP_PROFILES_FILE, [])
-    return profiles if isinstance(profiles, list) else []
+    if not isinstance(profiles, list):
+        return []
+    return [_normalize_nkp_profile(item) for item in profiles if isinstance(item, dict)]
 
 
 def _save_nkp_profiles(profiles: list[dict]) -> None:
@@ -312,6 +314,128 @@ def _with_nkp_binary_status(binary: dict) -> dict:
         except OSError:
             item['size'] = item.get('size')
     return item
+
+
+def _resolve_nkp_cli_path(path_text: str) -> Path | None:
+    """Resolve a registered NKP binary/bundle path to an executable CLI path."""
+    if not path_text:
+        return None
+    root = Path(str(path_text)).expanduser()
+    candidates = []
+    if root.is_file():
+        candidates.append(root)
+    candidates.extend([
+        root / 'cli' / ('nkp.exe' if os.name == 'nt' else 'nkp'),
+        root / ('nkp.exe' if os.name == 'nt' else 'nkp'),
+        root / 'nkp',
+        root / 'cli' / 'nkp',
+    ])
+    for candidate in candidates:
+        try:
+            if candidate.exists() and candidate.is_file():
+                return candidate
+        except OSError:
+            continue
+    return None
+
+
+def _nkp_compat_command(label: str, args: list[str], *, required_tokens: list[str] | None = None) -> dict:
+    check_id = re.sub(r'[^a-z0-9_]+', '_', label.strip().lower()).strip('_') or 'nkp_check'
+    return {
+        'id': check_id,
+        'label': label,
+        'args': args,
+        'requiredTokens': required_tokens or [],
+    }
+
+
+NKP_COMPATIBILITY_COMMANDS = [
+    _nkp_compat_command('NKP version', ['--version']),
+    _nkp_compat_command('Nutanix cluster create help', ['create', 'cluster', 'nutanix', '--help'], required_tokens=[
+        'create cluster nutanix', 'endpoint', 'control-plane', 'worker',
+    ]),
+    _nkp_compat_command('Nutanix image builder help', ['create', 'image', 'nutanix', '--help'], required_tokens=[
+        'create image nutanix', 'cluster', 'endpoint', 'subnet',
+    ]),
+    _nkp_compat_command('Bundle push help', ['push', 'bundle', '--help'], required_tokens=[
+        'push', 'bundle', 'registry',
+    ]),
+    _nkp_compat_command('Image bundle push help', ['push', 'image-bundle', '--help'], required_tokens=[
+        'push', 'image-bundle', 'registry',
+    ]),
+]
+
+
+def _nkp_cli_compatibility(path_text: str, timeout: int = 8) -> dict:
+    cli = _resolve_nkp_cli_path(path_text)
+    checks = []
+    if cli is None:
+        return {
+            'status': 'blocked',
+            'cliPath': '',
+            'summary': {'passed': 0, 'warnings': 0, 'failed': 1},
+            'checks': [{
+                'id': 'nkp_cli_path',
+                'label': 'NKP CLI path',
+                'status': 'fail',
+                'detail': 'No nkp executable found at the registered path or under cli/nkp',
+                'command': '',
+                'output': '',
+            }],
+        }
+
+    for spec in NKP_COMPATIBILITY_COMMANDS:
+        command = [str(cli), *spec['args']]
+        output = ''
+        status = 'warn'
+        detail = ''
+        try:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=timeout,
+            )
+            output = (result.stdout or '').strip()
+            searchable = f"{' '.join(spec['args'])}\n{output}".lower()
+            missing = [token for token in spec['requiredTokens'] if token.lower() not in searchable]
+            if result.returncode == 0 and not missing:
+                status = 'pass'
+                detail = 'Command completed and expected NKP v2.17-relevant help terms were observed'
+            elif result.returncode == 0:
+                status = 'warn'
+                detail = f"Command completed, but expected help terms need review: {', '.join(missing)}"
+            else:
+                status = 'warn'
+                detail = f'Command returned exit code {result.returncode}; review output for installed CLI syntax'
+        except subprocess.TimeoutExpired:
+            status = 'warn'
+            detail = f'Command timed out after {timeout} seconds'
+        except OSError as exc:
+            status = 'fail'
+            detail = f'Could not execute NKP CLI: {exc}'
+        checks.append({
+            'id': spec['id'],
+            'label': spec['label'],
+            'status': status,
+            'detail': detail,
+            'command': ' '.join(command),
+            'output': output[:4000],
+        })
+
+    failed = sum(1 for item in checks if item['status'] == 'fail')
+    warnings = sum(1 for item in checks if item['status'] == 'warn')
+    return {
+        'status': 'blocked' if failed else 'compatible' if warnings == 0 else 'needs_review',
+        'cliPath': str(cli),
+        'summary': {
+            'passed': sum(1 for item in checks if item['status'] == 'pass'),
+            'warnings': warnings,
+            'failed': failed,
+        },
+        'checks': checks,
+    }
 
 
 def _set_default_nkp_binary(binaries: list[dict], binary_id: str) -> bool:
@@ -750,6 +874,30 @@ def _nkp_profile_from_example(data: dict, source_name: str = '') -> dict:
             'domain': '',
             'vlanId': '',
         },
+        'proxy': {
+            'httpProxy': str(((environment.get('proxy') or {}) if isinstance(environment.get('proxy'), dict) else {}).get('httpProxy') or ''),
+            'httpsProxy': str(((environment.get('proxy') or {}) if isinstance(environment.get('proxy'), dict) else {}).get('httpsProxy') or ''),
+            'noProxy': _split_csv(((environment.get('proxy') or {}) if isinstance(environment.get('proxy'), dict) else {}).get('noProxy')),
+        },
+        'registry': {
+            'endpoint': str(registry.get('endpoint') or ''),
+            'namespace': str(registry.get('namespace') or 'nkp'),
+            'credentialRef': str(registry.get('credentialRef') or ''),
+            'caCert': str(registry.get('caCert') or ''),
+            'insecure': bool(registry.get('insecure') or False),
+        },
+        'imageBuilder': {
+            'enabled': False,
+            'prismElementCluster': str(nutanix.get('clusterName') or ''),
+            'subnet': str(nutanix.get('subnetName') or ''),
+            'sourceImage': '',
+            'artifactBundle': '',
+            'imageName': str(nutanix.get('imageName') or 'nkp-node-image'),
+            'bastionHost': '',
+            'gpuProfile': '',
+            'fips': False,
+            'insecure': False,
+        },
         'nodes': [{'name': 'node-1', 'serial': '', 'hostIp': '', 'cvmIp': '', 'ipmiIp': '', 'rack': ''}],
     }
     return _normalize_nkp_profile(profile)
@@ -942,6 +1090,42 @@ def _nkp_profile_readiness(profile: dict, check_connectivity: bool = False) -> d
     else:
         add('nkp_binary_source', 'NKP binary/source path', 'warn', 'No NKP binary/source path supplied')
 
+    proxy = profile.get('proxy') or {}
+    if proxy.get('httpProxy') or proxy.get('httpsProxy'):
+        no_proxy = _split_csv(proxy.get('noProxy'))
+        add(
+            'proxy_no_proxy',
+            'Proxy no-proxy list',
+            'pass' if no_proxy else 'warn',
+            f'{len(no_proxy)} no-proxy entr{"y" if len(no_proxy) == 1 else "ies"} configured'
+            if no_proxy else 'Proxy is configured without a no-proxy list; include Prism Central, registry, VIP, node, pod/service, and local domains as required',
+        )
+
+    image_builder = profile.get('imageBuilder') or {}
+    if image_builder.get('enabled'):
+        missing_image_builder = [
+            label for key, label in [
+                ('prismElementCluster', 'Prism Element cluster'),
+                ('subnet', 'image subnet'),
+                ('sourceImage', 'source/base image'),
+                ('artifactBundle', 'artifact bundle'),
+                ('imageName', 'target image name'),
+            ]
+            if not str(image_builder.get(key) or '').strip()
+        ]
+        add(
+            'image_builder_inputs',
+            'Nutanix Image Builder inputs',
+            'fail' if missing_image_builder else 'pass',
+            '; '.join(missing_image_builder) if missing_image_builder else 'Required Image Builder planning inputs are populated',
+        )
+        add(
+            'image_builder_execution',
+            'Image Builder execution support',
+            'warn',
+            'Profile captures NKP Image Builder inputs, but live image creation still requires NKP CLI validation and infrastructure UAT',
+        )
+
     template = profile.get('template') or {}
     template_id = str(template.get('id') or '').strip()
     nodes = profile.get('nodes') if isinstance(profile.get('nodes'), list) else []
@@ -962,17 +1146,27 @@ def _nkp_profile_readiness(profile: dict, check_connectivity: bool = False) -> d
         )
     elif template_id == 'airgapped-local-registry':
         registry = str(nkp.get('registry') or '').strip()
+        registry_meta = profile.get('registry') or {}
+        registry_endpoint = str(registry_meta.get('endpoint') or registry).strip()
         add(
             'template_airgap_registry',
             'Air-gapped registry',
-            'pass' if registry else 'fail',
-            f'Private registry configured: {registry}' if registry else 'Air-gapped template requires a private/local registry endpoint',
+            'pass' if registry_endpoint else 'fail',
+            f'Private registry configured: {registry_endpoint}' if registry_endpoint else 'Air-gapped template requires a private/local registry endpoint',
         )
         add(
             'template_airgap_local_binary',
             'Air-gapped local NKP binary',
             'pass' if binary_path else 'fail',
             'NKP binary/source path is configured for local staging' if binary_path else 'Air-gapped template requires a staged NKP binary path',
+        )
+        ca_cert = str(registry_meta.get('caCert') or '').strip()
+        add(
+            'template_airgap_registry_ca',
+            'Air-gapped registry CA',
+            'pass' if registry_meta.get('insecure') or ca_cert else 'warn',
+            'Registry TLS handling configured'
+            if registry_meta.get('insecure') or ca_cert else 'No registry CA certificate supplied; confirm this is valid for the target registry',
         )
 
     try:
@@ -1047,6 +1241,30 @@ def _normalize_nkp_profile(data: dict, existing: dict | None = None) -> dict:
             'domain': str(((data.get('network') or {}).get('domain')) or ((existing.get('network') or {}).get('domain')) or '').strip(),
             'vlanId': str(((data.get('network') or {}).get('vlanId')) or ((existing.get('network') or {}).get('vlanId')) or '').strip(),
         },
+        'proxy': {
+            'httpProxy': str(((data.get('proxy') or {}).get('httpProxy')) or ((existing.get('proxy') or {}).get('httpProxy')) or '').strip(),
+            'httpsProxy': str(((data.get('proxy') or {}).get('httpsProxy')) or ((existing.get('proxy') or {}).get('httpsProxy')) or '').strip(),
+            'noProxy': _split_csv(((data.get('proxy') or {}).get('noProxy')) or ((existing.get('proxy') or {}).get('noProxy'))),
+        },
+        'registry': {
+            'endpoint': str(((data.get('registry') or {}).get('endpoint')) or ((existing.get('registry') or {}).get('endpoint')) or ((data.get('nkp') or {}).get('registry')) or ((existing.get('nkp') or {}).get('registry')) or '').strip(),
+            'namespace': str(((data.get('registry') or {}).get('namespace')) or ((existing.get('registry') or {}).get('namespace')) or 'nkp').strip(),
+            'credentialRef': str(((data.get('registry') or {}).get('credentialRef')) or ((existing.get('registry') or {}).get('credentialRef')) or '').strip(),
+            'caCert': str(((data.get('registry') or {}).get('caCert')) or ((existing.get('registry') or {}).get('caCert')) or '').strip(),
+            'insecure': bool(((data.get('registry') or {}).get('insecure')) or ((existing.get('registry') or {}).get('insecure')) or False),
+        },
+        'imageBuilder': {
+            'enabled': bool(((data.get('imageBuilder') or {}).get('enabled')) or ((existing.get('imageBuilder') or {}).get('enabled')) or False),
+            'prismElementCluster': str(((data.get('imageBuilder') or {}).get('prismElementCluster')) or ((existing.get('imageBuilder') or {}).get('prismElementCluster')) or '').strip(),
+            'subnet': str(((data.get('imageBuilder') or {}).get('subnet')) or ((existing.get('imageBuilder') or {}).get('subnet')) or '').strip(),
+            'sourceImage': str(((data.get('imageBuilder') or {}).get('sourceImage')) or ((existing.get('imageBuilder') or {}).get('sourceImage')) or '').strip(),
+            'artifactBundle': str(((data.get('imageBuilder') or {}).get('artifactBundle')) or ((existing.get('imageBuilder') or {}).get('artifactBundle')) or '').strip(),
+            'imageName': str(((data.get('imageBuilder') or {}).get('imageName')) or ((existing.get('imageBuilder') or {}).get('imageName')) or 'nkp-node-image').strip(),
+            'bastionHost': str(((data.get('imageBuilder') or {}).get('bastionHost')) or ((existing.get('imageBuilder') or {}).get('bastionHost')) or '').strip(),
+            'gpuProfile': str(((data.get('imageBuilder') or {}).get('gpuProfile')) or ((existing.get('imageBuilder') or {}).get('gpuProfile')) or '').strip(),
+            'fips': bool(((data.get('imageBuilder') or {}).get('fips')) or ((existing.get('imageBuilder') or {}).get('fips')) or False),
+            'insecure': bool(((data.get('imageBuilder') or {}).get('insecure')) or ((existing.get('imageBuilder') or {}).get('insecure')) or False),
+        },
         'nodes': [],
         'revision': _profile_revision_value(data) if data.get('revision') is not None else _profile_revision_value(existing),
         'createdAt': existing.get('createdAt') or now,
@@ -1073,6 +1291,9 @@ def _nkp_profile_to_yaml(profile: dict) -> str:
     cluster = profile.get('cluster') or {}
     nkp = profile.get('nkp') or {}
     network = profile.get('network') or {}
+    proxy = profile.get('proxy') or {}
+    registry = profile.get('registry') or {}
+    image_builder = profile.get('imageBuilder') or {}
     pc_endpoint = str((profile.get('prismCentral') or {}).get('endpoint') or '')
     if pc_endpoint and '://' not in pc_endpoint:
         pc_endpoint = f'https://{pc_endpoint}:9440'
@@ -1102,7 +1323,7 @@ def _nkp_profile_to_yaml(profile: dict) -> str:
             'prismCentralEndpoint': pc_endpoint,
             'clusterName': cluster.get('name', ''),
             'subnetName': network.get('vlanId') or network.get('subnet') or '',
-            'imageName': 'nkp-node-image',
+            'imageName': image_builder.get('imageName') or 'nkp-node-image',
             'storageContainer': 'default-container',
             'project': 'default',
             'credentialRef': (profile.get('prismCentral') or {}).get('credentialRef', ''),
@@ -1124,18 +1345,38 @@ def _nkp_profile_to_yaml(profile: dict) -> str:
             'fips': False,
         },
     }
+    if proxy.get('httpProxy') or proxy.get('httpsProxy') or proxy.get('noProxy'):
+        payload['environment']['proxy'] = {
+            'httpProxy': proxy.get('httpProxy', ''),
+            'httpsProxy': proxy.get('httpsProxy', ''),
+            'noProxy': proxy.get('noProxy', []),
+        }
     if template_id == 'workload-cluster':
         payload['managementCluster'] = {
             'reference': template_summary.get('managementClusterRef', ''),
         }
     if template_id == 'airgapped-local-registry':
         payload['registry'] = {
-            'endpoint': nkp.get('registry', ''),
-            'namespace': 'nkp',
-            'insecure': False,
-            'caCert': '',
+            'endpoint': registry.get('endpoint') or nkp.get('registry', ''),
+            'namespace': registry.get('namespace') or 'nkp',
+            'insecure': bool(registry.get('insecure') or False),
+            'caCert': registry.get('caCert', ''),
+            'credentialRef': registry.get('credentialRef', ''),
             'pushConcurrency': 2,
             'onExistingTag': 'skip',
+        }
+    if image_builder.get('enabled'):
+        payload['imageBuilder'] = {
+            'enabled': True,
+            'prismElementCluster': image_builder.get('prismElementCluster') or cluster.get('name', ''),
+            'subnet': image_builder.get('subnet') or network.get('vlanId') or network.get('subnet') or '',
+            'sourceImage': image_builder.get('sourceImage', ''),
+            'artifactBundle': image_builder.get('artifactBundle', ''),
+            'imageName': image_builder.get('imageName') or 'nkp-node-image',
+            'bastionHost': image_builder.get('bastionHost', ''),
+            'gpuProfile': image_builder.get('gpuProfile', ''),
+            'fips': bool(image_builder.get('fips') or False),
+            'insecure': bool(image_builder.get('insecure') or False),
         }
     return yaml.safe_dump(payload, sort_keys=False)
 
@@ -3657,6 +3898,34 @@ def delete_nkp_binary(binary_id):
         'binaryId': binary_id,
     })
     return jsonify({'success': True})
+
+
+@app.route('/api/nkp/compatibility', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+@limiter.limit('10 per minute')
+def check_nkp_compatibility():
+    data = request.json or {}
+    path_text = str(data.get('path') or '').strip()
+    binary_id = str(data.get('binaryId') or '').strip()
+    if binary_id:
+        binary = next((item for item in _list_nkp_binaries() if item.get('id') == binary_id), None)
+        if not binary:
+            return jsonify({'error': 'NKP binary reference not found'}), 404
+        path_text = str(binary.get('path') or '')
+    if not path_text:
+        default_binary = next((item for item in _list_nkp_binaries() if item.get('default')), None)
+        path_text = str((default_binary or {}).get('path') or '')
+    if not path_text:
+        return jsonify({'error': 'NKP binary path is required'}), 400
+    result = _nkp_cli_compatibility(path_text)
+    log.info('nkp_compatibility_checked', extra={
+        'event': 'nkp_compatibility_checked',
+        'action': 'check_nkp_compatibility',
+        'user': (request.current_user or {}).get('username'),
+        'status': result.get('status'),
+        'cliPath': result.get('cliPath', ''),
+    })
+    return jsonify(result)
 
 
 @app.route('/api/nkp/templates')
