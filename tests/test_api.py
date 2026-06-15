@@ -1214,6 +1214,17 @@ def test_nkp_cli_compatibility_blocks_missing_path(client, auth_headers):
     assert data['summary']['failed'] == 1
 
 
+def test_nkp_cli_compatibility_viewer_forbidden(client, auth_headers):
+    _create_user(client, auth_headers, 'nkp-compat-viewer', 'viewer')
+    viewer_headers = _login(client, 'nkp-compat-viewer')
+
+    resp = client.post('/api/nkp/compatibility',
+                       json={'path': '/bin/echo'},
+                       headers=viewer_headers)
+
+    assert resp.status_code == 403
+
+
 def _valid_nkp_profile():
     return {
         'name': 'Lab NKP Management',
@@ -1591,6 +1602,31 @@ def test_validation_evidence_create_list_download_delete(client, auth_headers):
     delete = client.delete(f"/api/validation-evidence/{record['id']}", headers=auth_headers)
     assert delete.status_code == 200
     assert client.get(f"/api/validation-evidence/{record['id']}", headers=auth_headers).status_code == 404
+
+
+def test_validation_evidence_recomputes_client_supplied_attestations(client, auth_headers):
+    create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
+    assert create.status_code == 201
+    profile = create.get_json()
+
+    evidence = client.post('/api/validation-evidence',
+                           json={
+                               'profileId': profile['id'],
+                               'generatedYaml': 'forged: true\n',
+                               'readiness': {'status': 'blocked', 'score': 0, 'checks': []},
+                               'schemaValidation': {'status': 'fail', 'missing': ['everything']},
+                               'compatibility': {'status': 'compatible', 'checks': []},
+                           },
+                           headers=auth_headers)
+
+    assert evidence.status_code == 201
+    record = evidence.get_json()
+    assert 'forged: true' not in record['generatedYaml']
+    assert 'nkp-mgmt-lab' in record['generatedYaml']
+    assert record['readiness']['score'] >= 80
+    assert record['schemaValidation']['status'] in {'pass', 'warn'}
+    assert record['compatibility'] is None
+    assert record['status'] in {'ready', 'needs_review'}
 
 
 def test_validation_evidence_viewer_can_read_not_create_or_delete(client, auth_headers):

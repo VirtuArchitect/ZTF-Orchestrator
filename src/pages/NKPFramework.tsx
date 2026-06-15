@@ -1082,7 +1082,7 @@ export default function NKPFramework() {
                 {binarySaving ? <Loader size={14} className="animate-spin" /> : <Plus size={14} />}
                 Register Path
               </button>
-              <button onClick={() => checkCompatibility()} disabled={compatibilityChecking || (!binaryForm.path && !profile.nkp.binaryPath)} className="btn-secondary mt-2 gap-1.5">
+              <button onClick={() => checkCompatibility()} disabled={!canEdit || compatibilityChecking || (!binaryForm.path && !profile.nkp.binaryPath)} className="btn-secondary mt-2 gap-1.5">
                 {compatibilityChecking ? <Loader size={14} className="animate-spin" /> : <FileSearch size={14} />}
                 Check CLI Compatibility
               </button>
@@ -1141,7 +1141,7 @@ export default function NKPFramework() {
                         <Download size={14} />
                         Use in Profile
                       </button>
-                      <button onClick={() => checkCompatibility(binary)} disabled={compatibilityChecking || !binary.exists} className="btn-secondary gap-1.5">
+                      <button onClick={() => checkCompatibility(binary)} disabled={!canEdit || compatibilityChecking || !binary.exists} className="btn-secondary gap-1.5">
                         {compatibilityChecking ? <Loader size={14} className="animate-spin" /> : <FileSearch size={14} />}
                         Check
                       </button>

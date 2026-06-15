@@ -487,15 +487,15 @@ def _build_validation_evidence(data: dict, user: str) -> dict:
     elif isinstance(data.get('profile'), dict):
         profile = _normalize_nkp_profile(data['profile'])
 
-    generated_yaml = str(data.get('generatedYaml') or '')
-    readiness = data.get('readiness') if isinstance(data.get('readiness'), dict) else {}
-    schema_validation = data.get('schemaValidation') if isinstance(data.get('schemaValidation'), dict) else {}
-    compatibility = data.get('compatibility') if isinstance(data.get('compatibility'), dict) else None
+    generated_yaml = ''
+    readiness: dict = {}
+    schema_validation: dict = {}
+    compatibility = None
 
     if profile:
-        generated_yaml = generated_yaml or _nkp_profile_to_yaml(profile)
-        readiness = readiness or _nkp_profile_readiness(profile)
-        schema_validation = schema_validation or _nkp_schema_validate_content(generated_yaml)
+        generated_yaml = _nkp_profile_to_yaml(profile)
+        readiness = _nkp_profile_readiness(profile)
+        schema_validation = _nkp_schema_validate_content(generated_yaml)
         if data.get('includeCompatibility'):
             binary_path = str(((profile.get('nkp') or {}).get('binaryPath')) or '').strip()
             if binary_path:
@@ -512,8 +512,7 @@ def _build_validation_evidence(data: dict, user: str) -> dict:
 
     if not readiness:
         readiness = {'status': 'unknown', 'score': 0, 'summary': {'passed': 0, 'warnings': 0, 'failed': 0}, 'checks': []}
-    if not schema_validation:
-        schema_validation = _nkp_schema_validate_content(generated_yaml)
+    schema_validation = _nkp_schema_validate_content(generated_yaml)
 
     job_id = str(data.get('jobId') or '').strip()
     job = _job_manager.get_job(job_id) if job_id else None
@@ -4228,7 +4227,7 @@ def delete_nkp_binary(binary_id):
 
 
 @app.route('/api/nkp/compatibility', methods=['POST'])
-@require_role('admin', 'operator', 'viewer')
+@require_role('admin', 'operator')
 @limiter.limit('10 per minute')
 def check_nkp_compatibility():
     data = request.json or {}
