@@ -17,6 +17,24 @@ submit execution jobs, capture validation evidence, track output, detect drift,
 schedule repeatable tasks, request approvals, and review audit history without
 every operator working directly in Git, YAML, and CLI commands.
 
+## ZeroTouch Framework Compatibility
+
+ZTF-Orchestrator's workflow and script launcher targets the legacy
+ZeroTouch Framework 1.x CLI (`python main.py --workflow ...` and
+`python main.py --script ...`). The default install, Docker, appliance, and
+container publishing paths therefore pin ZeroTouch Framework to **v1.5.2**.
+
+`nutanixdev/zerotouch-framework` v2.0.0 is a ground-up rewrite with a new
+`ztf plan/apply/refresh/destroy` command model. Upstream v2.0.0 does not yet
+port the Foundation Central imaging workflows, Prism Element v2 script family,
+pod workflows, Calm/NCM workflows, NDB workflow, or legacy NKE/Karbon flows that
+this Orchestrator release exposes. If a ZTF 2.x checkout is configured,
+ZTF-Orchestrator reports it as incompatible and blocks legacy workflow/script
+execution instead of launching it through the wrong CLI.
+
+Future ZTF 2.x support should be implemented as a separate IaC/plan-apply mode,
+not as a drop-in replacement for the current workflow catalog.
+
 ## Engineering Quality
 
 This project follows a production-grade quality bar. Changes are expected to
@@ -81,13 +99,13 @@ curl -fsSL https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/mai
 With custom options:
 
 ```bash
-ZTF_PORT=8080 ZTF_INSTALL_DIR=/opt/ztf bash install.sh
+ZTF_PORT=8080 ZTF_INSTALL_DIR=/opt/ztf ZTF_REF=v1.5.2 bash install.sh
 ```
 
 The script automatically:
 1. Checks Python 3.10+, pip, and git are present
 2. Clones ZTF-Orchestrator into `~/ztf/ZTF-Orchestrator`
-3. Clones ZeroTouch Framework into `~/ztf/zerotouch-framework`
+3. Clones ZeroTouch Framework `v1.5.2` into `~/ztf/zerotouch-framework`
 4. Creates a shared Python virtual environment
 5. Installs all dependencies for both components
 6. Starts ZTF-Orchestrator (admin credentials printed on first run)
@@ -102,6 +120,12 @@ With a custom port:
 
 ```powershell
 $env:ZTF_PORT = "8080"; .\install.ps1
+```
+
+To override the pinned legacy framework ref for testing:
+
+```powershell
+$env:ZTF_REF = "v1.5.2"; .\install.ps1
 ```
 
 ### Option C: Docker
@@ -507,7 +531,7 @@ Flask server  (server.py — 127.0.0.1:5001)
     |  subprocess([python, main.py, --workflow, X, -f, config.yml])
     |  argument list only · no shell · allowlist validated
     |
-ZeroTouch Framework  (main.py)
+ZeroTouch Framework 1.x  (main.py)
     |
     |  HTTPS — on-premises only
     |
@@ -528,6 +552,7 @@ other settings via environment variables or a `.env` file (see `.env.example`).
 | `ZTF_PATH` | `~/zerotouch-framework` | ZTF installation path |
 | `ZTF_NKP_PATH` | `~/nkp-zerotouch-framework` | Optional NKP ZeroTouch Framework path |
 | `ZTF_PYTHON` | current Python | Python executable for running ZTF |
+| `ZTF_REF` | `v1.5.2` | ZeroTouch Framework branch/tag used by Docker and installer paths. Current Orchestrator workflows require ZTF 1.x. |
 | `ZTF_PORT` | `5001` | Flask listen port |
 | `ZTF_BIND_HOST` | `127.0.0.1` | Flask bind address for manual runs. Docker sets `0.0.0.0` inside the container. |
 | `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
@@ -560,13 +585,13 @@ or manual ZTF installation required. Use build args to pin a specific ZTF versio
 or point to an internal mirror:
 
 ```bash
-ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v2.1.0 docker compose up -d
+ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v1.5.2 docker compose up -d
 ```
 
 | Build arg | Default | Purpose |
 |---|---|---|
 | `ZTF_REPO_URL` | GitHub URL | Git URL to clone ZTF from during image build |
-| `ZTF_REF` | `main` | Git branch or tag to check out during image build |
+| `ZTF_REF` | `v1.5.2` | Git branch or tag to check out during image build. Keep this on ZTF 1.x for the current workflow/script launcher. |
 
 The container binds only to `127.0.0.1:5001`. Place nginx in front for TLS.
 

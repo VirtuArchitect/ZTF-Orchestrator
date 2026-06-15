@@ -10,9 +10,14 @@ unprivileged service account.
 
 - A Linux host with systemd (Ubuntu 20.04+, RHEL 8+, Debian 11+)
 - ZTF-Orchestrator cloned to `/opt/ztf/ZTF-Orchestrator`
-- ZeroTouch Framework cloned to `/opt/ztf/zerotouch-framework`
+- ZeroTouch Framework `v1.5.2` cloned to `/opt/ztf/zerotouch-framework`
 - Python virtual environment at `/opt/ztf/venv`
 - A dedicated service account `ztf-svc` (created below)
+
+ZTF-Orchestrator's current workflow/script launcher requires the legacy
+ZeroTouch Framework 1.x CLI. Use `git clone --branch v1.5.2 --depth 1` or a
+reviewed 1.x branch; ZTF 2.x is detected as incompatible until a separate
+plan/apply mode is added.
 
 ---
 

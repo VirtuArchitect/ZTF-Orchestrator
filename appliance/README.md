@@ -67,6 +67,12 @@ sudo ZTF_ORCHESTRATOR_VERSION=v1.2.9 \
 
 The first-boot script writes this value into `/opt/ztf-orchestrator/.env`.
 
+The current appliance image is built with ZeroTouch Framework `v1.5.2` because
+ZTF-Orchestrator's workflow and script launcher targets the legacy 1.x
+`main.py --workflow/--script` CLI. ZeroTouch Framework v2.0.0 uses a new
+`ztf plan/apply` model and is not a drop-in replacement for these appliance
+workflows.
+
 ## Secrets
 
 The appliance kit never stores real secrets in Git. On first boot, the script:

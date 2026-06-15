@@ -21,6 +21,7 @@ $InstallDir       = if ($env:ZTF_INSTALL_DIR) { $env:ZTF_INSTALL_DIR } else { "$
 $ZtfPort          = if ($env:ZTF_PORT)         { $env:ZTF_PORT }         else { "5001" }
 $OrchestratorRepo = if ($env:ORCHESTRATOR_REPO){ $env:ORCHESTRATOR_REPO } else { "https://github.com/VirtuArchitect/ZTF-Orchestrator.git" }
 $ZtfRepo          = if ($env:ZTF_REPO)         { $env:ZTF_REPO }         else { "https://github.com/nutanixdev/zerotouch-framework.git" }
+$ZtfRef           = if ($env:ZTF_REF)          { $env:ZTF_REF }          else { "v1.5.2" }
 
 $OrchDir = "$InstallDir\ZTF-Orchestrator"
 $ZtfDir  = "$InstallDir\zerotouch-framework"
@@ -39,6 +40,7 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 Write-Info "Install directory : $InstallDir"
 Write-Info "Port              : $ZtfPort"
+Write-Info "ZTF ref           : $ZtfRef"
 Write-Host ""
 
 # ── 1. Prerequisites ──────────────────────────────────────────────────────────
@@ -92,11 +94,12 @@ if (Test-Path "$OrchDir\.git") {
 Write-Ok "ZTF-Orchestrator → $OrchDir"
 
 if (Test-Path "$ZtfDir\.git") {
-    Write-Info "ZeroTouch Framework already cloned — pulling latest"
-    git -C $ZtfDir pull --ff-only
+    Write-Info "ZeroTouch Framework already cloned — checking out $ZtfRef"
+    git -C $ZtfDir fetch --depth 1 origin $ZtfRef
+    git -C $ZtfDir checkout FETCH_HEAD
 } else {
-    Write-Info "Cloning ZeroTouch Framework..."
-    git clone --depth 1 $ZtfRepo $ZtfDir
+    Write-Info "Cloning ZeroTouch Framework $ZtfRef..."
+    git clone --depth 1 --branch $ZtfRef $ZtfRepo $ZtfDir
 }
 Write-Ok "ZeroTouch Framework → $ZtfDir"
 

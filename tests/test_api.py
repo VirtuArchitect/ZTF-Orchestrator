@@ -428,6 +428,7 @@ def test_schedule_runner_uses_configured_config_dir(client, auth_headers, tmp_pa
     config_file.write_text('pc_ip: 10.0.0.1\n')
     ztf_dir = tmp_path / 'ztf'
     ztf_dir.mkdir()
+    (ztf_dir / 'main.py').write_text('# legacy ztf entrypoint\n')
 
     client.post('/api/settings',
                 json={'configDir': str(config_dir),
@@ -1966,23 +1967,44 @@ def test_health_returns_json(client):
     assert 'jobs' not in data
 
 
-def test_health_accepts_current_ztf_package_layout(client, auth_headers, tmp_path):
+def test_health_accepts_legacy_ztf_layout(client, auth_headers, tmp_path):
     ztf_dir = tmp_path / 'zerotouch-framework'
-    (ztf_dir / 'ztf').mkdir(parents=True)
-    (ztf_dir / 'ztf' / 'main.py').write_text('print("ztf")\n')
+    ztf_dir.mkdir()
+    (ztf_dir / 'main.py').write_text('print("ztf 1.x")\n')
 
     resp = client.post('/api/settings', json={'ztfPath': str(ztf_dir)}, headers=auth_headers)
     assert resp.status_code == 200
 
     resp = client.get('/health')
     assert resp.status_code == 200
-    assert resp.get_json()['status'] == 'healthy'
+    data = resp.get_json()
+    assert data['status'] == 'healthy'
+    assert data['ztf']['compatible'] is True
+    assert data['ztf']['layout'] == 'legacy-1.x'
 
 
-def test_system_check_accepts_packaged_ztf_without_requirements(client, auth_headers, tmp_path):
+def test_health_flags_ztf_v2_layout_as_incompatible(client, auth_headers, tmp_path):
     ztf_dir = tmp_path / 'zerotouch-framework'
     (ztf_dir / 'ztf').mkdir(parents=True)
-    (ztf_dir / 'ztf' / 'main.py').write_text('print("ztf")\n')
+    (ztf_dir / 'ztf' / 'main.py').write_text('print("ztf 2.x")\n')
+    (ztf_dir / 'pyproject.toml').write_text('[project]\nname = "nutanix-ztf"\nversion = "2.0.0"\n')
+
+    resp = client.post('/api/settings', json={'ztfPath': str(ztf_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.get('/health')
+    assert resp.status_code == 503
+    data = resp.get_json()
+    assert data['status'] == 'degraded'
+    assert data['ztf']['compatible'] is False
+    assert data['ztf']['layout'] == 'ztf-2.x'
+    assert 'ZTF 2.x detected' in data['ztf']['message']
+
+
+def test_system_check_reports_ztf_v2_incompatible(client, auth_headers, tmp_path):
+    ztf_dir = tmp_path / 'zerotouch-framework'
+    (ztf_dir / 'ztf').mkdir(parents=True)
+    (ztf_dir / 'ztf' / 'main.py').write_text('print("ztf 2.x")\n')
 
     resp = client.post('/api/settings', json={'ztfPath': str(ztf_dir)}, headers=auth_headers)
     assert resp.status_code == 200
@@ -1992,15 +2014,34 @@ def test_system_check_accepts_packaged_ztf_without_requirements(client, auth_hea
     payload = resp.get_json()
     checks = {item['name']: item for item in payload['checks']}
 
-    assert payload['ztfInstalled'] is True
+    assert payload['ztfInstalled'] is False
+    assert payload['ztf']['layout'] == 'ztf-2.x'
+    assert payload['ztf']['compatible'] is False
+    assert checks['ZTF Installed']['ok'] is False
+    assert 'ZTF 2.x detected' in checks['ZTF Installed']['value']
     assert 'nkpInstalled' in payload
     assert payload['nkpBinaries'] == {'total': 0, 'available': 0}
-    assert checks['Requirements File']['ok'] is True
-    assert checks['Requirements File']['value'] == 'not required - packaged install'
     assert checks['NKP Framework']['ok'] is True
     assert checks['NKP Framework']['value'] == 'not installed (optional)'
     assert checks['NKP Binaries']['ok'] is True
     assert checks['NKP Binaries']['value'] == 'none registered (optional)'
+
+
+def test_ztf_v2_layout_blocks_legacy_job_submission(client, auth_headers, tmp_path):
+    ztf_dir = tmp_path / 'zerotouch-framework'
+    (ztf_dir / 'ztf').mkdir(parents=True)
+    (ztf_dir / 'ztf' / 'main.py').write_text('print("ztf 2.x")\n')
+
+    resp = client.post('/api/settings', json={'ztfPath': str(ztf_dir)}, headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'cluster-create', 'configFile': 'cluster.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 409
+    data = resp.get_json()
+    assert data['ztf']['layout'] == 'ztf-2.x'
+    assert 'legacy workflows require' in data['error']
 
 
 def test_health_details_requires_admin(client):

@@ -12,7 +12,7 @@
 # Build args (override for internal mirrors / specific ZTF version):
 #   docker compose build \
 #     --build-arg ZTF_REPO_URL=https://gitea.internal/ztf.git \
-#     --build-arg ZTF_REF=v2.1.0
+#     --build-arg ZTF_REF=v1.5.2
 
 services:
   ztf-orchestrator:
@@ -20,7 +20,7 @@ services:
       context: .
       args:
         ZTF_REPO_URL: ${ZTF_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}
-        ZTF_REF:      ${ZTF_REF:-main}
+        ZTF_REF:      ${ZTF_REF:-v1.5.2}
     image: ztf-orchestrator:latest
     container_name: ztf-orchestrator
     restart: unless-stopped

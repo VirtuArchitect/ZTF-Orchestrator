@@ -4,7 +4,7 @@ LABEL maintainer="John Goulden"
 LABEL application="ZTF-Orchestrator"
 
 ARG ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
-ARG ZTF_REF=main
+ARG ZTF_REF=v1.5.2
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1

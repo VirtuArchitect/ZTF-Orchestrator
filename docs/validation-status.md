@@ -28,6 +28,7 @@ checks, static configuration checks, or local Docker checks:
 | Authentication and RBAC | Login, sessions, logout, admin/operator/viewer restrictions, and protected routes are tested. |
 | Config file management | Create, read, update, delete, backup, restore, path traversal rejection, extension validation, and oversized body handling are tested. |
 | Workflow validation | Unknown workflow/script rejection, YAML validation, dry-run checks, and legacy `fc_ip` normalization are tested. |
+| ZeroTouch Framework compatibility | Current workflow/script execution is validated against legacy ZTF 1.x semantics. Install and container defaults pin ZTF `v1.5.2`; ZTF 2.x checkouts are detected and blocked for legacy workflow/script launch because upstream v2.0.0 has a different `ztf plan/apply` model and does not yet port the 1.x workflow surfaces. |
 | Storage abstraction | File storage round-trip is tested. PostgreSQL storage document/session/audit behavior is testable when `ZTF_TEST_DATABASE_URL` is supplied. |
 | PostgreSQL backup controls | Admin-only backup list/create/download/restore endpoints, restore confirmation, safety-backup creation, restore maintenance locking, path rejection, and command secret handling are tested. |
 | Docker Compose | Default PostgreSQL-backed compose and file-backed compose validate successfully. |

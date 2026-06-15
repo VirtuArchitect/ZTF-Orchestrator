@@ -45,12 +45,24 @@ into the next numbered release section when the next version is cut.
 - Restore maintenance lock that rejects new workflow/NKP job submissions,
   prevents queued jobs from starting during restore, and refuses restore while
   jobs are already running or cancelling.
+- ZeroTouch Framework major-version detection. ZTF 2.x checkouts are now
+  reported as incompatible for the current legacy workflow/script launcher.
+
+### Changed
+- Default ZeroTouch Framework install, Docker build, and container publishing
+  paths now pin ZTF `v1.5.2` because upstream ZTF v2.0.0 replaces the legacy
+  `main.py --workflow/--script` CLI with a new `ztf plan/apply` model.
+- NKP CLI compatibility checks are restricted to admin/operator roles, and
+  validation evidence recomputes readiness/schema/compatibility server-side
+  instead of trusting client-supplied attestations.
 
 ### Documentation
 - Refreshed NKP v2.17 alignment notes after local validation with real NKP
   v2.17.1 bundles staged under `C:\Share`.
 - Refreshed the repository security assessment notes to cover PostgreSQL
   restore, NKP safe-phase execution, and current release-validation scope.
+- Documented the ZeroTouch Framework v2.0.0 compatibility boundary and the
+  current requirement to use ZTF 1.x for legacy workflows.
 
 ---
 

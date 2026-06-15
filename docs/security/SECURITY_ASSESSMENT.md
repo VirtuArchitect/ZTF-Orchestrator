@@ -239,6 +239,27 @@ Recommendation:
 
 Status: mitigated by current controls; ongoing operational risk.
 
+### Low: ZeroTouch Framework Major-Version Boundary
+
+ZeroTouch Framework v2.0.0 replaced the legacy `main.py --workflow/--script`
+surface with a new `ztf plan/apply` IaC model. The current Orchestrator
+workflow catalog still targets the 1.x workflow/script CLI, so default install,
+Docker, and container publishing paths pin ZTF to `v1.5.2`.
+
+Risk:
+
+- Accidentally tracking upstream `main` can place a ZTF 2.x checkout behind the
+  legacy Orchestrator workflow UI.
+
+Recommendation:
+
+- Keep default installs pinned to ZTF `v1.5.2` or a reviewed 1.x branch.
+- Detect ZTF 2.x layouts and block legacy workflow/script execution.
+- Add native ZTF 2.x support only as a separate reviewed plan/apply mode.
+
+Status: mitigated by default pinning, system-health detection, and execution
+guards that reject incompatible ZTF 2.x checkouts for legacy workflows.
+
 ## Positive Controls Observed
 
 - Passwords are bcrypt-hashed.

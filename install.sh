@@ -23,6 +23,7 @@ INSTALL_DIR="${ZTF_INSTALL_DIR:-$HOME/ztf}"
 ZTF_PORT="${ZTF_PORT:-5001}"
 ORCHESTRATOR_REPO="${ORCHESTRATOR_REPO:-https://github.com/VirtuArchitect/ZTF-Orchestrator.git}"
 ZTF_REPO="${ZTF_REPO:-https://github.com/nutanixdev/zerotouch-framework.git}"
+ZTF_REF="${ZTF_REF:-v1.5.2}"
 
 ORCH_DIR="$INSTALL_DIR/ZTF-Orchestrator"
 ZTF_DIR="$INSTALL_DIR/zerotouch-framework"
@@ -45,6 +46,7 @@ echo -e "${BOLD}╚════════════════════�
 echo ""
 info "Install directory : $INSTALL_DIR"
 info "Port              : $ZTF_PORT"
+info "ZTF ref           : $ZTF_REF"
 echo ""
 
 # ── 1. Prerequisites ──────────────────────────────────────────────────────────
@@ -87,11 +89,12 @@ fi
 ok "ZTF-Orchestrator → $ORCH_DIR"
 
 if [ -d "$ZTF_DIR/.git" ]; then
-    info "ZeroTouch Framework already cloned — pulling latest"
-    git -C "$ZTF_DIR" pull --ff-only
+    info "ZeroTouch Framework already cloned — checking out $ZTF_REF"
+    git -C "$ZTF_DIR" fetch --depth 1 origin "$ZTF_REF"
+    git -C "$ZTF_DIR" checkout FETCH_HEAD
 else
-    info "Cloning ZeroTouch Framework..."
-    git clone --depth 1 "$ZTF_REPO" "$ZTF_DIR"
+    info "Cloning ZeroTouch Framework $ZTF_REF..."
+    git clone --depth 1 --branch "$ZTF_REF" "$ZTF_REPO" "$ZTF_DIR"
 fi
 ok "ZeroTouch Framework → $ZTF_DIR"
 

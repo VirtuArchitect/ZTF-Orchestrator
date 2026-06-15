@@ -57,6 +57,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 APP_VERSION = '1.2.9'
+ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
@@ -101,16 +102,63 @@ def _now_iso() -> str:
 
 
 def _resolve_ztf_main(ztf_path: str | Path) -> Path | None:
-    """Return the ZeroTouch Framework CLI entrypoint for supported repo layouts."""
+    """Return the legacy ZeroTouch Framework 1.x entrypoint."""
     root = Path(ztf_path)
-    for candidate in (root / 'main.py', root / 'ztf' / 'main.py'):
-        if candidate.exists():
-            return candidate
+    candidate = root / 'main.py'
+    if candidate.exists():
+        return candidate
     return None
 
 
 def _ztf_installed(ztf_path: str | Path) -> bool:
     return _resolve_ztf_main(ztf_path) is not None
+
+
+def _ztf_detect(ztf_path: str | Path) -> dict:
+    root = Path(ztf_path)
+    legacy_main = root / 'main.py'
+    package_main = root / 'ztf' / 'main.py'
+    pyproject = root / 'pyproject.toml'
+
+    if legacy_main.exists():
+        return {
+            'installed': True,
+            'compatible': True,
+            'layout': 'legacy-1.x',
+            'entrypoint': str(legacy_main),
+            'requiredRef': ZTF_LEGACY_REF,
+            'message': 'Legacy ZTF 1.x workflow/script CLI detected',
+        }
+    if package_main.exists() or pyproject.exists():
+        return {
+            'installed': True,
+            'compatible': False,
+            'layout': 'ztf-2.x',
+            'entrypoint': str(package_main) if package_main.exists() else '',
+            'requiredRef': ZTF_LEGACY_REF,
+            'message': (
+                'ZTF 2.x detected. ZTF-Orchestrator legacy workflows require '
+                f'ZeroTouch Framework {ZTF_LEGACY_REF} or the 1.x branch.'
+            ),
+        }
+    return {
+        'installed': False,
+        'compatible': False,
+        'layout': 'missing',
+        'entrypoint': '',
+        'requiredRef': ZTF_LEGACY_REF,
+        'message': 'ZeroTouch Framework was not found',
+    }
+
+
+def _ztf_incompatible_error(ztf_path: str | Path) -> tuple[dict, int] | None:
+    info = _ztf_detect(ztf_path)
+    if info.get('compatible'):
+        return None
+    return {
+        'error': info['message'],
+        'ztf': info,
+    }, 409
 
 
 def _ztf_requirements_file(ztf_path: str | Path) -> str | None:
@@ -2074,6 +2122,28 @@ def _init_engines():
         config_content = schedule.get('configContent') or ''
         config_file    = schedule.get('configFile') or ''
 
+        incompatible = _ztf_incompatible_error(ztf_path)
+        if incompatible:
+            rc = -1
+            status = 'failed'
+            entry = {
+                'id':         str(int(_t.time() * 1000)),
+                'workflow':   workflow or script,
+                'type':       'schedule',
+                'command':    '',
+                'status':     status,
+                'returnCode': rc,
+                'timestamp':  datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                'user':       'scheduler',
+                'configFile': config_file,
+                'output':     incompatible[0]['error'],
+            }
+            hist = read_json(HISTORY_FILE, [])
+            hist.insert(0, entry)
+            write_json(HISTORY_FILE, hist[:1000])
+            _fire_configured_webhook(workflow or script, status, rc, 'scheduler', entry['id'])
+            return status
+
         import tempfile
         tf_path = None
         if config_content:
@@ -2917,6 +2987,10 @@ class ExecutionJobManager:
             settings = get_settings()
             ztf_path = settings['ztfPath']
             python_path = settings['pythonPath']
+            incompatible = _ztf_incompatible_error(ztf_path)
+            if incompatible:
+                self._emit(job_id, 'error', incompatible[0]['error'])
+                return
             configs_dir = get_configs_dir()
             cfg_path = None
 
@@ -3513,11 +3587,13 @@ def _bounded_int_arg(name: str, default: int, minimum: int, maximum: int):
 @app.route('/health')
 def health():
     settings = get_settings()
-    ztf_ok = _ztf_installed(settings['ztfPath'])
+    ztf_info = _ztf_detect(settings['ztfPath'])
+    ztf_ok = bool(ztf_info.get('compatible'))
     status  = 'healthy' if ztf_ok else 'degraded'
     return jsonify({
         'status':  status,
         'version': APP_VERSION,
+        'ztf': ztf_info,
     }), 200 if ztf_ok else 503
 
 
@@ -3630,7 +3706,8 @@ def operational_visibility_summary():
 @require_role('admin')
 def health_details():
     settings = get_settings()
-    ztf_ok = _ztf_installed(settings['ztfPath'])
+    ztf_info = _ztf_detect(settings['ztfPath'])
+    ztf_ok = bool(ztf_info.get('compatible'))
     nkp_ok = _nkp_installed(settings.get('nkpPath') or NKP_DEFAULT)
     status  = 'healthy' if ztf_ok else 'degraded'
     jobs = _job_manager.list_jobs(1000)
@@ -3639,6 +3716,7 @@ def health_details():
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
+        'ztf':           ztf_info,
         'nkp_installed': nkp_ok,
         'storage':       _storage.name,
         'database': {
@@ -3799,7 +3877,8 @@ def system_check():
         except Exception:
             return {'name': name, 'ok': False, 'value': 'check failed'}
 
-    ztf_installed = _ztf_installed(ztf_path)
+    ztf_info = _ztf_detect(ztf_path)
+    ztf_installed = bool(ztf_info.get('compatible'))
     nkp_installed = _nkp_installed(nkp_path)
     nkp_binaries = _list_nkp_binaries()
     available_nkp_binaries = sum(1 for item in nkp_binaries if item.get('exists'))
@@ -3807,7 +3886,7 @@ def system_check():
         run_check('Python 3.9+', [python_path, '--version']),
         run_check('pip',          [python_path, '-m', 'pip', '--version']),
         run_check('git',          ['git', '--version']),
-        {'name': 'ZTF Installed', 'ok': ztf_installed, 'value': 'found' if ztf_installed else ''},
+        {'name': 'ZTF Installed', 'ok': ztf_installed, 'value': ztf_info['message'] if ztf_info.get('installed') else ''},
         {'name': 'NKP Framework', 'ok': True, 'value': 'found' if nkp_installed else 'not installed (optional)'},
         {
             'name': 'NKP Binaries',
@@ -3827,6 +3906,7 @@ def system_check():
     return jsonify({
         'checks': checks,
         'ztfInstalled': ztf_installed,
+        'ztf': ztf_info,
         'nkpInstalled': nkp_installed,
         'nkpBinaries': {'total': len(nkp_binaries), 'available': available_nkp_binaries},
     })
@@ -3874,12 +3954,13 @@ def install_ztf():
 
         try:
             ztf = Path(ztf_path)
-            if not _ztf_installed(ztf):
-                yield from send('step', 'Cloning ZeroTouch Framework...')
-                yield from run_cmd(['git', 'clone', repo_url, ztf_path])
-            elif is_git_checkout(ztf):
-                yield from send('step', 'Updating existing ZeroTouch Framework...')
-                yield from run_cmd(['git', 'pull'], cwd=ztf_path)
+            if is_git_checkout(ztf):
+                yield from send('step', f'Updating existing ZeroTouch Framework to {ZTF_LEGACY_REF}...')
+                yield from run_cmd(['git', 'fetch', '--depth', '1', 'origin', ZTF_LEGACY_REF], cwd=ztf_path)
+                yield from run_cmd(['git', 'checkout', 'FETCH_HEAD'], cwd=ztf_path)
+            elif not _ztf_installed(ztf):
+                yield from send('step', f'Cloning ZeroTouch Framework {ZTF_LEGACY_REF}...')
+                yield from run_cmd(['git', 'clone', '--depth', '1', '--branch', ZTF_LEGACY_REF, repo_url, ztf_path])
             else:
                 yield from send('step', 'Existing ZeroTouch Framework is not a git checkout; skipping source update.')
                 yield from send('log', 'To update source files, set ZTF Path to a cloned zerotouch-framework repository.')
@@ -4815,6 +4896,10 @@ def run_pipeline(pipeline_id: str):
     python_path  = settings['pythonPath']
     configs_dir  = get_configs_dir()
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    incompatible = _ztf_incompatible_error(ztf_path)
+    if incompatible:
+        body, status_code = incompatible
+        return jsonify(body), status_code
 
     import time as _tm
     pipeline_run_id = str(int(_tm.time() * 1000))
@@ -5021,6 +5106,11 @@ def execute_workflow():
             return jsonify({'error': f'Unknown script: {sid}'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
+
+    incompatible = _ztf_incompatible_error(get_settings()['ztfPath'])
+    if incompatible:
+        body, status_code = incompatible
+        return jsonify(body), status_code
 
     # Dry-run: run pre-flight checks only — no subprocess, no concurrency lock
     if dry_run:
@@ -5251,6 +5341,11 @@ def submit_job():
             return jsonify({'error': f'Unknown script: {sid}'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
+
+    incompatible = _ztf_incompatible_error(get_settings()['ztfPath'])
+    if incompatible:
+        body, status_code = incompatible
+        return jsonify(body), status_code
 
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     job = _job_manager.submit({
@@ -5677,6 +5772,10 @@ def start_parallel_run():
 
     settings    = get_settings()
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    incompatible = _ztf_incompatible_error(settings['ztfPath'])
+    if incompatible:
+        body, status_code = incompatible
+        return jsonify(body), status_code
 
     try:
         run = _parallel_engine.submit(

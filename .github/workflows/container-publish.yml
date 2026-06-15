@@ -47,4 +47,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
-            ZTF_REF=main
+            ZTF_REF=v1.5.2
