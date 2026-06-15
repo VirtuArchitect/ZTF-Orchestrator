@@ -73,6 +73,11 @@ ZTF-Orchestrator's workflow and script launcher targets the legacy 1.x
 `ztf plan/apply` model and is not a drop-in replacement for these appliance
 workflows.
 
+The framework copy inside the appliance container is intentionally not a git
+checkout. The Setup page may report that source update is skipped; that is
+expected. Rebuild or pull a newer appliance image to change the bundled ZTF
+version, or configure Settings to point at a separate cloned ZTF 1.x checkout.
+
 ## Secrets
 
 The appliance kit never stores real secrets in Git. On first boot, the script:

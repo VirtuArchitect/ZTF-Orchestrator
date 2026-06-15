@@ -595,6 +595,12 @@ ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v1.5.2 docker compose up -d
 
 The container binds only to `127.0.0.1:5001`. Place nginx in front for TLS.
 
+In Docker and appliance images, the bundled ZeroTouch Framework directory is not
+a git checkout. The in-app Setup page can reinstall Python dependencies, but it
+cannot `git pull` that baked copy. To update the bundled framework, rebuild the
+image with the desired `ZTF_REF` or point Settings > Framework Location at a
+separate cloned ZTF 1.x checkout.
+
 ---
 
 ## Data Storage

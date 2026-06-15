@@ -3962,8 +3962,17 @@ def install_ztf():
                 yield from send('step', f'Cloning ZeroTouch Framework {ZTF_LEGACY_REF}...')
                 yield from run_cmd(['git', 'clone', '--depth', '1', '--branch', ZTF_LEGACY_REF, repo_url, ztf_path])
             else:
-                yield from send('step', 'Existing ZeroTouch Framework is not a git checkout; skipping source update.')
-                yield from send('log', 'To update source files, set ZTF Path to a cloned zerotouch-framework repository.')
+                yield from send('step', 'Using existing bundled ZeroTouch Framework.')
+                yield from send(
+                    'log',
+                    'Source update skipped because this ZTF path is not a git checkout. '
+                    'This is expected for Docker/appliance images where ZTF is baked into the image.'
+                )
+                yield from send(
+                    'log',
+                    f'To change the bundled framework, rebuild the image with ZTF_REF={ZTF_LEGACY_REF} '
+                    'or set ZTF Path to a cloned zerotouch-framework 1.x checkout.'
+                )
 
             yield from send('step', 'Installing Python dependencies...')
             req_file = None
