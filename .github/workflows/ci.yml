@@ -33,7 +33,14 @@ jobs:
           ZTF_STORAGE_BACKEND: file
           ZTF_DATABASE_URL: ''
           POSTGRES_PASSWORD: ''
-        run: pytest tests/ -v --cov=server --cov-report=term-missing --cov-fail-under=70
+        run: |
+          set +e
+          pytest tests/ -v --cov=server --cov-report=term-missing --cov-fail-under=70 --junitxml=pytest-results.xml
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            python .github/scripts/annotate_pytest_failures.py pytest-results.xml
+          fi
+          exit "$status"
 
   # -- Frontend ---------------------------------------------------------------
   frontend:
