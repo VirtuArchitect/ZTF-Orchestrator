@@ -8,6 +8,10 @@ import pytest
 @pytest.fixture(autouse=True)
 def isolated_data_dir(tmp_path, monkeypatch):
     monkeypatch.setenv('ZTF_DATA_DIR', str(tmp_path))
+    ztf_dir = tmp_path / 'default-legacy-ztf'
+    ztf_dir.mkdir()
+    (ztf_dir / 'main.py').write_text('# test legacy ZeroTouch Framework entrypoint\n')
+    monkeypatch.setenv('ZTF_PATH', str(ztf_dir))
     # Re-import server with the new env var
     import importlib
     import server
