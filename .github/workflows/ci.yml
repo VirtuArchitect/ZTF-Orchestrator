@@ -20,7 +20,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest pytest-cov pip-audit
+        run: pip install -r requirements.txt pytest pytest-cov pip-audit defusedxml
 
       - name: Vulnerability scan
         # PYSEC-2024-271: log-injection via CRLF in flask-cors debug mode.

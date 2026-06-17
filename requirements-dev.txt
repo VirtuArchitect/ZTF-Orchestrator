@@ -2,4 +2,4 @@ pytest
 pytest-cov
 pip-audit
 bandit
-
+defusedxml==0.7.1
