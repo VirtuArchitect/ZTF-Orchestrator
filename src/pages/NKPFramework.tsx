@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle, Download, FilePlus, FileSearch, Info, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
@@ -246,6 +246,10 @@ const fromCsv = (value: string) => value.split(',').map(item => item.trim()).fil
 export default function NKPFramework() {
   const user = useStore(s => s.user)
   const canEdit = user?.role === 'admin' || user?.role === 'operator'
+  const phaseId = useId()
+  const configFileId = useId()
+  const configContentId = useId()
+  const strictValidationId = useId()
   const [status, setStatus] = useState<NkpStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [installing, setInstalling] = useState(false)
@@ -866,8 +870,8 @@ export default function NKPFramework() {
 
             <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
               <div>
-                <LabelWithHelp label="Phase" help="Only safe phases exposed by the installed framework are selectable here." />
-                <select className="input" value={phase} onChange={e => setPhase(e.target.value)}>
+                <FieldLabel htmlFor={phaseId} label="Phase" help="Only safe phases exposed by the installed framework are selectable here." />
+                <select id={phaseId} className="input" value={phase} onChange={e => setPhase(e.target.value)}>
                   {PHASES.map(item => (
                     <option key={item.id} value={item.id} disabled={!safePhases.has(item.id)}>
                       {item.label}
@@ -880,8 +884,9 @@ export default function NKPFramework() {
               </div>
 
               <div>
-                <LabelWithHelp label="Config File" help="Existing NKP config file to run, or the target filename when YAML content is pasted below." />
+                <FieldLabel htmlFor={configFileId} label="Config File" help="Existing NKP config file to run, or the target filename when YAML content is pasted below." />
                 <input
+                  id={configFileId}
                   className="input font-mono"
                   value={configFile}
                   onChange={e => setConfigFile(e.target.value)}
@@ -898,8 +903,9 @@ export default function NKPFramework() {
             </div>
 
             <div className="mt-4">
-              <LabelWithHelp label="Optional YAML Content" help="Pasted YAML is saved to the selected config file before the phase is submitted." />
+              <FieldLabel htmlFor={configContentId} label="Optional YAML Content" help="Pasted YAML is saved to the selected config file before the phase is submitted." />
               <textarea
+                id={configContentId}
                 className="input font-mono min-h-48"
                 value={configContent}
                 onChange={e => setConfigContent(e.target.value)}
@@ -934,11 +940,11 @@ export default function NKPFramework() {
             )}
 
             <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <label className="flex items-center gap-2 text-sm text-gray-400">
-                <input type="checkbox" checked={strict} onChange={e => setStrict(e.target.checked)} />
-                Strict validation
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <input id={strictValidationId} type="checkbox" checked={strict} onChange={e => setStrict(e.target.checked)} />
+                <label htmlFor={strictValidationId}>Strict validation</label>
                 <HelpTip text="Enforces stricter script-side validation where the selected NKP phase supports it." />
-              </label>
+              </div>
               <div className="flex items-center gap-2">
                 {message && (
                   <span className={clsx('text-sm', message.startsWith('Submitted') ? 'text-nutanix-teal' : 'text-red-300')}>
@@ -1646,16 +1652,30 @@ function ProfileField({
   disabled?: boolean
   mono?: boolean
 }) {
+  const inputId = useId()
+
   return (
-    <label className="block">
-      <LabelWithHelp label={label} help={help} />
+    <div>
+      <FieldLabel htmlFor={inputId} label={label} help={help} />
       <input
+        id={inputId}
         className={clsx('input', mono && 'font-mono')}
         value={value || ''}
         disabled={disabled}
         onChange={e => onChange(e.target.value)}
       />
-    </label>
+    </div>
+  )
+}
+
+function FieldLabel({ label, help, htmlFor, compact = false }: { label: string; help?: string; htmlFor: string; compact?: boolean }) {
+  return (
+    <div className={clsx('inline-flex items-center gap-1.5', compact && 'text-xs font-medium text-gray-500')}>
+      <label htmlFor={htmlFor} className={clsx('label mb-0', compact && 'text-xs font-medium text-gray-500')}>
+        {label}
+      </label>
+      {help && <HelpTip text={help} />}
+    </div>
   )
 }
 
