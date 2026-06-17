@@ -6,8 +6,8 @@ Documentation refresh: 2026-06-14
 
 Repository reviewed: `VirtuArchitect/ZTF-Orchestrator`
 
-Local path reviewed:
-`C:\Users\john\OneDrive\09 Profile\Documents\GitHub\ZTF-Orchestrator`
+Repository location reviewed:
+local checkout of `VirtuArchitect/ZTF-Orchestrator`
 
 Branch and commit reviewed for the original assessment: `main`, `a620303`
 
