@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle, Download, FilePlus, FileSearch, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Download, FilePlus, FileSearch, Info, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
@@ -202,6 +202,16 @@ const PHASES = [
   { id: 'runs', label: 'Runs', hint: 'Summarise NKP ZeroTouch run artifacts' },
 ]
 
+const NKP_TABS = [
+  { id: 'overview', label: 'Overview', description: 'Framework status and safe phase execution' },
+  { id: 'schema', label: 'Schema', description: 'Installed examples and inferred YAML shape' },
+  { id: 'templates', label: 'Templates', description: 'Guided deployment profile starters' },
+  { id: 'binaries', label: 'Binaries', description: 'NKP CLI registration and compatibility' },
+  { id: 'profiles', label: 'Profiles', description: 'Deployment profiles, readiness, and YAML generation' },
+] as const
+
+type NkpTab = typeof NKP_TABS[number]['id']
+
 const APPROVAL_REQUIRED_PHASES = new Set(['prepare', 'generate', 'registry', 'deploy'])
 
 const emptyProfile = (): NkpProfile => ({
@@ -273,6 +283,7 @@ export default function NKPFramework() {
   const [schema, setSchema] = useState<NkpSchema | null>(null)
   const [schemaValidation, setSchemaValidation] = useState<NkpSchemaValidation | null>(null)
   const [exampleImporting, setExampleImporting] = useState('')
+  const [activeTab, setActiveTab] = useState<NkpTab>('overview')
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
@@ -779,6 +790,36 @@ export default function NKPFramework() {
       }
     >
       <div className="space-y-6">
+        <div className="overflow-x-auto rounded-lg border border-border bg-gray-950/40 p-1">
+          <div className="flex min-w-max gap-1 sm:grid sm:min-w-0 sm:grid-cols-2 xl:grid-cols-5">
+            {NKP_TABS.map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={clsx(
+                  'relative min-h-16 w-44 rounded-md border px-3 py-2 text-left transition-colors sm:w-auto',
+                  activeTab === tab.id
+                    ? 'border-[#21c2f8] bg-gray-900 text-white shadow-sm'
+                    : 'border-transparent text-gray-400 hover:border-gray-700 hover:bg-gray-900 hover:text-gray-100'
+                )}
+              >
+                {activeTab === tab.id && (
+                  <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[#21c2f8]" />
+                )}
+                <span className="block text-sm font-semibold">{tab.label}</span>
+                <span className={clsx('mt-1 block text-xs leading-snug', activeTab === tab.id ? 'text-blue-100' : 'text-gray-600')}>
+                  {tab.description}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activeTab === 'overview' && (
+        <>
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
           <div className="card">
             <div className="flex items-start gap-3">
@@ -799,9 +840,9 @@ export default function NKPFramework() {
             </div>
 
             <div className="mt-5 space-y-3 text-sm">
-              <ReadOnly label="Path" value={status?.path || 'loading'} />
-              <ReadOnly label="Script" value={status?.script || 'not found'} />
-              <ReadOnly label="Repository" value={status?.repoUrl || ''} />
+              <ReadOnly label="Path" value={status?.path || 'loading'} help="Server-side NKP framework checkout used by the orchestrator." />
+              <ReadOnly label="Script" value={status?.script || 'not found'} help="Resolved safe-phase shell script inside the NKP framework checkout." />
+              <ReadOnly label="Repository" value={status?.repoUrl || ''} help="Git source used by Setup when installing or updating the NKP framework." />
             </div>
 
             <button onClick={runInstall} disabled={installing} className="btn-primary w-full justify-center mt-5 gap-1.5">
@@ -825,7 +866,7 @@ export default function NKPFramework() {
 
             <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
               <div>
-                <label className="label">Phase</label>
+                <LabelWithHelp label="Phase" help="Only safe phases exposed by the installed framework are selectable here." />
                 <select className="input" value={phase} onChange={e => setPhase(e.target.value)}>
                   {PHASES.map(item => (
                     <option key={item.id} value={item.id} disabled={!safePhases.has(item.id)}>
@@ -839,7 +880,7 @@ export default function NKPFramework() {
               </div>
 
               <div>
-                <label className="label">Config File</label>
+                <LabelWithHelp label="Config File" help="Existing NKP config file to run, or the target filename when YAML content is pasted below." />
                 <input
                   className="input font-mono"
                   value={configFile}
@@ -857,7 +898,7 @@ export default function NKPFramework() {
             </div>
 
             <div className="mt-4">
-              <label className="label">Optional YAML Content</label>
+              <LabelWithHelp label="Optional YAML Content" help="Pasted YAML is saved to the selected config file before the phase is submitted." />
               <textarea
                 className="input font-mono min-h-48"
                 value={configContent}
@@ -896,6 +937,7 @@ export default function NKPFramework() {
               <label className="flex items-center gap-2 text-sm text-gray-400">
                 <input type="checkbox" checked={strict} onChange={e => setStrict(e.target.checked)} />
                 Strict validation
+                <HelpTip text="Enforces stricter script-side validation where the selected NKP phase supports it." />
               </label>
               <div className="flex items-center gap-2">
                 {message && (
@@ -918,7 +960,10 @@ export default function NKPFramework() {
         {logs.length > 0 && (
           <Terminal logs={logs} status={installStatus} title="NKP Framework Installation Output" />
         )}
+        </>
+        )}
 
+        {activeTab === 'schema' && (
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
             <div className="flex items-start gap-3">
@@ -982,7 +1027,9 @@ export default function NKPFramework() {
             </div>
           </div>
         </div>
+        )}
 
+        {activeTab === 'templates' && (
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
             <div className="flex items-start gap-3">
@@ -1045,7 +1092,9 @@ export default function NKPFramework() {
             </div>
           )}
         </div>
+        )}
 
+        {activeTab === 'binaries' && (
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
             <div>
@@ -1076,7 +1125,7 @@ export default function NKPFramework() {
               <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
                 <ProfileField label="Name" value={binaryForm.name} onChange={value => setBinaryForm(prev => ({ ...prev, name: value }))} disabled={!canEdit} />
                 <ProfileField label="Version" value={binaryForm.version} onChange={value => setBinaryForm(prev => ({ ...prev, version: value }))} disabled={!canEdit} />
-                <ProfileField label="Server Path" value={binaryForm.path} onChange={value => setBinaryForm(prev => ({ ...prev, path: value }))} disabled={!canEdit} mono />
+                <ProfileField label="Server Path" help="Absolute path on the Orchestrator host or appliance, not a browser-local file path." value={binaryForm.path} onChange={value => setBinaryForm(prev => ({ ...prev, path: value }))} disabled={!canEdit} mono />
               </div>
               <button onClick={registerBinary} disabled={!canEdit || binarySaving || !binaryForm.path} className="btn-primary mt-4 gap-1.5">
                 {binarySaving ? <Loader size={14} className="animate-spin" /> : <Plus size={14} />}
@@ -1205,7 +1254,9 @@ export default function NKPFramework() {
             </div>
           )}
         </div>
+        )}
 
+        {activeTab === 'profiles' && (
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-5">
             <div>
@@ -1396,11 +1447,11 @@ export default function NKPFramework() {
               <ProfileField label="Management Cluster Ref" value={profile.template.managementClusterRef} onChange={value => setProfileField('template.managementClusterRef', value)} disabled={!canEdit} />
             )}
             <ProfileField label="NKP Version" value={profile.nkp.version} onChange={value => setProfileField('nkp.version', value)} disabled={!canEdit} />
-            <ProfileField label="NKP Binary Path" value={profile.nkp.binaryPath} onChange={value => setProfileField('nkp.binaryPath', value)} disabled={!canEdit} mono />
-            <ProfileField label="Registry" value={profile.nkp.registry} onChange={value => setProfileField('nkp.registry', value)} disabled={!canEdit} />
-            <ProfileField label="Prism Central Endpoint" value={profile.prismCentral.endpoint} onChange={value => setProfileField('prismCentral.endpoint', value)} disabled={!canEdit} />
-            <ProfileField label="PC Credential Ref" value={profile.prismCentral.credentialRef} onChange={value => setProfileField('prismCentral.credentialRef', value)} disabled={!canEdit} mono />
-            <ProfileField label="SSH Key Ref" value={profile.nkp.sshKeyRef} onChange={value => setProfileField('nkp.sshKeyRef', value)} disabled={!canEdit} mono />
+            <ProfileField label="NKP Binary Path" help="Path to a registered NKP CLI or bundle on the Orchestrator host." value={profile.nkp.binaryPath} onChange={value => setProfileField('nkp.binaryPath', value)} disabled={!canEdit} mono />
+            <ProfileField label="Registry" help="Default container registry endpoint used by generated NKP config." value={profile.nkp.registry} onChange={value => setProfileField('nkp.registry', value)} disabled={!canEdit} />
+            <ProfileField label="Prism Central Endpoint" help="Prism Central address used for NKP infrastructure API access." value={profile.prismCentral.endpoint} onChange={value => setProfileField('prismCentral.endpoint', value)} disabled={!canEdit} />
+            <ProfileField label="PC Credential Ref" help="Credential reference name expected by the ZeroTouch/NKP environment." value={profile.prismCentral.credentialRef} onChange={value => setProfileField('prismCentral.credentialRef', value)} disabled={!canEdit} mono />
+            <ProfileField label="SSH Key Ref" help="Credential reference used for node or bastion SSH access." value={profile.nkp.sshKeyRef} onChange={value => setProfileField('nkp.sshKeyRef', value)} disabled={!canEdit} mono />
             <ProfileField label="Cluster Name" value={profile.cluster.name} onChange={value => setProfileField('cluster.name', value)} disabled={!canEdit} />
             <ProfileField label="Cluster Type" value={profile.cluster.type} onChange={value => setProfileField('cluster.type', value)} disabled={!canEdit} />
             <ProfileField label="Kubernetes Version" value={profile.cluster.kubernetesVersion} onChange={value => setProfileField('cluster.kubernetesVersion', value)} disabled={!canEdit} />
@@ -1422,8 +1473,8 @@ export default function NKPFramework() {
             </div>
             <ProfileField label="HTTP Proxy" value={profile.proxy.httpProxy} onChange={value => setProfileField('proxy.httpProxy', value)} disabled={!canEdit} />
             <ProfileField label="HTTPS Proxy" value={profile.proxy.httpsProxy} onChange={value => setProfileField('proxy.httpsProxy', value)} disabled={!canEdit} />
-            <ProfileField label="No Proxy" value={toCsv(profile.proxy.noProxy)} onChange={value => setProfileField('proxy.noProxy', fromCsv(value))} disabled={!canEdit} />
-            <ProfileField label="Registry Endpoint" value={profile.registry.endpoint} onChange={value => setProfileField('registry.endpoint', value)} disabled={!canEdit} />
+            <ProfileField label="No Proxy" help="Comma-separated hosts, domains, or CIDRs that bypass the proxy." value={toCsv(profile.proxy.noProxy)} onChange={value => setProfileField('proxy.noProxy', fromCsv(value))} disabled={!canEdit} />
+            <ProfileField label="Registry Endpoint" help="Private registry used for air-gapped or proxied NKP deployments." value={profile.registry.endpoint} onChange={value => setProfileField('registry.endpoint', value)} disabled={!canEdit} />
             <ProfileField label="Registry Namespace" value={profile.registry.namespace} onChange={value => setProfileField('registry.namespace', value)} disabled={!canEdit} />
             <ProfileField label="Registry Credential Ref" value={profile.registry.credentialRef} onChange={value => setProfileField('registry.credentialRef', value)} disabled={!canEdit} mono />
             <ProfileField label="Registry CA Cert Path" value={profile.registry.caCert} onChange={value => setProfileField('registry.caCert', value)} disabled={!canEdit} mono />
@@ -1462,7 +1513,7 @@ export default function NKPFramework() {
             <ProfileField label="PE Cluster" value={profile.imageBuilder.prismElementCluster} onChange={value => setProfileField('imageBuilder.prismElementCluster', value)} disabled={!canEdit} />
             <ProfileField label="Image Subnet" value={profile.imageBuilder.subnet} onChange={value => setProfileField('imageBuilder.subnet', value)} disabled={!canEdit} />
             <ProfileField label="Source/Base Image" value={profile.imageBuilder.sourceImage} onChange={value => setProfileField('imageBuilder.sourceImage', value)} disabled={!canEdit} />
-            <ProfileField label="Artifact Bundle" value={profile.imageBuilder.artifactBundle} onChange={value => setProfileField('imageBuilder.artifactBundle', value)} disabled={!canEdit} mono />
+            <ProfileField label="Artifact Bundle" help="Path or reference to the NKP artifact bundle used during image planning." value={profile.imageBuilder.artifactBundle} onChange={value => setProfileField('imageBuilder.artifactBundle', value)} disabled={!canEdit} mono />
             <ProfileField label="Target Image Name" value={profile.imageBuilder.imageName} onChange={value => setProfileField('imageBuilder.imageName', value)} disabled={!canEdit} />
             <ProfileField label="Bastion Host" value={profile.imageBuilder.bastionHost} onChange={value => setProfileField('imageBuilder.bastionHost', value)} disabled={!canEdit} />
             <ProfileField label="GPU / vGPU Profile" value={profile.imageBuilder.gpuProfile} onChange={value => setProfileField('imageBuilder.gpuProfile', value)} disabled={!canEdit} />
@@ -1535,15 +1586,16 @@ export default function NKPFramework() {
             </div>
           )}
         </div>
+        )}
       </div>
     </Layout>
   )
 }
 
-function ReadOnly({ label, value }: { label: string; value: string }) {
+function ReadOnly({ label, value, help }: { label: string; value: string; help?: string }) {
   return (
     <div>
-      <div className="text-xs font-medium text-gray-500">{label}</div>
+      <LabelWithHelp label={label} help={help} compact />
       <div className="mt-1 rounded-md border border-border bg-gray-950 px-3 py-2 font-mono text-xs text-gray-300 break-all">
         {value || 'not configured'}
       </div>
@@ -1581,12 +1633,14 @@ function formatBytes(value: number) {
 
 function ProfileField({
   label,
+  help,
   value,
   onChange,
   disabled,
   mono = false,
 }: {
   label: string
+  help?: string
   value: string
   onChange: (value: string) => void
   disabled?: boolean
@@ -1594,7 +1648,7 @@ function ProfileField({
 }) {
   return (
     <label className="block">
-      <span className="label">{label}</span>
+      <LabelWithHelp label={label} help={help} />
       <input
         className={clsx('input', mono && 'font-mono')}
         value={value || ''}
@@ -1602,5 +1656,32 @@ function ProfileField({
         onChange={e => onChange(e.target.value)}
       />
     </label>
+  )
+}
+
+function LabelWithHelp({ label, help, compact = false }: { label: string; help?: string; compact?: boolean }) {
+  return (
+    <span className={clsx('label inline-flex items-center gap-1.5', compact && 'text-xs font-medium text-gray-500')}>
+      {label}
+      {help && <HelpTip text={help} />}
+    </span>
+  )
+}
+
+function HelpTip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex align-middle">
+      <button
+        type="button"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-border text-gray-500 transition-colors hover:border-nutanix-cyan hover:text-nutanix-cyan focus:outline-none focus:ring-1 focus:ring-nutanix-cyan"
+        aria-label={text}
+        title={text}
+      >
+        <Info size={10} />
+      </button>
+      <span className="pointer-events-none absolute left-1/2 top-6 z-20 hidden w-64 -translate-x-1/2 rounded-md border border-border bg-gray-950 px-3 py-2 text-xs font-normal leading-relaxed text-gray-300 shadow-xl group-hover:block group-focus-within:block">
+        {text}
+      </span>
+    </span>
   )
 }
