@@ -20,7 +20,8 @@ QCOW2 files as GitHub Release artifacts.
 |---|---|
 | `docker-compose.appliance.yml` | Runtime Compose file using the published GHCR image |
 | `scripts/install-docker.sh` | Installs Docker Engine and the Compose plugin |
-| `scripts/firstboot.sh` | Clones the repo, creates `.env`, installs systemd, and starts the appliance |
+| `scripts/firstboot.sh` | Clones or reuses baked source, creates `.env`, installs systemd, and starts the appliance |
+| `scripts/build-ahv-qcow2.sh` | Local wrapper for building the AHV QCOW2 with Packer and QEMU |
 | `systemd/ztf-orchestrator.service` | Systemd wrapper for Docker Compose |
 | `systemd/ztf-orchestrator-firstboot.service` | Optional first-boot unit for baked images |
 | `cloud-init/user-data.example` | Example first-boot cloud-init payload |
@@ -100,16 +101,122 @@ cd /opt/ztf-orchestrator
 sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestrator
 ```
 
-## Building a QCOW2
+## Pre-Built AHV QCOW2 Appliance
 
-The Packer template in `packer/` is a reference starting point for creating an
-AHV-importable QCOW2. Build requirements vary by workstation or CI runner:
+The repository can produce an AHV-importable QCOW2 appliance image. The image is
+built from Ubuntu Server cloud images, installs Docker Engine, stages the
+ZTF-Orchestrator source tree, enables first-boot bootstrap, and attempts to
+preload the ZTF-Orchestrator and PostgreSQL container images.
+
+On first boot, the VM generates local secrets, creates `/opt/ztf-orchestrator`,
+starts Docker Compose, and leaves the application admin password in the service
+logs.
+
+### Build from GitHub Actions
+
+1. Open **Actions > Build AHV Appliance Image**.
+2. Select **Run workflow**.
+3. Use:
+
+   ```text
+   source_ref: main or a version tag
+   image_version: latest or a published container tag
+   qemu_accelerator: tcg
+   ```
+
+4. Download the artifact:
+
+   ```text
+   ztf-orchestrator-ahv-qcow2-<ref>
+   ```
+
+5. Verify `SHA256SUMS` before importing the image.
+
+Tag builds also attach the QCOW2 and `SHA256SUMS` to the matching GitHub
+Release. If the release does not exist, the workflow creates it.
+
+### Build Locally
+
+The Packer template in `packer/` creates an AHV-importable QCOW2. Build
+requirements vary by workstation or CI runner:
 
 - Packer with the QEMU plugin
 - QEMU available on the build host
 - network access to Ubuntu cloud images and GitHub/GHCR
 
-Example:
+Run:
+
+```bash
+cd appliance
+VERSION=v1.2.9 \
+ZTF_ORCHESTRATOR_VERSION=v1.2.9 \
+QEMU_ACCELERATOR=kvm \
+scripts/build-ahv-qcow2.sh
+```
+
+Use `QEMU_ACCELERATOR=tcg` when KVM is not available. TCG is slower but works on
+many hosted runners.
+
+The output is written to:
+
+```text
+appliance/packer/output/
+```
+
+### Import into Nutanix AHV
+
+1. In Prism Central or Prism Element, upload the `.qcow2` image to Image
+   Configuration.
+2. Create a VM from the image with:
+
+   ```text
+   2 vCPU
+   4-8 GB RAM
+   80-100 GB disk
+   Management network with access to Nutanix targets
+   ```
+
+3. Add a cloud-init user-data payload or use your image process to set an
+   administrator SSH key or console login.
+4. Boot the VM.
+5. Wait for first boot to complete:
+
+   ```bash
+   sudo systemctl status ztf-orchestrator-firstboot
+   sudo systemctl status ztf-orchestrator
+   ```
+
+6. Retrieve the app admin password:
+
+   ```bash
+   sudo journalctl -u ztf-orchestrator -n 200 --no-pager
+   ```
+
+7. Open:
+
+   ```text
+   http://<appliance-ip>:5001
+   ```
+
+8. Sign in as `admin`, rotate credentials, and configure users.
+
+### Offline or Restricted Sites
+
+For disconnected sites, build the QCOW2 in a connected staging environment where
+the workflow can preload container images. Transfer the QCOW2 and checksum into
+the restricted site using the approved media process.
+
+If the appliance must pull from an internal registry, mirror these images and
+set the appliance `.env` after first boot or before sealing your own image:
+
+```text
+ghcr.io/virtuarchitect/ztf-orchestrator:<tag>
+postgres:16-alpine
+```
+
+## Packer Template Reference
+
+The raw Packer commands are:
 
 ```bash
 cd appliance/packer
@@ -117,11 +224,12 @@ packer init ahv-qcow2.pkr.hcl
 packer build \
   -var "version=v1.2.9" \
   -var "ztf_orchestrator_version=v1.2.9" \
+  -var "qemu_accelerator=kvm" \
   ahv-qcow2.pkr.hcl
 ```
 
-Attach the resulting QCOW2 to the matching GitHub Release rather than storing it
-inside the repository.
+Do not commit built VM images to Git. Attach the resulting QCOW2 to the matching
+GitHub Release or store it in your internal artifact repository.
 
 The Packer template installs Docker and a first-boot systemd unit, but it does
 not start ZTF-Orchestrator during image build. Secrets are generated only after

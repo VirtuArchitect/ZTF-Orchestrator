@@ -9,6 +9,7 @@ fi
 APP_DIR="${ZTF_APPLIANCE_DIR:-/opt/ztf-orchestrator}"
 SOURCE_REPO="${ZTF_SOURCE_REPO:-https://github.com/VirtuArchitect/ZTF-Orchestrator.git}"
 SOURCE_REF="${ZTF_SOURCE_REF:-main}"
+LOCAL_SOURCE_DIR="${ZTF_LOCAL_SOURCE_DIR:-/opt/ztf-orchestrator-source}"
 IMAGE_VERSION="${ZTF_ORCHESTRATOR_VERSION:-latest}"
 HOST_BIND="${ZTF_HOST_BIND:-0.0.0.0}"
 
@@ -34,11 +35,21 @@ mkdir -p "${APP_DIR}"
 
 if [[ ! -d "${APP_DIR}/.git" ]]; then
   rm -rf "${APP_DIR:?}/"*
-  git clone --branch "${SOURCE_REF}" "${SOURCE_REPO}" "${APP_DIR}"
+  if [[ -d "${LOCAL_SOURCE_DIR}/.git" ]]; then
+    git clone --branch "${SOURCE_REF}" "${LOCAL_SOURCE_DIR}" "${APP_DIR}" \
+      || git clone "${LOCAL_SOURCE_DIR}" "${APP_DIR}"
+  else
+    git clone --branch "${SOURCE_REF}" "${SOURCE_REPO}" "${APP_DIR}"
+  fi
 else
-  git -C "${APP_DIR}" fetch --all --tags
-  git -C "${APP_DIR}" checkout "${SOURCE_REF}"
-  git -C "${APP_DIR}" pull --ff-only || true
+  if [[ -d "${LOCAL_SOURCE_DIR}/.git" ]]; then
+    git -C "${APP_DIR}" fetch "${LOCAL_SOURCE_DIR}" "${SOURCE_REF}" || true
+    git -C "${APP_DIR}" checkout FETCH_HEAD || git -C "${APP_DIR}" checkout "${SOURCE_REF}" || true
+  else
+    git -C "${APP_DIR}" fetch --all --tags
+    git -C "${APP_DIR}" checkout "${SOURCE_REF}"
+    git -C "${APP_DIR}" pull --ff-only || true
+  fi
 fi
 
 cd "${APP_DIR}"

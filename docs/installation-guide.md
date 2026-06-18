@@ -327,6 +327,11 @@ Use this for a small Linux VM on AHV or another virtualization platform. The
 appliance Compose file pulls the published container image and starts a local
 PostgreSQL container.
 
+For a pre-built AHV-importable QCOW2 workflow, see
+[Appliance Kit](../appliance/README.md). The repository includes a
+**Build AHV Appliance Image** GitHub Actions workflow and a local
+`appliance/scripts/build-ahv-qcow2.sh` wrapper for Packer/QEMU builds.
+
 ### Prerequisites
 
 1. Ubuntu Server 24.04 LTS or Rocky Linux 9 VM.
@@ -403,6 +408,21 @@ PostgreSQL container.
 For shared team access, place nginx, a load balancer, or another TLS reverse
 proxy in front of the appliance. Do not expose port `5001` directly to
 untrusted networks.
+
+### Pre-Built QCOW2 Summary
+
+1. Run **Actions > Build AHV Appliance Image** in GitHub, or run the local
+   Packer wrapper from a Linux build host.
+2. Download the `.qcow2` and `SHA256SUMS` artifact.
+3. Upload the `.qcow2` into Prism Central or Prism Element image management.
+4. Create a VM with 2 vCPU, 4-8 GB RAM, and 80-100 GB disk.
+5. Attach a management VLAN and provide cloud-init or image-process credentials.
+6. Boot the VM and wait for `ztf-orchestrator-firstboot` to complete.
+7. Retrieve the generated admin password from:
+
+   ```bash
+   sudo journalctl -u ztf-orchestrator -n 200 --no-pager
+   ```
 
 ## Option E: Manual Install
 

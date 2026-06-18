@@ -1,0 +1,100 @@
+name: Build AHV Appliance Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Git ref to bake into the appliance source checkout
+        required: false
+        default: main
+      image_version:
+        description: ZTF-Orchestrator container tag to preload and run
+        required: false
+        default: latest
+      qemu_accelerator:
+        description: QEMU accelerator to use; tcg works on GitHub-hosted runners
+        required: false
+        default: tcg
+  push:
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-qcow2:
+    name: Build AHV QCOW2
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Resolve build inputs
+        id: vars
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "source_ref=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
+            echo "image_version=${{ inputs.image_version }}" >> "$GITHUB_OUTPUT"
+            echo "qemu_accelerator=${{ inputs.qemu_accelerator }}" >> "$GITHUB_OUTPUT"
+            echo "artifact_suffix=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "source_ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "image_version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "qemu_accelerator=tcg" >> "$GITHUB_OUTPUT"
+            echo "artifact_suffix=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: latest
+
+      - name: Initialize Packer
+        working-directory: appliance/packer
+        run: packer init ahv-qcow2.pkr.hcl
+
+      - name: Validate Packer template
+        working-directory: appliance/packer
+        run: |
+          packer validate \
+            -var "version=${{ steps.vars.outputs.source_ref }}" \
+            -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
+            -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
+            ahv-qcow2.pkr.hcl
+
+      - name: Build AHV QCOW2
+        working-directory: appliance/packer
+        run: |
+          packer build \
+            -var "version=${{ steps.vars.outputs.source_ref }}" \
+            -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
+            -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
+            ahv-qcow2.pkr.hcl
+
+      - name: Package image checksum
+        working-directory: appliance/packer
+        run: |
+          sha256sum output/*.qcow2 > output/SHA256SUMS
+
+      - name: Upload QCOW2 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ztf-orchestrator-ahv-qcow2-${{ steps.vars.outputs.artifact_suffix }}
+          path: |
+            appliance/packer/output/*.qcow2
+            appliance/packer/output/SHA256SUMS
+          if-no-files-found: error
+
+      - name: Attach QCOW2 to release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
+            || gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
+          gh release upload "${GITHUB_REF_NAME}" appliance/packer/output/*.qcow2 appliance/packer/output/SHA256SUMS --clobber
