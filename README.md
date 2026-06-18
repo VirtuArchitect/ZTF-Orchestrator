@@ -90,6 +90,11 @@ it orchestrates repeatable ZeroTouch Framework workflows that call Nutanix APIs.
 
 ## Installation
 
+For a detailed step-by-step guide covering every supported installation option,
+including Docker, appliance, Kubernetes starters, manual installs, and
+air-gapped deployment, see
+[Installation Guide](docs/installation-guide.md).
+
 ### Option A: One-Command (Linux / macOS) - Recommended
 
 ```bash
@@ -705,6 +710,7 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 
 | Guide | Description |
 |---|---|
+| [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
 | [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
 | [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
 | [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
