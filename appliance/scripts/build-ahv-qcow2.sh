@@ -4,6 +4,12 @@ set -euo pipefail
 VERSION="${VERSION:-dev}"
 ZTF_ORCHESTRATOR_VERSION="${ZTF_ORCHESTRATOR_VERSION:-latest}"
 QEMU_ACCELERATOR="${QEMU_ACCELERATOR:-tcg}"
+ZTF_CONTAINER_IMAGE="${ZTF_CONTAINER_IMAGE:-ghcr.io/virtuarchitect/ztf-orchestrator}"
+ZTF_POSTGRES_IMAGE="${ZTF_POSTGRES_IMAGE:-postgres:16-alpine}"
+ZTF_BUILD_CONTAINER_IMAGE="${ZTF_BUILD_CONTAINER_IMAGE:-true}"
+ZTF_PULL_CONTAINER_IMAGES="${ZTF_PULL_CONTAINER_IMAGES:-true}"
+ZTF_FRAMEWORK_REPO_URL="${ZTF_FRAMEWORK_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}"
+ZTF_FRAMEWORK_REF="${ZTF_FRAMEWORK_REF:-v1.5.2}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKER_DIR="$(cd "${SCRIPT_DIR}/../packer" && pwd)"
@@ -23,11 +29,23 @@ packer init ahv-qcow2.pkr.hcl
 packer validate \
   -var "version=${VERSION}" \
   -var "ztf_orchestrator_version=${ZTF_ORCHESTRATOR_VERSION}" \
+  -var "ztf_container_image=${ZTF_CONTAINER_IMAGE}" \
+  -var "postgres_image=${ZTF_POSTGRES_IMAGE}" \
+  -var "build_container_image=${ZTF_BUILD_CONTAINER_IMAGE}" \
+  -var "pull_container_images=${ZTF_PULL_CONTAINER_IMAGES}" \
+  -var "ztf_framework_repo_url=${ZTF_FRAMEWORK_REPO_URL}" \
+  -var "ztf_framework_ref=${ZTF_FRAMEWORK_REF}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
   ahv-qcow2.pkr.hcl
 packer build \
   -var "version=${VERSION}" \
   -var "ztf_orchestrator_version=${ZTF_ORCHESTRATOR_VERSION}" \
+  -var "ztf_container_image=${ZTF_CONTAINER_IMAGE}" \
+  -var "postgres_image=${ZTF_POSTGRES_IMAGE}" \
+  -var "build_container_image=${ZTF_BUILD_CONTAINER_IMAGE}" \
+  -var "pull_container_images=${ZTF_PULL_CONTAINER_IMAGES}" \
+  -var "ztf_framework_repo_url=${ZTF_FRAMEWORK_REPO_URL}" \
+  -var "ztf_framework_ref=${ZTF_FRAMEWORK_REF}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
   ahv-qcow2.pkr.hcl
 

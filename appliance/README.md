@@ -8,9 +8,9 @@ QCOW2 files as GitHub Release artifacts.
 
 ## Recommended Distribution Model
 
-1. Build and publish the application container to GitHub Container Registry.
-2. Deploy a small Linux VM on AHV.
-3. Run the first-boot script, or bake it into a QCOW2 image with Packer.
+1. Build a QCOW2 appliance in a connected staging environment.
+2. Bake the ZTF-Orchestrator container image into that QCOW2.
+3. Deploy the small Linux VM on AHV.
 4. Store generated secrets only on the appliance VM.
 5. Attach any generated QCOW2 image to a versioned GitHub Release.
 
@@ -18,7 +18,7 @@ QCOW2 files as GitHub Release artifacts.
 
 | Path | Purpose |
 |---|---|
-| `docker-compose.appliance.yml` | Runtime Compose file using the published GHCR image |
+| `docker-compose.appliance.yml` | Runtime Compose file using the configured ZTF-Orchestrator image tag |
 | `scripts/install-docker.sh` | Installs Docker Engine and the Compose plugin |
 | `scripts/firstboot.sh` | Clones or reuses baked source, creates `.env`, installs systemd, and starts the appliance |
 | `scripts/build-ahv-qcow2.sh` | Local wrapper for building the AHV QCOW2 with Packer and QEMU |
@@ -105,8 +105,18 @@ sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestra
 
 The repository can produce an AHV-importable QCOW2 appliance image. The image is
 built from Ubuntu Server cloud images, installs Docker Engine, stages the
-ZTF-Orchestrator source tree, enables first-boot bootstrap, and attempts to
-preload the ZTF-Orchestrator and PostgreSQL container images.
+ZTF-Orchestrator source tree, enables first-boot bootstrap, builds the
+ZTF-Orchestrator container image locally, and attempts to preload the PostgreSQL
+container image.
+
+The locally built container image bakes the legacy ZeroTouch Framework into:
+
+```text
+/opt/zerotouch-framework
+```
+
+inside the running `ztf-orchestrator` container. The default framework ref is
+`v1.5.2`.
 
 On first boot, the VM generates local secrets, creates `/opt/ztf-orchestrator`,
 starts Docker Compose, and leaves the application admin password in the service
@@ -122,6 +132,9 @@ logs.
    source_ref: main or a version tag
    image_version: latest or a published container tag
    qemu_accelerator: tcg
+   build_container_image: true
+   pull_container_images: true
+   ztf_framework_ref: v1.5.2
    ```
 
 4. Download the artifact:
@@ -142,7 +155,8 @@ requirements vary by workstation or CI runner:
 
 - Packer with the QEMU plugin
 - QEMU available on the build host
-- network access to Ubuntu cloud images and GitHub/GHCR
+- network access to Ubuntu cloud images, GitHub, and the ZeroTouch Framework
+  repository
 
 Run:
 
@@ -150,6 +164,9 @@ Run:
 cd appliance
 VERSION=v1.2.9 \
 ZTF_ORCHESTRATOR_VERSION=v1.2.9 \
+ZTF_BUILD_CONTAINER_IMAGE=true \
+ZTF_PULL_CONTAINER_IMAGES=true \
+ZTF_FRAMEWORK_REF=v1.5.2 \
 QEMU_ACCELERATOR=kvm \
 scripts/build-ahv-qcow2.sh
 ```
@@ -202,17 +219,24 @@ appliance/packer/output/
 
 ### Offline or Restricted Sites
 
-For disconnected sites, build the QCOW2 in a connected staging environment where
-the workflow can preload container images. Transfer the QCOW2 and checksum into
-the restricted site using the approved media process.
+For disconnected sites, build the QCOW2 in a connected staging environment. The
+default build creates the ZTF-Orchestrator image inside the QCOW2, so first boot
+does not require GitHub Container Registry for the application image. The build
+also attempts to preload the PostgreSQL image. Transfer the QCOW2 and checksum
+into the restricted site using the approved media process.
 
-If the appliance must pull from an internal registry, mirror these images and
-set the appliance `.env` after first boot or before sealing your own image:
+If the appliance must pull from an internal registry instead of using the baked
+application image, set `ZTF_BUILD_CONTAINER_IMAGE=false`, mirror these images,
+and set the appliance `.env` after first boot or before sealing your own image:
 
 ```text
 ghcr.io/virtuarchitect/ztf-orchestrator:<tag>
 postgres:16-alpine
 ```
+
+For NKP air-gapped deployments, stage the NKP framework and NKP bundle or binary
+separately on the deployed appliance or on approved shared storage, then register
+their server-visible paths in the NKP Framework screen.
 
 ## Packer Template Reference
 
@@ -224,6 +248,9 @@ packer init ahv-qcow2.pkr.hcl
 packer build \
   -var "version=v1.2.9" \
   -var "ztf_orchestrator_version=v1.2.9" \
+  -var "build_container_image=true" \
+  -var "pull_container_images=true" \
+  -var "ztf_framework_ref=v1.5.2" \
   -var "qemu_accelerator=kvm" \
   ahv-qcow2.pkr.hcl
 ```

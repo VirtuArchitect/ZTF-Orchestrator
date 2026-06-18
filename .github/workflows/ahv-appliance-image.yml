@@ -15,6 +15,18 @@ on:
         description: QEMU accelerator to use; tcg works on GitHub-hosted runners
         required: false
         default: tcg
+      build_container_image:
+        description: Build the ZTF-Orchestrator image inside the QCOW2 instead of relying on GHCR
+        required: false
+        default: "true"
+      pull_container_images:
+        description: Pull supporting container images into the QCOW2 when network is available
+        required: false
+        default: "true"
+      ztf_framework_ref:
+        description: ZeroTouch Framework 1.x ref to bake into the container image
+        required: false
+        default: v1.5.2
   push:
     tags: [ "v*" ]
 
@@ -36,11 +48,17 @@ jobs:
             echo "source_ref=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
             echo "image_version=${{ inputs.image_version }}" >> "$GITHUB_OUTPUT"
             echo "qemu_accelerator=${{ inputs.qemu_accelerator }}" >> "$GITHUB_OUTPUT"
+            echo "build_container_image=${{ inputs.build_container_image }}" >> "$GITHUB_OUTPUT"
+            echo "pull_container_images=${{ inputs.pull_container_images }}" >> "$GITHUB_OUTPUT"
+            echo "ztf_framework_ref=${{ inputs.ztf_framework_ref }}" >> "$GITHUB_OUTPUT"
             echo "artifact_suffix=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
           else
             echo "source_ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
             echo "image_version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
             echo "qemu_accelerator=tcg" >> "$GITHUB_OUTPUT"
+            echo "build_container_image=true" >> "$GITHUB_OUTPUT"
+            echo "pull_container_images=true" >> "$GITHUB_OUTPUT"
+            echo "ztf_framework_ref=v1.5.2" >> "$GITHUB_OUTPUT"
             echo "artifact_suffix=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
@@ -65,6 +83,9 @@ jobs:
             -var "version=${{ steps.vars.outputs.source_ref }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
+            -var "build_container_image=${{ steps.vars.outputs.build_container_image }}" \
+            -var "pull_container_images=${{ steps.vars.outputs.pull_container_images }}" \
+            -var "ztf_framework_ref=${{ steps.vars.outputs.ztf_framework_ref }}" \
             ahv-qcow2.pkr.hcl
 
       - name: Build AHV QCOW2
@@ -74,6 +95,9 @@ jobs:
             -var "version=${{ steps.vars.outputs.source_ref }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
+            -var "build_container_image=${{ steps.vars.outputs.build_container_image }}" \
+            -var "pull_container_images=${{ steps.vars.outputs.pull_container_images }}" \
+            -var "ztf_framework_ref=${{ steps.vars.outputs.ztf_framework_ref }}" \
             ahv-qcow2.pkr.hcl
 
       - name: Package image checksum

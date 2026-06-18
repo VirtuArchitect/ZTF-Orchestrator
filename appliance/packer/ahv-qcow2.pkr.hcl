@@ -27,6 +27,26 @@ variable "postgres_image" {
   default = "postgres:16-alpine"
 }
 
+variable "build_container_image" {
+  type    = bool
+  default = true
+}
+
+variable "pull_container_images" {
+  type    = bool
+  default = true
+}
+
+variable "ztf_framework_repo_url" {
+  type    = string
+  default = "https://github.com/nutanixdev/zerotouch-framework.git"
+}
+
+variable "ztf_framework_ref" {
+  type    = string
+  default = "v1.5.2"
+}
+
 variable "qemu_accelerator" {
   type    = string
   default = "tcg"
@@ -71,15 +91,19 @@ build {
       "ZTF_ORCHESTRATOR_VERSION=${var.ztf_orchestrator_version}",
       "ZTF_SOURCE_REF=${var.version}",
       "ZTF_CONTAINER_IMAGE=${var.ztf_container_image}",
-      "ZTF_POSTGRES_IMAGE=${var.postgres_image}"
+      "ZTF_POSTGRES_IMAGE=${var.postgres_image}",
+      "ZTF_BUILD_CONTAINER_IMAGE=${var.build_container_image}",
+      "ZTF_PULL_CONTAINER_IMAGES=${var.pull_container_images}",
+      "ZTF_FRAMEWORK_REPO_URL=${var.ztf_framework_repo_url}",
+      "ZTF_FRAMEWORK_REF=${var.ztf_framework_ref}"
     ]
     inline = [
       "sudo apt-get update",
       "sudo apt-get install -y git ca-certificates curl openssl",
       "sudo git clone --branch ${var.version} https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source || sudo git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source",
       "sudo bash /opt/ztf-orchestrator-source/appliance/scripts/install-docker.sh",
-      "sudo docker pull ${var.ztf_container_image}:${var.ztf_orchestrator_version} || true",
-      "sudo docker pull ${var.postgres_image} || true",
+      "if [ \"$ZTF_BUILD_CONTAINER_IMAGE\" = \"true\" ]; then sudo docker build --build-arg ZTF_REPO_URL=\"$ZTF_FRAMEWORK_REPO_URL\" --build-arg ZTF_REF=\"$ZTF_FRAMEWORK_REF\" -t \"$ZTF_CONTAINER_IMAGE:$ZTF_ORCHESTRATOR_VERSION\" /opt/ztf-orchestrator-source; elif [ \"$ZTF_PULL_CONTAINER_IMAGES\" = \"true\" ]; then sudo docker pull \"$ZTF_CONTAINER_IMAGE:$ZTF_ORCHESTRATOR_VERSION\" || true; fi",
+      "if [ \"$ZTF_PULL_CONTAINER_IMAGES\" = \"true\" ]; then sudo docker pull \"$ZTF_POSTGRES_IMAGE\" || true; fi",
       "printf 'ZTF_SOURCE_REPO=https://github.com/VirtuArchitect/ZTF-Orchestrator.git\\nZTF_LOCAL_SOURCE_DIR=/opt/ztf-orchestrator-source\\nZTF_SOURCE_REF=${var.version}\\nZTF_ORCHESTRATOR_VERSION=${var.ztf_orchestrator_version}\\nZTF_HOST_BIND=0.0.0.0\\n' | sudo tee /etc/ztf-orchestrator-appliance.env >/dev/null",
       "sudo chmod 600 /etc/ztf-orchestrator-appliance.env",
       "sudo install -m 0644 /opt/ztf-orchestrator-source/appliance/systemd/ztf-orchestrator-firstboot.service /etc/systemd/system/ztf-orchestrator-firstboot.service",

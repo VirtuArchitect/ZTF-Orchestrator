@@ -336,8 +336,8 @@ For a pre-built AHV-importable QCOW2 workflow, see
 
 1. Ubuntu Server 24.04 LTS or Rocky Linux 9 VM.
 2. 2 vCPU, 4-8 GB RAM, and 80-100 GB disk.
-3. Network access to GitHub and GHCR, unless using internal mirrors or a
-   preloaded image.
+3. Network access to GitHub and a container registry, unless using internal
+   mirrors or a preloaded image.
 4. Network access from the VM to Prism Central, Prism Element, Foundation
    Central, DNS, NTP, and other deployment services.
 5. `sudo` access.
@@ -413,6 +413,9 @@ untrusted networks.
 
 1. Run **Actions > Build AHV Appliance Image** in GitHub, or run the local
    Packer wrapper from a Linux build host.
+   The default QCOW2 build locally builds the ZTF-Orchestrator container image
+   inside the appliance and bakes ZeroTouch Framework `v1.5.2` into
+   `/opt/zerotouch-framework` inside that container.
 2. Download the `.qcow2` and `SHA256SUMS` artifact.
 3. Upload the `.qcow2` into Prism Central or Prism Element image management.
 4. Create a VM with 2 vCPU, 4-8 GB RAM, and 80-100 GB disk.
@@ -620,6 +623,99 @@ staging environment, then transfer them into the disconnected site.
    NKP framework archive, if used
    NKP bundle/artifacts, if used
    ```
+
+### Connected Staging for a Portable AHV Appliance
+
+Use this path when the disconnected site should receive a ready-to-import QCOW2
+rather than container tar files.
+
+1. Build the QCOW2 from GitHub Actions or a connected Linux build host.
+
+   GitHub Actions inputs:
+
+   ```text
+   source_ref: main or a release tag
+   image_version: latest or the release tag
+   qemu_accelerator: tcg
+   build_container_image: true
+   pull_container_images: true
+   ztf_framework_ref: v1.5.2
+   ```
+
+   Local Linux build host:
+
+   ```bash
+   cd appliance
+   VERSION=v1.2.9 \
+   ZTF_ORCHESTRATOR_VERSION=v1.2.9 \
+   ZTF_BUILD_CONTAINER_IMAGE=true \
+   ZTF_PULL_CONTAINER_IMAGES=true \
+   ZTF_FRAMEWORK_REF=v1.5.2 \
+   QEMU_ACCELERATOR=kvm \
+   scripts/build-ahv-qcow2.sh
+   ```
+
+2. Verify the checksum:
+
+   ```bash
+   cd appliance/packer/output
+   sha256sum -c SHA256SUMS
+   ```
+
+3. Transfer only the appliance artifacts required by the site:
+
+   ```text
+   ztf-orchestrator-appliance-<version>.qcow2
+   SHA256SUMS
+   NKP framework archive, if used
+   NKP bundle/artifacts, if used
+   ```
+
+The appliance includes the ZTF-Orchestrator source checkout and a Docker image
+with legacy ZeroTouch Framework baked into `/opt/zerotouch-framework` inside the
+container. The first boot can therefore start without GitHub Container Registry
+access for the application image. PostgreSQL is also preloaded when
+`ZTF_PULL_CONTAINER_IMAGES=true` succeeds during the connected build.
+
+### Disconnected AHV Appliance Import
+
+1. Upload the QCOW2 into Prism Central or Prism Element image management.
+2. Create a VM from the image with 2 vCPU, 4-8 GB RAM, 80-100 GB disk, and the
+   target management network.
+3. Provide a site-approved cloud-init payload or image-process credentials for
+   administrator access.
+4. Boot the VM and wait for first boot:
+
+   ```bash
+   sudo systemctl status ztf-orchestrator-firstboot
+   sudo systemctl status ztf-orchestrator
+   ```
+
+5. Validate the baked app image and framework:
+
+   ```bash
+   cd /opt/ztf-orchestrator
+   sudo docker image ls | grep ztf-orchestrator
+   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /opt/zerotouch-framework
+   curl http://localhost:5001/health
+   ```
+
+6. Retrieve the generated application admin password:
+
+   ```bash
+   sudo journalctl -u ztf-orchestrator -n 200 --no-pager
+   ```
+
+7. Stage optional NKP artifacts under persistent storage, for example:
+
+   ```text
+   /var/lib/ztf-orchestrator/nkp-zerotouch-framework
+   /var/lib/ztf-orchestrator/bundles/
+   ```
+
+8. In the UI, register the NKP framework path and any NKP binary or bundle paths
+   under **NKP Framework**.
 
 ### Disconnected Target Environment
 
