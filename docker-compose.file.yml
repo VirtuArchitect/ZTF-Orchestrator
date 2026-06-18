@@ -4,7 +4,7 @@ services:
       context: .
       args:
         ZTF_REPO_URL: ${ZTF_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}
-        ZTF_REF:      ${ZTF_REF:-main}
+        ZTF_REF:      ${ZTF_REF:-v1.5.2}
     image: ztf-orchestrator:latest
     container_name: ztf-orchestrator
     restart: unless-stopped
