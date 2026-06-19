@@ -14,6 +14,7 @@ ZTF_BAKE_NKP_FRAMEWORK="${ZTF_BAKE_NKP_FRAMEWORK:-true}"
 ZTF_NKP_FRAMEWORK_REPO_URL="${ZTF_NKP_FRAMEWORK_REPO_URL:-https://github.com/VirtuArchitect/nkp-zerotouch-framework.git}"
 ZTF_NKP_FRAMEWORK_REF="${ZTF_NKP_FRAMEWORK_REF:-main}"
 ZTF_NKP_BUNDLE_URLS="${ZTF_NKP_BUNDLE_URLS:-}"
+QEMU_BINARY="${QEMU_BINARY:-qemu-system-x86_64}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKER_DIR="$(cd "${SCRIPT_DIR}/../packer" && pwd)"
@@ -43,6 +44,7 @@ packer validate \
   -var "nkp_framework_repo_url=${ZTF_NKP_FRAMEWORK_REPO_URL}" \
   -var "nkp_framework_ref=${ZTF_NKP_FRAMEWORK_REF}" \
   -var "nkp_bundle_urls=${ZTF_NKP_BUNDLE_URLS}" \
+  -var "qemu_binary=${QEMU_BINARY}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
   ahv-qcow2.pkr.hcl
 packer build \
@@ -58,6 +60,7 @@ packer build \
   -var "nkp_framework_repo_url=${ZTF_NKP_FRAMEWORK_REPO_URL}" \
   -var "nkp_framework_ref=${ZTF_NKP_FRAMEWORK_REF}" \
   -var "nkp_bundle_urls=${ZTF_NKP_BUNDLE_URLS}" \
+  -var "qemu_binary=${QEMU_BINARY}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
   ahv-qcow2.pkr.hcl
 

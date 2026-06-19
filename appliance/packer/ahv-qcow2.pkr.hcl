@@ -72,6 +72,11 @@ variable "qemu_accelerator" {
   default = "tcg"
 }
 
+variable "qemu_binary" {
+  type    = string
+  default = "qemu-system-x86_64"
+}
+
 variable "ubuntu_cloud_image_url" {
   type    = string
   default = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
@@ -91,6 +96,7 @@ source "qemu" "ztf_orchestrator_ahv" {
   vm_name           = "ztf-orchestrator-appliance-${var.version}.qcow2"
   headless          = true
   accelerator       = var.qemu_accelerator
+  qemu_binary       = var.qemu_binary
   disk_size         = "81920M"
   memory            = 4096
   cpus              = 2

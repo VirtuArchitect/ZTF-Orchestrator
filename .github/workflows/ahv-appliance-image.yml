@@ -15,6 +15,10 @@ on:
         description: QEMU accelerator to use; tcg works on GitHub-hosted runners
         required: false
         default: tcg
+      qemu_binary:
+        description: QEMU binary path or name used by Packer
+        required: false
+        default: /usr/bin/qemu-system-x86_64
       build_container_image:
         description: Build the ZTF-Orchestrator image inside the QCOW2 instead of relying on GHCR
         required: false
@@ -60,6 +64,7 @@ jobs:
             echo "source_ref=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
             echo "image_version=${{ inputs.image_version }}" >> "$GITHUB_OUTPUT"
             echo "qemu_accelerator=${{ inputs.qemu_accelerator }}" >> "$GITHUB_OUTPUT"
+            echo "qemu_binary=${{ inputs.qemu_binary }}" >> "$GITHUB_OUTPUT"
             echo "build_container_image=${{ inputs.build_container_image }}" >> "$GITHUB_OUTPUT"
             echo "pull_container_images=${{ inputs.pull_container_images }}" >> "$GITHUB_OUTPUT"
             echo "ztf_framework_ref=${{ inputs.ztf_framework_ref }}" >> "$GITHUB_OUTPUT"
@@ -71,6 +76,7 @@ jobs:
             echo "source_ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
             echo "image_version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
             echo "qemu_accelerator=tcg" >> "$GITHUB_OUTPUT"
+            echo "qemu_binary=/usr/bin/qemu-system-x86_64" >> "$GITHUB_OUTPUT"
             echo "build_container_image=true" >> "$GITHUB_OUTPUT"
             echo "pull_container_images=true" >> "$GITHUB_OUTPUT"
             echo "ztf_framework_ref=v1.5.2" >> "$GITHUB_OUTPUT"
@@ -83,7 +89,15 @@ jobs:
       - name: Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils
+          sudo apt-get install -y qemu-system-x86 qemu-utils qemu-kvm
+
+      - name: Verify QEMU and Packer inputs
+        run: |
+          set -eux
+          command -v "${{ steps.vars.outputs.qemu_binary }}"
+          "${{ steps.vars.outputs.qemu_binary }}" --version
+          qemu-img --version
+          ls -la /usr/bin/qemu-system-* || true
 
       - name: Set up Packer
         uses: hashicorp/setup-packer@v3
@@ -101,6 +115,7 @@ jobs:
             -var "version=${{ steps.vars.outputs.source_ref }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
+            -var "qemu_binary=${{ steps.vars.outputs.qemu_binary }}" \
             -var "build_container_image=${{ steps.vars.outputs.build_container_image }}" \
             -var "pull_container_images=${{ steps.vars.outputs.pull_container_images }}" \
             -var "ztf_framework_ref=${{ steps.vars.outputs.ztf_framework_ref }}" \
@@ -116,6 +131,7 @@ jobs:
             -var "version=${{ steps.vars.outputs.source_ref }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
+            -var "qemu_binary=${{ steps.vars.outputs.qemu_binary }}" \
             -var "build_container_image=${{ steps.vars.outputs.build_container_image }}" \
             -var "pull_container_images=${{ steps.vars.outputs.pull_container_images }}" \
             -var "ztf_framework_ref=${{ steps.vars.outputs.ztf_framework_ref }}" \
