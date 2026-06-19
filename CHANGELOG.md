@@ -18,6 +18,9 @@ into the next numbered release section when the next version is cut.
   assets from one post-matrix job.
 - Made the AHV release publisher checkout the repository and pass an explicit
   GitHub repository to `gh release` commands.
+- Replaced the custom AHV release upload shell with `softprops/action-gh-release`
+  so tag builds publish downloaded QCOW2 artifacts through a maintained release
+  uploader.
 
 ---
 
