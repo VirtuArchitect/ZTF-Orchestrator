@@ -185,8 +185,10 @@ For AHV or VM-based deployments, use the reproducible appliance kit in
 [appliance](appliance/). The kit is designed for a small Linux VM running Docker
 Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
 
-The repository does not store QCOW2 or OVA binaries. Large appliance images
-should be attached to versioned GitHub Releases. The repo contains:
+The repository does not store QCOW2 or OVA binaries. Large appliance images are
+published as GitHub Actions artifacts or stored in an internal artifact
+repository because GitHub Release assets have a 2 GiB per-file limit. The repo
+contains:
 
 - a GHCR container publishing workflow;
 - an appliance Compose file that pulls `ghcr.io/virtuarchitect/ztf-orchestrator`;

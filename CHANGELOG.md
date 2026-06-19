@@ -21,6 +21,11 @@ into the next numbered release section when the next version is cut.
 - Replaced the custom AHV release upload shell with `softprops/action-gh-release`
   so tag builds publish downloaded QCOW2 artifacts through a maintained release
   uploader.
+- Kept large QCOW2 images as GitHub Actions artifacts and published only
+  checksum/manifest metadata to GitHub Releases to avoid the 2 GiB per-file
+  Release asset limit.
+- Added small per-profile release metadata artifacts so the release publisher
+  does not need to download multi-gigabyte QCOW2 images.
 
 ---
 

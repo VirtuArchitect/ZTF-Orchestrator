@@ -4,7 +4,7 @@ This directory contains the reproducible appliance assets for deploying
 ZTF-Orchestrator as a small Linux VM on AHV or any other virtual platform.
 
 Do not commit built VM images to Git. Publish large appliance outputs such as
-QCOW2 files as GitHub Release artifacts.
+QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 
 ## Recommended Distribution Model
 
@@ -12,7 +12,7 @@ QCOW2 files as GitHub Release artifacts.
 2. Bake the ZTF-Orchestrator container image into that QCOW2.
 3. Deploy the small Linux VM on AHV.
 4. Store generated secrets only on the appliance VM.
-5. Attach any generated QCOW2 image to a versioned GitHub Release.
+5. Attach checksum and manifest metadata to a versioned GitHub Release.
 
 ## Contents
 
@@ -188,8 +188,10 @@ logs.
 
 6. Verify `SHA256SUMS-<profile>-<ref>.txt` before importing the image.
 
-Tag builds also attach the QCOW2 and a profile-specific checksum file to the
-matching GitHub Release. If the release does not exist, the workflow creates it.
+Tag builds also attach profile-specific checksum files and an artifact manifest
+to the matching GitHub Release. The QCOW2 images remain GitHub Actions artifacts
+because GitHub Release assets have a 2 GiB per-file limit. If the release does
+not exist, the workflow creates it.
 
 ### Build Locally
 
@@ -463,8 +465,9 @@ packer build \
   ahv-qcow2.pkr.hcl
 ```
 
-Do not commit built VM images to Git. Attach the resulting QCOW2 to the matching
-GitHub Release or store it in your internal artifact repository.
+Do not commit built VM images to Git. Download generated QCOW2 files from the
+GitHub Actions artifact for the build run, or store them in your internal
+artifact repository.
 
 The Packer template installs Docker and a first-boot systemd unit, but it does
 not start ZTF-Orchestrator during image build. Secrets are generated only after

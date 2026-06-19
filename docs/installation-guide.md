@@ -416,7 +416,9 @@ untrusted networks.
    The default QCOW2 build locally builds the ZTF-Orchestrator container image
    inside the appliance and bakes ZeroTouch Framework `v1.5.2` into
    `/opt/zerotouch-framework` inside that container.
-2. Download the `.qcow2` and checksum artifact.
+2. Download the `.qcow2` and checksum artifact from the workflow run. GitHub
+   Releases publish checksum and manifest metadata only because QCOW2 files can
+   exceed the GitHub Release 2 GiB per-file asset limit.
 3. Upload the `.qcow2` into Prism Central or Prism Element image management.
 4. Create a VM with 2 vCPU, 4-8 GB RAM, and 80-100 GB disk.
 5. Attach a management VLAN and provide cloud-init or image-process credentials.
@@ -738,6 +740,10 @@ Preloaded NKP bundles are mounted into:
 
 1. Download and extract the GitHub Actions artifact from the successful
    **Build AHV Appliance Image** run.
+
+   The matching GitHub Release contains checksum files and an artifact manifest,
+   but the QCOW2 images are downloaded from the Actions run artifacts because
+   GitHub Release assets have a 2 GiB per-file limit.
 
    Artifact names include the selected appliance profile:
 
