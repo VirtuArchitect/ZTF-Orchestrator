@@ -47,6 +47,26 @@ variable "ztf_framework_ref" {
   default = "v1.5.2"
 }
 
+variable "bake_nkp_framework" {
+  type    = bool
+  default = true
+}
+
+variable "nkp_framework_repo_url" {
+  type    = string
+  default = "https://github.com/VirtuArchitect/nkp-zerotouch-framework.git"
+}
+
+variable "nkp_framework_ref" {
+  type    = string
+  default = "main"
+}
+
+variable "nkp_bundle_urls" {
+  type    = string
+  default = ""
+}
+
 variable "qemu_accelerator" {
   type    = string
   default = "tcg"
@@ -95,7 +115,11 @@ build {
       "ZTF_BUILD_CONTAINER_IMAGE=${var.build_container_image}",
       "ZTF_PULL_CONTAINER_IMAGES=${var.pull_container_images}",
       "ZTF_FRAMEWORK_REPO_URL=${var.ztf_framework_repo_url}",
-      "ZTF_FRAMEWORK_REF=${var.ztf_framework_ref}"
+      "ZTF_FRAMEWORK_REF=${var.ztf_framework_ref}",
+      "ZTF_BAKE_NKP_FRAMEWORK=${var.bake_nkp_framework}",
+      "ZTF_NKP_FRAMEWORK_REPO_URL=${var.nkp_framework_repo_url}",
+      "ZTF_NKP_FRAMEWORK_REF=${var.nkp_framework_ref}",
+      "ZTF_NKP_BUNDLE_URLS=${var.nkp_bundle_urls}"
     ]
     inline = [
       "sudo apt-get update",
@@ -112,6 +136,30 @@ build {
       "sudo passwd -l ubuntu",
       "sudo cloud-init clean --logs",
       "sudo rm -f /etc/ssh/ssh_host_*"
+    ]
+  }
+
+  provisioner "file" {
+    source      = "../preload/"
+    destination = "/tmp/ztf-orchestrator-preload"
+  }
+
+  provisioner "shell" {
+    environment_vars = [
+      "ZTF_BAKE_NKP_FRAMEWORK=${var.bake_nkp_framework}",
+      "ZTF_NKP_FRAMEWORK_REPO_URL=${var.nkp_framework_repo_url}",
+      "ZTF_NKP_FRAMEWORK_REF=${var.nkp_framework_ref}",
+      "ZTF_NKP_BUNDLE_URLS=${var.nkp_bundle_urls}"
+    ]
+    inline = [
+      "sudo mkdir -p /opt/ztf-orchestrator-preload/nkp-zerotouch-framework /opt/ztf-orchestrator-preload/bundles",
+      "if [ -d /tmp/ztf-orchestrator-preload/nkp-zerotouch-framework ] && [ \"$(find /tmp/ztf-orchestrator-preload/nkp-zerotouch-framework -mindepth 1 -maxdepth 1 2>/dev/null | head -n 1)\" ]; then sudo cp -a /tmp/ztf-orchestrator-preload/nkp-zerotouch-framework/. /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/; fi",
+      "if [ -d /tmp/ztf-orchestrator-preload/bundles ] && [ \"$(find /tmp/ztf-orchestrator-preload/bundles -mindepth 1 -maxdepth 1 2>/dev/null | head -n 1)\" ]; then sudo cp -a /tmp/ztf-orchestrator-preload/bundles/. /opt/ztf-orchestrator-preload/bundles/; fi",
+      "sudo find /opt/ztf-orchestrator-preload -name .gitkeep -type f -delete",
+      "if [ \"$ZTF_BAKE_NKP_FRAMEWORK\" = \"true\" ] && [ ! -f /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/scripts/zt.sh ] && [ ! -f /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/scripts/zt.ps1 ]; then sudo git clone --branch \"$ZTF_NKP_FRAMEWORK_REF\" \"$ZTF_NKP_FRAMEWORK_REPO_URL\" /opt/ztf-orchestrator-preload/nkp-zerotouch-framework || sudo git clone \"$ZTF_NKP_FRAMEWORK_REPO_URL\" /opt/ztf-orchestrator-preload/nkp-zerotouch-framework; sudo rm -rf /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/.git; fi",
+      "if [ -n \"$ZTF_NKP_BUNDLE_URLS\" ]; then printf '%s' \"$ZTF_NKP_BUNDLE_URLS\" | tr ',' '\\n' | while IFS= read -r url; do clean_url=\"$(printf '%s' \"$url\" | xargs)\"; [ -z \"$clean_url\" ] && continue; sudo sh -c 'cd /opt/ztf-orchestrator-preload/bundles && curl -fL --retry 3 --connect-timeout 20 -O \"$1\"' sh \"$clean_url\"; done; fi",
+      "sudo chown -R root:root /opt/ztf-orchestrator-preload",
+      "sudo chmod -R a+rX /opt/ztf-orchestrator-preload"
     ]
   }
 }

@@ -10,6 +10,10 @@ ZTF_BUILD_CONTAINER_IMAGE="${ZTF_BUILD_CONTAINER_IMAGE:-true}"
 ZTF_PULL_CONTAINER_IMAGES="${ZTF_PULL_CONTAINER_IMAGES:-true}"
 ZTF_FRAMEWORK_REPO_URL="${ZTF_FRAMEWORK_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}"
 ZTF_FRAMEWORK_REF="${ZTF_FRAMEWORK_REF:-v1.5.2}"
+ZTF_BAKE_NKP_FRAMEWORK="${ZTF_BAKE_NKP_FRAMEWORK:-true}"
+ZTF_NKP_FRAMEWORK_REPO_URL="${ZTF_NKP_FRAMEWORK_REPO_URL:-https://github.com/VirtuArchitect/nkp-zerotouch-framework.git}"
+ZTF_NKP_FRAMEWORK_REF="${ZTF_NKP_FRAMEWORK_REF:-main}"
+ZTF_NKP_BUNDLE_URLS="${ZTF_NKP_BUNDLE_URLS:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKER_DIR="$(cd "${SCRIPT_DIR}/../packer" && pwd)"
@@ -35,6 +39,10 @@ packer validate \
   -var "pull_container_images=${ZTF_PULL_CONTAINER_IMAGES}" \
   -var "ztf_framework_repo_url=${ZTF_FRAMEWORK_REPO_URL}" \
   -var "ztf_framework_ref=${ZTF_FRAMEWORK_REF}" \
+  -var "bake_nkp_framework=${ZTF_BAKE_NKP_FRAMEWORK}" \
+  -var "nkp_framework_repo_url=${ZTF_NKP_FRAMEWORK_REPO_URL}" \
+  -var "nkp_framework_ref=${ZTF_NKP_FRAMEWORK_REF}" \
+  -var "nkp_bundle_urls=${ZTF_NKP_BUNDLE_URLS}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
   ahv-qcow2.pkr.hcl
 packer build \
@@ -46,6 +54,10 @@ packer build \
   -var "pull_container_images=${ZTF_PULL_CONTAINER_IMAGES}" \
   -var "ztf_framework_repo_url=${ZTF_FRAMEWORK_REPO_URL}" \
   -var "ztf_framework_ref=${ZTF_FRAMEWORK_REF}" \
+  -var "bake_nkp_framework=${ZTF_BAKE_NKP_FRAMEWORK}" \
+  -var "nkp_framework_repo_url=${ZTF_NKP_FRAMEWORK_REPO_URL}" \
+  -var "nkp_framework_ref=${ZTF_NKP_FRAMEWORK_REF}" \
+  -var "nkp_bundle_urls=${ZTF_NKP_BUNDLE_URLS}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
   ahv-qcow2.pkr.hcl
 

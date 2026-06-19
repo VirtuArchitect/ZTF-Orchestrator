@@ -7,6 +7,11 @@ htmlcov
 .pytest_cache
 *.egg-info
 
+appliance/preload/bundles/*
+!appliance/preload/bundles/.gitkeep
+appliance/preload/nkp-zerotouch-framework/*
+!appliance/preload/nkp-zerotouch-framework/.gitkeep
+
 .env
 .env.*
 !.env.example

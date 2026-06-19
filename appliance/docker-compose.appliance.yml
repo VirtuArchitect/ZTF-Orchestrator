@@ -11,6 +11,8 @@ services:
     volumes:
       - ztf-data:/var/lib/ztf-orchestrator
       - ztf-logs:/var/log/ztf-orchestrator
+      - /opt/ztf-orchestrator-preload/nkp-zerotouch-framework:/var/lib/ztf-orchestrator/nkp-zerotouch-framework:ro
+      - /opt/ztf-orchestrator-preload/bundles:/var/lib/ztf-orchestrator/bundles:ro
     environment:
       ZTF_DATA_DIR: /var/lib/ztf-orchestrator
       ZTF_PATH: /opt/zerotouch-framework

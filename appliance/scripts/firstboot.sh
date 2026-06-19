@@ -12,6 +12,7 @@ SOURCE_REF="${ZTF_SOURCE_REF:-main}"
 LOCAL_SOURCE_DIR="${ZTF_LOCAL_SOURCE_DIR:-/opt/ztf-orchestrator-source}"
 IMAGE_VERSION="${ZTF_ORCHESTRATOR_VERSION:-latest}"
 HOST_BIND="${ZTF_HOST_BIND:-0.0.0.0}"
+PRELOAD_DIR="${ZTF_PRELOAD_DIR:-/opt/ztf-orchestrator-preload}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -32,6 +33,7 @@ if ! command -v git >/dev/null 2>&1; then
 fi
 
 mkdir -p "${APP_DIR}"
+mkdir -p "${PRELOAD_DIR}/nkp-zerotouch-framework" "${PRELOAD_DIR}/bundles"
 
 if [[ ! -d "${APP_DIR}/.git" ]]; then
   rm -rf "${APP_DIR:?}/"*

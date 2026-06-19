@@ -27,6 +27,18 @@ on:
         description: ZeroTouch Framework 1.x ref to bake into the container image
         required: false
         default: v1.5.2
+      bake_nkp_framework:
+        description: Clone and bake the NKP ZeroTouch Framework into the appliance
+        required: false
+        default: "true"
+      nkp_framework_ref:
+        description: NKP ZeroTouch Framework ref to bake into the appliance
+        required: false
+        default: main
+      nkp_bundle_urls:
+        description: Optional comma-separated NKP bundle URLs to download into the appliance
+        required: false
+        default: ""
   push:
     tags: [ "v*" ]
 
@@ -51,6 +63,9 @@ jobs:
             echo "build_container_image=${{ inputs.build_container_image }}" >> "$GITHUB_OUTPUT"
             echo "pull_container_images=${{ inputs.pull_container_images }}" >> "$GITHUB_OUTPUT"
             echo "ztf_framework_ref=${{ inputs.ztf_framework_ref }}" >> "$GITHUB_OUTPUT"
+            echo "bake_nkp_framework=${{ inputs.bake_nkp_framework }}" >> "$GITHUB_OUTPUT"
+            echo "nkp_framework_ref=${{ inputs.nkp_framework_ref }}" >> "$GITHUB_OUTPUT"
+            echo "nkp_bundle_urls=${{ inputs.nkp_bundle_urls }}" >> "$GITHUB_OUTPUT"
             echo "artifact_suffix=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
           else
             echo "source_ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
@@ -59,6 +74,9 @@ jobs:
             echo "build_container_image=true" >> "$GITHUB_OUTPUT"
             echo "pull_container_images=true" >> "$GITHUB_OUTPUT"
             echo "ztf_framework_ref=v1.5.2" >> "$GITHUB_OUTPUT"
+            echo "bake_nkp_framework=true" >> "$GITHUB_OUTPUT"
+            echo "nkp_framework_ref=main" >> "$GITHUB_OUTPUT"
+            echo "nkp_bundle_urls=" >> "$GITHUB_OUTPUT"
             echo "artifact_suffix=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
@@ -86,6 +104,9 @@ jobs:
             -var "build_container_image=${{ steps.vars.outputs.build_container_image }}" \
             -var "pull_container_images=${{ steps.vars.outputs.pull_container_images }}" \
             -var "ztf_framework_ref=${{ steps.vars.outputs.ztf_framework_ref }}" \
+            -var "bake_nkp_framework=${{ steps.vars.outputs.bake_nkp_framework }}" \
+            -var "nkp_framework_ref=${{ steps.vars.outputs.nkp_framework_ref }}" \
+            -var "nkp_bundle_urls=${{ steps.vars.outputs.nkp_bundle_urls }}" \
             ahv-qcow2.pkr.hcl
 
       - name: Build AHV QCOW2
@@ -98,6 +119,9 @@ jobs:
             -var "build_container_image=${{ steps.vars.outputs.build_container_image }}" \
             -var "pull_container_images=${{ steps.vars.outputs.pull_container_images }}" \
             -var "ztf_framework_ref=${{ steps.vars.outputs.ztf_framework_ref }}" \
+            -var "bake_nkp_framework=${{ steps.vars.outputs.bake_nkp_framework }}" \
+            -var "nkp_framework_ref=${{ steps.vars.outputs.nkp_framework_ref }}" \
+            -var "nkp_bundle_urls=${{ steps.vars.outputs.nkp_bundle_urls }}" \
             ahv-qcow2.pkr.hcl
 
       - name: Package image checksum

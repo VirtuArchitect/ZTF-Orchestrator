@@ -629,7 +629,7 @@ staging environment, then transfer them into the disconnected site.
 Use this path when the disconnected site should receive a ready-to-import QCOW2
 rather than container tar files.
 
-1. Build the QCOW2 from GitHub Actions or a connected Linux build host.
+1. Choose the QCOW2 build path.
 
    GitHub Actions inputs:
 
@@ -640,7 +640,33 @@ rather than container tar files.
    build_container_image: true
    pull_container_images: true
    ztf_framework_ref: v1.5.2
+   bake_nkp_framework: true
+   nkp_framework_ref: main
+   nkp_bundle_urls: optional comma-separated bundle URLs
    ```
+
+2. Optional: include NKP bundle artifacts before a local build.
+
+   Copy local files into:
+
+   ```text
+   appliance/preload/bundles/
+   ```
+
+   Or provide connected staging URLs:
+
+   ```bash
+   ZTF_NKP_BUNDLE_URLS="https://mirror.example/nkp-bundle.tar.gz"
+   ```
+
+   If you need to use a reviewed local NKP framework checkout instead of
+   cloning from Git, copy it into:
+
+   ```text
+   appliance/preload/nkp-zerotouch-framework/
+   ```
+
+3. Build the QCOW2 from GitHub Actions or a connected Linux build host.
 
    Local Linux build host:
 
@@ -651,31 +677,43 @@ rather than container tar files.
    ZTF_BUILD_CONTAINER_IMAGE=true \
    ZTF_PULL_CONTAINER_IMAGES=true \
    ZTF_FRAMEWORK_REF=v1.5.2 \
+   ZTF_BAKE_NKP_FRAMEWORK=true \
+   ZTF_NKP_FRAMEWORK_REF=main \
    QEMU_ACCELERATOR=kvm \
    scripts/build-ahv-qcow2.sh
    ```
 
-2. Verify the checksum:
+4. Verify the checksum:
 
    ```bash
    cd appliance/packer/output
    sha256sum -c SHA256SUMS
    ```
 
-3. Transfer only the appliance artifacts required by the site:
+5. Transfer only the appliance artifacts required by the site:
 
    ```text
    ztf-orchestrator-appliance-<version>.qcow2
    SHA256SUMS
-   NKP framework archive, if used
-   NKP bundle/artifacts, if used
    ```
 
 The appliance includes the ZTF-Orchestrator source checkout and a Docker image
 with legacy ZeroTouch Framework baked into `/opt/zerotouch-framework` inside the
 container. The first boot can therefore start without GitHub Container Registry
 access for the application image. PostgreSQL is also preloaded when
-`ZTF_PULL_CONTAINER_IMAGES=true` succeeds during the connected build.
+`ZTF_PULL_CONTAINER_IMAGES=true` succeeds during the connected build. When
+`ZTF_BAKE_NKP_FRAMEWORK=true`, the NKP framework is staged on the appliance host
+and mounted into the container at:
+
+```text
+/var/lib/ztf-orchestrator/nkp-zerotouch-framework
+```
+
+Preloaded NKP bundles are mounted into:
+
+```text
+/var/lib/ztf-orchestrator/bundles
+```
 
 ### Disconnected AHV Appliance Import
 
@@ -691,13 +729,17 @@ access for the application image. PostgreSQL is also preloaded when
    sudo systemctl status ztf-orchestrator
    ```
 
-5. Validate the baked app image and framework:
+5. Validate the baked app image, ZTF framework, and NKP preload:
 
    ```bash
    cd /opt/ztf-orchestrator
    sudo docker image ls | grep ztf-orchestrator
    sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /opt/zerotouch-framework
+   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /var/lib/ztf-orchestrator/nkp-zerotouch-framework
+   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /var/lib/ztf-orchestrator/bundles
    curl http://localhost:5001/health
    ```
 
@@ -707,7 +749,7 @@ access for the application image. PostgreSQL is also preloaded when
    sudo journalctl -u ztf-orchestrator -n 200 --no-pager
    ```
 
-7. Stage optional NKP artifacts under persistent storage, for example:
+7. Confirm the NKP Framework UI can see the preloaded paths:
 
    ```text
    /var/lib/ztf-orchestrator/nkp-zerotouch-framework

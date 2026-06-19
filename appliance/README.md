@@ -107,7 +107,8 @@ The repository can produce an AHV-importable QCOW2 appliance image. The image is
 built from Ubuntu Server cloud images, installs Docker Engine, stages the
 ZTF-Orchestrator source tree, enables first-boot bootstrap, builds the
 ZTF-Orchestrator container image locally, and attempts to preload the PostgreSQL
-container image.
+container image. It can also preload the NKP ZeroTouch Framework and NKP bundle
+artifacts for disconnected NKP deployment preparation.
 
 The locally built container image bakes the legacy ZeroTouch Framework into:
 
@@ -117,6 +118,30 @@ The locally built container image bakes the legacy ZeroTouch Framework into:
 
 inside the running `ztf-orchestrator` container. The default framework ref is
 `v1.5.2`.
+
+The NKP framework is staged on the appliance host at:
+
+```text
+/opt/ztf-orchestrator-preload/nkp-zerotouch-framework
+```
+
+and mounted read-only into the app container at:
+
+```text
+/var/lib/ztf-orchestrator/nkp-zerotouch-framework
+```
+
+NKP bundle artifacts are staged under:
+
+```text
+/opt/ztf-orchestrator-preload/bundles
+```
+
+and mounted read-only into:
+
+```text
+/var/lib/ztf-orchestrator/bundles
+```
 
 On first boot, the VM generates local secrets, creates `/opt/ztf-orchestrator`,
 starts Docker Compose, and leaves the application admin password in the service
@@ -135,6 +160,9 @@ logs.
    build_container_image: true
    pull_container_images: true
    ztf_framework_ref: v1.5.2
+   bake_nkp_framework: true
+   nkp_framework_ref: main
+   nkp_bundle_urls: optional comma-separated bundle URLs
    ```
 
 4. Download the artifact:
@@ -155,8 +183,8 @@ requirements vary by workstation or CI runner:
 
 - Packer with the QEMU plugin
 - QEMU available on the build host
-- network access to Ubuntu cloud images, GitHub, and the ZeroTouch Framework
-  repository
+- network access to Ubuntu cloud images, GitHub, the ZeroTouch Framework
+  repository, and the NKP framework repository when NKP bake-in is enabled
 
 Run:
 
@@ -167,12 +195,34 @@ ZTF_ORCHESTRATOR_VERSION=v1.2.9 \
 ZTF_BUILD_CONTAINER_IMAGE=true \
 ZTF_PULL_CONTAINER_IMAGES=true \
 ZTF_FRAMEWORK_REF=v1.5.2 \
+ZTF_BAKE_NKP_FRAMEWORK=true \
+ZTF_NKP_FRAMEWORK_REF=main \
 QEMU_ACCELERATOR=kvm \
 scripts/build-ahv-qcow2.sh
 ```
 
 Use `QEMU_ACCELERATOR=tcg` when KVM is not available. TCG is slower but works on
 many hosted runners.
+
+To include large local NKP bundles, copy them into this directory before running
+Packer:
+
+```text
+appliance/preload/bundles/
+```
+
+To provide a reviewed local NKP framework checkout instead of cloning from Git,
+copy it into:
+
+```text
+appliance/preload/nkp-zerotouch-framework/
+```
+
+To fetch NKP bundles from connected staging URLs during the build, set:
+
+```bash
+ZTF_NKP_BUNDLE_URLS="https://mirror.example/nkp-bundle.tar.gz,https://mirror.example/other-artifact.tgz"
+```
 
 The output is written to:
 
@@ -222,8 +272,9 @@ appliance/packer/output/
 For disconnected sites, build the QCOW2 in a connected staging environment. The
 default build creates the ZTF-Orchestrator image inside the QCOW2, so first boot
 does not require GitHub Container Registry for the application image. The build
-also attempts to preload the PostgreSQL image. Transfer the QCOW2 and checksum
-into the restricted site using the approved media process.
+also attempts to preload the PostgreSQL image and stages the NKP framework when
+`ZTF_BAKE_NKP_FRAMEWORK=true`. Transfer the QCOW2 and checksum into the
+restricted site using the approved media process.
 
 If the appliance must pull from an internal registry instead of using the baked
 application image, set `ZTF_BUILD_CONTAINER_IMAGE=false`, mirror these images,
@@ -234,9 +285,14 @@ ghcr.io/virtuarchitect/ztf-orchestrator:<tag>
 postgres:16-alpine
 ```
 
-For NKP air-gapped deployments, stage the NKP framework and NKP bundle or binary
-separately on the deployed appliance or on approved shared storage, then register
-their server-visible paths in the NKP Framework screen.
+For NKP air-gapped deployments, include the NKP framework and bundle artifacts
+during the connected appliance build whenever possible. After deployment,
+register these server-visible paths in the NKP Framework screen:
+
+```text
+/var/lib/ztf-orchestrator/nkp-zerotouch-framework
+/var/lib/ztf-orchestrator/bundles/<bundle-or-binary>
+```
 
 ## Packer Template Reference
 
@@ -251,6 +307,8 @@ packer build \
   -var "build_container_image=true" \
   -var "pull_container_images=true" \
   -var "ztf_framework_ref=v1.5.2" \
+  -var "bake_nkp_framework=true" \
+  -var "nkp_framework_ref=main" \
   -var "qemu_accelerator=kvm" \
   ahv-qcow2.pkr.hcl
 ```
