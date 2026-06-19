@@ -11,6 +11,7 @@ appliance/preload/bundles/*
 !appliance/preload/bundles/.gitkeep
 appliance/preload/nkp-zerotouch-framework/*
 !appliance/preload/nkp-zerotouch-framework/.gitkeep
+appliance/packer/output/
 
 .env
 .env.*

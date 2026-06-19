@@ -126,6 +126,9 @@ jobs:
 
       - name: Build AHV QCOW2
         working-directory: appliance/packer
+        env:
+          PACKER_LOG: "1"
+          PACKER_LOG_PATH: packer-debug.log
         run: |
           packer build \
             -var "version=${{ steps.vars.outputs.source_ref }}" \
@@ -139,6 +142,38 @@ jobs:
             -var "nkp_framework_ref=${{ steps.vars.outputs.nkp_framework_ref }}" \
             -var "nkp_bundle_urls=${{ steps.vars.outputs.nkp_bundle_urls }}" \
             ahv-qcow2.pkr.hcl
+
+      - name: Collect Packer failure diagnostics
+        if: failure()
+        working-directory: appliance/packer
+        run: |
+          mkdir -p diagnostics
+          cp packer-debug.log diagnostics/packer-debug.log 2>/dev/null || true
+          {
+            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "Ref: $GITHUB_REF"
+            echo "SHA: $GITHUB_SHA"
+            echo "UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "QEMU:"
+            command -v "${{ steps.vars.outputs.qemu_binary }}" || true
+            "${{ steps.vars.outputs.qemu_binary }}" --version || true
+            qemu-img --version || true
+            echo
+            echo "Packer:"
+            packer version || true
+            echo
+            echo "Output directory:"
+            find output -maxdepth 2 -type f -printf '%p %s bytes\n' 2>/dev/null || true
+          } > diagnostics/build-context.txt
+
+      - name: Upload Packer failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ztf-orchestrator-ahv-qcow2-diagnostics-${{ steps.vars.outputs.artifact_suffix }}
+          path: appliance/packer/diagnostics/
+          if-no-files-found: warn
 
       - name: Package image checksum
         working-directory: appliance/packer
