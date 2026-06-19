@@ -166,7 +166,7 @@ build {
 
   provisioner "file" {
     source      = "../preload/"
-    destination = "/tmp/ztf-orchestrator-preload"
+    destination = "/tmp/"
   }
 
   provisioner "shell" {
@@ -178,8 +178,8 @@ build {
     ]
     inline = [
       "sudo mkdir -p /opt/ztf-orchestrator-preload/nkp-zerotouch-framework /opt/ztf-orchestrator-preload/bundles",
-      "if [ -d /tmp/ztf-orchestrator-preload/nkp-zerotouch-framework ] && [ \"$(find /tmp/ztf-orchestrator-preload/nkp-zerotouch-framework -mindepth 1 -maxdepth 1 2>/dev/null | head -n 1)\" ]; then sudo cp -a /tmp/ztf-orchestrator-preload/nkp-zerotouch-framework/. /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/; fi",
-      "if [ -d /tmp/ztf-orchestrator-preload/bundles ] && [ \"$(find /tmp/ztf-orchestrator-preload/bundles -mindepth 1 -maxdepth 1 2>/dev/null | head -n 1)\" ]; then sudo cp -a /tmp/ztf-orchestrator-preload/bundles/. /opt/ztf-orchestrator-preload/bundles/; fi",
+      "if [ -d /tmp/preload/nkp-zerotouch-framework ] && [ \"$(find /tmp/preload/nkp-zerotouch-framework -mindepth 1 -maxdepth 1 2>/dev/null | head -n 1)\" ]; then sudo cp -a /tmp/preload/nkp-zerotouch-framework/. /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/; fi",
+      "if [ -d /tmp/preload/bundles ] && [ \"$(find /tmp/preload/bundles -mindepth 1 -maxdepth 1 2>/dev/null | head -n 1)\" ]; then sudo cp -a /tmp/preload/bundles/. /opt/ztf-orchestrator-preload/bundles/; fi",
       "sudo find /opt/ztf-orchestrator-preload -name .gitkeep -type f -delete",
       "if [ \"$ZTF_BAKE_NKP_FRAMEWORK\" = \"true\" ] && [ ! -f /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/scripts/zt.sh ] && [ ! -f /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/scripts/zt.ps1 ]; then sudo git clone --branch \"$ZTF_NKP_FRAMEWORK_REF\" \"$ZTF_NKP_FRAMEWORK_REPO_URL\" /opt/ztf-orchestrator-preload/nkp-zerotouch-framework || sudo git clone \"$ZTF_NKP_FRAMEWORK_REPO_URL\" /opt/ztf-orchestrator-preload/nkp-zerotouch-framework; sudo rm -rf /opt/ztf-orchestrator-preload/nkp-zerotouch-framework/.git; fi",
       "if [ -n \"$ZTF_NKP_BUNDLE_URLS\" ]; then printf '%s' \"$ZTF_NKP_BUNDLE_URLS\" | tr ',' '\\n' | while IFS= read -r url; do clean_url=\"$(printf '%s' \"$url\" | xargs)\"; [ -z \"$clean_url\" ] && continue; sudo sh -c 'cd /opt/ztf-orchestrator-preload/bundles && curl -fL --retry 3 --connect-timeout 20 -O \"$1\"' sh \"$clean_url\"; done; fi",
