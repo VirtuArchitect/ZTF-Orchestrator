@@ -723,23 +723,96 @@ Preloaded NKP bundles are mounted into:
 
 ### Disconnected AHV Appliance Import
 
-1. Upload the QCOW2 into Prism Central or Prism Element image management.
-2. Create a VM from the image with 2 vCPU, 4-8 GB RAM, 80-100 GB disk, and the
-   target management network.
-3. Provide a site-approved cloud-init payload or image-process credentials for
-   administrator access.
-4. Boot the VM and wait for first boot:
+1. Download and extract the GitHub Actions artifact from the successful
+   **Build AHV Appliance Image** run.
+
+   Expected files:
+
+   ```text
+   ztf-orchestrator-appliance-<ref>.qcow2
+   SHA256SUMS
+   ```
+
+2. Verify the checksum.
+
+   ```bash
+   cd <artifact-directory>
+   sha256sum -c SHA256SUMS
+   ```
+
+3. Upload the QCOW2 into Prism Central or Prism Element image management.
+
+   Use **Image Configuration** or **Infrastructure > Compute & Storage >
+   Images**, depending on the Prism version.
+
+   Recommended settings:
+
+   ```text
+   Image type: Disk
+   Source: uploaded QCOW2
+   Storage container: site-approved container
+   ```
+
+4. Create a VM from the image with 2 vCPU, 4-8 GB RAM, the imported QCOW2 disk,
+   and the target management network.
+
+5. Provide site-approved administrator access.
+
+   The sealed image locks the temporary Packer `ubuntu` build account. Inject an
+   administrator SSH key or account using cloud-init, AHV guest customization,
+   or your image process.
+
+   Minimal cloud-init example:
+
+   ```yaml
+   #cloud-config
+   users:
+     - name: ztfadmin
+       groups: sudo
+       shell: /bin/bash
+       sudo: ALL=(ALL) NOPASSWD:ALL
+       ssh_authorized_keys:
+         - ssh-ed25519 <public-key> <owner>
+   ssh_pwauth: false
+   ```
+
+6. Boot the VM and wait for first boot:
 
    ```bash
    sudo systemctl status ztf-orchestrator-firstboot
    sudo systemctl status ztf-orchestrator
+   cd /opt/ztf-orchestrator
+   sudo docker compose -f appliance/docker-compose.appliance.yml ps
    ```
 
-5. Validate the baked app image, ZTF framework, and NKP preload:
+7. Retrieve the generated application admin password:
+
+   ```bash
+   sudo journalctl -u ztf-orchestrator -n 300 --no-pager
+   ```
+
+   If needed, inspect the container logs:
+
+   ```bash
+   cd /opt/ztf-orchestrator
+   sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestrator
+   ```
+
+8. Open the UI and complete initial configuration:
+
+   ```text
+   http://<appliance-ip>:5001
+   ```
+
+   Sign in as `admin`, rotate credentials, create named users, and restrict
+   access to the management network or a TLS reverse proxy.
+
+9. Validate the baked app image, ZTF framework, and NKP preload:
 
    ```bash
    cd /opt/ztf-orchestrator
    sudo docker image ls | grep ztf-orchestrator
+   sudo docker image ls | grep postgres
    sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /opt/zerotouch-framework
    sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
@@ -749,21 +822,41 @@ Preloaded NKP bundles are mounted into:
    curl http://localhost:5001/health
    ```
 
-6. Retrieve the generated application admin password:
-
-   ```bash
-   sudo journalctl -u ztf-orchestrator -n 200 --no-pager
-   ```
-
-7. Confirm the NKP Framework UI can see the preloaded paths:
+10. Confirm the NKP Framework UI can see the preloaded paths:
 
    ```text
    /var/lib/ztf-orchestrator/nkp-zerotouch-framework
    /var/lib/ztf-orchestrator/bundles/
    ```
 
-8. In the UI, register the NKP framework path and any NKP binary or bundle paths
-   under **NKP Framework**.
+11. In the UI, register the NKP framework path and any NKP binary or bundle
+    paths under **NKP Framework > Binaries**. Use **Check CLI Compatibility**
+    after registration.
+
+12. Configure site integrations:
+
+    ```text
+    Global Config: Prism Central, Foundation Central, DNS/NTP/IPAM, registry
+    Config Files: site YAML profiles and environment files
+    Users: named operators and admin accounts
+    Schedules/Approvals: maintenance windows and approval gates
+    Validation Evidence: deployment evidence retention
+    ```
+
+13. Troubleshoot first boot if needed:
+
+    ```bash
+    sudo journalctl -u ztf-orchestrator-firstboot -n 300 --no-pager
+    sudo journalctl -u ztf-orchestrator -n 300 --no-pager
+    cd /opt/ztf-orchestrator
+    sudo docker compose -f appliance/docker-compose.appliance.yml ps
+    sudo docker compose -f appliance/docker-compose.appliance.yml logs --tail=200
+    sudo ls -l /opt/ztf-orchestrator/.env
+    sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
+    ```
+
+    Keep `/opt/ztf-orchestrator/.env` local to the appliance because it contains
+    the generated database password.
 
 ### Disconnected Target Environment
 

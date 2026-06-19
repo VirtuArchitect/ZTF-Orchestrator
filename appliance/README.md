@@ -232,42 +232,175 @@ The output is written to:
 appliance/packer/output/
 ```
 
-### Import into Nutanix AHV
+### Import and Configure the Prebuilt QCOW2
 
-1. In Prism Central or Prism Element, upload the `.qcow2` image to Image
-   Configuration.
-2. Create a VM from the image with:
+Use this procedure after the **Build AHV Appliance Image** workflow has produced
+the `ztf-orchestrator-ahv-qcow2-<ref>` artifact. The artifact contains the
+AHV-importable QCOW2 and a checksum file.
+
+1. Download and extract the GitHub Actions artifact.
+
+   Expected files:
 
    ```text
-   2 vCPU
-   4-8 GB RAM
-   80-100 GB disk
-   Management network with access to Nutanix targets
+   ztf-orchestrator-appliance-<ref>.qcow2
+   SHA256SUMS
    ```
 
-3. Add a cloud-init user-data payload or use your image process to set an
-   administrator SSH key or console login.
-4. Boot the VM.
-5. Wait for first boot to complete:
+2. Verify the checksum before transferring or importing the image.
+
+   ```bash
+   cd <artifact-directory>
+   sha256sum -c SHA256SUMS
+   ```
+
+   On Windows PowerShell, use:
+
+   ```powershell
+   Get-FileHash .\ztf-orchestrator-appliance-<ref>.qcow2 -Algorithm SHA256
+   Get-Content .\SHA256SUMS
+   ```
+
+3. Upload the `.qcow2` image in Prism Central or Prism Element.
+
+   Use **Infrastructure > Compute & Storage > Images** or the equivalent
+   **Image Configuration** page for your AOS/Prism version.
+
+   Recommended image settings:
+
+   ```text
+   Image type: Disk
+   Storage container: site-approved container
+   Source: uploaded QCOW2
+   ```
+
+4. Create a VM from the uploaded image.
+
+   Recommended starting size:
+
+   ```text
+   vCPU: 2
+   RAM: 4-8 GB
+   Disk: use the imported QCOW2 disk
+   NIC: management VLAN or subnet
+   Boot: imported disk first
+   ```
+
+   The management network must reach Prism Central, Prism Element/CVMs, DNS,
+   NTP, IPAM, registry endpoints if used, and NKP deployment targets.
+
+5. Add administrator access.
+
+   The Packer build locks the temporary `ubuntu` build account before sealing
+   the image. Use your AHV image process, cloud-init, guest customization, or
+   break-glass console process to inject a site-approved administrator SSH key
+   or account.
+
+   A minimal cloud-init access payload looks like:
+
+   ```yaml
+   #cloud-config
+   users:
+     - name: ztfadmin
+       groups: sudo
+       shell: /bin/bash
+       sudo: ALL=(ALL) NOPASSWD:ALL
+       ssh_authorized_keys:
+         - ssh-ed25519 <public-key> <owner>
+   ssh_pwauth: false
+   ```
+
+6. Boot the VM and wait for first boot.
+
+   From the VM console or SSH session:
 
    ```bash
    sudo systemctl status ztf-orchestrator-firstboot
    sudo systemctl status ztf-orchestrator
+   cd /opt/ztf-orchestrator
+   sudo docker compose -f appliance/docker-compose.appliance.yml ps
    ```
 
-6. Retrieve the app admin password:
+   First boot creates `/opt/ztf-orchestrator/.env`, generates the PostgreSQL
+   password, installs/enables the runtime systemd service, and starts Docker
+   Compose.
+
+7. Retrieve the generated application admin password.
 
    ```bash
-   sudo journalctl -u ztf-orchestrator -n 200 --no-pager
+   sudo journalctl -u ztf-orchestrator -n 300 --no-pager
    ```
 
-7. Open:
+   If the password has scrolled out of the systemd view, inspect the container
+   logs:
+
+   ```bash
+   cd /opt/ztf-orchestrator
+   sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestrator
+   ```
+
+8. Open the web UI.
 
    ```text
    http://<appliance-ip>:5001
    ```
 
-8. Sign in as `admin`, rotate credentials, and configure users.
+   Sign in as `admin`, rotate credentials, create named users, and restrict
+   access to the management network or a TLS reverse proxy.
+
+9. Validate baked-in assets.
+
+   ```bash
+   cd /opt/ztf-orchestrator
+   sudo docker image ls | grep ztf-orchestrator
+   sudo docker image ls | grep postgres
+   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /opt/zerotouch-framework
+   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /var/lib/ztf-orchestrator/nkp-zerotouch-framework
+   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /var/lib/ztf-orchestrator/bundles
+   curl http://localhost:5001/health
+   ```
+
+10. Register NKP assets in the UI when using NKP workflows.
+
+    In **NKP Framework > Binaries**, register server-visible paths such as:
+
+    ```text
+    /var/lib/ztf-orchestrator/nkp-zerotouch-framework
+    /var/lib/ztf-orchestrator/bundles/<bundle-or-binary>
+    ```
+
+    Use the **Check CLI Compatibility** action after registering the framework
+    or binary path.
+
+11. Configure site integrations.
+
+    In the UI, configure:
+
+    ```text
+    Global Config: Prism Central, Foundation Central, DNS/NTP/IPAM, registry
+    Config Files: site YAML profiles and environment files
+    Users: named operators and admin accounts
+    Schedules/Approvals: maintenance windows and approval gates
+    Validation Evidence: deployment evidence retention
+    ```
+
+12. Troubleshoot first boot if needed.
+
+    ```bash
+    sudo journalctl -u ztf-orchestrator-firstboot -n 300 --no-pager
+    sudo journalctl -u ztf-orchestrator -n 300 --no-pager
+    cd /opt/ztf-orchestrator
+    sudo docker compose -f appliance/docker-compose.appliance.yml ps
+    sudo docker compose -f appliance/docker-compose.appliance.yml logs --tail=200
+    sudo ls -l /opt/ztf-orchestrator/.env
+    sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
+    ```
+
+    Keep `/opt/ztf-orchestrator/.env` local to the appliance. It contains the
+    generated database password and must not be copied into Git.
 
 ### Offline or Restricted Sites
 
