@@ -12,6 +12,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.3.0 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Fixed
+- Avoided release asset collisions in tag-triggered multi-profile AHV appliance
+  builds by publishing profile-specific checksum files.
+
 ---
 
 ## [1.3.0] - 2026-06-19

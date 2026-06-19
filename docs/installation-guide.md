@@ -416,7 +416,7 @@ untrusted networks.
    The default QCOW2 build locally builds the ZTF-Orchestrator container image
    inside the appliance and bakes ZeroTouch Framework `v1.5.2` into
    `/opt/zerotouch-framework` inside that container.
-2. Download the `.qcow2` and `SHA256SUMS` artifact.
+2. Download the `.qcow2` and checksum artifact.
 3. Upload the `.qcow2` into Prism Central or Prism Element image management.
 4. Create a VM with 2 vCPU, 4-8 GB RAM, and 80-100 GB disk.
 5. Attach a management VLAN and provide cloud-init or image-process credentials.
@@ -751,14 +751,14 @@ Preloaded NKP bundles are mounted into:
 
    ```text
    ztf-orchestrator-appliance-<profile>-<ref>.qcow2
-   SHA256SUMS
+   SHA256SUMS-<profile>-<ref>.txt
    ```
 
 2. Verify the checksum.
 
    ```bash
    cd <artifact-directory>
-   sha256sum -c SHA256SUMS
+   sha256sum -c SHA256SUMS-<profile>-<ref>.txt
    ```
 
 3. Upload the QCOW2 into Prism Central or Prism Element image management.

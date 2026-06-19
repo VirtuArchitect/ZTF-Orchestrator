@@ -186,10 +186,10 @@ logs.
    ztf-orchestrator-ahv-qcow2-minimal-<ref>
    ```
 
-6. Verify `SHA256SUMS` before importing the image.
+6. Verify `SHA256SUMS-<profile>-<ref>.txt` before importing the image.
 
-Tag builds also attach the QCOW2 and `SHA256SUMS` to the matching GitHub
-Release. If the release does not exist, the workflow creates it.
+Tag builds also attach the QCOW2 and a profile-specific checksum file to the
+matching GitHub Release. If the release does not exist, the workflow creates it.
 
 ### Build Locally
 
@@ -258,22 +258,22 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
    Expected files:
 
    ```text
-   ztf-orchestrator-appliance-<ref>.qcow2
-   SHA256SUMS
+   ztf-orchestrator-appliance-<profile>-<ref>.qcow2
+   SHA256SUMS-<profile>-<ref>.txt
    ```
 
 2. Verify the checksum before transferring or importing the image.
 
    ```bash
    cd <artifact-directory>
-   sha256sum -c SHA256SUMS
+   sha256sum -c SHA256SUMS-<profile>-<ref>.txt
    ```
 
    On Windows PowerShell, use:
 
    ```powershell
-   Get-FileHash .\ztf-orchestrator-appliance-<ref>.qcow2 -Algorithm SHA256
-   Get-Content .\SHA256SUMS
+   Get-FileHash .\ztf-orchestrator-appliance-<profile>-<ref>.qcow2 -Algorithm SHA256
+   Get-Content .\SHA256SUMS-<profile>-<ref>.txt
    ```
 
 3. Upload the `.qcow2` image in Prism Central or Prism Element.
