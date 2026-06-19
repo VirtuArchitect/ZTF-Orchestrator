@@ -16,6 +16,8 @@ into the next numbered release section when the next version is cut.
 - Avoided release asset collisions in tag-triggered multi-profile AHV appliance
   builds by publishing profile-specific checksum files and attaching release
   assets from one post-matrix job.
+- Made the AHV release publisher checkout the repository and pass an explicit
+  GitHub repository to `gh release` commands.
 
 ---
 
