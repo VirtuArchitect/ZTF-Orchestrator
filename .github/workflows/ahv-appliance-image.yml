@@ -89,7 +89,7 @@ jobs:
       - name: Install QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils qemu-kvm
+          sudo apt-get install -y qemu-system-x86 qemu-utils qemu-kvm xorriso
 
       - name: Verify QEMU and Packer inputs
         run: |
@@ -97,6 +97,7 @@ jobs:
           command -v "${{ steps.vars.outputs.qemu_binary }}"
           "${{ steps.vars.outputs.qemu_binary }}" --version
           qemu-img --version
+          xorriso -version
           ls -la /usr/bin/qemu-system-* || true
 
       - name: Set up Packer

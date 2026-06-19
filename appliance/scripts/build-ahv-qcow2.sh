@@ -29,6 +29,11 @@ if ! command -v qemu-system-x86_64 >/dev/null 2>&1 && ! command -v qemu-system-x
   exit 1
 fi
 
+if ! command -v xorriso >/dev/null 2>&1 && ! command -v mkisofs >/dev/null 2>&1 && ! command -v hdiutil >/dev/null 2>&1 && ! command -v oscdimg >/dev/null 2>&1; then
+  echo "An ISO creation tool is required for Packer cd_files. Install xorriso or mkisofs, then rerun." >&2
+  exit 1
+fi
+
 cd "${PACKER_DIR}"
 packer init ahv-qcow2.pkr.hcl
 packer validate \

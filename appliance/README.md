@@ -183,6 +183,8 @@ requirements vary by workstation or CI runner:
 
 - Packer with the QEMU plugin
 - QEMU available on the build host
+- an ISO creation tool for Packer cloud-init media (`xorriso` or `mkisofs`;
+  `xorriso` is installed automatically by the GitHub Actions workflow)
 - network access to Ubuntu cloud images, GitHub, the ZeroTouch Framework
   repository, and the NKP framework repository when NKP bake-in is enabled
 

@@ -645,6 +645,9 @@ rather than container tar files.
    nkp_bundle_urls: optional comma-separated bundle URLs
    ```
 
+   The workflow installs QEMU plus `xorriso`; Packer uses `xorriso` to create
+   the temporary cloud-init ISO attached during image customization.
+
 2. Optional: include NKP bundle artifacts before a local build.
 
    Copy local files into:
@@ -667,6 +670,9 @@ rather than container tar files.
    ```
 
 3. Build the QCOW2 from GitHub Actions or a connected Linux build host.
+
+   A local Linux build host needs Packer, QEMU, and an ISO creation tool such
+   as `xorriso` or `mkisofs`.
 
    Local Linux build host:
 
