@@ -6,6 +6,7 @@ import {
   FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive
 } from 'lucide-react'
 import { useStore } from '../store'
+import { APP_VERSION } from '../version'
 import clsx from 'clsx'
 
 type Role = 'admin' | 'operator' | 'viewer'
@@ -153,7 +154,7 @@ export default function Sidebar() {
       {/* Version */}
       {sidebarOpen && (
         <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-gray-600">ZeroTouch Orchestrator v1.2.9</p>
+          <p className="text-xs text-gray-600">ZeroTouch Orchestrator v{APP_VERSION}</p>
           <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
         </div>
       )}

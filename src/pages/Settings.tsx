@@ -9,6 +9,7 @@ import Layout from '../components/Layout'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
 import { toYaml } from '../utils/yaml'
+import { APP_VERSION } from '../version'
 import type { ConnectionProfile, Settings as AppSettings } from '../types'
 import clsx from 'clsx'
 
@@ -632,7 +633,7 @@ export default function Settings() {
                   <ReadOnlyField label="Audit Retention" value={`${health?.retention?.auditDays ?? 90} days`} />
                   <ReadOnlyField label="Execution Retention" value={`${health?.retention?.executionDays ?? 180} days`} />
                   <ReadOnlyField label="ZTF Installed" value={health?.ztf_installed ? 'yes' : 'no'} />
-                  <ReadOnlyField label="Version" value={health?.version || '1.2.9'} />
+                  <ReadOnlyField label="Version" value={health?.version || APP_VERSION} />
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
                   Change storage and retention values with environment variables, then restart the service.
@@ -964,7 +965,7 @@ export default function Settings() {
               </a>.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-500">
-              <div>UI Version: <span className="text-gray-300">1.2.9</span></div>
+              <div>UI Version: <span className="text-gray-300">{APP_VERSION}</span></div>
               <div>ZTF Supported: <span className="text-gray-300">AOS 6.5+, PC 2022.6+</span></div>
               <div>Maintainer: <span className="text-gray-300">John Goulden</span></div>
               <div>Project: <span className="text-gray-300">ZTF-Orchestrator</span></div>
