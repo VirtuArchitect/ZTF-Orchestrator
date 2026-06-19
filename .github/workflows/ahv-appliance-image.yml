@@ -58,6 +58,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   resolve-profiles:
@@ -269,12 +270,30 @@ jobs:
             appliance/packer/output/SHA256SUMS-*.txt
           if-no-files-found: error
 
-      - name: Attach QCOW2 to release
-        if: startsWith(github.ref, 'refs/tags/')
+  publish-release:
+    name: Publish AHV release assets
+    needs: build-qcow2
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download QCOW2 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ztf-orchestrator-ahv-qcow2-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Attach QCOW2 artifacts to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
             || gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes \
             || gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1
-          gh release upload "${GITHUB_REF_NAME}" appliance/packer/output/*.qcow2 appliance/packer/output/SHA256SUMS-*.txt --clobber
+          mapfile -d '' release_files < <(find release-assets -type f \( -name '*.qcow2' -o -name 'SHA256SUMS-*.txt' \) -print0)
+          if [ "${#release_files[@]}" -eq 0 ]; then
+            echo "No QCOW2 release assets were downloaded." >&2
+            exit 1
+          fi
+          gh release upload "${GITHUB_REF_NAME}" "${release_files[@]}" --clobber

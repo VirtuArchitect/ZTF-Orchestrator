@@ -14,7 +14,8 @@ into the next numbered release section when the next version is cut.
 
 ### Fixed
 - Avoided release asset collisions in tag-triggered multi-profile AHV appliance
-  builds by publishing profile-specific checksum files.
+  builds by publishing profile-specific checksum files and attaching release
+  assets from one post-matrix job.
 
 ---
 
