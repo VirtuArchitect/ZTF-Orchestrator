@@ -105,6 +105,16 @@ jobs:
         with:
           version: latest
 
+      - name: Generate Packer SSH key
+        id: packer_ssh
+        run: |
+          set -eu
+          key_path="${GITHUB_WORKSPACE}/appliance/packer/packer-build-key"
+          ssh-keygen -t ed25519 -N "" -f "$key_path" -C "ztf-orchestrator-packer"
+          chmod 600 "$key_path"
+          echo "private_key_file=$key_path" >> "$GITHUB_OUTPUT"
+          echo "public_key=$(cat "$key_path.pub")" >> "$GITHUB_OUTPUT"
+
       - name: Initialize Packer
         working-directory: appliance/packer
         run: packer init ahv-qcow2.pkr.hcl
@@ -123,6 +133,8 @@ jobs:
             -var "bake_nkp_framework=${{ steps.vars.outputs.bake_nkp_framework }}" \
             -var "nkp_framework_ref=${{ steps.vars.outputs.nkp_framework_ref }}" \
             -var "nkp_bundle_urls=${{ steps.vars.outputs.nkp_bundle_urls }}" \
+            -var "packer_ssh_private_key_file=${{ steps.packer_ssh.outputs.private_key_file }}" \
+            -var "packer_ssh_public_key=${{ steps.packer_ssh.outputs.public_key }}" \
             ahv-qcow2.pkr.hcl
 
       - name: Build AHV QCOW2
@@ -142,6 +154,8 @@ jobs:
             -var "bake_nkp_framework=${{ steps.vars.outputs.bake_nkp_framework }}" \
             -var "nkp_framework_ref=${{ steps.vars.outputs.nkp_framework_ref }}" \
             -var "nkp_bundle_urls=${{ steps.vars.outputs.nkp_bundle_urls }}" \
+            -var "packer_ssh_private_key_file=${{ steps.packer_ssh.outputs.private_key_file }}" \
+            -var "packer_ssh_public_key=${{ steps.packer_ssh.outputs.public_key }}" \
             ahv-qcow2.pkr.hcl
 
       - name: Collect Packer failure diagnostics

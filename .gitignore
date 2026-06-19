@@ -12,6 +12,8 @@ appliance/preload/bundles/*
 appliance/preload/nkp-zerotouch-framework/*
 !appliance/preload/nkp-zerotouch-framework/.gitkeep
 appliance/packer/output/
+appliance/packer/packer-build-key
+appliance/packer/packer-build-key.pub
 
 .env
 .env.*

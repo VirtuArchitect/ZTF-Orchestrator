@@ -18,6 +18,7 @@ QEMU_BINARY="${QEMU_BINARY:-qemu-system-x86_64}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKER_DIR="$(cd "${SCRIPT_DIR}/../packer" && pwd)"
+PACKER_SSH_KEY_FILE="${PACKER_SSH_KEY_FILE:-${PACKER_DIR}/packer-build-key}"
 
 command -v packer >/dev/null 2>&1 || {
   echo "packer is required. Install Packer and rerun." >&2
@@ -33,6 +34,12 @@ if ! command -v xorriso >/dev/null 2>&1 && ! command -v mkisofs >/dev/null 2>&1 
   echo "An ISO creation tool is required for Packer cd_files. Install xorriso or mkisofs, then rerun." >&2
   exit 1
 fi
+
+if [ ! -f "${PACKER_SSH_KEY_FILE}" ]; then
+  ssh-keygen -t ed25519 -N "" -f "${PACKER_SSH_KEY_FILE}" -C "ztf-orchestrator-packer" >/dev/null
+fi
+chmod 600 "${PACKER_SSH_KEY_FILE}"
+PACKER_SSH_PUBLIC_KEY="$(cat "${PACKER_SSH_KEY_FILE}.pub")"
 
 cd "${PACKER_DIR}"
 packer init ahv-qcow2.pkr.hcl
@@ -51,6 +58,8 @@ packer validate \
   -var "nkp_bundle_urls=${ZTF_NKP_BUNDLE_URLS}" \
   -var "qemu_binary=${QEMU_BINARY}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
+  -var "packer_ssh_private_key_file=${PACKER_SSH_KEY_FILE}" \
+  -var "packer_ssh_public_key=${PACKER_SSH_PUBLIC_KEY}" \
   ahv-qcow2.pkr.hcl
 packer build \
   -var "version=${VERSION}" \
@@ -67,6 +76,8 @@ packer build \
   -var "nkp_bundle_urls=${ZTF_NKP_BUNDLE_URLS}" \
   -var "qemu_binary=${QEMU_BINARY}" \
   -var "qemu_accelerator=${QEMU_ACCELERATOR}" \
+  -var "packer_ssh_private_key_file=${PACKER_SSH_KEY_FILE}" \
+  -var "packer_ssh_public_key=${PACKER_SSH_PUBLIC_KEY}" \
   ahv-qcow2.pkr.hcl
 
 sha256sum output/*.qcow2 > output/SHA256SUMS

@@ -1,16 +1,15 @@
 #cloud-config
 hostname: ztf-orchestrator-appliance-build
-ssh_pwauth: true
+ssh_pwauth: false
 
 users:
-  - default
-
-chpasswd:
-  expire: false
-  users:
-    - name: ubuntu
-      password: packer
-      type: text
+  - name: ubuntu
+    groups: sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${packer_ssh_public_key}
 
 package_update: true
 packages:

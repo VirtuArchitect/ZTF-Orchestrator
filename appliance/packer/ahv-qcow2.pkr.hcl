@@ -77,6 +77,16 @@ variable "qemu_binary" {
   default = "qemu-system-x86_64"
 }
 
+variable "packer_ssh_private_key_file" {
+  type    = string
+  default = ""
+}
+
+variable "packer_ssh_public_key" {
+  type    = string
+  default = ""
+}
+
 variable "ubuntu_cloud_image_url" {
   type    = string
   default = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
@@ -88,24 +98,29 @@ variable "ubuntu_cloud_image_checksum" {
 }
 
 source "qemu" "ztf_orchestrator_ahv" {
-  iso_url           = var.ubuntu_cloud_image_url
-  iso_checksum      = var.ubuntu_cloud_image_checksum
-  disk_image        = true
-  format            = "qcow2"
-  output_directory  = "output"
-  vm_name           = "ztf-orchestrator-appliance-${var.version}.qcow2"
-  headless          = true
-  accelerator       = var.qemu_accelerator
-  qemu_binary       = var.qemu_binary
-  disk_size         = "81920M"
-  memory            = 4096
-  cpus              = 2
-  ssh_username      = "ubuntu"
-  ssh_password      = "packer"
-  ssh_timeout       = "10m"
-  shutdown_command  = "sudo shutdown -P now"
-  cd_files          = ["../cloud-init/meta-data", "../cloud-init/user-data.packer"]
-  cd_label          = "cidata"
+  iso_url              = var.ubuntu_cloud_image_url
+  iso_checksum         = var.ubuntu_cloud_image_checksum
+  disk_image           = true
+  format               = "qcow2"
+  output_directory     = "output"
+  vm_name              = "ztf-orchestrator-appliance-${var.version}.qcow2"
+  headless             = true
+  accelerator          = var.qemu_accelerator
+  qemu_binary          = var.qemu_binary
+  disk_size            = "81920M"
+  memory               = 4096
+  cpus                 = 2
+  ssh_username         = "ubuntu"
+  ssh_private_key_file = var.packer_ssh_private_key_file
+  ssh_timeout          = "10m"
+  shutdown_command     = "sudo shutdown -P now"
+  cd_content = {
+    "meta-data" = file("../cloud-init/meta-data")
+    "user-data" = templatefile("../cloud-init/user-data.packer", {
+      packer_ssh_public_key = var.packer_ssh_public_key
+    })
+  }
+  cd_label = "cidata"
 }
 
 build {
@@ -140,6 +155,7 @@ build {
       "sudo systemctl daemon-reload",
       "sudo systemctl enable ztf-orchestrator-firstboot.service",
       "sudo passwd -l ubuntu",
+      "sudo rm -f /home/ubuntu/.ssh/authorized_keys",
       "sudo cloud-init clean --logs",
       "sudo rm -f /etc/ssh/ssh_host_*"
     ]
