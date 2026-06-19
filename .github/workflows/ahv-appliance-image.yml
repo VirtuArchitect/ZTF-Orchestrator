@@ -3,6 +3,16 @@ name: Build AHV Appliance Image
 on:
   workflow_dispatch:
     inputs:
+      artifact_profile:
+        description: Appliance artifact profile to build
+        required: false
+        default: standard
+        type: choice
+        options:
+          - standard
+          - airgap
+          - minimal
+          - all
       source_ref:
         description: Git ref to bake into the appliance source checkout
         required: false
@@ -50,41 +60,94 @@ permissions:
   contents: write
 
 jobs:
+  resolve-profiles:
+    name: Resolve appliance profiles
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.profiles.outputs.matrix }}
+    steps:
+      - name: Select profiles
+        id: profiles
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            selected="${{ inputs.artifact_profile }}"
+          else
+            selected="all"
+          fi
+          case "$selected" in
+            standard)
+              matrix='{"include":[{"profile":"standard","description":"Connected staging appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"}]}'
+              ;;
+            airgap)
+              matrix='{"include":[{"profile":"airgap","description":"Portable disconnected-site appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"}]}'
+              ;;
+            minimal)
+              matrix='{"include":[{"profile":"minimal","description":"Smaller bootstrap appliance that defers app/support image pulls and NKP framework staging to first boot or site process.","build_container_image":"false","pull_container_images":"false","bake_nkp_framework":"false"}]}'
+              ;;
+            all)
+              matrix='{"include":[{"profile":"standard","description":"Connected staging appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"},{"profile":"airgap","description":"Portable disconnected-site appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"},{"profile":"minimal","description":"Smaller bootstrap appliance that defers app/support image pulls and NKP framework staging to first boot or site process.","build_container_image":"false","pull_container_images":"false","bake_nkp_framework":"false"}]}'
+              ;;
+            *)
+              echo "Unsupported artifact_profile: $selected" >&2
+              exit 1
+              ;;
+          esac
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   build-qcow2:
-    name: Build AHV QCOW2
+    name: Build AHV QCOW2 (${{ matrix.profile }})
+    needs: resolve-profiles
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.resolve-profiles.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v6
 
       - name: Resolve build inputs
         id: vars
         run: |
+          profile="${{ matrix.profile }}"
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            echo "source_ref=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
-            echo "image_version=${{ inputs.image_version }}" >> "$GITHUB_OUTPUT"
-            echo "qemu_accelerator=${{ inputs.qemu_accelerator }}" >> "$GITHUB_OUTPUT"
-            echo "qemu_binary=${{ inputs.qemu_binary }}" >> "$GITHUB_OUTPUT"
-            echo "build_container_image=${{ inputs.build_container_image }}" >> "$GITHUB_OUTPUT"
-            echo "pull_container_images=${{ inputs.pull_container_images }}" >> "$GITHUB_OUTPUT"
-            echo "ztf_framework_ref=${{ inputs.ztf_framework_ref }}" >> "$GITHUB_OUTPUT"
-            echo "bake_nkp_framework=${{ inputs.bake_nkp_framework }}" >> "$GITHUB_OUTPUT"
-            echo "nkp_framework_ref=${{ inputs.nkp_framework_ref }}" >> "$GITHUB_OUTPUT"
-            echo "nkp_bundle_urls=${{ inputs.nkp_bundle_urls }}" >> "$GITHUB_OUTPUT"
-            echo "artifact_suffix=${{ inputs.source_ref }}" >> "$GITHUB_OUTPUT"
+            source_ref="${{ inputs.source_ref }}"
+            image_version="${{ inputs.image_version }}"
+            qemu_accelerator="${{ inputs.qemu_accelerator }}"
+            qemu_binary="${{ inputs.qemu_binary }}"
+            ztf_framework_ref="${{ inputs.ztf_framework_ref }}"
+            nkp_framework_ref="${{ inputs.nkp_framework_ref }}"
+            nkp_bundle_urls="${{ inputs.nkp_bundle_urls }}"
           else
-            echo "source_ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "image_version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "qemu_accelerator=tcg" >> "$GITHUB_OUTPUT"
-            echo "qemu_binary=/usr/bin/qemu-system-x86_64" >> "$GITHUB_OUTPUT"
-            echo "build_container_image=true" >> "$GITHUB_OUTPUT"
-            echo "pull_container_images=true" >> "$GITHUB_OUTPUT"
-            echo "ztf_framework_ref=v1.5.2" >> "$GITHUB_OUTPUT"
-            echo "bake_nkp_framework=true" >> "$GITHUB_OUTPUT"
-            echo "nkp_framework_ref=main" >> "$GITHUB_OUTPUT"
-            echo "nkp_bundle_urls=" >> "$GITHUB_OUTPUT"
-            echo "artifact_suffix=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            source_ref="${GITHUB_REF_NAME}"
+            image_version="${GITHUB_REF_NAME}"
+            qemu_accelerator="tcg"
+            qemu_binary="/usr/bin/qemu-system-x86_64"
+            ztf_framework_ref="v1.5.2"
+            nkp_framework_ref="main"
+            nkp_bundle_urls=""
           fi
+          build_container_image="${{ matrix.build_container_image }}"
+          pull_container_images="${{ matrix.pull_container_images }}"
+          bake_nkp_framework="${{ matrix.bake_nkp_framework }}"
+          if [ "$profile" = "standard" ] && [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${{ inputs.artifact_profile }}" != "all" ]; then
+            build_container_image="${{ inputs.build_container_image }}"
+            pull_container_images="${{ inputs.pull_container_images }}"
+            bake_nkp_framework="${{ inputs.bake_nkp_framework }}"
+          fi
+          artifact_suffix="${profile}-${source_ref}"
+          echo "profile=${profile}" >> "$GITHUB_OUTPUT"
+          echo "profile_description=${{ matrix.description }}" >> "$GITHUB_OUTPUT"
+          echo "source_ref=${source_ref}" >> "$GITHUB_OUTPUT"
+          echo "image_version=${image_version}" >> "$GITHUB_OUTPUT"
+          echo "qemu_accelerator=${qemu_accelerator}" >> "$GITHUB_OUTPUT"
+          echo "qemu_binary=${qemu_binary}" >> "$GITHUB_OUTPUT"
+          echo "build_container_image=${build_container_image}" >> "$GITHUB_OUTPUT"
+          echo "pull_container_images=${pull_container_images}" >> "$GITHUB_OUTPUT"
+          echo "ztf_framework_ref=${ztf_framework_ref}" >> "$GITHUB_OUTPUT"
+          echo "bake_nkp_framework=${bake_nkp_framework}" >> "$GITHUB_OUTPUT"
+          echo "nkp_framework_ref=${nkp_framework_ref}" >> "$GITHUB_OUTPUT"
+          echo "nkp_bundle_urls=${nkp_bundle_urls}" >> "$GITHUB_OUTPUT"
+          echo "artifact_suffix=${artifact_suffix}" >> "$GITHUB_OUTPUT"
 
       - name: Install QEMU
         run: |
@@ -124,6 +187,7 @@ jobs:
         run: |
           packer validate \
             -var "version=${{ steps.vars.outputs.source_ref }}" \
+            -var "image_label=${{ steps.vars.outputs.artifact_suffix }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
             -var "qemu_binary=${{ steps.vars.outputs.qemu_binary }}" \
@@ -145,6 +209,7 @@ jobs:
         run: |
           packer build \
             -var "version=${{ steps.vars.outputs.source_ref }}" \
+            -var "image_label=${{ steps.vars.outputs.artifact_suffix }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
             -var "qemu_binary=${{ steps.vars.outputs.qemu_binary }}" \

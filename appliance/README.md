@@ -110,6 +110,9 @@ ZTF-Orchestrator container image locally, and attempts to preload the PostgreSQL
 container image. It can also preload the NKP ZeroTouch Framework and NKP bundle
 artifacts for disconnected NKP deployment preparation.
 
+In v1.3.0 and later, the GitHub Actions workflow can publish named appliance
+artifact profiles. v1.2.x remains the prior single-appliance workflow line.
+
 The locally built container image bakes the legacy ZeroTouch Framework into:
 
 ```text
@@ -151,9 +154,19 @@ logs.
 
 1. Open **Actions > Build AHV Appliance Image**.
 2. Select **Run workflow**.
-3. Use:
+3. Choose an appliance artifact profile:
 
    ```text
+   standard: connected staging appliance with baked app, PostgreSQL, ZTF, and NKP framework
+   airgap: portable disconnected-site appliance with baked app, PostgreSQL, ZTF, and NKP framework
+   minimal: smaller bootstrap appliance; defers image pulls and NKP staging
+   all: builds standard, airgap, and minimal artifacts in one workflow run
+   ```
+
+4. Use:
+
+   ```text
+   artifact_profile: standard, airgap, minimal, or all
    source_ref: main or a version tag
    image_version: latest or a published container tag
    qemu_accelerator: tcg
@@ -165,13 +178,15 @@ logs.
    nkp_bundle_urls: optional comma-separated bundle URLs
    ```
 
-4. Download the artifact:
+5. Download the artifact for the required profile:
 
    ```text
-   ztf-orchestrator-ahv-qcow2-<ref>
+   ztf-orchestrator-ahv-qcow2-standard-<ref>
+   ztf-orchestrator-ahv-qcow2-airgap-<ref>
+   ztf-orchestrator-ahv-qcow2-minimal-<ref>
    ```
 
-5. Verify `SHA256SUMS` before importing the image.
+6. Verify `SHA256SUMS` before importing the image.
 
 Tag builds also attach the QCOW2 and `SHA256SUMS` to the matching GitHub
 Release. If the release does not exist, the workflow creates it.
@@ -235,8 +250,8 @@ appliance/packer/output/
 ### Import and Configure the Prebuilt QCOW2
 
 Use this procedure after the **Build AHV Appliance Image** workflow has produced
-the `ztf-orchestrator-ahv-qcow2-<ref>` artifact. The artifact contains the
-AHV-importable QCOW2 and a checksum file.
+one or more `ztf-orchestrator-ahv-qcow2-<profile>-<ref>` artifacts. Each
+artifact contains an AHV-importable QCOW2 and a checksum file.
 
 1. Download and extract the GitHub Actions artifact.
 

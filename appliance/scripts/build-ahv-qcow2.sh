@@ -2,6 +2,7 @@
 set -euo pipefail
 
 VERSION="${VERSION:-dev}"
+IMAGE_LABEL="${IMAGE_LABEL:-${VERSION}}"
 ZTF_ORCHESTRATOR_VERSION="${ZTF_ORCHESTRATOR_VERSION:-latest}"
 QEMU_ACCELERATOR="${QEMU_ACCELERATOR:-tcg}"
 ZTF_CONTAINER_IMAGE="${ZTF_CONTAINER_IMAGE:-ghcr.io/virtuarchitect/ztf-orchestrator}"
@@ -45,6 +46,7 @@ cd "${PACKER_DIR}"
 packer init ahv-qcow2.pkr.hcl
 packer validate \
   -var "version=${VERSION}" \
+  -var "image_label=${IMAGE_LABEL}" \
   -var "ztf_orchestrator_version=${ZTF_ORCHESTRATOR_VERSION}" \
   -var "ztf_container_image=${ZTF_CONTAINER_IMAGE}" \
   -var "postgres_image=${ZTF_POSTGRES_IMAGE}" \
@@ -63,6 +65,7 @@ packer validate \
   ahv-qcow2.pkr.hcl
 packer build \
   -var "version=${VERSION}" \
+  -var "image_label=${IMAGE_LABEL}" \
   -var "ztf_orchestrator_version=${ZTF_ORCHESTRATOR_VERSION}" \
   -var "ztf_container_image=${ZTF_CONTAINER_IMAGE}" \
   -var "postgres_image=${ZTF_POSTGRES_IMAGE}" \

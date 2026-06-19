@@ -9,10 +9,29 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.2.9 and should be moved
+Changes in this section are present on `main` after v1.3.0 and should be moved
 into the next numbered release section when the next version is cut.
 
+---
+
+## [1.3.0] - 2026-06-19
+
+### Summary
+AHV appliance distribution release: the project now supports named appliance
+artifact profiles, a successful AHV QCOW2 build workflow, and a documented
+import/configuration runbook for connected and air-gapped use.
+
 ### Added
+- AHV appliance artifact profiles for `standard`, `airgap`, and `minimal`
+  builds, plus an `all` workflow option that publishes multiple QCOW2 variants
+  as separate GitHub Actions artifacts.
+- Successful prebuilt AHV QCOW2 appliance path with baked ZTF-Orchestrator,
+  ZeroTouch Framework v1.5.2, PostgreSQL image preload, and optional NKP
+  framework staging for disconnected-site preparation.
+- Dedicated AHV appliance import and configuration guide covering artifact
+  download, checksum verification, Prism image upload, VM sizing, administrator
+  access, firstboot checks, UI login, NKP path registration, and
+  troubleshooting.
 - NKP Deployment Template Packs for Management Cluster, Workload Cluster, and
   Air-Gapped / Local Registry profile starts, including required fields,
   optional fields, and operator preflight checklists.
@@ -49,6 +68,10 @@ into the next numbered release section when the next version is cut.
   reported as incompatible for the current legacy workflow/script launcher.
 
 ### Changed
+- The AHV appliance workflow now uses key-based Packer SSH, installs the QEMU
+  ISO tooling required by cloud-init media generation, captures failure
+  diagnostics, waits for cloud-init/apt locks, and names artifacts by appliance
+  profile.
 - Default ZeroTouch Framework install, Docker build, and container publishing
   paths now pin ZTF `v1.5.2` because upstream ZTF v2.0.0 replaces the legacy
   `main.py --workflow/--script` CLI with a new `ztf plan/apply` model.
@@ -57,6 +80,8 @@ into the next numbered release section when the next version is cut.
   instead of trusting client-supplied attestations.
 
 ### Documentation
+- Documented the v1.3.0 AHV appliance profiles and clarified that v1.2.x remains
+  the prior single-appliance workflow line.
 - Refreshed NKP v2.17 alignment notes after local validation with real NKP
   v2.17.1 bundles staged under `C:\Share`.
 - Refreshed the repository security assessment notes to cover PostgreSQL

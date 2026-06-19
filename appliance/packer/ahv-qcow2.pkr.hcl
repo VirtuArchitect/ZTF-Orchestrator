@@ -12,6 +12,11 @@ variable "version" {
   default = "dev"
 }
 
+variable "image_label" {
+  type    = string
+  default = "dev"
+}
+
 variable "ztf_orchestrator_version" {
   type    = string
   default = "latest"
@@ -103,7 +108,7 @@ source "qemu" "ztf_orchestrator_ahv" {
   disk_image           = true
   format               = "qcow2"
   output_directory     = "output"
-  vm_name              = "ztf-orchestrator-appliance-${var.version}.qcow2"
+  vm_name              = "ztf-orchestrator-appliance-${var.image_label}.qcow2"
   headless             = true
   accelerator          = var.qemu_accelerator
   qemu_binary          = var.qemu_binary

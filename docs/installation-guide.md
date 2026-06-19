@@ -629,11 +629,15 @@ staging environment, then transfer them into the disconnected site.
 Use this path when the disconnected site should receive a ready-to-import QCOW2
 rather than container tar files.
 
+ZTF-Orchestrator v1.3.0 adds named AHV appliance artifact profiles. v1.2.x
+remains the prior single-appliance workflow line.
+
 1. Choose the QCOW2 build path.
 
    GitHub Actions inputs:
 
    ```text
+   artifact_profile: standard, airgap, minimal, or all
    source_ref: main or a release tag
    image_version: latest or the release tag
    qemu_accelerator: tcg
@@ -643,6 +647,15 @@ rather than container tar files.
    bake_nkp_framework: true
    nkp_framework_ref: main
    nkp_bundle_urls: optional comma-separated bundle URLs
+   ```
+
+   Profiles:
+
+   ```text
+   standard: connected staging appliance with baked app, PostgreSQL, ZTF, and NKP framework
+   airgap: portable disconnected-site appliance with baked app, PostgreSQL, ZTF, and NKP framework
+   minimal: smaller bootstrap appliance; defers image pulls and NKP staging
+   all: builds standard, airgap, and minimal artifacts in one workflow run
    ```
 
    The workflow installs QEMU plus `xorriso`; Packer uses `xorriso` to create
@@ -726,10 +739,18 @@ Preloaded NKP bundles are mounted into:
 1. Download and extract the GitHub Actions artifact from the successful
    **Build AHV Appliance Image** run.
 
-   Expected files:
+   Artifact names include the selected appliance profile:
 
    ```text
-   ztf-orchestrator-appliance-<ref>.qcow2
+   ztf-orchestrator-ahv-qcow2-standard-<ref>
+   ztf-orchestrator-ahv-qcow2-airgap-<ref>
+   ztf-orchestrator-ahv-qcow2-minimal-<ref>
+   ```
+
+   Expected files inside the artifact:
+
+   ```text
+   ztf-orchestrator-appliance-<profile>-<ref>.qcow2
    SHA256SUMS
    ```
 
