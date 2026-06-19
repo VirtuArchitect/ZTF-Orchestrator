@@ -45,7 +45,7 @@ checks, static configuration checks, or local Docker checks:
 | Audit/logging | Structured audit endpoint access and role restrictions are tested. |
 | Security controls | Security headers, auth enforcement, allowlists, path traversal rejection, request size limit, and role checks are tested. |
 | Repository security assessment | Baseline source, dependency, auth/RBAC, storage, execution, and deployment review completed on 2026-06-05. |
-| Version control | Release branch, `main`, and version tag workflow have been exercised through v1.2.9. |
+| Version control | Release branch, `main`, and version tag workflow have been exercised through v1.3.0. |
 
 ## Requires Environment Validation
 
