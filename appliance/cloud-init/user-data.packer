@@ -11,11 +11,4 @@ users:
     ssh_authorized_keys:
       - ${packer_ssh_public_key}
 
-package_update: true
-packages:
-  - ca-certificates
-  - curl
-  - git
-  - openssl
-
 final_message: "Packer build seed complete."

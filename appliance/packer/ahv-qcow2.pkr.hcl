@@ -143,6 +143,9 @@ build {
       "ZTF_NKP_BUNDLE_URLS=${var.nkp_bundle_urls}"
     ]
     inline = [
+      "while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock >/dev/null 2>&1; do echo 'Waiting for apt locks...'; sleep 5; done",
+      "sudo cloud-init status --wait || true",
+      "while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock >/dev/null 2>&1; do echo 'Waiting for apt locks...'; sleep 5; done",
       "sudo apt-get update",
       "sudo apt-get install -y git ca-certificates curl openssl",
       "sudo git clone --branch ${var.version} https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source || sudo git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source",
