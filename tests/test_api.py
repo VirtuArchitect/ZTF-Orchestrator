@@ -53,6 +53,56 @@ def test_viewer_can_read_configs(client, auth_headers):
     assert resp.status_code == 200
 
 
+def test_appliance_artifact_archive_crud(client, auth_headers):
+    payload = {
+        'profile': 'airgap',
+        'version': 'v1.3.1',
+        'artifactName': 'ztf-orchestrator-ahv-qcow2-airgap-v1.3.1.zip',
+        'archiveLocation': 'Nutanix Files release share',
+        'checksum': 'a' * 64,
+        'checksumFile': 'SHA256SUMS-airgap-v1.3.1.txt',
+        'expiresAt': '2026-09-18T14:22:19Z',
+        'sizeBytes': 1523522046,
+    }
+    resp = client.post('/api/appliance/artifacts', json=payload, headers=auth_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+    assert record['profile'] == 'airgap'
+    assert record['status'] in {'archived', 'expiring'}
+
+    resp = client.post(f"/api/appliance/artifacts/{record['id']}/verify",
+                       json={}, headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['status'] == 'verified'
+
+    resp = client.get('/api/appliance/artifacts', headers=auth_headers)
+    body = resp.get_json()
+    assert body['summary']['total'] == 1
+    assert body['summary']['verified'] == 1
+
+    resp = client.delete(f"/api/appliance/artifacts/{record['id']}", headers=auth_headers)
+    assert resp.status_code == 200
+
+
+def test_appliance_artifact_rejects_bad_checksum(client, auth_headers):
+    resp = client.post('/api/appliance/artifacts',
+                       json={'profile': 'standard', 'version': 'v1.3.1', 'checksum': 'not-a-sha'},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+
+
+def test_appliance_status_and_ztf_compatibility(client, auth_headers):
+    resp = client.get('/api/appliance/status', headers=auth_headers)
+    assert resp.status_code == 200
+    assert 'checks' in resp.get_json()
+
+    resp = client.get('/api/ztf/compatibility', headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['layout'] == 'legacy-1.x'
+    assert any(mode['id'] == 'ztf2-iac' for mode in body['supportedModes'])
+
+
 def test_viewer_cannot_write_config(client, auth_headers):
     _create_user(client, auth_headers, 'viewer3', 'viewer')
     viewer_headers = _login(client, 'viewer3')

@@ -19,6 +19,7 @@ import ParallelExecution from './pages/ParallelExecution'
 import Approvals         from './pages/Approvals'
 import NKPFramework      from './pages/NKPFramework'
 import ValidationEvidence from './pages/ValidationEvidence'
+import Appliance          from './pages/Appliance'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
 
@@ -112,6 +113,9 @@ export default function App() {
         } />
         <Route path="/validation-evidence" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ValidationEvidence /></RequireRole>
+        } />
+        <Route path="/appliance" element={
+          <RequireRole roles={['admin', 'operator', 'viewer']}><Appliance /></RequireRole>
         } />
         <Route path="/approvals" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Approvals /></RequireRole>

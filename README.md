@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.3.1
+# ZTF-Orchestrator · v1.4.0
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -56,6 +56,8 @@ ZeroTouch Framework is powerful automation. ZTF-Orchestrator makes that power
 easier to consume in day-to-day operations by adding:
 
 - Guided configuration instead of hand-written YAML for common workflows.
+- Appliance operations for AHV artifact archive tracking, first-boot checks,
+  NKP readiness review, and ZTF compatibility mode visibility.
 - Durable job execution instead of browser-bound terminal sessions.
 - PostgreSQL-backed operational state for Docker deployments.
 - RBAC, approvals, audit logs, and validation status for governance.

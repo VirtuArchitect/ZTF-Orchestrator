@@ -56,7 +56,7 @@ STORAGE_BACKEND = os.environ.get('ZTF_STORAGE_BACKEND', 'file').strip().lower() 
 AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
-APP_VERSION = '1.2.9'
+APP_VERSION = '1.4.0'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -72,6 +72,7 @@ NKP_PROFILES_FILE = CONFIG_DIR / 'nkp_profiles.json'
 NKP_PROFILE_REVISIONS_FILE = CONFIG_DIR / 'nkp_profile_revisions.json'
 NKP_BINARIES_FILE = CONFIG_DIR / 'nkp_binaries.json'
 VALIDATION_EVIDENCE_FILE = CONFIG_DIR / 'validation_evidence.json'
+APPLIANCE_ARTIFACTS_FILE = CONFIG_DIR / 'appliance_artifacts.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
@@ -196,6 +197,131 @@ def _nkp_script(nkp_path: str | Path) -> Path | None:
 
 def _nkp_installed(nkp_path: str | Path) -> bool:
     return _nkp_script(nkp_path) is not None
+
+
+def _parse_iso_datetime(value: str | None):
+    if not value:
+        return None
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except (TypeError, ValueError):
+        return None
+
+
+def _artifact_status(record: dict) -> str:
+    verified_at = _parse_iso_datetime(record.get('verifiedAt'))
+    expires_at = _parse_iso_datetime(record.get('expiresAt'))
+    now = datetime.datetime.now(datetime.timezone.utc)
+    if verified_at:
+        return 'verified'
+    if expires_at and expires_at < now:
+        return 'expired'
+    if expires_at and expires_at - now <= datetime.timedelta(days=14):
+        return 'expiring'
+    if record.get('archiveLocation'):
+        return 'archived'
+    return 'pending'
+
+
+def _load_appliance_artifacts() -> list[dict]:
+    artifacts = read_json(APPLIANCE_ARTIFACTS_FILE, [])
+    if not isinstance(artifacts, list):
+        return []
+    normalized = []
+    for item in artifacts:
+        if not isinstance(item, dict) or not item.get('id'):
+            continue
+        record = dict(item)
+        record['status'] = _artifact_status(record)
+        normalized.append(record)
+    return sorted(normalized, key=lambda item: item.get('updatedAt') or item.get('createdAt') or '', reverse=True)
+
+
+def _save_appliance_artifacts(artifacts: list[dict]) -> None:
+    write_json(APPLIANCE_ARTIFACTS_FILE, artifacts[:500])
+
+
+def _clean_text(value, limit: int = 512) -> str:
+    return str(value or '').strip()[:limit]
+
+
+def _clean_artifact_payload(data: dict, existing: dict | None = None) -> tuple[dict | None, str | None]:
+    existing = existing or {}
+    profile = _clean_text(data.get('profile', existing.get('profile', '')), 32).lower()
+    if profile not in {'standard', 'airgap', 'minimal'}:
+        return None, 'profile must be standard, airgap, or minimal'
+
+    version = _clean_text(data.get('version', existing.get('version', '')), 64)
+    if not version:
+        return None, 'version is required'
+
+    checksum = _clean_text(data.get('checksum', existing.get('checksum', '')), 128).lower()
+    if checksum and not re.fullmatch(r'[a-f0-9]{64}', checksum):
+        return None, 'checksum must be a SHA-256 hex digest'
+
+    expires_at = _clean_text(data.get('expiresAt', existing.get('expiresAt', '')), 64)
+    if expires_at and not _parse_iso_datetime(expires_at):
+        return None, 'expiresAt must be an ISO timestamp'
+
+    verified_at = _clean_text(data.get('verifiedAt', existing.get('verifiedAt', '')), 64)
+    if verified_at and not _parse_iso_datetime(verified_at):
+        return None, 'verifiedAt must be an ISO timestamp'
+    try:
+        size_bytes = int(data.get('sizeBytes', existing.get('sizeBytes') or 0) or 0)
+    except (TypeError, ValueError):
+        return None, 'sizeBytes must be a number'
+
+    now = _now_iso()
+    record = {
+        **existing,
+        'profile': profile,
+        'version': version,
+        'artifactName': _clean_text(data.get('artifactName', existing.get('artifactName', '')), 160),
+        'archiveLocation': _clean_text(data.get('archiveLocation', existing.get('archiveLocation', '')), 512),
+        'checksum': checksum,
+        'checksumFile': _clean_text(data.get('checksumFile', existing.get('checksumFile', '')), 160),
+        'workflowUrl': _clean_text(data.get('workflowUrl', existing.get('workflowUrl', '')), 512),
+        'releaseUrl': _clean_text(data.get('releaseUrl', existing.get('releaseUrl', '')), 512),
+        'sizeBytes': max(0, size_bytes),
+        'expiresAt': expires_at,
+        'verifiedAt': verified_at,
+        'notes': _clean_text(data.get('notes', existing.get('notes', '')), 1000),
+        'updatedAt': now,
+    }
+    if not record.get('id'):
+        record['id'] = str(uuid.uuid4())
+        record['createdAt'] = now
+    record['status'] = _artifact_status(record)
+    return record, None
+
+
+def _appliance_status() -> dict:
+    source_dir = Path('/opt/ztf-orchestrator-source')
+    install_dir = Path('/opt/ztf-orchestrator')
+    preload_dir = Path('/opt/ztf-orchestrator-preload')
+    compose_file = install_dir / 'appliance' / 'docker-compose.appliance.yml'
+    env_file = Path('/etc/ztf-orchestrator-appliance.env')
+    firstboot_log = Path('/var/log/ztf-orchestrator-firstboot.log')
+    nkp_host_path = preload_dir / 'nkp-zerotouch-framework'
+    bundles_path = preload_dir / 'bundles'
+    checks = [
+        {'name': 'Source checkout', 'ok': source_dir.exists(), 'value': str(source_dir)},
+        {'name': 'Install directory', 'ok': install_dir.exists(), 'value': str(install_dir)},
+        {'name': 'Appliance Compose file', 'ok': compose_file.exists(), 'value': str(compose_file)},
+        {'name': 'Appliance environment', 'ok': env_file.exists(), 'value': str(env_file)},
+        {'name': 'Firstboot log', 'ok': firstboot_log.exists(), 'value': str(firstboot_log)},
+        {'name': 'NKP framework preload', 'ok': nkp_host_path.exists(), 'value': str(nkp_host_path)},
+        {'name': 'NKP bundle preload', 'ok': bundles_path.exists(), 'value': str(bundles_path)},
+    ]
+    return {
+        'detected': any(check['ok'] for check in checks),
+        'checks': checks,
+        'containerPaths': {
+            'ztfFramework': '/opt/zerotouch-framework',
+            'nkpFramework': '/var/lib/ztf-orchestrator/nkp-zerotouch-framework',
+            'nkpBundles': '/var/lib/ztf-orchestrator/bundles',
+        },
+    }
 
 
 def _nkp_command(nkp_path: str | Path, phase: str, config_path: str, strict: bool = False) -> list[str]:
@@ -5488,6 +5614,130 @@ def run_retention_cleanup():
 
 
 # ─── Drift detection ─────────────────────────────────────────────────────────
+
+@app.route('/api/appliance/artifacts')
+@require_role('admin', 'operator', 'viewer')
+def list_appliance_artifacts():
+    artifacts = _load_appliance_artifacts()
+    summary = {
+        'total': len(artifacts),
+        'verified': sum(1 for item in artifacts if item.get('status') == 'verified'),
+        'archived': sum(1 for item in artifacts if item.get('status') == 'archived'),
+        'expiring': sum(1 for item in artifacts if item.get('status') == 'expiring'),
+        'expired': sum(1 for item in artifacts if item.get('status') == 'expired'),
+        'pending': sum(1 for item in artifacts if item.get('status') == 'pending'),
+    }
+    return jsonify({'artifacts': artifacts, 'summary': summary})
+
+
+@app.route('/api/appliance/artifacts', methods=['POST'])
+@require_role('admin', 'operator')
+def create_appliance_artifact():
+    record, error = _clean_artifact_payload(request.json or {})
+    if error:
+        return jsonify({'error': error}), 400
+    artifacts = _load_appliance_artifacts()
+    artifacts.insert(0, record)
+    _save_appliance_artifacts(artifacts)
+    log.info('appliance_artifact_created', extra={
+        'action': 'appliance_artifact_created',
+        'user': request.current_user['username'],
+        'profile': record['profile'],
+        'version': record['version'],
+        'status': record['status'],
+    })
+    return jsonify(record), 201
+
+
+@app.route('/api/appliance/artifacts/<artifact_id>', methods=['PUT'])
+@require_role('admin', 'operator')
+def update_appliance_artifact(artifact_id):
+    artifacts = _load_appliance_artifacts()
+    existing = next((item for item in artifacts if item.get('id') == artifact_id), None)
+    if not existing:
+        return jsonify({'error': 'Artifact record not found'}), 404
+    record, error = _clean_artifact_payload(request.json or {}, existing)
+    if error:
+        return jsonify({'error': error}), 400
+    _save_appliance_artifacts([record if item.get('id') == artifact_id else item for item in artifacts])
+    log.info('appliance_artifact_updated', extra={
+        'action': 'appliance_artifact_updated',
+        'user': request.current_user['username'],
+        'profile': record['profile'],
+        'version': record['version'],
+        'status': record['status'],
+    })
+    return jsonify(record)
+
+
+@app.route('/api/appliance/artifacts/<artifact_id>/verify', methods=['POST'])
+@require_role('admin', 'operator')
+def verify_appliance_artifact(artifact_id):
+    artifacts = _load_appliance_artifacts()
+    existing = next((item for item in artifacts if item.get('id') == artifact_id), None)
+    if not existing:
+        return jsonify({'error': 'Artifact record not found'}), 404
+    data = {**existing, **(request.json or {}), 'verifiedAt': _now_iso()}
+    record, error = _clean_artifact_payload(data, existing)
+    if error:
+        return jsonify({'error': error}), 400
+    _save_appliance_artifacts([record if item.get('id') == artifact_id else item for item in artifacts])
+    log.info('appliance_artifact_verified', extra={
+        'action': 'appliance_artifact_verified',
+        'user': request.current_user['username'],
+        'profile': record['profile'],
+        'version': record['version'],
+        'status': record['status'],
+    })
+    return jsonify(record)
+
+
+@app.route('/api/appliance/artifacts/<artifact_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_appliance_artifact(artifact_id):
+    artifacts = _load_appliance_artifacts()
+    target = next((item for item in artifacts if item.get('id') == artifact_id), None)
+    if not target:
+        return jsonify({'error': 'Artifact record not found'}), 404
+    _save_appliance_artifacts([item for item in artifacts if item.get('id') != artifact_id])
+    log.info('appliance_artifact_deleted', extra={
+        'action': 'appliance_artifact_deleted',
+        'user': request.current_user['username'],
+        'profile': target.get('profile'),
+        'version': target.get('version'),
+    })
+    return jsonify({'success': True, 'deleted': target})
+
+
+@app.route('/api/appliance/status')
+@require_role('admin', 'operator', 'viewer')
+def get_appliance_status():
+    return jsonify(_appliance_status())
+
+
+@app.route('/api/ztf/compatibility')
+@require_role('admin', 'operator', 'viewer')
+def get_ztf_compatibility():
+    settings = get_settings()
+    info = _ztf_detect(settings['ztfPath'])
+    return jsonify({
+        **info,
+        'supportedModes': [
+            {
+                'id': 'legacy-workflows',
+                'label': 'ZTF 1.x legacy workflows',
+                'available': bool(info.get('compatible')),
+                'description': 'Runs python main.py workflow and script commands through the existing catalog.',
+            },
+            {
+                'id': 'ztf2-iac',
+                'label': 'ZTF 2.x plan/apply mode',
+                'available': False,
+                'description': 'Planned separate mode for ztf plan/apply/refresh/destroy projects.',
+            },
+        ],
+    })
+
 
 @app.route('/api/maintenance/database-backups')
 @require_role('admin')

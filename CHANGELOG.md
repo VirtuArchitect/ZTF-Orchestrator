@@ -9,8 +9,30 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.3.1 and should be moved
+Changes in this section are present on `main` after v1.4.0 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.4.0] - 2026-06-20
+
+### Summary
+Operational appliance management release: adds an appliance operations surface
+for AHV artifact retention, first-boot validation, NKP readiness review, ZTF
+compatibility visibility, and optional visual smoke testing.
+
+### Added
+- Appliance artifact archive manager for standard, airgap, and minimal AHV
+  QCOW2 records, including archive location, SHA-256 checksum, expiry,
+  verification status, and RBAC-protected CRUD APIs.
+- First-boot appliance status checks for expected source, install, Compose,
+  environment, firstboot log, NKP framework, and NKP bundle paths.
+- Guided NKP deployment readiness checklist view that runs the existing
+  server-side profile readiness evaluation from a dedicated appliance page.
+- ZTF compatibility mode endpoint and UI showing current legacy ZTF 1.x support
+  and the planned separate ZTF 2.x plan/apply mode boundary.
+- Optional Playwright visual smoke tests for login rendering, dashboard theme
+  toggle, and Appliance Operations navigation.
 
 ---
 

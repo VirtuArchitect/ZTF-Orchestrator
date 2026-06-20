@@ -366,7 +366,7 @@ For a pre-built AHV-importable QCOW2 workflow, see
 4. To pin a released image:
 
    ```bash
-   sudo ZTF_ORCHESTRATOR_VERSION=v1.3.1 \
+   sudo ZTF_ORCHESTRATOR_VERSION=v1.4.0 \
      bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
    ```
 
@@ -590,7 +590,7 @@ staging environment, then transfer them into the disconnected site.
    docker build \
      --build-arg ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git \
      --build-arg ZTF_REF=v1.5.2 \
-     -t ztf-orchestrator:airgap-v1.3.1 .
+     -t ztf-orchestrator:airgap-v1.4.0 .
    ```
 
 3. Pull the PostgreSQL image if using the PostgreSQL Compose deployment:
@@ -602,7 +602,7 @@ staging environment, then transfer them into the disconnected site.
 4. Export images:
 
    ```bash
-   docker save ztf-orchestrator:airgap-v1.3.1 -o ztf-orchestrator-airgap-v1.3.1.tar
+   docker save ztf-orchestrator:airgap-v1.4.0 -o ztf-orchestrator-airgap-v1.4.0.tar
    docker save postgres:16-alpine -o postgres-16-alpine.tar
    ```
 
@@ -619,7 +619,7 @@ staging environment, then transfer them into the disconnected site.
 7. Transfer these files using your approved removable-media or artifact process:
 
    ```text
-   ztf-orchestrator-airgap-v1.3.1.tar
+   ztf-orchestrator-airgap-v1.4.0.tar
    postgres-16-alpine.tar
    ZTF-Orchestrator-source.tar.gz
    NKP framework archive, if used
@@ -693,8 +693,8 @@ remains the prior single-appliance workflow line.
 
    ```bash
    cd appliance
-   VERSION=v1.3.1 \
-   ZTF_ORCHESTRATOR_VERSION=v1.3.1 \
+   VERSION=v1.4.0 \
+   ZTF_ORCHESTRATOR_VERSION=v1.4.0 \
    ZTF_BUILD_CONTAINER_IMAGE=true \
    ZTF_PULL_CONTAINER_IMAGES=true \
    ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -737,6 +737,16 @@ remains the prior single-appliance workflow line.
    SHA256SUMS-airgap-<version>.txt
    SHA256SUMS-minimal-<version>.txt
    ```
+
+7. Record archive status in **Appliance Ops**.
+
+   After login, open **Appliance Ops** from the sidebar and create one archive
+   record for each retained profile. Record the durable archive location,
+   checksum file, SHA-256 digest, workflow/release links, and artifact expiry
+   timestamp. Mark each record verified after checksum validation.
+
+   The same page also provides first-boot path checks, NKP profile readiness
+   review, and ZeroTouch Framework compatibility mode status.
 
 The appliance includes the ZTF-Orchestrator source checkout and a Docker image
 with legacy ZeroTouch Framework baked into `/opt/zerotouch-framework` inside the
@@ -913,7 +923,7 @@ Preloaded NKP bundles are mounted into:
 2. Load images:
 
    ```bash
-   docker load -i ztf-orchestrator-airgap-v1.3.1.tar
+   docker load -i ztf-orchestrator-airgap-v1.4.0.tar
    docker load -i postgres-16-alpine.tar
    ```
 
@@ -943,7 +953,7 @@ Preloaded NKP bundles are mounted into:
    image as the Compose default:
 
    ```bash
-   docker tag ztf-orchestrator:airgap-v1.3.1 ztf-orchestrator:latest
+   docker tag ztf-orchestrator:airgap-v1.4.0 ztf-orchestrator:latest
    ```
 
 7. Start:

@@ -76,6 +76,7 @@ Use the repository's actual commands when available. Common examples:
 npm test
 npm run lint
 npm run typecheck
+npm run smoke:visual
 npm run build
 pnpm test
 pnpm lint
@@ -88,3 +89,24 @@ go test ./...
 dotnet test
 ```
 
+## Visual Smoke Tests
+
+Use the optional Playwright smoke tests after frontend, navigation, or theme
+changes. They can run against a local Vite server, appliance, or deployed
+instance:
+
+```bash
+ZTF_VISUAL_BASE_URL=http://127.0.0.1:5173 npm run smoke:visual
+```
+
+Set credentials to include authenticated dashboard, theme-toggle, and Appliance
+Ops navigation checks:
+
+```bash
+ZTF_VISUAL_BASE_URL=http://127.0.0.1:5173 \
+ZTF_VISUAL_USERNAME=admin \
+ZTF_VISUAL_PASSWORD='<password>' \
+npm run smoke:visual
+```
+
+Without credentials, the suite still verifies that the login screen renders.

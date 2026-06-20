@@ -5,6 +5,8 @@ __pycache__
 .coverage
 htmlcov
 .pytest_cache
+playwright-report/
+test-results/
 *.egg-info
 
 appliance/preload/bundles/*

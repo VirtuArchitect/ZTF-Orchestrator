@@ -65,8 +65,9 @@ export default function Login() {
           )}
 
           <div>
-            <label className="label">Username</label>
+            <label htmlFor="login-username" className="label">Username</label>
             <input
+              id="login-username"
               className="input"
               type="text"
               autoComplete="username"
@@ -79,9 +80,10 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="label">Password</label>
+            <label htmlFor="login-password" className="label">Password</label>
             <div className="relative">
               <input
+                id="login-password"
                 className="input pr-10"
                 type={showPw ? 'text' : 'password'}
                 autoComplete="current-password"
