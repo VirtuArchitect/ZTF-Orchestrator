@@ -96,3 +96,20 @@ test('dashboard supports theme toggle and appliance navigation', async ({ page }
   await expect(page.getByRole('heading', { name: 'Appliance Operations' })).toBeVisible()
   await expect(page.getByRole('button', { name: /Artifacts/i })).toBeVisible()
 })
+
+test('workflow cards stay readable in light theme', async ({ page }) => {
+  await seedUiSession(page)
+  await page.addInitScript(() => {
+    window.localStorage.setItem('ztf-theme-mode', 'light')
+  })
+  await page.goto('/workflows')
+
+  await expect(page.locator('html')).toHaveClass(/theme-light/)
+  await expect(page.getByRole('heading', { name: 'Cluster Create' })).toBeVisible()
+  await expect(page.getByText('Creates clusters using Foundation Central with full node imaging')).toBeVisible()
+
+  const infrastructureBadge = page.getByRole('link', { name: /Cluster Create/ }).locator('.badge')
+  await expect(infrastructureBadge).toBeVisible()
+  await expect(infrastructureBadge).toHaveCSS('color', 'rgb(29, 78, 216)')
+  await expect(infrastructureBadge).toHaveCSS('background-color', 'rgb(219, 234, 254)')
+})

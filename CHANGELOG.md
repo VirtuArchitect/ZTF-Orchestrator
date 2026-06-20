@@ -12,6 +12,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.4.0 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Fixed
+- Improved light theme contrast for workflow cards, category badges, muted
+  helper text, form labels, and secondary controls.
+
 ---
 
 ## [1.4.0] - 2026-06-20

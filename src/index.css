@@ -190,9 +190,75 @@
 }
 
 .theme-light .text-gray-600 {
-  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
+  color: rgb(51 65 85 / var(--tw-text-opacity, 1));
 }
 
 .theme-light .text-gray-700 {
+  color: rgb(30 41 59 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-gray-500 {
   color: rgb(71 85 105 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .label,
+.theme-light .section-desc,
+.theme-light .btn-ghost {
+  color: rgb(71 85 105 / 1);
+}
+
+.theme-light .btn-secondary {
+  color: rgb(51 65 85 / 1);
+}
+
+.theme-light .input {
+  color: rgb(15 23 42 / 1);
+}
+
+.theme-light .input::placeholder {
+  color: rgb(100 116 139 / 1);
+}
+
+.theme-light .group:hover .group-hover\:text-white {
+  color: rgb(15 23 42 / 1);
+}
+
+.theme-light .group:hover .group-hover\:text-gray-400 {
+  color: rgb(51 65 85 / 1);
+}
+
+.theme-light .badge-blue {
+  background-color: rgb(219 234 254 / 1);
+  color: rgb(29 78 216 / 1);
+  border-color: rgb(147 197 253 / 1);
+}
+
+.theme-light .badge-green {
+  background-color: rgb(209 250 229 / 1);
+  color: rgb(4 120 87 / 1);
+  border-color: rgb(110 231 183 / 1);
+}
+
+.theme-light .badge-yellow {
+  background-color: rgb(254 249 195 / 1);
+  color: rgb(161 98 7 / 1);
+  border-color: rgb(253 224 71 / 1);
+}
+
+.theme-light .badge-red {
+  background-color: rgb(254 226 226 / 1);
+  color: rgb(185 28 28 / 1);
+  border-color: rgb(252 165 165 / 1);
+}
+
+.theme-light .badge-gray {
+  background-color: rgb(226 232 240 / 1);
+  color: rgb(51 65 85 / 1);
+  border-color: rgb(148 163 184 / 1);
+}
+
+.theme-light .badge-purple {
+  background-color: rgb(243 232 255 / 1);
+  color: rgb(126 34 206 / 1);
+  border-color: rgb(216 180 254 / 1);
 }
