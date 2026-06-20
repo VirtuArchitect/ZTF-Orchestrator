@@ -1,6 +1,8 @@
-import { Menu, LogOut, UserCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Menu, LogOut, UserCircle, Monitor, Moon, Sun } from 'lucide-react'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
+import { applyThemeMode, getStoredThemeMode, setStoredThemeMode, type ThemeMode } from '../theme'
 
 interface HeaderProps {
   title: string
@@ -16,11 +18,30 @@ const ROLE_COLOURS: Record<string, string> = {
 
 export default function Header({ title, subtitle, actions }: HeaderProps) {
   const { toggleSidebar, user, clearAuth } = useStore()
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => getStoredThemeMode())
+
+  useEffect(() => {
+    applyThemeMode(themeMode)
+    if (themeMode !== 'system' || !window.matchMedia) return
+    const media = window.matchMedia('(prefers-color-scheme: light)')
+    const onChange = () => applyThemeMode('system')
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [themeMode])
 
   const logout = async () => {
     try { await apiFetch('/api/auth/logout', { method: 'POST' }) } catch { /* ok */ }
     clearAuth()
   }
+
+  const cycleTheme = () => {
+    const next: ThemeMode = themeMode === 'system' ? 'dark' : themeMode === 'dark' ? 'light' : 'system'
+    setStoredThemeMode(next)
+    setThemeMode(next)
+  }
+
+  const ThemeIcon = themeMode === 'system' ? Monitor : themeMode === 'dark' ? Moon : Sun
+  const themeTitle = `Theme: ${themeMode}. Click to switch to ${themeMode === 'system' ? 'dark' : themeMode === 'dark' ? 'light' : 'system'}.`
 
   return (
     <header className="min-h-16 border-b border-border flex items-center px-4 sm:px-6 gap-3 sm:gap-4 bg-gray-950/90 backdrop-blur-sm flex-shrink-0">
@@ -34,6 +55,15 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
       </div>
 
       {actions && <div className="hidden sm:flex items-center gap-2 flex-shrink-0">{actions}</div>}
+
+      <button
+        onClick={cycleTheme}
+        className="btn-ghost p-1.5"
+        title={themeTitle}
+        aria-label={themeTitle}
+      >
+        <ThemeIcon size={15} />
+      </button>
 
       {/* User badge */}
       {user && (

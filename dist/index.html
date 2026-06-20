@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="dark theme-dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=veridian-126" />
@@ -10,8 +10,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-CVkogjfC.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DP9788HS.css">
+    <script>
+      (() => {
+        let stored = 'system'
+        try {
+          stored = localStorage.getItem('ztf-theme-mode') || 'system'
+        } catch {
+          stored = 'system'
+        }
+        const prefersLight = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches
+        const resolved = stored === 'light' || (stored === 'system' && prefersLight) ? 'light' : 'dark'
+        document.documentElement.classList.toggle('theme-light', resolved === 'light')
+        document.documentElement.classList.toggle('theme-dark', resolved === 'dark')
+        document.documentElement.classList.toggle('dark', resolved === 'dark')
+        document.documentElement.style.colorScheme = resolved
+      })()
+    </script>
+    <script type="module" crossorigin src="/assets/index-DXJ79xgY.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-hH0FKxyz.css">
   </head>
   <body class="bg-gray-950 text-gray-100">
     <div id="root"></div>

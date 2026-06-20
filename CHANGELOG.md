@@ -12,6 +12,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.3.0 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Added
+- Added an optional System/Dark/Light dashboard theme selector with persisted
+  user preference and early page bootstrap to avoid a flash of the wrong theme.
+
 ### Fixed
 - Avoided release asset collisions in tag-triggered multi-profile AHV appliance
   builds by publishing profile-specific checksum files and attaching release
