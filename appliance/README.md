@@ -62,7 +62,7 @@ and restrict access to admin networks.
 By default, the appliance uses the `latest` GHCR image. To pin a release:
 
 ```bash
-sudo ZTF_ORCHESTRATOR_VERSION=v1.3.0 \
+sudo ZTF_ORCHESTRATOR_VERSION=v1.3.1 \
   bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
 ```
 
@@ -193,6 +193,33 @@ to the matching GitHub Release. The QCOW2 images remain GitHub Actions artifacts
 because GitHub Release assets have a 2 GiB per-file limit. If the release does
 not exist, the workflow creates it.
 
+### Preserve QCOW2 Artifacts
+
+GitHub Actions artifacts are temporary. After a successful release build,
+download the required QCOW2 artifact ZIP files and copy them to durable storage
+before the artifact expiry date shown on the workflow run.
+
+Recommended archive targets include Nutanix Files, an internal artifact
+repository, object storage, OneDrive/SharePoint release storage, or offline
+transfer media for air-gapped sites.
+
+For a complete appliance archive, retain these items together:
+
+```text
+ztf-orchestrator-ahv-qcow2-standard-<version>.zip
+ztf-orchestrator-ahv-qcow2-airgap-<version>.zip
+ztf-orchestrator-ahv-qcow2-minimal-<version>.zip
+AHV-APPLIANCE-ARTIFACTS-<version>.md
+SHA256SUMS-standard-<version>.txt
+SHA256SUMS-airgap-<version>.txt
+SHA256SUMS-minimal-<version>.txt
+```
+
+Before moving the files into long-term storage, extract each ZIP and verify the
+matching checksum file against the QCOW2 image. Keep the checksum files in the
+same archive folder as the images so disconnected imports can be validated
+without reaching GitHub.
+
 ### Build Locally
 
 The Packer template in `packer/` creates an AHV-importable QCOW2. Build
@@ -209,8 +236,8 @@ Run:
 
 ```bash
 cd appliance
-VERSION=v1.3.0 \
-ZTF_ORCHESTRATOR_VERSION=v1.3.0 \
+VERSION=v1.3.1 \
+ZTF_ORCHESTRATOR_VERSION=v1.3.1 \
 ZTF_BUILD_CONTAINER_IMAGE=true \
 ZTF_PULL_CONTAINER_IMAGES=true \
 ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -454,8 +481,8 @@ The raw Packer commands are:
 cd appliance/packer
 packer init ahv-qcow2.pkr.hcl
 packer build \
-  -var "version=v1.3.0" \
-  -var "ztf_orchestrator_version=v1.3.0" \
+  -var "version=v1.3.1" \
+  -var "ztf_orchestrator_version=v1.3.1" \
   -var "build_container_image=true" \
   -var "pull_container_images=true" \
   -var "ztf_framework_ref=v1.5.2" \
