@@ -14,7 +14,8 @@ into the next numbered release section when the next version is cut.
 
 ### Fixed
 - Improved light theme contrast for workflow cards, category badges, muted
-  helper text, form labels, and secondary controls.
+  helper text, form labels, secondary controls, alert panels, inline code chips,
+  accent status text, and tab states across the main application pages.
 
 ---
 

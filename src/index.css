@@ -207,6 +207,11 @@
   color: rgb(71 85 105 / 1);
 }
 
+.theme-light .text-gray-300,
+.theme-light .text-gray-400 {
+  color: rgb(30 41 59 / var(--tw-text-opacity, 1));
+}
+
 .theme-light .btn-secondary {
   color: rgb(51 65 85 / 1);
 }
@@ -225,6 +230,89 @@
 
 .theme-light .group:hover .group-hover\:text-gray-400 {
   color: rgb(51 65 85 / 1);
+}
+
+.theme-light .bg-nutanix-blue\/20.text-white {
+  color: rgb(15 23 42 / 1);
+}
+
+.theme-light .bg-gray-900.text-white {
+  color: rgb(15 23 42 / 1);
+}
+
+.theme-light .text-blue-100,
+.theme-light .text-blue-300,
+.theme-light .text-blue-400 {
+  color: rgb(29 78 216 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-emerald-300,
+.theme-light .text-emerald-400,
+.theme-light .text-nutanix-teal {
+  color: rgb(4 120 87 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-yellow-300,
+.theme-light .text-yellow-400,
+.theme-light .text-amber-300,
+.theme-light .text-amber-400 {
+  color: rgb(146 64 14 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-red-300,
+.theme-light .text-red-400 {
+  color: rgb(185 28 28 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-purple-300,
+.theme-light .text-purple-400 {
+  color: rgb(126 34 206 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-orange-400 {
+  color: rgb(194 65 12 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .text-nutanix-cyan {
+  color: rgb(3 105 161 / var(--tw-text-opacity, 1));
+}
+
+.theme-light .border-amber-700\/30.bg-amber-900\/5,
+.theme-light .border-amber-700\/30.bg-amber-900\/10 {
+  background-color: rgb(254 243 199 / 1);
+  border-color: rgb(252 211 77 / 1);
+  color: rgb(146 64 14 / 1);
+}
+
+.theme-light .border-red-700\/30.bg-red-900\/10,
+.theme-light .border-red-700\/40.bg-red-900\/20 {
+  background-color: rgb(254 226 226 / 1);
+  border-color: rgb(252 165 165 / 1);
+  color: rgb(153 27 27 / 1);
+}
+
+.theme-light .border-blue-700\/20.bg-blue-900\/10,
+.theme-light .border-blue-700\/30.bg-blue-900\/30 {
+  background-color: rgb(219 234 254 / 1);
+  border-color: rgb(147 197 253 / 1);
+  color: rgb(29 78 216 / 1);
+}
+
+.theme-light .bg-blue-900\/10,
+.theme-light .bg-blue-900\/30 {
+  background-color: rgb(239 246 255 / 1);
+  color: rgb(30 64 175 / 1);
+}
+
+.theme-light .bg-emerald-900\/30 {
+  background-color: rgb(236 253 245 / 1);
+  color: rgb(6 95 70 / 1);
+}
+
+.theme-light .border-emerald-700\/30.bg-emerald-900\/30 {
+  background-color: rgb(209 250 229 / 1);
+  border-color: rgb(110 231 183 / 1);
+  color: rgb(4 120 87 / 1);
 }
 
 .theme-light .badge-blue {

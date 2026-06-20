@@ -29,6 +29,17 @@ async function seedUiSession(page: Page) {
       await route.fulfill({ json: { detected: false, checks: [], containerPaths: {} } })
       return
     }
+    if (url.endsWith('/api/nkp/status')) {
+      await route.fulfill({ json: {
+        installed: true,
+        path: '/opt/nkp-zerotouch-framework',
+        repoUrl: 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git',
+        script: '/opt/nkp-zerotouch-framework/scripts/zt.sh',
+        safePhases: ['validate', 'prepare', 'generate'],
+        configs: ['air-gapped.example.yaml', 'connected.example.yaml'],
+      } })
+      return
+    }
     if (url.endsWith('/api/ztf/compatibility')) {
       await route.fulfill({ json: { installed: true, compatible: true, layout: 'legacy-1.x', entrypoint: 'main.py', requiredRef: 'v1.5.2', message: 'Legacy ZTF 1.x workflow/script CLI detected', supportedModes: [] } })
       return
@@ -63,6 +74,100 @@ async function seedUiSession(page: Page) {
       version: 0,
     }))
   })
+}
+
+async function expectLightThemeReadable(page: Page) {
+  const violations = await page.evaluate(() => {
+    type Rgb = [number, number, number]
+    type Rgba = [number, number, number, number]
+
+    const parseRgb = (value: string): Rgba | null => {
+      const match = value.match(/rgba?\(([^)]+)\)/)
+      if (!match) return null
+      const parts = match[1].split(',').map(part => Number.parseFloat(part.trim()))
+      if (parts.length < 3 || parts.some(Number.isNaN)) return null
+      return [parts[0], parts[1], parts[2], parts.length >= 4 ? parts[3] : 1]
+    }
+
+    const luminance = ([r, g, b]: Rgb) => {
+      const channel = [r, g, b].map(value => {
+        const normalized = value / 255
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * channel[0] + 0.7152 * channel[1] + 0.0722 * channel[2]
+    }
+
+    const contrast = (fg: Rgb, bg: Rgb) => {
+      const foreground = luminance(fg)
+      const background = luminance(bg)
+      const lighter = Math.max(foreground, background)
+      const darker = Math.min(foreground, background)
+      return (lighter + 0.05) / (darker + 0.05)
+    }
+
+    const visible = (element: Element) => {
+      const style = window.getComputedStyle(element)
+      const rect = element.getBoundingClientRect()
+      return style.visibility !== 'hidden' && style.display !== 'none' && Number(style.opacity) > 0.55 && rect.width > 0 && rect.height > 0
+    }
+
+    const blend = (foreground: Rgba, background: Rgb): Rgb => {
+      const alpha = foreground[3]
+      return [
+        foreground[0] * alpha + background[0] * (1 - alpha),
+        foreground[1] * alpha + background[1] * (1 - alpha),
+        foreground[2] * alpha + background[2] * (1 - alpha),
+      ]
+    }
+
+    const backgroundFor = (element: Element): Rgb => {
+      const chain: Element[] = []
+      let current: Element | null = element
+      while (current) {
+        chain.unshift(current)
+        current = current.parentElement
+      }
+      let background: Rgb = [255, 255, 255]
+      for (const node of chain) {
+        const color = window.getComputedStyle(node).backgroundColor
+        if (color === 'transparent') continue
+        const parsed = parseRgb(color)
+        if (!parsed || parsed[3] === 0) continue
+        background = blend(parsed, background)
+      }
+      return background
+    }
+
+    const ownText = (element: Element) => Array.from(element.childNodes)
+      .filter(node => node.nodeType === Node.TEXT_NODE)
+      .map(node => node.textContent?.trim() ?? '')
+      .join(' ')
+      .trim()
+
+    return Array.from(document.querySelectorAll('body *'))
+      .filter(element => visible(element) && ownText(element).length > 0)
+      .map(element => {
+        const style = window.getComputedStyle(element)
+        const foreground = parseRgb(style.color)
+        if (!foreground) return null
+        const ratio = contrast([foreground[0], foreground[1], foreground[2]], backgroundFor(element))
+        const largeText = Number.parseFloat(style.fontSize) >= 18 || Number.parseInt(style.fontWeight, 10) >= 700
+        const minimum = largeText ? 3 : 4.5
+        if (ratio >= minimum) return null
+        return {
+          text: ownText(element).slice(0, 80),
+          className: element.getAttribute('class') ?? '',
+          color: style.color,
+          background: window.getComputedStyle(element.parentElement ?? element).backgroundColor,
+          ratio: Number(ratio.toFixed(2)),
+          minimum,
+        }
+      })
+      .filter(Boolean)
+      .slice(0, 12)
+  })
+
+  expect(violations).toEqual([])
 }
 
 test('login page renders', async ({ page }) => {
@@ -112,4 +217,49 @@ test('workflow cards stay readable in light theme', async ({ page }) => {
   await expect(infrastructureBadge).toBeVisible()
   await expect(infrastructureBadge).toHaveCSS('color', 'rgb(29, 78, 216)')
   await expect(infrastructureBadge).toHaveCSS('background-color', 'rgb(219, 234, 254)')
+})
+
+test('main pages keep readable text contrast in light theme', async ({ page }) => {
+  await seedUiSession(page)
+  const pageErrors: string[] = []
+  page.on('pageerror', error => {
+    pageErrors.push(`${page.url()}: ${error.message}`)
+  })
+  await page.addInitScript(() => {
+    window.localStorage.setItem('ztf-theme-mode', 'light')
+  })
+
+  const routes = [
+    '/',
+    '/setup',
+    '/global-config',
+    '/workflows',
+    '/workflows/cluster-create',
+    '/scripts',
+    '/configs',
+    '/executions',
+    '/jobs',
+    '/pipelines',
+    '/schedules',
+    '/parallel',
+    '/nkp',
+    '/validation-evidence',
+    '/appliance',
+    '/approvals',
+    '/drift',
+    '/settings',
+    '/users',
+    '/audit-log',
+  ]
+
+  for (const route of routes) {
+    await test.step(route, async () => {
+      const previousErrorCount = pageErrors.length
+      await page.goto(route)
+      expect(pageErrors.slice(previousErrorCount)).toEqual([])
+      await expect(page.locator('html')).toHaveClass(/theme-light/)
+      await expect(page.locator('main')).toBeVisible()
+      await expectLightThemeReadable(page)
+    })
+  }
 })
