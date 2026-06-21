@@ -7,7 +7,7 @@
 # Quick start:
 #   docker compose up -d
 #   docker compose logs -f          # copy admin password on first run
-#   open http://localhost:5001
+#   open http://localhost:${ZTF_HOST_PORT:-15001}
 #
 # Build args (override for internal mirrors / specific ZTF version):
 #   docker compose build \
@@ -28,7 +28,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "127.0.0.1:5001:5001"   # localhost only — put nginx in front for TLS
+      - "${ZTF_HOST_BIND:-127.0.0.1}:${ZTF_HOST_PORT:-15001}:5001"   # localhost only by default — put nginx in front for TLS
     volumes:
       - ztf-data:/var/lib/ztf-orchestrator   # users, history, configs, logs, pipelines
       - ztf-logs:/var/log/ztf-orchestrator
@@ -38,6 +38,7 @@ services:
       ZTF_NKP_PATH:       /var/lib/ztf-orchestrator/nkp-zerotouch-framework
       ZTF_PORT:           "5001"
       ZTF_BIND_HOST:      "0.0.0.0"
+      ZTF_PUBLIC_URL:     "http://localhost:${ZTF_HOST_PORT:-15001}"
       ZTF_LOG_LEVEL:      ${ZTF_LOG_LEVEL:-INFO}
       ZTF_EXEC_TIMEOUT:   ${ZTF_EXEC_TIMEOUT:-3600}
       ZTF_EXEC_WORKERS:   ${ZTF_EXEC_WORKERS:-1}

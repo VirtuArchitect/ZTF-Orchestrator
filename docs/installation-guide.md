@@ -220,6 +220,7 @@ ZeroTouch Framework at build time under `/opt/zerotouch-framework`.
    POSTGRES_PASSWORD=<unique-password>
    ZTF_DATABASE_URL=postgresql://ztf:<unique-password>@postgres:5432/ztf_orchestrator
    ZTF_REF=v1.5.2
+   ZTF_HOST_PORT=15001
    ```
 
 4. Build and start:
@@ -237,7 +238,7 @@ ZeroTouch Framework at build time under `/opt/zerotouch-framework`.
 6. Open:
 
    ```text
-   http://localhost:5001
+   http://localhost:15001
    ```
 
 ### Validate
@@ -251,7 +252,7 @@ ZeroTouch Framework at build time under `/opt/zerotouch-framework`.
 2. Check health:
 
    ```bash
-   curl http://localhost:5001/health
+   curl http://localhost:15001/health
    ```
 
 3. Confirm the baked framework:
@@ -310,14 +311,14 @@ Use this for simple local Docker testing when PostgreSQL is not required.
 4. Open:
 
    ```text
-   http://localhost:5001
+   http://localhost:15001
    ```
 
 ### Validate
 
 ```bash
 docker compose -f docker-compose.file.yml ps
-curl http://localhost:5001/health
+curl http://localhost:15001/health
 docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework
 ```
 

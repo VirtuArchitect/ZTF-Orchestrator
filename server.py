@@ -41,6 +41,7 @@ NKP_DEFAULT   = os.environ.get('ZTF_NKP_PATH',         str(Path.home() / 'nkp-ze
 PYTHON_DEFAULT= os.environ.get('ZTF_PYTHON',           sys.executable)
 PORT          = int(os.environ.get('ZTF_PORT',          5001))
 BIND_HOST     = os.environ.get('ZTF_BIND_HOST',         '127.0.0.1')
+PUBLIC_URL    = os.environ.get('ZTF_PUBLIC_URL',        '').strip()
 LOG_LEVEL     = os.environ.get('ZTF_LOG_LEVEL',        'INFO')
 EXEC_TIMEOUT  = int(os.environ.get('ZTF_EXEC_TIMEOUT',  3600))   # seconds
 EXEC_WORKERS  = max(1, int(os.environ.get('ZTF_EXEC_WORKERS', '1')))
@@ -6625,7 +6626,8 @@ if __name__ == '__main__':
     print(f'  ZeroTouch Enterprise Orchestrator  v{APP_VERSION}')
     print('=' * 60)
     display_host = 'localhost' if BIND_HOST in {'127.0.0.1', '0.0.0.0', '::'} else BIND_HOST  # nosec B104
-    print(f'  URL:  http://{display_host}:{PORT}')
+    display_url = PUBLIC_URL or f'http://{display_host}:{PORT}'
+    print(f'  URL:  {display_url}')
     print(f'  Logs: {LOG_FILE}')
     print('=' * 60, flush=True)
     app.run(host=BIND_HOST, port=PORT, debug=False, threaded=True)

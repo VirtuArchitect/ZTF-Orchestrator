@@ -146,6 +146,10 @@ docker compose up -d
 docker compose logs -f   # admin password printed here on first run
 ```
 
+Open **http://localhost:15001** for the Docker Compose deployment. The app
+still listens on `5001` inside the container; change `ZTF_HOST_PORT` in `.env`
+if your workstation needs a different host port.
+
 For one-off Windows PowerShell testing, the PostgreSQL password and database URL
 must use the same password:
 
@@ -511,7 +515,7 @@ Passwords are bcrypt-hashed. Session tokens expire after 8 hours.
 - Path traversal protection on all config file operations
 - YAML `safe_load` validation before accepting any config content
 - `Content-Security-Policy`, `X-Frame-Options`, `Permissions-Policy` headers
-- Docker Compose publishes the application to `127.0.0.1:5001` by default
+- Docker Compose publishes the application to `127.0.0.1:15001` by default
 
 ### Deployment boundary
 
@@ -563,6 +567,9 @@ other settings via environment variables or a `.env` file (see `.env.example`).
 | `ZTF_PYTHON` | current Python | Python executable for running ZTF |
 | `ZTF_REF` | `v1.5.2` | ZeroTouch Framework branch/tag used by Docker and installer paths. Current Orchestrator workflows require ZTF 1.x. |
 | `ZTF_PORT` | `5001` | Flask listen port |
+| `ZTF_HOST_PORT` | `15001` | Host-side Docker Compose port mapped to container port `5001` |
+| `ZTF_HOST_BIND` | `127.0.0.1` | Host-side Docker Compose bind address |
+| `ZTF_PUBLIC_URL` | empty | Optional URL shown in the startup banner; Docker Compose sets this to the host URL |
 | `ZTF_BIND_HOST` | `127.0.0.1` | Flask bind address for manual runs. Docker sets `0.0.0.0` inside the container. |
 | `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
 | `ZTF_EXEC_WORKERS` | `1` | Background execution worker count |
@@ -602,7 +609,10 @@ ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v1.5.2 docker compose up -d
 | `ZTF_REPO_URL` | GitHub URL | Git URL to clone ZTF from during image build |
 | `ZTF_REF` | `v1.5.2` | Git branch or tag to check out during image build. Keep this on ZTF 1.x for the current workflow/script launcher. |
 
-The container binds only to `127.0.0.1:5001`. Place nginx in front for TLS.
+Docker Compose publishes the container on `127.0.0.1:15001` by default and
+keeps the application listening on port `5001` inside the container. Override
+`ZTF_HOST_PORT` in `.env` if your workstation requires a different host port.
+Place nginx in front for TLS when exposing the service to a team network.
 
 In Docker and appliance images, the bundled ZeroTouch Framework directory is not
 a git checkout. The in-app Setup page can reinstall Python dependencies, but it
