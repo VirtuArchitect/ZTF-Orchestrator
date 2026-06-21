@@ -22,6 +22,7 @@ QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 | `scripts/install-docker.sh` | Installs Docker Engine and the Compose plugin |
 | `scripts/firstboot.sh` | Clones or reuses baked source, creates `.env`, installs systemd, and starts the appliance |
 | `scripts/build-ahv-qcow2.sh` | Local wrapper for building the AHV QCOW2 with Packer and QEMU |
+| `scripts/apply-update-request.sh` | Host-side helper for applying a staged Appliance Update Manager request |
 | `systemd/ztf-orchestrator.service` | Systemd wrapper for Docker Compose |
 | `systemd/ztf-orchestrator-firstboot.service` | Optional first-boot unit for baked images |
 | `cloud-init/user-data.example` | Example first-boot cloud-init payload |
@@ -511,3 +512,6 @@ password is locked before the image shuts down.
 - Do not expose port `5001` directly to untrusted networks.
 - Prefer TLS via nginx or a load balancer for shared team access.
 - Keep `.env` local to the appliance and never commit it.
+- Use [Appliance Update Manager](../docs/appliance-update-manager.md) for
+  connected or air-gapped in-place container updates. The web UI stages update
+  metadata; a privileged host-side script applies Docker/systemd changes.

@@ -17,6 +17,14 @@ into the next numbered release section when the next version is cut.
   helper text, form labels, secondary controls, alert panels, inline code chips,
   accent status text, and tab states across the main application pages.
 
+### Added
+- Added an Appliance Update Manager for connected GitHub release discovery,
+  offline update manifest import, verification, staging, applied-state tracking,
+  and host-side update request generation.
+- Added a privileged appliance host helper script for applying staged
+  ZTF-Orchestrator container updates with `.env` backup and optional offline
+  Docker image tar loading.
+
 ---
 
 ## [1.4.0] - 2026-06-20

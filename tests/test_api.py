@@ -103,6 +103,88 @@ def test_appliance_status_and_ztf_compatibility(client, auth_headers):
     assert any(mode['id'] == 'ztf2-iac' for mode in body['supportedModes'])
 
 
+def test_appliance_update_import_verify_stage_and_delete(client, auth_headers):
+    import server
+
+    manifest = {
+        'version': 'v1.4.1',
+        'repository': 'VirtuArchitect/ZTF-Orchestrator',
+        'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.4.1',
+        'sourceRef': 'v1.4.1',
+        'releaseUrl': 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.4.1',
+        'checksum': 'b' * 64,
+    }
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': manifest},
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+    assert record['version'] == 'v1.4.1'
+    assert record['status'] == 'imported'
+    assert len(record['manifestSha256']) == 64
+
+    resp = client.post(f"/api/appliance/updates/{record['id']}/stage",
+                       headers=auth_headers)
+    assert resp.status_code == 400
+
+    resp = client.post(f"/api/appliance/updates/{record['id']}/verify",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['status'] == 'verified'
+
+    resp = client.post(f"/api/appliance/updates/{record['id']}/stage",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['update']['status'] == 'staged'
+    assert body['request']['version'] == 'v1.4.1'
+    assert server.APPLIANCE_UPDATE_REQUEST_FILE.exists()
+
+    resp = client.post(f"/api/appliance/updates/{record['id']}/applied",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['status'] == 'applied'
+
+    resp = client.get('/api/appliance/updates', headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['updates'][0]['version'] == 'v1.4.1'
+
+    resp = client.delete(f"/api/appliance/updates/{record['id']}", headers=auth_headers)
+    assert resp.status_code == 200
+
+
+def test_appliance_update_rejects_unapproved_container_image(client, auth_headers):
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': {
+                           'version': 'v1.4.1',
+                           'repository': 'VirtuArchitect/ZTF-Orchestrator',
+                           'containerImage': 'example.com/evil/app:v1.4.1',
+                       }},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'approved ZTF-Orchestrator image namespace' in resp.get_json()['error']
+
+
+def test_operator_cannot_stage_appliance_update(client, auth_headers):
+    _create_user(client, auth_headers, 'op_update', 'operator')
+    operator_headers = _login(client, 'op_update')
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': {
+                           'version': 'v1.4.1',
+                           'repository': 'VirtuArchitect/ZTF-Orchestrator',
+                           'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.4.1',
+                       }},
+                       headers=operator_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+    resp = client.post(f"/api/appliance/updates/{record['id']}/verify",
+                       headers=operator_headers)
+    assert resp.status_code == 200
+    resp = client.post(f"/api/appliance/updates/{record['id']}/stage",
+                       headers=operator_headers)
+    assert resp.status_code == 403
+
+
 def test_viewer_cannot_write_config(client, auth_headers):
     _create_user(client, auth_headers, 'viewer3', 'viewer')
     viewer_headers = _login(client, 'viewer3')

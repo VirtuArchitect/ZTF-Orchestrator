@@ -25,6 +25,15 @@ async function seedUiSession(page: Page) {
       await route.fulfill({ json: { artifacts: [], summary: { total: 0, verified: 0, archived: 0, expiring: 0, expired: 0, pending: 0 } } })
       return
     }
+    if (url.endsWith('/api/appliance/updates')) {
+      await route.fulfill({ json: {
+        current: { version: '1.4.0', containerImage: '', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
+        updates: [],
+        staged: null,
+        allowedRepositories: ['virtuarchitect/ztf-orchestrator'],
+      } })
+      return
+    }
     if (url.endsWith('/api/appliance/status')) {
       await route.fulfill({ json: { detected: false, checks: [], containerPaths: {} } })
       return
@@ -200,6 +209,7 @@ test('dashboard supports theme toggle and appliance navigation', async ({ page }
   await page.getByRole('link', { name: /Appliance Ops/i }).click()
   await expect(page.getByRole('heading', { name: 'Appliance Operations' })).toBeVisible()
   await expect(page.getByRole('button', { name: /Artifacts/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Updates/i })).toBeVisible()
 })
 
 test('workflow cards stay readable in light theme', async ({ page }) => {

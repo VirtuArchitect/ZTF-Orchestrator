@@ -16,6 +16,7 @@ import subprocess
 import sys
 import threading
 import urllib.parse
+import urllib.request
 import uuid
 import zipfile
 from copy import deepcopy
@@ -73,9 +74,16 @@ NKP_PROFILE_REVISIONS_FILE = CONFIG_DIR / 'nkp_profile_revisions.json'
 NKP_BINARIES_FILE = CONFIG_DIR / 'nkp_binaries.json'
 VALIDATION_EVIDENCE_FILE = CONFIG_DIR / 'validation_evidence.json'
 APPLIANCE_ARTIFACTS_FILE = CONFIG_DIR / 'appliance_artifacts.json'
+APPLIANCE_UPDATES_FILE = CONFIG_DIR / 'appliance_updates.json'
+APPLIANCE_UPDATE_REQUEST_FILE = CONFIG_DIR / 'appliance_update_request.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
+ALLOWED_UPDATE_REPOS = {
+    item.strip().lower()
+    for item in os.environ.get('ZTF_UPDATE_ALLOWED_REPOS', 'VirtuArchitect/ZTF-Orchestrator').split(',')
+    if item.strip()
+}
 
 ALLOWED_ORIGINS = [
     f'http://localhost:{PORT}',    f'http://127.0.0.1:{PORT}',
@@ -243,6 +251,194 @@ def _save_appliance_artifacts(artifacts: list[dict]) -> None:
 
 def _clean_text(value, limit: int = 512) -> str:
     return str(value or '').strip()[:limit]
+
+
+def _normalize_release_repo(value: str | None) -> tuple[str | None, str | None]:
+    raw = _clean_text(value or 'VirtuArchitect/ZTF-Orchestrator', 256)
+    if raw.startswith('https://github.com/'):
+        parsed = urllib.parse.urlparse(raw)
+        parts = [part for part in parsed.path.strip('/').split('/') if part]
+        raw = '/'.join(parts[:2])
+    raw = raw.removesuffix('.git')
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', raw):
+        return None, 'repository must be an owner/name GitHub repository'
+    if raw.lower() not in ALLOWED_UPDATE_REPOS:
+        return None, 'repository is not in the appliance update allowlist'
+    return raw, None
+
+
+def _valid_update_version(value: str) -> bool:
+    return bool(re.fullmatch(r'v?[0-9][A-Za-z0-9_.-]{0,63}', value))
+
+
+def _valid_container_image(value: str) -> bool:
+    if not value:
+        return True
+    allowed_prefixes = (
+        'ghcr.io/virtuarchitect/ztf-orchestrator:',
+        'ztf-orchestrator:',
+    )
+    if not value.startswith(allowed_prefixes):
+        return False
+    tag = value.rsplit(':', 1)[-1]
+    return _valid_update_version(tag) or tag == 'latest'
+
+
+def _update_status(record: dict) -> str:
+    if record.get('appliedAt'):
+        return 'applied'
+    if record.get('stagedAt'):
+        return 'staged'
+    if record.get('verifiedAt'):
+        return 'verified'
+    if record.get('source') == 'github':
+        return 'available'
+    return 'imported'
+
+
+def _load_appliance_updates() -> list[dict]:
+    updates = read_json(APPLIANCE_UPDATES_FILE, [])
+    if not isinstance(updates, list):
+        return []
+    normalized = []
+    for item in updates:
+        if not isinstance(item, dict) or not item.get('id'):
+            continue
+        record = dict(item)
+        record['status'] = _update_status(record)
+        normalized.append(record)
+    return sorted(normalized, key=lambda item: item.get('updatedAt') or item.get('createdAt') or '', reverse=True)
+
+
+def _save_appliance_updates(updates: list[dict]) -> None:
+    write_json(APPLIANCE_UPDATES_FILE, updates[:100])
+
+
+def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[dict | None, str | None]:
+    existing = existing or {}
+    source = _clean_text(data.get('source', existing.get('source', 'offline')), 32).lower()
+    if source not in {'github', 'offline'}:
+        return None, 'source must be github or offline'
+
+    version = _clean_text(data.get('version', existing.get('version', '')), 64)
+    if not version or not _valid_update_version(version):
+        return None, 'version must be a release tag such as v1.4.1'
+
+    repo, error = _normalize_release_repo(data.get('repository', existing.get('repository', 'VirtuArchitect/ZTF-Orchestrator')))
+    if error:
+        return None, error
+
+    container_image = _clean_text(
+        data.get('containerImage', existing.get('containerImage', f'ghcr.io/virtuarchitect/ztf-orchestrator:{version}')),
+        256,
+    )
+    if not _valid_container_image(container_image):
+        return None, 'containerImage must use the approved ZTF-Orchestrator image namespace'
+
+    checksum = _clean_text(data.get('checksum', existing.get('checksum', '')), 128).lower()
+    if checksum and not re.fullmatch(r'[a-f0-9]{64}', checksum):
+        return None, 'checksum must be a SHA-256 hex digest'
+
+    raw_assets = data.get('assets', existing.get('assets', []))
+    assets = []
+    if isinstance(raw_assets, list):
+        for asset in raw_assets[:20]:
+            if not isinstance(asset, dict):
+                continue
+            try:
+                size = int(asset.get('size') or 0)
+            except (TypeError, ValueError):
+                size = 0
+            assets.append({
+                'name': _clean_text(asset.get('name', ''), 160),
+                'size': max(0, size),
+                'url': _clean_text(asset.get('url', asset.get('browser_download_url', '')), 512),
+            })
+
+    now = _now_iso()
+    record = {
+        **existing,
+        'source': source,
+        'repository': repo,
+        'version': version,
+        'name': _clean_text(data.get('name', existing.get('name', version)), 160),
+        'releaseUrl': _clean_text(data.get('releaseUrl', existing.get('releaseUrl', '')), 512),
+        'artifactUrl': _clean_text(data.get('artifactUrl', existing.get('artifactUrl', '')), 512),
+        'containerImage': container_image,
+        'sourceRef': _clean_text(data.get('sourceRef', existing.get('sourceRef', version)), 128),
+        'checksum': checksum,
+        'manifestSha256': _clean_text(data.get('manifestSha256', existing.get('manifestSha256', '')), 128).lower(),
+        'publishedAt': _clean_text(data.get('publishedAt', existing.get('publishedAt', '')), 64),
+        'notes': _clean_text(data.get('notes', existing.get('notes', '')), 1200),
+        'prerelease': bool(data.get('prerelease', existing.get('prerelease', False))),
+        'assets': assets,
+        'verifiedAt': _clean_text(data.get('verifiedAt', existing.get('verifiedAt', '')), 64),
+        'verifiedBy': _clean_text(data.get('verifiedBy', existing.get('verifiedBy', '')), 128),
+        'stagedAt': _clean_text(data.get('stagedAt', existing.get('stagedAt', '')), 64),
+        'stagedBy': _clean_text(data.get('stagedBy', existing.get('stagedBy', '')), 128),
+        'requestId': _clean_text(data.get('requestId', existing.get('requestId', '')), 128),
+        'requestPath': _clean_text(data.get('requestPath', existing.get('requestPath', '')), 512),
+        'appliedAt': _clean_text(data.get('appliedAt', existing.get('appliedAt', '')), 64),
+        'appliedBy': _clean_text(data.get('appliedBy', existing.get('appliedBy', '')), 128),
+        'updatedAt': now,
+    }
+    if record.get('manifestSha256') and not re.fullmatch(r'[a-f0-9]{64}', record['manifestSha256']):
+        return None, 'manifestSha256 must be a SHA-256 hex digest'
+    for field in ('verifiedAt', 'stagedAt', 'appliedAt'):
+        if record.get(field) and not _parse_iso_datetime(record[field]):
+            return None, f'{field} must be an ISO timestamp'
+    if not record.get('id'):
+        record['id'] = str(uuid.uuid4())
+        record['createdAt'] = now
+    record['status'] = _update_status(record)
+    return record, None
+
+
+def _latest_github_release(repository: str, include_prerelease: bool = False) -> dict:
+    url = f'https://api.github.com/repos/{repository}/releases'
+    req = urllib.request.Request(
+        url,
+        headers={
+            'Accept': 'application/vnd.github+json',
+            'User-Agent': f'ZTF-Orchestrator/{APP_VERSION}',
+            'X-GitHub-Api-Version': '2022-11-28',
+        },
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310 - allowlisted GitHub API URL.
+        releases = json.loads(resp.read().decode('utf-8'))
+    if not isinstance(releases, list):
+        raise RuntimeError('GitHub release response was not a list')
+    for release in releases:
+        if not isinstance(release, dict) or release.get('draft'):
+            continue
+        if release.get('prerelease') and not include_prerelease:
+            continue
+        tag = str(release.get('tag_name') or '').strip()
+        if not tag:
+            continue
+        assets = release.get('assets') if isinstance(release.get('assets'), list) else []
+        return {
+            'source': 'github',
+            'repository': repository,
+            'version': tag,
+            'name': release.get('name') or tag,
+            'releaseUrl': release.get('html_url') or '',
+            'artifactUrl': release.get('zipball_url') or '',
+            'containerImage': f'ghcr.io/virtuarchitect/ztf-orchestrator:{tag}',
+            'sourceRef': tag,
+            'publishedAt': release.get('published_at') or '',
+            'prerelease': bool(release.get('prerelease')),
+            'assets': [
+                {
+                    'name': _clean_text(asset.get('name', ''), 160),
+                    'size': int(asset.get('size') or 0),
+                    'url': _clean_text(asset.get('browser_download_url', ''), 512),
+                }
+                for asset in assets
+                if isinstance(asset, dict)
+            ][:20],
+        }
+    raise RuntimeError('No matching GitHub release was found')
 
 
 def _clean_artifact_payload(data: dict, existing: dict | None = None) -> tuple[dict | None, str | None]:
@@ -5704,6 +5900,190 @@ def delete_appliance_artifact(artifact_id):
         'action': 'appliance_artifact_deleted',
         'user': request.current_user['username'],
         'profile': target.get('profile'),
+        'version': target.get('version'),
+    })
+    return jsonify({'success': True, 'deleted': target})
+
+
+@app.route('/api/appliance/updates')
+@require_role('admin', 'operator', 'viewer')
+def list_appliance_updates():
+    updates = _load_appliance_updates()
+    current = {
+        'version': APP_VERSION,
+        'containerImage': os.environ.get('ZTF_ORCHESTRATOR_IMAGE', ''),
+        'requestPath': str(APPLIANCE_UPDATE_REQUEST_FILE),
+    }
+    staged = next((item for item in updates if item.get('status') == 'staged'), None)
+    return jsonify({
+        'current': current,
+        'updates': updates,
+        'staged': staged,
+        'allowedRepositories': sorted(ALLOWED_UPDATE_REPOS),
+    })
+
+
+@app.route('/api/appliance/updates/check', methods=['POST'])
+@require_role('admin', 'operator')
+@limiter.limit('10 per minute')
+def check_appliance_update():
+    payload = request.get_json(silent=True) or {}
+    repository, error = _normalize_release_repo(payload.get('repository'))
+    if error:
+        return jsonify({'error': error}), 400
+    try:
+        release = _latest_github_release(repository, bool(payload.get('includePrerelease')))
+        record, error = _clean_update_manifest(release)
+        if error:
+            return jsonify({'error': error}), 400
+        updates = _load_appliance_updates()
+        existing = next((item for item in updates if item.get('repository') == record['repository'] and item.get('version') == record['version']), None)
+        if existing:
+            record = {**existing, **record, 'id': existing['id'], 'createdAt': existing.get('createdAt', record.get('createdAt'))}
+        _save_appliance_updates([record] + [item for item in updates if item.get('id') != record['id']])
+        log.info('appliance_update_checked', extra={
+            'action': 'appliance_update_checked',
+            'user': request.current_user['username'],
+            'repository': record['repository'],
+            'version': record['version'],
+        })
+        return jsonify(record)
+    except Exception as exc:
+        log.warning('appliance_update_check_failed', extra={
+            'action': 'appliance_update_check_failed',
+            'user': request.current_user['username'],
+            'repository': repository,
+            'error': str(exc),
+        })
+        return jsonify({'error': 'Could not fetch GitHub release metadata'}), 502
+
+
+@app.route('/api/appliance/updates/import', methods=['POST'])
+@require_role('admin', 'operator')
+def import_appliance_update():
+    data = request.get_json(silent=True) or {}
+    manifest = data.get('manifest', data)
+    if isinstance(manifest, str):
+        try:
+            manifest = json.loads(manifest)
+        except json.JSONDecodeError:
+            return jsonify({'error': 'manifest must be valid JSON'}), 400
+    if not isinstance(manifest, dict):
+        return jsonify({'error': 'manifest must be a JSON object'}), 400
+    manifest = {**manifest, 'source': manifest.get('source') or 'offline'}
+    canonical = json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    manifest.setdefault('manifestSha256', hashlib.sha256(canonical).hexdigest())
+    record, error = _clean_update_manifest(manifest)
+    if error:
+        return jsonify({'error': error}), 400
+    updates = _load_appliance_updates()
+    _save_appliance_updates([record] + [item for item in updates if item.get('id') != record['id']])
+    log.info('appliance_update_imported', extra={
+        'action': 'appliance_update_imported',
+        'user': request.current_user['username'],
+        'version': record['version'],
+        'source': record['source'],
+    })
+    return jsonify(record), 201
+
+
+@app.route('/api/appliance/updates/<update_id>/verify', methods=['POST'])
+@require_role('admin', 'operator')
+def verify_appliance_update(update_id):
+    updates = _load_appliance_updates()
+    existing = next((item for item in updates if item.get('id') == update_id), None)
+    if not existing:
+        return jsonify({'error': 'Update record not found'}), 404
+    data = {**existing, **(request.get_json(silent=True) or {}), 'verifiedAt': _now_iso(), 'verifiedBy': request.current_user['username']}
+    record, error = _clean_update_manifest(data, existing)
+    if error:
+        return jsonify({'error': error}), 400
+    _save_appliance_updates([record if item.get('id') == update_id else item for item in updates])
+    log.info('appliance_update_verified', extra={
+        'action': 'appliance_update_verified',
+        'user': request.current_user['username'],
+        'version': record['version'],
+    })
+    return jsonify(record)
+
+
+@app.route('/api/appliance/updates/<update_id>/stage', methods=['POST'])
+@require_role('admin')
+def stage_appliance_update(update_id):
+    updates = _load_appliance_updates()
+    existing = next((item for item in updates if item.get('id') == update_id), None)
+    if not existing:
+        return jsonify({'error': 'Update record not found'}), 404
+    if not existing.get('verifiedAt'):
+        return jsonify({'error': 'Update must be verified before staging'}), 400
+    now = _now_iso()
+    request_doc = {
+        'id': str(uuid.uuid4()),
+        'type': 'ztf-orchestrator-container-update',
+        'requestedAt': now,
+        'requestedBy': request.current_user['username'],
+        'version': existing['version'],
+        'containerImage': existing['containerImage'],
+        'sourceRef': existing.get('sourceRef') or existing['version'],
+        'releaseUrl': existing.get('releaseUrl', ''),
+        'manifestSha256': existing.get('manifestSha256', ''),
+        'instructions': [
+            'Create or confirm a current PostgreSQL backup.',
+            'Run appliance/scripts/apply-update-request.sh on the appliance host.',
+            'Confirm /health returns the staged version after restart.',
+        ],
+    }
+    write_json(APPLIANCE_UPDATE_REQUEST_FILE, request_doc)
+    record = {
+        **existing,
+        'stagedAt': now,
+        'stagedBy': request.current_user['username'],
+        'requestId': request_doc['id'],
+        'requestPath': str(APPLIANCE_UPDATE_REQUEST_FILE),
+        'updatedAt': now,
+    }
+    record['status'] = _update_status(record)
+    _save_appliance_updates([record if item.get('id') == update_id else item for item in updates])
+    log.warning('appliance_update_staged', extra={
+        'action': 'appliance_update_staged',
+        'user': request.current_user['username'],
+        'version': record['version'],
+        'requestPath': str(APPLIANCE_UPDATE_REQUEST_FILE),
+    })
+    return jsonify({'update': record, 'request': request_doc})
+
+
+@app.route('/api/appliance/updates/<update_id>/applied', methods=['POST'])
+@require_role('admin')
+def mark_appliance_update_applied(update_id):
+    updates = _load_appliance_updates()
+    existing = next((item for item in updates if item.get('id') == update_id), None)
+    if not existing:
+        return jsonify({'error': 'Update record not found'}), 404
+    data = {**existing, 'appliedAt': _now_iso(), 'appliedBy': request.current_user['username']}
+    record, error = _clean_update_manifest(data, existing)
+    if error:
+        return jsonify({'error': error}), 400
+    _save_appliance_updates([record if item.get('id') == update_id else item for item in updates])
+    log.warning('appliance_update_marked_applied', extra={
+        'action': 'appliance_update_marked_applied',
+        'user': request.current_user['username'],
+        'version': record['version'],
+    })
+    return jsonify(record)
+
+
+@app.route('/api/appliance/updates/<update_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_appliance_update(update_id):
+    updates = _load_appliance_updates()
+    target = next((item for item in updates if item.get('id') == update_id), None)
+    if not target:
+        return jsonify({'error': 'Update record not found'}), 404
+    _save_appliance_updates([item for item in updates if item.get('id') != update_id])
+    log.info('appliance_update_deleted', extra={
+        'action': 'appliance_update_deleted',
+        'user': request.current_user['username'],
         'version': target.get('version'),
     })
     return jsonify({'success': True, 'deleted': target})

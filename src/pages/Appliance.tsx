@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Archive, CheckCircle, Clock, Layers, Loader, Plus, RefreshCw, Save,
-  Server, ShieldCheck, Trash2, XCircle,
+  Archive, CheckCircle, Clock, ExternalLink, FileCheck, Layers, Loader, PackageCheck,
+  Plus, RefreshCw, Server, ShieldCheck, Trash2, Upload, XCircle,
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch } from '../utils/api'
@@ -9,7 +9,7 @@ import { useStore } from '../store'
 import { APP_VERSION } from '../version'
 import clsx from 'clsx'
 
-type Tab = 'artifacts' | 'firstboot' | 'readiness' | 'ztf'
+type Tab = 'artifacts' | 'updates' | 'firstboot' | 'readiness' | 'ztf'
 
 interface ArtifactRecord {
   id: string
@@ -37,6 +37,42 @@ interface ArtifactSummary {
   expiring: number
   expired: number
   pending: number
+}
+
+interface UpdateRecord {
+  id: string
+  source: 'github' | 'offline' | string
+  repository: string
+  version: string
+  name: string
+  releaseUrl?: string
+  artifactUrl?: string
+  containerImage: string
+  sourceRef: string
+  checksum?: string
+  manifestSha256?: string
+  publishedAt?: string
+  notes?: string
+  prerelease?: boolean
+  status: 'available' | 'imported' | 'verified' | 'staged' | 'applied' | string
+  assets?: Array<{ name: string; size: number; url: string }>
+  verifiedAt?: string
+  stagedAt?: string
+  requestPath?: string
+  appliedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface UpdateState {
+  current: {
+    version: string
+    containerImage: string
+    requestPath: string
+  }
+  updates: UpdateRecord[]
+  staged?: UpdateRecord | null
+  allowedRepositories: string[]
 }
 
 interface ApplianceStatus {
@@ -81,6 +117,16 @@ const EMPTY_ARTIFACT = {
   notes: '',
 }
 
+const EXAMPLE_UPDATE_MANIFEST = JSON.stringify({
+  version: `v${APP_VERSION}`,
+  repository: 'VirtuArchitect/ZTF-Orchestrator',
+  containerImage: `ghcr.io/virtuarchitect/ztf-orchestrator:v${APP_VERSION}`,
+  sourceRef: `v${APP_VERSION}`,
+  releaseUrl: 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/vX.Y.Z',
+  checksum: '',
+  notes: 'Offline update manifest staged from a connected environment.',
+}, null, 2)
+
 export default function Appliance() {
   const user = useStore(s => s.user)
   const canEdit = user?.role === 'admin' || user?.role === 'operator'
@@ -93,6 +139,11 @@ export default function Appliance() {
   const [artifacts, setArtifacts] = useState<ArtifactRecord[]>([])
   const [summary, setSummary] = useState<ArtifactSummary | null>(null)
   const [form, setForm] = useState(EMPTY_ARTIFACT)
+  const [updateState, setUpdateState] = useState<UpdateState | null>(null)
+  const [updateRepo, setUpdateRepo] = useState('VirtuArchitect/ZTF-Orchestrator')
+  const [includePrerelease, setIncludePrerelease] = useState(false)
+  const [updateManifest, setUpdateManifest] = useState(EXAMPLE_UPDATE_MANIFEST)
+  const [updateBusy, setUpdateBusy] = useState('')
   const [appliance, setAppliance] = useState<ApplianceStatus | null>(null)
   const [ztf, setZtf] = useState<ZtfCompatibility | null>(null)
   const [profiles, setProfiles] = useState<NkpProfile[]>([])
@@ -122,6 +173,8 @@ export default function Appliance() {
         setProfiles(data || [])
         if (!selectedProfile && data?.length) setSelectedProfile(data[0].id)
       }
+      const updateResp = await apiFetch('/api/appliance/updates')
+      if (updateResp.ok) setUpdateState(await updateResp.json())
     } catch {
       setError('Could not load appliance operations state.')
     } finally {
@@ -182,6 +235,122 @@ export default function Appliance() {
     await load()
   }
 
+  const checkGithubUpdate = async () => {
+    setUpdateBusy('check')
+    setError('')
+    setMessage('')
+    try {
+      const resp = await apiFetch('/api/appliance/updates/check', {
+        method: 'POST',
+        body: JSON.stringify({ repository: updateRepo, includePrerelease }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setMessage(`Found ${data.version} from ${data.repository}.`)
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
+  const importOfflineUpdate = async () => {
+    setUpdateBusy('import')
+    setError('')
+    setMessage('')
+    try {
+      const resp = await apiFetch('/api/appliance/updates/import', {
+        method: 'POST',
+        body: JSON.stringify({ manifest: updateManifest }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setMessage(`Imported update manifest for ${data.version}.`)
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
+  const verifyUpdate = async (record: UpdateRecord) => {
+    setUpdateBusy(`verify:${record.id}`)
+    setError('')
+    setMessage('')
+    try {
+      const resp = await apiFetch(`/api/appliance/updates/${record.id}/verify`, { method: 'POST' })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setMessage(`${record.version} marked verified.`)
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
+  const stageUpdate = async (record: UpdateRecord) => {
+    if (!confirm(`Stage update ${record.version}? This writes an appliance update request for host-side application.`)) return
+    setUpdateBusy(`stage:${record.id}`)
+    setError('')
+    setMessage('')
+    try {
+      const resp = await apiFetch(`/api/appliance/updates/${record.id}/stage`, { method: 'POST' })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setMessage(`Staged ${data.update.version}. Request path: ${data.update.requestPath}`)
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
+  const markUpdateApplied = async (record: UpdateRecord) => {
+    if (!confirm(`Mark ${record.version} as applied? Use this after the host-side update has completed and health checks pass.`)) return
+    setUpdateBusy(`applied:${record.id}`)
+    setError('')
+    setMessage('')
+    try {
+      const resp = await apiFetch(`/api/appliance/updates/${record.id}/applied`, { method: 'POST' })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setMessage(`${data.version} marked applied.`)
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
+  const deleteUpdate = async (record: UpdateRecord) => {
+    if (!confirm(`Delete update record for ${record.version}?`)) return
+    setUpdateBusy(`delete:${record.id}`)
+    setError('')
+    setMessage('')
+    try {
+      const resp = await apiFetch(`/api/appliance/updates/${record.id}`, { method: 'DELETE' })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
   const loadReadiness = async () => {
     if (!selectedProfile) return
     setReadinessLoading(true)
@@ -216,6 +385,7 @@ export default function Appliance() {
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-3">
           <TabButton active={tab === 'artifacts'} icon={Archive} label="Artifacts" onClick={() => setTab('artifacts')} />
+          <TabButton active={tab === 'updates'} icon={PackageCheck} label="Updates" onClick={() => setTab('updates')} />
           <TabButton active={tab === 'firstboot'} icon={Server} label="First Boot" onClick={() => setTab('firstboot')} />
           <TabButton active={tab === 'readiness'} icon={ShieldCheck} label="NKP Readiness" onClick={() => setTab('readiness')} />
           <TabButton active={tab === 'ztf'} icon={Layers} label="ZTF Modes" onClick={() => setTab('ztf')} />
@@ -308,6 +478,137 @@ export default function Appliance() {
                 <div className="empty-state py-12">
                   <Archive size={34} className="mx-auto mb-3 text-gray-700" />
                   <p className="text-sm font-medium text-gray-400">No appliance artifact archive records yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === 'updates' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <Metric label="Current App Version" value={updateState?.current.version || APP_VERSION} />
+              <Metric label="Tracked Updates" value={updateState?.updates.length ?? 0} />
+              <Metric label="Staged" value={updateState?.staged?.version || 'none'} tone={updateState?.staged ? 'warn' : 'neutral'} />
+              <Metric label="Request Path" value={updateState?.current.requestPath || 'not configured'} mono />
+            </div>
+
+            <div className="card">
+              <div className="mb-4">
+                <h2 className="font-semibold text-gray-100">Appliance Update Manager</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Discover release metadata from an allowlisted GitHub repository or import an offline manifest, then stage a host-side update request.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div className="rounded-lg border border-border bg-gray-950/40 p-4 space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-100">Connected Release Check</h3>
+                    <p className="text-xs text-gray-500 mt-1">Fetches GitHub Release metadata only. It does not download or execute release code.</p>
+                  </div>
+                  <Field label="Repository">
+                    <input className="input font-mono" value={updateRepo} onChange={event => setUpdateRepo(event.target.value)} disabled={!canEdit} />
+                  </Field>
+                  <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <input type="checkbox" checked={includePrerelease} onChange={event => setIncludePrerelease(event.target.checked)} disabled={!canEdit} />
+                    Include prereleases
+                  </label>
+                  <button onClick={checkGithubUpdate} disabled={!canEdit || updateBusy === 'check'} className="btn-secondary gap-1.5">
+                    {updateBusy === 'check' ? <Loader size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                    Check GitHub
+                  </button>
+                  <p className="text-xs text-gray-500">
+                    Allowed repositories: {(updateState?.allowedRepositories || ['virtuarchitect/ztf-orchestrator']).join(', ')}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border bg-gray-950/40 p-4 space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-100">Offline Manifest Import</h3>
+                    <p className="text-xs text-gray-500 mt-1">Paste a reviewed update manifest from connected staging. Arbitrary source archives are not unpacked by the web app.</p>
+                  </div>
+                  <textarea
+                    className="input min-h-40 font-mono text-xs resize-y"
+                    value={updateManifest}
+                    onChange={event => setUpdateManifest(event.target.value)}
+                    disabled={!canEdit}
+                  />
+                  <button onClick={importOfflineUpdate} disabled={!canEdit || updateBusy === 'import'} className="btn-secondary gap-1.5">
+                    {updateBusy === 'import' ? <Loader size={14} className="animate-spin" /> : <Upload size={14} />}
+                    Import Manifest
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {(updateState?.updates || []).map(record => (
+                <div key={record.id} className="card">
+                  <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-gray-100">{record.name || record.version}</h3>
+                        <span className={clsx('badge text-xs', updateStatusBadge(record.status))}>{record.status}</span>
+                        <span className="badge badge-gray text-xs">{record.source}</span>
+                        {record.prerelease && <span className="badge badge-yellow text-xs">prerelease</span>}
+                      </div>
+                      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                        <span className="font-mono truncate">{record.containerImage}</span>
+                        <span className="font-mono truncate">{record.repository}</span>
+                        <span>{record.publishedAt ? `Published ${formatDate(record.publishedAt)}` : 'No publish date recorded'}</span>
+                        <span>{record.stagedAt ? `Staged ${formatDate(record.stagedAt)}` : record.verifiedAt ? `Verified ${formatDate(record.verifiedAt)}` : 'Not verified'}</span>
+                      </div>
+                      {record.manifestSha256 && <p className="mt-2 font-mono text-xs text-gray-600 break-all">manifest {record.manifestSha256}</p>}
+                      {record.checksum && <p className="mt-1 font-mono text-xs text-gray-600 break-all">checksum {record.checksum}</p>}
+                      {record.requestPath && <p className="mt-2 text-xs text-gray-500">Host update request: <span className="font-mono">{record.requestPath}</span></p>}
+                      {record.notes && <p className="mt-3 text-sm text-gray-400">{record.notes}</p>}
+                      {!!record.assets?.length && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {record.assets.slice(0, 4).map(asset => (
+                            <span key={`${record.id}-${asset.name}`} className="badge badge-gray text-xs">{asset.name || formatBytes(asset.size)}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {record.releaseUrl && (
+                        <a href={record.releaseUrl} target="_blank" rel="noreferrer" className="btn-secondary gap-1.5">
+                          <ExternalLink size={14} /> Release
+                        </a>
+                      )}
+                      {canEdit && !record.verifiedAt && (
+                        <button onClick={() => verifyUpdate(record)} disabled={updateBusy === `verify:${record.id}`} className="btn-secondary gap-1.5">
+                          {updateBusy === `verify:${record.id}` ? <Loader size={14} className="animate-spin" /> : <FileCheck size={14} />}
+                          Verify
+                        </button>
+                      )}
+                      {isAdmin && record.verifiedAt && !record.stagedAt && (
+                        <button onClick={() => stageUpdate(record)} disabled={updateBusy === `stage:${record.id}`} className="btn-primary gap-1.5">
+                          {updateBusy === `stage:${record.id}` ? <Loader size={14} className="animate-spin" /> : <PackageCheck size={14} />}
+                          Stage
+                        </button>
+                      )}
+                      {isAdmin && record.stagedAt && !record.appliedAt && (
+                        <button onClick={() => markUpdateApplied(record)} disabled={updateBusy === `applied:${record.id}`} className="btn-secondary gap-1.5">
+                          {updateBusy === `applied:${record.id}` ? <Loader size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                          Mark Applied
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button onClick={() => deleteUpdate(record)} disabled={updateBusy === `delete:${record.id}`} className="btn-danger gap-1.5">
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!updateState?.updates.length && (
+                <div className="empty-state py-12">
+                  <PackageCheck size={34} className="mx-auto mb-3 text-gray-700" />
+                  <p className="text-sm font-medium text-gray-400">No appliance update records yet</p>
+                  <p className="text-xs text-gray-600 mt-1">Check GitHub or import an offline manifest to begin.</p>
                 </div>
               )}
             </div>
@@ -434,6 +735,14 @@ function statusBadge(status: string) {
   if (status === 'verified' || status === 'archived') return 'badge-green'
   if (status === 'expiring') return 'badge-yellow'
   if (status === 'expired') return 'badge-red'
+  return 'badge-gray'
+}
+
+function updateStatusBadge(status: string) {
+  if (status === 'applied') return 'badge-green'
+  if (status === 'staged') return 'badge-yellow'
+  if (status === 'verified') return 'badge-blue'
+  if (status === 'available' || status === 'imported') return 'badge-purple'
   return 'badge-gray'
 }
 

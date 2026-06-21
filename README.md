@@ -715,6 +715,7 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 | Guide | Description |
 |---|---|
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
+| [docs/appliance-update-manager.md](docs/appliance-update-manager.md) | Connected and air-gapped Appliance Update Manager workflow |
 | [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
 | [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
 | [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
