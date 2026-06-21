@@ -30,7 +30,12 @@ async function seedUiSession(page: Page) {
         current: { version: '1.4.0', containerImage: '', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
         updates: [],
         staged: null,
-        allowedRepositories: ['virtuarchitect/ztf-orchestrator'],
+        allowedRepositories: ['virtuarchitect/ztf-orchestrator', 'nutanixdev/zerotouch-framework', 'virtuarchitect/nkp-zerotouch-framework'],
+        targets: [
+          { id: 'ztf-orchestrator', label: 'ZTF-Orchestrator', defaultRepo: 'VirtuArchitect/ZTF-Orchestrator', defaultPath: '' },
+          { id: 'ztf-framework', label: 'ZeroTouch Framework', defaultRepo: 'nutanixdev/zerotouch-framework', defaultPath: '/opt/zerotouch-framework' },
+          { id: 'nkp-framework', label: 'NKP Framework', defaultRepo: 'VirtuArchitect/nkp-zerotouch-framework', defaultPath: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework' },
+        ],
       } })
       return
     }

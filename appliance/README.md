@@ -513,5 +513,7 @@ password is locked before the image shuts down.
 - Prefer TLS via nginx or a load balancer for shared team access.
 - Keep `.env` local to the appliance and never commit it.
 - Use [Appliance Update Manager](../docs/appliance-update-manager.md) for
-  connected or air-gapped in-place container updates. The web UI stages update
-  metadata; a privileged host-side script applies Docker/systemd changes.
+  connected or air-gapped in-place ZTF-Orchestrator container updates and
+  host-visible ZeroTouch/NKP framework checkout updates. The web UI stages
+  update metadata; a privileged host-side script applies Docker/systemd or git
+  checkout changes.

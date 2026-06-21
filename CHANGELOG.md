@@ -24,6 +24,8 @@ into the next numbered release section when the next version is cut.
 - Added a privileged appliance host helper script for applying staged
   ZTF-Orchestrator container updates with `.env` backup and optional offline
   Docker image tar loading.
+- Extended the Appliance Update Manager to stage ZeroTouch Framework and NKP
+  Framework git checkout updates from allowlisted repositories.
 
 ---
 

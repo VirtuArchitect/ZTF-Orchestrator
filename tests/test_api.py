@@ -107,6 +107,7 @@ def test_appliance_update_import_verify_stage_and_delete(client, auth_headers):
     import server
 
     manifest = {
+        'target': 'ztf-orchestrator',
         'version': 'v1.4.1',
         'repository': 'VirtuArchitect/ZTF-Orchestrator',
         'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.4.1',
@@ -137,6 +138,8 @@ def test_appliance_update_import_verify_stage_and_delete(client, auth_headers):
     assert resp.status_code == 200
     body = resp.get_json()
     assert body['update']['status'] == 'staged'
+    assert body['request']['type'] == 'ztf-orchestrator-container-update'
+    assert body['request']['target'] == 'ztf-orchestrator'
     assert body['request']['version'] == 'v1.4.1'
     assert server.APPLIANCE_UPDATE_REQUEST_FILE.exists()
 
@@ -148,6 +151,7 @@ def test_appliance_update_import_verify_stage_and_delete(client, auth_headers):
     resp = client.get('/api/appliance/updates', headers=auth_headers)
     assert resp.status_code == 200
     assert resp.get_json()['updates'][0]['version'] == 'v1.4.1'
+    assert any(target['id'] == 'ztf-framework' for target in resp.get_json()['targets'])
 
     resp = client.delete(f"/api/appliance/updates/{record['id']}", headers=auth_headers)
     assert resp.status_code == 200
@@ -163,6 +167,90 @@ def test_appliance_update_rejects_unapproved_container_image(client, auth_header
                        headers=auth_headers)
     assert resp.status_code == 400
     assert 'approved ZTF-Orchestrator image namespace' in resp.get_json()['error']
+
+
+def test_framework_update_import_verify_and_stage(client, auth_headers):
+    manifest = {
+        'target': 'ztf-framework',
+        'version': 'v1.5.2',
+        'repository': 'nutanixdev/zerotouch-framework',
+        'targetPath': '/opt/zerotouch-framework',
+        'sourceRef': 'v1.5.2',
+        'releaseUrl': 'https://github.com/nutanixdev/zerotouch-framework/releases/tag/v1.5.2',
+        'checksum': 'c' * 64,
+    }
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': manifest},
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+    assert record['target'] == 'ztf-framework'
+    assert record['containerImage'] == ''
+    assert record['targetPath'] == '/opt/zerotouch-framework'
+
+    resp = client.post(f"/api/appliance/updates/{record['id']}/verify",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    resp = client.post(f"/api/appliance/updates/{record['id']}/stage",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['request']['type'] == 'ztf-framework-source-update'
+    assert body['request']['targetPath'] == '/opt/zerotouch-framework'
+    assert body['request']['sourceRef'] == 'v1.5.2'
+
+
+def test_nkp_framework_update_accepts_safe_source_checkout_metadata(client, auth_headers):
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': {
+                           'target': 'nkp-framework',
+                           'version': 'v2.17.1',
+                           'repository': 'VirtuArchitect/nkp-zerotouch-framework',
+                           'targetPath': '/var/lib/ztf-orchestrator/nkp-zerotouch-framework',
+                           'sourceRef': 'release/v2.17.1',
+                       }},
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+    assert record['target'] == 'nkp-framework'
+    assert record['targetLabel'] == 'NKP Framework'
+
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': {
+                           'target': 'nkp-framework',
+                           'version': 'v2.17.1',
+                           'repository': 'VirtuArchitect/nkp-zerotouch-framework',
+                           'targetPath': 'relative/nkp-zerotouch-framework',
+                       }},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'absolute appliance host path' in resp.get_json()['error']
+
+
+def test_framework_update_rejects_container_image_and_unsafe_ref(client, auth_headers):
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': {
+                           'target': 'ztf-framework',
+                           'version': 'v1.5.2',
+                           'repository': 'nutanixdev/zerotouch-framework',
+                           'targetPath': '/opt/zerotouch-framework',
+                           'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.2',
+                       }},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'containerImage is only valid' in resp.get_json()['error']
+
+    resp = client.post('/api/appliance/updates/import',
+                       json={'manifest': {
+                           'target': 'ztf-framework',
+                           'version': 'v1.5.2',
+                           'repository': 'nutanixdev/zerotouch-framework',
+                           'targetPath': '/opt/zerotouch-framework',
+                           'sourceRef': '../main',
+                       }},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'sourceRef must be a safe git ref' in resp.get_json()['error']
 
 
 def test_operator_cannot_stage_appliance_update(client, auth_headers):

@@ -81,8 +81,31 @@ POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
 ALLOWED_UPDATE_REPOS = {
     item.strip().lower()
-    for item in os.environ.get('ZTF_UPDATE_ALLOWED_REPOS', 'VirtuArchitect/ZTF-Orchestrator').split(',')
+    for item in os.environ.get(
+        'ZTF_UPDATE_ALLOWED_REPOS',
+        'VirtuArchitect/ZTF-Orchestrator,nutanixdev/zerotouch-framework,VirtuArchitect/nkp-zerotouch-framework',
+    ).split(',')
     if item.strip()
+}
+UPDATE_TARGETS = {
+    'ztf-orchestrator': {
+        'label': 'ZTF-Orchestrator',
+        'defaultRepo': 'VirtuArchitect/ZTF-Orchestrator',
+        'requestType': 'ztf-orchestrator-container-update',
+        'defaultPath': '',
+    },
+    'ztf-framework': {
+        'label': 'ZeroTouch Framework',
+        'defaultRepo': 'nutanixdev/zerotouch-framework',
+        'requestType': 'ztf-framework-source-update',
+        'defaultPath': ZTF_DEFAULT,
+    },
+    'nkp-framework': {
+        'label': 'NKP Framework',
+        'defaultRepo': 'VirtuArchitect/nkp-zerotouch-framework',
+        'requestType': 'nkp-framework-source-update',
+        'defaultPath': NKP_DEFAULT,
+    },
 }
 
 ALLOWED_ORIGINS = [
@@ -284,6 +307,21 @@ def _valid_container_image(value: str) -> bool:
     return _valid_update_version(tag) or tag == 'latest'
 
 
+def _valid_git_ref(value: str) -> bool:
+    if not value:
+        return False
+    if value.startswith(('-', '/', '.')) or value.endswith(('/', '.')):
+        return False
+    if '..' in value or '@{' in value or '\\' in value:
+        return False
+    return bool(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{0,127}', value))
+
+
+def _clean_update_target(value: str | None) -> str | None:
+    target = _clean_text(value or 'ztf-orchestrator', 64).lower()
+    return target if target in UPDATE_TARGETS else None
+
+
 def _update_status(record: dict) -> str:
     if record.get('appliedAt'):
         return 'applied'
@@ -316,6 +354,11 @@ def _save_appliance_updates(updates: list[dict]) -> None:
 
 def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[dict | None, str | None]:
     existing = existing or {}
+    target = _clean_update_target(data.get('target', existing.get('target', 'ztf-orchestrator')))
+    if not target:
+        return None, 'target must be ztf-orchestrator, ztf-framework, or nkp-framework'
+    target_info = UPDATE_TARGETS[target]
+
     source = _clean_text(data.get('source', existing.get('source', 'offline')), 32).lower()
     if source not in {'github', 'offline'}:
         return None, 'source must be github or offline'
@@ -324,20 +367,35 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
     if not version or not _valid_update_version(version):
         return None, 'version must be a release tag such as v1.4.1'
 
-    repo, error = _normalize_release_repo(data.get('repository', existing.get('repository', 'VirtuArchitect/ZTF-Orchestrator')))
+    repo, error = _normalize_release_repo(data.get('repository', existing.get('repository', target_info['defaultRepo'])))
     if error:
         return None, error
 
     container_image = _clean_text(
-        data.get('containerImage', existing.get('containerImage', f'ghcr.io/virtuarchitect/ztf-orchestrator:{version}')),
+        data.get(
+            'containerImage',
+            existing.get('containerImage', f'ghcr.io/virtuarchitect/ztf-orchestrator:{version}' if target == 'ztf-orchestrator' else ''),
+        ),
         256,
     )
-    if not _valid_container_image(container_image):
+    if target == 'ztf-orchestrator' and not _valid_container_image(container_image):
         return None, 'containerImage must use the approved ZTF-Orchestrator image namespace'
+    if target != 'ztf-orchestrator' and container_image:
+        return None, 'containerImage is only valid for ztf-orchestrator updates'
+
+    target_path = _clean_text(data.get('targetPath', existing.get('targetPath', target_info['defaultPath'])), 512)
+    if target != 'ztf-orchestrator' and not target_path:
+        return None, 'targetPath is required for framework updates'
+    if target != 'ztf-orchestrator' and not target_path.startswith('/'):
+        return None, 'targetPath must be an absolute appliance host path'
 
     checksum = _clean_text(data.get('checksum', existing.get('checksum', '')), 128).lower()
     if checksum and not re.fullmatch(r'[a-f0-9]{64}', checksum):
         return None, 'checksum must be a SHA-256 hex digest'
+
+    source_ref = _clean_text(data.get('sourceRef', existing.get('sourceRef', version)), 128)
+    if not _valid_git_ref(source_ref):
+        return None, 'sourceRef must be a safe git ref or release tag'
 
     raw_assets = data.get('assets', existing.get('assets', []))
     assets = []
@@ -358,6 +416,8 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
     now = _now_iso()
     record = {
         **existing,
+        'target': target,
+        'targetLabel': target_info['label'],
         'source': source,
         'repository': repo,
         'version': version,
@@ -365,7 +425,8 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
         'releaseUrl': _clean_text(data.get('releaseUrl', existing.get('releaseUrl', '')), 512),
         'artifactUrl': _clean_text(data.get('artifactUrl', existing.get('artifactUrl', '')), 512),
         'containerImage': container_image,
-        'sourceRef': _clean_text(data.get('sourceRef', existing.get('sourceRef', version)), 128),
+        'sourceRef': source_ref,
+        'targetPath': target_path,
         'checksum': checksum,
         'manifestSha256': _clean_text(data.get('manifestSha256', existing.get('manifestSha256', '')), 128).lower(),
         'publishedAt': _clean_text(data.get('publishedAt', existing.get('publishedAt', '')), 64),
@@ -394,7 +455,7 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
     return record, None
 
 
-def _latest_github_release(repository: str, include_prerelease: bool = False) -> dict:
+def _latest_github_release(repository: str, include_prerelease: bool = False, target: str = 'ztf-orchestrator') -> dict:
     url = f'https://api.github.com/repos/{repository}/releases'
     req = urllib.request.Request(
         url,
@@ -418,13 +479,15 @@ def _latest_github_release(repository: str, include_prerelease: bool = False) ->
             continue
         assets = release.get('assets') if isinstance(release.get('assets'), list) else []
         return {
+            'target': target,
             'source': 'github',
             'repository': repository,
             'version': tag,
             'name': release.get('name') or tag,
             'releaseUrl': release.get('html_url') or '',
             'artifactUrl': release.get('zipball_url') or '',
-            'containerImage': f'ghcr.io/virtuarchitect/ztf-orchestrator:{tag}',
+            'containerImage': f'ghcr.io/virtuarchitect/ztf-orchestrator:{tag}' if target == 'ztf-orchestrator' else '',
+            'targetPath': UPDATE_TARGETS.get(target, UPDATE_TARGETS['ztf-orchestrator'])['defaultPath'],
             'sourceRef': tag,
             'publishedAt': release.get('published_at') or '',
             'prerelease': bool(release.get('prerelease')),
@@ -5920,6 +5983,15 @@ def list_appliance_updates():
         'updates': updates,
         'staged': staged,
         'allowedRepositories': sorted(ALLOWED_UPDATE_REPOS),
+        'targets': [
+            {
+                'id': key,
+                'label': value['label'],
+                'defaultRepo': value['defaultRepo'],
+                'defaultPath': value['defaultPath'],
+            }
+            for key, value in UPDATE_TARGETS.items()
+        ],
     })
 
 
@@ -5928,16 +6000,21 @@ def list_appliance_updates():
 @limiter.limit('10 per minute')
 def check_appliance_update():
     payload = request.get_json(silent=True) or {}
-    repository, error = _normalize_release_repo(payload.get('repository'))
+    target = _clean_update_target(payload.get('target'))
+    if not target:
+        return jsonify({'error': 'target must be ztf-orchestrator, ztf-framework, or nkp-framework'}), 400
+    repository, error = _normalize_release_repo(payload.get('repository') or UPDATE_TARGETS[target]['defaultRepo'])
     if error:
         return jsonify({'error': error}), 400
     try:
-        release = _latest_github_release(repository, bool(payload.get('includePrerelease')))
+        release = _latest_github_release(repository, bool(payload.get('includePrerelease')), target)
+        if payload.get('targetPath'):
+            release['targetPath'] = payload.get('targetPath')
         record, error = _clean_update_manifest(release)
         if error:
             return jsonify({'error': error}), 400
         updates = _load_appliance_updates()
-        existing = next((item for item in updates if item.get('repository') == record['repository'] and item.get('version') == record['version']), None)
+        existing = next((item for item in updates if item.get('target') == record['target'] and item.get('repository') == record['repository'] and item.get('version') == record['version']), None)
         if existing:
             record = {**existing, **record, 'id': existing['id'], 'createdAt': existing.get('createdAt', record.get('createdAt'))}
         _save_appliance_updates([record] + [item for item in updates if item.get('id') != record['id']])
@@ -5946,6 +6023,7 @@ def check_appliance_update():
             'user': request.current_user['username'],
             'repository': record['repository'],
             'version': record['version'],
+            'target': record['target'],
         })
         return jsonify(record)
     except Exception as exc:
@@ -5982,6 +6060,7 @@ def import_appliance_update():
         'action': 'appliance_update_imported',
         'user': request.current_user['username'],
         'version': record['version'],
+        'target': record['target'],
         'source': record['source'],
     })
     return jsonify(record), 201
@@ -6003,6 +6082,7 @@ def verify_appliance_update(update_id):
         'action': 'appliance_update_verified',
         'user': request.current_user['username'],
         'version': record['version'],
+        'target': record['target'],
     })
     return jsonify(record)
 
@@ -6017,21 +6097,30 @@ def stage_appliance_update(update_id):
     if not existing.get('verifiedAt'):
         return jsonify({'error': 'Update must be verified before staging'}), 400
     now = _now_iso()
+    target = existing.get('target') or 'ztf-orchestrator'
+    target_info = UPDATE_TARGETS.get(target, UPDATE_TARGETS['ztf-orchestrator'])
+    instructions = [
+        'Create or confirm a current PostgreSQL backup.',
+        'Run appliance/scripts/apply-update-request.sh on the appliance host.',
+        'Confirm /health and the relevant framework status after restart or source update.',
+    ]
+    if target != 'ztf-orchestrator':
+        instructions.insert(1, 'Confirm the target path is an approved git checkout or stage a reviewed checkout at that path.')
     request_doc = {
         'id': str(uuid.uuid4()),
-        'type': 'ztf-orchestrator-container-update',
+        'type': target_info['requestType'],
+        'target': target,
+        'targetLabel': target_info['label'],
         'requestedAt': now,
         'requestedBy': request.current_user['username'],
         'version': existing['version'],
         'containerImage': existing['containerImage'],
+        'repository': existing.get('repository', ''),
+        'targetPath': existing.get('targetPath', ''),
         'sourceRef': existing.get('sourceRef') or existing['version'],
         'releaseUrl': existing.get('releaseUrl', ''),
         'manifestSha256': existing.get('manifestSha256', ''),
-        'instructions': [
-            'Create or confirm a current PostgreSQL backup.',
-            'Run appliance/scripts/apply-update-request.sh on the appliance host.',
-            'Confirm /health returns the staged version after restart.',
-        ],
+        'instructions': instructions,
     }
     write_json(APPLIANCE_UPDATE_REQUEST_FILE, request_doc)
     record = {
@@ -6048,6 +6137,7 @@ def stage_appliance_update(update_id):
         'action': 'appliance_update_staged',
         'user': request.current_user['username'],
         'version': record['version'],
+        'target': record.get('target'),
         'requestPath': str(APPLIANCE_UPDATE_REQUEST_FILE),
     })
     return jsonify({'update': record, 'request': request_doc})
@@ -6069,6 +6159,7 @@ def mark_appliance_update_applied(update_id):
         'action': 'appliance_update_marked_applied',
         'user': request.current_user['username'],
         'version': record['version'],
+        'target': record.get('target'),
     })
     return jsonify(record)
 
@@ -6085,6 +6176,7 @@ def delete_appliance_update(update_id):
         'action': 'appliance_update_deleted',
         'user': request.current_user['username'],
         'version': target.get('version'),
+        'target': target.get('target'),
     })
     return jsonify({'success': True, 'deleted': target})
 

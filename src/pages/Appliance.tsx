@@ -41,6 +41,9 @@ interface ArtifactSummary {
 
 interface UpdateRecord {
   id: string
+  target?: 'ztf-orchestrator' | 'ztf-framework' | 'nkp-framework' | string
+  targetLabel?: string
+  targetPath?: string
   source: 'github' | 'offline' | string
   repository: string
   version: string
@@ -73,6 +76,14 @@ interface UpdateState {
   updates: UpdateRecord[]
   staged?: UpdateRecord | null
   allowedRepositories: string[]
+  targets?: UpdateTarget[]
+}
+
+interface UpdateTarget {
+  id: 'ztf-orchestrator' | 'ztf-framework' | 'nkp-framework' | string
+  label: string
+  defaultRepo: string
+  defaultPath: string
 }
 
 interface ApplianceStatus {
@@ -118,14 +129,22 @@ const EMPTY_ARTIFACT = {
 }
 
 const EXAMPLE_UPDATE_MANIFEST = JSON.stringify({
+  target: 'ztf-orchestrator',
   version: `v${APP_VERSION}`,
   repository: 'VirtuArchitect/ZTF-Orchestrator',
   containerImage: `ghcr.io/virtuarchitect/ztf-orchestrator:v${APP_VERSION}`,
+  targetPath: '',
   sourceRef: `v${APP_VERSION}`,
   releaseUrl: 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/vX.Y.Z',
   checksum: '',
   notes: 'Offline update manifest staged from a connected environment.',
 }, null, 2)
+
+const DEFAULT_UPDATE_TARGETS: UpdateTarget[] = [
+  { id: 'ztf-orchestrator', label: 'ZTF-Orchestrator', defaultRepo: 'VirtuArchitect/ZTF-Orchestrator', defaultPath: '' },
+  { id: 'ztf-framework', label: 'ZeroTouch Framework', defaultRepo: 'nutanixdev/zerotouch-framework', defaultPath: '/opt/zerotouch-framework' },
+  { id: 'nkp-framework', label: 'NKP Framework', defaultRepo: 'VirtuArchitect/nkp-zerotouch-framework', defaultPath: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework' },
+]
 
 export default function Appliance() {
   const user = useStore(s => s.user)
@@ -140,7 +159,9 @@ export default function Appliance() {
   const [summary, setSummary] = useState<ArtifactSummary | null>(null)
   const [form, setForm] = useState(EMPTY_ARTIFACT)
   const [updateState, setUpdateState] = useState<UpdateState | null>(null)
+  const [updateTarget, setUpdateTarget] = useState('ztf-orchestrator')
   const [updateRepo, setUpdateRepo] = useState('VirtuArchitect/ZTF-Orchestrator')
+  const [updateTargetPath, setUpdateTargetPath] = useState('')
   const [includePrerelease, setIncludePrerelease] = useState(false)
   const [updateManifest, setUpdateManifest] = useState(EXAMPLE_UPDATE_MANIFEST)
   const [updateBusy, setUpdateBusy] = useState('')
@@ -185,6 +206,10 @@ export default function Appliance() {
   useEffect(() => {
     load()
   }, [])
+
+  const updateTargets = updateState?.targets?.length ? updateState.targets : DEFAULT_UPDATE_TARGETS
+  const selectedUpdateTarget = updateTargets.find(item => item.id === updateTarget) || updateTargets[0]
+  const frameworkUpdateSelected = selectedUpdateTarget?.id !== 'ztf-orchestrator'
 
   const archiveCoverage = useMemo(() => {
     const profiles = new Set(artifacts.filter(item => ['verified', 'archived'].includes(item.status)).map(item => item.profile))
@@ -235,6 +260,13 @@ export default function Appliance() {
     await load()
   }
 
+  const selectUpdateTarget = (targetId: string) => {
+    const target = updateTargets.find(item => item.id === targetId) || DEFAULT_UPDATE_TARGETS[0]
+    setUpdateTarget(target.id)
+    setUpdateRepo(target.defaultRepo)
+    setUpdateTargetPath(target.defaultPath || '')
+  }
+
   const checkGithubUpdate = async () => {
     setUpdateBusy('check')
     setError('')
@@ -242,14 +274,19 @@ export default function Appliance() {
     try {
       const resp = await apiFetch('/api/appliance/updates/check', {
         method: 'POST',
-        body: JSON.stringify({ repository: updateRepo, includePrerelease }),
+        body: JSON.stringify({
+          target: updateTarget,
+          repository: updateRepo,
+          targetPath: updateTargetPath,
+          includePrerelease,
+        }),
       })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {
         setError(data.error || `Server returned ${resp.status}`)
         return
       }
-      setMessage(`Found ${data.version} from ${data.repository}.`)
+      setMessage(`Found ${data.version} for ${data.targetLabel || data.target || 'update'} from ${data.repository}.`)
       await load()
     } finally {
       setUpdateBusy('')
@@ -270,7 +307,7 @@ export default function Appliance() {
         setError(data.error || `Server returned ${resp.status}`)
         return
       }
-      setMessage(`Imported update manifest for ${data.version}.`)
+      setMessage(`Imported update manifest for ${data.targetLabel || data.target || 'update'} ${data.version}.`)
       await load()
     } finally {
       setUpdateBusy('')
@@ -296,7 +333,7 @@ export default function Appliance() {
   }
 
   const stageUpdate = async (record: UpdateRecord) => {
-    if (!confirm(`Stage update ${record.version}? This writes an appliance update request for host-side application.`)) return
+    if (!confirm(`Stage ${record.targetLabel || record.target || 'update'} ${record.version}? This writes an appliance update request for host-side application.`)) return
     setUpdateBusy(`stage:${record.id}`)
     setError('')
     setMessage('')
@@ -497,7 +534,7 @@ export default function Appliance() {
               <div className="mb-4">
                 <h2 className="font-semibold text-gray-100">Appliance Update Manager</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Discover release metadata from an allowlisted GitHub repository or import an offline manifest, then stage a host-side update request.
+                  Discover release metadata for the appliance, ZeroTouch Framework, or NKP Framework, then stage a host-side update request.
                 </p>
               </div>
 
@@ -507,9 +544,21 @@ export default function Appliance() {
                     <h3 className="text-sm font-semibold text-gray-100">Connected Release Check</h3>
                     <p className="text-xs text-gray-500 mt-1">Fetches GitHub Release metadata only. It does not download or execute release code.</p>
                   </div>
+                  <Field label="Update Target">
+                    <select className="input" value={updateTarget} onChange={event => selectUpdateTarget(event.target.value)} disabled={!canEdit}>
+                      {updateTargets.map(target => (
+                        <option key={target.id} value={target.id}>{target.label}</option>
+                      ))}
+                    </select>
+                  </Field>
                   <Field label="Repository">
                     <input className="input font-mono" value={updateRepo} onChange={event => setUpdateRepo(event.target.value)} disabled={!canEdit} />
                   </Field>
+                  {frameworkUpdateSelected && (
+                    <Field label="Target Path">
+                      <input className="input font-mono" value={updateTargetPath} onChange={event => setUpdateTargetPath(event.target.value)} disabled={!canEdit} placeholder={selectedUpdateTarget?.defaultPath || '/opt/zerotouch-framework'} />
+                    </Field>
+                  )}
                   <label className="flex items-center gap-2 text-sm text-gray-300">
                     <input type="checkbox" checked={includePrerelease} onChange={event => setIncludePrerelease(event.target.checked)} disabled={!canEdit} />
                     Include prereleases
@@ -521,6 +570,11 @@ export default function Appliance() {
                   <p className="text-xs text-gray-500">
                     Allowed repositories: {(updateState?.allowedRepositories || ['virtuarchitect/ztf-orchestrator']).join(', ')}
                   </p>
+                  {frameworkUpdateSelected && (
+                    <p className="text-xs text-gray-500">
+                      Framework targets update a host-visible git checkout at the target path; baked framework copies require an appliance rebuild.
+                    </p>
+                  )}
                 </div>
 
                 <div className="rounded-lg border border-border bg-gray-950/40 p-4 space-y-3">
@@ -549,16 +603,18 @@ export default function Appliance() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold text-gray-100">{record.name || record.version}</h3>
+                        <span className="badge badge-gray text-xs">{record.targetLabel || record.target || 'ZTF-Orchestrator'}</span>
                         <span className={clsx('badge text-xs', updateStatusBadge(record.status))}>{record.status}</span>
                         <span className="badge badge-gray text-xs">{record.source}</span>
                         {record.prerelease && <span className="badge badge-yellow text-xs">prerelease</span>}
                       </div>
                       <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
-                        <span className="font-mono truncate">{record.containerImage}</span>
+                        <span className="font-mono truncate">{record.containerImage || record.targetPath || 'No target path recorded'}</span>
                         <span className="font-mono truncate">{record.repository}</span>
                         <span>{record.publishedAt ? `Published ${formatDate(record.publishedAt)}` : 'No publish date recorded'}</span>
                         <span>{record.stagedAt ? `Staged ${formatDate(record.stagedAt)}` : record.verifiedAt ? `Verified ${formatDate(record.verifiedAt)}` : 'Not verified'}</span>
                       </div>
+                      {record.targetPath && <p className="mt-2 text-xs text-gray-500">Framework path: <span className="font-mono">{record.targetPath}</span></p>}
                       {record.manifestSha256 && <p className="mt-2 font-mono text-xs text-gray-600 break-all">manifest {record.manifestSha256}</p>}
                       {record.checksum && <p className="mt-1 font-mono text-xs text-gray-600 break-all">checksum {record.checksum}</p>}
                       {record.requestPath && <p className="mt-2 text-xs text-gray-500">Host update request: <span className="font-mono">{record.requestPath}</span></p>}
