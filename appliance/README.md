@@ -63,7 +63,7 @@ and restrict access to admin networks.
 By default, the appliance uses the `latest` GHCR image. To pin a release:
 
 ```bash
-sudo ZTF_ORCHESTRATOR_VERSION=v1.4.0 \
+sudo ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
   bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
 ```
 
@@ -237,8 +237,8 @@ Run:
 
 ```bash
 cd appliance
-VERSION=v1.4.0 \
-ZTF_ORCHESTRATOR_VERSION=v1.4.0 \
+VERSION=v1.4.1 \
+ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
 ZTF_BUILD_CONTAINER_IMAGE=true \
 ZTF_PULL_CONTAINER_IMAGES=true \
 ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -482,8 +482,8 @@ The raw Packer commands are:
 cd appliance/packer
 packer init ahv-qcow2.pkr.hcl
 packer build \
-  -var "version=v1.4.0" \
-  -var "ztf_orchestrator_version=v1.4.0" \
+  -var "version=v1.4.1" \
+  -var "ztf_orchestrator_version=v1.4.1" \
   -var "build_container_image=true" \
   -var "pull_container_images=true" \
   -var "ztf_framework_ref=v1.5.2" \

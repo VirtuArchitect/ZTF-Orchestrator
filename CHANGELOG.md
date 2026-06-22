@@ -9,8 +9,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.4.0 and should be moved
+Changes in this section are present on `main` after v1.4.1 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.4.1] - 2026-06-22
+
+### Summary
+Patch release that aligns the runtime, documentation, and container package
+version with the post-v1.4.0 update-management and light-theme fixes already
+present on `main`.
 
 ### Fixed
 - Improved light theme contrast for workflow cards, category badges, muted

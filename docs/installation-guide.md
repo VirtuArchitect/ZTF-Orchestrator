@@ -367,7 +367,7 @@ For a pre-built AHV-importable QCOW2 workflow, see
 4. To pin a released image:
 
    ```bash
-   sudo ZTF_ORCHESTRATOR_VERSION=v1.4.0 \
+   sudo ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
      bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
    ```
 
@@ -591,7 +591,7 @@ staging environment, then transfer them into the disconnected site.
    docker build \
      --build-arg ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git \
      --build-arg ZTF_REF=v1.5.2 \
-     -t ztf-orchestrator:airgap-v1.4.0 .
+     -t ztf-orchestrator:airgap-v1.4.1 .
    ```
 
 3. Pull the PostgreSQL image if using the PostgreSQL Compose deployment:
@@ -603,7 +603,7 @@ staging environment, then transfer them into the disconnected site.
 4. Export images:
 
    ```bash
-   docker save ztf-orchestrator:airgap-v1.4.0 -o ztf-orchestrator-airgap-v1.4.0.tar
+   docker save ztf-orchestrator:airgap-v1.4.1 -o ztf-orchestrator-airgap-v1.4.1.tar
    docker save postgres:16-alpine -o postgres-16-alpine.tar
    ```
 
@@ -620,7 +620,7 @@ staging environment, then transfer them into the disconnected site.
 7. Transfer these files using your approved removable-media or artifact process:
 
    ```text
-   ztf-orchestrator-airgap-v1.4.0.tar
+   ztf-orchestrator-airgap-v1.4.1.tar
    postgres-16-alpine.tar
    ZTF-Orchestrator-source.tar.gz
    NKP framework archive, if used
@@ -694,8 +694,8 @@ remains the prior single-appliance workflow line.
 
    ```bash
    cd appliance
-   VERSION=v1.4.0 \
-   ZTF_ORCHESTRATOR_VERSION=v1.4.0 \
+   VERSION=v1.4.1 \
+   ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
    ZTF_BUILD_CONTAINER_IMAGE=true \
    ZTF_PULL_CONTAINER_IMAGES=true \
    ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -924,7 +924,7 @@ Preloaded NKP bundles are mounted into:
 2. Load images:
 
    ```bash
-   docker load -i ztf-orchestrator-airgap-v1.4.0.tar
+   docker load -i ztf-orchestrator-airgap-v1.4.1.tar
    docker load -i postgres-16-alpine.tar
    ```
 
@@ -954,7 +954,7 @@ Preloaded NKP bundles are mounted into:
    image as the Compose default:
 
    ```bash
-   docker tag ztf-orchestrator:airgap-v1.4.0 ztf-orchestrator:latest
+   docker tag ztf-orchestrator:airgap-v1.4.1 ztf-orchestrator:latest
    ```
 
 7. Start:

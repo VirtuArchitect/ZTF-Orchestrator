@@ -27,7 +27,7 @@ async function seedUiSession(page: Page) {
     }
     if (url.endsWith('/api/appliance/updates')) {
       await route.fulfill({ json: {
-        current: { version: '1.4.0', containerImage: '', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
+        current: { version: '1.4.1', containerImage: '', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
         updates: [],
         staged: null,
         allowedRepositories: ['virtuarchitect/ztf-orchestrator', 'nutanixdev/zerotouch-framework', 'virtuarchitect/nkp-zerotouch-framework'],
