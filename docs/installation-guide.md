@@ -427,6 +427,27 @@ untrusted networks.
    The default QCOW2 build locally builds the ZTF-Orchestrator container image
    inside the appliance and bakes ZeroTouch Framework `v1.5.2` into
    `/opt/zerotouch-framework` inside that container.
+
+   The GitHub **Run workflow** button is only visible to repository users with
+   permission to manually dispatch workflows, typically write-level access or
+   higher. Public and read-only users should download published artifacts, ask a
+   maintainer to run the workflow, or open the **AHV appliance build request**
+   issue template. This is a GitHub permission rule rather than a
+   ZTF-Orchestrator workflow setting.
+
+   Maintainers can run the workflow from the GitHub CLI:
+
+   ```bash
+   gh workflow run ahv-appliance-image.yml \
+     -f artifact_profile=standard \
+     -f source_ref=main \
+     -f image_version=latest \
+     -f ztf_framework_ref=v1.5.2
+   ```
+
+   Pushing a version tag matching `v*` automatically builds all appliance
+   profiles and publishes release checksum/manifest metadata.
+
 2. Download the `.qcow2` and checksum artifact from the workflow run. GitHub
    Releases publish checksum and manifest metadata only because QCOW2 files can
    exceed the GitHub Release 2 GiB per-file asset limit.

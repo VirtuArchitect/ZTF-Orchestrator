@@ -164,6 +164,24 @@ logs.
 
 1. Open **Actions > Build AHV Appliance Image**.
 2. Select **Run workflow**.
+
+   GitHub only shows **Run workflow** for repository users with permission to
+   manually dispatch Actions workflows, typically write-level repository access
+   or higher. Public and read-only users cannot make this button available by
+   changing workflow inputs. They should download published release artifacts,
+   ask a maintainer to run the workflow, or open the **AHV appliance build
+   request** issue template for maintainer review.
+
+   Maintainers can also trigger the workflow from the GitHub CLI:
+
+   ```bash
+   gh workflow run ahv-appliance-image.yml \
+     -f artifact_profile=standard \
+     -f source_ref=main \
+     -f image_version=latest \
+     -f ztf_framework_ref=v1.5.2
+   ```
+
 3. Choose an appliance artifact profile:
 
    ```text
@@ -197,6 +215,10 @@ logs.
    ```
 
 6. Verify `SHA256SUMS-<profile>-<ref>.txt` before importing the image.
+
+Maintainers can publish all appliance profiles by pushing a version tag that
+matches `v*`. Tag builds run automatically and attach checksum and manifest
+metadata to the matching GitHub Release.
 
 Tag builds also attach profile-specific checksum files and an artifact manifest
 to the matching GitHub Release. The QCOW2 images remain GitHub Actions artifacts

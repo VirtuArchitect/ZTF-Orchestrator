@@ -1,0 +1,79 @@
+name: AHV appliance build request
+description: Request a maintainer-run ZTF-Orchestrator AHV QCOW2 appliance build
+title: "[AHV Appliance Build]: "
+labels:
+  - ahv-appliance
+  - build-request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this request when you cannot see **Run workflow** for the **Build AHV Appliance Image** action.
+
+        GitHub only exposes manual workflow dispatch to repository users with sufficient write-level permissions. Public and read-only users can request a build here, then a maintainer can review the request and run the workflow.
+  - type: dropdown
+    id: artifact_profile
+    attributes:
+      label: Appliance artifact profile
+      description: Select the QCOW2 profile that should be built.
+      options:
+        - standard
+        - airgap
+        - minimal
+        - all
+      default: 0
+    validations:
+      required: true
+  - type: input
+    id: source_ref
+    attributes:
+      label: Source ref
+      description: Git branch, tag, or commit to bake into the appliance source checkout.
+      placeholder: v1.4.1
+      value: main
+    validations:
+      required: true
+  - type: input
+    id: image_version
+    attributes:
+      label: Container image version
+      description: ZTF-Orchestrator container tag to preload and run.
+      placeholder: v1.4.1
+      value: latest
+    validations:
+      required: true
+  - type: input
+    id: ztf_framework_ref
+    attributes:
+      label: ZeroTouch Framework ref
+      description: ZeroTouch Framework 1.x ref to bake into the container image.
+      value: v1.5.2
+    validations:
+      required: true
+  - type: input
+    id: nkp_framework_ref
+    attributes:
+      label: NKP framework ref
+      description: NKP ZeroTouch Framework ref to bake into the appliance when NKP is enabled.
+      value: main
+    validations:
+      required: false
+  - type: textarea
+    id: nkp_bundle_urls
+    attributes:
+      label: Optional NKP bundle URLs
+      description: Provide comma-separated connected-staging URLs only. Do not include credentials or private tokens.
+      placeholder: https://mirror.example/nkp-bundle.tgz
+    validations:
+      required: false
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I understand that a maintainer must approve and run the workflow.
+          required: true
+        - label: I have not included passwords, tokens, private keys, or other secrets in this request.
+          required: true
+        - label: I understand that generated workflow artifacts may be visible to users who can access the repository's Actions artifacts.
+          required: true
