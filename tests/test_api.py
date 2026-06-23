@@ -369,6 +369,68 @@ def test_settings_persist_connection_profiles(client, auth_headers):
     assert body['connectionProfiles'][0]['ipam']['method'] == 'infoblox'
 
 
+def test_connection_profile_test_reachable(client, auth_headers, monkeypatch):
+    import server
+
+    calls = []
+
+    def fake_tcp_check(host, port, timeout=5.0):
+        calls.append((host, port, timeout))
+        return True, 12.34
+
+    monkeypatch.setattr(server, '_tcp_check', fake_tcp_check)
+    resp = client.post('/api/settings/test-connection',
+                       json={
+                           'target': 'prismCentral',
+                           'profile': {'prismCentral': {'endpoint': 'https://pc.example.com:9441'}},
+                       },
+                       headers=auth_headers)
+    body = resp.get_json()
+    assert resp.status_code == 200
+    assert body['ok'] is True
+    assert body['host'] == 'pc.example.com'
+    assert body['port'] == 9441
+    assert body['latencyMs'] == 12.3
+    assert calls == [('pc.example.com', 9441, 5.0)]
+
+
+def test_connection_profile_test_reports_missing_endpoint(client, auth_headers, monkeypatch):
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError('should not probe')))
+    resp = client.post('/api/settings/test-connection',
+                       json={'target': 'foundationCentral', 'profile': {'foundationCentral': {}}},
+                       headers=auth_headers)
+    body = resp.get_json()
+    assert resp.status_code == 200
+    assert body['ok'] is False
+    assert body['message'] == 'endpoint is not configured'
+
+
+def test_connection_profile_test_operator_allowed(client, auth_headers, monkeypatch):
+    import server
+
+    _create_user(client, auth_headers, 'op-settings', 'operator')
+    op_headers = _login(client, 'op-settings')
+    monkeypatch.setattr(server, '_tcp_check', lambda host, port, timeout=5.0: (False, 0.0))
+    resp = client.post('/api/settings/test-connection',
+                       json={'target': 'ipam', 'profile': {'ipam': {'method': 'infoblox', 'infobloxHost': 'infoblox.example.com'}}},
+                       headers=op_headers)
+    body = resp.get_json()
+    assert resp.status_code == 200
+    assert body['ok'] is False
+    assert body['host'] == 'infoblox.example.com'
+    assert body['port'] == 443
+
+
+def test_connection_profile_test_rejects_unknown_target(client, auth_headers):
+    resp = client.post('/api/settings/test-connection',
+                       json={'target': 'unknown', 'profile': {}},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert resp.get_json()['message'] == 'unknown connection target'
+
+
 def test_only_admin_can_create_users(client, auth_headers):
     _create_user(client, auth_headers, 'op3', 'operator')
     op_headers = _login(client, 'op3')

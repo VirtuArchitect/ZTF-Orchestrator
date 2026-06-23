@@ -2954,6 +2954,55 @@ def _tcp_check(host: str, port: int, timeout: float = 5.0) -> tuple[bool, float]
     except OSError:
         return False, 0.0
 
+def _endpoint_host_port(value: str, default_port: int) -> tuple[str, int, str] | tuple[None, None, str]:
+    """Resolve a user-supplied endpoint or URL to host/port without credentials."""
+    raw = str(value or '').strip()
+    if not raw:
+        return None, None, 'endpoint is not configured'
+    try:
+        parsed = urllib.parse.urlparse(raw if '://' in raw else f'https://{raw}')
+        host = parsed.hostname
+        port = parsed.port or default_port
+    except ValueError as exc:
+        return None, None, f'invalid endpoint: {exc}'
+    if not host:
+        return None, None, 'endpoint must include a host'
+    if port <= 0 or port > 65535:
+        return None, None, 'endpoint port must be between 1 and 65535'
+    return host, port, ''
+
+
+def _connection_test_target(profile: dict, target: str) -> tuple[str, str, int, str] | tuple[None, None, None, str]:
+    """Return label, host, port, error for a connection profile target."""
+    if not isinstance(profile, dict):
+        return None, None, None, 'profile is required'
+
+    if target == 'prismCentral':
+        host, port, error = _endpoint_host_port(((profile.get('prismCentral') or {}).get('endpoint') or ''), 9440)
+        return 'Prism Central', host, port, error
+    if target == 'foundationCentral':
+        host, port, error = _endpoint_host_port(((profile.get('foundationCentral') or {}).get('endpoint') or ''), 9440)
+        return 'Foundation Central', host, port, error
+    if target == 'prismElement':
+        host, port, error = _endpoint_host_port(((profile.get('prismElement') or {}).get('defaultClusterVip') or ''), 9440)
+        return 'Prism Element / CVM', host, port, error
+    if target == 'ncm':
+        host, port, error = _endpoint_host_port(((profile.get('ncm') or {}).get('endpoint') or ''), 9440)
+        return 'NCM / Calm', host, port, error
+    if target == 'directory':
+        directory = profile.get('directory') or {}
+        raw = str(directory.get('ldapUrl') or directory.get('domain') or '').strip()
+        default_port = 636 if raw.lower().startswith('ldaps://') else 389
+        host, port, error = _endpoint_host_port(raw, default_port)
+        return 'Directory / LDAP', host, port, error
+    if target == 'ipam':
+        ipam = profile.get('ipam') or {}
+        if ipam.get('method') != 'infoblox':
+            return 'Infoblox IPAM', None, None, 'IPAM method is static; no Infoblox endpoint to test'
+        host, port, error = _endpoint_host_port((ipam.get('infobloxHost') or ''), 443)
+        return 'Infoblox IPAM', host, port, error
+    return None, None, None, 'unknown connection target'
+
 
 def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Generator[str, None, None]:
     """Yield SSE events for dry-run pre-flight checks (no subprocess)."""
@@ -4253,6 +4302,39 @@ def post_settings():
     filtered = {k: v for k, v in data.items() if k in ALLOWED_SETTINGS_KEYS}
     write_json(SETTINGS_FILE, filtered)
     return jsonify({'success': True})
+
+@app.route('/api/settings/test-connection', methods=['POST'])
+@require_role('admin', 'operator')
+def test_connection_profile_target():
+    data = request.json or {}
+    target = str(data.get('target') or '').strip()
+    profile = data.get('profile') or {}
+    label, host, port, error = _connection_test_target(profile, target)
+    if error:
+        status_code = 400 if error in {'profile is required', 'unknown connection target'} else 200
+        return jsonify({
+            'ok': False,
+            'target': target,
+            'label': label or target,
+            'host': host,
+            'port': port,
+            'message': error,
+        }), status_code
+
+    reachable, latency_ms = _tcp_check(host, int(port))
+    return jsonify({
+        'ok': reachable,
+        'target': target,
+        'label': label,
+        'host': host,
+        'port': port,
+        'latencyMs': round(latency_ms, 1) if reachable else None,
+        'message': (
+            f'{label} reachable at {host}:{port}'
+            if reachable else
+            f'{label} is not reachable at {host}:{port}'
+        ),
+    })
 
 # ─── System check ─────────────────────────────────────────────────────────────
 

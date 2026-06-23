@@ -37,6 +37,18 @@ interface DatabaseBackup {
   createdAt: string
 }
 
+type ConnectionTestTarget = 'prismCentral' | 'foundationCentral' | 'prismElement' | 'ncm' | 'directory' | 'ipam'
+
+interface ConnectionTestResult {
+  ok: boolean
+  target: ConnectionTestTarget
+  label?: string
+  host?: string
+  port?: number
+  latencyMs?: number | null
+  message: string
+}
+
 function newProfile(seed?: Partial<ConnectionProfile>): ConnectionProfile {
   const id = seed?.id || `profile-${Date.now()}`
   return {
@@ -262,24 +274,30 @@ function Toggle({
 }
 
 function Section({
-  title, subtitle, icon: Icon, children,
+  title, subtitle, icon: Icon, children, action, status,
 }: {
   title: string
   subtitle: string
   icon: LucideIcon
   children: ReactNode
+  action?: ReactNode
+  status?: ReactNode
 }) {
   return (
     <div className="card">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-8 h-8 rounded-lg bg-nutanix-blue/10 border border-nutanix-blue/20 flex items-center justify-center">
-          <Icon size={16} className="text-nutanix-cyan" />
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 shrink-0 rounded-lg bg-nutanix-blue/10 border border-nutanix-blue/20 flex items-center justify-center">
+            <Icon size={16} className="text-nutanix-cyan" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-gray-100">{title}</h3>
+            <p className="text-xs text-gray-500">{subtitle}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-100">{title}</h3>
-          <p className="text-xs text-gray-500">{subtitle}</p>
-        </div>
+        {action}
       </div>
+      {status}
       {children}
     </div>
   )
@@ -323,7 +341,10 @@ export default function Settings() {
   const [restoreConfirm, setRestoreConfirm] = useState('')
   const [restoreUnderstood, setRestoreUnderstood] = useState(false)
   const [restoreRunning, setRestoreRunning] = useState(false)
+  const [connectionTesting, setConnectionTesting] = useState<Record<string, boolean>>({})
+  const [connectionTests, setConnectionTests] = useState<Record<string, ConnectionTestResult>>({})
   const isAdmin = user?.role === 'admin'
+  const canTestConnections = user?.role === 'admin' || user?.role === 'operator'
   const storageBackend = health?.storage || backupStorage
 
   useEffect(() => {
@@ -452,6 +473,80 @@ export default function Settings() {
     await navigator.clipboard.writeText(profileYaml(activeProfile))
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
+  }
+
+  const connectionTestKey = (target: ConnectionTestTarget) => `${activeProfile?.id || 'profile'}:${target}`
+
+  const runConnectionTest = async (target: ConnectionTestTarget) => {
+    if (!activeProfile) return
+    const key = connectionTestKey(target)
+    setConnectionTesting(prev => ({ ...prev, [key]: true }))
+    try {
+      const response = await apiFetch('/api/settings/test-connection', {
+        method: 'POST',
+        body: JSON.stringify({ target, profile: activeProfile }),
+      })
+      const data = await response.json().catch(() => ({}))
+      setConnectionTests(prev => ({
+        ...prev,
+        [key]: {
+          ok: response.ok && Boolean(data.ok),
+          target,
+          label: data.label,
+          host: data.host,
+          port: data.port,
+          latencyMs: data.latencyMs,
+          message: data.message || (response.ok ? 'Connection test completed' : 'Connection test failed'),
+        },
+      }))
+    } catch (error) {
+      setConnectionTests(prev => ({
+        ...prev,
+        [key]: {
+          ok: false,
+          target,
+          message: error instanceof Error ? error.message : 'Connection test failed',
+        },
+      }))
+    } finally {
+      setConnectionTesting(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
+  const connectionTestAction = (target: ConnectionTestTarget) => {
+    const key = connectionTestKey(target)
+    const running = Boolean(connectionTesting[key])
+    return (
+      <button
+        type="button"
+        onClick={() => runConnectionTest(target)}
+        disabled={running || !canTestConnections}
+        className="btn-secondary text-xs gap-1.5 shrink-0"
+        title={canTestConnections ? 'Test TCP reachability for this connection' : 'Admin or operator role required'}
+      >
+        <RefreshCw size={13} className={running ? 'animate-spin' : ''} />
+        {running ? 'Testing...' : 'Test Connection'}
+      </button>
+    )
+  }
+
+  const connectionTestStatus = (target: ConnectionTestTarget) => {
+    const result = connectionTests[connectionTestKey(target)]
+    if (!result) return null
+    const endpoint = result.host && result.port ? `${result.host}:${result.port}` : ''
+    const details = endpoint && !result.message.includes(endpoint) ? ` (${endpoint})` : ''
+    const latency = result.ok && result.latencyMs != null ? ` in ${result.latencyMs} ms` : ''
+    return (
+      <div className={clsx(
+        'mb-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs',
+        result.ok
+          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
+          : 'border-amber-500/30 bg-amber-500/10 text-amber-600'
+      )}>
+        {result.ok ? <ShieldCheck size={14} className="mt-0.5 shrink-0" /> : <AlertTriangle size={14} className="mt-0.5 shrink-0" />}
+        <span>{result.message}{details}{latency}</span>
+      </div>
+    )
   }
 
   const createBackup = async () => {
@@ -764,7 +859,13 @@ export default function Settings() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <Section title="Prism Central" subtitle="PC endpoint and service defaults" icon={Server}>
+              <Section
+                title="Prism Central"
+                subtitle="PC endpoint and service defaults"
+                icon={Server}
+                action={connectionTestAction('prismCentral')}
+                status={connectionTestStatus('prismCentral')}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="PC VIP / FQDN" value={activeProfile.prismCentral.endpoint} disabled={!isAdmin} mono
                     placeholder="10.10.1.10 or pc.example.com"
@@ -789,7 +890,13 @@ export default function Settings() {
                 </div>
               </Section>
 
-              <Section title="Foundation Central" subtitle="Imaging and Day-0 deployment defaults" icon={Network}>
+              <Section
+                title="Foundation Central"
+                subtitle="Imaging and Day-0 deployment defaults"
+                icon={Network}
+                action={connectionTestAction('foundationCentral')}
+                status={connectionTestStatus('foundationCentral')}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="FC / PC Endpoint" value={activeProfile.foundationCentral.endpoint} disabled={!isAdmin} mono
                     placeholder="Foundation Central endpoint"
@@ -825,7 +932,13 @@ export default function Settings() {
                 </div>
               </Section>
 
-              <Section title="Prism Element / CVM" subtitle="Cluster and PC deployment defaults" icon={HardDrive}>
+              <Section
+                title="Prism Element / CVM"
+                subtitle="Cluster and PC deployment defaults"
+                icon={HardDrive}
+                action={connectionTestAction('prismElement')}
+                status={connectionTestStatus('prismElement')}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Default Cluster VIP" value={activeProfile.prismElement.defaultClusterVip} disabled={!isAdmin} mono
                     placeholder="10.10.2.10"
@@ -845,7 +958,13 @@ export default function Settings() {
                 </div>
               </Section>
 
-              <Section title="NCM / Calm" subtitle="NCM Self-Service workload defaults" icon={Database}>
+              <Section
+                title="NCM / Calm"
+                subtitle="NCM Self-Service workload defaults"
+                icon={Database}
+                action={connectionTestAction('ncm')}
+                status={connectionTestStatus('ncm')}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="NCM Endpoint" value={activeProfile.ncm.endpoint} disabled={!isAdmin} mono
                     placeholder="NCM / PC endpoint"
@@ -862,7 +981,13 @@ export default function Settings() {
                 </div>
               </Section>
 
-              <Section title="Directory / Identity" subtitle="AD, LDAP, and role mapping defaults" icon={ShieldCheck}>
+              <Section
+                title="Directory / Identity"
+                subtitle="AD, LDAP, and role mapping defaults"
+                icon={ShieldCheck}
+                action={connectionTestAction('directory')}
+                status={connectionTestStatus('directory')}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Domain" value={activeProfile.directory.domain} disabled={!isAdmin}
                     placeholder="corp.example.com"
@@ -879,7 +1004,13 @@ export default function Settings() {
                 </div>
               </Section>
 
-              <Section title="IPAM and Defaults" subtitle="IP allocation, DNS, NTP, and site defaults" icon={Globe2}>
+              <Section
+                title="IPAM and Defaults"
+                subtitle="IP allocation, DNS, NTP, and site defaults"
+                icon={Globe2}
+                action={connectionTestAction('ipam')}
+                status={connectionTestStatus('ipam')}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="label">IPAM Method</label>
