@@ -3801,6 +3801,14 @@ def get_configs_dir() -> Path:
     _secure_mkdir(d)
     return d
 
+def get_global_config_path() -> Path:
+    """Return the durable Orchestrator-owned global.yml path."""
+    return get_configs_dir() / 'global.yml'
+
+def get_legacy_global_config_path() -> Path:
+    """Return the legacy ZeroTouch Framework global.yml path."""
+    return Path(get_settings()['ztfPath']) / 'config' / 'global.yml'
+
 def safe_config_path(name: str, configs_dir: Path) -> Path | None:
     safe = Path(name).name
     if not safe or safe in ('.', '..'):
@@ -5181,11 +5189,16 @@ def restore_config_backup(name, version):
 @app.route('/api/global-config')
 @require_role('admin', 'operator', 'viewer')
 def get_global_config():
-    settings = get_settings()
-    ztf_path = Path(settings['ztfPath'])
-    global_yml = ztf_path / 'config' / 'global.yml'
+    global_yml = get_global_config_path()
+    legacy_global_yml = get_legacy_global_config_path()
     if global_yml.exists():
-        return jsonify({'content': global_yml.read_text(), 'path': str(global_yml)})
+        return jsonify({'content': global_yml.read_text(encoding='utf-8'), 'path': str(global_yml)})
+    if legacy_global_yml.exists():
+        return jsonify({
+            'content': legacy_global_yml.read_text(encoding='utf-8'),
+            'path': str(legacy_global_yml),
+            'legacy': True,
+        })
     return jsonify({'content': None, 'path': str(global_yml)})
 
 @app.route('/api/global-config', methods=['POST'])
@@ -5195,12 +5208,28 @@ def save_global_config():
     ok, err = validate_yaml(content)
     if not ok:
         return jsonify({'error': f'Invalid YAML: {err}'}), 400
-    settings = get_settings()
-    global_yml = Path(settings['ztfPath']) / 'config' / 'global.yml'
+    global_yml = get_global_config_path()
     global_yml.parent.mkdir(parents=True, exist_ok=True)
     backup_config(global_yml)
     _secure_write(global_yml, content)
-    return jsonify({'success': True})
+
+    legacy_global_yml = get_legacy_global_config_path()
+    mirrored = False
+    if legacy_global_yml.resolve() != global_yml.resolve():
+        try:
+            legacy_global_yml.parent.mkdir(parents=True, exist_ok=True)
+            backup_config(legacy_global_yml)
+            _secure_write(legacy_global_yml, content)
+            mirrored = True
+        except OSError as exc:
+            log.warning('global_config_legacy_mirror_failed', extra={
+                'event': 'global_config_legacy_mirror_failed',
+                'action': 'save_global_config',
+                'path': str(legacy_global_yml),
+                'error': str(exc),
+            })
+
+    return jsonify({'success': True, 'path': str(global_yml), 'legacyPath': str(legacy_global_yml), 'mirrored': mirrored})
 
 # ─── Pipelines ───────────────────────────────────────────────────────────────
 

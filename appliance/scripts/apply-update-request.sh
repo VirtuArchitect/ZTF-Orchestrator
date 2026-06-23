@@ -13,7 +13,7 @@ IMAGE_TAR="${ZTF_UPDATE_IMAGE_TAR:-}"
 if [[ -z "${REQUEST_FILE}" ]]; then
   REQUEST_FILE="${APP_DIR}/appliance_update_request.json"
   if [[ ! -f "${REQUEST_FILE}" && -d "${APP_DIR}" ]]; then
-    container_id="$(docker compose -f "${APP_DIR}/appliance/docker-compose.appliance.yml" ps -q ztf-orchestrator 2>/dev/null || true)"
+    container_id="$(docker compose --env-file "${APP_DIR}/.env" -f "${APP_DIR}/appliance/docker-compose.appliance.yml" ps -q ztf-orchestrator 2>/dev/null || true)"
     if [[ -n "${container_id}" ]]; then
       tmp_request="$(mktemp)"
       if docker cp "${container_id}:/var/lib/ztf-orchestrator/appliance_update_request.json" "${tmp_request}" 2>/dev/null; then
@@ -137,7 +137,7 @@ else
   printf '\nZTF_ORCHESTRATOR_VERSION=%s\n' "${VERSION}" >> .env
 fi
 
-docker compose -f appliance/docker-compose.appliance.yml pull ztf-orchestrator || true
+docker compose --env-file "${APP_DIR}/.env" -f "${APP_DIR}/appliance/docker-compose.appliance.yml" pull ztf-orchestrator || true
 systemctl restart ztf-orchestrator
 
 echo "ZTF-Orchestrator appliance update staged to ${VERSION}."

@@ -17,10 +17,12 @@ jobs:
 
       - name: Validate appliance Compose file
         run: |
-          export POSTGRES_PASSWORD=ci-postgres-password
-          export ZTF_DATABASE_URL=postgresql://ztf:ci-postgres-password@postgres:5432/ztf_orchestrator
-          export ZTF_ORCHESTRATOR_VERSION=${GITHUB_REF_NAME:-latest}
-          docker compose -f appliance/docker-compose.appliance.yml config
+          printf '%s\n' \
+            'POSTGRES_PASSWORD=ci-postgres-password' \
+            'ZTF_DATABASE_URL=postgresql://ztf:ci-postgres-password@postgres:5432/ztf_orchestrator' \
+            "ZTF_ORCHESTRATOR_VERSION=${GITHUB_REF_NAME:-latest}" \
+            > /tmp/ztf-appliance.env
+          docker compose --env-file /tmp/ztf-appliance.env -f appliance/docker-compose.appliance.yml config
 
       - name: Package appliance directory
         run: |

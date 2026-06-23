@@ -335,7 +335,7 @@ For a pre-built AHV-importable QCOW2 workflow, see
 
 ### Prerequisites
 
-1. Ubuntu Server 24.04 LTS or Rocky Linux 9 VM.
+1. Ubuntu Server 24.04 LTS VM for the reference appliance path.
 2. 2 vCPU, 4-8 GB RAM, and 80-100 GB disk.
 3. Network access to GitHub and a container registry, unless using internal
    mirrors or a preloaded image.
@@ -395,7 +395,8 @@ For a pre-built AHV-importable QCOW2 workflow, see
 
    ```bash
    cd /opt/ztf-orchestrator
-   sudo docker compose -f appliance/docker-compose.appliance.yml ps
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml ps
    ```
 
 4. Confirm health:
@@ -840,8 +841,13 @@ Preloaded NKP bundles are mounted into:
    sudo systemctl status ztf-orchestrator-firstboot
    sudo systemctl status ztf-orchestrator
    cd /opt/ztf-orchestrator
-   sudo docker compose -f appliance/docker-compose.appliance.yml ps
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml ps
    ```
+
+   The first-boot script creates `/opt/ztf-orchestrator/.env` and the systemd
+   service passes it explicitly to Docker Compose with `--env-file`. Do not copy
+   this secret-bearing file into `/opt/ztf-orchestrator/appliance/`.
 
 7. Retrieve the generated application admin password:
 
@@ -853,7 +859,8 @@ Preloaded NKP bundles are mounted into:
 
    ```bash
    cd /opt/ztf-orchestrator
-   sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestrator
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml logs ztf-orchestrator
    ```
 
 8. Open the UI and complete initial configuration:
@@ -871,11 +878,14 @@ Preloaded NKP bundles are mounted into:
    cd /opt/ztf-orchestrator
    sudo docker image ls | grep ztf-orchestrator
    sudo docker image ls | grep postgres
-   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /opt/zerotouch-framework
-   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /var/lib/ztf-orchestrator/nkp-zerotouch-framework
-   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /var/lib/ztf-orchestrator/bundles
    curl http://localhost:5001/health
    ```
@@ -904,17 +914,20 @@ Preloaded NKP bundles are mounted into:
 13. Troubleshoot first boot if needed:
 
     ```bash
-    sudo journalctl -u ztf-orchestrator-firstboot -n 300 --no-pager
-    sudo journalctl -u ztf-orchestrator -n 300 --no-pager
-    cd /opt/ztf-orchestrator
-    sudo docker compose -f appliance/docker-compose.appliance.yml ps
-    sudo docker compose -f appliance/docker-compose.appliance.yml logs --tail=200
-    sudo ls -l /opt/ztf-orchestrator/.env
-    sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
-    ```
+   sudo journalctl -u ztf-orchestrator-firstboot -n 300 --no-pager
+   sudo journalctl -u ztf-orchestrator -n 300 --no-pager
+   cd /opt/ztf-orchestrator
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml ps
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml logs --tail=200
+   sudo ls -l /opt/ztf-orchestrator/.env
+   sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
+   ```
 
-    Keep `/opt/ztf-orchestrator/.env` local to the appliance because it contains
-    the generated database password.
+   Keep `/opt/ztf-orchestrator/.env` local to the appliance because it contains
+   the generated database password. Do not copy it into
+   `/opt/ztf-orchestrator/appliance/`.
 
 ### Disconnected Target Environment
 

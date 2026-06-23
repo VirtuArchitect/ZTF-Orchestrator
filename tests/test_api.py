@@ -526,11 +526,29 @@ def test_get_global_config(client, auth_headers):
     assert 'content' in resp.get_json()
 
 
-def test_save_global_config(client, auth_headers):
+def test_save_global_config(client, auth_headers, isolated_data_dir):
     resp = client.post('/api/global-config',
                        json={'content': 'vault_to_use: local\n'},
                        headers=auth_headers)
     assert resp.status_code == 200
+    data = resp.get_json()
+    assert Path(data['path']).name == 'global.yml'
+    assert Path(data['path']).parent.name == 'configs'
+    global_yml = isolated_data_dir / 'configs' / 'global.yml'
+    assert global_yml.read_text() == 'vault_to_use: local\n'
+
+
+def test_get_global_config_falls_back_to_legacy_path(client, auth_headers, isolated_data_dir):
+    legacy_global_yml = isolated_data_dir / 'default-legacy-ztf' / 'config' / 'global.yml'
+    legacy_global_yml.parent.mkdir()
+    legacy_global_yml.write_text('vault_to_use: local\n')
+
+    resp = client.get('/api/global-config', headers=auth_headers)
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['content'] == 'vault_to_use: local\n'
+    assert data['legacy'] is True
 
 
 # ── Drift detection ──────────────────────────────────────────────────────────

@@ -37,7 +37,7 @@ QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 | vCPU | 2 |
 | RAM | 4-8 GB |
 | Disk | 80-100 GB |
-| OS | Ubuntu Server 24.04 LTS or Rocky Linux 9 |
+| OS | Ubuntu Server 24.04 LTS for the QCOW2 appliance build |
 | Network | Management VLAN with access to Prism Central, Foundation Central, Prism Element/CVMs, DNS, NTP, Git, and IPAM |
 
 ## Quick Deploy on a Fresh Ubuntu VM
@@ -58,6 +58,10 @@ http://<vm-ip>:5001
 For production-style use, put nginx or another reverse proxy with TLS in front
 and restrict access to admin networks.
 
+The reference AHV QCOW2 build uses Ubuntu Server cloud images. Manual host
+installs may work on other systemd-based Linux distributions, but the packaged
+appliance build and validation path is Ubuntu/Debian-family.
+
 ## Version Pinning
 
 By default, the appliance uses the `latest` GHCR image. To pin a release:
@@ -68,6 +72,9 @@ sudo ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
 ```
 
 The first-boot script writes this value into `/opt/ztf-orchestrator/.env`.
+The systemd service passes that file explicitly to Docker Compose with
+`--env-file`, so the file must remain in `/opt/ztf-orchestrator` and does not
+need to be copied into `/opt/ztf-orchestrator/appliance`.
 
 The current appliance image is built with ZeroTouch Framework `v1.5.2` because
 ZTF-Orchestrator's workflow and script launcher targets the legacy 1.x
@@ -87,6 +94,7 @@ The appliance kit never stores real secrets in Git. On first boot, the script:
 - creates `/opt/ztf-orchestrator/.env` if it does not exist;
 - generates a random `POSTGRES_PASSWORD` if one is not supplied;
 - writes `ZTF_DATABASE_URL` using the generated password;
+- passes `/opt/ztf-orchestrator/.env` explicitly to Docker Compose;
 - leaves application admin password creation to ZTF-Orchestrator first start.
 
 Retrieve the generated application admin password with:
@@ -99,7 +107,8 @@ or:
 
 ```bash
 cd /opt/ztf-orchestrator
-sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestrator
+sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+  -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml logs ztf-orchestrator
 ```
 
 ## Pre-Built AHV QCOW2 Appliance
@@ -363,12 +372,14 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
    sudo systemctl status ztf-orchestrator-firstboot
    sudo systemctl status ztf-orchestrator
    cd /opt/ztf-orchestrator
-   sudo docker compose -f appliance/docker-compose.appliance.yml ps
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml ps
    ```
 
    First boot creates `/opt/ztf-orchestrator/.env`, generates the PostgreSQL
    password, installs/enables the runtime systemd service, and starts Docker
-   Compose.
+   Compose. The env file is passed explicitly with `--env-file`; do not copy it
+   into the `appliance/` subdirectory.
 
 7. Retrieve the generated application admin password.
 
@@ -381,7 +392,8 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
 
    ```bash
    cd /opt/ztf-orchestrator
-   sudo docker compose -f appliance/docker-compose.appliance.yml logs ztf-orchestrator
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml logs ztf-orchestrator
    ```
 
 8. Open the web UI.
@@ -399,11 +411,14 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
    cd /opt/ztf-orchestrator
    sudo docker image ls | grep ztf-orchestrator
    sudo docker image ls | grep postgres
-   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /opt/zerotouch-framework
-   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /var/lib/ztf-orchestrator/nkp-zerotouch-framework
-   sudo docker compose -f appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /var/lib/ztf-orchestrator/bundles
    curl http://localhost:5001/health
    ```
@@ -435,17 +450,20 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
 12. Troubleshoot first boot if needed.
 
     ```bash
-    sudo journalctl -u ztf-orchestrator-firstboot -n 300 --no-pager
-    sudo journalctl -u ztf-orchestrator -n 300 --no-pager
-    cd /opt/ztf-orchestrator
-    sudo docker compose -f appliance/docker-compose.appliance.yml ps
-    sudo docker compose -f appliance/docker-compose.appliance.yml logs --tail=200
-    sudo ls -l /opt/ztf-orchestrator/.env
-    sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
-    ```
+   sudo journalctl -u ztf-orchestrator-firstboot -n 300 --no-pager
+   sudo journalctl -u ztf-orchestrator -n 300 --no-pager
+   cd /opt/ztf-orchestrator
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml ps
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml logs --tail=200
+   sudo ls -l /opt/ztf-orchestrator/.env
+   sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
+   ```
 
-    Keep `/opt/ztf-orchestrator/.env` local to the appliance. It contains the
-    generated database password and must not be copied into Git.
+   Keep `/opt/ztf-orchestrator/.env` local to the appliance. It contains the
+   generated database password and must not be copied into Git or into the
+   `appliance/` source directory.
 
 ### Offline or Restricted Sites
 

@@ -27,6 +27,7 @@ export default function GlobalConfig() {
   const [showPasswords, setShowPasswords] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [activeTab, setActiveTab] = useState<'credentials' | 'vault' | 'ipam' | 'preview'>('credentials')
 
   const [cyberark, setCyberark] = useState({ host: '', certFile: '', keyFile: '' })
@@ -96,14 +97,22 @@ export default function GlobalConfig() {
 
   const save = async () => {
     setSaving(true)
+    setSaveError('')
     try {
-      await apiFetch('/api/global-config', {
+      const resp = await apiFetch('/api/global-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: getYaml() }),
       })
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        throw new Error(data.error || `Save failed with status ${resp.status}`)
+      }
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setSaved(false)
+      setSaveError(err instanceof Error ? err.message : 'Unable to save global configuration')
     } finally {
       setSaving(false)
     }
@@ -142,6 +151,12 @@ export default function GlobalConfig() {
       }
     >
       {/* Tabs */}
+      {saveError && (
+        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {saveError}
+        </div>
+      )}
+
       <div className="flex gap-1 mb-6 bg-surface rounded-lg p-1 border border-border w-fit">
         {TABS.map(tab => (
           <button

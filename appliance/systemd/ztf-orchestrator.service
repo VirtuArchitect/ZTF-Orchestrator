@@ -9,8 +9,8 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=/opt/ztf-orchestrator
 RemainAfterExit=yes
-ExecStart=/usr/bin/docker compose -f appliance/docker-compose.appliance.yml up -d
-ExecStop=/usr/bin/docker compose -f appliance/docker-compose.appliance.yml down
+ExecStart=/usr/bin/docker compose --env-file /opt/ztf-orchestrator/.env -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml up -d
+ExecStop=/usr/bin/docker compose --env-file /opt/ztf-orchestrator/.env -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml down
 TimeoutStartSec=0
 
 [Install]

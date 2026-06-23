@@ -57,7 +57,7 @@ fi
 cd "${APP_DIR}"
 
 if [[ ! -f .env ]]; then
-  POSTGRES_PASSWORD_VALUE="${POSTGRES_PASSWORD:-$(openssl rand -base64 32 | tr -d '\n')}"
+  POSTGRES_PASSWORD_VALUE="${POSTGRES_PASSWORD:-$(openssl rand -hex 32)}"
   cat > .env <<EOF
 ZTF_ORCHESTRATOR_VERSION=${IMAGE_VERSION}
 ZTF_HOST_BIND=${HOST_BIND}
@@ -78,7 +78,7 @@ install -m 0644 "${APP_DIR}/appliance/systemd/ztf-orchestrator.service" /etc/sys
 systemctl daemon-reload
 systemctl enable ztf-orchestrator
 
-docker compose -f appliance/docker-compose.appliance.yml pull || true
+docker compose --env-file "${APP_DIR}/.env" -f "${APP_DIR}/appliance/docker-compose.appliance.yml" pull || true
 systemctl restart ztf-orchestrator
 
 cat <<'EOF'
@@ -87,7 +87,7 @@ ZTF-Orchestrator appliance started.
 Useful commands:
   sudo systemctl status ztf-orchestrator
   sudo journalctl -u ztf-orchestrator -f
-  cd /opt/ztf-orchestrator && sudo docker compose -f appliance/docker-compose.appliance.yml ps
+  sudo docker compose --env-file /opt/ztf-orchestrator/.env -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml ps
 
 Open:
   http://<appliance-ip>:5001
