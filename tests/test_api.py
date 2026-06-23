@@ -381,8 +381,8 @@ def test_connection_profile_test_reachable(client, auth_headers, monkeypatch):
     monkeypatch.setattr(server, '_tcp_check', fake_tcp_check)
     resp = client.post('/api/settings/test-connection',
                        json={
-                           'target': 'prismCentral',
-                           'profile': {'prismCentral': {'endpoint': 'https://pc.example.com:9441'}},
+                           'target': 'ncm',
+                           'profile': {'ncm': {'endpoint': 'https://pc.example.com:9441'}},
                        },
                        headers=auth_headers)
     body = resp.get_json()
@@ -392,6 +392,78 @@ def test_connection_profile_test_reachable(client, auth_headers, monkeypatch):
     assert body['port'] == 9441
     assert body['latencyMs'] == 12.3
     assert calls == [('pc.example.com', 9441, 5.0)]
+
+
+def test_connection_profile_prism_central_full_login(client, auth_headers, monkeypatch):
+    import server
+
+    resp = client.post('/api/global-config',
+                       json={'content': (
+                           'vault_to_use: local\n'
+                           'ip_allocation_method: static\n'
+                           'vaults:\n'
+                           '  local:\n'
+                           '    credentials:\n'
+                           '      pc_user:\n'
+                           '        username: admin\n'
+                           '        password: secret\n'
+                       )},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+    captured = {}
+
+    class FakeResponse:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def fake_urlopen(req, timeout=0, context=None):
+        captured['url'] = req.full_url
+        captured['authorization'] = req.get_header('Authorization')
+        captured['timeout'] = timeout
+        captured['context'] = context
+        return FakeResponse()
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+    resp = client.post('/api/settings/test-connection',
+                       json={
+                           'target': 'prismCentral',
+                           'profile': {'prismCentral': {'endpoint': 'pc.example.com', 'credentialRef': 'pc_user'}},
+                       },
+                       headers=auth_headers)
+    body = resp.get_json()
+    assert resp.status_code == 200
+    assert body['ok'] is True
+    assert body['auth'] is True
+    assert body['tlsVerified'] is False
+    assert body['host'] == 'pc.example.com'
+    assert body['port'] == 9440
+    assert captured['url'] == 'https://pc.example.com:9440/api/nutanix/v3/users/me'
+    assert captured['authorization'].startswith('Basic ')
+    assert captured['timeout'] == 10
+    assert captured['context'] is not None
+
+
+def test_connection_profile_prism_central_missing_credential(client, auth_headers, monkeypatch):
+    import server
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError('should not authenticate')))
+    resp = client.post('/api/settings/test-connection',
+                       json={
+                           'target': 'prismCentral',
+                           'profile': {'prismCentral': {'endpoint': 'pc.example.com', 'credentialRef': 'missing'}},
+                       },
+                       headers=auth_headers)
+    body = resp.get_json()
+    assert resp.status_code == 200
+    assert body['ok'] is False
+    assert body['auth'] is True
+    assert body['message'] == 'credential reference missing was not found in global.yml'
 
 
 def test_connection_profile_test_reports_missing_endpoint(client, auth_headers, monkeypatch):

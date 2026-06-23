@@ -2,6 +2,7 @@
 """ZeroTouch Enterprise Orchestrator — Flask Backend (production-hardened)"""
 
 import datetime
+import base64
 import hashlib
 import ipaddress
 import json
@@ -11,9 +12,12 @@ import queue
 import re
 import secrets
 import socket
+import ssl
 import stat
 import subprocess
 import sys
+import time
+import urllib.error
 import threading
 import urllib.parse
 import urllib.request
@@ -3004,6 +3008,76 @@ def _connection_test_target(profile: dict, target: str) -> tuple[str, str, int, 
     return None, None, None, 'unknown connection target'
 
 
+def _load_global_config_data() -> dict:
+    global_yml = get_global_config_path()
+    legacy_global_yml = get_legacy_global_config_path()
+    path = global_yml if global_yml.exists() else legacy_global_yml
+    if not path.exists():
+        return {}
+    try:
+        parsed = yaml.safe_load(path.read_text(encoding='utf-8')) or {}
+        return parsed if isinstance(parsed, dict) else {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def _lookup_credential_ref(ref: str) -> tuple[str | None, str | None, str]:
+    ref = str(ref or '').strip()
+    if not ref:
+        return None, None, 'credential reference is not configured'
+
+    config = _load_global_config_data()
+    vaults = config.get('vaults') if isinstance(config.get('vaults'), dict) else {}
+    vault_order = []
+    active_vault = str(config.get('vault_to_use') or '').strip()
+    if active_vault:
+        vault_order.append(active_vault)
+    vault_order.extend([name for name in ('local', 'cyberark') if name not in vault_order])
+
+    for vault_name in vault_order:
+        vault = vaults.get(vault_name) if isinstance(vaults, dict) else None
+        credentials = vault.get('credentials') if isinstance(vault, dict) else None
+        entry = credentials.get(ref) if isinstance(credentials, dict) else None
+        if isinstance(entry, dict):
+            username = str(entry.get('username') or '').strip()
+            password = str(entry.get('password') or '')
+            if not username or not password:
+                return None, None, f'credential reference {ref} is missing username or password'
+            return username, password, ''
+
+    return None, None, f'credential reference {ref} was not found in global.yml'
+
+
+def _prism_central_login_check(host: str, port: int, credential_ref: str) -> tuple[bool, str, float]:
+    username, password, error = _lookup_credential_ref(credential_ref)
+    if error:
+        return False, error, 0.0
+
+    token = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
+    url = f'https://{host}:{port}/api/nutanix/v3/users/me'
+    req = urllib.request.Request(url, headers={
+        'Authorization': f'Basic {token}',
+        'Accept': 'application/json',
+    })
+    context = ssl._create_unverified_context()
+    started = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=10, context=context) as resp:  # nosec B310 - operator-configured Prism Central endpoint.
+            latency_ms = (time.monotonic() - started) * 1000
+            if 200 <= getattr(resp, 'status', 0) < 300:
+                return True, f'Prism Central login succeeded for credential reference {credential_ref}', latency_ms
+            return False, f'Prism Central returned HTTP {getattr(resp, "status", "unknown")}', latency_ms
+    except urllib.error.HTTPError as exc:
+        latency_ms = (time.monotonic() - started) * 1000
+        if exc.code in {401, 403}:
+            return False, f'Prism Central rejected credential reference {credential_ref} with HTTP {exc.code}', latency_ms
+        return False, f'Prism Central API returned HTTP {exc.code}', latency_ms
+    except urllib.error.URLError as exc:
+        return False, f'Prism Central login request failed: {exc.reason}', 0.0
+    except OSError as exc:
+        return False, f'Prism Central login request failed: {exc}', 0.0
+
+
 def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Generator[str, None, None]:
     """Yield SSE events for dry-run pre-flight checks (no subprocess)."""
 
@@ -4320,6 +4394,21 @@ def test_connection_profile_target():
             'port': port,
             'message': error,
         }), status_code
+
+    if target == 'prismCentral':
+        credential_ref = ((profile.get('prismCentral') or {}).get('credentialRef') or '')
+        ok, message, auth_latency_ms = _prism_central_login_check(host, int(port), credential_ref)
+        return jsonify({
+            'ok': ok,
+            'target': target,
+            'label': label,
+            'host': host,
+            'port': port,
+            'latencyMs': round(auth_latency_ms, 1) if auth_latency_ms else None,
+            'auth': True,
+            'tlsVerified': False,
+            'message': message,
+        })
 
     reachable, latency_ms = _tcp_check(host, int(port))
     return jsonify({
