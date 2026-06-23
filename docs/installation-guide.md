@@ -261,7 +261,16 @@ ZeroTouch Framework at build time under `/opt/zerotouch-framework`.
    docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework
    ```
 
-4. Confirm persistent data volume:
+4. Confirm the baked framework runtime dependencies:
+
+   ```bash
+   docker exec -w /opt/zerotouch-framework ztf-orchestrator \
+     /opt/ztf-python/bin/python -c "import rainbow_logging_handler; import ntnx_iam_py_client; import scrypt; import framework.helpers.log_utils"
+   docker exec -w /opt/zerotouch-framework ztf-orchestrator \
+     /opt/ztf-python/bin/python main.py --help
+   ```
+
+5. Confirm persistent data volume:
 
    ```bash
    docker volume ls | grep ztf

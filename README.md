@@ -621,6 +621,12 @@ cannot `git pull` that baked copy. To update the bundled framework, rebuild the
 image with the desired `ZTF_REF` or point Settings > Framework Location at a
 separate cloned ZTF 1.x checkout.
 
+The image also installs the pinned ZeroTouch Framework runtime dependencies in
+the dedicated `/opt/ztf-python` virtual environment. If workflow execution fails
+with a missing module such as `rainbow_logging_handler`, rebuild or update the
+container image so the baked framework and its Python dependencies are refreshed
+together.
+
 ---
 
 ## Data Storage

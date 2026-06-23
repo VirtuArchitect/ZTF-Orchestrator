@@ -90,6 +90,10 @@ jobs:
             ztf-orchestrator:${{ github.sha }}
           for i in {1..12}; do
             if curl -fsS http://localhost:5001/health; then
+              docker exec -w /opt/zerotouch-framework smoke \
+                /opt/ztf-python/bin/python -c "import rainbow_logging_handler; import ntnx_iam_py_client; import scrypt; import framework.helpers.log_utils"
+              docker exec -w /opt/zerotouch-framework smoke \
+                /opt/ztf-python/bin/python main.py --help
               docker stop smoke
               exit 0
             fi
