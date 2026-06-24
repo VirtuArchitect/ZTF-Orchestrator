@@ -178,6 +178,8 @@ docker compose -f docker-compose.file.yml up -d --build
 See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
 See [Validation Status](docs/validation-status.md) for what has been locally
 validated and what still requires infrastructure UAT.
+See [Prism Central Simulator](docs/prism-central-simulator.md) for local
+Prism-shaped smoke testing without Nutanix hardware.
 See [NKP v2.17 Alignment](docs/nkp-v217-alignment.md) for a traceability matrix
 between the NKP guide, the NKP framework, and the current ZTF-Orchestrator
 integration.

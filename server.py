@@ -2976,6 +2976,24 @@ def _endpoint_host_port(value: str, default_port: int) -> tuple[str, int, str] |
     return host, port, ''
 
 
+def _endpoint_scheme(value: str, default_scheme: str = 'https') -> str:
+    raw = str(value or '').strip()
+    if not raw or '://' not in raw:
+        return default_scheme
+    scheme = urllib.parse.urlparse(raw).scheme.lower()
+    return scheme if scheme in {'http', 'https'} else default_scheme
+
+
+def _is_loopback_host(host: str) -> bool:
+    normalized = str(host or '').strip().lower()
+    if normalized in {'localhost', '127.0.0.1', '::1'}:
+        return True
+    try:
+        return ipaddress.ip_address(normalized).is_loopback
+    except ValueError:
+        return False
+
+
 def _connection_test_target(profile: dict, target: str) -> tuple[str, str, int, str] | tuple[None, None, None, str]:
     """Return label, host, port, error for a connection profile target."""
     if not isinstance(profile, dict):
@@ -3048,13 +3066,17 @@ def _lookup_credential_ref(ref: str) -> tuple[str | None, str | None, str]:
     return None, None, f'credential reference {ref} was not found in global.yml'
 
 
-def _prism_central_login_check(host: str, port: int, credential_ref: str) -> tuple[bool, str, float]:
+def _prism_central_login_check(host: str, port: int, credential_ref: str, scheme: str = 'https') -> tuple[bool, str, float]:
+    scheme = scheme if scheme in {'http', 'https'} else 'https'
+    if scheme == 'http' and not _is_loopback_host(host):
+        return False, 'HTTP Prism Central login checks are only allowed for loopback simulator endpoints', 0.0
+
     username, password, error = _lookup_credential_ref(credential_ref)
     if error:
         return False, error, 0.0
 
     token = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
-    url = f'https://{host}:{port}/api/nutanix/v3/users/me'
+    url = f'{scheme}://{host}:{port}/api/nutanix/v3/users/me'
     req = urllib.request.Request(url, headers={
         'Authorization': f'Basic {token}',
         'Accept': 'application/json',
@@ -4396,8 +4418,10 @@ def test_connection_profile_target():
         }), status_code
 
     if target == 'prismCentral':
-        credential_ref = ((profile.get('prismCentral') or {}).get('credentialRef') or '')
-        ok, message, auth_latency_ms = _prism_central_login_check(host, int(port), credential_ref)
+        prism_profile = profile.get('prismCentral') or {}
+        credential_ref = (prism_profile.get('credentialRef') or '')
+        scheme = _endpoint_scheme(prism_profile.get('endpoint') or '')
+        ok, message, auth_latency_ms = _prism_central_login_check(host, int(port), credential_ref, scheme)
         return jsonify({
             'ok': ok,
             'target': target,
@@ -4407,6 +4431,7 @@ def test_connection_profile_target():
             'latencyMs': round(auth_latency_ms, 1) if auth_latency_ms else None,
             'auth': True,
             'tlsVerified': False,
+            'scheme': scheme,
             'message': message,
         })
 
