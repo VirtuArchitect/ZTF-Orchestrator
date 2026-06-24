@@ -27,6 +27,22 @@ export default function Terminal({ logs, status, title, onClose }: TerminalProps
     navigator.clipboard.writeText(text)
   }
 
+  const logTextClass = (line: LogLine) => {
+    if (line.type === 'step') return 'text-nutanix-cyan font-medium'
+    if (line.type === 'done') return 'text-nutanix-teal'
+    if (line.type === 'start') return 'text-gray-500'
+    if (line.type === 'log') return 'text-blue-400'
+
+    const text = String(line.data || '').replace(/\x1b\[[0-9;]*m/g, '').toUpperCase()
+    const hasErrorSignal = /\[(ERROR|CRITICAL|FATAL)\]/.test(text)
+      || /\b(ERROR|CRITICAL|FATAL|TRACEBACK|EXCEPTION|FAILED)\b/.test(text)
+    if (line.type === 'error' || hasErrorSignal) return 'text-red-400'
+    if (/\[(WARNING|WARN)\]/.test(text) || /\b(WARNING|WARN)\b/.test(text)) return 'text-yellow-300'
+    if (/\[(PASS|SUCCESS)\]/.test(text) || /\b(PASS|SUCCESS|COMPLETED)\b/.test(text)) return 'text-nutanix-teal'
+
+    return 'text-gray-100'
+  }
+
   return (
     <div className="flex flex-col bg-gray-950 rounded-xl border border-border overflow-hidden">
       {/* Terminal Header */}
@@ -77,13 +93,7 @@ export default function Terminal({ logs, status, title, onClose }: TerminalProps
         {logs.map((line, i) => (
           <div key={i} className={clsx(
             'whitespace-pre-wrap break-all',
-            line.type === 'stderr' ? 'text-red-400' :
-            line.type === 'step' ? 'text-nutanix-cyan font-medium' :
-            line.type === 'error' ? 'text-red-400' :
-            line.type === 'done' ? 'text-nutanix-teal' :
-            line.type === 'start' ? 'text-gray-500' :
-            line.type === 'log' ? 'text-blue-400' :
-            'text-gray-300'
+            logTextClass(line)
           )}>
             {line.type === 'step' && '▶ '}
             {line.type === 'done' && '✓ '}
