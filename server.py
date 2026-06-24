@@ -10,6 +10,7 @@ import logging
 import os
 import queue
 import re
+import shutil
 import secrets
 import socket
 import ssl
@@ -62,7 +63,8 @@ STORAGE_BACKEND = os.environ.get('ZTF_STORAGE_BACKEND', 'file').strip().lower() 
 AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
-APP_VERSION = '1.4.1'
+UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
+APP_VERSION = '1.5.0'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -81,6 +83,7 @@ VALIDATION_EVIDENCE_FILE = CONFIG_DIR / 'validation_evidence.json'
 APPLIANCE_ARTIFACTS_FILE = CONFIG_DIR / 'appliance_artifacts.json'
 APPLIANCE_UPDATES_FILE = CONFIG_DIR / 'appliance_updates.json'
 APPLIANCE_UPDATE_REQUEST_FILE = CONFIG_DIR / 'appliance_update_request.json'
+APPLIANCE_UPDATE_PACKAGES_DIR = CONFIG_DIR / 'appliance-update-packages'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
@@ -327,6 +330,10 @@ def _clean_update_target(value: str | None) -> str | None:
     return target if target in UPDATE_TARGETS else None
 
 
+def _is_absolute_filesystem_path(value: str) -> bool:
+    return bool(value) and (value.startswith('/') or Path(value).is_absolute())
+
+
 def _update_status(record: dict) -> str:
     if record.get('appliedAt'):
         return 'applied'
@@ -398,6 +405,16 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
     if checksum and not re.fullmatch(r'[a-f0-9]{64}', checksum):
         return None, 'checksum must be a SHA-256 hex digest'
 
+    image_tar_path = _clean_text(data.get('imageTarPath', existing.get('imageTarPath', '')), 512)
+    framework_archive_path = _clean_text(data.get('frameworkArchivePath', existing.get('frameworkArchivePath', '')), 512)
+    for field_name, path_text in (('imageTarPath', image_tar_path), ('frameworkArchivePath', framework_archive_path)):
+        if path_text and not _is_absolute_filesystem_path(path_text):
+            return None, f'{field_name} must be an absolute staged appliance path'
+    if target == 'ztf-orchestrator' and framework_archive_path:
+        return None, 'frameworkArchivePath is only valid for framework updates'
+    if target != 'ztf-orchestrator' and image_tar_path:
+        return None, 'imageTarPath is only valid for ztf-orchestrator updates'
+
     source_ref = _clean_text(data.get('sourceRef', existing.get('sourceRef', version)), 128)
     if not _valid_git_ref(source_ref):
         return None, 'sourceRef must be a safe git ref or release tag'
@@ -418,6 +435,31 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
                 'url': _clean_text(asset.get('url', asset.get('browser_download_url', '')), 512),
             })
 
+    raw_package_artifacts = data.get('packageArtifacts', existing.get('packageArtifacts', []))
+    package_artifacts = []
+    if isinstance(raw_package_artifacts, list):
+        for artifact in raw_package_artifacts[:20]:
+            if not isinstance(artifact, dict):
+                continue
+            try:
+                size_bytes = int(artifact.get('sizeBytes') or 0)
+            except (TypeError, ValueError):
+                size_bytes = 0
+            path_text = _clean_text(artifact.get('path', ''), 512)
+            if path_text and not _is_absolute_filesystem_path(path_text):
+                return None, 'package artifact paths must be absolute staged appliance paths'
+            sha = _clean_text(artifact.get('sha256', ''), 128).lower()
+            if sha and not re.fullmatch(r'[a-f0-9]{64}', sha):
+                return None, 'package artifact sha256 must be a SHA-256 hex digest'
+            package_artifacts.append({
+                'type': _clean_text(artifact.get('type', ''), 64),
+                'name': _clean_text(artifact.get('name', ''), 160),
+                'path': path_text,
+                'relativePath': _clean_text(artifact.get('relativePath', ''), 256),
+                'sha256': sha,
+                'sizeBytes': max(0, size_bytes),
+            })
+
     now = _now_iso()
     record = {
         **existing,
@@ -433,11 +475,14 @@ def _clean_update_manifest(data: dict, existing: dict | None = None) -> tuple[di
         'sourceRef': source_ref,
         'targetPath': target_path,
         'checksum': checksum,
+        'imageTarPath': image_tar_path,
+        'frameworkArchivePath': framework_archive_path,
         'manifestSha256': _clean_text(data.get('manifestSha256', existing.get('manifestSha256', '')), 128).lower(),
         'publishedAt': _clean_text(data.get('publishedAt', existing.get('publishedAt', '')), 64),
         'notes': _clean_text(data.get('notes', existing.get('notes', '')), 1200),
         'prerelease': bool(data.get('prerelease', existing.get('prerelease', False))),
         'assets': assets,
+        'packageArtifacts': package_artifacts,
         'verifiedAt': _clean_text(data.get('verifiedAt', existing.get('verifiedAt', '')), 64),
         'verifiedBy': _clean_text(data.get('verifiedBy', existing.get('verifiedBy', '')), 128),
         'stagedAt': _clean_text(data.get('stagedAt', existing.get('stagedAt', '')), 64),
@@ -507,6 +552,156 @@ def _latest_github_release(repository: str, include_prerelease: bool = False, ta
             ][:20],
         }
     raise RuntimeError('No matching GitHub release was found')
+
+
+def _safe_update_package_filename(name: str) -> str:
+    filename = Path(name or '').name
+    filename = re.sub(r'[^A-Za-z0-9._-]+', '-', filename).strip('.-')
+    if not filename:
+        filename = f'ztf-update-package-{uuid.uuid4().hex[:8]}.zip'
+    if not filename.lower().endswith('.zip'):
+        filename = f'{filename}.zip'
+    return filename[:180]
+
+
+def _safe_update_package_member(path_text: str) -> str | None:
+    if not isinstance(path_text, str):
+        return None
+    normalized = path_text.strip().replace('\\', '/')
+    if normalized.startswith('/') or re.match(r'^[A-Za-z]:', normalized):
+        return None
+    if not normalized or normalized.endswith('/'):
+        return None
+    parts = [part for part in normalized.split('/') if part]
+    if any(part in {'.', '..'} for part in parts):
+        return None
+    if any(':' in part for part in parts):
+        return None
+    if len(parts) > 8:
+        return None
+    return '/'.join(parts)
+
+
+def _load_update_package_manifest(package_path: Path) -> tuple[dict | None, str | None, str | None]:
+    try:
+        with zipfile.ZipFile(package_path) as archive:
+            manifest_name = next((name for name in archive.namelist() if name.strip('/').lower() == 'manifest.json'), None)
+            if not manifest_name:
+                return None, None, 'manifest.json is required at the package root'
+            raw = archive.read(manifest_name)
+    except (OSError, zipfile.BadZipFile) as exc:
+        return None, None, f'update package must be a valid zip file: {exc}'
+    try:
+        manifest = json.loads(raw.decode('utf-8'))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return None, None, f'manifest.json must be valid UTF-8 JSON: {exc}'
+    if not isinstance(manifest, dict):
+        return None, None, 'manifest.json must contain a JSON object'
+    manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+    return manifest, manifest_sha, None
+
+
+def _package_artifacts(manifest: dict) -> list[dict]:
+    artifacts = manifest.get('artifacts')
+    if isinstance(artifacts, list):
+        return [item for item in artifacts if isinstance(item, dict)]
+    # Backward-compatible single-artifact manifests.
+    path_text = manifest.get('artifactPath') or manifest.get('imageTarPath') or manifest.get('frameworkArchivePath')
+    if path_text:
+        artifact_type = 'container-image' if manifest.get('target', 'ztf-orchestrator') == 'ztf-orchestrator' else 'framework-archive'
+        return [{
+            'type': artifact_type,
+            'path': path_text,
+            'sha256': manifest.get('checksum', ''),
+            'name': manifest.get('name') or manifest.get('version') or Path(str(path_text)).name,
+        }]
+    return []
+
+
+def _extract_verified_update_artifacts(package_path: Path, manifest: dict, package_dir: Path) -> tuple[dict | None, str | None]:
+    artifacts = _package_artifacts(manifest)
+    if not artifacts:
+        return None, 'manifest must include at least one artifact'
+    package_dir.mkdir(parents=True, exist_ok=True)
+    staged: list[dict] = []
+    by_type: dict[str, str] = {}
+    with zipfile.ZipFile(package_path) as archive:
+        normalized_members = {
+            member_name: info
+            for info in archive.infolist()
+            if not info.is_dir()
+            for member_name in [_safe_update_package_member(info.filename)]
+            if member_name
+        }
+        total_size = 0
+        for artifact in artifacts[:20]:
+            rel_path = _safe_update_package_member(str(artifact.get('path') or ''))
+            if not rel_path:
+                return None, 'artifact paths must be relative package paths without traversal'
+            info = normalized_members.get(rel_path)
+            if not info:
+                return None, f'artifact not found in package: {rel_path}'
+            expected_sha = _clean_text(artifact.get('sha256') or artifact.get('checksum') or '', 128).lower()
+            if not expected_sha or not re.fullmatch(r'[a-f0-9]{64}', expected_sha):
+                return None, f'artifact {rel_path} requires a SHA-256 hex digest'
+            if info.file_size > UPDATE_PACKAGE_MAX_UPLOAD:
+                return None, f'artifact {rel_path} exceeds the configured package limit'
+            total_size += info.file_size
+            if total_size > UPDATE_PACKAGE_MAX_UPLOAD:
+                return None, 'update package artifacts exceed the configured package limit'
+            output_path = package_dir / rel_path
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            digest = hashlib.sha256()
+            with archive.open(info) as src, output_path.open('wb') as dst:
+                for chunk in iter(lambda: src.read(1024 * 1024), b''):
+                    digest.update(chunk)
+                    dst.write(chunk)
+            actual_sha = digest.hexdigest()
+            if actual_sha != expected_sha:
+                try:
+                    output_path.unlink()
+                except OSError:
+                    pass
+                return None, f'artifact checksum mismatch for {rel_path}'
+            artifact_type = _clean_text(artifact.get('type', ''), 64).lower()
+            entry = {
+                'type': artifact_type,
+                'name': _clean_text(artifact.get('name') or Path(rel_path).name, 160),
+                'path': str(output_path),
+                'relativePath': rel_path,
+                'sha256': actual_sha,
+                'sizeBytes': info.file_size,
+            }
+            staged.append(entry)
+            if artifact_type:
+                by_type[artifact_type] = str(output_path)
+    return {'artifacts': staged, 'byType': by_type}, None
+
+
+def _record_from_update_package_manifest(manifest: dict, package_info: dict, manifest_sha: str) -> tuple[dict | None, str | None]:
+    target = _clean_update_target(manifest.get('target', 'ztf-orchestrator'))
+    if not target:
+        return None, 'target must be ztf-orchestrator, ztf-framework, or nkp-framework'
+    payload = {**manifest, 'source': 'offline', 'manifestSha256': manifest_sha}
+    by_type = package_info.get('byType') or {}
+    artifacts = package_info.get('artifacts') if isinstance(package_info.get('artifacts'), list) else []
+    primary_artifact = artifacts[0] if artifacts else {}
+    if target == 'ztf-orchestrator':
+        image_tar = by_type.get('container-image') or by_type.get('docker-image') or by_type.get('image-tar')
+        if not image_tar:
+            return None, 'ztf-orchestrator update packages require a container-image artifact'
+        payload['imageTarPath'] = image_tar
+        primary_artifact = next((artifact for artifact in artifacts if artifact.get('path') == image_tar), primary_artifact)
+    else:
+        archive_path = by_type.get('framework-archive') or by_type.get('source-archive')
+        if not archive_path:
+            return None, 'framework update packages require a framework-archive artifact'
+        payload['frameworkArchivePath'] = archive_path
+        primary_artifact = next((artifact for artifact in artifacts if artifact.get('path') == archive_path), primary_artifact)
+    payload.setdefault('checksum', primary_artifact.get('sha256', ''))
+    payload['packageArtifacts'] = artifacts
+    payload.setdefault('notes', 'Imported from an offline update package.')
+    return _clean_update_manifest(payload)
 
 
 def _clean_artifact_payload(data: dict, existing: dict | None = None) -> tuple[dict | None, str | None]:
@@ -2823,7 +3018,12 @@ def require_role(*roles):
 
 @app.before_request
 def check_body_size():
-    max_body = NKP_BINARY_MAX_UPLOAD if request.path == '/api/nkp/binaries/upload' else MAX_BODY
+    if request.path == '/api/nkp/binaries/upload':
+        max_body = NKP_BINARY_MAX_UPLOAD
+    elif request.path == '/api/appliance/updates/import-package':
+        max_body = UPDATE_PACKAGE_MAX_UPLOAD
+    else:
+        max_body = MAX_BODY
     if request.content_length and request.content_length > max_body:
         return jsonify({'error': 'Request body too large'}), 413
 
@@ -6301,6 +6501,54 @@ def import_appliance_update():
     return jsonify(record), 201
 
 
+@app.route('/api/appliance/updates/import-package', methods=['POST'])
+@require_role('admin', 'operator')
+def import_appliance_update_package():
+    upload = request.files.get('package')
+    if upload is None or not upload.filename:
+        return jsonify({'error': 'package file is required'}), 400
+    filename = _safe_update_package_filename(upload.filename)
+    package_id = str(uuid.uuid4())
+    package_dir = APPLIANCE_UPDATE_PACKAGES_DIR / package_id
+    package_dir.mkdir(parents=True, exist_ok=False)
+    package_path = package_dir / filename
+    upload.save(package_path)
+    imported = False
+    try:
+        manifest, manifest_sha, error = _load_update_package_manifest(package_path)
+        if error:
+            return jsonify({'error': error}), 400
+        assert manifest is not None and manifest_sha is not None
+        package_info, error = _extract_verified_update_artifacts(package_path, manifest, package_dir)
+        if error:
+            return jsonify({'error': error}), 400
+        assert package_info is not None
+        package_info['packageId'] = package_id
+        package_info['packagePath'] = str(package_path)
+        record, error = _record_from_update_package_manifest(manifest, package_info, manifest_sha)
+        if error:
+            return jsonify({'error': error}), 400
+        assert record is not None
+        record['packageId'] = package_id
+        record['packagePath'] = str(package_path)
+        updates = _load_appliance_updates()
+        _save_appliance_updates([record] + [item for item in updates if item.get('id') != record['id']])
+        log.info('appliance_update_package_imported', extra={
+            'action': 'appliance_update_package_imported',
+            'user': request.current_user['username'],
+            'version': record['version'],
+            'target': record['target'],
+            'packageId': package_id,
+        })
+        imported = True
+        return jsonify(record), 201
+    except zipfile.BadZipFile:
+        return jsonify({'error': 'update package must be a valid zip file'}), 400
+    finally:
+        if not imported:
+            shutil.rmtree(package_dir, ignore_errors=True)
+
+
 @app.route('/api/appliance/updates/<update_id>/verify', methods=['POST'])
 @require_role('admin', 'operator')
 def verify_appliance_update(update_id):
@@ -6334,11 +6582,19 @@ def stage_appliance_update(update_id):
     now = _now_iso()
     target = existing.get('target') or 'ztf-orchestrator'
     target_info = UPDATE_TARGETS.get(target, UPDATE_TARGETS['ztf-orchestrator'])
+    if target == 'ztf-orchestrator' and existing.get('imageTarPath') and not Path(existing['imageTarPath']).is_file():
+        return jsonify({'error': 'Staged container image tar was not found on disk'}), 400
+    if target != 'ztf-orchestrator' and existing.get('frameworkArchivePath') and not Path(existing['frameworkArchivePath']).is_file():
+        return jsonify({'error': 'Staged framework archive was not found on disk'}), 400
     instructions = [
         'Create or confirm a current PostgreSQL backup.',
         'Run appliance/scripts/apply-update-request.sh on the appliance host.',
         'Confirm /health and the relevant framework status after restart or source update.',
     ]
+    if target == 'ztf-orchestrator' and existing.get('imageTarPath'):
+        instructions.insert(1, 'The staged container image tar path is included in this request; no ZTF_UPDATE_IMAGE_TAR override is required.')
+    if target != 'ztf-orchestrator' and existing.get('frameworkArchivePath'):
+        instructions.insert(1, 'The staged framework archive path is included in this request; the helper will back up the current target path before replacement.')
     if target != 'ztf-orchestrator':
         instructions.insert(1, 'Confirm the target path is an approved git checkout or stage a reviewed checkout at that path.')
     request_doc = {
@@ -6355,6 +6611,10 @@ def stage_appliance_update(update_id):
         'sourceRef': existing.get('sourceRef') or existing['version'],
         'releaseUrl': existing.get('releaseUrl', ''),
         'manifestSha256': existing.get('manifestSha256', ''),
+        'checksum': existing.get('checksum', ''),
+        'imageTarPath': existing.get('imageTarPath', ''),
+        'frameworkArchivePath': existing.get('frameworkArchivePath', ''),
+        'packageArtifacts': existing.get('packageArtifacts', []),
         'instructions': instructions,
     }
     write_json(APPLIANCE_UPDATE_REQUEST_FILE, request_doc)
