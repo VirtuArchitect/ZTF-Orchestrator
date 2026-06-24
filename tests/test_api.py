@@ -494,6 +494,51 @@ def test_connection_profile_prism_central_loopback_http_simulator(client, auth_h
     assert captured['url'] == 'http://127.0.0.1:9440/api/nutanix/v3/users/me'
 
 
+def test_connection_profile_prism_central_docker_host_http_simulator(client, auth_headers, monkeypatch):
+    import server
+
+    resp = client.post('/api/global-config',
+                       json={'content': (
+                           'vault_to_use: local\n'
+                           'vaults:\n'
+                           '  local:\n'
+                           '    credentials:\n'
+                           '      pc_user:\n'
+                           '        username: admin\n'
+                           '        password: nutanix/4u\n'
+                       )},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+    captured = {}
+
+    class FakeResponse:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def fake_urlopen(req, timeout=0, context=None):
+        captured['url'] = req.full_url
+        return FakeResponse()
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+    resp = client.post('/api/settings/test-connection',
+                       json={
+                           'target': 'prismCentral',
+                           'profile': {'prismCentral': {'endpoint': 'http://host.docker.internal:9440', 'credentialRef': 'pc_user'}},
+                       },
+                       headers=auth_headers)
+    body = resp.get_json()
+    assert resp.status_code == 200
+    assert body['ok'] is True
+    assert body['scheme'] == 'http'
+    assert captured['url'] == 'http://host.docker.internal:9440/api/nutanix/v3/users/me'
+
+
 def test_connection_profile_prism_central_rejects_non_loopback_http(client, auth_headers, monkeypatch):
     import server
 
@@ -508,7 +553,7 @@ def test_connection_profile_prism_central_rejects_non_loopback_http(client, auth
     assert resp.status_code == 200
     assert body['ok'] is False
     assert body['scheme'] == 'http'
-    assert 'loopback simulator endpoints' in body['message']
+    assert 'local simulator endpoints' in body['message']
 
 
 def test_connection_profile_prism_central_missing_credential(client, auth_headers, monkeypatch):

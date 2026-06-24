@@ -2984,9 +2984,18 @@ def _endpoint_scheme(value: str, default_scheme: str = 'https') -> str:
     return scheme if scheme in {'http', 'https'} else default_scheme
 
 
-def _is_loopback_host(host: str) -> bool:
+LOCAL_SIMULATOR_HTTP_HOSTS = {
+    'localhost',
+    '127.0.0.1',
+    '::1',
+    'host.docker.internal',
+    'gateway.docker.internal',
+}
+
+
+def _is_local_simulator_http_host(host: str) -> bool:
     normalized = str(host or '').strip().lower()
-    if normalized in {'localhost', '127.0.0.1', '::1'}:
+    if normalized in LOCAL_SIMULATOR_HTTP_HOSTS:
         return True
     try:
         return ipaddress.ip_address(normalized).is_loopback
@@ -3068,8 +3077,8 @@ def _lookup_credential_ref(ref: str) -> tuple[str | None, str | None, str]:
 
 def _prism_central_login_check(host: str, port: int, credential_ref: str, scheme: str = 'https') -> tuple[bool, str, float]:
     scheme = scheme if scheme in {'http', 'https'} else 'https'
-    if scheme == 'http' and not _is_loopback_host(host):
-        return False, 'HTTP Prism Central login checks are only allowed for loopback simulator endpoints', 0.0
+    if scheme == 'http' and not _is_local_simulator_http_host(host):
+        return False, 'HTTP Prism Central login checks are only allowed for local simulator endpoints', 0.0
 
     username, password, error = _lookup_credential_ref(credential_ref)
     if error:

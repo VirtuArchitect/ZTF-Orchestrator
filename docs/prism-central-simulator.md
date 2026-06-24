@@ -11,8 +11,17 @@ production.
 
 ## Start The Simulator
 
+For a host-based Orchestrator run:
+
 ```powershell
 python scripts\prism_central_simulator.py --host 127.0.0.1 --port 9440
+```
+
+For a Docker-based Orchestrator run, bind the simulator to all host interfaces
+so the container can reach it through Docker's host gateway:
+
+```powershell
+python scripts\prism_central_simulator.py --host 0.0.0.0 --port 9440
 ```
 
 Default credentials:
@@ -41,8 +50,15 @@ In Settings, set the Prism Central endpoint to:
 http://127.0.0.1:9440
 ```
 
-The backend only allows HTTP Prism Central login checks for loopback simulator
-hosts. Non-local Prism Central endpoints continue to use HTTPS.
+For Docker Compose deployments, use:
+
+```text
+http://host.docker.internal:9440
+```
+
+The backend only allows HTTP Prism Central login checks for local simulator
+hosts such as `127.0.0.1`, `localhost`, and `host.docker.internal`. Non-local
+Prism Central endpoints continue to use HTTPS.
 
 ## Smoke Test Examples
 
