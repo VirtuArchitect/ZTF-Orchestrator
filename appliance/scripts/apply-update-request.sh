@@ -9,6 +9,7 @@ fi
 APP_DIR="${ZTF_APPLIANCE_DIR:-/opt/ztf-orchestrator}"
 REQUEST_FILE="${ZTF_UPDATE_REQUEST_FILE:-}"
 IMAGE_TAR="${ZTF_UPDATE_IMAGE_TAR:-}"
+FRAMEWORK_ARCHIVE="${ZTF_UPDATE_FRAMEWORK_ARCHIVE:-}"
 
 if [[ -z "${REQUEST_FILE}" ]]; then
   REQUEST_FILE="${APP_DIR}/appliance_update_request.json"
@@ -87,12 +88,113 @@ print(target_path)
 PY
 )"
 
+REQUEST_IMAGE_TAR="$(python3 - "$REQUEST_FILE" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding='utf-8'))
+path = str(data.get('imageTarPath') or '').strip()
+if path and not path.startswith('/'):
+    raise SystemExit('Invalid imageTarPath')
+print(path)
+PY
+)"
+
+REQUEST_FRAMEWORK_ARCHIVE="$(python3 - "$REQUEST_FILE" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding='utf-8'))
+path = str(data.get('frameworkArchivePath') or '').strip()
+if path and not path.startswith('/'):
+    raise SystemExit('Invalid frameworkArchivePath')
+print(path)
+PY
+)"
+
+REQUEST_CHECKSUM="$(python3 - "$REQUEST_FILE" <<'PY'
+import json, re, sys
+data = json.load(open(sys.argv[1], encoding='utf-8'))
+checksum = str(data.get('checksum') or '').strip().lower()
+if checksum and not re.fullmatch(r'[a-f0-9]{64}', checksum):
+    raise SystemExit('Invalid checksum')
+print(checksum)
+PY
+)"
+
+if [[ -z "${IMAGE_TAR}" && -n "${REQUEST_IMAGE_TAR}" ]]; then
+  IMAGE_TAR="${REQUEST_IMAGE_TAR}"
+fi
+
+if [[ -z "${FRAMEWORK_ARCHIVE}" && -n "${REQUEST_FRAMEWORK_ARCHIVE}" ]]; then
+  FRAMEWORK_ARCHIVE="${REQUEST_FRAMEWORK_ARCHIVE}"
+fi
+
+verify_checksum() {
+  local path="$1"
+  local expected="$2"
+  if [[ -z "${expected}" ]]; then
+    return 0
+  fi
+  if ! command -v sha256sum >/dev/null 2>&1; then
+    echo "sha256sum is required to verify staged artifacts." >&2
+    exit 1
+  fi
+  local actual
+  actual="$(sha256sum "${path}" | awk '{print $1}')"
+  if [[ "${actual}" != "${expected}" ]]; then
+    echo "Checksum mismatch for ${path}" >&2
+    echo "Expected: ${expected}" >&2
+    echo "Actual:   ${actual}" >&2
+    exit 1
+  fi
+}
+
 cd "${APP_DIR}"
 
 if [[ "${TARGET}" != "ztf-orchestrator" ]]; then
   if [[ -z "${TARGET_PATH}" ]]; then
     echo "Framework update request does not include targetPath." >&2
     exit 1
+  fi
+  if [[ -n "${FRAMEWORK_ARCHIVE}" ]]; then
+    if [[ ! -f "${FRAMEWORK_ARCHIVE}" ]]; then
+      echo "Framework archive does not exist: ${FRAMEWORK_ARCHIVE}" >&2
+      exit 1
+    fi
+    verify_checksum "${FRAMEWORK_ARCHIVE}" "${REQUEST_CHECKSUM}"
+    if ! command -v tar >/dev/null 2>&1; then
+      echo "tar is required to apply framework archives." >&2
+      exit 1
+    fi
+    if tar -tf "${FRAMEWORK_ARCHIVE}" | grep -Eq '(^/|(^|/)\.\.(/|$))'; then
+      echo "Framework archive contains unsafe paths." >&2
+      exit 1
+    fi
+    backup_path="${TARGET_PATH}.pre-update-$(date -u +%Y%m%d%H%M%S)"
+    if [[ -e "${TARGET_PATH}" ]]; then
+      mv "${TARGET_PATH}" "${backup_path}"
+    fi
+    mkdir -p "$(dirname "${TARGET_PATH}")"
+    tmp_extract="$(mktemp -d)"
+    tar -xf "${FRAMEWORK_ARCHIVE}" -C "${tmp_extract}"
+    entry_count="$(find "${tmp_extract}" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
+    if [[ "${entry_count}" = "1" ]]; then
+      only_entry="$(find "${tmp_extract}" -mindepth 1 -maxdepth 1 | head -n 1)"
+      if [[ -d "${only_entry}" ]]; then
+        mv "${only_entry}" "${TARGET_PATH}"
+      else
+        mkdir -p "${TARGET_PATH}"
+        mv "${only_entry}" "${TARGET_PATH}/"
+      fi
+    else
+      mv "${tmp_extract}" "${TARGET_PATH}"
+      tmp_extract=""
+    fi
+    if [[ -n "${tmp_extract}" ]]; then
+      rm -rf "${tmp_extract}"
+    fi
+    echo "${TARGET} archive applied to ${TARGET_PATH}."
+    if [[ -n "${backup_path:-}" ]]; then
+      echo "Previous framework backup: ${backup_path}"
+    fi
+    exit 0
   fi
   if [[ ! -d "${TARGET_PATH}/.git" ]]; then
     echo "Framework target path is not a git checkout: ${TARGET_PATH}" >&2
@@ -128,6 +230,7 @@ if [[ -n "${IMAGE_TAR}" ]]; then
     echo "ZTF_UPDATE_IMAGE_TAR does not exist: ${IMAGE_TAR}" >&2
     exit 1
   fi
+  verify_checksum "${IMAGE_TAR}" "${REQUEST_CHECKSUM}"
   docker load -i "${IMAGE_TAR}"
 fi
 

@@ -135,6 +135,83 @@ Use this when the appliance cannot reach GitHub or GHCR.
 
 9. Verify `/health`, then mark the update applied in the UI.
 
+### Offline Update Package
+
+For enterprise air-gapped operations, package the manifest and binaries into a
+single zip file. The web app imports only the artifacts referenced by
+`manifest.json`, verifies each SHA-256 digest during extraction, and stages the
+verified artifact path into the host update request.
+
+Package layout:
+
+```text
+ztf-update-vX.Y.Z.zip
+├── manifest.json
+└── images/
+    └── ztf-orchestrator-vX.Y.Z-image.tar
+```
+
+Example `manifest.json` for a ZTF-Orchestrator image package:
+
+```json
+{
+  "target": "ztf-orchestrator",
+  "version": "vX.Y.Z",
+  "repository": "VirtuArchitect/ZTF-Orchestrator",
+  "containerImage": "ghcr.io/virtuarchitect/ztf-orchestrator:vX.Y.Z",
+  "sourceRef": "vX.Y.Z",
+  "releaseUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/vX.Y.Z",
+  "artifacts": [
+    {
+      "type": "container-image",
+      "name": "ZTF-Orchestrator image",
+      "path": "images/ztf-orchestrator-vX.Y.Z-image.tar",
+      "sha256": "<sha256-of-image-tar>"
+    }
+  ],
+  "notes": "Transferred through the approved air-gapped media process."
+}
+```
+
+Example `manifest.json` for a framework archive package:
+
+```json
+{
+  "target": "ztf-framework",
+  "version": "v1.5.2",
+  "repository": "nutanixdev/zerotouch-framework",
+  "targetPath": "/opt/zerotouch-framework",
+  "sourceRef": "v1.5.2",
+  "artifacts": [
+    {
+      "type": "framework-archive",
+      "name": "ZeroTouch Framework source",
+      "path": "framework/zerotouch-framework-v1.5.2.tar.gz",
+      "sha256": "<sha256-of-framework-archive>"
+    }
+  ]
+}
+```
+
+Import process:
+
+1. Build the zip package in connected staging.
+2. Verify and record the SHA-256 digest for every artifact listed in
+   `manifest.json`.
+3. Transfer the zip through the approved air-gapped media process.
+4. In **Appliance Ops > Updates**, select the zip under **Offline Update
+   Package** and click **Import Package**.
+5. Review the imported artifact paths and checksums, click **Verify**, then as
+   an admin click **Stage**.
+6. Run the helper without additional artifact environment variables:
+
+   ```bash
+   sudo /opt/ztf-orchestrator/appliance/scripts/apply-update-request.sh
+   ```
+
+The package upload limit defaults to 2 GiB and can be changed with
+`ZTF_UPDATE_PACKAGE_MAX_UPLOAD`.
+
 ### Framework Checkout
 
 Use this when the appliance has a host-visible framework git checkout. It is
@@ -234,7 +311,11 @@ sudo git -C /opt/zerotouch-framework checkout "${previous_ref}"
 - Container image names are restricted to the approved ZTF-Orchestrator image
   namespace.
 - Framework updates require an absolute target path and a safe git ref.
-- Offline imports store metadata only. They do not extract archives.
+- Manifest-only imports store metadata and rely on a manually staged host
+  artifact path or git checkout.
+- Package imports extract only manifest-referenced relative artifact paths,
+  reject traversal, enforce configured size limits, and verify SHA-256 before
+  staging.
 - Staging requires admin role.
 - Host-level changes require root access on the appliance VM.
 - Update events are recorded in the application audit log.

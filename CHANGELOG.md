@@ -14,6 +14,29 @@ into the next numbered release section when the next version is cut.
 
 ---
 
+## [1.5.0] - 2026-06-24
+
+### Summary
+Minor release adding enterprise air-gapped update package handling for
+ZTF-Orchestrator appliance updates.
+
+### Added
+- Added offline update package import for zip packages containing
+  `manifest.json` and checksum-verified container image or framework archive
+  artifacts.
+- Extended staged update requests and the host helper to carry verified
+  artifact paths, validate SHA-256 checksums, load offline container image
+  tars, and apply framework archives with a host-side backup.
+- Added Appliance Operations UI controls for importing offline update packages
+  and viewing staged package artifacts.
+
+### Security
+- Update package extraction now rejects traversal paths, enforces configured
+  upload and extraction size limits, stores artifacts in appliance data
+  staging, and cleans failed imports.
+
+---
+
 ## [1.4.1] - 2026-06-22
 
 ### Summary

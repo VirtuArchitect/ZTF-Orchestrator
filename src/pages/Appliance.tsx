@@ -4,7 +4,7 @@ import {
   Plus, RefreshCw, Server, ShieldCheck, Trash2, Upload, XCircle,
 } from 'lucide-react'
 import Layout from '../components/Layout'
-import { apiFetch } from '../utils/api'
+import { apiFetch, authHeaders } from '../utils/api'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
 import clsx from 'clsx'
@@ -53,12 +53,17 @@ interface UpdateRecord {
   containerImage: string
   sourceRef: string
   checksum?: string
+  imageTarPath?: string
+  frameworkArchivePath?: string
   manifestSha256?: string
+  packageId?: string
+  packagePath?: string
   publishedAt?: string
   notes?: string
   prerelease?: boolean
   status: 'available' | 'imported' | 'verified' | 'staged' | 'applied' | string
   assets?: Array<{ name: string; size: number; url: string }>
+  packageArtifacts?: Array<{ type: string; name: string; path: string; relativePath: string; sha256: string; sizeBytes: number }>
   verifiedAt?: string
   stagedAt?: string
   requestPath?: string
@@ -164,6 +169,7 @@ export default function Appliance() {
   const [updateTargetPath, setUpdateTargetPath] = useState('')
   const [includePrerelease, setIncludePrerelease] = useState(false)
   const [updateManifest, setUpdateManifest] = useState(EXAMPLE_UPDATE_MANIFEST)
+  const [updatePackage, setUpdatePackage] = useState<File | null>(null)
   const [updateBusy, setUpdateBusy] = useState('')
   const [appliance, setAppliance] = useState<ApplianceStatus | null>(null)
   const [ztf, setZtf] = useState<ZtfCompatibility | null>(null)
@@ -308,6 +314,32 @@ export default function Appliance() {
         return
       }
       setMessage(`Imported update manifest for ${data.targetLabel || data.target || 'update'} ${data.version}.`)
+      await load()
+    } finally {
+      setUpdateBusy('')
+    }
+  }
+
+  const importOfflineUpdatePackage = async () => {
+    if (!updatePackage) return
+    setUpdateBusy('import-package')
+    setError('')
+    setMessage('')
+    try {
+      const formData = new FormData()
+      formData.append('package', updatePackage)
+      const resp = await fetch('/api/appliance/updates/import-package', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: formData,
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      setUpdatePackage(null)
+      setMessage(`Imported update package for ${data.targetLabel || data.target || 'update'} ${data.version}.`)
       await load()
     } finally {
       setUpdateBusy('')
@@ -580,7 +612,7 @@ export default function Appliance() {
                 <div className="rounded-lg border border-border bg-gray-950/40 p-4 space-y-3">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-100">Offline Manifest Import</h3>
-                    <p className="text-xs text-gray-500 mt-1">Paste a reviewed update manifest from connected staging. Arbitrary source archives are not unpacked by the web app.</p>
+                    <p className="text-xs text-gray-500 mt-1">Paste reviewed metadata or import a zip package with manifest.json and checksum-verified artifacts.</p>
                   </div>
                   <textarea
                     className="input min-h-40 font-mono text-xs resize-y"
@@ -592,6 +624,21 @@ export default function Appliance() {
                     {updateBusy === 'import' ? <Loader size={14} className="animate-spin" /> : <Upload size={14} />}
                     Import Manifest
                   </button>
+                  <div className="border-t border-border pt-3 space-y-3">
+                    <Field label="Offline Update Package">
+                      <input
+                        className="input file:mr-3 file:rounded file:border-0 file:bg-gray-800 file:px-3 file:py-1.5 file:text-sm file:text-gray-200"
+                        type="file"
+                        accept=".zip,application/zip"
+                        disabled={!canEdit}
+                        onChange={event => setUpdatePackage(event.target.files?.[0] || null)}
+                      />
+                    </Field>
+                    <button onClick={importOfflineUpdatePackage} disabled={!canEdit || !updatePackage || updateBusy === 'import-package'} className="btn-primary gap-1.5">
+                      {updateBusy === 'import-package' ? <Loader size={14} className="animate-spin" /> : <PackageCheck size={14} />}
+                      Import Package
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -615,6 +662,8 @@ export default function Appliance() {
                         <span>{record.stagedAt ? `Staged ${formatDate(record.stagedAt)}` : record.verifiedAt ? `Verified ${formatDate(record.verifiedAt)}` : 'Not verified'}</span>
                       </div>
                       {record.targetPath && <p className="mt-2 text-xs text-gray-500">Framework path: <span className="font-mono">{record.targetPath}</span></p>}
+                      {record.imageTarPath && <p className="mt-2 text-xs text-gray-500">Container image tar: <span className="font-mono break-all">{record.imageTarPath}</span></p>}
+                      {record.frameworkArchivePath && <p className="mt-2 text-xs text-gray-500">Framework archive: <span className="font-mono break-all">{record.frameworkArchivePath}</span></p>}
                       {record.manifestSha256 && <p className="mt-2 font-mono text-xs text-gray-600 break-all">manifest {record.manifestSha256}</p>}
                       {record.checksum && <p className="mt-1 font-mono text-xs text-gray-600 break-all">checksum {record.checksum}</p>}
                       {record.requestPath && <p className="mt-2 text-xs text-gray-500">Host update request: <span className="font-mono">{record.requestPath}</span></p>}
@@ -623,6 +672,15 @@ export default function Appliance() {
                         <div className="mt-3 flex flex-wrap gap-2">
                           {record.assets.slice(0, 4).map(asset => (
                             <span key={`${record.id}-${asset.name}`} className="badge badge-gray text-xs">{asset.name || formatBytes(asset.size)}</span>
+                          ))}
+                        </div>
+                      )}
+                      {!!record.packageArtifacts?.length && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {record.packageArtifacts.slice(0, 4).map(artifact => (
+                            <span key={`${record.id}-${artifact.relativePath || artifact.path}`} className="badge badge-blue text-xs">
+                              {artifact.name || artifact.relativePath || artifact.type} {formatBytes(artifact.sizeBytes || 0)}
+                            </span>
                           ))}
                         </div>
                       )}

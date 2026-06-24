@@ -1,6 +1,7 @@
 """Tests for API endpoint availability, RBAC, and config CRUD."""
 
 import io
+import hashlib
 import json
 import socket
 import zipfile
@@ -35,6 +36,16 @@ def _wait_for_job(client, auth_headers, job_id, terminal_statuses=None, attempts
             return job
         time.sleep(delay)
     return job
+
+
+def _build_update_package(manifest, files):
+    package = io.BytesIO()
+    with zipfile.ZipFile(package, 'w') as archive:
+        archive.writestr('manifest.json', json.dumps(manifest))
+        for name, content in files.items():
+            archive.writestr(name, content)
+    package.seek(0)
+    return package
 
 
 def test_viewer_cannot_execute(client, auth_headers):
@@ -155,6 +166,96 @@ def test_appliance_update_import_verify_stage_and_delete(client, auth_headers):
 
     resp = client.delete(f"/api/appliance/updates/{record['id']}", headers=auth_headers)
     assert resp.status_code == 200
+
+
+def test_appliance_update_package_import_verify_and_stage(client, auth_headers):
+    import server
+
+    image_bytes = b'fake docker image tar bytes'
+    image_sha = hashlib.sha256(image_bytes).hexdigest()
+    manifest = {
+        'target': 'ztf-orchestrator',
+        'version': 'v1.5.0',
+        'repository': 'VirtuArchitect/ZTF-Orchestrator',
+        'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.0',
+        'sourceRef': 'v1.5.0',
+        'artifacts': [{
+            'type': 'container-image',
+            'name': 'ztf-orchestrator image',
+            'path': 'images/ztf-orchestrator-v1.5.0.tar',
+            'sha256': image_sha,
+        }],
+    }
+    package = _build_update_package(manifest, {'images/ztf-orchestrator-v1.5.0.tar': image_bytes})
+
+    resp = client.post('/api/appliance/updates/import-package',
+                       data={'package': (package, 'ztf-update-v1.5.0.zip')},
+                       content_type='multipart/form-data',
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+    assert record['status'] == 'imported'
+    assert record['version'] == 'v1.5.0'
+    assert record['checksum'] == image_sha
+    assert Path(record['imageTarPath']).is_file()
+    assert record['packageArtifacts'][0]['relativePath'] == 'images/ztf-orchestrator-v1.5.0.tar'
+
+    resp = client.post(f"/api/appliance/updates/{record['id']}/verify",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    resp = client.post(f"/api/appliance/updates/{record['id']}/stage",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['request']['imageTarPath'] == record['imageTarPath']
+    assert body['request']['checksum'] == image_sha
+    assert body['request']['packageArtifacts'][0]['sha256'] == image_sha
+    assert server.APPLIANCE_UPDATE_REQUEST_FILE.exists()
+
+
+def test_appliance_update_package_rejects_bad_checksum(client, auth_headers):
+    manifest = {
+        'target': 'ztf-orchestrator',
+        'version': 'v1.5.0',
+        'repository': 'VirtuArchitect/ZTF-Orchestrator',
+        'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.0',
+        'sourceRef': 'v1.5.0',
+        'artifacts': [{
+            'type': 'container-image',
+            'path': 'images/ztf-orchestrator-v1.5.0.tar',
+            'sha256': '0' * 64,
+        }],
+    }
+    package = _build_update_package(manifest, {'images/ztf-orchestrator-v1.5.0.tar': b'not matching'})
+    resp = client.post('/api/appliance/updates/import-package',
+                       data={'package': (package, 'ztf-update-v1.5.0.zip')},
+                       content_type='multipart/form-data',
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'checksum mismatch' in resp.get_json()['error']
+
+
+def test_appliance_update_package_rejects_traversal_artifact(client, auth_headers):
+    payload = b'archive'
+    manifest = {
+        'target': 'ztf-framework',
+        'version': 'v1.5.2',
+        'repository': 'nutanixdev/zerotouch-framework',
+        'targetPath': '/opt/zerotouch-framework',
+        'sourceRef': 'v1.5.2',
+        'artifacts': [{
+            'type': 'framework-archive',
+            'path': '../ztf-framework.tar.gz',
+            'sha256': hashlib.sha256(payload).hexdigest(),
+        }],
+    }
+    package = _build_update_package(manifest, {'ztf-framework.tar.gz': payload})
+    resp = client.post('/api/appliance/updates/import-package',
+                       data={'package': (package, 'ztf-update-v1.5.2.zip')},
+                       content_type='multipart/form-data',
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'without traversal' in resp.get_json()['error']
 
 
 def test_appliance_update_rejects_unapproved_container_image(client, auth_headers):
