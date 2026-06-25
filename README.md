@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.4.1
+# ZTF-Orchestrator · v1.5.0
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -57,7 +57,8 @@ easier to consume in day-to-day operations by adding:
 
 - Guided configuration instead of hand-written YAML for common workflows.
 - Appliance operations for AHV artifact archive tracking, first-boot checks,
-  NKP readiness review, and ZTF compatibility mode visibility.
+  NKP readiness review, ZTF compatibility mode visibility, and air-gapped
+  appliance update package handling.
 - Durable job execution instead of browser-bound terminal sessions.
 - PostgreSQL-backed operational state for Docker deployments.
 - RBAC, approvals, audit logs, and validation status for governance.
@@ -734,7 +735,7 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 | Guide | Description |
 |---|---|
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
-| [docs/appliance-update-manager.md](docs/appliance-update-manager.md) | Connected and air-gapped Appliance Update Manager workflow |
+| [docs/appliance-update-manager.md](docs/appliance-update-manager.md) | Connected and air-gapped Appliance Update Manager workflow, including offline update packages |
 | [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
 | [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
 | [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
