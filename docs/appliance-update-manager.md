@@ -90,7 +90,7 @@ Use this when the appliance cannot reach GitHub or GHCR.
 
 1. In a connected staging environment, download or build the target appliance
    container image.
-2. Save the image to a tar file:
+2. If the release image is published to GHCR, pull it and save it to a tar file:
 
    ```bash
    docker pull ghcr.io/virtuarchitect/ztf-orchestrator:vX.Y.Z
@@ -99,7 +99,23 @@ Use this when the appliance cannot reach GitHub or GHCR.
    sha256sum ztf-orchestrator-vX.Y.Z-image.tar
    ```
 
-3. Create an offline update manifest:
+   Confirm availability before using a GHCR tag in the manifest:
+
+   ```bash
+   docker manifest inspect ghcr.io/virtuarchitect/ztf-orchestrator:vX.Y.Z
+   ```
+
+   If the GHCR tag is not available yet, build the image locally in connected
+   staging and use the local image name in the manifest:
+
+   ```bash
+   docker build -t ztf-orchestrator:vX.Y.Z .
+   docker save ztf-orchestrator:vX.Y.Z -o ztf-orchestrator-vX.Y.Z-image.tar
+   sha256sum ztf-orchestrator-vX.Y.Z-image.tar
+   ```
+
+3. Create an offline update manifest. Use the `containerImage` value that
+   matches the image name inside the tar file:
 
    ```json
    {
@@ -113,6 +129,12 @@ Use this when the appliance cannot reach GitHub or GHCR.
      "checksum": "<sha256-of-transferred-image-tar>",
      "notes": "Transferred through the approved air-gapped media process."
    }
+   ```
+
+   For a locally built image tar, use:
+
+   ```json
+   "containerImage": "ztf-orchestrator:vX.Y.Z"
    ```
 
 4. Transfer the image tar and manifest through the approved removable-media or
@@ -172,6 +194,10 @@ Example `manifest.json` for a ZTF-Orchestrator image package:
   "notes": "Transferred through the approved air-gapped media process."
 }
 ```
+
+If the image was built locally instead of pulled from GHCR, set
+`containerImage` to the local tag included in the tar, for example
+`ztf-orchestrator:vX.Y.Z`.
 
 Example `manifest.json` for a framework archive package:
 

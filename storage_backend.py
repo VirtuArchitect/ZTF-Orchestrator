@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -25,11 +26,14 @@ class FileStorage:
             return default
 
     def write_json(self, path: Path, data: Any) -> None:
-        path.write_text(json.dumps(data, indent=2), encoding='utf-8')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = path.with_name(f'.{path.name}.{uuid.uuid4().hex}.tmp')
+        tmp_path.write_text(json.dumps(data, indent=2), encoding='utf-8')
         try:
-            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
+            os.chmod(tmp_path, stat.S_IRUSR | stat.S_IWUSR)
         except OSError:
             pass
+        os.replace(tmp_path, path)
 
 
 class PostgresStorage:

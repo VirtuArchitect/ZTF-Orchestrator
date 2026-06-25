@@ -67,7 +67,7 @@ appliance build and validation path is Ubuntu/Debian-family.
 By default, the appliance uses the `latest` GHCR image. To pin a release:
 
 ```bash
-sudo ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
+sudo ZTF_ORCHESTRATOR_VERSION=v1.5.1 \
   bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
 ```
 
@@ -81,6 +81,16 @@ ZTF-Orchestrator's workflow and script launcher targets the legacy 1.x
 `main.py --workflow/--script` CLI. ZeroTouch Framework v2.0.0 uses a new
 `ztf plan/apply` model and is not a drop-in replacement for these appliance
 workflows.
+
+Before pinning a GHCR tag, confirm it has been published:
+
+```bash
+docker manifest inspect ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.1
+```
+
+If the tag is not available yet, use `latest`, build the application image
+inside the appliance image, or import a locally built image tar through the
+offline update package workflow.
 
 The framework copy inside the appliance container is intentionally not a git
 checkout. The Setup page may report that source update is skipped; that is
@@ -268,8 +278,8 @@ Run:
 
 ```bash
 cd appliance
-VERSION=v1.4.1 \
-ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
+VERSION=v1.5.1 \
+ZTF_ORCHESTRATOR_VERSION=v1.5.1 \
 ZTF_BUILD_CONTAINER_IMAGE=true \
 ZTF_PULL_CONTAINER_IMAGES=true \
 ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -522,8 +532,8 @@ The raw Packer commands are:
 cd appliance/packer
 packer init ahv-qcow2.pkr.hcl
 packer build \
-  -var "version=v1.4.1" \
-  -var "ztf_orchestrator_version=v1.4.1" \
+  -var "version=v1.5.1" \
+  -var "ztf_orchestrator_version=v1.5.1" \
   -var "build_container_image=true" \
   -var "pull_container_images=true" \
   -var "ztf_framework_ref=v1.5.2" \

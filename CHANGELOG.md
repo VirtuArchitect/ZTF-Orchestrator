@@ -9,8 +9,30 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.4.1 and should be moved
+Changes in this section are present on `main` after v1.5.1 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.5.1] - 2026-06-25
+
+### Summary
+Patch release for the v1.5 appliance update line, adding community project
+metadata and fixing bodyless artifact verification requests in the Appliance
+Operations UI.
+
+### Fixed
+- Fixed Appliance artifact verification returning HTTP 415 when the UI posted
+  to the verify endpoint without a JSON body.
+- Hardened file-backed JSON writes to avoid partial reads while background
+  workers update job state.
+
+### Added
+- Added a repository Code of Conduct.
+- Added contributor guidance covering development setup, testing expectations,
+  security review triggers, appliance changes, and release/version alignment.
+- Added a GitHub pull request template aligned with the repository definition
+  of done.
 
 ---
 
