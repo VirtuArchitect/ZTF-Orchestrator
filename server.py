@@ -6327,7 +6327,7 @@ def list_appliance_artifacts():
 @app.route('/api/appliance/artifacts', methods=['POST'])
 @require_role('admin', 'operator')
 def create_appliance_artifact():
-    record, error = _clean_artifact_payload(request.json or {})
+    record, error = _clean_artifact_payload(request.get_json(silent=True) or {})
     if error:
         return jsonify({'error': error}), 400
     artifacts = _load_appliance_artifacts()
@@ -6350,7 +6350,7 @@ def update_appliance_artifact(artifact_id):
     existing = next((item for item in artifacts if item.get('id') == artifact_id), None)
     if not existing:
         return jsonify({'error': 'Artifact record not found'}), 404
-    record, error = _clean_artifact_payload(request.json or {}, existing)
+    record, error = _clean_artifact_payload(request.get_json(silent=True) or {}, existing)
     if error:
         return jsonify({'error': error}), 400
     _save_appliance_artifacts([record if item.get('id') == artifact_id else item for item in artifacts])
@@ -6371,7 +6371,7 @@ def verify_appliance_artifact(artifact_id):
     existing = next((item for item in artifacts if item.get('id') == artifact_id), None)
     if not existing:
         return jsonify({'error': 'Artifact record not found'}), 404
-    data = {**existing, **(request.json or {}), 'verifiedAt': _now_iso()}
+    data = {**existing, **(request.get_json(silent=True) or {}), 'verifiedAt': _now_iso()}
     record, error = _clean_artifact_payload(data, existing)
     if error:
         return jsonify({'error': error}), 400

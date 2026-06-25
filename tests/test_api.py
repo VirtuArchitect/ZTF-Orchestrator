@@ -95,6 +95,19 @@ def test_appliance_artifact_archive_crud(client, auth_headers):
     assert resp.status_code == 200
 
 
+def test_appliance_artifact_verify_accepts_empty_post_body(client, auth_headers):
+    resp = client.post('/api/appliance/artifacts',
+                       json={'profile': 'airgap', 'version': 'v1.5.0'},
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    record = resp.get_json()
+
+    resp = client.post(f"/api/appliance/artifacts/{record['id']}/verify",
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['status'] == 'verified'
+
+
 def test_appliance_artifact_rejects_bad_checksum(client, auth_headers):
     resp = client.post('/api/appliance/artifacts',
                        json={'profile': 'standard', 'version': 'v1.3.1', 'checksum': 'not-a-sha'},
