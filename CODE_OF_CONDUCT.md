@@ -10,32 +10,32 @@ security-adjacent engineering work. Discussions should stay constructive,
 evidence-based, and focused on helping users and contributors build safer,
 more reliable systems.
 
-## Expected Behavior
+## Expected Behaviour
 
-Examples of behavior that contributes to a positive community include:
+Examples of behaviour that contributes to a positive community include:
 
-- Using welcoming and respectful language.
-- Being direct without being hostile.
-- Giving and receiving technical feedback with professionalism.
-- Assuming good intent while still being clear about risks or mistakes.
-- Respecting different levels of experience.
-- Keeping issues, pull requests, and discussions focused on the project.
-- Disclosing security concerns responsibly and privately where appropriate.
+* Using welcoming and respectful language.
+* Being direct without being hostile.
+* Giving and receiving technical feedback with professionalism.
+* Assuming good intent while still being clear about risks or mistakes.
+* Respecting different levels of experience.
+* Keeping issues, pull requests, and discussions focused on the project.
+* Disclosing security concerns responsibly and privately where appropriate.
 
-## Unacceptable Behavior
+## Unacceptable Behaviour
 
-Examples of unacceptable behavior include:
+Examples of unacceptable behaviour include:
 
-- Harassment, intimidation, threats, or personal attacks.
-- Derogatory comments based on personal identity, background, employer,
-  experience level, or technology choices.
-- Sexualized language or imagery.
-- Public or private harassment.
-- Publishing another person's private information without explicit permission.
-- Trolling, sustained disruption, or repeated off-topic escalation.
-- Dismissing operational or security risks in bad faith.
-- Any conduct that would be inappropriate in a professional engineering
-  environment.
+* Harassment, intimidation, threats, or personal attacks.
+* Derogatory comments based on personal identity, background, employer,
+experience level, or technology choices.
+* Sexualized language or imagery.
+* Public or private harassment.
+* Publishing another person's private information without explicit permission.
+* Trolling, sustained disruption, or repeated off-topic escalation.
+* Dismissing operational or security risks in bad faith.
+* Any conduct that would be inappropriate in a professional engineering
+environment.
 
 ## Security and Responsible Disclosure
 
@@ -55,7 +55,7 @@ pull requests, discussions, or other contributions that are not aligned with
 this Code of Conduct.
 
 Maintainers may also temporarily or permanently ban any contributor or
-participant for behavior they determine to be inappropriate, threatening,
+participant for behaviour they determine to be inappropriate, threatening,
 offensive, harmful, or disruptive.
 
 ## Reporting
@@ -65,9 +65,9 @@ using the contact information published on the maintainer's GitHub profile.
 
 Reports should include:
 
-- A description of what happened.
-- Links to relevant issues, pull requests, discussions, commits, or messages.
-- Any additional context that may help maintainers understand the situation.
+* A description of what happened.
+* Links to relevant issues, pull requests, discussions, commits, or messages.
+* Any additional context that may help maintainers understand the situation.
 
 Maintainers will review reports as promptly and fairly as possible. Reports will
 be handled with discretion, and information will be shared only as needed to
@@ -76,13 +76,13 @@ investigate and respond.
 ## Enforcement Guidelines
 
 Maintainers may use the following responses depending on the impact and pattern
-of behavior:
+of behaviour:
 
-1. Correction: A private or public clarification about why behavior was
-   inappropriate and what change is expected.
-2. Warning: A formal warning for behavior that violates this Code of Conduct.
+1. Correction: A private or public clarification about why behaviour was
+inappropriate and what change is expected.
+2. Warning: A formal warning for behaviour that violates this Code of Conduct.
 3. Temporary restriction: Temporary loss of access to project spaces or
-   contribution channels.
+contribution channels.
 4. Permanent restriction: Permanent removal from project participation.
 
 ## Scope
@@ -96,3 +96,4 @@ spaces.
 
 This Code of Conduct is adapted from the Contributor Covenant and tailored for
 the ZTF-Orchestrator project.
+
