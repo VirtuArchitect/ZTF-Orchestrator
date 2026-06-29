@@ -17,6 +17,76 @@ submit execution jobs, capture validation evidence, track output, detect drift,
 schedule repeatable tasks, request approvals, and review audit history without
 every operator working directly in Git, YAML, and CLI commands.
 
+## At A Glance
+
+| Question | Answer |
+|---|---|
+| What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
+| Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
+| What does it execute? | Allowlisted ZTF 1.x workflows/scripts and constrained NKP safe phases through background jobs. |
+| Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
+| What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and native ZTF 2.x plan/apply mode. |
+
+## How It Works
+
+```text
+Browser UI
+  React 18, TypeScript, Tailwind CSS
+  Dashboard, workflows, scripts, jobs, approvals, NKP profiles, evidence
+        |
+        | REST API, Server-Sent Events, bearer session token
+        v
+Flask application
+  Auth/RBAC, validation, allowlists, audit logging, config management
+        |
+        +--> Storage
+        |     File-backed JSON for local/manual use
+        |     PostgreSQL documents, sessions, audit events, and backups for Docker/appliance use
+        |
+        +--> Durable job queue and background workers
+        |     Persisted logs, cancellation, estimated progress, execution history
+        |
+        +--> Approval gates, schedules, pipelines, drift checks, validation evidence
+        |
+        +--> Execution adapters
+              ZTF 1.x: python main.py --workflow/--script ...
+              NKP: allowlisted safe phases via nkp-zerotouch-framework
+                    |
+                    v
+              Nutanix infrastructure
+              Prism Central, Prism Element, Foundation Central, registries, NKP targets
+```
+
+ZTF-Orchestrator is the control plane and evidence layer. ZeroTouch Framework
+and the NKP framework remain the automation engines that interact with Nutanix
+systems.
+
+## Core Operator Workflow
+
+1. Configure the ZTF path, Python runtime, config directory, NKP path, and
+   connection defaults.
+2. Generate or edit workflow YAML, global configuration, NKP deployment
+   profiles, or imported examples.
+3. Validate inputs, compatibility, readiness, and generated YAML before
+   execution.
+4. Request and approve controlled work when the selected workflow or NKP phase
+   requires governance.
+5. Submit the workflow, script queue, pipeline, schedule, parallel run, or NKP
+   safe phase as a durable job.
+6. Watch persisted logs, progress estimates, task IDs, execution history, audit
+   events, and downloadable validation evidence.
+
+## Choose An Install Path
+
+| Goal | Recommended path |
+|---|---|
+| Quick local trial on Linux or macOS | One-command installer |
+| Quick local trial on Windows | PowerShell installer |
+| Small-team server with durable state | Docker Compose with PostgreSQL |
+| AHV/VM-based appliance | Appliance kit |
+| Existing air-gapped environment | Internal Git/PyPI mirrors plus the air-gapped guidance |
+| Frontend or backend development | Manual install plus Vite development mode |
+
 ## ZeroTouch Framework Compatibility
 
 ZTF-Orchestrator's workflow and script launcher targets the legacy
@@ -84,12 +154,10 @@ it orchestrates repeatable ZeroTouch Framework workflows that call Nutanix APIs.
 > **Port note (Windows):** Hyper-V reserves ports 4940–5039. If the server fails to
 > start on the default port 5001, set `$env:ZTF_PORT = "8080"` before starting.
 
-<img width="1763" height="1207" alt="image" src="https://github.com/user-attachments/assets/b4c2df54-1577-405e-b330-a94e0c215b8f" />
+<img width="1763" height="1207" alt="ZTF-Orchestrator dashboard showing readiness, queue, governance, schedules, storage, and backup panels" src="https://github.com/user-attachments/assets/b4c2df54-1577-405e-b330-a94e0c215b8f" />
 
-
-
-
-
+Dashboard view with operational readiness, queue pressure, governance,
+schedule, storage, and backup posture panels.
 
 
 ---
@@ -539,22 +607,37 @@ For vulnerability reporting and baseline security guidance, see
 
 ## Architecture
 
-```
+```text
 Browser (React 18, TypeScript, Tailwind CSS)
     |
-    |  REST API + Server-Sent Events
-    |  Authorization: Bearer <session-token>
+    | REST API + Server-Sent Events
+    | Authorization: Bearer <session-token>
+    v
+Flask server (server.py, default 127.0.0.1:5001 for manual runs)
     |
-Flask server  (server.py — 127.0.0.1:5001)
+    +-- Auth, RBAC, security headers, rate limits, audit logging
+    +-- Config files, YAML validation, drift checks, approvals, schedules
+    +-- NKP profiles, binary registry, readiness checks, validation evidence
     |
-    |  subprocess([python, main.py, --workflow, X, -f, config.yml])
-    |  argument list only · no shell · allowlist validated
+    +-- Storage backend
+    |     File mode: JSON documents under ZTF_DATA_DIR
+    |     PostgreSQL mode: documents, sessions, audit events, backups
     |
-ZeroTouch Framework 1.x  (main.py)
-    |
-    |  HTTPS — on-premises only
-    |
-Nutanix Infrastructure  (Prism Central · Prism Element · Foundation Central)
+    +-- Durable execution jobs
+          Worker threads launch subprocesses with argument lists only
+          No shell invocation; workflow/script/phase allowlists are enforced
+          Logs, status, return code, task IDs, and history are persisted
+          |
+          +-- ZeroTouch Framework 1.x
+          |     python main.py --workflow X -f config.yml
+          |     python main.py --script A,B,C -f config.yml
+          |
+          +-- NKP ZeroTouch Framework
+                Safe phases only; controlled phases require approval
+                |
+                v
+          Nutanix infrastructure
+          Prism Central, Prism Element, Foundation Central, registries, NKP targets
 ```
 
 ---
