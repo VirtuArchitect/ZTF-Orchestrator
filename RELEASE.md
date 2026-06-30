@@ -4,7 +4,7 @@ Use this checklist for ZTF-Orchestrator patch, minor, and appliance releases.
 
 ## 1. Choose the Version
 
-- [ ] Decide the semantic version, for example `v1.5.1`.
+- [ ] Decide the semantic version, for example `vX.Y.Z`.
 - [ ] Confirm whether the release is a patch, minor, or major change.
 - [ ] Confirm whether the release includes appliance, Docker, CI/CD, or
   security-sensitive changes.
@@ -99,8 +99,8 @@ Record the security notes in the pull request and release notes.
 After checks pass on `main`:
 
 ```bash
-git tag -a v1.5.1 -m "ZTF-Orchestrator v1.5.1"
-git push origin v1.5.1
+git tag -a vX.Y.Z -m "ZTF-Orchestrator vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
 The tag push should trigger:
@@ -121,7 +121,7 @@ Create or update the GitHub Release:
 After the tag workflow completes, confirm the release image exists:
 
 ```bash
-docker manifest inspect ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.1
+docker manifest inspect ghcr.io/virtuarchitect/ztf-orchestrator:vX.Y.Z
 ```
 
 If the image is not available:

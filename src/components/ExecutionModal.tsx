@@ -42,6 +42,20 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
       body: JSON.stringify(body),
     })
 
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}))
+      const message = data.error || 'Execution request failed'
+      appendLog('error', message)
+      setProgress({
+        phase: 'Failed',
+        percent: 100,
+        detail: message,
+        estimated: true,
+      })
+      finishExecution('error')
+      return
+    }
+
     if (!resp.body) return
 
     const reader = resp.body.getReader()

@@ -118,6 +118,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     configFile: 'ndb.yml',
     details: 'Full NDB deployment including VM provisioning, compute profiles, cluster registration, and network profiles for PostgreSQL, MySQL, Oracle, SQL Server, MariaDB, and MongoDB.',
   },
+  {
+    id: 'lcm-update',
+    name: 'LCM Update',
+    description: 'Runs lifecycle management update workflows',
+    category: 'System',
+    icon: 'Wrench',
+    configFile: 'lcm-update.yml',
+    details: 'Executes Nutanix lifecycle management update workflows using reviewed YAML inputs and approval-gated execution.',
+  },
 ]
 
 export const SCRIPT_CATEGORIES = [

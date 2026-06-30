@@ -1,4 +1,4 @@
-export type WorkflowCategory = 'Infrastructure' | 'Prism Central' | 'Configuration' | 'Pod Operations' | 'Workloads' | 'Services'
+export type WorkflowCategory = 'Infrastructure' | 'Prism Central' | 'Configuration' | 'Pod Operations' | 'Workloads' | 'Services' | 'System'
 
 export interface WorkflowDef {
   id: string
@@ -144,6 +144,7 @@ export interface Settings {
   webhookUrl: string
   activeProfileId: string
   connectionProfiles: ConnectionProfile[]
+  approvalRequiredWorkflows?: string[]
 }
 
 export interface ConnectionProfile {

@@ -9,8 +9,38 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.5.1 and should be moved
+Changes in this section are present on `main` after v1.5.2 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.5.2] - 2026-06-30
+
+### Summary
+Patch release for production hardening after UAT workflow validation, adding
+mandatory approval policy controls, file-backed job persistence hardening, and
+separate validation records for PostgreSQL restore, non-NKP evidence,
+Foundation Central imaging, and ZTF 2.x planning.
+
+### Added
+- Added configurable mandatory approval policies for high-impact ZTF workflows.
+- Added Settings > Governance controls for selecting approval-mandatory
+  workflows.
+- Added approval ID support to direct workflow execution.
+- Added sanitized UAT evidence guidance for non-NKP workflows.
+- Added a safe PostgreSQL backup/restore drill record pattern.
+- Added a separate Foundation Central cluster-create and imaging validation
+  path.
+- Added a separate ZTF 2.x plan/apply roadmap.
+
+### Changed
+- Schedules, pipelines, and parallel runs now reject workflows marked as
+  approval-mandatory until those automation surfaces have explicit approval
+  binding.
+
+### Fixed
+- Hardened file-backed JSON persistence with per-file write locks and bounded
+  `os.replace` retry handling for transient Windows file locks.
 
 ---
 

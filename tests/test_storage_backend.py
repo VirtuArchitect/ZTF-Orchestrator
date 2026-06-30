@@ -1,5 +1,6 @@
 import datetime
 import os
+import threading
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,46 @@ def test_file_storage_round_trip(tmp_path):
     storage.write_json(path, {'activeProfileId': 'default'})
 
     assert storage.read_json(path, {}) == {'activeProfileId': 'default'}
+
+
+def test_file_storage_retries_permission_error_on_replace(tmp_path, monkeypatch):
+    storage = FileStorage(tmp_path)
+    path = tmp_path / 'jobs.json'
+    original_replace = os.replace
+    attempts = {'count': 0}
+
+    def flaky_replace(src, dst):
+        attempts['count'] += 1
+        if attempts['count'] == 1:
+            raise PermissionError('file is temporarily locked')
+        return original_replace(src, dst)
+
+    monkeypatch.setattr(os, 'replace', flaky_replace)
+
+    storage.write_json(path, {'status': 'queued'})
+
+    assert attempts['count'] == 2
+    assert storage.read_json(path, {}) == {'status': 'queued'}
+    assert not list(tmp_path.glob('.jobs.json.*.tmp'))
+
+
+def test_file_storage_concurrent_writes_leave_valid_json(tmp_path):
+    storage = FileStorage(tmp_path)
+    path = tmp_path / 'jobs.json'
+
+    def write_job(index: int) -> None:
+        storage.write_json(path, {'job': index, 'status': 'done'})
+
+    threads = [threading.Thread(target=write_job, args=(index,)) for index in range(20)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    data = storage.read_json(path, {})
+    assert data['status'] == 'done'
+    assert isinstance(data['job'], int)
+    assert not list(tmp_path.glob('.jobs.json.*.tmp'))
 
 
 @pytest.mark.skipif(

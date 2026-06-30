@@ -128,6 +128,17 @@ export const useStore = create<AppState>()(
         webhookUrl: '',
         activeProfileId: 'default',
         connectionProfiles: [DEFAULT_CONNECTION_PROFILE],
+        approvalRequiredWorkflows: [
+          'cluster-create',
+          'imaging-only',
+          'imaging',
+          'site-deploy',
+          'deploy-pc',
+          'config-pc',
+          'config-cluster',
+          'ndb',
+          'lcm-update',
+        ],
       },
       setSettings: (s) => set(state => ({ settings: { ...state.settings, ...s } })),
 
