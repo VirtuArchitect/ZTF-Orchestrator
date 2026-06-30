@@ -233,6 +233,30 @@ export default function Dashboard() {
   const latestEvidenceStatus = visibility?.evidence.latestStatus ?? 'missing'
   const latestEvidenceAt = visibility?.evidence.latestAt ? new Date(visibility.evidence.latestAt) : null
   const evidenceNeedsAttention = (visibility?.evidence.blocked ?? 0) + (visibility?.evidence.needsReview ?? 0)
+  const ztfWorkflowReady = ztfInstalled && healthIssueCount === 0
+  const nkpPlanningReady = nkpInstalled && nkpProfiles > 0 && availableNkpBinaries > 0
+  const evidenceReady = evidenceTotal > 0 && latestEvidenceStatus === 'ready'
+  const backupReady = backupWarning === 'OK'
+  const readinessHeadline = !ztfInstalled
+    ? 'Runtime setup incomplete'
+    : healthIssueCount > 0
+      ? 'Runtime ready with health warnings'
+      : 'Runtime ready for ZTF workflows'
+  const readinessDetail = !ztfInstalled
+    ? 'Run the setup wizard before automating Nutanix deployments.'
+    : healthIssueCount > 0
+      ? 'Resolve health warnings before launching production workflows; NKP planning, evidence, and backup status are tracked separately below.'
+      : 'Runtime checks are healthy for ZTF workflows. Confirm NKP planning, validation evidence, and backup status before production deployment.'
+  const operatorChecklist = [
+    { label: 'Configure runtime paths', done: ztfInstalled, path: '/setup' },
+    { label: 'Confirm storage backend', done: !storageIssue && storageBackend !== 'unknown', path: '/settings' },
+    { label: 'Create latest database backup', done: backupReady || storageBackend !== 'postgres', path: '/settings' },
+    { label: 'Create or validate config', done: generatedNkpConfigs > 0 || executions.length > 0, path: generatedNkpConfigs > 0 ? '/configs' : '/nkp' },
+    { label: 'Request approval where required', done: pendingApprovals === 0, path: '/approvals' },
+    { label: 'Run dry run', done: executions.some(item => item.workflow?.toLowerCase().includes('dry')), path: '/workflows' },
+    { label: 'Submit job', done: jobs.length > 0 || executions.length > 0, path: '/jobs' },
+    { label: 'Export evidence', done: evidenceReady, path: '/validation-evidence' },
+  ]
 
   const stats = [
     { label: 'Total Runs', value: executions.length, hint: 'Recorded executions', icon: Activity, color: 'text-nutanix-cyan', path: '/executions' },
@@ -273,12 +297,10 @@ export default function Dashboard() {
           }
           <div>
             <p className={clsx('font-semibold', ztfInstalled ? 'text-gray-100' : 'text-yellow-300')}>
-              {ztfInstalled ? 'Framework ready for orchestration' : 'ZeroTouch Framework not installed'}
+              {readinessHeadline}
             </p>
             <p className={clsx('text-sm mt-0.5', ztfInstalled ? 'text-gray-400' : 'text-yellow-400/70')}>
-              {ztfInstalled
-                ? 'System checks refresh every 30 seconds. Review failures before launching workflows.'
-                : 'Run the setup wizard before automating Nutanix deployments.'}
+              {readinessDetail}
             </p>
           </div>
         </div>
@@ -322,14 +344,25 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-6 gap-4 mb-6">
         <DashboardMiniSection
-          title="Deployment Readiness"
+          title="Readiness Layers"
           icon={Boxes}
           path="/nkp"
           items={[
-            { label: 'ZTF', value: ztfInstalled ? 'Ready' : 'Missing', tone: ztfInstalled ? 'good' : 'bad', path: '/setup' },
-            { label: 'NKP', value: nkpInstalled ? 'Ready' : 'Optional', tone: nkpInstalled ? 'good' : 'neutral', path: '/nkp' },
-            { label: 'Profiles', value: nkpProfiles, tone: nkpProfiles ? 'good' : 'warning', path: '/nkp' },
-            { label: 'Binaries', value: `${availableNkpBinaries}/${nkpBinaries}`, tone: availableNkpBinaries ? 'good' : nkpBinaries ? 'bad' : 'warning', path: '/nkp' },
+            { label: 'Runtime', value: ztfWorkflowReady ? 'Ready' : ztfInstalled ? 'Warnings' : 'Missing', tone: ztfWorkflowReady ? 'good' : ztfInstalled ? 'warning' : 'bad', path: '/setup' },
+            { label: 'ZTF workflows', value: ztfWorkflowReady ? 'Ready' : 'Check setup', tone: ztfWorkflowReady ? 'good' : 'warning', path: '/setup' },
+            { label: 'NKP planning', value: nkpPlanningReady ? 'Ready' : 'Incomplete', tone: nkpPlanningReady ? 'good' : 'warning', path: '/nkp#profiles' },
+            { label: 'Evidence', value: evidenceReady ? 'Ready' : 'Missing', tone: evidenceReady ? 'good' : 'warning', path: '/validation-evidence' },
+            { label: 'Backup/recovery', value: backupReady ? 'OK' : backupWarning, tone: backupReady ? 'good' : backupWarning === 'Admin only' || backupWarning === 'PostgreSQL not active' ? 'neutral' : 'warning', path: '/settings' },
+          ]}
+        />
+        <DashboardMiniSection
+          title="Deployment Inventory"
+          icon={FileArchive}
+          path="/nkp"
+          items={[
+            { label: 'NKP installed', value: nkpInstalled ? 'Yes' : 'No', tone: nkpInstalled ? 'good' : 'neutral', path: '/nkp' },
+            { label: 'Profiles', value: nkpProfiles, tone: nkpProfiles ? 'good' : 'warning', path: '/nkp#profiles' },
+            { label: 'Binaries', value: `${availableNkpBinaries}/${nkpBinaries}`, tone: availableNkpBinaries ? 'good' : nkpBinaries ? 'bad' : 'warning', path: '/nkp#binaries' },
             { label: 'Generated configs', value: generatedNkpConfigs, tone: generatedNkpConfigs ? 'good' : 'neutral', path: '/configs' },
           ]}
         />
@@ -466,7 +499,7 @@ export default function Dashboard() {
         </Link>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="card xl:col-span-1">
           <div className="flex items-start justify-between gap-3 mb-4">
             <h2 className="section-title flex items-center gap-2 mb-0">
@@ -522,6 +555,28 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h2 className="section-title flex items-center gap-2 mb-4">
+            <ListChecks size={16} className="text-nutanix-cyan" />
+            Operator Checklist
+          </h2>
+          <div className="space-y-2">
+            {operatorChecklist.map(item => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className="flex items-start gap-3 rounded-md bg-gray-900/40 px-3 py-2 text-sm hover:bg-gray-900/70 transition-colors"
+              >
+                {item.done
+                  ? <CheckCircle size={14} className="mt-0.5 flex-shrink-0 text-nutanix-teal" />
+                  : <Clock size={14} className="mt-0.5 flex-shrink-0 text-yellow-400" />
+                }
+                <span className={item.done ? 'text-gray-400' : 'text-gray-200'}>{item.label}</span>
+              </Link>
             ))}
           </div>
         </div>

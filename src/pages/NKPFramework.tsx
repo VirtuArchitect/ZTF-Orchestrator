@@ -291,6 +291,16 @@ export default function NKPFramework() {
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
+  useEffect(() => {
+    const applyHashTab = () => {
+      const hashTab = window.location.hash.replace('#', '') as NkpTab
+      if (NKP_TABS.some(tab => tab.id === hashTab)) setActiveTab(hashTab)
+    }
+    applyHashTab()
+    window.addEventListener('hashchange', applyHashTab)
+    return () => window.removeEventListener('hashchange', applyHashTab)
+  }, [])
+
   const appendLog = (type: string, data: string) =>
     setLogs(prev => [...prev, { type, data, ts: Date.now() }])
 
@@ -802,7 +812,10 @@ export default function NKPFramework() {
                 type="button"
                 role="tab"
                 aria-selected={activeTab === tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  window.history.replaceState(null, '', `#${tab.id}`)
+                }}
                 className={clsx(
                   'relative min-h-16 w-44 rounded-md border px-3 py-2 text-left transition-colors sm:w-auto',
                   activeTab === tab.id

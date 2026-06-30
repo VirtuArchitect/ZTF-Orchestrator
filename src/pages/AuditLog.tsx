@@ -27,6 +27,19 @@ const LEVEL_STYLE: Record<string, string> = {
   DEBUG:   'bg-gray-800 text-gray-500',
 }
 
+const EVENT_FILTERS = [
+  { id: 'OPERATIONS', label: 'Operations', action: '', includeHttp: false },
+  { id: 'AUTH', label: 'Auth', action: 'login', includeHttp: false },
+  { id: 'JOBS', label: 'Jobs', action: 'job', includeHttp: false },
+  { id: 'GOVERNANCE', label: 'Governance', action: 'approval', includeHttp: false },
+  { id: 'CONFIG', label: 'Config', action: 'config', includeHttp: false },
+  { id: 'BACKUPS', label: 'Backups', action: 'backup', includeHttp: false },
+  { id: 'SYSTEM', label: 'System', action: 'health', includeHttp: false },
+  { id: 'HTTP', label: 'Raw HTTP', action: '', includeHttp: true },
+] as const
+
+type EventFilterId = typeof EVENT_FILTERS[number]['id']
+
 function titleCase(value: string) {
   return value
     .replace(/_/g, ' ')
@@ -70,13 +83,17 @@ export default function AuditLog() {
   const [loading,   setLoading]   = useState(true)
   const [search,    setSearch]    = useState('')
   const [levelFlt,  setLevelFlt]  = useState('ALL')
+  const [eventFlt,  setEventFlt]  = useState<EventFilterId>('OPERATIONS')
   const [expanded,  setExpanded]  = useState<number | null>(null)
 
   const load = async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({ limit: '500' })
+      const eventFilter = EVENT_FILTERS.find(item => item.id === eventFlt) || EVENT_FILTERS[0]
       if (levelFlt !== 'ALL') params.set('level', levelFlt)
+      if (!eventFilter.includeHttp) params.set('include_http', 'false')
+      if (eventFilter.action) params.set('action', eventFilter.action)
       const resp = await apiFetch(`/api/audit-log?${params}`)
       if (resp.ok) {
         const data: LogEntry[] = await resp.json()
@@ -87,7 +104,7 @@ export default function AuditLog() {
     }
   }
 
-  useEffect(() => { load() }, [levelFlt])
+  useEffect(() => { load() }, [levelFlt, eventFlt])
 
   const filtered = entries.filter(e => {
     if (!search) return true
@@ -113,7 +130,7 @@ export default function AuditLog() {
   return (
     <Layout
       title="Audit Log"
-      subtitle="Structured application events — logins, executions, config changes, user management"
+      subtitle="Operational events by default; raw HTTP requests are available for debug review"
       actions={
         <button onClick={load} disabled={loading} className="btn-secondary gap-1.5">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -122,33 +139,58 @@ export default function AuditLog() {
       }
     >
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-          <input
-            className="input pl-9"
-            placeholder="Search message, user, IP…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-1">
-          {['ALL', 'INFO', 'WARNING', 'ERROR'].map(l => (
+      <div className="mb-5 space-y-3">
+        <div className="flex flex-wrap gap-1">
+          {EVENT_FILTERS.map(item => (
             <button
-              key={l}
-              onClick={() => setLevelFlt(l)}
+              key={item.id}
+              onClick={() => setEventFlt(item.id)}
               className={clsx(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                levelFlt === l
-                  ? 'bg-nutanix-blue text-white'
+                eventFlt === item.id
+                  ? item.id === 'HTTP'
+                    ? 'bg-yellow-700 text-white'
+                    : 'bg-nutanix-blue text-white'
                   : 'bg-surface border border-border text-gray-500 hover:text-gray-300'
               )}
             >
-              {l}
+              {item.label}
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-500">{filtered.length} entries</span>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              className="input pl-9"
+              placeholder="Search message, user, IP..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-1">
+              {['ALL', 'INFO', 'WARNING', 'ERROR'].map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLevelFlt(l)}
+                  className={clsx(
+                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                    levelFlt === l
+                      ? 'bg-nutanix-blue text-white'
+                      : 'bg-surface border border-border text-gray-500 hover:text-gray-300'
+                  )}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-gray-500">
+              {filtered.length} entries
+              {eventFlt !== 'HTTP' ? ' (raw HTTP hidden)' : ''}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Table */}

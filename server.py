@@ -4500,10 +4500,13 @@ def auth_login():
     password = str(data.get('password', ''))
     if not username or not password:
         return jsonify({'error': 'username and password required'}), 400
-    user = _find_user(username)
+    users = _load_users()
+    user = next((u for u in users if u.get('username') == username), None)
     if not user or not bcrypt.checkpw(password.encode(), user['password_hash'].encode()):
         log.warning('login_failed', extra={'user': username, 'ip': request.remote_addr})
         return jsonify({'error': 'Invalid credentials'}), 401
+    user['last_login_at'] = _now_iso()
+    _save_users(users)
     token = _create_session(username, user['role'])
     log.info('login_success', extra={'user': username, 'ip': request.remote_addr})
     return jsonify({
@@ -4532,7 +4535,17 @@ def auth_me():
 @require_role('admin')
 def list_users():
     return jsonify([
-        {'username': u['username'], 'role': u['role'], 'created_at': u.get('created_at')}
+        {
+            'username': u['username'],
+            'role': u['role'],
+            'created_at': u.get('created_at'),
+            'last_login_at': u.get('last_login_at'),
+            'password_changed_at': u.get('password_changed_at'),
+            'disabled': bool(u.get('disabled', False)),
+            'mfa_supported': False,
+            'sso_supported': False,
+            'active_sessions_supported': False,
+        }
         for u in _load_users()
     ])
 
@@ -4557,6 +4570,7 @@ def create_user():
         'password_hash': hashed,
         'role':          role,
         'created_at':    datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
+        'disabled':      False,
     })
     _save_users(users)
     log.info('user_created', extra={'user': request.current_user['username'], 'action': f'created {username}'})
@@ -4574,6 +4588,7 @@ def update_user(username: str):
         user['password_hash'] = bcrypt.hashpw(
             str(data['password']).encode(), bcrypt.gensalt()
         ).decode()
+        user['password_changed_at'] = _now_iso()
     if 'role' in data:
         if data['role'] not in ROLES:
             return jsonify({'error': f'role must be one of {ROLES}'}), 400
@@ -6251,9 +6266,10 @@ def get_audit_log():
     level  = request.args.get('level', '').upper()
     user   = request.args.get('user', '').lower()
     action = request.args.get('action', '').lower()
+    include_http = request.args.get('include_http', 'true').lower() not in {'0', 'false', 'no'}
 
     if hasattr(_storage, 'read_audit_events'):
-        return jsonify(_storage.read_audit_events(limit, level, user, action))
+        return jsonify(_storage.read_audit_events(limit, level, user, action, include_http))
 
     if not LOG_FILE.exists():
         return jsonify([])
@@ -6275,6 +6291,8 @@ def get_audit_log():
                     continue
                 if action and action not in entry.get('msg', '').lower() \
                           and action not in entry.get('action', '').lower():
+                    continue
+                if not include_http and entry.get('event') == 'http_request':
                     continue
                 entries.append(entry)
     except OSError:

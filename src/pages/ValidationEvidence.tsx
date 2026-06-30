@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Download, FileArchive, Loader, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertTriangle, Download, FileArchive, Loader, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch, authHeaders } from '../utils/api'
 import { useStore } from '../store'
@@ -41,6 +42,8 @@ export default function ValidationEvidence() {
   const [creating, setCreating] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<EvidenceRecord | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -94,15 +97,17 @@ export default function ValidationEvidence() {
     }
   }
 
-  const deleteRecord = async (record: EvidenceRecord) => {
-    if (!confirm(`Delete validation evidence ${record.profileName || record.id}?`)) return
+  const deleteRecord = async () => {
+    if (!deleteTarget || deleteConfirm !== deleteTarget.id) return
     setError('')
-    const resp = await apiFetch(`/api/validation-evidence/${record.id}`, { method: 'DELETE' })
+    const resp = await apiFetch(`/api/validation-evidence/${deleteTarget.id}`, { method: 'DELETE' })
     if (!resp.ok) {
       const data = await resp.json().catch(() => ({}))
       setError(data.error || `Server returned ${resp.status}`)
       return
     }
+    setDeleteTarget(null)
+    setDeleteConfirm('')
     await load()
   }
 
@@ -191,7 +196,19 @@ export default function ValidationEvidence() {
             <div className="empty-state py-10">
               <FileArchive size={32} className="mx-auto mb-3 text-gray-700" />
               <p className="text-sm font-medium text-gray-400">No validation evidence captured yet</p>
-              <p className="text-xs text-gray-600 mt-1">Create an evidence run from a saved NKP profile.</p>
+              <p className="mx-auto mt-1 max-w-xl text-xs text-gray-600">
+                Production handover evidence should include an NKP profile, readiness report, generated YAML, schema validation, and any required CLI compatibility output.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Link to="/nkp#profiles" className="btn-primary gap-1.5">
+                  <Plus size={14} />
+                  Create NKP Profile
+                </Link>
+                <Link to="/nkp#profiles" className="btn-secondary gap-1.5">
+                  <ShieldCheck size={14} />
+                  Run Readiness
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -224,7 +241,7 @@ export default function ValidationEvidence() {
                         Download
                       </button>
                       {isAdmin && (
-                        <button onClick={() => deleteRecord(record)} className="btn-danger gap-1.5">
+                        <button onClick={() => { setDeleteTarget(record); setDeleteConfirm('') }} className="btn-danger gap-1.5">
                           <Trash2 size={14} />
                           Delete
                         </button>
@@ -237,6 +254,35 @@ export default function ValidationEvidence() {
           )}
         </div>
       </div>
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-red-700/40 bg-gray-950 p-5 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg border border-red-700/40 bg-red-950/30 p-2 text-red-300">
+                <AlertTriangle size={18} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-100">Delete validation evidence</h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  This removes the evidence archive for <span className="text-gray-200">{deleteTarget.profileName || 'this profile'}</span>. Exported copies are not affected.
+                </p>
+              </div>
+            </div>
+            <label className="mt-5 block">
+              <span className="label">Type the evidence ID to confirm</span>
+              <input className="input font-mono" value={deleteConfirm} onChange={event => setDeleteConfirm(event.target.value)} autoFocus />
+            </label>
+            <p className="mt-2 break-all font-mono text-xs text-gray-600">{deleteTarget.id}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setDeleteTarget(null)} className="btn-secondary">Cancel</button>
+              <button onClick={deleteRecord} disabled={deleteConfirm !== deleteTarget.id} className="btn-danger gap-1.5">
+                <Trash2 size={14} />
+                Delete Evidence
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }

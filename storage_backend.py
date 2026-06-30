@@ -165,6 +165,7 @@ class PostgresStorage:
         level: str = '',
         user: str = '',
         action: str = '',
+        include_http: bool = True,
     ) -> list[dict]:
         level_filter = level.upper()
         user_filter = user.lower()
@@ -178,6 +179,7 @@ class PostgresStorage:
                 where (%s = '' or upper(level) = %s)
                   and (%s = '' or lower(username) = %s)
                   and (%s = '' or lower(msg) like %s or lower(coalesce(action, '')) like %s)
+                  and (%s or coalesce(event->>'event', '') <> 'http_request')
                 order by id desc
                 limit %s
                 """,
@@ -185,6 +187,7 @@ class PostgresStorage:
                     level_filter, level_filter,
                     user_filter, user_filter,
                     action_filter, action_needle, action_needle,
+                    include_http,
                     limit,
                 ),
             ).fetchall()

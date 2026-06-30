@@ -152,13 +152,28 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Version */}
-      {sidebarOpen && (
-        <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-gray-600">ZeroTouch Orchestrator v{APP_VERSION}</p>
-          <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
-        </div>
-      )}
+      {/* Navigation mode */}
+      <div className={clsx('border-t border-border p-3', sidebarOpen ? 'space-y-3' : 'flex justify-center')}>
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={sidebarOpen ? 'Use compact navigation' : 'Use labeled navigation'}
+          title={sidebarOpen ? 'Use compact navigation' : 'Use labeled navigation'}
+          className={clsx(
+            'flex items-center rounded-lg border border-border bg-surface text-gray-400 transition-colors hover:text-gray-200 hover:border-border-light',
+            sidebarOpen ? 'w-full justify-between px-3 py-2 text-xs' : 'h-10 w-10 justify-center'
+          )}
+        >
+          {sidebarOpen && <span>Navigation labels</span>}
+          <ChevronRight size={16} className={clsx('transition-transform', sidebarOpen ? 'rotate-180' : '')} />
+        </button>
+        {sidebarOpen && (
+          <div>
+            <p className="text-xs text-gray-600">ZeroTouch Orchestrator v{APP_VERSION}</p>
+            <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
+          </div>
+        )}
+      </div>
     </aside>
   )
 }
