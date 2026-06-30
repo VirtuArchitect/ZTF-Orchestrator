@@ -25,6 +25,12 @@ afterward. Raw evidence, endpoint details, hostnames, addresses, credentials,
 logs, and screenshots are intentionally withheld because they relate to a
 restricted UAT environment.
 
+Use [Sanitized UAT Evidence Record Pattern](sanitized-uat-evidence-record.md)
+for non-NKP workflow evidence records. Use
+[Foundation Central Validation Path](foundation-central-validation.md) for
+cluster-create and imaging evidence, which is tracked separately from Prism
+Central configuration.
+
 ## Locally Validated
 
 The following areas have been validated with automated tests, local build
@@ -38,7 +44,7 @@ checks, static configuration checks, or local Docker checks:
 | Config file management | Create, read, update, delete, backup, restore, path traversal rejection, extension validation, and oversized body handling are tested. |
 | Workflow validation | Unknown workflow/script rejection, YAML validation, dry-run checks, and legacy `fc_ip` normalization are tested. |
 | ZeroTouch Framework compatibility | Current workflow/script execution is validated against legacy ZTF 1.x semantics. Install and container defaults pin ZTF `v1.5.2`; ZTF 2.x checkouts are detected and blocked for legacy workflow/script launch because upstream v2.0.0 has a different `ztf plan/apply` model and does not yet port the 1.x workflow surfaces. |
-| Storage abstraction | File storage round-trip is tested. PostgreSQL storage document/session/audit behavior is testable when `ZTF_TEST_DATABASE_URL` is supplied. |
+| Storage abstraction | File storage round-trip, concurrent file writes, and transient replace retry behavior are tested. PostgreSQL storage document/session/audit behavior is testable when `ZTF_TEST_DATABASE_URL` is supplied. |
 | PostgreSQL backup controls | Admin-only backup list/create/download/restore endpoints, restore confirmation, safety-backup creation, restore maintenance locking, path rejection, and command secret handling are tested. |
 | Docker Compose | Default PostgreSQL-backed compose and file-backed compose validate successfully. |
 | Appliance kit | Appliance Compose file, first-boot scripts, cloud-init examples, and release packaging workflow are included. Local validation covers Compose rendering and script syntax only; QCOW2 image build and AHV import require infrastructure UAT. |
@@ -48,7 +54,7 @@ checks, static configuration checks, or local Docker checks:
 | Validation evidence | NKP evidence records, role-gated creation/list/download/delete behavior, generated YAML capture, readiness/schema metadata, and ZIP bundle export are tested locally. |
 | Pipelines | CRUD, viewer access, invalid workflows, empty steps, and streamed execution behavior are tested. |
 | Schedules | Schedule validation and configured config directory behavior are tested. |
-| Approvals | Create/approve/reject behavior and webhook integration are tested. |
+| Approvals | Create/approve/reject behavior, webhook integration, configurable mandatory workflow approval policy, direct-job approval enforcement, and automation-surface rejection for approval-mandatory workflows are tested. |
 | Parallel execution | Submit flow and webhook adapter integration are tested. |
 | Drift detection | Matched, changed, missing, unexpected, unknown, list, clear, and viewer restriction behavior are tested. |
 | Audit/logging | Structured audit endpoint access and role restrictions are tested. |
@@ -64,7 +70,8 @@ The following areas cannot be fully proven without the relevant infrastructure:
 |---|---|
 | Nutanix workflow execution | Prism Central, Foundation Central, Prism Element, real credentials, safe test clusters/nodes, and approved workflow inputs. |
 | Prism Central / Foundation Central connectivity | Reachable Nutanix endpoints on required ports, valid service accounts, and representative network paths. |
-| Production PostgreSQL backup/restore | Target production or staging PostgreSQL service, backup storage, restore target, and recovery acceptance criteria. |
+| PostgreSQL backup/restore drill | Safe UAT PostgreSQL service, backup storage, restore target, restart path, and recovery acceptance criteria. See [PostgreSQL Backup and Restore Drill](postgresql-backup-restore-drill.md). |
+| Foundation Central cluster-create / imaging | Separate UAT Foundation Central validation for `cluster-create`, `imaging-only`, and `imaging`; Prism Central config success does not validate this path. |
 | Kubernetes runtime | A real Kubernetes cluster, Docker Desktop Kubernetes, kind, minikube, or managed Kubernetes environment. |
 | Load balancing and scaling | Multiple app instances, shared PostgreSQL backend, ingress or reverse proxy, and session/job behavior checks. |
 | CDN/caching | A configured CDN or cache layer such as Cloudflare, Azure Front Door, nginx cache, or equivalent. |
@@ -79,10 +86,8 @@ The following areas cannot be fully proven without the relevant infrastructure:
    - Log in, check Dashboard state backend, submit a dry-run workflow, and review Jobs / Queue.
 
 2. PostgreSQL backup and restore drill
-   - Create test users, config files, jobs, schedules, approvals, and drift records.
-   - Back up the PostgreSQL database or Docker volume.
-   - Restore into a clean environment.
-   - Confirm state, sessions, history, jobs, and audit events are present.
+   - Follow [PostgreSQL Backup and Restore Drill](postgresql-backup-restore-drill.md).
+   - Record only the sanitized drill record and private evidence-store label.
 
 3. Kubernetes deployment test
    - Apply the starter manifests in `k8s/`.
@@ -101,6 +106,7 @@ The following areas cannot be fully proven without the relevant infrastructure:
    - Run dry-run checks first.
    - Execute low-risk workflows against a controlled lab environment.
    - Record expected versus actual Prism Central, Foundation Central, and Prism Element changes.
+   - Validate Foundation Central cluster-create and imaging separately from Prism Central configuration.
 
 6. Disaster recovery exercise
    - Simulate application container loss.
@@ -116,3 +122,6 @@ Docker Compose configuration, durable job execution, audit logging, and
 configuration workflows. Full enterprise validation requires environment-specific
 UAT against the target Nutanix infrastructure, PostgreSQL deployment,
 Kubernetes/load-balancing model, and disaster recovery process.
+
+ZTF 2.x support is intentionally tracked outside v1.5.x in the
+[ZTF 2.x Plan/Apply Roadmap](ztf-2x-plan-apply-roadmap.md).

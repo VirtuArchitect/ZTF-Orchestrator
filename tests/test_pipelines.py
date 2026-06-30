@@ -7,7 +7,7 @@ import pytest
 
 def _create(client, auth_headers, name='Test Pipeline', steps=None):
     if steps is None:
-        steps = [{'workflow': 'cluster-create', 'configFile': ''}]
+        steps = [{'workflow': 'pod-config', 'configFile': ''}]
     return client.post('/api/pipelines',
                        json={'name': name, 'steps': steps},
                        headers=auth_headers)
@@ -48,12 +48,12 @@ def test_pipeline_update(client, auth_headers):
     pid = _create(client, auth_headers).get_json()['id']
     resp = client.put(f'/api/pipelines/{pid}',
                       json={'name': 'Updated Name',
-                            'steps': [{'workflow': 'imaging-only', 'configFile': ''}]},
+                            'steps': [{'workflow': 'pod-config', 'configFile': ''}]},
                       headers=auth_headers)
     assert resp.status_code == 200
     data = resp.get_json()
     assert data['name'] == 'Updated Name'
-    assert data['steps'][0]['workflow'] == 'imaging-only'
+    assert data['steps'][0]['workflow'] == 'pod-config'
 
 
 def test_pipeline_delete(client, auth_headers):

@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.5.1
+# ZTF-Orchestrator · v1.5.2
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -446,6 +446,14 @@ notes — before executing sensitive operations. Admins approve or reject with
 an optional decision note. Requests auto-expire after 24 hours. A pending
 count badge on the sidebar signals outstanding requests to admins.
 
+v1.5.2 adds configurable mandatory approval policies in **Settings >
+Governance**. High-impact workflows such as Foundation Central imaging,
+cluster-create, Prism Central deployment/configuration, cluster configuration,
+NDB, and LCM update require a matching approved request ID before direct
+execution. Schedules, pipelines, and parallel runs reject workflows that are
+currently marked approval-mandatory until those automation surfaces have their
+own approval binding.
+
 ### Drift Detection
 Compare a saved ZTF config file against the last successful applied config or a
 pasted current-state JSON/YAML snapshot. Results are classified as **Matched**,
@@ -542,6 +550,16 @@ download existing records. Each bundle captures readiness scoring, generated
 YAML, schema validation, optional NKP CLI compatibility output, notes, linked
 approval/job/task references where available, and a Markdown summary. Downloads
 are ZIP bundles intended for change records, customer UAT, and handover packs.
+
+For non-NKP workflows, use
+[`docs/sanitized-uat-evidence-record.md`](docs/sanitized-uat-evidence-record.md).
+Foundation Central cluster-create and imaging validation is tracked separately in
+[`docs/foundation-central-validation.md`](docs/foundation-central-validation.md).
+PostgreSQL backup/restore UAT drills should follow
+[`docs/postgresql-backup-restore-drill.md`](docs/postgresql-backup-restore-drill.md).
+ZTF 2.x support is intentionally separated into the
+[`docs/ztf-2x-plan-apply-roadmap.md`](docs/ztf-2x-plan-apply-roadmap.md)
+plan/apply roadmap.
 
 ### Audit Log
 Structured log viewer (admin only). Displays the last 200 entries from

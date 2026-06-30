@@ -64,7 +64,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.5.1'
+APP_VERSION = '1.5.2'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2500,6 +2500,11 @@ ALLOWED_WORKFLOWS = {
     'lcm-update',
 }
 
+DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
+    'cluster-create', 'imaging-only', 'imaging', 'site-deploy',
+    'deploy-pc', 'config-pc', 'config-cluster', 'ndb', 'lcm-update',
+}
+
 
 def _is_allowed_approval_workflow(workflow: str) -> bool:
     if workflow in ALLOWED_WORKFLOWS:
@@ -2579,6 +2584,68 @@ def _nkp_approval_error(
 # ip_fields: keys whose values must be valid IP addresses
 # connect: [(field_key, port, label)] — TCP reachability checks
 # cluster_dict_connect: (port, label) — check each key of a clusters:{ip: ...} map
+def _approval_required_workflows(settings: dict | None = None) -> set[str]:
+    configured = (settings or get_settings()).get('approvalRequiredWorkflows', None)
+    if configured is None or not isinstance(configured, list):
+        return set(DEFAULT_APPROVAL_REQUIRED_WORKFLOWS)
+    return {str(item).strip() for item in configured if str(item).strip() in ALLOWED_WORKFLOWS}
+
+
+def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
+    return bool(workflow and workflow in _approval_required_workflows(settings))
+
+
+def _workflow_approval_error(
+    approval: dict | None,
+    workflow: str,
+    config_file: str,
+    config_content: str,
+) -> str | None:
+    if not approval:
+        return 'Approved workflow execution request was not found'
+    if approval.get('status') != 'approved':
+        return 'Workflow execution request is not approved'
+    if approval.get('workflow') != workflow:
+        return 'Workflow execution approval does not match the requested workflow'
+    expires = _parse_iso_datetime(approval.get('expiresAt'))
+    if expires and expires < datetime.datetime.now(datetime.timezone.utc):
+        return 'Workflow execution approval has expired'
+    approved_config_file = str(approval.get('configFile') or '').strip()
+    if approved_config_file and config_file and approved_config_file != config_file:
+        return 'Workflow execution approval does not match the requested config file'
+    approved_content = approval.get('configContent') or ''
+    if approved_content and config_content and approved_content != config_content:
+        return 'Workflow execution approval does not match the requested YAML content'
+    return None
+
+
+def _validate_workflow_approval(data: dict, settings: dict | None = None) -> tuple[str | None, dict | None]:
+    workflow = str(data.get('workflow') or '').strip()
+    if not _workflow_requires_approval(workflow, settings):
+        return None, None
+    _require_engines()
+    approval_id = str(data.get('approvalId') or '').strip()
+    if not approval_id:
+        return f'Workflow "{workflow}" requires an approved approval request', None
+    approval = _approval_manager.get_approval(approval_id)
+    error = _workflow_approval_error(
+        approval,
+        workflow,
+        str(data.get('configFile') or '').strip(),
+        data.get('configContent') or '',
+    )
+    return error, approval
+
+
+def _approval_automation_error(workflow: str | None) -> str | None:
+    if _workflow_requires_approval(workflow):
+        return (
+            f'Workflow "{workflow}" requires an approved approval request and must be '
+            'submitted as a direct job with an approval ID'
+        )
+    return None
+
+
 WORKFLOW_PREFLIGHT: dict[str, dict] = {
     'cluster-create': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'clusters'],
@@ -2676,7 +2743,7 @@ def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[s
 
 ALLOWED_SETTINGS_KEYS = {
     'ztfPath', 'nkpPath', 'pythonPath', 'configDir', 'repoUrl', 'nkpRepoUrl', 'webhookUrl',
-    'activeProfileId', 'connectionProfiles',
+    'activeProfileId', 'connectionProfiles', 'approvalRequiredWorkflows',
 }
 
 # ─── Feature engines (lazy-initialised in _init_engines) ─────────────────────
@@ -2706,6 +2773,28 @@ def _init_engines():
         script         = schedule.get('script') or ''
         config_content = schedule.get('configContent') or ''
         config_file    = schedule.get('configFile') or ''
+
+        approval_error = _approval_automation_error(workflow)
+        if approval_error:
+            rc = -1
+            status = 'failed'
+            entry = {
+                'id':         str(int(_t.time() * 1000)),
+                'workflow':   workflow or script,
+                'type':       'schedule',
+                'command':    '',
+                'status':     status,
+                'returnCode': rc,
+                'timestamp':  datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                'user':       'scheduler',
+                'configFile': config_file,
+                'output':     approval_error,
+            }
+            hist = read_json(HISTORY_FILE, [])
+            hist.insert(0, entry)
+            write_json(HISTORY_FILE, hist[:1000])
+            _fire_configured_webhook(workflow or script, status, rc, 'scheduler', entry['id'], 'schedule')
+            return status
 
         incompatible = _ztf_incompatible_error(ztf_path)
         if incompatible:
@@ -2849,6 +2938,9 @@ def _schedule_validation_error(data: dict, existing: dict | None = None) -> str:
     script = str(candidate.get('script', '')).strip()
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         return 'Unknown workflow'
+    approval_error = _approval_automation_error(workflow)
+    if approval_error:
+        return approval_error
     if script and script not in ALLOWED_SCRIPTS:
         return 'Unknown script'
     if not workflow and not script:
@@ -3135,6 +3227,7 @@ def get_settings() -> dict:
         'webhookUrl': '',
         'activeProfileId': 'default',
         'connectionProfiles': [default_profile],
+        'approvalRequiredWorkflows': sorted(DEFAULT_APPROVAL_REQUIRED_WORKFLOWS),
     }
     stored = read_json(SETTINGS_FILE, {})
     merged = {**defaults, **stored}
@@ -5670,6 +5763,9 @@ def create_pipeline():
     for s in steps:
         if s.get('workflow') not in ALLOWED_WORKFLOWS:
             return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
+        approval_error = _approval_automation_error(s.get('workflow'))
+        if approval_error:
+            return jsonify({'error': approval_error}), 400
     pipeline = {
         'id':        str(uuid.uuid4()),
         'name':      name,
@@ -5706,6 +5802,9 @@ def update_pipeline(pipeline_id: str):
         for s in data['steps']:
             if s.get('workflow') not in ALLOWED_WORKFLOWS:
                 return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
+            approval_error = _approval_automation_error(s.get('workflow'))
+            if approval_error:
+                return jsonify({'error': approval_error}), 400
         pipeline['steps'] = data['steps']
     pipeline['updatedAt'] = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
     _save_pipelines(pipelines)
@@ -5734,6 +5833,9 @@ def run_pipeline(pipeline_id: str):
     for s in steps:
         if s.get('workflow') not in ALLOWED_WORKFLOWS:
             return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
+        approval_error = _approval_automation_error(s.get('workflow'))
+        if approval_error:
+            return jsonify({'error': approval_error}), 403
 
     settings     = get_settings()
     ztf_path     = settings['ztfPath']
@@ -5951,7 +6053,8 @@ def execute_workflow():
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
 
-    incompatible = _ztf_incompatible_error(get_settings()['ztfPath'])
+    settings = get_settings()
+    incompatible = _ztf_incompatible_error(settings['ztfPath'])
     if incompatible:
         body, status_code = incompatible
         return jsonify(body), status_code
@@ -5966,6 +6069,10 @@ def execute_workflow():
             headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
         )
 
+    approval_error, approval = _validate_workflow_approval(data, settings)
+    if approval_error:
+        return jsonify({'error': approval_error, 'approvalRequired': True}), 403
+
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     job = _job_manager.submit({
         'workflow': workflow,
@@ -5973,7 +6080,10 @@ def execute_workflow():
         'configContent': config_content,
         'configFile': config_file,
         'debug': debug,
+        'approvalId': str(data.get('approvalId') or '').strip() or None,
     }, current_user)
+    if approval:
+        _approval_manager.link_job(approval['id'], job['id'])
 
     return Response(
         _job_manager.stream_events(job['id']),
@@ -6186,10 +6296,15 @@ def submit_job():
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
 
-    incompatible = _ztf_incompatible_error(get_settings()['ztfPath'])
+    settings = get_settings()
+    incompatible = _ztf_incompatible_error(settings['ztfPath'])
     if incompatible:
         body, status_code = incompatible
         return jsonify(body), status_code
+
+    approval_error, approval = _validate_workflow_approval(data, settings)
+    if approval_error:
+        return jsonify({'error': approval_error, 'approvalRequired': True}), 403
 
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     job = _job_manager.submit({
@@ -6198,7 +6313,10 @@ def submit_job():
         'configContent': data.get('configContent'),
         'configFile': data.get('configFile'),
         'debug': bool(data.get('debug', False)),
+        'approvalId': str(data.get('approvalId') or '').strip() or None,
     }, current_user)
+    if approval:
+        _approval_manager.link_job(approval['id'], job['id'])
     return jsonify(job), 202
 
 
@@ -7015,6 +7133,9 @@ def start_parallel_run():
 
     if not workflow or workflow not in ALLOWED_WORKFLOWS:
         return jsonify({'error': 'Unknown workflow'}), 400
+    approval_error = _approval_automation_error(workflow)
+    if approval_error:
+        return jsonify({'error': approval_error}), 403
     if not sites or not isinstance(sites, list):
         return jsonify({'error': 'sites must be a non-empty list'}), 400
     if len(sites) > 10:

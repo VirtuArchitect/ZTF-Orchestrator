@@ -42,6 +42,7 @@ export default function WorkflowDetail() {
   const [yamlContent, setYamlContent] = useState('')
   const [showExecution, setShowExecution] = useState(false)
   const [isDryRun, setIsDryRun] = useState(false)
+  const [approvalId, setApprovalId] = useState('')
 
   if (!workflow) {
     return (
@@ -55,6 +56,7 @@ export default function WorkflowDetail() {
   }
 
   const Icon = ICON_MAP[workflow.icon] || Server
+  const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
 
   const handleYamlGenerated = (yaml: string) => {
     setYamlContent(yaml)
@@ -106,9 +108,9 @@ export default function WorkflowDetail() {
           </button>
           <button
             onClick={() => { if (yamlContent) { setIsDryRun(false); setShowExecution(true) } }}
-            disabled={!yamlContent}
+            disabled={!yamlContent || (approvalRequired && !approvalId.trim())}
             className="btn-success gap-1.5"
-            title={!yamlContent ? 'Fill out the form first' : undefined}
+            title={!yamlContent ? 'Fill out the form first' : approvalRequired && !approvalId.trim() ? 'Paste an approved request ID first' : undefined}
           >
             <Play size={14} />
             Run Workflow
@@ -164,12 +166,28 @@ export default function WorkflowDetail() {
           )
       )}
 
+      {approvalRequired && (
+        <div className="mt-6 card border-amber-700/30 bg-amber-900/5">
+          <label className="label">Approved Request ID</label>
+          <input
+            value={approvalId}
+            onChange={event => setApprovalId(event.target.value)}
+            className="input font-mono"
+            placeholder="Paste approved approval request ID before running"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Dry Run does not require approval. Run Workflow requires a matching approved request for this workflow and YAML.
+          </p>
+        </div>
+      )}
+
       {showExecution && yamlContent && (
         <ExecutionModal
           onClose={() => setShowExecution(false)}
           workflow={workflow.id}
           configContent={yamlContent}
           configFile={workflow.configFile}
+          extraParams={!isDryRun && approvalId.trim() ? { approvalId: approvalId.trim() } : undefined}
           dryRun={isDryRun}
         />
       )}

@@ -10,10 +10,22 @@ import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
 import { toYaml } from '../utils/yaml'
 import { APP_VERSION } from '../version'
+import { WORKFLOWS } from '../data'
 import type { ConnectionProfile, Settings as AppSettings } from '../types'
 import clsx from 'clsx'
 
 const ENVIRONMENTS: ConnectionProfile['environment'][] = ['lab', 'preprod', 'production', 'customer', 'other']
+const DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = [
+  'cluster-create',
+  'imaging-only',
+  'imaging',
+  'site-deploy',
+  'deploy-pc',
+  'config-pc',
+  'config-cluster',
+  'ndb',
+  'lcm-update',
+]
 
 interface PlatformHealth {
   status: string
@@ -130,6 +142,9 @@ function normalizeSettings(settings: AppSettings): AppSettings {
     nkpRepoUrl: settings.nkpRepoUrl || 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git',
     activeProfileId,
     connectionProfiles: profiles,
+    approvalRequiredWorkflows: Array.isArray(settings.approvalRequiredWorkflows)
+      ? settings.approvalRequiredWorkflows.filter(id => WORKFLOWS.some(workflow => workflow.id === id))
+      : DEFAULT_APPROVAL_REQUIRED_WORKFLOWS,
   }
 }
 
@@ -327,7 +342,7 @@ export default function Settings() {
   const [form, setForm] = useState<AppSettings>(() => normalizeSettings(settings))
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'runtime' | 'storage' | 'connections' | 'notifications' | 'about'>('runtime')
+  const [activeTab, setActiveTab] = useState<'runtime' | 'storage' | 'connections' | 'governance' | 'notifications' | 'about'>('runtime')
   const [copied, setCopied] = useState(false)
   const [health, setHealth] = useState<PlatformHealth | null>(null)
   const [healthLoading, setHealthLoading] = useState(false)
@@ -550,6 +565,23 @@ export default function Settings() {
     )
   }
 
+  const toggleApprovalWorkflow = (workflowId: string) => {
+    setForm(prev => {
+      const current = new Set(prev.approvalRequiredWorkflows || [])
+      if (current.has(workflowId)) {
+        current.delete(workflowId)
+      } else {
+        current.add(workflowId)
+      }
+      return {
+        ...prev,
+        approvalRequiredWorkflows: WORKFLOWS
+          .map(workflow => workflow.id)
+          .filter(id => current.has(id)),
+      }
+    })
+  }
+
   const createBackup = async () => {
     setBackupError('')
     setBackupMessage('')
@@ -623,6 +655,7 @@ export default function Settings() {
     { id: 'runtime', label: 'Runtime' },
     { id: 'storage', label: 'Storage' },
     { id: 'connections', label: 'Connection Profiles' },
+    { id: 'governance', label: 'Governance' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'about', label: 'About' },
   ] as const
@@ -1101,6 +1134,40 @@ export default function Settings() {
               onChange={value => setForm(p => ({ ...p, webhookUrl: value }))} />
             <p className="text-xs text-gray-500 mt-3">
               Receives a POST summary when workflows, scripts, schedules, pipelines, approvals, or parallel runs complete.
+            </p>
+          </Section>
+        )}
+
+        {activeTab === 'governance' && (
+          <Section title="Approval Policies" subtitle="Mandatory workflow approvals" icon={ShieldCheck}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {WORKFLOWS.map(workflow => {
+                const checked = Boolean(form.approvalRequiredWorkflows?.includes(workflow.id))
+                return (
+                  <label
+                    key={workflow.id}
+                    className={clsx(
+                      'flex items-start gap-3 rounded-lg border px-3 py-3 transition-colors',
+                      checked ? 'border-amber-500/30 bg-amber-500/10' : 'border-border bg-gray-950/40'
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!isAdmin}
+                      onChange={() => toggleApprovalWorkflow(workflow.id)}
+                      className="mt-1"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-gray-100">{workflow.name}</span>
+                      <span className="block text-xs text-gray-500">{workflow.category} / {workflow.id}</span>
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              Selected workflows require a matching approved request ID for direct execution.
             </p>
           </Section>
         )}

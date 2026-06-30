@@ -1051,7 +1051,8 @@ def test_schedule_runner_uses_configured_config_dir(client, auth_headers, tmp_pa
     client.post('/api/settings',
                 json={'configDir': str(config_dir),
                       'ztfPath': str(ztf_dir),
-                      'pythonPath': 'python'},
+                      'pythonPath': 'python',
+                      'approvalRequiredWorkflows': []},
                 headers=auth_headers)
 
     calls = []
@@ -1144,6 +1145,108 @@ def test_approval_self_approval_is_rejected(client, auth_headers):
     assert 'Self-approval' in approve_resp.get_json()['error']
 
 
+def test_mandatory_workflow_approval_blocks_direct_job(client, auth_headers):
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'config-pc',
+                             'configFile': 'pc-config.yml',
+                             'configContent': 'pc_ip: 10.0.0.1\n'},
+                       headers=auth_headers)
+    assert resp.status_code == 403
+    data = resp.get_json()
+    assert data['approvalRequired'] is True
+    assert 'requires an approved approval request' in data['error']
+
+
+def test_mandatory_workflow_approval_accepts_approved_request(client, auth_headers, monkeypatch):
+    import subprocess
+
+    import server
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['configured\n'])
+        stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+
+    _create_user(client, auth_headers, 'approval-runner', 'operator')
+    op_headers = _login(client, 'approval-runner')
+    create_resp = client.post('/api/approvals',
+                              json={'workflow': 'config-pc',
+                                    'configFile': 'pc-config.yml',
+                                    'configContent': 'pc_ip: 10.0.0.1\n'},
+                              headers=op_headers)
+    assert create_resp.status_code == 201
+    approval_id = create_resp.get_json()['id']
+
+    approve_resp = client.post(f'/api/approvals/{approval_id}/approve',
+                               json={'notes': 'approved'},
+                               headers=auth_headers)
+    assert approve_resp.status_code == 200
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'config-pc',
+                             'configFile': 'pc-config.yml',
+                             'configContent': 'pc_ip: 10.0.0.1\n',
+                             'approvalId': approval_id},
+                       headers=op_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+    job = _wait_for_job(client, op_headers, job_id)
+    assert job['status'] == 'success'
+
+    approval = client.get(f'/api/approvals/{approval_id}', headers=auth_headers).get_json()
+    assert approval['jobId'] == job_id
+
+
+def test_mandatory_workflow_approval_is_configurable(client, auth_headers):
+    settings = client.get('/api/settings', headers=auth_headers).get_json()
+    settings['approvalRequiredWorkflows'] = []
+    resp = client.post('/api/settings', json=settings, headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'config-pc',
+                             'configFile': 'pc-config.yml',
+                             'configContent': 'pc_ip: 10.0.0.1\n'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+
+
+def test_mandatory_workflow_approval_blocks_schedules_pipelines_and_parallel(client, auth_headers):
+    schedule_resp = client.post('/api/schedules',
+                                json={'name': 'PC Config',
+                                      'workflow': 'config-pc',
+                                      'configFile': 'pc-config.yml',
+                                      'configContent': 'pc_ip: 10.0.0.1\n',
+                                      'cronExpr': '0 1 * * *',
+                                      'enabled': True},
+                                headers=auth_headers)
+    assert schedule_resp.status_code == 400
+    assert 'requires an approved approval request' in schedule_resp.get_json()['error']
+
+    pipeline_resp = client.post('/api/pipelines',
+                                json={'name': 'PC Pipeline',
+                                      'steps': [{'workflow': 'config-pc',
+                                                 'configFile': 'pc-config.yml',
+                                                 'configContent': 'pc_ip: 10.0.0.1\n'}]},
+                                headers=auth_headers)
+    assert pipeline_resp.status_code == 400
+    assert 'requires an approved approval request' in pipeline_resp.get_json()['error']
+
+    parallel_resp = client.post('/api/parallel-runs',
+                                json={'workflow': 'config-pc',
+                                      'sites': [{'label': 'uat-a',
+                                                 'configContent': 'pc_ip: 10.0.0.1\n',
+                                                 'configFile': 'pc-config.yml'}]},
+                                headers=auth_headers)
+    assert parallel_resp.status_code == 403
+    assert 'requires an approved approval request' in parallel_resp.get_json()['error']
+
+
 def test_parallel_submit_uses_configured_webhook_adapter(client, auth_headers, monkeypatch):
     import server
 
@@ -1157,7 +1260,7 @@ def test_parallel_submit_uses_configured_webhook_adapter(client, auth_headers, m
     monkeypatch.setattr(server._parallel_engine, 'submit', fake_submit)
 
     resp = client.post('/api/parallel-runs',
-                       json={'workflow': 'config-pc',
+                       json={'workflow': 'pod-config',
                              'sites': [
                                  {'label': 'A', 'configContent': 'pc_ip: 10.0.0.1\n'},
                                  {'label': 'B', 'configContent': 'pc_ip: 10.0.0.2\n'},

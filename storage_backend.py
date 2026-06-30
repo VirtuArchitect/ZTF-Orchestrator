@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import os
 import stat
+import threading
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -11,6 +13,20 @@ from typing import Any
 
 class StorageError(RuntimeError):
     pass
+
+
+_FILE_LOCKS: dict[str, threading.RLock] = {}
+_FILE_LOCKS_GUARD = threading.Lock()
+
+
+def _file_lock(path: Path) -> threading.RLock:
+    key = str(path.resolve())
+    with _FILE_LOCKS_GUARD:
+        lock = _FILE_LOCKS.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _FILE_LOCKS[key] = lock
+        return lock
 
 
 class FileStorage:
@@ -27,13 +43,27 @@ class FileStorage:
 
     def write_json(self, path: Path, data: Any) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp_path = path.with_name(f'.{path.name}.{uuid.uuid4().hex}.tmp')
-        tmp_path.write_text(json.dumps(data, indent=2), encoding='utf-8')
-        try:
-            os.chmod(tmp_path, stat.S_IRUSR | stat.S_IWUSR)
-        except OSError:
-            pass
-        os.replace(tmp_path, path)
+        with _file_lock(path):
+            tmp_path = path.with_name(f'.{path.name}.{uuid.uuid4().hex}.tmp')
+            tmp_path.write_text(json.dumps(data, indent=2), encoding='utf-8')
+            try:
+                os.chmod(tmp_path, stat.S_IRUSR | stat.S_IWUSR)
+            except OSError:
+                pass
+            last_error: PermissionError | None = None
+            for attempt in range(6):
+                try:
+                    os.replace(tmp_path, path)
+                    return
+                except PermissionError as exc:
+                    last_error = exc
+                    time.sleep(0.05 * (attempt + 1))
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+            if last_error:
+                raise last_error
 
 
 class PostgresStorage:
