@@ -2,12 +2,18 @@ import Layout from '../components/Layout'
 import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
-import { Trash2, Plus, RefreshCw, KeyRound, Check, X } from 'lucide-react'
+import { AlertTriangle, Check, Clock, KeyRound, Plus, RefreshCw, Shield, Trash2, X } from 'lucide-react'
 
 type UserRecord = {
   username: string
   role: 'admin' | 'operator' | 'viewer'
   created_at?: string
+  last_login_at?: string
+  password_changed_at?: string
+  disabled?: boolean
+  mfa_supported?: boolean
+  sso_supported?: boolean
+  active_sessions_supported?: boolean
 }
 
 const ROLES = ['admin', 'operator', 'viewer'] as const
@@ -25,6 +31,8 @@ export default function UserRoles() {
   const [resetTarget,  setResetTarget]  = useState<string | null>(null)
   const [resetPw,      setResetPw]      = useState('')
   const [resetSaving,  setResetSaving]  = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<UserRecord | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -51,10 +59,12 @@ export default function UserRoles() {
     fetchUsers()
   }
 
-  const deleteUser = async (username: string) => {
-    if (!confirm(`Delete user "${username}"?`)) return
-    const res = await apiFetch(`/api/users/${username}`, { method: 'DELETE' })
+  const deleteUser = async () => {
+    if (!deleteTarget || deleteConfirm !== deleteTarget.username) return
+    const res = await apiFetch(`/api/users/${deleteTarget.username}`, { method: 'DELETE' })
     if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed'); return }
+    setDeleteTarget(null)
+    setDeleteConfirm('')
     fetchUsers()
   }
 
@@ -85,14 +95,20 @@ export default function UserRoles() {
   }
 
   return (
-    <Layout title="Users & Roles" subtitle="Manage user accounts and role assignments">
-      <div className="max-w-2xl space-y-6">
+    <Layout title="Users & Roles" subtitle="Manage user accounts, role assignments, and local identity posture">
+      <div className="max-w-5xl space-y-6">
 
         {!isAdmin && (
           <div className="card border-amber-700/30 bg-amber-900/5 text-sm text-amber-400">
             User management requires the <strong>admin</strong> role.
           </div>
         )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <IdentityPostureCard icon={Shield} label="MFA / SSO" value="Not configured" detail="Local password authentication only in this release." tone="warning" />
+          <IdentityPostureCard icon={Clock} label="Active sessions" value="Not exposed" detail="Admins can expire sessions through token TTL or restart/restore workflows." tone="neutral" />
+          <IdentityPostureCard icon={KeyRound} label="Password history" value="Reset timestamp" detail="Password reset time is tracked; password history enforcement is not supported." tone="neutral" />
+        </div>
 
         {/* User list */}
         <div className="card">
@@ -107,14 +123,20 @@ export default function UserRoles() {
             {users.map(u => (
               <div key={u.username}
                 className="rounded-lg bg-gray-900 border border-border/50 overflow-hidden">
-                <div className="flex items-center gap-3 p-3">
+                <div className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-200 truncate">{u.username}</p>
-                    {u.created_at && (
-                      <p className="text-xs text-gray-500">
-                        Created {new Date(u.created_at).toLocaleDateString()}
-                      </p>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-gray-200 truncate">{u.username}</p>
+                      <span className={u.disabled ? 'badge-red text-xs' : 'badge-green text-xs'}>
+                        {u.disabled ? 'disabled' : 'active'}
+                      </span>
+                    </div>
+                    <div className="mt-1 grid grid-cols-1 gap-1 text-xs text-gray-500 sm:grid-cols-2 xl:grid-cols-4">
+                      <span>Created {formatDate(u.created_at)}</span>
+                      <span>Last login {formatDate(u.last_login_at)}</span>
+                      <span>Password reset {formatDate(u.password_changed_at)}</span>
+                      <span>MFA/SSO not supported</span>
+                    </div>
                   </div>
 
                   {isAdmin ? (
@@ -143,9 +165,10 @@ export default function UserRoles() {
 
                   {isAdmin && u.username !== currentUser?.username && (
                     <button
-                      onClick={() => deleteUser(u.username)}
+                      onClick={() => { setDeleteTarget(u); setDeleteConfirm(''); setError('') }}
                       className="btn-ghost p-1.5 text-gray-500 hover:text-red-400"
                       title="Delete user"
+                      aria-label={`Delete user ${u.username}`}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -170,7 +193,7 @@ export default function UserRoles() {
                       className="btn-primary text-xs px-3 py-1.5 gap-1"
                     >
                       <Check size={12} />
-                      {resetSaving ? 'Saving…' : 'Save'}
+                      {resetSaving ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={() => { setResetTarget(null); setResetPw('') }}
@@ -220,7 +243,74 @@ export default function UserRoles() {
           </div>
         )}
 
+        {deleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 p-4">
+            <div className="w-full max-w-lg rounded-xl border border-red-700/40 bg-gray-950 p-5 shadow-2xl">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg border border-red-700/40 bg-red-950/30 p-2 text-red-300">
+                  <AlertTriangle size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-100">Delete user account</h3>
+                  <p className="mt-1 text-sm text-gray-400">
+                    This removes the local account for <span className="font-mono text-gray-200">{deleteTarget.username}</span>. Existing audit records remain, but the user will no longer be able to sign in.
+                  </p>
+                </div>
+              </div>
+              <label className="mt-5 block">
+                <span className="label">Type the username to confirm</span>
+                <input
+                  className="input font-mono"
+                  value={deleteConfirm}
+                  onChange={event => setDeleteConfirm(event.target.value)}
+                  autoFocus
+                />
+              </label>
+              <div className="mt-5 flex justify-end gap-2">
+                <button onClick={() => setDeleteTarget(null)} className="btn-secondary">Cancel</button>
+                <button onClick={deleteUser} disabled={deleteConfirm !== deleteTarget.username} className="btn-danger gap-1.5">
+                  <Trash2 size={14} />
+                  Delete User
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </Layout>
+  )
+}
+
+function formatDate(value?: string) {
+  if (!value) return 'never'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString()
+}
+
+function IdentityPostureCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  icon: typeof Shield
+  label: string
+  value: string
+  detail: string
+  tone: 'neutral' | 'warning'
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="flex items-start gap-3">
+        <Icon size={17} className={tone === 'warning' ? 'mt-0.5 flex-shrink-0 text-yellow-300' : 'mt-0.5 flex-shrink-0 text-nutanix-cyan'} />
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-600">{label}</p>
+          <p className="mt-1 text-sm font-semibold text-gray-100">{value}</p>
+          <p className="mt-1 text-xs text-gray-500">{detail}</p>
+        </div>
+      </div>
+    </div>
   )
 }

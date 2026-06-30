@@ -208,17 +208,6 @@ export default function Jobs() {
                     {cancelling === job.id ? 'Cancelling' : 'Cancel'}
                   </button>
                 )}
-                {canDelete && !isActive && (
-                  <button
-                    onClick={() => deleteJob(job)}
-                    disabled={deleting === job.id}
-                    className="btn-danger text-xs gap-1.5"
-                    title="Delete this queue record"
-                  >
-                    {deleting === job.id ? <Loader size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                    Delete
-                  </button>
-                )}
                 <button
                   onClick={() => setExpanded(expanded === job.id ? null : job.id)}
                   className="btn-ghost p-2"
@@ -236,6 +225,24 @@ export default function Jobs() {
                     <Detail label="Return Code" value={job.returnCode === null || job.returnCode === undefined ? 'pending' : String(job.returnCode)} />
                     <Detail label="Log Events" value={String(logs.length)} />
                   </div>
+                  {canDelete && !isActive && (
+                    <div className="rounded-lg border border-red-900/40 bg-red-950/10 px-3 py-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-red-200">Delete queue record</p>
+                          <p className="mt-1 text-xs text-red-200/70">Removes this durable queue record only. Execution history and audit logs are retained.</p>
+                        </div>
+                        <button
+                          onClick={() => deleteJob(job)}
+                          disabled={deleting === job.id}
+                          className="btn-danger text-xs gap-1.5"
+                        >
+                          {deleting === job.id ? <Loader size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                          Delete Queue Record
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {job.progress && <ProgressBar progress={job.progress} />}
                   {job.trace && (
                     <div className="rounded-lg border border-border bg-gray-900/50 px-3 py-3">

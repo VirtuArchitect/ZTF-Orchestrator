@@ -800,6 +800,31 @@ def test_create_list_delete_user(client, auth_headers):
     assert 'bob' not in usernames
 
 
+def test_user_list_exposes_identity_posture_metadata(client, auth_headers):
+    resp = client.post('/api/users',
+                       json={'username': 'identity_meta', 'password': 'Pass123!', 'role': 'viewer'},
+                       headers=auth_headers)
+    assert resp.status_code == 201
+
+    login_headers = _login(client, 'identity_meta')
+    assert login_headers['Authorization'].startswith('Bearer ')
+
+    resp = client.put('/api/users/identity_meta',
+                      json={'password': 'Pass456!'},
+                      headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.get('/api/users', headers=auth_headers)
+    body = resp.get_json()
+    user = next(item for item in body if item['username'] == 'identity_meta')
+    assert user['last_login_at']
+    assert user['password_changed_at']
+    assert user['disabled'] is False
+    assert user['mfa_supported'] is False
+    assert user['sso_supported'] is False
+    assert user['active_sessions_supported'] is False
+
+
 def test_cannot_delete_own_account(client, auth_headers):
     resp = client.delete('/api/users/admin', headers=auth_headers)
     assert resp.status_code == 400
@@ -2252,6 +2277,40 @@ def test_audit_log_returns_list(client, auth_headers):
     resp = client.get('/api/audit-log', headers=auth_headers)
     assert resp.status_code == 200
     assert isinstance(resp.get_json(), list)
+
+
+def test_audit_log_passes_filters_to_storage(client, auth_headers, monkeypatch):
+    """Audit log endpoint forwards operator-facing filters to storage."""
+    import server
+
+    captured = {}
+
+    class AuditStorage:
+        def read_audit_events(self, limit=200, level='', user='', action='', include_http=True):
+            captured.update({
+                'limit': limit,
+                'level': level,
+                'user': user,
+                'action': action,
+                'include_http': include_http,
+            })
+            return [{'msg': 'login_success', 'event': 'auth'}]
+
+    monkeypatch.setattr(server, '_storage', AuditStorage())
+    resp = client.get(
+        '/api/audit-log?level=info&user=admin&action=login&include_http=false&limit=25',
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 200
+    assert resp.get_json() == [{'msg': 'login_success', 'event': 'auth'}]
+    assert captured == {
+        'limit': 25,
+        'level': 'INFO',
+        'user': 'admin',
+        'action': 'login',
+        'include_http': False,
+    }
 
 
 def test_audit_log_viewer_forbidden(client, auth_headers):
