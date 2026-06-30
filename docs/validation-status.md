@@ -16,6 +16,15 @@ UAT. It should not be represented as fully production-validated until the
 environment-dependent tests below have been executed in the target deployment
 model.
 
+## Sanitized UAT Progress
+
+On 2026-06-30, the Orchestrator was connected to a UAT Prism Central
+environment. The Configure Prism Central workflow successfully applied NTP and
+DNS settings, and drift detection successfully reported the expected state
+afterward. Raw evidence, endpoint details, hostnames, addresses, credentials,
+logs, and screenshots are intentionally withheld because they relate to a
+restricted UAT environment.
+
 ## Locally Validated
 
 The following areas have been validated with automated tests, local build

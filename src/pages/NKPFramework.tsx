@@ -291,6 +291,11 @@ export default function NKPFramework() {
 
   const safePhases = useMemo(() => new Set(status?.safePhases || []), [status])
 
+  const selectTab = (tab: NkpTab) => {
+    setActiveTab(tab)
+    window.history.replaceState(null, '', `#${tab}`)
+  }
+
   useEffect(() => {
     const applyHashTab = () => {
       const hashTab = window.location.hash.replace('#', '') as NkpTab
@@ -812,10 +817,7 @@ export default function NKPFramework() {
                 type="button"
                 role="tab"
                 aria-selected={activeTab === tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id)
-                  window.history.replaceState(null, '', `#${tab.id}`)
-                }}
+                onClick={() => selectTab(tab.id)}
                 className={clsx(
                   'relative min-h-16 w-44 rounded-md border px-3 py-2 text-left transition-colors sm:w-auto',
                   activeTab === tab.id
@@ -979,6 +981,48 @@ export default function NKPFramework() {
         {logs.length > 0 && (
           <Terminal logs={logs} status={installStatus} title="NKP Framework Installation Output" />
         )}
+
+        <div className="card">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-100">Production Readiness Workflow</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Register real NKP tooling, bind it to a saved deployment profile, validate readiness, generate YAML, then capture the evidence package.
+              </p>
+            </div>
+            <Link to="/validation-evidence" className="btn-secondary gap-1.5">
+              <FileSearch size={14} />
+              Evidence
+            </Link>
+          </div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+            <button type="button" onClick={() => selectTab('binaries')} className="rounded-lg border border-border bg-gray-950/40 p-3 text-left hover:border-nutanix-blue/50">
+              <span className="badge badge-blue text-xs">1</span>
+              <div className="mt-2 text-sm font-semibold text-gray-100">Register Binary</div>
+              <p className="mt-1 text-xs text-gray-500">Point at the NKP CLI or upload a managed bundle.</p>
+            </button>
+            <button type="button" onClick={() => selectTab('profiles')} className="rounded-lg border border-border bg-gray-950/40 p-3 text-left hover:border-nutanix-blue/50">
+              <span className="badge badge-blue text-xs">2</span>
+              <div className="mt-2 text-sm font-semibold text-gray-100">Build Profile</div>
+              <p className="mt-1 text-xs text-gray-500">Select the binary, environment, network, registry, and node inventory.</p>
+            </button>
+            <button type="button" onClick={() => selectTab('profiles')} className="rounded-lg border border-border bg-gray-950/40 p-3 text-left hover:border-nutanix-blue/50">
+              <span className="badge badge-yellow text-xs">3</span>
+              <div className="mt-2 text-sm font-semibold text-gray-100">Check Readiness</div>
+              <p className="mt-1 text-xs text-gray-500">Run profile validation before any safe-phase submission.</p>
+            </button>
+            <button type="button" onClick={() => selectTab('profiles')} className="rounded-lg border border-border bg-gray-950/40 p-3 text-left hover:border-nutanix-blue/50">
+              <span className="badge badge-green text-xs">4</span>
+              <div className="mt-2 text-sm font-semibold text-gray-100">Generate YAML</div>
+              <p className="mt-1 text-xs text-gray-500">Save a versioned config for approval-gated execution.</p>
+            </button>
+            <Link to="/validation-evidence" className="rounded-lg border border-border bg-gray-950/40 p-3 text-left hover:border-nutanix-blue/50">
+              <span className="badge badge-gray text-xs">5</span>
+              <div className="mt-2 text-sm font-semibold text-gray-100">Capture Evidence</div>
+              <p className="mt-1 text-xs text-gray-500">Record validation artifacts for production handover.</p>
+            </Link>
+          </div>
+        </div>
         </>
         )}
 

@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
@@ -65,13 +66,28 @@ const NAV_GROUPS: NavGroup[] = [
 ]
 
 export default function Sidebar() {
-  const { sidebarOpen, ztfInstalled, toggleSidebar, user } = useStore()
+  const {
+    sidebarOpen,
+    sidebarPreferenceInitialized,
+    ztfInstalled,
+    toggleSidebar,
+    setSidebarOpen,
+    markSidebarPreferenceInitialized,
+    user,
+  } = useStore()
   const location = useLocation()
   const role = user?.role
   const visibleGroups = NAV_GROUPS.map(group => ({
     ...group,
     items: group.items.filter(item => role && item.roles.includes(role)),
   })).filter(group => group.items.length > 0)
+
+  useEffect(() => {
+    if (!sidebarPreferenceInitialized) {
+      setSidebarOpen(true)
+      markSidebarPreferenceInitialized()
+    }
+  }, [markSidebarPreferenceInitialized, setSidebarOpen, sidebarPreferenceInitialized])
 
   return (
     <aside className={clsx(

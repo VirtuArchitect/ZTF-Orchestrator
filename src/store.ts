@@ -30,7 +30,10 @@ interface AppState {
 
   // UI state
   sidebarOpen: boolean
+  sidebarPreferenceInitialized: boolean
   toggleSidebar: () => void
+  setSidebarOpen: (open: boolean) => void
+  markSidebarPreferenceInitialized: () => void
   activePage: string
   setActivePage: (p: string) => void
 
@@ -137,7 +140,10 @@ export const useStore = create<AppState>()(
       addExecution: (e) => set(state => ({ executions: [e, ...state.executions].slice(0, 50) })),
 
       sidebarOpen: true,
+      sidebarPreferenceInitialized: false,
       toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
+      setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      markSidebarPreferenceInitialized: () => set({ sidebarPreferenceInitialized: true }),
       activePage: 'dashboard',
       setActivePage: (p) => set({ activePage: p }),
 
@@ -163,6 +169,7 @@ export const useStore = create<AppState>()(
         user:         state.user,
         settings:     state.settings,
         sidebarOpen:  state.sidebarOpen,
+        sidebarPreferenceInitialized: state.sidebarPreferenceInitialized,
       }),
     }
   )
