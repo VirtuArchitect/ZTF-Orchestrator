@@ -14,6 +14,7 @@ const WORKFLOWS = [
 ]
 
 const STATUS_FILTERS: ApprovalStatus[] = ['pending','approved','rejected','expired']
+type LifecycleFilter = 'active' | 'history' | 'all'
 
 function StatusBadge({ status }: { status: ApprovalStatus }) {
   const map: Record<ApprovalStatus, { icon: React.ReactNode; cls: string }> = {
@@ -40,6 +41,7 @@ export default function Approvals() {
 
   const [approvals, setApprovals]   = useState<ApprovalRequest[]>([])
   const [filter, setFilter]         = useState<ApprovalStatus | 'all'>('all')
+  const [lifecycle, setLifecycle]   = useState<LifecycleFilter>('active')
   const [loading, setLoading]       = useState(true)
   const [showForm, setShowForm]     = useState(false)
   const [form, setForm]             = useState<FormState>(EMPTY_FORM)
@@ -51,13 +53,12 @@ export default function Approvals() {
 
   const load = async () => {
     setLoading(true)
-    const url = filter === 'all' ? '/api/approvals' : `/api/approvals?status=${filter}`
-    const r = await apiFetch(url, { headers: { Authorization: `Bearer ${sessionToken}` } })
+    const r = await apiFetch('/api/approvals', { headers: { Authorization: `Bearer ${sessionToken}` } })
     if (r.ok) setApprovals(await r.json())
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [filter])
+  useEffect(() => { load() }, [])
 
   const create = async () => {
     if (!form.configContent.trim()) { setFormError('Config content is required'); return }
@@ -92,6 +93,13 @@ export default function Approvals() {
 
   const toggle = (aid: string) => setExpanded(e => ({ ...e, [aid]: !e[aid] }))
   const pendingCount = approvals.filter(a => a.status === 'pending').length
+  const historyCount = approvals.filter(a => a.status !== 'pending').length
+  const visibleApprovals = approvals.filter(a => {
+    if (lifecycle === 'active' && a.status !== 'pending') return false
+    if (lifecycle === 'history' && a.status === 'pending') return false
+    if (filter !== 'all' && a.status !== filter) return false
+    return true
+  })
 
   return (
     <Layout title="Approval Gates">
@@ -115,7 +123,23 @@ export default function Approvals() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: 'active', label: `Active (${pendingCount})` },
+            { id: 'history', label: `History (${historyCount})` },
+            { id: 'all', label: `All (${approvals.length})` },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => setLifecycle(item.id as LifecycleFilter)}
+              className={clsx('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border',
+                lifecycle === item.id ? 'bg-nutanix-blue text-white border-nutanix-blue' : 'text-gray-400 border-border hover:text-gray-200')}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => setFilter('all')}
             className={clsx('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border',
               filter === 'all' ? 'bg-nutanix-blue text-white border-nutanix-blue' : 'text-gray-400 border-border hover:text-gray-200')}>
@@ -131,33 +155,38 @@ export default function Approvals() {
         </div>
 
         {loading ? (
-          <div className="text-gray-400 text-sm">Loading…</div>
-        ) : approvals.length === 0 ? (
+          <div className="text-gray-400 text-sm">Loading...</div>
+        ) : visibleApprovals.length === 0 ? (
           <div className="bg-surface border border-border rounded-xl p-10 text-center">
             <ShieldCheck size={36} className="mx-auto text-gray-600 mb-3" />
-            <p className="text-gray-400">No approval requests {filter !== 'all' ? `with status "${filter}"` : ''}.</p>
+            <p className="text-gray-400">No approval requests match the selected filters.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {approvals.map(a => (
+            {visibleApprovals.map(a => (
               <div key={a.id} className="bg-surface border border-border rounded-xl overflow-hidden">
                 <div className="flex items-center gap-4 px-4 py-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-medium text-gray-200 text-sm font-mono">{a.workflow}</span>
                       <StatusBadge status={a.status} />
+                      {a.status === 'pending' ? (
+                        <span className="badge badge-yellow text-xs">active approval</span>
+                      ) : (
+                        <span className="badge badge-gray text-xs">historical record</span>
+                      )}
                       {a.configFile && <span className="text-xs text-gray-500">{a.configFile}</span>}
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5">
                       Requested by <span className="text-gray-400">{a.requestedBy}</span>
-                      {' · '}{new Date(a.requestedAt).toLocaleString()}
-                      {' · '}Expires {new Date(a.expiresAt).toLocaleString()}
+                      {' - '}{new Date(a.requestedAt).toLocaleString()}
+                      {' - '}Expires {new Date(a.expiresAt).toLocaleString()}
                     </div>
                     {a.decidedBy && (
                       <div className="text-xs text-gray-500 mt-0.5">
-                        {a.status === 'approved' ? '✓ Approved' : '✗ Rejected'} by{' '}
+                        {a.status === 'approved' ? 'Approved' : 'Rejected'} by{' '}
                         <span className="text-gray-400">{a.decidedBy}</span>
-                        {a.decidedAt ? ` · ${new Date(a.decidedAt).toLocaleString()}` : ''}
+                        {a.decidedAt ? ` - ${new Date(a.decidedAt).toLocaleString()}` : ''}
                       </div>
                     )}
                   </div>
@@ -248,7 +277,7 @@ export default function Approvals() {
               <div className="flex gap-3 pt-2">
                 <button onClick={create} disabled={saving}
                   className="flex-1 py-2 bg-nutanix-blue hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-                  {saving ? 'Submitting…' : 'Submit Request'}
+                  {saving ? 'Submitting...' : 'Submit Request'}
                 </button>
                 <button onClick={() => setShowForm(false)}
                   className="flex-1 py-2 bg-surface hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium border border-border transition-colors">

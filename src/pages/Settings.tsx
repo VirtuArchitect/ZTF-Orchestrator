@@ -338,6 +338,7 @@ export default function Settings() {
   const [backupMessage, setBackupMessage] = useState('')
   const [backupStorage, setBackupStorage] = useState('')
   const [restoreTarget, setRestoreTarget] = useState<DatabaseBackup | null>(null)
+  const [backupDetails, setBackupDetails] = useState<string | null>(null)
   const [restoreConfirm, setRestoreConfirm] = useState('')
   const [restoreUnderstood, setRestoreUnderstood] = useState(false)
   const [restoreRunning, setRestoreRunning] = useState(false)
@@ -781,30 +782,53 @@ export default function Settings() {
                     <div className="px-4 py-8 text-center text-sm text-gray-500">
                       No database backups have been created.
                     </div>
-                  ) : backups.map(backup => (
-                    <div key={backup.filename} className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 border-b border-border last:border-b-0">
-                      <div className="min-w-0">
-                        <div className="font-mono text-sm text-gray-200 truncate">{backup.filename}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {formatDate(backup.createdAt)} · {formatBytes(backup.size)}
+                  ) : backups.map(backup => {
+                    const expanded = backupDetails === backup.filename
+                    return (
+                      <div key={backup.filename} className="border-b border-border last:border-b-0">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3">
+                          <div className="min-w-0">
+                            <div className="font-mono text-sm text-gray-200 truncate">{backup.filename}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {formatDate(backup.createdAt)} - {formatBytes(backup.size)}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button onClick={() => downloadBackup(backup)} className="btn-secondary gap-1.5 w-fit">
+                              <Download size={14} />
+                              Download
+                            </button>
+                            <button
+                              onClick={() => setBackupDetails(expanded ? null : backup.filename)}
+                              className="btn-secondary gap-1.5 w-fit"
+                            >
+                              {expanded ? 'Hide Details' : 'Details'}
+                            </button>
+                          </div>
                         </div>
+                        {expanded && (
+                          <div className="mx-4 mb-4 rounded-lg border border-red-900/40 bg-red-950/10 px-3 py-3">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-red-200">Restore from this backup</p>
+                                <p className="mt-1 text-xs text-red-200/70">
+                                  Restore overwrites users, sessions, settings, jobs, approvals, evidence, and audit data after creating a safety backup.
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => openRestore(backup)}
+                                disabled={!isAdmin || restoreRunning || storageBackend !== 'postgres'}
+                                className="btn-danger gap-1.5 w-fit"
+                              >
+                                <RotateCcw size={14} />
+                                Open Restore Confirmation
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button onClick={() => downloadBackup(backup)} className="btn-secondary gap-1.5 w-fit">
-                          <Download size={14} />
-                          Download
-                        </button>
-                        <button
-                          onClick={() => openRestore(backup)}
-                          disabled={!isAdmin || restoreRunning || storageBackend !== 'postgres'}
-                          className="btn-danger gap-1.5 w-fit"
-                        >
-                          <RotateCcw size={14} />
-                          Restore
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </Section>
@@ -1129,7 +1153,7 @@ export default function Settings() {
 
             <div className="mt-5 rounded-lg border border-border bg-gray-950/50 p-4">
               <div className="font-mono text-sm text-gray-100 break-all">{restoreTarget.filename}</div>
-              <div className="mt-1 text-xs text-gray-500">{formatDate(restoreTarget.createdAt)} · {formatBytes(restoreTarget.size)}</div>
+              <div className="mt-1 text-xs text-gray-500">{formatDate(restoreTarget.createdAt)} - {formatBytes(restoreTarget.size)}</div>
             </div>
 
             <div className="mt-4 rounded-lg border border-amber-700/30 bg-amber-900/10 px-3 py-2 text-sm text-amber-300">

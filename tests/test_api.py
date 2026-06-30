@@ -2286,19 +2286,28 @@ def test_audit_log_passes_filters_to_storage(client, auth_headers, monkeypatch):
     captured = {}
 
     class AuditStorage:
-        def read_audit_events(self, limit=200, level='', user='', action='', include_http=True):
+        def read_audit_events(
+            self,
+            limit=200,
+            level='',
+            user='',
+            action='',
+            include_http=True,
+            include_routine=True,
+        ):
             captured.update({
                 'limit': limit,
                 'level': level,
                 'user': user,
                 'action': action,
                 'include_http': include_http,
+                'include_routine': include_routine,
             })
             return [{'msg': 'login_success', 'event': 'auth'}]
 
     monkeypatch.setattr(server, '_storage', AuditStorage())
     resp = client.get(
-        '/api/audit-log?level=info&user=admin&action=login&include_http=false&limit=25',
+        '/api/audit-log?level=info&user=admin&action=login&include_http=false&include_routine=false&limit=25',
         headers=auth_headers,
     )
 
@@ -2310,6 +2319,7 @@ def test_audit_log_passes_filters_to_storage(client, auth_headers, monkeypatch):
         'user': 'admin',
         'action': 'login',
         'include_http': False,
+        'include_routine': False,
     }
 
 

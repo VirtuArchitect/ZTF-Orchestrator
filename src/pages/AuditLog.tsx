@@ -28,14 +28,14 @@ const LEVEL_STYLE: Record<string, string> = {
 }
 
 const EVENT_FILTERS = [
-  { id: 'OPERATIONS', label: 'Operations', action: '', includeHttp: false },
-  { id: 'AUTH', label: 'Auth', action: 'login', includeHttp: false },
-  { id: 'JOBS', label: 'Jobs', action: 'job', includeHttp: false },
-  { id: 'GOVERNANCE', label: 'Governance', action: 'approval', includeHttp: false },
-  { id: 'CONFIG', label: 'Config', action: 'config', includeHttp: false },
-  { id: 'BACKUPS', label: 'Backups', action: 'backup', includeHttp: false },
-  { id: 'SYSTEM', label: 'System', action: 'health', includeHttp: false },
-  { id: 'HTTP', label: 'Raw HTTP', action: '', includeHttp: true },
+  { id: 'OPERATIONS', label: 'Operations', action: '', includeHttp: false, includeRoutine: false },
+  { id: 'AUTH', label: 'Auth', action: 'login', includeHttp: false, includeRoutine: false },
+  { id: 'JOBS', label: 'Jobs', action: 'job', includeHttp: false, includeRoutine: false },
+  { id: 'GOVERNANCE', label: 'Governance', action: 'approval', includeHttp: false, includeRoutine: false },
+  { id: 'CONFIG', label: 'Config', action: 'config', includeHttp: false, includeRoutine: false },
+  { id: 'BACKUPS', label: 'Backups', action: 'backup', includeHttp: false, includeRoutine: false },
+  { id: 'SYSTEM', label: 'System', action: '', includeHttp: false, includeRoutine: true },
+  { id: 'HTTP', label: 'Raw HTTP', action: '', includeHttp: true, includeRoutine: true },
 ] as const
 
 type EventFilterId = typeof EVENT_FILTERS[number]['id']
@@ -93,6 +93,7 @@ export default function AuditLog() {
       const eventFilter = EVENT_FILTERS.find(item => item.id === eventFlt) || EVENT_FILTERS[0]
       if (levelFlt !== 'ALL') params.set('level', levelFlt)
       if (!eventFilter.includeHttp) params.set('include_http', 'false')
+      if (!eventFilter.includeRoutine) params.set('include_routine', 'false')
       if (eventFilter.action) params.set('action', eventFilter.action)
       const resp = await apiFetch(`/api/audit-log?${params}`)
       if (resp.ok) {
@@ -126,6 +127,11 @@ export default function AuditLog() {
     Object.entries(e).filter(([k]) =>
       !['ts', 'level', 'msg', 'logger', 'user', 'ip', 'status'].includes(k)
     )
+  const activeEventFilter = EVENT_FILTERS.find(item => item.id === eventFlt) || EVENT_FILTERS[0]
+  const hiddenScopes = [
+    !activeEventFilter.includeHttp ? 'raw HTTP hidden' : '',
+    !activeEventFilter.includeRoutine ? 'routine system hidden' : '',
+  ].filter(Boolean).join(', ')
 
   return (
     <Layout
@@ -187,7 +193,7 @@ export default function AuditLog() {
             </div>
             <span className="text-xs text-gray-500">
               {filtered.length} entries
-              {eventFlt !== 'HTTP' ? ' (raw HTTP hidden)' : ''}
+              {hiddenScopes ? ` (${hiddenScopes})` : ''}
             </span>
           </div>
         </div>

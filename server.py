@@ -6267,9 +6267,10 @@ def get_audit_log():
     user   = request.args.get('user', '').lower()
     action = request.args.get('action', '').lower()
     include_http = request.args.get('include_http', 'true').lower() not in {'0', 'false', 'no'}
+    include_routine = request.args.get('include_routine', 'true').lower() not in {'0', 'false', 'no'}
 
     if hasattr(_storage, 'read_audit_events'):
-        return jsonify(_storage.read_audit_events(limit, level, user, action, include_http))
+        return jsonify(_storage.read_audit_events(limit, level, user, action, include_http, include_routine))
 
     if not LOG_FILE.exists():
         return jsonify([])
@@ -6293,6 +6294,11 @@ def get_audit_log():
                           and action not in entry.get('action', '').lower():
                     continue
                 if not include_http and entry.get('event') == 'http_request':
+                    continue
+                if not include_routine and (
+                    entry.get('event') == 'scheduler_start'
+                    or entry.get('msg') == 'scheduler_start'
+                ):
                     continue
                 entries.append(entry)
     except OSError:

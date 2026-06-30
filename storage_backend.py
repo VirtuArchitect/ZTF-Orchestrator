@@ -166,6 +166,7 @@ class PostgresStorage:
         user: str = '',
         action: str = '',
         include_http: bool = True,
+        include_routine: bool = True,
     ) -> list[dict]:
         level_filter = level.upper()
         user_filter = user.lower()
@@ -180,6 +181,10 @@ class PostgresStorage:
                   and (%s = '' or lower(username) = %s)
                   and (%s = '' or lower(msg) like %s or lower(coalesce(action, '')) like %s)
                   and (%s or coalesce(event->>'event', '') <> 'http_request')
+                  and (%s or (
+                        coalesce(event->>'event', '') not in ('scheduler_start')
+                        and lower(msg) not in ('scheduler_start')
+                  ))
                 order by id desc
                 limit %s
                 """,
@@ -188,6 +193,7 @@ class PostgresStorage:
                     user_filter, user_filter,
                     action_filter, action_needle, action_needle,
                     include_http,
+                    include_routine,
                     limit,
                 ),
             ).fetchall()
