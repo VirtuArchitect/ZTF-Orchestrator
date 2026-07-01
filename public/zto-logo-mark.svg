@@ -1,0 +1,8 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">ZeroTouch Orchestrator mark</title>
+  <desc id="desc">ZeroTouch Orchestrator compact brand mark</desc>
+  <rect width="120" height="120" rx="28" fill="#F8FAFC"/>
+  <rect x="50" y="10" width="24" height="96" rx="12" fill="#10233F" transform="rotate(45 62 58)"/>
+  <rect x="50" y="10" width="24" height="96" rx="12" fill="#10233F" transform="rotate(-45 62 58)"/>
+  <circle cx="60" cy="60" r="10" fill="#14B8A6"/>
+</svg>

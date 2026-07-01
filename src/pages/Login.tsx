@@ -43,19 +43,19 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-2xl">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <img src="/veridian-mark.svg" alt="ZeroTouch" className="w-14 h-14 rounded-2xl mb-4" />
-          <h1 className="max-w-xs text-center text-2xl font-bold leading-tight text-gray-100">
-            ZeroTouch Enterprise Orchestrator
-          </h1>
-          <p className="text-center text-sm text-gray-500 mt-2">Enterprise ZeroTouch operations console</p>
+        <div className="mx-auto mb-5 flex h-[172px] w-full max-w-[654px] items-center justify-center bg-[#f7f8fb] px-12">
+          <img
+            src="/zto-logo-login.svg"
+            alt="ZeroTouch Enterprise Orchestrator"
+            className="h-[142px] w-full max-w-[560px] object-contain"
+          />
         </div>
 
         {/* Card */}
-        <form onSubmit={submit} className="card space-y-4">
+        <form onSubmit={submit} className="card space-y-4 max-w-sm mx-auto">
           <h2 className="font-semibold text-gray-200 text-center">Sign in</h2>
 
           {error && (
@@ -108,7 +108,7 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-600 mt-6">
+        <p className="text-center text-xs text-gray-600 mt-6 max-w-sm mx-auto">
           Default credentials are printed in the server console on first start.
         </p>
       </div>

@@ -95,17 +95,19 @@ export default function Sidebar() {
       sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-16'
     )}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-border flex-shrink-0 gap-3">
-        <img
-          src="/veridian-mark.svg"
-          alt="ZeroTouch"
-          className="w-8 h-8 rounded-lg flex-shrink-0"
-        />
-        {sidebarOpen && (
-          <div className="min-w-0">
-            <div className="text-sm font-bold text-gray-100 truncate">ZeroTouch</div>
-            <div className="text-xs text-gray-500 truncate">Orchestrator</div>
-          </div>
+      <div className="h-16 flex items-center px-4 border-b border-border flex-shrink-0">
+        {sidebarOpen ? (
+          <img
+            src="/zto-logo-flat-horizontal.svg"
+            alt="ZeroTouch Enterprise Orchestrator"
+            className="h-12 w-52 object-contain object-left"
+          />
+        ) : (
+          <img
+            src="/zto-logo-mark.svg"
+            alt="ZeroTouch"
+            className="w-8 h-8 rounded-lg flex-shrink-0"
+          />
         )}
       </div>
 
