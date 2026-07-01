@@ -154,7 +154,8 @@ it orchestrates repeatable ZeroTouch Framework workflows that call Nutanix APIs.
 > **Port note (Windows):** Hyper-V reserves ports 4940–5039. If the server fails to
 > start on the default port 5001, set `$env:ZTF_PORT = "8080"` before starting.
 
-<img width="1763" height="1207" alt="ZTF-Orchestrator dashboard showing readiness, queue, governance, schedules, storage, and backup panels" src="https://github.com/user-attachments/assets/b4c2df54-1577-405e-b330-a94e0c215b8f" />
+![Uploading image.png…]()
+
 
 Dashboard view with operational readiness, queue pressure, governance,
 schedule, storage, and backup posture panels.
