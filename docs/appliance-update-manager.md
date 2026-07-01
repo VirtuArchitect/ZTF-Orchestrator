@@ -238,6 +238,159 @@ Import process:
 The package upload limit defaults to 2 GiB and can be changed with
 `ZTF_UPDATE_PACKAGE_MAX_UPLOAD`.
 
+### Validated AHV Appliance v1.5.0 to v1.5.2 Flow
+
+Use this process for an AHV VM appliance built by the GitHub **AHV Build
+Image** workflow and deployed in an air-gapped environment. This path was
+validated on a v1.5.0 appliance using the PostgreSQL storage backend.
+
+In that configuration, **Appliance Ops > Updates** can show the staged request
+path as `/var/lib/ztf-orchestrator/appliance_update_request.json`, but the
+request may be stored in the PostgreSQL `ztf_documents` table instead of as a
+host-visible file. Export the request to the host before running the privileged
+update helper.
+
+1. In connected staging, create the offline update package and transfer it to
+   the appliance access workstation.
+2. In **Appliance Ops > Updates**, import the package, review the manifest,
+   click **Verify**, then click **Stage**. Confirm the UI reports
+   `Staged v1.5.2`.
+3. SSH to the AHV appliance VM as the appliance Linux administrator:
+
+   ```bash
+   ssh ztfadmin@<appliance-ip>
+   ```
+
+4. Confirm the expected containers are running:
+
+   ```bash
+   cd /opt/ztf-orchestrator
+   sudo docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Image}}"
+   ```
+
+   A PostgreSQL-backed appliance should include containers similar to
+   `ztf-orchestrator` and `ztf-orchestrator-postgres`.
+
+5. Export the staged update request from PostgreSQL to the host path expected
+   by the update helper:
+
+   ```bash
+   sudo bash -c 'docker exec ztf-orchestrator-postgres psql -U ztf -d ztf_orchestrator -tA -c "copy (select data::text from ztf_documents where name='\''appliance_update_request.json'\'') to stdout" > /opt/ztf-orchestrator/appliance_update_request.json'
+   sudo python3 -m json.tool /opt/ztf-orchestrator/appliance_update_request.json
+   ```
+
+   Check that the JSON shows the expected `target`, `version`,
+   `containerImage`, and `checksum`.
+
+6. Copy the image tar to the appliance host. From a Windows transfer host, for
+   example:
+
+   ```powershell
+   scp "C:\Share\ztf-update-v1.5.2\images\ztf-orchestrator-v1.5.2-image.tar" ztfadmin@<appliance-ip>:/home/ztfadmin/
+   ```
+
+7. Move the image tar into the appliance update artifact directory:
+
+   ```bash
+   sudo mkdir -p /opt/ztf-orchestrator/update-artifacts
+   sudo mv /home/ztfadmin/ztf-orchestrator-v1.5.2-image.tar /opt/ztf-orchestrator/update-artifacts/
+   sudo ls -lh /opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.2-image.tar
+   ```
+
+8. Apply the staged request with explicit host paths:
+
+   ```bash
+   sudo env \
+     ZTF_UPDATE_REQUEST_FILE=/opt/ztf-orchestrator/appliance_update_request.json \
+     ZTF_UPDATE_IMAGE_TAR=/opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.2-image.tar \
+     /opt/ztf-orchestrator/appliance/scripts/apply-update-request.sh
+   ```
+
+   In a fully air-gapped environment, a later `docker compose pull` attempt may
+   fail to resolve `ghcr.io`. That is expected after `docker load` succeeds;
+   the helper continues and applies the locally loaded image.
+
+   Before restarting the service, the helper creates host-side pre-update
+   safety artifacts under:
+
+   ```text
+   /opt/ztf-orchestrator/update-artifacts/pre-update-backups/
+   ```
+
+   The safety artifacts include a PostgreSQL custom dump and a compressed
+   `/var/lib/ztf-orchestrator` data directory snapshot. The helper stops if it
+   cannot create these backups unless `ZTF_REQUIRE_PRE_UPDATE_BACKUP=0` is set
+   for a controlled recovery case with an independent VM or database backup.
+
+9. Verify the appliance after the helper completes:
+
+   ```bash
+   curl http://localhost:5001/health
+   sudo docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+   sudo grep ZTF_ORCHESTRATOR_VERSION /opt/ztf-orchestrator/.env
+   sudo systemctl status ztf-orchestrator --no-pager
+   ```
+
+10. Sign in to the web UI, confirm the footer or settings page reports v1.5.2,
+    verify the key workflows still load, then click **Mark Applied** in
+    **Appliance Ops > Updates**.
+
+### Post-Upgrade State Validation and Recovery
+
+After an appliance update, validate that the application is still reading the
+expected state store before running new workflows. The following items should
+remain visible:
+
+- execution and run history;
+- imported or created config files;
+- approval requests and approval history;
+- PostgreSQL backup inventory under **Settings > Storage**.
+
+If these items are missing together, treat it as a state-store issue rather than
+four independent UI issues. Do not run `docker compose down -v`, delete Docker
+volumes, or create replacement records until the active storage has been
+checked.
+
+Run these checks on the appliance host:
+
+```bash
+cd /opt/ztf-orchestrator
+sudo docker compose --env-file .env -f appliance/docker-compose.appliance.yml ps
+sudo docker volume ls | grep ztf
+sudo grep -E 'ZTF_ORCHESTRATOR_VERSION|ZTF_DATABASE_URL|POSTGRES_PASSWORD' .env
+```
+
+Check whether the active PostgreSQL database still contains application
+documents:
+
+```bash
+sudo docker exec ztf-orchestrator-postgres psql -U ztf -d ztf_orchestrator \
+  -c "select name, updated_at from ztf_documents order by name;"
+
+sudo docker exec ztf-orchestrator-postgres psql -U ztf -d ztf_orchestrator \
+  -c "select count(*) as audit_events from ztf_audit_events;"
+```
+
+Check whether backup files still exist in the application data volume:
+
+```bash
+sudo docker exec ztf-orchestrator \
+  find /var/lib/ztf-orchestrator/backups/postgres -maxdepth 1 -type f -name 'ztf-orchestrator-*.dump' -ls
+```
+
+If the active database is empty but older Docker volumes still exist, take a VM
+snapshot first, then inspect the volume names before attempting recovery. The
+pre-update helper artifacts, when present, are the preferred recovery source:
+
+```bash
+sudo ls -lh /opt/ztf-orchestrator/update-artifacts/pre-update-backups/
+```
+
+Restore only during a maintenance window. A PostgreSQL dump can be restored
+through **Settings > Storage** if it is visible to the application, or manually
+with `pg_restore` after stopping the application container and taking a fresh VM
+snapshot.
+
 ### Framework Checkout
 
 Use this when the appliance has a host-visible framework git checkout. It is

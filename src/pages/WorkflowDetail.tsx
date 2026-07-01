@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  ArrowLeft, Play, Download, Save, ListChecks
+  ArrowLeft, Play, Download, ListChecks
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
@@ -24,6 +24,8 @@ import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
 import clsx from 'clsx'
 import { useStore } from '../store'
+import { apiFetch } from '../utils/api'
+import type { ApprovalRequest } from '../types'
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
@@ -32,9 +34,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; cla
 
 const TABS = ['Configure', 'YAML Preview'] as const
 
+function formatDate(value?: string | null): string {
+  if (!value) return 'not set'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
+
 export default function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const workflow = WORKFLOWS.find(w => w.id === id)
+  const workflowId = workflow?.id || ''
   const settings = useStore(s => s.settings)
   const activeProfile = settings.connectionProfiles?.find(p => p.id === settings.activeProfileId)
 
@@ -57,7 +66,6 @@ export default function WorkflowDetail() {
 
   const Icon = ICON_MAP[workflow.icon] || Server
   const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
-
   const handleYamlGenerated = (yaml: string) => {
     setYamlContent(yaml)
   }
@@ -110,7 +118,7 @@ export default function WorkflowDetail() {
             onClick={() => { if (yamlContent) { setIsDryRun(false); setShowExecution(true) } }}
             disabled={!yamlContent || (approvalRequired && !approvalId.trim())}
             className="btn-success gap-1.5"
-            title={!yamlContent ? 'Fill out the form first' : approvalRequired && !approvalId.trim() ? 'Paste an approved request ID first' : undefined}
+            title={!yamlContent ? 'Fill out the form first' : approvalRequired && !approvalId.trim() ? 'Select an approved request first' : undefined}
           >
             <Play size={14} />
             Run Workflow
@@ -167,18 +175,11 @@ export default function WorkflowDetail() {
       )}
 
       {approvalRequired && (
-        <div className="mt-6 card border-amber-700/30 bg-amber-900/5">
-          <label className="label">Approved Request ID</label>
-          <input
-            value={approvalId}
-            onChange={event => setApprovalId(event.target.value)}
-            className="input font-mono"
-            placeholder="Paste approved approval request ID before running"
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            Dry Run does not require approval. Run Workflow requires a matching approved request for this workflow and YAML.
-          </p>
-        </div>
+        <ApprovalSelector
+          workflowId={workflow.id}
+          value={approvalId}
+          onChange={setApprovalId}
+        />
       )}
 
       {showExecution && yamlContent && (
@@ -192,5 +193,86 @@ export default function WorkflowDetail() {
         />
       )}
     </Layout>
+  )
+}
+
+function ApprovalSelector({
+  workflowId,
+  value,
+  onChange,
+}: {
+  workflowId: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  const [approvals, setApprovals] = useState<ApprovalRequest[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const approvedWorkflowApprovals = useMemo(() => {
+    const now = Date.now()
+    return approvals
+      .filter(approval => {
+        if (approval.workflow !== workflowId || approval.status !== 'approved') return false
+        const expiresAt = Date.parse(approval.expiresAt || '')
+        return Number.isNaN(expiresAt) || expiresAt > now
+      })
+      .sort((a, b) => Date.parse(b.decidedAt || b.requestedAt || '') - Date.parse(a.decidedAt || a.requestedAt || ''))
+  }, [approvals, workflowId])
+  const selectedApproval = approvedWorkflowApprovals.find(approval => approval.id === value)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    apiFetch('/api/approvals?status=approved')
+      .then(response => response.ok ? response.json() : [])
+      .then(data => {
+        if (!cancelled) setApprovals(Array.isArray(data) ? data : [])
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [workflowId])
+
+  useEffect(() => {
+    if (value && !approvedWorkflowApprovals.some(approval => approval.id === value)) {
+      onChange('')
+    }
+  }, [approvedWorkflowApprovals, onChange, value])
+
+  return (
+    <div className="mt-6 card border-amber-700/30 bg-amber-900/5">
+      <label className="label">Approved Request</label>
+      <select
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        className="input"
+        disabled={loading}
+      >
+        <option value="">
+          {loading ? 'Loading approved requests...' : 'Select approved request'}
+        </option>
+        {approvedWorkflowApprovals.map(approval => (
+          <option key={approval.id} value={approval.id}>
+            {approval.notes || approval.configFile || approval.id.slice(0, 8)} / requested by {approval.requestedBy} / expires {formatDate(approval.expiresAt)}
+          </option>
+        ))}
+      </select>
+      {selectedApproval ? (
+        <div className="mt-3 rounded-lg border border-border bg-gray-950/40 px-3 py-2 text-xs text-gray-400">
+          <div className="font-mono text-gray-300 break-all">{selectedApproval.id}</div>
+          <div className="mt-1">Approved by {selectedApproval.decidedBy || 'admin'} on {formatDate(selectedApproval.decidedAt || selectedApproval.requestedAt)}</div>
+        </div>
+      ) : (
+        !loading && (
+          <p className="mt-2 text-xs text-amber-600">
+            No approved, unexpired request is available for this workflow.
+          </p>
+        )
+      )}
+      <p className="text-xs text-gray-500 mt-2">
+        Dry Run does not require approval. Run Workflow requires a matching approved request for this workflow and YAML.
+      </p>
+    </div>
   )
 }

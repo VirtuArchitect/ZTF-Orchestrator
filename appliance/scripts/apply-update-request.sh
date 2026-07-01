@@ -10,6 +10,8 @@ APP_DIR="${ZTF_APPLIANCE_DIR:-/opt/ztf-orchestrator}"
 REQUEST_FILE="${ZTF_UPDATE_REQUEST_FILE:-}"
 IMAGE_TAR="${ZTF_UPDATE_IMAGE_TAR:-}"
 FRAMEWORK_ARCHIVE="${ZTF_UPDATE_FRAMEWORK_ARCHIVE:-}"
+ARTIFACT_DIR="${ZTF_UPDATE_ARTIFACT_DIR:-${APP_DIR}/update-artifacts}"
+REQUIRE_PRE_UPDATE_BACKUP="${ZTF_REQUIRE_PRE_UPDATE_BACKUP:-1}"
 
 if [[ -z "${REQUEST_FILE}" ]]; then
   REQUEST_FILE="${APP_DIR}/appliance_update_request.json"
@@ -146,6 +148,63 @@ verify_checksum() {
   fi
 }
 
+compose_ps_id() {
+  local service="$1"
+  docker compose --env-file "${APP_DIR}/.env" -f "${APP_DIR}/appliance/docker-compose.appliance.yml" ps -q "${service}" 2>/dev/null || true
+}
+
+pre_update_backup_failed() {
+  local message="$1"
+  if [[ "${REQUIRE_PRE_UPDATE_BACKUP}" = "0" ]]; then
+    echo "WARNING: ${message}" >&2
+    return 0
+  fi
+  echo "${message}" >&2
+  echo "Set ZTF_REQUIRE_PRE_UPDATE_BACKUP=0 only if you have an independent VM or database backup." >&2
+  exit 1
+}
+
+create_pre_update_state_backups() {
+  local timestamp backup_dir app_container postgres_container pg_backup data_backup
+  timestamp="$(date -u +%Y%m%d%H%M%S)"
+  backup_dir="${ARTIFACT_DIR}/pre-update-backups"
+  mkdir -p "${backup_dir}"
+  chmod 700 "${backup_dir}" || true
+
+  postgres_container="$(compose_ps_id postgres)"
+  if [[ -n "${postgres_container}" ]]; then
+    pg_backup="${backup_dir}/ztf-orchestrator-postgres-pre-${VERSION}-${timestamp}.dump"
+    if docker exec "${postgres_container}" pg_dump \
+      --format=custom \
+      --no-owner \
+      --no-privileges \
+      --username ztf \
+      ztf_orchestrator > "${pg_backup}"; then
+      chmod 600 "${pg_backup}" || true
+      echo "Pre-update PostgreSQL backup: ${pg_backup}"
+    else
+      rm -f "${pg_backup}"
+      pre_update_backup_failed "Unable to create pre-update PostgreSQL backup."
+    fi
+  else
+    pre_update_backup_failed "PostgreSQL container is not running; cannot create pre-update PostgreSQL backup."
+  fi
+
+  app_container="$(compose_ps_id ztf-orchestrator)"
+  if [[ -n "${app_container}" ]]; then
+    data_backup="${backup_dir}/ztf-orchestrator-data-pre-${VERSION}-${timestamp}.tar.gz"
+    if docker exec "${app_container}" tar -C /var/lib/ztf-orchestrator -czf - . > "${data_backup}"; then
+      chmod 600 "${data_backup}" || true
+      echo "Pre-update data directory snapshot: ${data_backup}"
+    else
+      rm -f "${data_backup}"
+      pre_update_backup_failed "Unable to create pre-update data directory snapshot."
+    fi
+  else
+    pre_update_backup_failed "ZTF-Orchestrator container is not running; cannot create pre-update data directory snapshot."
+  fi
+}
+
 cd "${APP_DIR}"
 
 if [[ "${TARGET}" != "ztf-orchestrator" ]]; then
@@ -224,6 +283,8 @@ fi
 backup=".env.pre-update-$(date -u +%Y%m%d%H%M%S)"
 cp .env "${backup}"
 chmod 600 "${backup}"
+
+create_pre_update_state_backups
 
 if [[ -n "${IMAGE_TAR}" ]]; then
   if [[ ! -f "${IMAGE_TAR}" ]]; then

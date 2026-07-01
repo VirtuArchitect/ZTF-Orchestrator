@@ -567,3 +567,8 @@ password is locked before the image shuts down.
   host-visible ZeroTouch/NKP framework checkout updates. The web UI stages
   update metadata; a privileged host-side script applies Docker/systemd or git
   checkout changes.
+- For AHV appliances built by the GitHub **AHV Build Image** workflow, follow
+  the validated v1.5.0 to v1.5.2 procedure in the update manager guide. On
+  PostgreSQL-backed v1.5.0 appliances, the staged update request can be stored
+  in PostgreSQL rather than on the host filesystem, so export it before running
+  the host-side update helper.
