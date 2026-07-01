@@ -9,8 +9,34 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.5.2 and should be moved
+Changes in this section are present on `main` after v1.5.3 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.5.3] - 2026-07-01
+
+### Summary
+Patch release for appliance update safety after AHV UAT upgrade validation,
+ensuring future in-place upgrades create host-side state backups before restart.
+
+### Added
+- Added mandatory pre-update PostgreSQL dump creation to the appliance update
+  helper.
+- Added a pre-update `/var/lib/ztf-orchestrator` data directory snapshot to the
+  appliance update helper.
+- Added post-upgrade state validation and recovery checks to the Appliance
+  Update Manager guide.
+
+### Changed
+- Updated the validated AHV appliance air-gapped upgrade documentation for the
+  v1.5.3 state-preservation flow.
+- Improved image upload behavior and dashboard description copy.
+
+### Fixed
+- Reduced risk of execution history, config, approval, or backup inventory loss
+  during future appliance image updates by failing closed when pre-update state
+  backups cannot be created.
 
 ---
 

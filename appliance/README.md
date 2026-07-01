@@ -67,7 +67,7 @@ appliance build and validation path is Ubuntu/Debian-family.
 By default, the appliance uses the `latest` GHCR image. To pin a release:
 
 ```bash
-sudo ZTF_ORCHESTRATOR_VERSION=v1.5.2 \
+sudo ZTF_ORCHESTRATOR_VERSION=v1.5.3 \
   bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
 ```
 
@@ -85,7 +85,7 @@ workflows.
 Before pinning a GHCR tag, confirm it has been published:
 
 ```bash
-docker manifest inspect ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.2
+docker manifest inspect ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.3
 ```
 
 If the tag is not available yet, use `latest`, build the application image
@@ -278,8 +278,8 @@ Run:
 
 ```bash
 cd appliance
-VERSION=v1.5.2 \
-ZTF_ORCHESTRATOR_VERSION=v1.5.2 \
+VERSION=v1.5.3 \
+ZTF_ORCHESTRATOR_VERSION=v1.5.3 \
 ZTF_BUILD_CONTAINER_IMAGE=true \
 ZTF_PULL_CONTAINER_IMAGES=true \
 ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -532,8 +532,8 @@ The raw Packer commands are:
 cd appliance/packer
 packer init ahv-qcow2.pkr.hcl
 packer build \
-  -var "version=v1.5.2" \
-  -var "ztf_orchestrator_version=v1.5.2" \
+  -var "version=v1.5.3" \
+  -var "ztf_orchestrator_version=v1.5.3" \
   -var "build_container_image=true" \
   -var "pull_container_images=true" \
   -var "ztf_framework_ref=v1.5.2" \
@@ -568,7 +568,7 @@ password is locked before the image shuts down.
   update metadata; a privileged host-side script applies Docker/systemd or git
   checkout changes.
 - For AHV appliances built by the GitHub **AHV Build Image** workflow, follow
-  the validated v1.5.0 to v1.5.2 procedure in the update manager guide. On
+  the validated v1.5.0 to v1.5.2/v1.5.3 procedure in the update manager guide. On
   PostgreSQL-backed v1.5.0 appliances, the staged update request can be stored
   in PostgreSQL rather than on the host filesystem, so export it before running
   the host-side update helper.
