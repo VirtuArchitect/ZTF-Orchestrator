@@ -238,11 +238,12 @@ Import process:
 The package upload limit defaults to 2 GiB and can be changed with
 `ZTF_UPDATE_PACKAGE_MAX_UPLOAD`.
 
-### Validated AHV Appliance v1.5.0 to v1.5.2 Flow
+### Validated AHV Appliance v1.5.0 to v1.5.2/v1.5.3 Flow
 
 Use this process for an AHV VM appliance built by the GitHub **AHV Build
 Image** workflow and deployed in an air-gapped environment. This path was
-validated on a v1.5.0 appliance using the PostgreSQL storage backend.
+validated on a v1.5.0 appliance using the PostgreSQL storage backend, then
+hardened in v1.5.3 with mandatory pre-update state backups.
 
 In that configuration, **Appliance Ops > Updates** can show the staged request
 path as `/var/lib/ztf-orchestrator/appliance_update_request.json`, but the
@@ -254,7 +255,7 @@ update helper.
    the appliance access workstation.
 2. In **Appliance Ops > Updates**, import the package, review the manifest,
    click **Verify**, then click **Stage**. Confirm the UI reports
-   `Staged v1.5.2`.
+   `Staged v1.5.3`.
 3. SSH to the AHV appliance VM as the appliance Linux administrator:
 
    ```bash
@@ -286,15 +287,15 @@ update helper.
    example:
 
    ```powershell
-   scp "C:\Share\ztf-update-v1.5.2\images\ztf-orchestrator-v1.5.2-image.tar" ztfadmin@<appliance-ip>:/home/ztfadmin/
+   scp "C:\Share\ztf-update-v1.5.3\images\ztf-orchestrator-v1.5.3-image.tar" ztfadmin@<appliance-ip>:/home/ztfadmin/
    ```
 
 7. Move the image tar into the appliance update artifact directory:
 
    ```bash
    sudo mkdir -p /opt/ztf-orchestrator/update-artifacts
-   sudo mv /home/ztfadmin/ztf-orchestrator-v1.5.2-image.tar /opt/ztf-orchestrator/update-artifacts/
-   sudo ls -lh /opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.2-image.tar
+   sudo mv /home/ztfadmin/ztf-orchestrator-v1.5.3-image.tar /opt/ztf-orchestrator/update-artifacts/
+   sudo ls -lh /opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.3-image.tar
    ```
 
 8. Apply the staged request with explicit host paths:
@@ -302,7 +303,7 @@ update helper.
    ```bash
    sudo env \
      ZTF_UPDATE_REQUEST_FILE=/opt/ztf-orchestrator/appliance_update_request.json \
-     ZTF_UPDATE_IMAGE_TAR=/opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.2-image.tar \
+     ZTF_UPDATE_IMAGE_TAR=/opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.3-image.tar \
      /opt/ztf-orchestrator/appliance/scripts/apply-update-request.sh
    ```
 
@@ -331,7 +332,7 @@ update helper.
    sudo systemctl status ztf-orchestrator --no-pager
    ```
 
-10. Sign in to the web UI, confirm the footer or settings page reports v1.5.2,
+10. Sign in to the web UI, confirm the footer or settings page reports v1.5.3,
     verify the key workflows still load, then click **Mark Applied** in
     **Appliance Ops > Updates**.
 
