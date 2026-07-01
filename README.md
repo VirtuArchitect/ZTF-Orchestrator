@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.5.2
+# ZTF-Orchestrator · v1.5.3
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -448,7 +448,7 @@ notes — before executing sensitive operations. Admins approve or reject with
 an optional decision note. Requests auto-expire after 24 hours. A pending
 count badge on the sidebar signals outstanding requests to admins.
 
-v1.5.2 adds configurable mandatory approval policies in **Settings >
+v1.5.2+ adds configurable mandatory approval policies in **Settings >
 Governance**. High-impact workflows such as Foundation Central imaging,
 cluster-create, Prism Central deployment/configuration, cluster configuration,
 NDB, and LCM update require a matching approved request ID before direct
