@@ -1480,6 +1480,71 @@ def test_multi_script_unknown_in_array_rejected(client, auth_headers):
     assert 'Unknown script' in resp.get_json()['error']
 
 
+def test_multi_script_legacy_alias_normalized(client, auth_headers, monkeypatch):
+    """Unambiguous legacy UI aliases are translated to real ZTF class names."""
+    import subprocess
+
+    captured = {}
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter([])
+        stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    def fake_popen(args, **kwargs):
+        captured['args'] = args
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
+    resp = client.post('/api/execute',
+                       json={'script': 'CreateVpc', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = b''.join(resp.response).decode()
+    assert '"status": "success"' in body
+    assert captured['args'][captured['args'].index('--script') + 1] == 'CreateVPC'
+
+
+def test_ambiguous_create_vm_alias_rejected(client, auth_headers):
+    """Ambiguous legacy VM aliases require explicit PE or PC script selection."""
+    resp = client.post('/api/execute',
+                       json={'script': 'CreateVm', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'Use CreateVmPe' in resp.get_json()['error']
+
+
+def test_explicit_create_vm_pe_accepted(client, auth_headers, monkeypatch):
+    """The explicit Prism Element VM create script is accepted."""
+    import subprocess
+
+    captured = {}
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter([])
+        stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    def fake_popen(args, **kwargs):
+        captured['args'] = args
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
+    resp = client.post('/api/execute',
+                       json={'script': 'CreateVmPe', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = b''.join(resp.response).decode()
+    assert '"status": "success"' in body
+    assert captured['args'][captured['args'].index('--script') + 1] == 'CreateVmPe'
+
+
 # ── Audit log ────────────────────────────────────────────────────────────────
 
 def test_job_submit_persists_status_logs_and_history(client, auth_headers, monkeypatch):

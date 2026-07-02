@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { useStore } from '../store'
+import BrandLogo from '../components/BrandLogo'
 
 export default function Login() {
   const { setAuth, sessionToken } = useStore()
@@ -46,12 +47,8 @@ export default function Login() {
       <div className="w-full max-w-2xl">
 
         {/* Logo */}
-        <div className="mx-auto mb-5 flex h-[172px] w-full max-w-[654px] items-center justify-center bg-[#f7f8fb] px-12">
-          <img
-            src="/zto-logo-login.svg"
-            alt="ZeroTouch Enterprise Orchestrator"
-            className="h-[142px] w-full max-w-[560px] object-contain"
-          />
+        <div className="mx-auto mb-5 flex h-[172px] w-full max-w-[654px] items-center justify-center rounded-lg bg-surface px-12 ring-1 ring-border">
+          <BrandLogo className="h-[142px] w-full max-w-[560px]" />
         </div>
 
         {/* Card */}

@@ -64,7 +64,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.5.2'
+APP_VERSION = '1.5.3'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2514,22 +2514,92 @@ def _is_allowed_approval_workflow(workflow: str) -> bool:
     return False
 
 ALLOWED_SCRIPTS = {
-    'AddAdServerPe','AddAdServerPc','CreateRoleMappingPe','CreateRoleMappingPc',
-    'CreateLocalUser','DeleteLocalUser','AddSamlIdp',
-    'CreateSubnetPe','CreateSubnetPc','DeleteSubnetPe','CreateVpc',
-    'UpdateDnsNtp','EnableFlowNetworking',
-    'CreateContainer','DeleteContainer','CreateObjectStore','CreateBucket',
-    'CreateVm','DeleteVm','PowerOnVm','PowerOffVm','CloneVm',
-    'UploadImage','DeleteImage',
-    'CreateSecurityPolicy','CreateAddressGroup','CreateServiceGroup',
-    'CreateCategory','AssignCategoryToVm',
-    'CreateNkeCluster','DeleteNkeCluster','EnableNke',
-    'CreateDbServer','RegisterNdbCluster','CreateNdbNetworkProfile',
-    'DeployPc','RegisterPcToPe','EnableMicrosegmentation','EnableObjects',
-    'EnableDr','CreateProtectionRule','CreateRecoveryPlan','RegisterRemoteAz',
-    'ConfigureEula','EnablePulse','SetHaReservation','SetRebuildCapacity',
-    'UpdateClusterName','UpdateFoundation','UpdateNcc',
+    'AcceptEulaPc', 'AcceptEulaPe',
+    'AddAdServerPc', 'AddAdServerPe', 'AddAuthorizationPolicy', 'AddDirectoryServices',
+    'AddLocalUsers', 'AddNameServersPc', 'AddNameServersPe', 'AddNtpServersPc',
+    'AddNtpServersPe', 'AddRoles', 'AddUserGroups',
+    'ChangeDefaultAdminPasswordPc', 'ChangeDefaultAdminPasswordPe',
+    'ConnectToAz', 'CreateAddressGroups', 'CreateBucket', 'CreateCategoryPc',
+    'CreateContainerPe', 'CreateIdp', 'CreateIAMKeys', 'CreateKarbonClusterPc',
+    'CreateNcmAccount', 'CreateNcmProject', 'CreateNcmUser',
+    'CreateNetworkSecurityPolicy', 'CreateObjectStore', 'CreateProtectionPolicy',
+    'CreateRecoveryPlan', 'CreateRoleMappingPc', 'CreateRoleMappingPe',
+    'CreateServiceGroups', 'CreateSubnetPe', 'CreateSubnetsPc', 'CreateVmsPc',
+    'CreateVmPe', 'CreateVPC',
+    'DeleteAddressGroups', 'DeleteAdServerPc', 'DeleteAdServerPe', 'DeleteCategoryPc',
+    'DeleteContainerPe', 'DeleteNameServersPc', 'DeleteNameServersPe',
+    'DeleteNetworkSecurityPolicy', 'DeleteNtpServersPc', 'DeleteNtpServersPe',
+    'DeleteObjectStore', 'DeleteProtectionPolicy', 'DeleteRecoveryPlan',
+    'DeleteRoleMappingPc', 'DeleteRoleMappingPe', 'DeleteServiceGroups',
+    'DeleteSubnetsPc', 'DeleteSubnetsPe', 'DeleteVmPc', 'DeleteVmPe', 'DeleteVPC',
+    'DisableMicrosegmentation', 'DisableNetworkController', 'DisconnectAz',
+    'DeployPC', 'EnableDR', 'EnableFC', 'EnableMarketplace',
+    'EnableMicrosegmentation', 'EnableNetworkController', 'EnableNke', 'EnableObjects',
+    'GenerateFcApiKey', 'HaReservation', 'ImportUsers', 'InitCalmDsl', 'NdbConfig',
+    'PcImageDelete', 'PcImageUpload', 'PcOVADelete', 'PcOVAUpload',
+    'PowerOnVmPc', 'PowerTransitionVmPe', 'RebuildCapacityReservation',
+    'RegisterInitClusterNdb', 'RegisterToPc', 'ShareBucket',
+    'UpdateCvmFoundation', 'UpdateDsip', 'UpdatePulsePc', 'UpdatePulsePe',
+    'UpdateVPC', 'UploadImagePe',
 }
+
+SCRIPT_ALIASES = {
+    'AddSamlIdp': 'CreateIdp',
+    'CreateAddressGroup': 'CreateAddressGroups',
+    'CreateCategory': 'CreateCategoryPc',
+    'CreateContainer': 'CreateContainerPe',
+    'CreateLocalUser': 'AddLocalUsers',
+    'CreateNkeCluster': 'CreateKarbonClusterPc',
+    'CreateProtectionRule': 'CreateProtectionPolicy',
+    'CreateSecurityPolicy': 'CreateNetworkSecurityPolicy',
+    'CreateServiceGroup': 'CreateServiceGroups',
+    'CreateSubnetPc': 'CreateSubnetsPc',
+    'CreateVpc': 'CreateVPC',
+    'DeleteContainer': 'DeleteContainerPe',
+    'DeleteImage': 'PcImageDelete',
+    'DeleteSubnetPe': 'DeleteSubnetsPe',
+    'DeployPc': 'DeployPC',
+    'EnableDr': 'EnableDR',
+    'EnableFlowNetworking': 'EnableNetworkController',
+    'PowerOnVm': 'PowerOnVmPc',
+    'RegisterNdbCluster': 'RegisterInitClusterNdb',
+    'RegisterPcToPe': 'RegisterToPc',
+    'SetHaReservation': 'HaReservation',
+    'SetRebuildCapacity': 'RebuildCapacityReservation',
+    'UpdateFoundation': 'UpdateCvmFoundation',
+    'UploadImage': 'UploadImagePe',
+}
+
+AMBIGUOUS_SCRIPT_ALIASES = {
+    'ConfigureEula': 'Use AcceptEulaPe or AcceptEulaPc.',
+    'CreateVm': 'Use CreateVmPe for Prism Element or CreateVmsPc for Prism Central.',
+    'DeleteVm': 'Use DeleteVmPe for Prism Element or DeleteVmPc for Prism Central.',
+    'EnablePulse': 'Use UpdatePulsePe or UpdatePulsePc.',
+    'PowerOffVm': 'Use PowerTransitionVmPe with the desired PE power transition config.',
+}
+
+
+def _script_ids_from_payload(raw_script) -> list[str]:
+    if isinstance(raw_script, list):
+        return [str(s).strip() for s in raw_script if str(s).strip()]
+    if raw_script:
+        return [s.strip() for s in str(raw_script).split(',') if s.strip()]
+    return []
+
+
+def _normalize_script_ids(script_ids: list[str]) -> tuple[list[str], str | None]:
+    normalized: list[str] = []
+    for sid in script_ids:
+        if sid in ALLOWED_SCRIPTS:
+            normalized.append(sid)
+            continue
+        if sid in SCRIPT_ALIASES:
+            normalized.append(SCRIPT_ALIASES[sid])
+            continue
+        if sid in AMBIGUOUS_SCRIPT_ALIASES:
+            return [], f'Unknown script: {sid}. {AMBIGUOUS_SCRIPT_ALIASES[sid]}'
+        return [], f'Unknown script: {sid}'
+    return normalized, None
 
 ALLOWED_REPOS = {
     'https://github.com/nutanixdev/zerotouch-framework.git',
@@ -2941,8 +3011,10 @@ def _schedule_validation_error(data: dict, existing: dict | None = None) -> str:
     approval_error = _approval_automation_error(workflow)
     if approval_error:
         return approval_error
-    if script and script not in ALLOWED_SCRIPTS:
-        return 'Unknown script'
+    if script:
+        _, script_error = _normalize_script_ids(_script_ids_from_payload(script))
+        if script_error:
+            return script_error
     if not workflow and not script:
         return 'workflow or script required'
     return ''
@@ -6036,20 +6108,13 @@ def execute_workflow():
     dry_run        = bool(data.get('dryRun', False))
 
     # script accepts a single ID string or a list for multi-script composition
-    raw_script = data.get('script')
-    if isinstance(raw_script, list):
-        script_ids = [str(s).strip() for s in raw_script if str(s).strip()]
-    elif raw_script:
-        script_ids = [s.strip() for s in str(raw_script).split(',') if s.strip()]
-    else:
-        script_ids = []
+    script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
+    if script_error:
+        return jsonify({'error': script_error}), 400
     script = ','.join(script_ids) if script_ids else None
 
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         return jsonify({'error': 'Unknown workflow'}), 400
-    for sid in script_ids:
-        if sid not in ALLOWED_SCRIPTS:
-            return jsonify({'error': f'Unknown script: {sid}'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
 
@@ -6279,20 +6344,13 @@ def submit_job():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
     workflow = data.get('workflow')
-    raw_script = data.get('script')
-    if isinstance(raw_script, list):
-        script_ids = [str(s).strip() for s in raw_script if str(s).strip()]
-    elif raw_script:
-        script_ids = [s.strip() for s in str(raw_script).split(',') if s.strip()]
-    else:
-        script_ids = []
+    script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
+    if script_error:
+        return jsonify({'error': script_error}), 400
     script = ','.join(script_ids) if script_ids else None
 
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         return jsonify({'error': 'Unknown workflow'}), 400
-    for sid in script_ids:
-        if sid not in ALLOWED_SCRIPTS:
-            return jsonify({'error': f'Unknown script: {sid}'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
 
@@ -7061,6 +7119,9 @@ def create_schedule():
     error = _schedule_validation_error(data)
     if error:
         return jsonify({'error': error}), 400
+    script_ids, _ = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
+    if script_ids:
+        data = {**data, 'script': ','.join(script_ids)}
     s = _schedule_engine.create_schedule(data)
     return jsonify(s), 201
 
@@ -7084,6 +7145,9 @@ def update_schedule(sid):
     error = _schedule_validation_error(data, existing)
     if error:
         return jsonify({'error': error}), 400
+    if 'script' in data:
+        script_ids, _ = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
+        data = {**data, 'script': ','.join(script_ids)}
     s = _schedule_engine.update_schedule(sid, data)
     if not s:
         return jsonify({'error': 'not found'}), 404
