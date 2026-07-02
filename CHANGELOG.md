@@ -9,8 +9,38 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.5.3 and should be moved
+Changes in this section are present on `main` after v1.5.4 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.5.4] - 2026-07-02
+
+### Summary
+Patch release for v1.5.3 follow-up hardening, aligning script execution labels
+with real ZeroTouch Framework class names and reducing manual air-gapped update
+packaging errors.
+
+### Added
+- Added explicit Prism Element and Prism Central script entries for operations
+  whose legacy UI aliases were ambiguous, including VM create/delete/power
+  operations.
+- Added release consistency and script-catalogue validation coverage.
+- Added an offline update package generator for producing a manifest, image
+  tar, checksum file, and zip package from a reviewed container image tar.
+
+### Changed
+- Updated the in-app logo and SVG favicon to adapt to dark and light modes.
+- Excluded exported `.tar`, `.tar.gz`, and `.zip` artifacts from Docker build
+  context.
+
+### Fixed
+- Fixed backend `/health` version reporting so the API, UI, package metadata,
+  README, and changelog agree on the release version.
+- Fixed stale script aliases such as `CreateVm` by using real ZTF v1.5.2 script
+  class names such as `CreateVmPe` and `CreateVmsPc`.
+- Rejected ambiguous legacy script aliases with operator guidance instead of
+  guessing PE versus PC behavior.
 
 ---
 

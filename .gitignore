@@ -8,6 +8,9 @@ htmlcov
 playwright-report/
 test-results/
 *.egg-info
+*.tar
+*.tar.gz
+*.zip
 
 appliance/preload/bundles/*
 !appliance/preload/bundles/.gitkeep

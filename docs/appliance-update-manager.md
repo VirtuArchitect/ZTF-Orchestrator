@@ -199,6 +199,20 @@ If the image was built locally instead of pulled from GHCR, set
 `containerImage` to the local tag included in the tar, for example
 `ztf-orchestrator:vX.Y.Z`.
 
+To reduce manual checksum mistakes, connected staging can generate the package
+from a reviewed `docker save` tar with the repository helper:
+
+```bash
+python scripts/build_offline_update_package.py \
+  --version vX.Y.Z \
+  --image-tar ztf-orchestrator-vX.Y.Z-image.tar \
+  --output ztf-update-vX.Y.Z.zip
+```
+
+The command writes `manifest.json`, `SHA256SUMS`, and
+`images/ztf-orchestrator-vX.Y.Z-image.tar` into the zip. Record the printed
+package SHA-256 in the change record before transfer.
+
 Example `manifest.json` for a framework archive package:
 
 ```json

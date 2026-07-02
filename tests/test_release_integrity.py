@@ -1,0 +1,84 @@
+import ast
+import importlib.util
+import json
+import re
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_offline_package_module():
+    path = ROOT / 'scripts' / 'build_offline_update_package.py'
+    spec = importlib.util.spec_from_file_location('build_offline_update_package', path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def _frontend_script_ids() -> set[str]:
+    text = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
+    scripts_block = text.split('export const SCRIPTS', 1)[1].split('export const TIMEZONES', 1)[0]
+    return set(re.findall(r"\{ id: '([^']+)'", scripts_block))
+
+
+def test_release_version_metadata_is_consistent():
+    import server
+
+    package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
+    package_lock = json.loads((ROOT / 'package-lock.json').read_text(encoding='utf-8'))
+    version_ts = (ROOT / 'src' / 'version.ts').read_text(encoding='utf-8')
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    changelog = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
+
+    expected = package['version']
+    assert server.APP_VERSION == expected
+    assert package_lock['version'] == expected
+    assert package_lock['packages']['']['version'] == expected
+    assert f"export const APP_VERSION = '{expected}'" in version_ts
+    assert readme.startswith(f'# ZTF-Orchestrator · v{expected}')
+    assert f'## [{expected}]' in changelog
+
+
+def test_frontend_script_catalogue_is_backend_allowlisted():
+    import server
+
+    ids = _frontend_script_ids()
+    assert ids
+    assert not (ids - server.ALLOWED_SCRIPTS)
+    assert not (ids & set(server.AMBIGUOUS_SCRIPT_ALIASES))
+
+
+def test_offline_update_package_generator_writes_verified_manifest(tmp_path):
+    module = _load_offline_package_module()
+    image_tar = tmp_path / 'ztf-orchestrator-v1.5.4-image.tar'
+    image_tar.write_bytes(b'test image tar content')
+    output_zip = tmp_path / 'ztf-update-v1.5.4.zip'
+
+    package, package_sha = module.create_package(
+        image_tar=image_tar,
+        version='v1.5.4',
+        output_zip=output_zip,
+    )
+
+    assert package == output_zip
+    assert package_sha == module.sha256_file(output_zip)
+
+    import zipfile
+    with zipfile.ZipFile(output_zip) as archive:
+        names = set(archive.namelist())
+        assert names == {
+            'manifest.json',
+            'SHA256SUMS',
+            'images/ztf-orchestrator-v1.5.4-image.tar',
+        }
+        manifest = json.loads(archive.read('manifest.json'))
+        sha_line = archive.read('SHA256SUMS').decode('utf-8')
+
+    artifact = manifest['artifacts'][0]
+    assert manifest['version'] == 'v1.5.4'
+    assert manifest['containerImage'] == 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.4'
+    assert artifact['path'] == 'images/ztf-orchestrator-v1.5.4-image.tar'
+    assert artifact['sha256'] == module.sha256_file(image_tar)
+    assert sha_line == f"{artifact['sha256']}  {artifact['path']}\n"
