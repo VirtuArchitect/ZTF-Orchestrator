@@ -157,6 +157,14 @@
   .empty-state {
     @apply rounded-lg border border-dashed border-border bg-gray-900/30 px-6 py-10 text-center;
   }
+
+  .brand-logo {
+    color: #f8fafc;
+  }
+
+  .theme-light .brand-logo {
+    color: #10233f;
+  }
 }
 
 /* YAML syntax highlighting */

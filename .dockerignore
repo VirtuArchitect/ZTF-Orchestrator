@@ -10,6 +10,9 @@ htmlcov
 node_modules
 venv
 *.egg-info
+*.tar
+*.tar.gz
+*.zip
 
 npm-debug.log*
 yarn-debug.log*

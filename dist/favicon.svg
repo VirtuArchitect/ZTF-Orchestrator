@@ -1,5 +1,11 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <rect x="80" y="20" width="40" height="160" rx="20" fill="#10233F" transform="rotate(45 100 100)"/>
-  <rect x="80" y="20" width="40" height="160" rx="20" fill="#10233F" transform="rotate(-45 100 100)"/>
+  <style>
+    .mark { fill: #10233F; }
+    @media (prefers-color-scheme: dark) {
+      .mark { fill: #F8FAFC; }
+    }
+  </style>
+  <rect x="80" y="20" width="40" height="160" rx="20" class="mark" transform="rotate(45 100 100)"/>
+  <rect x="80" y="20" width="40" height="160" rx="20" class="mark" transform="rotate(-45 100 100)"/>
   <circle cx="100" cy="100" r="16" fill="#14B8A6"/>
 </svg>

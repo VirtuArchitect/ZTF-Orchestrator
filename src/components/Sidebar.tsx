@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
+import BrandLogo from './BrandLogo'
 import clsx from 'clsx'
 
 type Role = 'admin' | 'operator' | 'viewer'
@@ -97,17 +98,9 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-border flex-shrink-0">
         {sidebarOpen ? (
-          <img
-            src="/zto-logo-flat-horizontal.svg"
-            alt="ZeroTouch Enterprise Orchestrator"
-            className="h-12 w-52 object-contain object-left"
-          />
+          <BrandLogo className="h-12 w-52" />
         ) : (
-          <img
-            src="/zto-logo-mark.svg"
-            alt="ZeroTouch"
-            className="w-8 h-8 rounded-lg flex-shrink-0"
-          />
+          <BrandLogo variant="mark" className="w-8 h-8 flex-shrink-0" />
         )}
       </div>
 
