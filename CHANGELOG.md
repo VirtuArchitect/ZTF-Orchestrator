@@ -43,6 +43,10 @@ packaging errors.
   class names such as `CreateVmPe` and `CreateVmsPc`.
 - Rejected ambiguous legacy script aliases with operator guidance instead of
   guessing PE versus PC behavior.
+- Patched the bundled ZTF v1.5.2 PC entity list helper during image build so
+  `CreateVmsPc` filter-based VM lookups no longer raise `KeyError: 'filter'`.
+- Fixed the `CreateVmsPc` wizard output to use the runtime's expected
+  `network`, `ip_endpoint_list`, and `num_vcpus_per_socket` fields.
 
 ---
 

@@ -82,3 +82,23 @@ def test_offline_update_package_generator_writes_verified_manifest(tmp_path):
     assert artifact['path'] == 'images/ztf-orchestrator-v1.5.4-image.tar'
     assert artifact['sha256'] == module.sha256_file(image_tar)
     assert sha_line == f"{artifact['sha256']}  {artifact['path']}\n"
+
+
+def test_create_vms_pc_wizard_matches_runtime_contract():
+    schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
+    create_vms_pc = schema.split('CreateVmsPc:', 1)[1].split('DeployPC:', 1)[0]
+
+    assert "network: text(values, 'network_name')" in create_vms_pc
+    assert 'ip_endpoint_list' in create_vms_pc
+    assert 'nic_list' not in create_vms_pc
+    assert 'num_vcpus_per_socket' in create_vms_pc
+
+
+def test_docker_build_patches_ztf_pc_entity_filter_bug():
+    dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    patch_script = (ROOT / 'scripts' / 'patch_ztf_runtime.py').read_text(encoding='utf-8')
+
+    assert 'scripts/patch_ztf_runtime.py' in dockerfile
+    assert 'RUN python /tmp/patch_ztf_runtime.py' in dockerfile
+    assert 'filter_criteria = kwargs.pop("filter", None)' in patch_script
+    assert 'payload["filter"] = filter_criteria' in patch_script

@@ -222,7 +222,7 @@ export const SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       { key: 'static_ip', label: 'Static IP', type: 'text', placeholder: '10.10.110.51' },
       { key: 'memory_mb', label: 'Memory MB', type: 'number', defaultValue: 4096 },
       { key: 'num_vcpus', label: 'vCPUs', type: 'number', defaultValue: 2 },
-      { key: 'cores_per_vcpu', label: 'Cores per vCPU', type: 'number', defaultValue: 1 },
+      { key: 'num_vcpus_per_socket', label: 'vCPUs per Socket', type: 'number', defaultValue: 1 },
       { key: 'container_name', label: 'Storage Container', type: 'text', defaultValue: 'SelfServiceContainer' },
     ],
     build: values => toYaml(peCluster(values, {
@@ -283,16 +283,16 @@ export const SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
           vms: [{
             name: text(values, 'vm_name'),
             num_vcpus: integer(values, 'num_vcpus') || 2,
-            num_cores_per_vcpu: integer(values, 'cores_per_vcpu') || 1,
+            num_vcpus_per_socket: integer(values, 'num_vcpus_per_socket') || 1,
             memory_mb: integer(values, 'memory_mb') || 4096,
             include_cdrom: false,
             power_state: text(values, 'power_state') || 'ON',
             image_list: list(values, 'image_names'),
             hardware_clock_timezone: 'UTC',
-            nic_list: [{
-              name: text(values, 'network_name'),
-              ...(list(values, 'static_ips').length ? { ip_endpoint_list: list(values, 'static_ips') } : {}),
-            }],
+            network: text(values, 'network_name'),
+            ...(list(values, 'static_ips').length ? {
+              ip_endpoint_list: list(values, 'static_ips').map(ip => ({ ip })),
+            } : {}),
             boot_type: 'LEGACY',
           }],
         },
