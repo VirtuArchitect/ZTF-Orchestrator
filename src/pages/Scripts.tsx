@@ -6,6 +6,7 @@ import {
 import Layout from '../components/Layout'
 import { SCRIPTS, SCRIPT_CATEGORIES } from '../data'
 import Terminal_component from '../components/Terminal'
+import ScriptConfigWizard from '../components/ScriptConfigWizard'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
 
@@ -242,6 +243,9 @@ export default function Scripts() {
               {/* Config input */}
               <div className="card flex-1">
                 <label className="label mb-2">Shared Configuration (YAML/JSON) — optional</label>
+                <div className="mb-3">
+                  <ScriptConfigWizard scriptIds={queue} onGenerate={setConfigContent} />
+                </div>
                 <textarea
                   className="input font-mono text-xs resize-none h-40"
                   value={configContent}

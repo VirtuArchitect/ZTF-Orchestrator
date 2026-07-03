@@ -17,6 +17,27 @@ export interface ScriptDef {
   description: string
 }
 
+export type ScriptConfigFieldType = 'text' | 'number' | 'select' | 'list' | 'boolean'
+
+export interface ScriptConfigField {
+  key: string
+  label: string
+  type: ScriptConfigFieldType
+  required?: boolean
+  placeholder?: string
+  defaultValue?: string | number | boolean
+  options?: string[]
+  help?: string
+}
+
+export interface ScriptConfigSchema {
+  scriptId: string
+  title: string
+  description: string
+  fields: ScriptConfigField[]
+  build: (values: Record<string, string | number | boolean>) => string
+}
+
 export interface Credential {
   ref: string
   username: string
