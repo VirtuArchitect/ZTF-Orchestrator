@@ -62,8 +62,11 @@ RUN git clone --depth 1 --branch "${ZTF_REF}" \
 # ZTF into its own venv. Keeping ZTF isolated avoids conflicts with Flask and
 # other Orchestrator runtime dependencies.
 COPY scripts/prepare_ztf_requirements.py /tmp/prepare_ztf_requirements.py
+COPY scripts/patch_ztf_runtime.py /tmp/patch_ztf_runtime.py
 
 RUN python /tmp/prepare_ztf_requirements.py
+
+RUN python /tmp/patch_ztf_runtime.py
 
 RUN python -m venv /opt/ztf-python && \
     /opt/ztf-python/bin/pip install --no-cache-dir --upgrade pip && \
