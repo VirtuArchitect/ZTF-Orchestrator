@@ -28,6 +28,8 @@ packaging errors.
 - Added release consistency and script-catalogue validation coverage.
 - Added an offline update package generator for producing a manifest, image
   tar, checksum file, and zip package from a reviewed container image tar.
+- Added a script configuration wizard that generates starter YAML for common
+  ZTF script operations from operator-friendly form inputs.
 
 ### Changed
 - Updated the in-app logo and SVG favicon to adapt to dark and light modes.

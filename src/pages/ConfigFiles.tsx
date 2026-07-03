@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { FileCode, Plus, Trash2, Save, Download, Upload, RefreshCw, History, RotateCcw } from 'lucide-react'
+import { FileCode, Plus, Trash2, Save, Download, Upload, RefreshCw, History, RotateCcw, Wand2 } from 'lucide-react'
 import Layout from '../components/Layout'
+import ScriptConfigWizard from '../components/ScriptConfigWizard'
+import { SCRIPTS } from '../data'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
 
@@ -26,6 +28,7 @@ export default function ConfigFiles() {
   const [newFileName, setNewFileName] = useState('')
   const [backups, setBackups] = useState<Backup[]>([])
   const [showBackups, setShowBackups] = useState(false)
+  const [showWizard, setShowWizard] = useState(false)
   const [restoring, setRestoring] = useState<number | null>(null)
 
   const loadFiles = async () => {
@@ -43,6 +46,7 @@ export default function ConfigFiles() {
   const openFile = async (name: string) => {
     setSelected(name)
     setShowBackups(false)
+    setShowWizard(false)
     setBackups([])
     const resp = await apiFetch(`/api/configs/${encodeURIComponent(name)}`)
     if (resp.ok) {
@@ -153,6 +157,13 @@ export default function ConfigFiles() {
                   History ({backups.length})
                 </button>
               )}
+              <button
+                onClick={() => { setShowWizard(v => !v); setShowBackups(false) }}
+                className={clsx('btn-secondary gap-1.5', showWizard && 'border-nutanix-blue/60 text-nutanix-cyan')}
+              >
+                <Wand2 size={14} />
+                Wizard
+              </button>
               <button onClick={download} className="btn-secondary gap-1.5">
                 <Download size={14} />Download
               </button>
@@ -229,6 +240,13 @@ export default function ConfigFiles() {
         <div className="flex-1 flex flex-col gap-3 min-w-0">
           {selected ? (
             <>
+              {showWizard && (
+                <ScriptConfigWizard
+                  scriptIds={SCRIPTS.map(script => script.id)}
+                  onGenerate={setContent}
+                />
+              )}
+
               <div className="flex items-center gap-2 px-4 py-3 bg-gray-900 rounded-t-xl border border-border">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-500/60" />
