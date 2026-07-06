@@ -27,4 +27,21 @@ def patch_pc_entity_list() -> None:
     print(f"Patched {path}")
 
 
+def patch_pc_vm_payload_name() -> None:
+    path = Path("/opt/zerotouch-framework/framework/scripts/python/helpers/v3/vm.py")
+    text = path.read_text()
+    old = """        cluster_name = kwargs["cluster_name"]
+        payload = self.get_pc_vm_payload()
+"""
+    new = """        cluster_name = kwargs["cluster_name"]
+        payload = self.get_pc_vm_payload()
+        payload["spec"]["name"] = kwargs["name"]
+"""
+    if old not in text:
+        raise SystemExit(f"Expected VM payload block not found in {path}")
+    path.write_text(text.replace(old, new))
+    print(f"Patched {path}")
+
+
 patch_pc_entity_list()
+patch_pc_vm_payload_name()

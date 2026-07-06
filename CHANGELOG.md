@@ -47,6 +47,9 @@ packaging errors.
   `CreateVmsPc` filter-based VM lookups no longer raise `KeyError: 'filter'`.
 - Fixed the `CreateVmsPc` wizard output to use the runtime's expected
   `network`, `ip_endpoint_list`, and `num_vcpus_per_socket` fields.
+- Patched the bundled ZTF v1.5.2 PC VM payload helper during image build so
+  `CreateVmsPc` uses the requested VM name instead of the helper template's
+  default `test-payload` name.
 
 ---
 

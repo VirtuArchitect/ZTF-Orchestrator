@@ -102,3 +102,4 @@ def test_docker_build_patches_ztf_pc_entity_filter_bug():
     assert 'RUN python /tmp/patch_ztf_runtime.py' in dockerfile
     assert 'filter_criteria = kwargs.pop("filter", None)' in patch_script
     assert 'payload["filter"] = filter_criteria' in patch_script
+    assert 'payload["spec"]["name"] = kwargs["name"]' in patch_script
