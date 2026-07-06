@@ -7,6 +7,7 @@ import Layout from '../components/Layout'
 import { SCRIPTS, SCRIPT_CATEGORIES } from '../data'
 import Terminal_component from '../components/Terminal'
 import ScriptConfigWizard from '../components/ScriptConfigWizard'
+import { SCRIPT_CONFIG_SCHEMAS } from '../scriptConfigSchemas'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
 
@@ -62,6 +63,12 @@ export default function Scripts() {
   // ── Run ───────────────────────────────────────────────────────────────────
   const runScripts = async () => {
     if (!queue.length) return
+    const destructive = queue.filter(id => SCRIPT_CONFIG_SCHEMAS[id]?.riskLevel === 'destructive')
+    const confirmationPhrase = destructive.length ? `RUN ${destructive.join(',')}` : ''
+    if (destructive.length) {
+      const entered = window.prompt(`Destructive action confirmation required.\n\nScripts: ${destructive.join(', ')}\nType exactly: ${confirmationPhrase}`)
+      if (entered !== confirmationPhrase) return
+    }
     setRunStatus('running')
     setLogs([])
 
@@ -72,6 +79,10 @@ export default function Scripts() {
         script:        queue,          // pass as array; server joins to A,B,C
         configContent,
         configFile:    `multi-script-${Date.now()}.yml`,
+        ...(destructive.length ? {
+          riskAcknowledged: true,
+          destructiveConfirmation: confirmationPhrase,
+        } : {}),
       }),
     })
 

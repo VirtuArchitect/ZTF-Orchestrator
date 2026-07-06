@@ -84,6 +84,17 @@ def test_offline_update_package_generator_writes_verified_manifest(tmp_path):
     assert sha_line == f"{artifact['sha256']}  {artifact['path']}\n"
 
 
+def test_airgap_release_script_runs_required_release_steps():
+    script = (ROOT / 'scripts' / 'build_airgap_release.ps1').read_text(encoding='utf-8')
+
+    assert 'python -m pytest tests/test_release_integrity.py -q' in script
+    assert 'npm run build' in script
+    assert 'docker build' in script
+    assert 'docker save' in script
+    assert 'build_offline_update_package.py' in script
+    assert 'Get-FileHash' in script
+
+
 def test_create_vms_pc_wizard_matches_runtime_contract():
     schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
     create_vms_pc = schema.split('CreateVmsPc:', 1)[1].split('DeployPC:', 1)[0]
@@ -92,6 +103,17 @@ def test_create_vms_pc_wizard_matches_runtime_contract():
     assert 'ip_endpoint_list' in create_vms_pc
     assert 'nic_list' not in create_vms_pc
     assert 'num_vcpus_per_socket' in create_vms_pc
+
+
+def test_script_config_wizard_covers_all_catalog_scripts():
+    schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
+
+    assert 'SCRIPTS.reduce' in schema
+    assert 'genericSchemaFor' not in schema
+    assert 'ALL_SCRIPT_CONFIG_SCHEMAS[script.id]' in schema
+    assert '...EXACT_SCRIPT_CONFIG_SCHEMAS' in schema
+    assert '...FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS' in schema
+    assert 'Missing script config schemas' in schema
 
 
 def test_docker_build_patches_ztf_pc_entity_filter_bug():

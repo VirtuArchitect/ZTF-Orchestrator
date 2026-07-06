@@ -1547,6 +1547,41 @@ def test_explicit_create_vm_pe_accepted(client, auth_headers, monkeypatch):
 
 # ── Audit log ────────────────────────────────────────────────────────────────
 
+def test_destructive_script_requires_acknowledgement(client, auth_headers):
+    resp = client.post('/api/execute',
+                       json={'script': 'DeleteVmPc', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 403
+    body = resp.get_json()
+    assert body['destructiveAction'] is True
+    assert 'acknowledgement required' in body['error']
+
+
+def test_destructive_script_accepts_exact_confirmation(client, auth_headers, monkeypatch):
+    import subprocess
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter([])
+        stderr = iter([])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+    resp = client.post('/api/execute',
+                       json={
+                           'script': 'DeleteVmPc',
+                           'configFile': 'test.yml',
+                           'riskAcknowledged': True,
+                           'destructiveConfirmation': 'RUN DeleteVmPc',
+                       },
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = b''.join(resp.response).decode()
+    assert '"status": "success"' in body
+
+
 def test_job_submit_persists_status_logs_and_history(client, auth_headers, monkeypatch):
     """Submit-only jobs are executed by the background worker and persisted."""
     import subprocess
@@ -1587,6 +1622,36 @@ def test_job_submit_persists_status_logs_and_history(client, auth_headers, monke
     history = client.get('/api/executions', headers=auth_headers).get_json()
     assert history[0]['id'] == job_id
     assert history[0]['status'] == 'success'
+
+
+def test_failed_job_records_diagnostics_and_likely_fix(client, auth_headers, monkeypatch):
+    import subprocess
+
+    class FakeProc:
+        returncode = 1
+        stdout = iter(['starting\n'])
+        stderr = iter(['KeyError: missing pc_credential\n'])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 1
+
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPc', 'configFile': 'test.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+    job = _wait_for_job(client, auth_headers, job_id)
+
+    assert job['status'] == 'failed'
+    assert job['diagnostics']['category'] == 'credential_error'
+    assert 'credential reference' in job['diagnostics']['likelyFix']
+
+    history = client.get('/api/executions', headers=auth_headers).get_json()
+    assert history[0]['id'] == job_id
+    assert history[0]['diagnostics']['category'] == 'credential_error'
+    assert 'KeyError' in history[0]['stderr']
 
 
 def test_cancel_queued_job(client, auth_headers):

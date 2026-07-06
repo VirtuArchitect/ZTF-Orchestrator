@@ -9,8 +9,43 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.5.4 and should be moved
+Changes in this section are present on `main` after v1.5.5 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.5.5] - 2026-07-06
+
+### Summary
+Operator-safety release for the script wizard and air-gapped upgrade flow,
+adding generated guidance, stronger failed-run diagnostics, destructive action
+confirmation, and a repeatable offline package builder.
+
+### Added
+- Added generated per-script YAML example values and required-field guidance to
+  the script configuration wizard.
+- Added failed-run diagnostics that persist the redacted command, config file,
+  config path, return code, stderr/stdout tails, failure category, evidence, and
+  likely fix in jobs and execution history.
+- Added destructive script metadata and confirmation handling for delete,
+  destroy, disconnect, update, and power-transition style operations.
+- Added a one-command air-gapped release helper that runs release checks, builds
+  the UI and image, smoke-tests `/health`, verifies runtime patches, exports the
+  image tar, and creates the offline update ZIP with checksums.
+- Added a full validation test plan for proving all 75 script wizard schemas
+  against real ZeroTouch Framework behavior.
+
+### Changed
+- Improved the script page workflow so destructive queued scripts require an
+  exact operator confirmation phrase before submission.
+- Improved execution and job detail views with actionable diagnostics instead
+  of requiring operators to inspect raw logs first.
+
+### Security
+- Enforced destructive-script acknowledgement on the backend so API clients
+  cannot bypass the UI prompt.
+- Redacted sensitive command and diagnostic values for common password, token,
+  secret, and API-key markers before persistence/display.
 
 ---
 
