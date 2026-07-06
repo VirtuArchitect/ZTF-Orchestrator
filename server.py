@@ -64,7 +64,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.5.4'
+APP_VERSION = '1.5.5'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -3687,6 +3687,12 @@ def _record_execution_history(
     user: str,
     config_file: str = '',
     config_content: str = '',
+    command: str = '',
+    config_path: str = '',
+    return_code: int | None = None,
+    stdout: str = '',
+    stderr: str = '',
+    diagnostics: dict | None = None,
 ) -> dict:
     """Persist a workflow/script attempt so failed starts remain auditable."""
     entry = {
@@ -3698,11 +3704,99 @@ def _record_execution_history(
         'user':          user,
         'configFile':    config_file or '',
         'configContent': config_content or '',
+        'command':       command or '',
+        'configPath':    config_path or '',
+        'returnCode':    return_code,
+        'stdout':        stdout[-8000:] if stdout else '',
+        'stderr':        stderr[-8000:] if stderr else '',
+        'diagnostics':   diagnostics or {},
     }
     history = read_json(HISTORY_FILE, [])
     history.insert(0, entry)
     write_json(HISTORY_FILE, history[:1000])
     return entry
+
+
+DESTRUCTIVE_SCRIPT_IDS = {
+    'DeleteSubnetsPe', 'DeleteSubnetsPc', 'DeleteVPC', 'DisableNetworkController',
+    'DeleteContainerPe', 'DeleteObjectStore', 'DeleteVmPe', 'DeleteVmPc',
+    'PowerTransitionVmPe', 'PowerOnVmPc', 'PcImageDelete', 'PcOVADelete',
+    'DeleteNetworkSecurityPolicy', 'DeleteAddressGroups', 'DeleteServiceGroups',
+    'DeleteCategoryPc', 'DisableMicrosegmentation', 'DeleteProtectionPolicy',
+    'DeleteRecoveryPlan', 'DisconnectAz', 'UpdateDsip', 'UpdateCvmFoundation',
+}
+
+SENSITIVE_ARG_MARKERS = {'password', 'token', 'secret', 'key'}
+
+
+def _redact_text(value: str) -> str:
+    if not value:
+        return ''
+    redacted = re.sub(r'(?i)(password|token|secret|api[_-]?key)\s*[:=]\s*([^\s,\n]+)', r'\1=<redacted>', value)
+    return redacted
+
+
+def _redact_command_args(args: list[str]) -> list[str]:
+    redacted: list[str] = []
+    skip_next = False
+    for arg in args:
+        if skip_next:
+            redacted.append('<redacted>')
+            skip_next = False
+            continue
+        lowered = str(arg).lower()
+        if any(marker in lowered for marker in SENSITIVE_ARG_MARKERS):
+            if '=' in str(arg):
+                key, _sep, _value = str(arg).partition('=')
+                redacted.append(f'{key}=<redacted>')
+            else:
+                redacted.append(str(arg))
+                skip_next = True
+            continue
+        redacted.append(str(arg))
+    return redacted
+
+
+def _display_command(args: list[str]) -> str:
+    return ' '.join(_redact_command_args(args))
+
+
+def _classify_execution_failure(stderr: str, stdout: str, return_code: int | None) -> dict:
+    output = f'{stderr}\n{stdout}'.strip()
+    lower = output.lower()
+    checks = [
+        (('yaml', 'scannererror', 'parsererror'), 'yaml_parse_error', 'Review indentation, list syntax, and generated YAML before rerunning.'),
+        (('credential', 'vault', 'password'), 'credential_error', 'Confirm the credential reference exists in Global Config and has the required role.'),
+        (('unauthorized', 'forbidden', '401', '403'), 'authorization_error', 'Use a credential with the required Prism/Nutanix permissions.'),
+        (('not found', '404', 'does not exist'), 'object_not_found', 'Confirm the target object name, UUID, cluster, network, image, or container exists.'),
+        (('connection', 'timed out', 'timeout', 'unreachable', 'name resolution'), 'connectivity_error', 'Check appliance routing, DNS, firewall rules, and Prism endpoint reachability.'),
+        (('keyerror', 'missing', 'required'), 'missing_config_key', 'Compare the generated YAML with the script wizard required fields and ZTF example shape.'),
+        (('importerror', 'modulenotfounderror', 'dependency'), 'runtime_dependency_error', 'Verify the container image includes the patched ZTF runtime and Python dependencies.'),
+        (('permission denied', 'access denied'), 'permission_error', 'Check filesystem permissions and credential privileges.'),
+    ]
+    for tokens, category, likely_fix in checks:
+        if any(token in lower for token in tokens):
+            evidence = next((line.strip() for line in output.splitlines() if any(token in line.lower() for token in tokens)), '')
+            return {'category': category, 'likelyFix': likely_fix, 'evidence': _redact_text(evidence)}
+    if return_code not in (None, 0):
+        return {
+            'category': 'nonzero_exit',
+            'likelyFix': 'Review stderr/stdout and rerun with debug enabled if the root cause is not visible.',
+            'evidence': f'Process exited with code {return_code}',
+        }
+    return {'category': 'none', 'likelyFix': '', 'evidence': ''}
+
+
+def _validate_destructive_script_ack(script_ids: list[str], payload: dict) -> str | None:
+    destructive = [sid for sid in script_ids if sid in DESTRUCTIVE_SCRIPT_IDS]
+    if not destructive:
+        return None
+    expected = f'RUN {",".join(destructive)}'
+    if payload.get('riskAcknowledged') is not True:
+        return f'Destructive script acknowledgement required for: {", ".join(destructive)}'
+    if str(payload.get('destructiveConfirmation') or '').strip() != expected:
+        return f'Destructive script confirmation must exactly match: {expected}'
+    return None
 
 
 class ExecutionJobManager:
@@ -3888,6 +3982,10 @@ class ExecutionJobManager:
         effective_config_content = config_content
         status = 'failed'
         return_code = -1
+        cmd_args: list[str] = []
+        cfg_path = ''
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
         try:
             settings = get_settings()
             ztf_path = settings['ztfPath']
@@ -3897,8 +3995,6 @@ class ExecutionJobManager:
                 self._emit(job_id, 'error', incompatible[0]['error'])
                 return
             configs_dir = get_configs_dir()
-            cfg_path = None
-
             if effective_config_content and config_file:
                 self._update_progress(job_id, 'Preparing configuration', 15, 'Validating and saving workflow YAML')
                 path = safe_config_path(config_file, configs_dir)
@@ -3924,9 +4020,15 @@ class ExecutionJobManager:
             if cfg_path: cmd_args += ['-f', cfg_path]
             if debug:    cmd_args.append('--debug')
 
-            display = ' '.join(cmd_args[:4]) + (' ...' if len(cmd_args) > 4 else '')
+            display = _display_command(cmd_args)
             self._update_progress(job_id, 'Starting ZTF process', 30, 'Launching ZeroTouch Framework CLI')
-            self._emit(job_id, 'start', {'command': display, 'workingDir': ztf_path})
+            self._emit(job_id, 'start', {
+                'command': display,
+                'commandArgs': _redact_command_args(cmd_args),
+                'workingDir': ztf_path,
+                'configFile': config_file or '',
+                'configPath': cfg_path or '',
+            })
             log.info('execution_start', extra={
                 'user': user, 'workflow': workflow or script,
                 'action': 'execute', 'status': 'started', 'jobId': job_id,
@@ -3966,6 +4068,10 @@ class ExecutionJobManager:
                     done += 1
                 else:
                     label, line = item
+                    if label == 'stdout':
+                        stdout_lines.append(line)
+                    elif label == 'stderr':
+                        stderr_lines.append(line)
                     self._emit(job_id, label, line)
 
             proc.wait()
@@ -3983,6 +4089,22 @@ class ExecutionJobManager:
                 kill_timer.cancel()
             with self._condition:
                 self._active.pop(job_id, None)
+            stdout_text = _redact_text('\n'.join(stdout_lines))
+            stderr_text = _redact_text('\n'.join(stderr_lines))
+            diagnostics = _classify_execution_failure(stderr_text, stdout_text, return_code) if status != 'success' else {}
+            self._set_diagnostics(
+                job_id,
+                {
+                    'command': _display_command(cmd_args) if cmd_args else '',
+                    'commandArgs': _redact_command_args(cmd_args) if cmd_args else [],
+                    'workingDir': get_settings().get('ztfPath', ''),
+                    'configFile': config_file or '',
+                    'configPath': cfg_path or '',
+                    'stdoutTail': stdout_text[-4000:],
+                    'stderrTail': stderr_text[-4000:],
+                    **diagnostics,
+                },
+            )
             entry = _record_execution_history(
                 execution_id=job_id,
                 workflow_or_script=workflow or script,
@@ -3991,6 +4113,12 @@ class ExecutionJobManager:
                 user=user,
                 config_file=config_file,
                 config_content=effective_config_content,
+                command=_display_command(cmd_args) if cmd_args else '',
+                config_path=cfg_path or '',
+                return_code=return_code,
+                stdout=stdout_text,
+                stderr=stderr_text,
+                diagnostics=diagnostics,
             )
             self._complete(job_id, status, return_code)
             log.info('execution_complete', extra={
@@ -4176,6 +4304,17 @@ class ExecutionJobManager:
             if job:
                 self._finish_job(job, status, return_code)
                 self._save_jobs(jobs)
+            self._condition.notify_all()
+
+    def _set_diagnostics(self, job_id: str, diagnostics: dict) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return
+            job['diagnostics'] = diagnostics
+            job['updatedAt'] = self._now()
+            self._save_jobs(jobs)
             self._condition.notify_all()
 
     def _mark_running(self, job: dict) -> None:
@@ -6111,6 +6250,9 @@ def execute_workflow():
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
         return jsonify({'error': script_error}), 400
+    destructive_error = _validate_destructive_script_ack(script_ids, data)
+    if destructive_error:
+        return jsonify({'error': destructive_error, 'destructiveAction': True}), 403
     script = ','.join(script_ids) if script_ids else None
 
     if workflow and workflow not in ALLOWED_WORKFLOWS:
@@ -6145,6 +6287,8 @@ def execute_workflow():
         'configContent': config_content,
         'configFile': config_file,
         'debug': debug,
+        'riskAcknowledged': bool(data.get('riskAcknowledged', False)),
+        'destructiveConfirmation': str(data.get('destructiveConfirmation') or '').strip(),
         'approvalId': str(data.get('approvalId') or '').strip() or None,
     }, current_user)
     if approval:
@@ -6347,6 +6491,9 @@ def submit_job():
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
         return jsonify({'error': script_error}), 400
+    destructive_error = _validate_destructive_script_ack(script_ids, data)
+    if destructive_error:
+        return jsonify({'error': destructive_error, 'destructiveAction': True}), 403
     script = ','.join(script_ids) if script_ids else None
 
     if workflow and workflow not in ALLOWED_WORKFLOWS:
@@ -6371,6 +6518,8 @@ def submit_job():
         'configContent': data.get('configContent'),
         'configFile': data.get('configFile'),
         'debug': bool(data.get('debug', False)),
+        'riskAcknowledged': bool(data.get('riskAcknowledged', False)),
+        'destructiveConfirmation': str(data.get('destructiveConfirmation') or '').strip(),
         'approvalId': str(data.get('approvalId') or '').strip() or None,
     }, current_user)
     if approval:

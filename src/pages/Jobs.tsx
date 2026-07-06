@@ -244,6 +244,25 @@ export default function Jobs() {
                     </div>
                   )}
                   {job.progress && <ProgressBar progress={job.progress} />}
+                  {job.diagnostics && (
+                    <div className="rounded-lg border border-yellow-900/40 bg-yellow-950/10 px-3 py-3">
+                      <p className="text-xs font-medium text-yellow-200">Diagnostics</p>
+                      <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                        <Detail label="Failure Type" value={job.diagnostics.category || 'none'} />
+                        <Detail label="Config Path" value={job.diagnostics.configPath || job.diagnostics.configFile || 'not recorded'} />
+                        <Detail label="Working Dir" value={job.diagnostics.workingDir || 'not recorded'} />
+                      </div>
+                      {job.diagnostics.command && (
+                        <pre className="mt-3 rounded-lg bg-gray-950 p-3 font-mono text-xs text-gray-300 whitespace-pre-wrap break-words">{job.diagnostics.command}</pre>
+                      )}
+                      {job.diagnostics.likelyFix && (
+                        <p className="mt-2 text-xs text-yellow-100/80">{job.diagnostics.likelyFix}</p>
+                      )}
+                      {job.diagnostics.evidence && (
+                        <p className="mt-1 text-xs font-mono text-yellow-100/60 break-words">{job.diagnostics.evidence}</p>
+                      )}
+                    </div>
+                  )}
                   {job.trace && (
                     <div className="rounded-lg border border-border bg-gray-900/50 px-3 py-3">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">

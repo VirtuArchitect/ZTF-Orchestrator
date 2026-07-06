@@ -1,0 +1,12 @@
+﻿ZTF-Orchestrator v1.5.5
+
+Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.5
+Bundled ZTF ref: v1.5.2
+Built: 2026-07-06T17:22:21.9699154+02:00
+
+Verification:
+- release integrity tests: True
+- npm build: passed
+- docker build: passed
+- container /health: passed
+- ZTF runtime patches: passed

@@ -154,6 +154,26 @@ export default function Executions() {
                     </div>
                   </>
                 )}
+                {(exec.configPath || exec.returnCode !== undefined) && (
+                  <div className="mt-3 grid gap-3 md:grid-cols-3 text-xs">
+                    <Detail label="Return Code" value={exec.returnCode === null || exec.returnCode === undefined ? 'not recorded' : String(exec.returnCode)} />
+                    <Detail label="Config Path" value={exec.configPath || 'not recorded'} />
+                    <Detail label="Failure Type" value={exec.diagnostics?.category || 'none'} />
+                  </div>
+                )}
+                {exec.diagnostics?.likelyFix && (
+                  <div className="mt-3 rounded-lg border border-yellow-900/40 bg-yellow-950/10 px-3 py-2">
+                    <p className="text-xs font-medium text-yellow-200">Likely fix</p>
+                    <p className="mt-1 text-xs text-yellow-100/80">{exec.diagnostics.likelyFix}</p>
+                    {exec.diagnostics.evidence && <p className="mt-1 text-xs font-mono text-yellow-100/60 break-words">{exec.diagnostics.evidence}</p>}
+                  </div>
+                )}
+                {exec.stderr && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 mb-2">stderr:</p>
+                    <pre className="bg-gray-950 rounded-lg p-3 font-mono text-xs text-red-300 whitespace-pre-wrap max-h-48 overflow-auto">{exec.stderr}</pre>
+                  </div>
+                )}
                 {exec.configContent && (
                   <div className="mt-3 flex items-center justify-between">
                     <p className="text-xs text-gray-500">
@@ -192,6 +212,15 @@ export default function Executions() {
       />
     )}
     </>
+  )
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-gray-900/50 px-3 py-2">
+      <p className="text-[11px] uppercase tracking-wide text-gray-600">{label}</p>
+      <p className="mt-1 font-mono text-gray-300 break-words">{value}</p>
+    </div>
   )
 }
 

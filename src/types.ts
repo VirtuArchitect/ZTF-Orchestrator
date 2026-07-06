@@ -36,6 +36,10 @@ export interface ScriptConfigSchema {
   description: string
   fields: ScriptConfigField[]
   build: (values: Record<string, string | number | boolean>) => string
+  exampleValues?: Record<string, string | number | boolean>
+  requiredNotes?: string[]
+  riskLevel?: 'low' | 'medium' | 'high' | 'destructive'
+  confirmationPhrase?: string
 }
 
 export interface Credential {
@@ -73,10 +77,19 @@ export interface Execution {
   type: 'workflow' | 'script'
   command: string
   status: 'running' | 'success' | 'failed' | 'cancelled' | 'interrupted'
+  returnCode?: number | null
   duration?: number
   timestamp: string
   configFile?: string
   configContent?: string
+  configPath?: string
+  stdout?: string
+  stderr?: string
+  diagnostics?: {
+    category: string
+    likelyFix: string
+    evidence?: string
+  }
 }
 
 export type ExecutionJobStatus = 'queued' | 'running' | 'cancelling' | 'success' | 'failed' | 'cancelled' | 'interrupted'
@@ -125,6 +138,18 @@ export interface ExecutionJob {
     schemaStatus?: string
     schemaMissing?: string[]
     schemaWarnings?: string[]
+  }
+  diagnostics?: {
+    command?: string
+    commandArgs?: string[]
+    workingDir?: string
+    configFile?: string
+    configPath?: string
+    stdoutTail?: string
+    stderrTail?: string
+    category?: string
+    likelyFix?: string
+    evidence?: string
   }
 }
 

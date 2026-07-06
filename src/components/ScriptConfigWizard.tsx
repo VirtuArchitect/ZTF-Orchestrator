@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FileCode, Wand2 } from 'lucide-react'
+import { AlertTriangle, ClipboardList, FileCode, Wand2 } from 'lucide-react'
 import clsx from 'clsx'
 import { SCRIPTS } from '../data'
 import { SCRIPT_CONFIG_SCHEMAS } from '../scriptConfigSchemas'
@@ -85,6 +85,7 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
   const [selectedScriptId, setSelectedScriptId] = useState(supportedScripts[0] ?? '')
   const schema = selectedScriptId ? SCRIPT_CONFIG_SCHEMAS[selectedScriptId] : undefined
   const [values, setValues] = useState<WizardValues>(() => schema ? defaultsFor(schema) : {})
+  const [showGuidance, setShowGuidance] = useState(false)
 
   useEffect(() => {
     if (!supportedScripts.length) {
@@ -119,6 +120,7 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
             <Wand2 size={15} className="text-nutanix-cyan" />
             <h4 className="text-sm font-semibold text-gray-200">Config Wizard</h4>
             <span className="badge badge-blue text-xs">{scriptName}</span>
+            {schema.riskLevel === 'destructive' && <span className="badge badge-red text-xs">destructive</span>}
           </div>
           <p className="mt-1 text-xs text-gray-500">{schema.description}</p>
         </div>
@@ -134,6 +136,45 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
           </select>
         )}
       </div>
+
+      {schema.riskLevel === 'destructive' && (
+        <div className="mt-3 rounded-lg border border-red-900/50 bg-red-950/20 px-3 py-2 text-xs text-red-200">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+            <p>Review targets carefully. This script can delete, disable, disconnect, power, or update infrastructure state.</p>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setValues({ ...defaultsFor(schema), ...(schema.exampleValues ?? {}) })}
+          className="btn-secondary gap-1.5 text-xs"
+        >
+          <FileCode size={13} />
+          Load Example
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowGuidance(prev => !prev)}
+          className="btn-secondary gap-1.5 text-xs"
+        >
+          <ClipboardList size={13} />
+          Required Fields
+        </button>
+      </div>
+
+      {showGuidance && (
+        <div className="mt-3 rounded-lg border border-border bg-gray-900/50 px-3 py-2">
+          <p className="text-xs font-medium text-gray-400">Required guidance</p>
+          <ul className="mt-2 space-y-1 text-xs text-gray-500">
+            {(schema.requiredNotes?.length ? schema.requiredNotes : ['No required fields are declared for this wizard.']).map(note => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {schema.fields.map(field => (
