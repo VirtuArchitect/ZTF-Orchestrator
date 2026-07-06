@@ -271,7 +271,7 @@ export const SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       { key: 'static_ips', label: 'Static IPs', type: 'list', placeholder: '10.10.110.51' },
       { key: 'memory_mb', label: 'Memory MB', type: 'number', defaultValue: 4096 },
       { key: 'num_vcpus', label: 'vCPUs', type: 'number', defaultValue: 2 },
-      { key: 'cores_per_vcpu', label: 'Cores per vCPU', type: 'number', defaultValue: 1 },
+      { key: 'num_vcpus_per_socket', label: 'vCPUs per Socket', type: 'number', defaultValue: 1 },
       { key: 'power_state', label: 'Power State', type: 'select', defaultValue: 'ON', options: ['ON', 'OFF'] },
     ],
     build: values => toYaml({
