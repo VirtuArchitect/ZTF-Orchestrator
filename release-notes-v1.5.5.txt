@@ -2,7 +2,7 @@
 
 Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.5.5
 Bundled ZTF ref: v1.5.2
-Built: 2026-07-06T17:22:21.9699154+02:00
+Built: 2026-07-07T09:16:39.6324883+02:00
 
 Verification:
 - release integrity tests: True

@@ -162,10 +162,10 @@ export default function Executions() {
                   </div>
                 )}
                 {exec.diagnostics?.likelyFix && (
-                  <div className="mt-3 rounded-lg border border-yellow-900/40 bg-yellow-950/10 px-3 py-2">
-                    <p className="text-xs font-medium text-yellow-200">Likely fix</p>
-                    <p className="mt-1 text-xs text-yellow-100/80">{exec.diagnostics.likelyFix}</p>
-                    {exec.diagnostics.evidence && <p className="mt-1 text-xs font-mono text-yellow-100/60 break-words">{exec.diagnostics.evidence}</p>}
+                  <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 dark:border-yellow-900/40 dark:bg-yellow-950/10">
+                    <p className="text-xs font-medium text-amber-950 dark:text-yellow-200">Likely fix</p>
+                    <p className="mt-1 text-xs text-amber-900 dark:text-yellow-100/80">{exec.diagnostics.likelyFix}</p>
+                    {exec.diagnostics.evidence && <p className="mt-1 text-xs font-mono text-amber-800 break-words dark:text-yellow-100/60">{exec.diagnostics.evidence}</p>}
                   </div>
                 )}
                 {exec.stderr && (
