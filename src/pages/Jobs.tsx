@@ -245,8 +245,8 @@ export default function Jobs() {
                   )}
                   {job.progress && <ProgressBar progress={job.progress} />}
                   {job.diagnostics && (
-                    <div className="rounded-lg border border-yellow-900/40 bg-yellow-950/10 px-3 py-3">
-                      <p className="text-xs font-medium text-yellow-200">Diagnostics</p>
+                    <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-3 dark:border-yellow-900/40 dark:bg-yellow-950/10">
+                      <p className="text-xs font-medium text-amber-950 dark:text-yellow-200">Diagnostics</p>
                       <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                         <Detail label="Failure Type" value={job.diagnostics.category || 'none'} />
                         <Detail label="Config Path" value={job.diagnostics.configPath || job.diagnostics.configFile || 'not recorded'} />
@@ -256,10 +256,10 @@ export default function Jobs() {
                         <pre className="mt-3 rounded-lg bg-gray-950 p-3 font-mono text-xs text-gray-300 whitespace-pre-wrap break-words">{job.diagnostics.command}</pre>
                       )}
                       {job.diagnostics.likelyFix && (
-                        <p className="mt-2 text-xs text-yellow-100/80">{job.diagnostics.likelyFix}</p>
+                        <p className="mt-2 text-xs text-amber-900 dark:text-yellow-100/80">{job.diagnostics.likelyFix}</p>
                       )}
                       {job.diagnostics.evidence && (
-                        <p className="mt-1 text-xs font-mono text-yellow-100/60 break-words">{job.diagnostics.evidence}</p>
+                        <p className="mt-1 text-xs font-mono text-amber-800 break-words dark:text-yellow-100/60">{job.diagnostics.evidence}</p>
                       )}
                     </div>
                   )}
