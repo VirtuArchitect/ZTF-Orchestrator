@@ -358,3 +358,41 @@
   color: rgb(126 34 206 / 1);
   border-color: rgb(216 180 254 / 1);
 }
+
+.diagnostics-callout {
+  background-color: rgb(113 63 18 / 0.10);
+  border-color: rgb(113 63 18 / 0.40);
+}
+
+.diagnostics-callout-title {
+  color: rgb(254 240 138 / 1);
+}
+
+.diagnostics-callout-body {
+  color: rgb(254 249 195 / 0.86);
+}
+
+.diagnostics-callout-evidence {
+  color: rgb(254 249 195 / 0.70);
+}
+
+.theme-light .diagnostics-callout,
+.theme-light .border-yellow-900\/40.bg-yellow-950\/10 {
+  background-color: rgb(255 251 235 / 1) !important;
+  border-color: rgb(245 158 11 / 1) !important;
+}
+
+.theme-light .diagnostics-callout-title,
+.theme-light .border-yellow-900\/40.bg-yellow-950\/10 .text-yellow-200 {
+  color: rgb(69 26 3 / 1) !important;
+}
+
+.theme-light .diagnostics-callout-body,
+.theme-light .border-yellow-900\/40.bg-yellow-950\/10 .text-yellow-100\/80 {
+  color: rgb(120 53 15 / 1) !important;
+}
+
+.theme-light .diagnostics-callout-evidence,
+.theme-light .border-yellow-900\/40.bg-yellow-950\/10 .text-yellow-100\/60 {
+  color: rgb(146 64 14 / 1) !important;
+}
