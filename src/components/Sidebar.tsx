@@ -181,7 +181,6 @@ export default function Sidebar() {
         {sidebarOpen && (
           <div>
             <p className="text-xs text-gray-600">ZeroTouch Orchestrator v{APP_VERSION}</p>
-            <p className="text-xs text-gray-700 mt-1">Developed by John Goulden</p>
           </div>
         )}
       </div>
