@@ -1096,6 +1096,10 @@ def _redact_command_output(text: str) -> str:
     return value[:12000]
 
 
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(str(text or '').encode('utf-8')).hexdigest()
+
+
 def _evidence_summary_status(readiness: dict, compatibility: dict | None, schema_validation: dict | None = None) -> str:
     if readiness.get('status') == 'blocked':
         return 'blocked'
@@ -1110,7 +1114,159 @@ def _evidence_summary_status(readiness: dict, compatibility: dict | None, schema
     return 'ready'
 
 
-def _build_validation_evidence(data: dict, user: str) -> dict:
+def _workflow_evidence_readiness(config_content: str, config_file: str, job: dict | None, workflow: str) -> dict:
+    checks = []
+
+    def add_check(check_id: str, label: str, status: str, detail: str) -> None:
+        checks.append({'id': check_id, 'label': label, 'status': status, 'detail': detail})
+
+    parsed, parse_error = _parse_structured_config(config_content, config_file)
+    if config_content:
+        add_check(
+            'config_parse',
+            'Config parses',
+            'fail' if parse_error else 'pass',
+            parse_error or 'YAML/JSON content parsed successfully',
+        )
+    else:
+        add_check('config_present', 'Config present', 'warn', 'No config content is attached to this evidence record')
+
+    if config_file:
+        add_check('config_file', 'Config file named', 'pass', config_file)
+    else:
+        add_check('config_file', 'Config file named', 'warn', 'No config filename was recorded')
+
+    if workflow in ALLOWED_WORKFLOWS:
+        add_check('workflow_allowlist', 'Workflow allowlisted', 'pass', workflow)
+    elif workflow:
+        add_check('workflow_allowlist', 'Workflow allowlisted', 'warn', 'Record is for a script or external workflow identifier')
+    else:
+        add_check('workflow_allowlist', 'Workflow allowlisted', 'warn', 'No workflow identifier was supplied')
+
+    if job:
+        job_status = job.get('status') or 'unknown'
+        add_check(
+            'job_terminal',
+            'Execution job terminal',
+            'pass' if job_status == 'success' else 'warn' if job_status in ExecutionJobManager.TERMINAL else 'fail',
+            f'Job {job.get("id")} status is {job_status}',
+        )
+    else:
+        add_check('job_terminal', 'Execution job terminal', 'warn', 'No execution job was linked')
+
+    failed = sum(1 for item in checks if item['status'] == 'fail')
+    warnings = sum(1 for item in checks if item['status'] == 'warn')
+    total = len(checks) or 1
+    return {
+        'status': 'blocked' if failed else 'needs_attention' if warnings else 'ready',
+        'score': round(((total - failed - (warnings * 0.5)) / total) * 100),
+        'summary': {
+            'passed': sum(1 for item in checks if item['status'] == 'pass'),
+            'warnings': warnings,
+            'failed': failed,
+        },
+        'checks': checks,
+    }
+
+
+def _build_workflow_validation_evidence(data: dict, user: str) -> dict:
+    job_id = str(data.get('jobId') or '').strip()
+    job = None
+    execution = None
+    if job_id:
+        job = next((item for item in _job_manager._load_jobs() if item.get('id') == job_id), None)
+        if not job:
+            history = read_json(HISTORY_FILE, [])
+            if isinstance(history, list):
+                execution = next((item for item in history if isinstance(item, dict) and item.get('id') == job_id), None)
+    if job_id and not job and not execution:
+        raise ValueError('Execution job or history record was not found')
+
+    workflow = str(data.get('workflow') or '').strip()
+    config_file = str(data.get('configFile') or '').strip()
+    config_content = ''
+    approval_id = str(data.get('approvalId') or '').strip()
+    execution_status = ''
+    return_code = None
+    task_ids = data.get('taskIds', []) if isinstance(data.get('taskIds'), list) else []
+    output_excerpt = _redact_command_output(data.get('output') or '')
+
+    if job:
+        workflow = workflow or str(job.get('workflow') or '').strip()
+        payload = job.get('payload') if isinstance(job.get('payload'), dict) else {}
+        trace = job.get('trace') if isinstance(job.get('trace'), dict) else {}
+        config_file = config_file or str(trace.get('configFile') or payload.get('configFile') or '').strip()
+        config_content = str(payload.get('configContent') or '')
+        approval_id = approval_id or str(trace.get('approvalId') or payload.get('approvalId') or '').strip()
+        execution_status = str(job.get('status') or '')
+        return_code = job.get('returnCode')
+        task_ids = job.get('taskIds', task_ids)
+        if not output_excerpt:
+            output_excerpt = _redact_command_output('\n'.join(
+                str(event.get('data') or '') for event in job.get('logs', [])[-120:]
+            ))
+
+    if execution:
+        workflow = workflow or str(execution.get('workflow') or '').strip()
+        config_file = config_file or str(execution.get('configFile') or '').strip()
+        config_content = config_content or str(execution.get('configContent') or '')
+        execution_status = execution_status or str(execution.get('status') or '')
+        return_code = return_code if return_code is not None else execution.get('returnCode')
+        if not output_excerpt:
+            output_excerpt = _redact_command_output('\n'.join([
+                str(execution.get('stdout') or ''),
+                str(execution.get('stderr') or ''),
+            ]).strip())
+
+    if not config_content and data.get('configContent'):
+        config_content = str(data.get('configContent') or '')
+
+    if not config_content and config_file:
+        path = safe_config_path(config_file, get_configs_dir())
+        if path and path.exists():
+            config_content = path.read_text(encoding='utf-8')
+
+    if not config_content:
+        raise ValueError('workflow evidence requires jobId, configFile, or configContent')
+
+    readiness = _workflow_evidence_readiness(config_content, config_file, job, workflow)
+    parsed, parse_error = _parse_structured_config(config_content, config_file)
+    schema_validation = {
+        'status': 'fail' if parse_error else 'pass',
+        'missing': [],
+        'warnings': [parse_error] if parse_error else [],
+        'source': 'workflow_config_parse',
+    }
+    created_at = _now_iso()
+    record = {
+        'id': str(uuid.uuid4()),
+        'type': 'ztf-workflow-uat',
+        'source': 'ztf-workflow',
+        'status': _evidence_summary_status(readiness, None, schema_validation),
+        'createdAt': created_at,
+        'createdBy': user or 'unknown',
+        'notes': str(data.get('notes') or '').strip(),
+        'workflow': workflow,
+        'executionStatus': execution_status,
+        'returnCode': return_code,
+        'configFile': config_file,
+        'configSha256': _sha256_text(config_content),
+        'approvalId': approval_id,
+        'jobId': job_id,
+        'taskIds': task_ids,
+        'readiness': readiness,
+        'schemaValidation': schema_validation,
+        'compatibility': None,
+        'generatedYaml': config_content,
+        'outputExcerpt': output_excerpt,
+        'metadata': data.get('metadata') if isinstance(data.get('metadata'), dict) else {},
+    }
+    if isinstance(parsed, dict):
+        record['configTopLevelKeys'] = sorted(str(key) for key in parsed.keys())[:50]
+    return record
+
+
+def _build_nkp_validation_evidence(data: dict, user: str) -> dict:
     profile_id = str(data.get('profileId') or '').strip()
     profile = None
     if profile_id:
@@ -1156,9 +1312,10 @@ def _build_validation_evidence(data: dict, user: str) -> dict:
         ))
 
     created_at = _now_iso()
-    record = {
+    return {
         'id': str(uuid.uuid4()),
         'type': str(data.get('type') or 'nkp-validation'),
+        'source': 'nkp',
         'status': _evidence_summary_status(readiness, compatibility, schema_validation),
         'createdAt': created_at,
         'createdBy': user or 'unknown',
@@ -1177,6 +1334,15 @@ def _build_validation_evidence(data: dict, user: str) -> dict:
         'outputExcerpt': output_excerpt,
         'metadata': data.get('metadata') if isinstance(data.get('metadata'), dict) else {},
     }
+
+
+def _build_validation_evidence(data: dict, user: str) -> dict:
+    source = str(data.get('source') or data.get('type') or '').strip().lower()
+    if source in {'ztf-workflow', 'ztf-workflow-uat', 'workflow', 'generic-uat'} or data.get('workflow'):
+        record = _build_workflow_validation_evidence(data, user)
+    else:
+        record = _build_nkp_validation_evidence(data, user)
+
     evidence = _list_validation_evidence()
     evidence.insert(0, record)
     _save_validation_evidence(evidence)
@@ -1187,20 +1353,28 @@ def _build_validation_evidence(data: dict, user: str) -> dict:
         'evidenceId': record['id'],
         'status': record['status'],
         'profileId': record.get('profileId'),
+        'workflow': record.get('workflow'),
+        'source': record.get('source'),
     })
     return record
 
 
 def _validation_evidence_markdown(record: dict) -> str:
+    title = record.get('profileName') or record.get('workflow') or record.get('id')
     lines = [
-        f"# Validation Evidence - {record.get('profileName') or record.get('id')}",
+        f"# Validation Evidence - {title}",
         '',
+        f"- Source: {record.get('source') or record.get('type') or 'n/a'}",
         f"- Status: {record.get('status')}",
         f"- Created: {record.get('createdAt')}",
         f"- Created by: {record.get('createdBy')}",
+        f"- Workflow: {record.get('workflow') or 'n/a'}",
+        f"- Execution status: {record.get('executionStatus') or 'n/a'}",
+        f"- Return code: {record.get('returnCode') if record.get('returnCode') is not None else 'n/a'}",
         f"- Profile: {record.get('profileName') or 'n/a'}",
         f"- Profile revision: {record.get('profileRevision') or 'n/a'}",
         f"- Config file: {record.get('configFile') or 'n/a'}",
+        f"- Config SHA-256: {record.get('configSha256') or 'n/a'}",
         f"- Approval ID: {record.get('approvalId') or 'n/a'}",
         f"- Job ID: {record.get('jobId') or 'n/a'}",
         f"- Task IDs: {', '.join(record.get('taskIds') or []) or 'n/a'}",
@@ -1220,6 +1394,8 @@ def _validation_evidence_markdown(record: dict) -> str:
         lines.append(f"- Missing: {', '.join(missing)}")
     if warnings:
         lines.append(f"- Warnings: {'; '.join(warnings)}")
+    if record.get('configTopLevelKeys'):
+        lines += ['', '## Config Inventory', '', f"- Top-level keys: {', '.join(record.get('configTopLevelKeys') or [])}"]
     compatibility = record.get('compatibility') or {}
     if compatibility:
         lines += ['', '## NKP CLI Compatibility', '', f"- Status: {compatibility.get('status', 'unknown')}"]

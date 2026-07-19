@@ -548,15 +548,20 @@ binary/source path hints, and generated YAML syntax. Profiles are marked
 Pasted NKP YAML is parsed before a safe-phase job is queued.
 
 ### Validation Evidence
-Timestamped evidence records for NKP deployment readiness. Admins and operators
-can create an evidence run from a saved NKP profile; viewers can read and
-download existing records. Each bundle captures readiness scoring, generated
-YAML, schema validation, optional NKP CLI compatibility output, notes, linked
-approval/job/task references where available, and a Markdown summary. Downloads
+Timestamped evidence records for NKP deployment readiness and generic ZTF
+workflow UAT. Admins and operators can create an evidence run from a saved NKP
+profile, completed workflow/script execution, or saved YAML/JSON config; viewers
+can read and download existing records. NKP bundles capture readiness scoring,
+generated YAML, schema validation, optional NKP CLI compatibility output, notes,
+and linked approval/job/task references where available. ZTF workflow UAT
+bundles capture the workflow or script name, config filename, server-computed
+config SHA-256, YAML/JSON parse result, approval/job/task references, redacted
+execution output when linked to a job, notes, and a Markdown summary. Downloads
 are ZIP bundles intended for change records, customer UAT, and handover packs.
 
-For non-NKP workflows, use
-[`docs/sanitized-uat-evidence-record.md`](docs/sanitized-uat-evidence-record.md).
+Use
+[`docs/sanitized-uat-evidence-record.md`](docs/sanitized-uat-evidence-record.md)
+as the narrative pattern for sanitized non-NKP workflow evidence.
 Foundation Central cluster-create and imaging validation is tracked separately in
 [`docs/foundation-central-validation.md`](docs/foundation-central-validation.md).
 PostgreSQL backup/restore UAT drills should follow
@@ -754,7 +759,7 @@ all files within use 0600.
 | `schedules.json` | Scheduled execution definitions |
 | `parallel_runs.json` | Parallel multi-site run results (last 100) |
 | `approvals.json` | Approval request records (last 200) |
-| `validation_evidence.json` | Timestamped NKP validation evidence and export metadata |
+| `validation_evidence.json` | Timestamped NKP and ZTF workflow validation evidence and export metadata |
 | `ztf-orchestrator.log` | Structured JSON application log (Audit Log source) |
 | `configs/` | User-generated YAML/JSON workflow config files |
 | `configs/*.yml.bak.N` | Automatic backups — last 5 versions per file |
