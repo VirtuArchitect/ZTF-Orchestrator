@@ -51,7 +51,7 @@ checks, static configuration checks, or local Docker checks:
 | Durable execution jobs | Job submission, persisted logs, estimated phase progress, execution history integration, cancellation, terminal job deletion controls, and interrupted-job recovery logic are implemented and tested. |
 | Dashboard and health | `/health` reports runtime, storage backend, database location, retention, job queue counts, and NKP binary readiness. |
 | NKP integration | Safe-phase install/update, template-aware profile packs, installed-example schema inference, example import, YAML preview/generation, profile validation, profile revisioning/restoration, execution trace metadata, approval-gated execution, task ID extraction, and NKP binary registration/upload flows are implemented and covered by repository-level tests. |
-| Validation evidence | NKP evidence records, role-gated creation/list/download/delete behavior, generated YAML capture, readiness/schema metadata, and ZIP bundle export are tested locally. |
+| Validation evidence | NKP evidence records and generic ZTF workflow UAT packs are tested locally, including role-gated creation/list/download/delete behavior, generated or saved config capture, server-computed config hashes, readiness/schema metadata, redacted job output excerpts, and ZIP bundle export. |
 | Pipelines | CRUD, viewer access, invalid workflows, empty steps, and streamed execution behavior are tested. |
 | Schedules | Schedule validation and configured config directory behavior are tested. |
 | Approvals | Create/approve/reject behavior, webhook integration, configurable mandatory workflow approval policy, direct-job approval enforcement, and automation-surface rejection for approval-mandatory workflows are tested. |

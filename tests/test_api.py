@@ -2456,6 +2456,120 @@ def test_validation_evidence_create_list_download_delete(client, auth_headers):
     assert client.get(f"/api/validation-evidence/{record['id']}", headers=auth_headers).status_code == 404
 
 
+def test_validation_evidence_can_capture_ztf_config_uat_pack(client, auth_headers):
+    config_content = 'pc_ip: 10.0.0.11\npc_credential: pc_user\n'
+    save = client.post('/api/configs/uat-config-pc.yml',
+                       json={'content': config_content},
+                       headers=auth_headers)
+    assert save.status_code == 200
+
+    evidence = client.post('/api/validation-evidence',
+                           json={
+                               'source': 'ztf-workflow',
+                               'workflow': 'config-pc',
+                               'configFile': 'uat-config-pc.yml',
+                               'notes': 'sanitized Prism Central UAT checkpoint',
+                           },
+                           headers=auth_headers)
+
+    assert evidence.status_code == 201
+    record = evidence.get_json()
+    assert record['source'] == 'ztf-workflow'
+    assert record['type'] == 'ztf-workflow-uat'
+    assert record['workflow'] == 'config-pc'
+    assert record['configFile'] == 'uat-config-pc.yml'
+    assert record['configSha256'] == hashlib.sha256(config_content.encode()).hexdigest()
+    assert record['schemaValidation']['status'] == 'pass'
+    assert record['readiness']['status'] in {'ready', 'needs_attention'}
+    assert 'pc_ip' in record['configTopLevelKeys']
+
+    download = client.get(f"/api/validation-evidence/{record['id']}/download", headers=auth_headers)
+    assert download.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(download.data)) as zf:
+        names = set(zf.namelist())
+        assert any(name.endswith('/summary.md') for name in names)
+        assert any(name.endswith('/generated.yaml') for name in names)
+        summary_name = next(name for name in names if name.endswith('/summary.md'))
+        assert 'Config SHA-256' in zf.read(summary_name).decode()
+
+
+def test_validation_evidence_can_capture_ztf_job_uat_pack(client, auth_headers):
+    import server
+
+    config_content = 'pc_ip: 10.0.0.12\npc_credential: pc_user\n'
+    server.write_json(server.JOBS_FILE, [{
+        'id': 'job-uat-1',
+        'status': 'success',
+        'workflow': 'config-pc',
+        'type': 'workflow',
+        'framework': 'ztf',
+        'user': 'admin',
+        'createdAt': server._now_iso(),
+        'updatedAt': server._now_iso(),
+        'returnCode': 0,
+        'payload': {
+            'workflow': 'config-pc',
+            'configFile': 'job-config-pc.yml',
+            'configContent': config_content,
+            'approvalId': 'approval-123',
+        },
+        'logs': [
+            {'type': 'stdout', 'data': 'Applied DNS configuration', 'ts': server._now_iso()},
+            {'type': 'stdout', 'data': 'password: should-not-leak', 'ts': server._now_iso()},
+        ],
+        'taskIds': ['task-123'],
+    }])
+
+    evidence = client.post('/api/validation-evidence',
+                           json={'source': 'ztf-workflow', 'jobId': 'job-uat-1'},
+                           headers=auth_headers)
+
+    assert evidence.status_code == 201
+    record = evidence.get_json()
+    assert record['source'] == 'ztf-workflow'
+    assert record['jobId'] == 'job-uat-1'
+    assert record['approvalId'] == 'approval-123'
+    assert record['executionStatus'] == 'success'
+    assert record['returnCode'] == 0
+    assert record['taskIds'] == ['task-123']
+    assert 'Applied DNS configuration' in record['outputExcerpt']
+    assert 'should-not-leak' not in record['outputExcerpt']
+    assert 'password=<redacted>' in record['outputExcerpt']
+
+
+def test_validation_evidence_can_capture_execution_history_uat_pack(client, auth_headers):
+    import server
+
+    config_content = 'pc_ip: 10.0.0.13\npc_credential: pc_user\n'
+    server.write_json(server.HISTORY_FILE, [{
+        'id': 'history-uat-1',
+        'workflow': 'config-pc',
+        'type': 'workflow',
+        'status': 'success',
+        'timestamp': server._now_iso(),
+        'user': 'admin',
+        'configFile': 'history-config-pc.yml',
+        'configContent': config_content,
+        'returnCode': 0,
+        'stdout': 'Configured Prism Central NTP',
+        'stderr': '',
+    }])
+
+    evidence = client.post('/api/validation-evidence',
+                           json={'source': 'ztf-workflow', 'jobId': 'history-uat-1'},
+                           headers=auth_headers)
+
+    assert evidence.status_code == 201
+    record = evidence.get_json()
+    assert record['source'] == 'ztf-workflow'
+    assert record['workflow'] == 'config-pc'
+    assert record['jobId'] == 'history-uat-1'
+    assert record['configFile'] == 'history-config-pc.yml'
+    assert record['configSha256'] == hashlib.sha256(config_content.encode()).hexdigest()
+    assert record['executionStatus'] == 'success'
+    assert 'Configured Prism Central NTP' in record['outputExcerpt']
+
+
 def test_validation_evidence_recomputes_client_supplied_attestations(client, auth_headers):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     assert create.status_code == 201
