@@ -12,6 +12,22 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.5.5 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Added
+- Documented sanitized Nutanix Community Edition lab evidence for successful
+  Prism Central software upload and VM deployment with `pc.2024.3.1.14`.
+
+### Fixed
+- Fixed Deploy Prism Central YAML generation to emit the upstream ZTF 1.x
+  `pc_configs` contract with cluster-level PE and CVM credential references.
+- Made the PC version editable in the Deploy Prism Central form and added
+  `pc.2024.3.1.14` as a suggested version.
+- Marked queued ZTF jobs as failed when process output contains ZTF `[ERROR]`
+  or `[CRITICAL]` lines even if the runtime exits with status code `0`.
+- Mirrored the durable `global.yml` into the bundled ZTF runtime path before
+  workflow execution and surfaced mirror permission failures.
+- Patched bundled ZTF DeployPC helpers for top-level CVM credential fallback and
+  metadata-file download verification.
+
 ---
 
 ## [1.5.5] - 2026-07-06

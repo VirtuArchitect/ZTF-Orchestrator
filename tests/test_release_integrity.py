@@ -105,6 +105,25 @@ def test_create_vms_pc_wizard_matches_runtime_contract():
     assert 'num_vcpus_per_socket' in create_vms_pc
 
 
+def test_deploy_pc_workflow_generator_matches_runtime_contract():
+    yaml_builder = (ROOT / 'src' / 'utils' / 'yaml.ts').read_text(encoding='utf-8')
+    deploy_pc = yaml_builder.split('export function buildPCDeployYaml', 1)[1].split('export function buildClusterConfigYaml', 1)[0]
+
+    assert 'pc_configs' in deploy_pc
+    assert not re.search(r'^\s+pc_vms:', deploy_pc, flags=re.MULTILINE)
+    assert 'pe_credential: cfg.peCredential' in deploy_pc
+    assert 'cvm_credential: cfg.cvmCredential' in deploy_pc
+    assert 'pc_vm_name_prefix' in deploy_pc
+    assert 'num_pc_vms: 1' in deploy_pc
+    assert 'pc_size: cfg.vmSize' in deploy_pc
+    assert 'pc_vip: c.vip || c.pcIp' in deploy_pc
+    assert 'ip_list: [c.pcIp]' in deploy_pc
+    assert 'metadata_file_url' in deploy_pc
+    assert 'network_name: c.networkName' in deploy_pc
+    assert 'container_name: cfg.container' in deploy_pc
+    assert 'subnet_mask: c.subnetMask' in deploy_pc
+
+
 def test_script_config_wizard_covers_all_catalog_scripts():
     schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
 

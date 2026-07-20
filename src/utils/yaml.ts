@@ -229,12 +229,10 @@ export function buildPCDeployYaml(cfg: {
   pcVersion: string
   fileUrl: string
   metadataUrl?: string
-  md5sum?: string
   vmSize: string
   dnsServers: string[]
   ntpServers: string[]
   container: string
-  enableCmsp: boolean
   clusters: Array<{
     clusterIp: string
     pcVmName: string
@@ -248,29 +246,29 @@ export function buildPCDeployYaml(cfg: {
   const clusterMap: Record<string, unknown> = {}
   cfg.clusters.forEach(c => {
     clusterMap[c.clusterIp] = {
-      pc_vms: [{
-        vm_name: c.pcVmName,
-        size: cfg.vmSize,
-        pc_ip: c.pcIp,
-        network: c.networkName,
-        default_gateway: c.defaultGateway,
-        subnetmask: c.subnetMask,
-        ...(c.vip ? { vip: c.vip } : {}),
-        container: cfg.container,
-        pc_version: cfg.pcVersion,
+      pe_credential: cfg.peCredential,
+      cvm_credential: cfg.cvmCredential,
+      pc_configs: [{
         file_url: cfg.fileUrl,
-        ...(cfg.metadataUrl ? { metadata_url: cfg.metadataUrl } : {}),
-        ...(cfg.md5sum ? { md5sum: cfg.md5sum } : {}),
-        name_servers: cfg.dnsServers,
-        ntp_servers: cfg.ntpServers,
-        ...(cfg.enableCmsp ? { cmsp: { enable: true, cmsp_network: 'kPrivateNetwork' } } : {}),
+        ...(cfg.metadataUrl ? { metadata_file_url: cfg.metadataUrl } : {}),
+        pc_version: cfg.pcVersion,
+        pc_vm_name_prefix: c.pcVmName,
+        num_pc_vms: 1,
+        pc_size: cfg.vmSize,
+        pc_vip: c.vip || c.pcIp,
+        ip_list: [c.pcIp],
+        ntp_server_list: cfg.ntpServers,
+        dns_server_ip_list: cfg.dnsServers,
+        container_name: cfg.container,
+        network_name: c.networkName,
+        default_gateway: c.defaultGateway,
+        subnet_mask: c.subnetMask,
+        delete_existing_software: false,
       }],
     }
   })
 
   return toYaml({
-    pe_credential: cfg.peCredential,
-    cvm_credential: cfg.cvmCredential,
     clusters: clusterMap,
   })
 }

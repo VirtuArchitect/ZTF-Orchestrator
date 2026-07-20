@@ -43,5 +43,40 @@ def patch_pc_vm_payload_name() -> None:
     print(f"Patched {path}")
 
 
+def patch_deploy_pc_cvm_credential_fallback() -> None:
+    path = Path("/opt/zerotouch-framework/framework/scripts/python/pe/deploy_pc.py")
+    text = path.read_text()
+    old = """                        cvm_credential = cluster_details.get("cvm_credential")
+"""
+    new = """                        cvm_credential = cluster_details.get("cvm_credential") or self.data.get("cvm_credential")
+"""
+    if new in text:
+        print(f"Patch already present in {path}")
+        return
+    if old not in text:
+        raise SystemExit(f"Expected DeployPC CVM credential block not found in {path}")
+    path.write_text(text.replace(old, new))
+    print(f"Patched {path}")
+
+
+def patch_cvm_pc_metadata_download_check() -> None:
+    for path in [
+        Path("/opt/zerotouch-framework/framework/scripts/python/helpers/cvm/ssh_cvm.py"),
+        Path("/opt/zerotouch-framework/framework/scripts/python/helpers/ssh_cvm.py"),
+    ]:
+        text = path.read_text()
+        old = "if not self.file_exists(file_path) and not self.file_exists(metadata_file_url):"
+        new = "if not self.file_exists(file_path) or not self.file_exists(metadata_file_path):"
+        if new in text:
+            print(f"Patch already present in {path}")
+            continue
+        if old not in text:
+            raise SystemExit(f"Expected metadata download check block not found in {path}")
+        path.write_text(text.replace(old, new))
+        print(f"Patched {path}")
+
+
 patch_pc_entity_list()
 patch_pc_vm_payload_name()
+patch_deploy_pc_cvm_credential_fallback()
+patch_cvm_pc_metadata_download_check()
