@@ -2920,7 +2920,7 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'cluster_dict_connect':  (9440, 'Prism Element'),
     },
     'deploy-pc': {
-        'required':              ['pe_credential', 'cvm_credential', 'clusters'],
+        'required':              ['clusters'],
         'ip_fields':             [],
         'connect':               [],
         'cluster_dict_connect':  (9440, 'Prism Element'),
@@ -3963,6 +3963,24 @@ def _classify_execution_failure(stderr: str, stdout: str, return_code: int | Non
     return {'category': 'none', 'likelyFix': '', 'evidence': ''}
 
 
+def _ztf_output_failure_evidence(output: str) -> str:
+    """Return the first ZTF log line that should fail an otherwise-zero exit."""
+    for line in output.splitlines():
+        stripped = line.strip()
+        if re.search(r'\[(?:ERROR|CRITICAL)\]', stripped, re.IGNORECASE):
+            return _redact_text(stripped)
+    return ''
+
+
+def _ztf_process_status(return_code: int | None, stdout: str, stderr: str, cancelled: bool = False) -> str:
+    if cancelled:
+        return 'cancelled'
+    if return_code != 0:
+        return 'failed'
+    output = f'{stderr}\n{stdout}'.strip()
+    return 'failed' if _ztf_output_failure_evidence(output) else 'success'
+
+
 def _validate_destructive_script_ack(script_ids: list[str], payload: dict) -> str | None:
     destructive = [sid for sid in script_ids if sid in DESTRUCTIVE_SCRIPT_IDS]
     if not destructive:
@@ -4170,6 +4188,11 @@ class ExecutionJobManager:
             if incompatible:
                 self._emit(job_id, 'error', incompatible[0]['error'])
                 return
+            try:
+                _sync_global_config_to_legacy()
+            except OSError as exc:
+                self._emit(job_id, 'error', f'Failed to update ZeroTouch Framework global.yml: {exc}')
+                return
             configs_dir = get_configs_dir()
             if effective_config_content and config_file:
                 self._update_progress(job_id, 'Preparing configuration', 15, 'Validating and saving workflow YAML')
@@ -4253,7 +4276,12 @@ class ExecutionJobManager:
             proc.wait()
             return_code = proc.returncode
             current = self.get_job(job_id, include_logs=False) or {}
-            status = 'cancelled' if current.get('status') == 'cancelling' else ('success' if return_code == 0 else 'failed')
+            status = _ztf_process_status(
+                return_code,
+                '\n'.join(stdout_lines),
+                '\n'.join(stderr_lines),
+                cancelled=current.get('status') == 'cancelling',
+            )
 
         except Exception:
             log.exception('execution_error', extra={'user': user, 'workflow': workflow or script, 'jobId': job_id})
@@ -4660,6 +4688,20 @@ def validate_yaml(content: str) -> tuple[bool, str]:
         return True, ''
     except yaml.YAMLError as e:
         return False, str(e)
+
+def _sync_global_config_to_legacy() -> bool:
+    """Mirror durable global.yml to the ZTF runtime path before execution."""
+    global_yml = get_global_config_path()
+    legacy_global_yml = get_legacy_global_config_path()
+    if not global_yml.exists() or legacy_global_yml.resolve() == global_yml.resolve():
+        return False
+    content = global_yml.read_text(encoding='utf-8')
+    if legacy_global_yml.exists() and legacy_global_yml.read_text(encoding='utf-8') == content:
+        return False
+    legacy_global_yml.parent.mkdir(parents=True, exist_ok=True)
+    backup_config(legacy_global_yml)
+    _secure_write(legacy_global_yml, content)
+    return True
 
 def backup_config(path: Path):
     """Keep the last N versions of a config before overwriting."""
@@ -6128,6 +6170,12 @@ def save_global_config():
                 'path': str(legacy_global_yml),
                 'error': str(exc),
             })
+            return jsonify({
+                'error': f'Global config saved, but failed to update ZeroTouch Framework global.yml: {exc}',
+                'path': str(global_yml),
+                'legacyPath': str(legacy_global_yml),
+                'mirrored': False,
+            }), 500
 
     return jsonify({'success': True, 'path': str(global_yml), 'legacyPath': str(legacy_global_yml), 'mirrored': mirrored})
 

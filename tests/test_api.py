@@ -918,6 +918,29 @@ def test_save_global_config(client, auth_headers, isolated_data_dir):
     assert global_yml.read_text() == 'vault_to_use: local\n'
 
 
+def test_save_global_config_reports_legacy_mirror_failure(client, auth_headers, monkeypatch):
+    import server
+
+    original_secure_write = server._secure_write
+
+    def fail_legacy_global_write(path, content):
+        candidate = Path(path)
+        if candidate.name == 'global.yml' and candidate.parent.name == 'config':
+            raise OSError('read-only legacy path')
+        return original_secure_write(path, content)
+
+    monkeypatch.setattr(server, '_secure_write', fail_legacy_global_write)
+
+    resp = client.post('/api/global-config',
+                       json={'content': 'vault_to_use: local\n'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 500
+    data = resp.get_json()
+    assert data['mirrored'] is False
+    assert 'failed to update ZeroTouch Framework global.yml' in data['error']
+
+
 def test_get_global_config_falls_back_to_legacy_path(client, auth_headers, isolated_data_dir):
     legacy_global_yml = isolated_data_dir / 'default-legacy-ztf' / 'config' / 'global.yml'
     legacy_global_yml.parent.mkdir()
@@ -1652,6 +1675,36 @@ def test_failed_job_records_diagnostics_and_likely_fix(client, auth_headers, mon
     assert history[0]['id'] == job_id
     assert history[0]['diagnostics']['category'] == 'credential_error'
     assert 'KeyError' in history[0]['stderr']
+
+
+def test_zero_exit_job_with_ztf_error_log_is_failed(client, auth_headers, monkeypatch):
+    import subprocess
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['Validated the schema successfully!\n'])
+        stderr = iter(["[2026-07-20 12:29:23,964] [MainThread] [ERROR] DeployPC failed: {'code': 401, 'error': 'Unauthorized.'}\n"])
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+
+    resp = client.post('/api/jobs',
+                       json={'script': 'AddAdServerPc', 'configFile': 'pc-deploy.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+    job = _wait_for_job(client, auth_headers, job_id)
+
+    assert job['returnCode'] == 0
+    assert job['status'] == 'failed'
+    assert job['diagnostics']['category'] == 'authorization_error'
+    assert '401' in job['diagnostics']['evidence']
+
+    history = client.get('/api/executions', headers=auth_headers).get_json()
+    assert history[0]['id'] == job_id
+    assert history[0]['status'] == 'failed'
 
 
 def test_cancel_queued_job(client, auth_headers):

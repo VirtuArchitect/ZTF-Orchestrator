@@ -273,6 +273,7 @@ export const AOS_VERSIONS = [
 ]
 
 export const PC_VERSIONS = [
+  'pc.2024.3.1.14',
   'pc.2024.3',
   'pc.2024.1',
   'pc.2023.4',

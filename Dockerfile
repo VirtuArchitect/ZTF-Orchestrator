@@ -92,7 +92,7 @@ COPY . /app
 # Permissions
 # ============================================================================
 
-RUN chown -R ztf-svc:ztf-svc /app
+RUN chown -R ztf-svc:ztf-svc /app /opt/zerotouch-framework /opt/ztf-python
 
 # ============================================================================
 # Runtime user

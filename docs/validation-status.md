@@ -25,6 +25,16 @@ afterward. Raw evidence, endpoint details, hostnames, addresses, credentials,
 logs, and screenshots are intentionally withheld because they relate to a
 restricted UAT environment.
 
+On 2026-07-20, a controlled single-node Nutanix Community Edition lab validated
+the Deploy Prism Central path through the ZTF 1.x runtime after Orchestrator
+hardening. The Prism Central software bundle `pc.2024.3.1.14` uploaded
+successfully from a local HTTP artifact source, and the Prism Central VM
+deployment completed. Raw lab addresses, credentials, screenshots, and job logs
+remain outside the repository. PE-to-PC registration is not counted as completed
+in this record because the Nutanix cluster reported dual-stack enabled; that
+remaining blocker is tracked as infrastructure remediation rather than an
+Orchestrator deployment failure.
+
 Use [Sanitized UAT Evidence Record Pattern](sanitized-uat-evidence-record.md)
 for non-NKP workflow evidence records. Use
 [Foundation Central Validation Path](foundation-central-validation.md) for
