@@ -5,12 +5,22 @@ import { toYaml } from './utils/yaml'
 type Values = Record<string, string | number | boolean>
 
 export const DESTRUCTIVE_SCRIPT_IDS = new Set([
+  'ChangeDefaultAdminPasswordPc',
+  'ChangeDefaultAdminPasswordPe',
+  'DeleteAdServerPc',
+  'DeleteAdServerPe',
   'DeleteSubnetsPe',
   'DeleteSubnetsPc',
   'DeleteVPC',
   'DisableNetworkController',
   'DeleteContainerPe',
+  'DeleteNameServersPc',
+  'DeleteNameServersPe',
+  'DeleteNtpServersPc',
+  'DeleteNtpServersPe',
   'DeleteObjectStore',
+  'DeleteRoleMappingPc',
+  'DeleteRoleMappingPe',
   'DeleteVmPe',
   'DeleteVmPc',
   'PowerTransitionVmPe',
@@ -56,6 +66,19 @@ const pcBase = (values: Values) => ({
 const commonPeFields: ScriptConfigField[] = [
   { key: 'cluster_ip', label: 'Prism Element IP', type: 'text', required: true, placeholder: '10.4.72.10' },
   { key: 'pe_credential', label: 'PE Credential Ref', type: 'text', required: true, defaultValue: 'pe_user' },
+]
+
+const clusterNameField: ScriptConfigField = {
+  key: 'cluster_name',
+  label: 'Cluster Name',
+  type: 'text',
+  required: true,
+  placeholder: 'cluster-01',
+}
+
+const commonPeClusterFields: ScriptConfigField[] = [
+  ...commonPeFields,
+  clusterNameField,
 ]
 
 const commonPcFields: ScriptConfigField[] = [
@@ -120,6 +143,7 @@ function peCluster(values: Values, body: Record<string, unknown>) {
   return {
     clusters: {
       [text(values, 'cluster_ip')]: {
+        ...(text(values, 'cluster_name') ? { name: text(values, 'cluster_name') } : {}),
         pe_credential: text(values, 'pe_credential'),
         ...body,
       },
@@ -132,7 +156,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     scriptId: 'AddAdServerPe',
     title: 'Add AD Server (PE)',
     description: 'Creates Prism Element Active Directory configuration and optional role mapping YAML.',
-    fields: [...commonPeFields, ...directoryFields],
+    fields: [...commonPeClusterFields, ...directoryFields],
     build: values => toYaml(peCluster(values, {
       directory_services: {
         directory_type: 'ACTIVE_DIRECTORY',
@@ -166,14 +190,14 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     scriptId: 'AddNameServersPe',
     title: 'Add DNS Servers (PE)',
     description: 'Creates Prism Element DNS server YAML for one cluster.',
-    fields: [...commonPeFields, { key: 'dns_servers', label: 'DNS Servers', type: 'list', required: true, placeholder: '10.4.72.11\n10.4.72.12' }],
+    fields: [...commonPeClusterFields, { key: 'dns_servers', label: 'DNS Servers', type: 'list', required: true, placeholder: '10.4.72.11\n10.4.72.12' }],
     build: values => toYaml(peCluster(values, { name_servers_list: list(values, 'dns_servers') })),
   },
   AddNtpServersPe: {
     scriptId: 'AddNtpServersPe',
     title: 'Add NTP Servers (PE)',
     description: 'Creates Prism Element NTP server YAML for one cluster.',
-    fields: [...commonPeFields, { key: 'ntp_servers', label: 'NTP Servers', type: 'list', required: true, placeholder: '0.pool.ntp.org\n1.pool.ntp.org' }],
+    fields: [...commonPeClusterFields, { key: 'ntp_servers', label: 'NTP Servers', type: 'list', required: true, placeholder: '0.pool.ntp.org\n1.pool.ntp.org' }],
     build: values => toYaml(peCluster(values, { ntp_servers_list: list(values, 'ntp_servers') })),
   },
   AddNameServersPc: {
@@ -203,8 +227,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     title: 'Create Subnet (PE)',
     description: 'Creates Prism Element AHV VLAN subnet YAML for one cluster.',
     fields: [
-      ...commonPeFields,
-      { key: 'cluster_name', label: 'Cluster Name', type: 'text', placeholder: 'cluster-01' },
+      ...commonPeClusterFields,
       { key: 'subnet_name', label: 'Subnet Name', type: 'text', required: true, placeholder: 'vlan-110' },
       { key: 'vlan_id', label: 'VLAN ID', type: 'number', required: true, defaultValue: 110 },
       { key: 'network_ip', label: 'Network IP', type: 'text', placeholder: '10.10.110.0' },
@@ -215,7 +238,6 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       { key: 'dhcp_domain', label: 'DHCP Domain', type: 'text', placeholder: 'corp.example.com' },
     ],
     build: values => toYaml(peCluster(values, {
-      ...(text(values, 'cluster_name') ? { name: text(values, 'cluster_name') } : {}),
       networks: [{
         name: text(values, 'subnet_name'),
         subnet_type: 'VLAN',
@@ -240,9 +262,15 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     title: 'Create Storage Container (PE)',
     description: 'Creates Prism Element storage container YAML.',
     fields: [
-      ...commonPeFields,
+      ...commonPeClusterFields,
       { key: 'container_name', label: 'Container Name', type: 'text', required: true, placeholder: 'SelfServiceContainer' },
-      { key: 'replication_factor', label: 'Replication Factor', type: 'number', defaultValue: 2 },
+      {
+        key: 'replication_factor',
+        label: 'Replication Factor',
+        type: 'number',
+        defaultValue: 1,
+        help: 'Use 1 for one-node labs; use the replication factor required by the target cluster policy in production.',
+      },
       { key: 'advertised_capacity_gb', label: 'Advertised Capacity GB', type: 'number', defaultValue: 1024 },
       { key: 'reserved_gb', label: 'Reserved GB', type: 'number', defaultValue: 0 },
       { key: 'compression_enabled', label: 'Compression', type: 'boolean', defaultValue: true },
@@ -252,7 +280,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     build: values => toYaml(peCluster(values, {
       containers: [{
         name: text(values, 'container_name'),
-        replication_factor: integer(values, 'replication_factor') || 2,
+        replication_factor: integer(values, 'replication_factor') || 1,
         advertisedCapacity_in_gb: integer(values, 'advertised_capacity_gb'),
         reserved_in_gb: integer(values, 'reserved_gb'),
         compression_enabled: bool(values, 'compression_enabled'),
@@ -268,8 +296,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     title: 'Create VM (PE)',
     description: 'Creates Prism Element VM YAML for one VM on one cluster.',
     fields: [
-      ...commonPeFields,
-      { key: 'cluster_name', label: 'Cluster Name', type: 'text', placeholder: 'cluster-01' },
+      ...commonPeClusterFields,
       { key: 'vm_name', label: 'VM Name', type: 'text', required: true, placeholder: 'app-01' },
       { key: 'image_name', label: 'Boot Image Name', type: 'text', required: true, placeholder: 'rhel-9-template' },
       { key: 'network_name', label: 'Network Name', type: 'text', required: true, placeholder: 'vlan-110' },
@@ -280,7 +307,6 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       { key: 'container_name', label: 'Storage Container', type: 'text', defaultValue: 'SelfServiceContainer' },
     ],
     build: values => toYaml(peCluster(values, {
-      ...(text(values, 'cluster_name') ? { name: text(values, 'cluster_name') } : {}),
       vms: [{
         name: text(values, 'vm_name'),
         hypervisor_type: 'AHV',
@@ -358,7 +384,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     title: 'Deploy Prism Central',
     description: 'Creates Prism Central deployment YAML for one PE cluster.',
     fields: [
-      ...commonPeFields,
+      ...commonPeClusterFields,
       { key: 'cvm_credential', label: 'CVM Credential Ref', type: 'text', required: true, defaultValue: 'cvm_credential' },
       { key: 'pc_vm_name_prefix', label: 'PC VM Prefix', type: 'text', required: true, defaultValue: 'MGMT-PC' },
       { key: 'num_pc_vms', label: 'PC VM Count', type: 'select', defaultValue: '1', options: ['1', '3'] },
@@ -401,12 +427,13 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     scriptId: 'RegisterToPc',
     title: 'Register PE to PC',
     description: 'Creates Prism Element registration YAML for one cluster.',
-    fields: [...commonPcFields, ...commonPeFields],
+    fields: [...commonPcFields, ...commonPeClusterFields],
     build: values => toYaml({
       pc_ip: text(values, 'pc_ip'),
       pc_credential: text(values, 'pc_credential'),
       clusters: {
         [text(values, 'cluster_ip')]: {
+          name: text(values, 'cluster_name'),
           pe_credential: text(values, 'pe_credential'),
         },
       },
@@ -501,11 +528,52 @@ const peDeleteSchema = (scriptId: string, title: string, section: string, label:
   scriptId,
   title,
   description: `Generates Prism Element ${label.toLowerCase()} delete YAML for one cluster.`,
-  fields: [...commonPeFields, resourceNameField(label)],
+  fields: [...commonPeClusterFields, resourceNameField(label)],
   build: values => toYaml(peCluster(values, {
     [section]: list(values, 'resource_names').map(name => ({ name })),
   })),
 })
+
+const peSubnetDeleteSchema: ScriptConfigSchema = {
+  scriptId: 'DeleteSubnetsPe',
+  title: 'Delete Subnets (PE)',
+  description: 'Generates Prism Element subnet delete YAML for one cluster.',
+  fields: [
+    ...commonPeClusterFields,
+    { key: 'subnet_name', label: 'Subnet Name', type: 'text', required: true, placeholder: 'vlan-110' },
+    { key: 'vlan_id', label: 'VLAN ID', type: 'number', required: true, defaultValue: 110 },
+  ],
+  build: values => toYaml(peCluster(values, {
+    networks: [{
+      name: text(values, 'subnet_name'),
+      vlan_id: integer(values, 'vlan_id'),
+    }],
+  })),
+}
+
+const peContainerDeleteSchema: ScriptConfigSchema = {
+  scriptId: 'DeleteContainerPe',
+  title: 'Delete Storage Container (PE)',
+  description: 'Generates Prism Element storage container delete YAML for one cluster.',
+  fields: [
+    ...commonPeClusterFields,
+    { key: 'container_name', label: 'Container Name', type: 'text', required: true, placeholder: 'SelfServiceContainer' },
+    {
+      key: 'replication_factor',
+      label: 'Replication Factor',
+      type: 'number',
+      required: true,
+      defaultValue: 1,
+      help: 'ZTF validates this field before deleting by name. Match the target container/cluster replication factor.',
+    },
+  ],
+  build: values => toYaml(peCluster(values, {
+    containers: [{
+      name: text(values, 'container_name'),
+      replication_factor: integer(values, 'replication_factor') || 1,
+    }],
+  })),
+}
 
 const pcVmActionSchema = (scriptId: string, title: string): ScriptConfigSchema => ({
   scriptId,
@@ -532,7 +600,7 @@ const pePowerSchema: ScriptConfigSchema = {
   title: 'Power Transition VM (PE)',
   description: 'Generates Prism Element VM power transition YAML for one cluster.',
   fields: [
-    ...commonPeFields,
+    ...commonPeClusterFields,
     { key: 'vm_names', label: 'VM Names', type: 'list', required: true, placeholder: 'app-01\napp-02' },
     { key: 'transition', label: 'Power Transition', type: 'select', defaultValue: 'ON', options: ['ON', 'OFF', 'POWERCYCLE', 'RESET', 'PAUSE', 'RESUME'] },
   ],
@@ -563,21 +631,16 @@ const roleMappingSchema = (scriptId: string, title: string, scope: 'pe' | 'pc'):
   title,
   description: `Generates ${scope === 'pe' ? 'Prism Element' : 'Prism Central'} AD role mapping YAML.`,
   fields: [
-    ...(scope === 'pe' ? commonPeFields : commonPcFields),
-    { key: 'ad_name', label: 'Directory Name', type: 'text', required: true, placeholder: 'corp-ad' },
-    {
-      key: 'role_type',
-      label: 'Role',
-      type: 'select',
-      defaultValue: 'ROLE_USER_ADMIN',
-      options: ['ROLE_CLUSTER_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_CLUSTER_VIEWER', 'ROLE_BACKUP_ADMIN'],
-    },
-    { key: 'entity_type', label: 'Entity Type', type: 'select', defaultValue: 'GROUP', options: ['GROUP', 'OU', 'USER'] },
-    { key: 'entity_values', label: 'Entity Values', type: 'list', required: true, placeholder: 'Domain Admins\nZTF Operators' },
+    ...(scope === 'pe' ? commonPeClusterFields : commonPcFields),
+    ...directoryFields,
   ],
   build: values => {
     const directory = {
+      directory_type: 'ACTIVE_DIRECTORY',
       ad_name: text(values, 'ad_name'),
+      ad_domain: text(values, 'ad_domain'),
+      ad_directory_url: text(values, 'ad_directory_url'),
+      service_account_credential: text(values, 'service_account_credential'),
       role_mappings: roleMappings(values),
     }
     return toYaml(scope === 'pe'
@@ -848,7 +911,7 @@ const initialPcSchema = (scriptId: string, title: string, scope: 'pc' | 'pe'): S
   title,
   description: `Generates ${scope === 'pc' ? 'Prism Central' : 'Prism Element'} EULA/Pulse YAML.`,
   fields: [
-    ...(scope === 'pc' ? commonPcFields : commonPeFields),
+    ...(scope === 'pc' ? commonPcFields : commonPeClusterFields),
     { key: 'username', label: 'EULA Username', type: 'text', required: true, placeholder: 'Nutanix' },
     { key: 'company_name', label: 'Company Name', type: 'text', required: true, placeholder: 'Company' },
     { key: 'job_title', label: 'Job Title', type: 'text', placeholder: 'Engineer' },
@@ -868,13 +931,11 @@ const haSchema = (scriptId: string, title: string, key: string): ScriptConfigSch
   title,
   description: `Generates Prism Element ${title.toLowerCase()} YAML.`,
   fields: [
-    ...commonPeFields,
-    { key: 'cluster_name', label: 'Cluster Name', type: 'text', placeholder: 'cluster-01' },
+    ...commonPeClusterFields,
     { key: 'enabled', label: 'Enabled', type: 'boolean', defaultValue: true },
     ...(key === 'ha_reservation' ? [{ key: 'host_failures', label: 'Host Failures To Tolerate', type: 'number', defaultValue: 1 } as ScriptConfigField] : []),
   ],
   build: values => toYaml(peCluster(values, {
-    ...(text(values, 'cluster_name') ? { cluster_name: text(values, 'cluster_name') } : {}),
     [key]: key === 'ha_reservation'
       ? { enable_failover: bool(values, 'enabled'), num_host_failure_to_tolerate: integer(values, 'host_failures') || 1 }
       : bool(values, 'enabled'),
@@ -886,7 +947,7 @@ const updateDsipSchema: ScriptConfigSchema = {
   title: 'Update DSIP (PE)',
   description: 'Generates Prism Element DSIP update YAML.',
   fields: [
-    ...commonPeFields,
+    ...commonPeClusterFields,
     { key: 'dsip', label: 'DSIP', type: 'text', required: true, placeholder: 'get-ip-from-ipam or 10.4.72.30' },
     { key: 'ipam_subnet', label: 'IPAM Subnet', type: 'text', placeholder: '10.10.10.0/24' },
     { key: 'ipam_domain', label: 'IPAM Domain', type: 'text', placeholder: 'example.com' },
@@ -1017,7 +1078,7 @@ const uploadImagePeSchema: ScriptConfigSchema = {
   title: 'Upload Image (PE)',
   description: 'Generates Prism Element image upload YAML.',
   fields: [
-    ...commonPeFields,
+    ...commonPeClusterFields,
     { key: 'image_name', label: 'Image Name', type: 'text', required: true, placeholder: 'rhel-9-template' },
     { key: 'url', label: 'Image URL', type: 'text', required: true, placeholder: 'https://repo.local/image.qcow2' },
     { key: 'image_type', label: 'Image Type', type: 'select', defaultValue: 'DISK_IMAGE', options: ['DISK_IMAGE', 'ISO_IMAGE'] },
@@ -1107,7 +1168,7 @@ const FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       },
     }),
   },
-  DeleteSubnetsPe: peDeleteSchema('DeleteSubnetsPe', 'Delete Subnets (PE)', 'networks', 'Subnet Names'),
+  DeleteSubnetsPe: peSubnetDeleteSchema,
   DeleteSubnetsPc: {
     scriptId: 'DeleteSubnetsPc',
     title: 'Delete Subnets (PC)',
@@ -1126,7 +1187,7 @@ const FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
   CreateVPC: pcVpcsSchema('CreateVPC', 'Create VPC (PC)'),
   UpdateVPC: pcVpcsSchema('UpdateVPC', 'Update VPC (PC)'),
   DeleteVPC: pcVpcsSchema('DeleteVPC', 'Delete VPC (PC)'),
-  DeleteContainerPe: peDeleteSchema('DeleteContainerPe', 'Delete Storage Container (PE)', 'containers', 'Container Names'),
+  DeleteContainerPe: peContainerDeleteSchema,
   DeleteVmPe: peDeleteSchema('DeleteVmPe', 'Delete VM (PE)', 'vms', 'VM Names'),
   DeleteVmPc: pcVmActionSchema('DeleteVmPc', 'Delete VM (PC)'),
   PowerOnVmPc: pcVmActionSchema('PowerOnVmPc', 'Power On VM (PC)'),

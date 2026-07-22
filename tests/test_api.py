@@ -1410,6 +1410,90 @@ def test_preflight_generator_unreachable(monkeypatch):
     assert 'Unreachable' in output
 
 
+def test_pe_script_preflight_requires_runtime_cluster_name_key(monkeypatch):
+    """PE script dry-run catches stale cluster_name before launching ZTF."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_body = (
+        'clusters:\n'
+        '  10.20.30.201:\n'
+        '    pe_credential: pe_user\n'
+        '    cluster_name: DEV_LAB\n'
+        '    enable_pulse: true\n'
+    )
+    output = ''.join(server._run_preflight('UpdatePulsePe', yaml_body, 'test-id'))
+    assert 'Required cluster field missing : clusters.10.20.30.201.name' in output
+    assert 'dryRun' in output
+
+
+def test_pe_script_preflight_accepts_runtime_cluster_name_key(monkeypatch):
+    """PE script dry-run accepts the wizard's runtime-compatible name field."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_body = (
+        'clusters:\n'
+        '  10.20.30.201:\n'
+        '    pe_credential: pe_user\n'
+        '    name: DEV_LAB\n'
+        '    enable_pulse: true\n'
+    )
+    output = ''.join(server._run_preflight('UpdatePulsePe', yaml_body, 'test-id'))
+    assert 'Required cluster field present : clusters.10.20.30.201.name' in output
+    assert '[FAIL]' not in output
+
+
+def test_pe_delete_container_preflight_requires_schema_companion_field(monkeypatch):
+    """PE container delete dry-run catches ZTF schema-required replication factor."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_body = (
+        'clusters:\n'
+        '  10.20.30.201:\n'
+        '    pe_credential: pe_user\n'
+        '    name: DEV_LAB\n'
+        '    containers:\n'
+        '      - name: ztf-orchestrator-validation-container\n'
+    )
+    output = ''.join(server._run_preflight('DeleteContainerPe', yaml_body, 'test-id'))
+    assert 'Required item field missing : clusters.10.20.30.201.containers[0].replication_factor' in output
+    assert 'dryRun' in output
+
+
+def test_pe_delete_container_preflight_accepts_schema_companion_field(monkeypatch):
+    """PE container delete dry-run accepts schema-compatible delete YAML."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_body = (
+        'clusters:\n'
+        '  10.20.30.201:\n'
+        '    pe_credential: pe_user\n'
+        '    name: DEV_LAB\n'
+        '    containers:\n'
+        '      - name: ztf-orchestrator-validation-container\n'
+        '        replication_factor: 2\n'
+    )
+    output = ''.join(server._run_preflight('DeleteContainerPe', yaml_body, 'test-id'))
+    assert 'Required item field present : clusters.10.20.30.201.containers[0].replication_factor' in output
+    assert '[FAIL]' not in output
+
+
+def test_pe_delete_subnet_preflight_requires_vlan_id(monkeypatch):
+    """PE subnet delete dry-run catches ZTF schema-required vlan_id."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_body = (
+        'clusters:\n'
+        '  10.20.30.201:\n'
+        '    pe_credential: pe_user\n'
+        '    name: DEV_LAB\n'
+        '    networks:\n'
+        '      - name: ztf-validation-vlan\n'
+    )
+    output = ''.join(server._run_preflight('DeleteSubnetsPe', yaml_body, 'test-id'))
+    assert 'Required item field missing : clusters.10.20.30.201.networks[0].vlan_id' in output
+    assert 'dryRun' in output
+
+
 def test_execution_start_exception_is_recorded_as_failed(client, auth_headers, monkeypatch):
     """Failures before ZTF starts should still create a failed execution history row."""
     import subprocess
@@ -1578,6 +1662,33 @@ def test_destructive_script_requires_acknowledgement(client, auth_headers):
     body = resp.get_json()
     assert body['destructiveAction'] is True
     assert 'acknowledgement required' in body['error']
+
+
+def test_delete_container_pe_requires_destructive_acknowledgement(client, auth_headers):
+    """The DEV_LAB disposable delete path cannot execute without explicit acknowledgement."""
+    for endpoint in ('/api/execute', '/api/jobs'):
+        resp = client.post(endpoint,
+                           json={'script': 'DeleteContainerPe', 'configFile': 'test.yml'},
+                           headers=auth_headers)
+        assert resp.status_code == 403
+        body = resp.get_json()
+        assert body['destructiveAction'] is True
+        assert 'DeleteContainerPe' in body['error']
+
+
+def test_delete_container_pe_rejects_inexact_destructive_confirmation(client, auth_headers):
+    resp = client.post('/api/execute',
+                       json={
+                           'script': 'DeleteContainerPe',
+                           'configFile': 'test.yml',
+                           'riskAcknowledged': True,
+                           'destructiveConfirmation': 'RUN DeleteVmPc',
+                       },
+                       headers=auth_headers)
+    assert resp.status_code == 403
+    body = resp.get_json()
+    assert body['destructiveAction'] is True
+    assert body['error'] == 'Destructive script confirmation must exactly match: RUN DeleteContainerPe'
 
 
 def test_destructive_script_accepts_exact_confirmation(client, auth_headers, monkeypatch):

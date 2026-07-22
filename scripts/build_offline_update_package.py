@@ -35,7 +35,7 @@ def sha256_file(path: Path) -> str:
 def normalize_version(value: str) -> str:
     version = value.strip()
     if not re.fullmatch(r"v[0-9][A-Za-z0-9_.-]{0,63}", version):
-        raise ValueError("version must look like v1.5.5")
+        raise ValueError("version must look like v1.5.6")
     return version
 
 
@@ -111,7 +111,7 @@ def create_package(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", required=True, help="Release version, for example v1.5.5")
+    parser.add_argument("--version", required=True, help="Release version, for example v1.5.6")
     parser.add_argument("--image-tar", required=True, type=Path, help="docker save image tar")
     parser.add_argument("--output", type=Path, help="Output zip path")
     parser.add_argument("--repository", default=DEFAULT_REPOSITORY)

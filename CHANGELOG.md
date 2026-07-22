@@ -9,12 +9,25 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.5.5 and should be moved
+Changes in this section are present on `main` after v1.5.6 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.5.6] - 2026-07-22
+
+### Summary
+DEV_LAB validation hardening release for Prism Element script execution,
+covering real disposable storage-container create/delete behaviour, PE wizard
+schema compatibility, and stronger destructive-action safeguards.
 
 ### Added
 - Documented sanitized Nutanix Community Edition lab evidence for successful
   Prism Central software upload and VM deployment with `pc.2024.3.1.14`.
+- Added DEV_LAB validation evidence and a disposable storage-container
+  validation runbook for `CreateContainerPe` followed by `DeleteContainerPe`.
+- Added script wizard schema-contract coverage proving all 75 examples generate
+  parseable YAML and PE examples emit runtime-compatible cluster keys.
 
 ### Fixed
 - Fixed Deploy Prism Central YAML generation to emit the upstream ZTF 1.x
@@ -27,6 +40,19 @@ into the next numbered release section when the next version is cut.
   workflow execution and surfaced mirror permission failures.
 - Patched bundled ZTF DeployPC helpers for top-level CVM credential fallback and
   metadata-file download verification.
+- Fixed PE script wizard output to use `clusters.<pe_ip>.name` rather than the
+  stale `cluster_name` key rejected by ZTF runtime schema validation.
+- Fixed `CreateRoleMappingPe` wizard YAML to include the full schema-required
+  `directory_services` block.
+- Fixed `DeleteContainerPe` and `DeleteSubnetsPe` wizard YAML so ZTF
+  create-style schema requirements are satisfied before delete execution.
+- Changed PE container wizard examples to default to `replication_factor: 1`
+  with guidance to match the production cluster's RF policy.
+
+### Security
+- Expanded destructive-script backend enforcement and regression coverage so
+  delete and high-risk PE/PC actions require explicit confirmation through both
+  immediate execution and queued jobs.
 
 ---
 

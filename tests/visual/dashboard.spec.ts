@@ -186,7 +186,8 @@ async function expectLightThemeReadable(page: Page) {
 
 test('login page renders', async ({ page }) => {
   await page.goto('/login')
-  await expect(page.getByRole('heading', { name: /ZeroTouch Enterprise Orchestrator/i })).toBeVisible()
+  await expect(page.getByLabel('ZeroTouch Enterprise Orchestrator')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Sign in/i })).toBeVisible()
   await expect(page.getByLabel('Username')).toBeVisible()
   await expect(page.getByLabel('Password')).toBeVisible()
 })
@@ -232,6 +233,40 @@ test('workflow cards stay readable in light theme', async ({ page }) => {
   await expect(infrastructureBadge).toBeVisible()
   await expect(infrastructureBadge).toHaveCSS('color', 'rgb(29, 78, 216)')
   await expect(infrastructureBadge).toHaveCSS('background-color', 'rgb(219, 234, 254)')
+})
+
+test('script wizard emits PE cluster name using ZTF runtime key', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/scripts')
+
+  await page.getByPlaceholder('Search scripts...').fill('Update Pulse')
+  await page.getByRole('button', { name: /Update Pulse \(PE\)/ }).click()
+  await page.getByRole('button', { name: /Load Example/i }).click()
+  await page.getByRole('button', { name: /Generate YAML/i }).click()
+
+  const generatedYaml = await page.locator('textarea').last().inputValue()
+  expect(generatedYaml).toContain('name:')
+  expect(generatedYaml).not.toContain('cluster_name:')
+})
+
+test('script wizard emits schema-valid PE role mapping YAML', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/scripts')
+
+  await page.getByPlaceholder('Search scripts...').fill('Create Role Mapping')
+  await page.getByRole('button', { name: /Create Role Mapping \(PE\)/ }).click()
+  await page.getByRole('button', { name: /Load Example/i }).click()
+  await page.getByRole('button', { name: /Generate YAML/i }).click()
+
+  const generatedYaml = await page.locator('textarea').last().inputValue()
+  expect(generatedYaml).toContain('name:')
+  expect(generatedYaml).toContain('directory_services:')
+  expect(generatedYaml).toContain('directory_type: ACTIVE_DIRECTORY')
+  expect(generatedYaml).toContain('ad_domain:')
+  expect(generatedYaml).toContain('ad_directory_url:')
+  expect(generatedYaml).toContain('service_account_credential:')
+  expect(generatedYaml).toContain('role_mappings:')
+  expect(generatedYaml).not.toContain('cluster_name:')
 })
 
 test('main pages keep readable text contrast in light theme', async ({ page }) => {
