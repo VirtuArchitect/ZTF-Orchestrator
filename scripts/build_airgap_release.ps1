@@ -24,7 +24,7 @@ function Invoke-Step {
 }
 
 if ($Version -notmatch '^v\d+\.\d+\.\d+$') {
-  throw "Version must look like v1.5.5"
+  throw "Version must look like v1.5.6"
 }
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")

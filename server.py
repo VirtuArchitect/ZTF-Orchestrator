@@ -64,7 +64,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.5.5'
+APP_VERSION = '1.5.6'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2830,6 +2830,7 @@ def _nkp_approval_error(
 # ip_fields: keys whose values must be valid IP addresses
 # connect: [(field_key, port, label)] — TCP reachability checks
 # cluster_dict_connect: (port, label) — check each key of a clusters:{ip: ...} map
+# cluster_dict_required_keys: nested keys that each clusters:{ip: ...} value must include
 def _approval_required_workflows(settings: dict | None = None) -> set[str]:
     configured = (settings or get_settings()).get('approvalRequiredWorkflows', None)
     if configured is None or not isinstance(configured, list):
@@ -2961,6 +2962,54 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'connect':     [('cluster_ip', 9440, 'NDB Cluster')],
     },
 }
+
+PE_CLUSTER_SCRIPT_PREFLIGHT_IDS = {
+    'AcceptEulaPe',
+    'AddAdServerPe',
+    'AddNameServersPe',
+    'AddNtpServersPe',
+    'ChangeDefaultAdminPasswordPe',
+    'CreateContainerPe',
+    'CreateRoleMappingPe',
+    'CreateSubnetPe',
+    'CreateVmPe',
+    'DeleteAdServerPe',
+    'DeleteContainerPe',
+    'DeleteNameServersPe',
+    'DeleteNtpServersPe',
+    'DeleteRoleMappingPe',
+    'DeleteSubnetsPe',
+    'DeleteVmPe',
+    'DeployPC',
+    'HaReservation',
+    'PowerTransitionVmPe',
+    'RebuildCapacityReservation',
+    'RegisterToPc',
+    'UpdateDsip',
+    'UpdatePulsePe',
+    'UploadImagePe',
+}
+
+
+def _preflight_for_execution(workflow_or_script: str) -> dict:
+    workflow_or_script = str(workflow_or_script or '').strip()
+    if workflow_or_script in WORKFLOW_PREFLIGHT:
+        return WORKFLOW_PREFLIGHT[workflow_or_script]
+    script_ids = {item.strip() for item in workflow_or_script.split(',') if item.strip()}
+    if script_ids & PE_CLUSTER_SCRIPT_PREFLIGHT_IDS:
+        return {
+            'required': ['clusters'],
+            'ip_fields': [],
+            'connect': [],
+            'cluster_dict_connect': (9440, 'Prism Element'),
+            'cluster_dict_required_keys': ['name'],
+            'cluster_item_required_keys': {
+                'DeleteContainerPe': {'containers': ['name', 'replication_factor']},
+                'DeleteSubnetsPe': {'networks': ['name', 'vlan_id']},
+            },
+            'script_ids': script_ids,
+        }
+    return {}
 
 PC_IP_WORKFLOWS = {'cluster-create', 'imaging-only', 'imaging'}
 
@@ -3680,7 +3729,7 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('done', {'status': 'failed', 'dryRun': True})
         return
 
-    preflight = WORKFLOW_PREFLIGHT.get(workflow, {})
+    preflight = _preflight_for_execution(workflow)
     if not preflight:
         yield from send('stdout', f'[INFO] No preflight schema defined for "{workflow}" — YAML check only')
 
@@ -3722,7 +3771,62 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
             yield from send('stdout', f'[FAIL] Unreachable             : {label} {host}:{port}')
             failed += 1
 
-    # ── 5. Cluster-dict connectivity (deploy-pc / config-cluster) ────────────
+    # ── 5. Cluster-dict structure and connectivity (deploy-pc / config-cluster / PE scripts) ────────────
+    cluster_required_keys = preflight.get('cluster_dict_required_keys', [])
+    item_required_rules = preflight.get('cluster_item_required_keys', {})
+    item_required_script_ids = preflight.get('script_ids', set())
+    if 'cluster_dict_connect' in preflight or cluster_required_keys:
+        clusters = config.get('clusters', {})
+        if clusters and not isinstance(clusters, dict):
+            yield from send('stdout', '[FAIL] clusters must be a mapping keyed by Prism Element IP')
+            failed += 1
+        elif isinstance(clusters, dict):
+            for ip, cluster_details in list(clusters.items())[:4]:
+                try:
+                    ipaddress.ip_address(str(ip).strip())
+                except ValueError:
+                    yield from send('stdout', f'[FAIL] Cluster key is not a valid IP: {ip}')
+                    failed += 1
+                    continue
+                if cluster_required_keys:
+                    if not isinstance(cluster_details, dict):
+                        yield from send('stdout', f'[FAIL] Cluster {ip} must contain a settings map')
+                        failed += 1
+                    else:
+                        for key in cluster_required_keys:
+                            val = cluster_details.get(key)
+                            empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                            if empty:
+                                yield from send('stdout', f'[FAIL] Required cluster field missing : clusters.{ip}.{key}')
+                                failed += 1
+                            else:
+                                yield from send('stdout', f'[PASS] Required cluster field present : clusters.{ip}.{key}')
+                                passed += 1
+                        for script_id in item_required_script_ids:
+                            section_rules = item_required_rules.get(script_id, {})
+                            for section, required_keys in section_rules.items():
+                                items = cluster_details.get(section)
+                                if items is None:
+                                    continue
+                                if not isinstance(items, list):
+                                    yield from send('stdout', f'[FAIL] clusters.{ip}.{section} must be a list')
+                                    failed += 1
+                                    continue
+                                for index, item in enumerate(items):
+                                    if not isinstance(item, dict):
+                                        yield from send('stdout', f'[FAIL] clusters.{ip}.{section}[{index}] must be a settings map')
+                                        failed += 1
+                                        continue
+                                    for key in required_keys:
+                                        val = item.get(key)
+                                        empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                                        if empty:
+                                            yield from send('stdout', f'[FAIL] Required item field missing : clusters.{ip}.{section}[{index}].{key}')
+                                            failed += 1
+                                        else:
+                                            yield from send('stdout', f'[PASS] Required item field present : clusters.{ip}.{section}[{index}].{key}')
+                                            passed += 1
+
     if 'cluster_dict_connect' in preflight:
         port, label = preflight['cluster_dict_connect']
         clusters = config.get('clusters', {})
@@ -3894,8 +3998,12 @@ def _record_execution_history(
 
 
 DESTRUCTIVE_SCRIPT_IDS = {
-    'DeleteSubnetsPe', 'DeleteSubnetsPc', 'DeleteVPC', 'DisableNetworkController',
-    'DeleteContainerPe', 'DeleteObjectStore', 'DeleteVmPe', 'DeleteVmPc',
+    'ChangeDefaultAdminPasswordPc', 'ChangeDefaultAdminPasswordPe',
+    'DeleteAdServerPc', 'DeleteAdServerPe', 'DeleteSubnetsPe', 'DeleteSubnetsPc',
+    'DeleteVPC', 'DisableNetworkController', 'DeleteContainerPe',
+    'DeleteNameServersPc', 'DeleteNameServersPe', 'DeleteNtpServersPc',
+    'DeleteNtpServersPe', 'DeleteObjectStore', 'DeleteRoleMappingPc',
+    'DeleteRoleMappingPe', 'DeleteVmPe', 'DeleteVmPc',
     'PowerTransitionVmPe', 'PowerOnVmPc', 'PcImageDelete', 'PcOVADelete',
     'DeleteNetworkSecurityPolicy', 'DeleteAddressGroups', 'DeleteServiceGroups',
     'DeleteCategoryPc', 'DisableMicrosegmentation', 'DeleteProtectionPolicy',

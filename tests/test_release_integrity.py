@@ -105,6 +105,16 @@ def test_create_vms_pc_wizard_matches_runtime_contract():
     assert 'num_vcpus_per_socket' in create_vms_pc
 
 
+def test_pe_cluster_settings_wizard_uses_runtime_cluster_name_key():
+    schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
+    pe_cluster = schema.split('function peCluster', 1)[1].split('const EXACT_SCRIPT_CONFIG_SCHEMAS', 1)[0]
+    ha_schema = schema.split('const haSchema', 1)[1].split('const updateDsipSchema', 1)[0]
+
+    assert "{ name: text(values, 'cluster_name') }" in pe_cluster
+    assert '...commonPeClusterFields' in ha_schema
+    assert "{ cluster_name: text(values, 'cluster_name') }" not in ha_schema
+
+
 def test_deploy_pc_workflow_generator_matches_runtime_contract():
     yaml_builder = (ROOT / 'src' / 'utils' / 'yaml.ts').read_text(encoding='utf-8')
     deploy_pc = yaml_builder.split('export function buildPCDeployYaml', 1)[1].split('export function buildClusterConfigYaml', 1)[0]
@@ -133,6 +143,60 @@ def test_script_config_wizard_covers_all_catalog_scripts():
     assert '...EXACT_SCRIPT_CONFIG_SCHEMAS' in schema
     assert '...FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS' in schema
     assert 'Missing script config schemas' in schema
+
+
+def test_destructive_and_pe_preflight_script_guards_cover_high_risk_ids():
+    frontend_schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
+    frontend_data = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
+    backend = (ROOT / 'server.py').read_text(encoding='utf-8')
+    required_destructive = {
+        'ChangeDefaultAdminPasswordPe',
+        'DeleteAdServerPe',
+        'DeleteNameServersPe',
+        'DeleteNtpServersPe',
+        'DeleteRoleMappingPe',
+        'DeleteVmPe',
+        'PowerTransitionVmPe',
+        'UpdateDsip',
+    }
+    required_pe_preflight = {
+        'AddAdServerPe',
+        'ChangeDefaultAdminPasswordPe',
+        'CreateRoleMappingPe',
+        'DeleteRoleMappingPe',
+        'UpdatePulsePe',
+    }
+
+    frontend_destructive = frontend_schema.split('export const DESTRUCTIVE_SCRIPT_IDS', 1)[1].split('])', 1)[0]
+    backend_destructive = backend.split('DESTRUCTIVE_SCRIPT_IDS = {', 1)[1].split('}', 1)[0]
+    backend_pe_preflight = backend.split('PE_CLUSTER_SCRIPT_PREFLIGHT_IDS = {', 1)[1].split('}', 1)[0]
+
+    frontend_pe_scripts = set(re.findall(r"\{ id: '([^']+)', name: '[^']+\(PE\)'", frontend_data))
+    missing_pe_preflight = [script_id for script_id in sorted(frontend_pe_scripts) if script_id not in backend_pe_preflight]
+
+    assert not missing_pe_preflight
+    for script_id in required_destructive:
+        assert script_id in frontend_destructive
+        assert script_id in backend_destructive
+    for script_id in required_pe_preflight:
+        assert script_id in backend_pe_preflight
+
+
+def test_pe_wizard_builders_use_shared_cluster_fields():
+    schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
+    required_fragments = [
+        "fields: [...commonPeClusterFields, ...directoryFields]",
+        "fields: [...commonPeClusterFields, { key: 'dns_servers'",
+        "fields: [...commonPeClusterFields, { key: 'ntp_servers'",
+        '...commonPeClusterFields',
+        "fields: [...commonPcFields, ...commonPeClusterFields]",
+        "fields: [...commonPeClusterFields, resourceNameField(label)]",
+        "scope === 'pe' ? commonPeClusterFields : commonPcFields",
+        "scope === 'pc' ? commonPcFields : commonPeClusterFields",
+    ]
+
+    for fragment in required_fragments:
+        assert fragment in schema
 
 
 def test_docker_build_patches_ztf_pc_entity_filter_bug():
