@@ -114,6 +114,17 @@ $PipExe  = "$VenvDir\Scripts\pip.exe"
 $VenvPy  = "$VenvDir\Scripts\python.exe"
 Write-Ok "Virtual environment ready"
 
+Write-Info "Applying ZeroTouch Framework runtime compatibility patches..."
+$previousRuntimeRoot = $env:ZTF_RUNTIME_ROOT
+$env:ZTF_RUNTIME_ROOT = $ZtfDir
+& $VenvPy "$OrchDir\scripts\patch_ztf_runtime.py"
+if ($null -eq $previousRuntimeRoot) {
+    Remove-Item Env:\ZTF_RUNTIME_ROOT -ErrorAction SilentlyContinue
+} else {
+    $env:ZTF_RUNTIME_ROOT = $previousRuntimeRoot
+}
+Write-Ok "ZeroTouch Framework runtime patches applied"
+
 # ── 4. Install dependencies ───────────────────────────────────────────────────
 Write-Header "Step 4 of 5 — Installing Python dependencies"
 

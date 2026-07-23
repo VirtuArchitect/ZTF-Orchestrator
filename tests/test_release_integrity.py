@@ -2,6 +2,7 @@ import ast
 import importlib.util
 import json
 import re
+import types
 from pathlib import Path
 
 
@@ -11,6 +12,15 @@ ROOT = Path(__file__).resolve().parents[1]
 def _load_offline_package_module():
     path = ROOT / 'scripts' / 'build_offline_update_package.py'
     spec = importlib.util.spec_from_file_location('build_offline_update_package', path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_runtime_patch_module():
+    path = ROOT / 'scripts' / 'patch_ztf_runtime.py'
+    spec = importlib.util.spec_from_file_location('patch_ztf_runtime', path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
@@ -202,9 +212,81 @@ def test_pe_wizard_builders_use_shared_cluster_fields():
 def test_docker_build_patches_ztf_pc_entity_filter_bug():
     dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
     patch_script = (ROOT / 'scripts' / 'patch_ztf_runtime.py').read_text(encoding='utf-8')
+    install_ps1 = (ROOT / 'install.ps1').read_text(encoding='utf-8')
+    install_sh = (ROOT / 'install.sh').read_text(encoding='utf-8')
 
     assert 'scripts/patch_ztf_runtime.py' in dockerfile
     assert 'RUN python /tmp/patch_ztf_runtime.py' in dockerfile
+    assert 'ZTF_RUNTIME_ROOT = $ZtfDir' in install_ps1
+    assert 'patch_ztf_runtime.py' in install_ps1
+    assert 'ZTF_RUNTIME_ROOT="$ZTF_DIR" python "$ORCH_DIR/scripts/patch_ztf_runtime.py"' in install_sh
     assert 'filter_criteria = kwargs.pop("filter", None)' in patch_script
     assert 'payload["filter"] = filter_criteria' in patch_script
     assert 'payload["spec"]["name"] = kwargs["name"]' in patch_script
+
+
+def test_runtime_patch_covers_dev_lab_findings():
+    patch_script = (ROOT / 'scripts' / 'patch_ztf_runtime.py').read_text(encoding='utf-8')
+
+    assert 'patch_windows_log_cleanup()' in patch_script
+    assert 'except PermissionError:' in patch_script
+    assert 'Skipping deletion of active or locked file' in patch_script
+
+    assert 'patch_pc_config_preserves_sessions()' in patch_script
+    assert 'self.data = data' in patch_script
+    assert 'self.global_data = global_data or {}' in patch_script
+
+    assert 'patch_pc_v4_batch_retry()' in patch_script
+    assert 'def _submit_batch_with_retry' in patch_script
+    assert 'SERVICE UNAVAILABLE' in patch_script
+    assert 'upstream connect error' in patch_script
+    assert '_submit_batch_with_retry(self.batch_api, batch_spec)' in patch_script
+
+
+def test_runtime_patch_log_cleanup_skips_locked_active_log(tmp_path, monkeypatch):
+    module = _load_runtime_patch_module()
+    module.RUNTIME_ROOT = tmp_path
+    target = tmp_path / 'framework' / 'helpers' / 'general_utils.py'
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        """import os
+
+class Logger:
+    def __init__(self):
+        self.messages = []
+
+    def warning(self, message):
+        self.messages.append(message)
+
+logger = Logger()
+
+def delete_file_util(file_path: str) -> None:
+    \"\"\"
+    Function to delete a file if it exists.
+
+    Args:
+        file_path (str): Path to the file to delete.
+    \"\"\"
+    if os.path.exists(file_path):
+        os.remove(file_path)
+""",
+        encoding='utf-8',
+    )
+
+    module.patch_windows_log_cleanup()
+    namespace: dict[str, object] = {}
+    exec(target.read_text(encoding='utf-8'), namespace)
+    patched_os = types.SimpleNamespace(
+        path=__import__('os').path,
+        remove=lambda _path: (_ for _ in ()).throw(PermissionError('locked')),
+    )
+    monkeypatch.setitem(namespace, 'os', patched_os)
+    locked_log = tmp_path / 'active-zero_touch.log'
+    locked_log.write_text('active log', encoding='utf-8')
+
+    with locked_log.open('r', encoding='utf-8'):
+        namespace['delete_file_util'](str(locked_log))
+
+    logger = namespace['logger']
+    assert locked_log.exists()
+    assert logger.messages == [f"Skipping deletion of active or locked file {str(locked_log)!r}"]
