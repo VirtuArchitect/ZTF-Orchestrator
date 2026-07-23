@@ -108,6 +108,10 @@ fi
 source "$VENV_DIR/bin/activate"
 ok "Virtual environment active"
 
+info "Applying ZeroTouch Framework runtime compatibility patches..."
+ZTF_RUNTIME_ROOT="$ZTF_DIR" python "$ORCH_DIR/scripts/patch_ztf_runtime.py"
+ok "ZeroTouch Framework runtime patches applied"
+
 # ── 4. Install dependencies ───────────────────────────────────────────────────
 hdr "Step 4 of 5 — Installing Python dependencies"
 
