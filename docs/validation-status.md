@@ -25,15 +25,27 @@ afterward. Raw evidence, endpoint details, hostnames, addresses, credentials,
 logs, and screenshots are intentionally withheld because they relate to a
 restricted UAT environment.
 
-On 2026-07-20, a controlled single-node Nutanix Community Edition lab validated
-the Deploy Prism Central path through the ZTF 1.x runtime after Orchestrator
-hardening. The Prism Central software bundle `pc.2024.3.1.14` uploaded
-successfully from a local HTTP artifact source, and the Prism Central VM
-deployment completed. Raw lab addresses, credentials, screenshots, and job logs
-remain outside the repository. PE-to-PC registration is not counted as completed
-in this record because the Nutanix cluster reported dual-stack enabled; that
-remaining blocker is tracked as infrastructure remediation rather than an
-Orchestrator deployment failure.
+On 2026-07-20 and 2026-07-24, a controlled single-node Nutanix Community
+Edition lab validated the Deploy Prism Central path through the ZTF 1.x runtime
+after Orchestrator hardening. The Prism Central software bundle
+`pc.2024.3.1.14` uploaded successfully from a local HTTP artifact source, and
+the Prism Central VM deployment completed. After lab IPv6 dual-stack
+remediation and a PE/PC redeploy, `RegisterToPc` registered the DEV_LAB Prism
+Element cluster with Prism Central and ZTF verification returned
+`Register_to_PC: PASS`. Raw lab addresses, credentials, screenshots, and job
+logs remain outside the repository.
+
+On 2026-07-24, the same lab also validated a low-risk Prism Element storage
+container lifecycle through ZTF-Orchestrator job execution. `CreateContainerPe`
+created a temporary RF1 validation container and returned `Create_container:
+PASS`; `DeleteContainerPe` was first rejected without destructive-action
+acknowledgement, then succeeded with the required confirmation and returned
+`Delete_container: PASS`. A Prism Central category mutation was attempted as a
+PC-backed object test, but Prism Central returned `503 SERVICE UNAVAILABLE`
+from the v4 batch operations endpoint while category read calls succeeded. That
+PC category mutation remains unvalidated and is tracked as a Prism Central
+service-readiness limitation, not as proof of a credential or Orchestrator
+submission failure.
 
 Use [Sanitized UAT Evidence Record Pattern](sanitized-uat-evidence-record.md)
 for non-NKP workflow evidence records. Use
@@ -69,6 +81,7 @@ checks, static configuration checks, or local Docker checks:
 | Drift detection | Matched, changed, missing, unexpected, unknown, list, clear, and viewer restriction behavior are tested. |
 | Audit/logging | Structured audit endpoint access and role restrictions are tested. |
 | Security controls | Security headers, auth enforcement, allowlists, path traversal rejection, request size limit, and role checks are tested. |
+| Live Nutanix CE lab scripts | `DeployPC`, `RegisterToPc`, `CreateContainerPe`, and `DeleteContainerPe` have been validated in a controlled single-node CE lab. PC v4 category mutation remains blocked by a Prism Central `503` on the batch operations endpoint. |
 | Repository security assessment | Baseline source, dependency, auth/RBAC, storage, execution, and deployment review completed on 2026-06-05. |
 | Version control | Release branch, `main`, and version tag workflow have been exercised through v1.3.0. |
 
@@ -78,8 +91,8 @@ The following areas cannot be fully proven without the relevant infrastructure:
 
 | Area | Required Environment |
 |---|---|
-| Nutanix workflow execution | Prism Central, Foundation Central, Prism Element, real credentials, safe test clusters/nodes, and approved workflow inputs. |
-| Prism Central / Foundation Central connectivity | Reachable Nutanix endpoints on required ports, valid service accounts, and representative network paths. |
+| Nutanix workflow execution | Broader workflow coverage still requires Prism Central, Foundation Central, Prism Element, real credentials, safe test clusters/nodes, and approved workflow inputs beyond the validated DEV_LAB `DeployPC`, `RegisterToPc`, `CreateContainerPe`, and `DeleteContainerPe` paths. |
+| Prism Central / Foundation Central connectivity | Prism Central and Prism Element connectivity have been validated in DEV_LAB for selected paths. Foundation Central connectivity and broader PC mutation services still require environment-specific validation. |
 | PostgreSQL backup/restore drill | Safe UAT PostgreSQL service, backup storage, restore target, restart path, and recovery acceptance criteria. See [PostgreSQL Backup and Restore Drill](postgresql-backup-restore-drill.md). |
 | Foundation Central cluster-create / imaging | Separate UAT Foundation Central validation for `cluster-create`, `imaging-only`, and `imaging`; Prism Central config success does not validate this path. |
 | Kubernetes runtime | A real Kubernetes cluster, Docker Desktop Kubernetes, kind, minikube, or managed Kubernetes environment. |

@@ -2,9 +2,10 @@
 
 Date: 2026-07-22
 
-Latest read-only refresh: 2026-07-22 15:02:56 +02:00
+Latest live validation refresh: 2026-07-24 17:59:00 +02:00
 
-Scope: ZTF-Orchestrator v1.5.6 validation against the DEV_LAB Prism Element lab cluster.
+Scope: ZTF-Orchestrator v1.5.6 validation against the DEV_LAB Prism Element
+lab cluster and the lab Prism Central instance deployed by ZTF-Orchestrator.
 
 ## Target Summary
 
@@ -21,6 +22,9 @@ Scope: ZTF-Orchestrator v1.5.6 validation against the DEV_LAB Prism Element lab 
   - Hosts: `NTNX-edf2d4be-A`
   - Network: `MGMT_VLAN`
   - Storage containers: `default-container-23330302671351`, `NutanixManagementShare`, `SelfServiceContainer`
+- Prism Central validation endpoint: lab PC reachable on `9440`
+- Prism Central version validated: `pc.2024.3.1.14`
+- PE-to-PC registration: `RegisterToPc` returned `Register_to_PC: PASS`
 
 Credentials were used only for authorized lab read-only API checks. No passwords or secrets are recorded in this document.
 
@@ -171,6 +175,70 @@ Additional runtime discovery:
 
 - ZTF expects the `ipam` key to exist in `global.yml` even when `ip_allocation_method: static`; omitting `ipam` produced an early ZTF `'ipam'` error before the container operation.
 
+### Live DEV_LAB Prism Central Deployment And Registration
+
+On 2026-07-24, the lab was redeployed and the Prism Central deployment path was
+validated through the ZTF-Orchestrator job runner.
+
+Observed results:
+
+- `DeployPC` completed successfully for Prism Central `pc.2024.3.1.14`.
+- Prism Central became available on the configured lab VIP and reported
+  `pc.2024.3.1.14`.
+- The CE dual-stack IPv6 blocker was remediated before registration. After
+  remediation, `manage_ipv6 show` reported `gateway: null`, `prefixlen: null`,
+  and `svmips`/`hostips` set to `null`; `ip -6 addr` and `ip -6 route` returned
+  no active IPv6 configuration.
+- `RegisterToPc` was executed through ZTF-Orchestrator with the lab PE and PC
+  credential references. The job completed with return code `0`.
+- ZTF verification returned:
+
+```text
+{'clusters': {'10.20.30.201': {'Register_to_PC': 'PASS'}}}
+```
+
+Additional PC-backed validation:
+
+- `CreateCategoryPc` reached Prism Central, authenticated, and read categories
+  successfully with HTTP `200`.
+- The category value mutation path failed twice because Prism Central returned
+  `503 SERVICE UNAVAILABLE` from:
+
+```text
+POST /api/prism/v4.0/operations/$actions/batch
+```
+
+This keeps `CreateCategoryPc` out of the completed validation list. The failure
+is recorded as a Prism Central v4 batch service-readiness limitation in this lab
+because authentication and read access succeeded.
+
+### Live Orchestrator-Run Container Lifecycle
+
+On 2026-07-24, after the PE and PC redeploy, the disposable storage-container
+lifecycle was rerun through the ZTF-Orchestrator job API rather than a temporary
+standalone ZTF container.
+
+Observed results:
+
+- `CreateContainerPe` created `ztf_validation_container_20260724` with
+  `replication_factor: 1` and ZTF verification returned:
+
+```text
+{'clusters': {'10.20.30.201': {'Create_container': {'ztf_validation_container_20260724': 'PASS'}}}}
+```
+
+- `DeleteContainerPe` was rejected on the first submission without destructive
+  acknowledgement.
+- `DeleteContainerPe` was rerun with the required confirmation phrase
+  `RUN DeleteContainerPe` and ZTF verification returned:
+
+```text
+{'clusters': {'10.20.30.201': {'Delete_container': {'ztf_validation_container_20260724': 'PASS'}}}}
+```
+
+This validates both the Orchestrator destructive-action gate and the live PE
+create/delete execution path.
+
 ### Automated Checks
 
 Latest successful checks:
@@ -209,8 +277,9 @@ Visual smoke now covers:
 
 The following items are intentionally not complete because they require persistent Orchestrator credentials, additional lab assets, or packaging work:
 
-1. Configure the local Orchestrator/ZTF `pe_user` credential reference for DEV_LAB if future live tests should be launched through the Orchestrator execution API/UI rather than a temporary ZTF runtime file.
-2. Upload/provide a Prism Element image before a VM lifecycle test.
+1. Upload/provide a Prism Element image before a VM lifecycle test.
+2. Recheck Prism Central v4 batch operation service health before rerunning
+   PC mutation scripts such as `CreateCategoryPc`.
 3. Rebuild the container image and regenerate the offline upgrade package after final validation changes are committed.
 
 ### Recommended Gated Mutation Path

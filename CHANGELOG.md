@@ -12,6 +12,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.5.6 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Documentation
+- Updated DEV_LAB validation status after a fresh PE/PC redeploy confirmed
+  `DeployPC`, `RegisterToPc`, `CreateContainerPe`, and `DeleteContainerPe`
+  through ZTF-Orchestrator job execution.
+- Recorded the remaining Prism Central category mutation limitation where PC
+  category reads succeed but the v4 batch operations endpoint returns `503
+  SERVICE UNAVAILABLE` in the lab.
+
 ---
 
 ## [1.5.6] - 2026-07-22
