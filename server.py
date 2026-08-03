@@ -755,6 +755,9 @@ def _clean_artifact_payload(data: dict, existing: dict | None = None) -> tuple[d
 
 
 def _appliance_status() -> dict:
+    settings = get_settings()
+    ztf_info = _ztf_detect(settings['ztfPath'])
+    ztf_ok = bool(ztf_info.get('compatible'))
     source_dir = Path('/opt/ztf-orchestrator-source')
     install_dir = Path('/opt/ztf-orchestrator')
     preload_dir = Path('/opt/ztf-orchestrator-preload')
@@ -763,17 +766,46 @@ def _appliance_status() -> dict:
     firstboot_log = Path('/var/log/ztf-orchestrator-firstboot.log')
     nkp_host_path = preload_dir / 'nkp-zerotouch-framework'
     bundles_path = preload_dir / 'bundles'
-    checks = [
-        {'name': 'Source checkout', 'ok': source_dir.exists(), 'value': str(source_dir)},
-        {'name': 'Install directory', 'ok': install_dir.exists(), 'value': str(install_dir)},
-        {'name': 'Appliance Compose file', 'ok': compose_file.exists(), 'value': str(compose_file)},
-        {'name': 'Appliance environment', 'ok': env_file.exists(), 'value': str(env_file)},
-        {'name': 'Firstboot log', 'ok': firstboot_log.exists(), 'value': str(firstboot_log)},
-        {'name': 'NKP framework preload', 'ok': nkp_host_path.exists(), 'value': str(nkp_host_path)},
-        {'name': 'NKP bundle preload', 'ok': bundles_path.exists(), 'value': str(bundles_path)},
+    expected_paths = [
+        ('Source checkout', source_dir),
+        ('Install directory', install_dir),
+        ('Appliance Compose file', compose_file),
+        ('Appliance environment', env_file),
+        ('Firstboot log', firstboot_log),
+        ('NKP framework preload', nkp_host_path),
+        ('NKP bundle preload', bundles_path),
     ]
+    checks = []
+    for name, path in expected_paths:
+        visible = path.exists()
+        checks.append({
+            'name': name,
+            'ok': visible,
+            'status': 'present' if visible else 'not_visible',
+            'value': str(path),
+            'message': 'Present on this host/container' if visible else 'Not visible from this app process',
+        })
+    visible_count = sum(1 for check in checks if check['ok'])
     return {
-        'detected': any(check['ok'] for check in checks),
+        'detected': ztf_ok or visible_count > 0,
+        'runtime': {
+            'status': 'healthy' if ztf_ok else 'degraded',
+            'version': APP_VERSION,
+            'ztfCompatible': ztf_ok,
+            'message': ztf_info.get('message', ''),
+        },
+        'hostLayout': {
+            'status': 'visible' if visible_count == len(checks) else 'partial' if visible_count else 'not_visible',
+            'visible': visible_count,
+            'expected': len(checks),
+            'message': (
+                'All expected appliance first-boot paths are visible.'
+                if visible_count == len(checks)
+                else 'Runtime is available, but one or more host first-boot paths are not visible from this app process.'
+                if ztf_ok
+                else 'Runtime is degraded and expected appliance first-boot paths are incomplete.'
+            ),
+        },
         'checks': checks,
         'containerPaths': {
             'ztfFramework': '/opt/zerotouch-framework',

@@ -118,7 +118,14 @@ def test_appliance_artifact_rejects_bad_checksum(client, auth_headers):
 def test_appliance_status_and_ztf_compatibility(client, auth_headers):
     resp = client.get('/api/appliance/status', headers=auth_headers)
     assert resp.status_code == 200
-    assert 'checks' in resp.get_json()
+    status = resp.get_json()
+    assert 'checks' in status
+    assert status['detected'] is True
+    assert status['runtime']['status'] == 'healthy'
+    assert status['runtime']['version'] == '1.5.6'
+    assert status['hostLayout']['expected'] == len(status['checks'])
+    assert status['hostLayout']['visible'] <= status['hostLayout']['expected']
+    assert all(check['status'] in {'present', 'not_visible'} for check in status['checks'])
 
     resp = client.get('/api/ztf/compatibility', headers=auth_headers)
     assert resp.status_code == 200

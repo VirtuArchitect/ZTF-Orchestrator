@@ -40,7 +40,25 @@ async function seedUiSession(page: Page) {
       return
     }
     if (url.endsWith('/api/appliance/status')) {
-      await route.fulfill({ json: { detected: false, checks: [], containerPaths: {} } })
+      await route.fulfill({ json: {
+        detected: true,
+        runtime: { status: 'healthy', version: '1.5.6', ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
+        hostLayout: {
+          status: 'not_visible',
+          visible: 0,
+          expected: 7,
+          message: 'Runtime is available, but one or more host first-boot paths are not visible from this app process.',
+        },
+        checks: [
+          { name: 'Source checkout', ok: false, status: 'not_visible', value: '/opt/ztf-orchestrator-source', message: 'Not visible from this app process' },
+          { name: 'Install directory', ok: false, status: 'not_visible', value: '/opt/ztf-orchestrator', message: 'Not visible from this app process' },
+        ],
+        containerPaths: {
+          nkpBundles: '/var/lib/ztf-orchestrator/bundles',
+          nkpFramework: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework',
+          ztfFramework: '/opt/zerotouch-framework',
+        },
+      } })
       return
     }
     if (url.endsWith('/api/nkp/status')) {

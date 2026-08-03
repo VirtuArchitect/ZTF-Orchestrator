@@ -93,7 +93,19 @@ interface UpdateTarget {
 
 interface ApplianceStatus {
   detected: boolean
-  checks: Array<{ name: string; ok: boolean; value: string }>
+  runtime?: {
+    status: 'healthy' | 'degraded' | string
+    version: string
+    ztfCompatible: boolean
+    message: string
+  }
+  hostLayout?: {
+    status: 'visible' | 'partial' | 'not_visible' | string
+    visible: number
+    expected: number
+    message: string
+  }
+  checks: Array<{ name: string; ok: boolean; status?: string; value: string; message?: string }>
   containerPaths: Record<string, string>
 }
 
@@ -732,12 +744,43 @@ export default function Appliance() {
         {tab === 'firstboot' && (
           <div className="card">
             <div className="mb-4">
-              <h2 className="font-semibold text-gray-100">First-Boot Appliance Status</h2>
-              <p className="text-sm text-gray-500 mt-1">Confirms whether expected appliance paths and preload mounts are present on this host.</p>
+              <h2 className="font-semibold text-gray-100">Appliance Runtime and First-Boot Layout</h2>
+              <p className="text-sm text-gray-500 mt-1">Shows whether the app runtime is healthy and which host first-boot paths are visible to this process.</p>
             </div>
+            <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Metric
+                label="Runtime"
+                value={appliance?.runtime?.status || (appliance?.detected ? 'detected' : 'unknown')}
+                tone={appliance?.runtime?.status === 'healthy' ? 'good' : appliance?.runtime?.status === 'degraded' ? 'bad' : 'warn'}
+              />
+              <Metric label="Version" value={appliance?.runtime?.version || APP_VERSION} />
+              <Metric
+                label="Host Layout"
+                value={appliance?.hostLayout ? `${appliance.hostLayout.visible}/${appliance.hostLayout.expected} visible` : 'unknown'}
+                tone={appliance?.hostLayout?.status === 'visible' ? 'good' : appliance?.runtime?.status === 'healthy' ? 'warn' : 'bad'}
+              />
+            </div>
+            {appliance?.hostLayout?.message && (
+              <div className={clsx(
+                'mb-4 rounded-lg border px-4 py-3 text-sm',
+                appliance.hostLayout.status === 'visible'
+                  ? 'border-nutanix-teal/30 bg-nutanix-teal/10 text-nutanix-teal'
+                  : appliance.runtime?.status === 'healthy'
+                    ? 'border-yellow-500/30 bg-yellow-950/20 text-yellow-300'
+                    : 'border-red-500/30 bg-red-950/20 text-red-200',
+              )}>
+                {appliance.hostLayout.message}
+              </div>
+            )}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
               {appliance?.checks.map(check => (
-                <CheckRow key={check.name} label={check.name} ok={check.ok} value={check.value} />
+                <CheckRow
+                  key={check.name}
+                  label={check.name}
+                  ok={check.ok}
+                  warn={!check.ok && appliance?.runtime?.status === 'healthy'}
+                  value={check.message ? `${check.message}: ${check.value}` : check.value}
+                />
               ))}
             </div>
             <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
