@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 import {
   Server, CheckCircle, XCircle, Clock,
   Activity, AlertTriangle, Zap, Settings, Download,

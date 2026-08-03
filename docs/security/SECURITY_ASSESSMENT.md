@@ -84,19 +84,23 @@ in each release security review.
 
 ## Findings
 
-### Medium: React Router Dependency Advisory
+### Medium: React Router Dependency Advisories
 
-`npm audit` reported moderate advisories affecting `react-router` through
+`npm audit` reported advisories affecting `react-router` through
 `react-router-dom`.
 
 Recommendation:
 
-- Run `npm audit fix`.
+- Remove the external router package if the app only needs simple client-side
+  history navigation.
 - Rebuild the frontend.
-- Regression test login, redirects, and route navigation.
+- Regression test login, redirects, route parameters, search parameters, and
+  route navigation.
 
-Status: remediated in the current working tree by updating `react-router-dom`
-to 6.30.4.
+Status: remediated in the current working tree by replacing the small
+`react-router-dom` usage surface with a local browser-history router and
+removing `react-router-dom` from the dependency graph. `npm audit` reports zero
+vulnerabilities after the dependency update.
 
 ### Medium: Webhook Destination Validation
 

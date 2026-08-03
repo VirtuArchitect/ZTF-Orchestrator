@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation } from '../router'
 import { useEffect } from 'react'
 import type { ElementType } from 'react'
 import {

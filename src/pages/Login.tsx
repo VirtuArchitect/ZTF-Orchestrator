@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate, Navigate } from '../router'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { useStore } from '../store'
 import BrandLogo from '../components/BrandLogo'
