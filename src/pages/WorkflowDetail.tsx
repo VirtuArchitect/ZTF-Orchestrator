@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link } from '../router'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,

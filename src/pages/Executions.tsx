@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from '../router'
 import { Trash2, RefreshCw, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Terminal, Play } from 'lucide-react'
 import Layout from '../components/Layout'
 import ExecutionModal from '../components/ExecutionModal'

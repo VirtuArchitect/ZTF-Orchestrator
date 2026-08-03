@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle, Download, FilePlus, FileSearch, Info, Layers, Loader, Plus, Play, RefreshCw, Save, ShieldCheck, Star, Trash2, Upload, XCircle } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 import Layout from '../components/Layout'
 import Terminal from '../components/Terminal'
 import { apiFetch, authHeaders } from '../utils/api'

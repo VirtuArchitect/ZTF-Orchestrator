@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 import { AlertTriangle, Download, FileArchive, Loader, Plus, RefreshCw, ShieldCheck, Terminal, Trash2 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch, authHeaders } from '../utils/api'
