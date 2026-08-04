@@ -18,7 +18,7 @@ setup, drift checks, and backup/restore drills.
 
 ```yaml
 evidence_id: ztf-uat-YYYYMMDD-001
-orchestrator_version: v1.5.2
+orchestrator_version: v1.5.6
 workflow: config-pc
 environment_class: uat
 operator_role: operator
