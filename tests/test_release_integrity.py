@@ -3,7 +3,9 @@ import importlib.util
 import json
 import re
 import types
+import zipfile
 from pathlib import Path
+from xml.etree import ElementTree
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +51,39 @@ def test_release_version_metadata_is_consistent():
     assert f"export const APP_VERSION = '{expected}'" in version_ts
     assert readme.startswith(f'# ZTF-Orchestrator · v{expected}')
     assert f'## [{expected}]' in changelog
+
+
+def _docx_text(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        document_xml = archive.read('word/document.xml')
+    root = ElementTree.fromstring(document_xml)
+    namespace = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+    return '\n'.join(node.text or '' for node in root.findall('.//w:t', namespace))
+
+
+def test_current_operator_docs_reference_release_version():
+    package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
+    expected_tag = f"v{package['version']}"
+
+    markdown_docs = [
+        ROOT / 'README.md',
+        ROOT / 'appliance' / 'README.md',
+        ROOT / 'docs' / 'installation-guide.md',
+        ROOT / 'docs' / 'foundation-central-validation.md',
+        ROOT / 'docs' / 'postgresql-backup-restore-drill.md',
+        ROOT / 'docs' / 'sanitized-uat-evidence-record.md',
+        ROOT / 'docs' / 'script-wizard-validation-test-plan.md',
+        ROOT / 'docs' / 'dev-lab-disposable-container-runbook.md',
+        ROOT / 'docs' / 'ztf-2x-plan-apply-roadmap.md',
+    ]
+
+    for path in markdown_docs:
+        text = path.read_text(encoding='utf-8')
+        assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+
+    ahv_build_guide = _docx_text(ROOT / 'docs' / 'AHV-Appliance-Build-Guide.docx')
+    assert expected_tag in ahv_build_guide
+    assert f'ZTF_ORCHESTRATOR_VERSION={expected_tag}' in ahv_build_guide
 
 
 def test_frontend_script_catalogue_is_backend_allowlisted():

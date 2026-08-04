@@ -4,6 +4,8 @@ ZTF 2.x support is tracked separately from the v1.5.x ZTF 1.x orchestrator
 hardening line. The goal is to avoid blending new framework semantics with the
 current production UAT validation path.
 
+Current ZTF-Orchestrator release for this roadmap baseline: `v1.5.6`.
+
 ## Principles
 
 - Keep v1.5.x focused on ZTF 1.x workflows, UAT hardening, approvals, backup,
@@ -32,7 +34,7 @@ current production UAT validation path.
    - Document which ZTF 1.x workflows map to ZTF 2.x.
    - Keep unsupported workflows explicit.
 
-## Non-Goals for v1.5.2
+## Non-Goals for v1.5.x
 
 - No ZTF 2.x apply execution.
 - No automatic migration of ZTF 1.x configs to ZTF 2.x.
