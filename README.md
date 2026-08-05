@@ -154,7 +154,8 @@ it orchestrates repeatable ZeroTouch Framework workflows that call Nutanix APIs.
 > **Port note (Windows):** Hyper-V reserves ports 4940–5039. If the server fails to
 > start on the default port 5001, set `$env:ZTF_PORT = "8080"` before starting.
 
-<img width="1714" height="1273" alt="image" src="https://github.com/user-attachments/assets/10930f0e-4c7a-41d5-aede-a816d81ac3bf" />
+<img width="1977" height="1175" alt="image" src="https://github.com/user-attachments/assets/c17bd90b-9b91-4233-81d8-944b938b8c9d" />
+
 
 
 
