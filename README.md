@@ -272,8 +272,10 @@ Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
 
 The repository does not store QCOW2 or OVA binaries. Large appliance images are
 published as GitHub Actions artifacts or stored in an internal artifact
-repository because GitHub Release assets have a 2 GiB per-file limit. The repo
-contains:
+repository because GitHub Release assets have a 2 GiB per-file limit. For the
+public `v1.5.6` standard AHV QCOW2 bundle and checksum, see
+[Public v1.5.6 Appliance Image](appliance/README.md#public-v156-appliance-image).
+The repo contains:
 
 - a GHCR container publishing workflow;
 - an appliance Compose file that pulls `ghcr.io/virtuarchitect/ztf-orchestrator`;
