@@ -37,6 +37,12 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from storage_backend import StorageError, create_storage
+from upgrade_advisor import (
+    assess_upgrade_risk,
+    load_upgrade_rules,
+    merge_upgrade_rule_packs,
+    render_upgrade_assessment_markdown,
+)
 
 # ─── Environment configuration ───────────────────────────────────────────────
 
@@ -64,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.5.6'
+APP_VERSION = '1.6.0'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -84,6 +90,7 @@ APPLIANCE_ARTIFACTS_FILE = CONFIG_DIR / 'appliance_artifacts.json'
 APPLIANCE_UPDATES_FILE = CONFIG_DIR / 'appliance_updates.json'
 APPLIANCE_UPDATE_REQUEST_FILE = CONFIG_DIR / 'appliance_update_request.json'
 APPLIANCE_UPDATE_PACKAGES_DIR = CONFIG_DIR / 'appliance-update-packages'
+UPGRADE_ADVISOR_SOURCE_PACKS_FILE = CONFIG_DIR / 'upgrade_advisor_source_packs.json'
 LOG_FILE       = CONFIG_DIR / 'ztf-orchestrator.log'
 POSTGRES_BACKUP_DIR = CONFIG_DIR / 'backups' / 'postgres'
 NKP_BINARIES_DIR = CONFIG_DIR / 'nkp-binaries'
@@ -7617,6 +7624,198 @@ def clear_drift_runs():
 
 
 # ─── Scheduled executions ─────────────────────────────────────────────────────
+
+# Nutanix Upgrade Risk Advisor
+
+def _load_upgrade_source_packs() -> list[dict]:
+    packs = read_json(UPGRADE_ADVISOR_SOURCE_PACKS_FILE, [])
+    if not isinstance(packs, list):
+        return []
+    normalized = []
+    for item in packs:
+        if isinstance(item, dict) and item.get('id') and isinstance(item.get('rules'), list):
+            normalized.append(item)
+    return sorted(normalized, key=lambda item: item.get('updatedAt') or item.get('createdAt') or '', reverse=True)
+
+
+def _save_upgrade_source_packs(packs: list[dict]) -> None:
+    write_json(UPGRADE_ADVISOR_SOURCE_PACKS_FILE, packs[:100])
+
+
+def _active_upgrade_rules_pack() -> dict:
+    return merge_upgrade_rule_packs(load_upgrade_rules(), _load_upgrade_source_packs())
+
+
+def _source_pack_from_payload(data: dict, existing: dict | None = None) -> tuple[dict | None, str | None]:
+    existing = existing or {}
+    content = data.get('content')
+    pack_data = data.get('pack') if isinstance(data.get('pack'), dict) else None
+    if content and not pack_data:
+        try:
+            pack_data = yaml.safe_load(str(content)) or {}
+        except yaml.YAMLError as exc:
+            return None, f'Source pack parse error: {exc}'
+    if not isinstance(pack_data, dict):
+        pack_data = {
+            'name': data.get('name', existing.get('name', '')),
+            'version': data.get('version', existing.get('version', '')),
+            'description': data.get('description', existing.get('description', '')),
+            'rules': data.get('rules', existing.get('rules', [])),
+        }
+    rules = pack_data.get('rules')
+    if not isinstance(rules, list) or not rules:
+        return None, 'Source pack must include at least one rule'
+    clean_rules = []
+    for index, rule in enumerate(rules, start=1):
+        if not isinstance(rule, dict):
+            return None, f'Rule {index} must be an object'
+        rule_id = _clean_text(rule.get('id', ''), 128)
+        if not rule_id:
+            return None, f'Rule {index} id is required'
+        status = _clean_text(rule.get('status', 'review'), 32)
+        if status not in {'blocked', 'warning', 'review', 'unknown', 'clear'}:
+            return None, f'Rule {rule_id} has invalid status'
+        severity = _clean_text(rule.get('severity', 'medium'), 32)
+        if severity not in {'critical', 'high', 'medium', 'low', 'info'}:
+            return None, f'Rule {rule_id} has invalid severity'
+        rule_copy = dict(rule)
+        rule_copy['id'] = rule_id
+        rule_copy['status'] = status
+        rule_copy['severity'] = severity
+        rule_copy.setdefault('title', rule_id)
+        rule_copy.setdefault('message', 'Review this curated upgrade condition before proceeding.')
+        rule_copy.setdefault('guidance', 'Review source evidence and change-control requirements before proceeding.')
+        clean_rules.append(rule_copy)
+
+    now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+    record = {
+        'id': existing.get('id') or str(uuid.uuid4()),
+        'name': _clean_text(pack_data.get('name') or data.get('name') or existing.get('name') or 'Curated Source Pack', 120),
+        'version': _clean_text(pack_data.get('version') or data.get('version') or existing.get('version') or 'manual', 64),
+        'description': _clean_text(pack_data.get('description') or data.get('description') or existing.get('description') or '', 500),
+        'sourceType': _clean_text(data.get('sourceType', existing.get('sourceType', 'manual')), 64),
+        'enabled': bool(data.get('enabled', existing.get('enabled', True))),
+        'rules': clean_rules,
+        'createdAt': existing.get('createdAt') or now,
+        'updatedAt': now,
+        'createdBy': existing.get('createdBy') or getattr(request, 'current_user', {}).get('username', 'unknown'),
+        'updatedBy': getattr(request, 'current_user', {}).get('username', 'unknown'),
+    }
+    return record, None
+
+
+def _upgrade_assessment_zip(assessment: dict) -> BytesIO:
+    buffer = BytesIO()
+    markdown = render_upgrade_assessment_markdown(assessment)
+    with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr('assessment.json', json.dumps(assessment, indent=2, sort_keys=True))
+        zf.writestr('assessment.md', markdown)
+    buffer.seek(0)
+    return buffer
+
+
+@app.route('/api/upgrade-advisor/rules')
+@require_role('admin', 'operator', 'viewer')
+def get_upgrade_advisor_rules():
+    rules_pack = _active_upgrade_rules_pack()
+    return jsonify({
+        'version': rules_pack.get('version', 'unknown'),
+        'name': rules_pack.get('name', 'Nutanix Upgrade Risk Advisor rules'),
+        'description': rules_pack.get('description', ''),
+        'phases': rules_pack.get('phases', []),
+        'rules': rules_pack.get('rules', []),
+        'sourcePacks': rules_pack.get('sourcePacks', []),
+        'readOnly': True,
+    })
+
+
+@app.route('/api/upgrade-advisor/source-packs')
+@require_role('admin', 'operator', 'viewer')
+def list_upgrade_source_packs():
+    return jsonify({'sourcePacks': _load_upgrade_source_packs()})
+
+
+@app.route('/api/upgrade-advisor/source-packs', methods=['POST'])
+@require_role('admin', 'operator')
+def create_upgrade_source_pack():
+    data = request.json or {}
+    record, error = _source_pack_from_payload(data)
+    if error:
+        return jsonify({'error': error}), 400
+    packs = _load_upgrade_source_packs()
+    packs.insert(0, record)
+    _save_upgrade_source_packs(packs)
+    return jsonify(record), 201
+
+
+@app.route('/api/upgrade-advisor/source-packs/<pack_id>', methods=['PUT'])
+@require_role('admin', 'operator')
+def update_upgrade_source_pack(pack_id):
+    data = request.json or {}
+    packs = _load_upgrade_source_packs()
+    existing = next((pack for pack in packs if pack.get('id') == pack_id), None)
+    if not existing:
+        return jsonify({'error': 'Source pack not found'}), 404
+    if set(data.keys()) <= {'enabled'}:
+        existing['enabled'] = bool(data.get('enabled'))
+        existing['updatedAt'] = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+        existing['updatedBy'] = request.current_user['username']
+        _save_upgrade_source_packs(packs)
+        return jsonify(existing)
+    record, error = _source_pack_from_payload(data, existing)
+    if error:
+        return jsonify({'error': error}), 400
+    updated = [record if pack.get('id') == pack_id else pack for pack in packs]
+    _save_upgrade_source_packs(updated)
+    return jsonify(record)
+
+
+@app.route('/api/upgrade-advisor/source-packs/<pack_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_upgrade_source_pack(pack_id):
+    packs = _load_upgrade_source_packs()
+    remaining = [pack for pack in packs if pack.get('id') != pack_id]
+    if len(remaining) == len(packs):
+        return jsonify({'error': 'Source pack not found'}), 404
+    _save_upgrade_source_packs(remaining)
+    return jsonify({'success': True})
+
+
+@app.route('/api/upgrade-advisor/assess', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def assess_upgrade_advisor():
+    data = request.json or {}
+    if not isinstance(data, dict):
+        return jsonify({'error': 'JSON object required'}), 400
+    targets = data.get('targets')
+    if not isinstance(targets, dict) or not any(str(value).strip() for value in targets.values()):
+        return jsonify({'error': 'At least one target version is required'}), 400
+    result = assess_upgrade_risk(data, _active_upgrade_rules_pack())
+    log.info('upgrade_advisor_assess',
+             extra={'user': request.current_user['username'],
+                    'action': 'upgrade_advisor_assess',
+                    'status': result['status'],
+                    'targets': ','.join(sorted(result['targets'].keys()))})
+    return jsonify(result)
+
+
+@app.route('/api/upgrade-advisor/export', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def export_upgrade_advisor_assessment():
+    data = request.json or {}
+    assessment = data.get('assessment') if isinstance(data.get('assessment'), dict) else None
+    assessment_input = data.get('assessmentInput') if isinstance(data.get('assessmentInput'), dict) else None
+    if assessment_input:
+        targets = assessment_input.get('targets')
+        if not isinstance(targets, dict) or not any(str(value).strip() for value in targets.values()):
+            return jsonify({'error': 'At least one target version is required'}), 400
+        assessment = assess_upgrade_risk(assessment_input, _active_upgrade_rules_pack())
+    if not assessment:
+        return jsonify({'error': 'assessment or assessmentInput required'}), 400
+    bundle = _upgrade_assessment_zip(assessment)
+    filename = f"ztf-upgrade-advisor-{assessment.get('id', 'assessment')}.zip"
+    return send_file(bundle, mimetype='application/zip', as_attachment=True, download_name=filename)
+
 
 @app.route('/api/schedules')
 @require_role('admin', 'operator', 'viewer')

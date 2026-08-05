@@ -1,0 +1,113 @@
+version: 2026.08.05
+name: Nutanix Upgrade Risk Advisor bundled rules
+description: >
+  Read-only ZTF guardrails for Nutanix upgrade decisions. The bundled pack
+  avoids asserting private Nutanix defect IDs; operators can extend it with
+  customer-owned release-note, KB, advisory, and support-case evidence.
+phases:
+  - id: phase-1-manual-mvp
+    name: Manual read-only assessment
+    status: implemented
+    outcome: Manual inventory and target versions are evaluated against bundled rules.
+  - id: phase-2-curated-rules
+    name: Curated known-issue rules
+    status: implemented
+    outcome: Rules support sources, affected components, evidence requirements, and operator guidance.
+  - id: phase-3-live-inventory
+    name: Live Nutanix inventory enrichment
+    status: planned
+    outcome: Prism and LCM collectors will populate the same assessment contract without changing execution safety.
+rules:
+  - id: ztf-lcm-precheck-required
+    title: LCM precheck evidence is required
+    status: review
+    severity: high
+    match:
+      targetComponents: [aos, ahv, prismCentral, ncc, foundation, firmware]
+    requiresEvidence:
+      lcmPrecheck: passed
+    message: LCM precheck evidence was not marked as passed for this planned upgrade.
+    guidance: Run LCM inventory and prechecks for the selected entities, then attach or record the precheck result before approving the change.
+    source:
+      label: Nutanix LCM workflow
+      url: https://www.nutanix.dev/2023/05/09/nutanix-lcm-v4-apis-managing-inventory-and-planning-software-updates-revisited/
+  - id: ztf-release-notes-known-issues-review-required
+    title: Release-note known-issue review is required
+    status: review
+    severity: high
+    match:
+      targetComponents: [aos, ahv, prismCentral, ncc, foundation, firmware]
+    requiresEvidence:
+      releaseNotesReviewed: true
+    message: Target release notes and known issues were not marked as reviewed.
+    guidance: Review target-version release notes, known issues, resolved issues, and upgrade instructions. Import customer-owned advisory notes as custom rules when they apply.
+    source:
+      label: Nutanix Support release notes guidance
+      url: https://portal.nutanix.com/kb/7536
+  - id: ztf-compatibility-matrix-review-required
+    title: Compatibility matrix review is required
+    status: review
+    severity: high
+    match:
+      targetComponents: [aos, ahv, prismCentral, ncc, foundation, firmware]
+    requiresEvidence:
+      compatibilityReviewed: true
+    message: Hardware, hypervisor, firmware, and software interoperability evidence was not marked as reviewed.
+    guidance: Check Nutanix compatibility and interoperability guidance for the exact hardware model, hypervisor, firmware, AOS, AHV, Prism Central, and feature set.
+    source:
+      label: Nutanix compatibility and interoperability matrix
+      url: https://portal.nutanix.com/page/compatibility-interoperability-matrix
+  - id: ztf-major-aOS-upgrade-path-review
+    title: AOS major-version change needs explicit upgrade-path review
+    status: warning
+    severity: high
+    match:
+      targetComponents: [aos]
+      component: aos
+      majorVersionChange: true
+    message: The requested AOS target crosses a major version boundary.
+    guidance: Validate the exact supported hop sequence, minimum NCC/LCM requirements, Prism Central sequencing, and rollback plan before scheduling the upgrade.
+    source:
+      label: Nutanix LCM upgrade resources
+      url: https://portal.nutanix.com/page/documents/details?targetId=Life-Cycle-Manager-Guide-v3_2%3Atop-acropolis-upgrade-resources-r.html
+  - id: ztf-prism-central-context-required-for-aos
+    title: Prism Central context is required for AOS planning
+    status: review
+    severity: medium
+    match:
+      targetComponents: [aos]
+    requiresEvidence:
+      prismCentralVersionCaptured: true
+    message: Prism Central version evidence was not marked as captured.
+    guidance: Capture Prism Central version and management topology before approving AOS changes, especially when planning fleet or registered-cluster workflows.
+    source:
+      label: Nutanix LCM API workflow
+      url: https://www.nutanix.dev/2023/05/09/nutanix-lcm-v4-apis-managing-inventory-and-planning-software-updates-revisited/
+  - id: ztf-dark-site-bundle-review
+    title: Dark-site bundle completeness must be reviewed
+    status: review
+    severity: medium
+    match:
+      targetComponents: [aos, ahv, prismCentral, ncc, foundation, firmware]
+      context:
+        darkSite: true
+    requiresEvidence:
+      darkSiteBundleReviewed: true
+    message: This assessment is marked as dark-site, but bundle completeness was not confirmed.
+    guidance: Verify all target payloads, dependencies, checksums, and staged artifacts before starting the maintenance window.
+    source:
+      label: ZTF dark-site operating guardrail
+      url: ""
+  - id: ztf-community-edition-manual-review
+    title: Community Edition upgrade paths need manual validation
+    status: review
+    severity: medium
+    match:
+      targetComponents: [aos, ahv]
+      context:
+        edition: community
+    message: Community Edition behavior can differ from enterprise LCM assumptions.
+    guidance: Validate target availability, version naming, and supported path in the specific CE environment before proceeding.
+    source:
+      label: ZTF CE operating guardrail
+      url: ""

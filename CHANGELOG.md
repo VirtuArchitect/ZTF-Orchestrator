@@ -9,10 +9,39 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.5.6 and should be moved
+Changes in this section are present on `main` after v1.6.0 and should be moved
 into the next numbered release section when the next version is cut.
 
+---
+
+## [1.6.0] - 2026-08-05
+
+### Summary
+Read-only Nutanix Upgrade Advisor release, adding pre-upgrade risk assessment,
+curated source packs, evidence export, and appliance/image documentation for
+the `v1.6.0` release line.
+
+### Added
+- Added the Upgrade Advisor page for manual current/target Nutanix component
+  version assessment with evidence-backed findings.
+- Added bundled Nutanix upgrade guardrail rules for LCM prechecks,
+  release-note review, compatibility review, Prism Central context, dark-site
+  bundle review, Community Edition review, and AOS major-version planning.
+- Added curated Source Packs so operators can import customer-owned KB
+  summaries, release-note findings, support-case notes, lab findings, or
+  internal standards as local advisor rules.
+- Added Upgrade Advisor evidence export as a ZIP containing `assessment.json`
+  and `assessment.md`.
+- Added documentation for source-pack usage, information-source boundaries, and
+  the planned live Prism/LCM inventory enrichment phase.
+
+### Fixed
+- Preserved the left navigation scroll position across route changes so lower
+  menu items do not jump back to the top after selection.
+
 ### Documentation
+- Updated AHV appliance build guidance, install guidance, README versioning, and
+  release artifacts for `v1.6.0`.
 - Updated DEV_LAB validation status after a fresh PE/PC redeploy confirmed
   `DeployPC`, `RegisterToPc`, `CreateContainerPe`, and `DeleteContainerPe`
   through ZTF-Orchestrator job execution.

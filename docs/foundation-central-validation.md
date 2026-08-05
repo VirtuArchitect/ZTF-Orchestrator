@@ -4,6 +4,8 @@ Foundation Central cluster-create and imaging workflows must be validated
 separately from Prism Central configuration. A successful `config-pc` UAT test
 does not prove imaging, bare-metal preparation, or cluster creation readiness.
 
+Current ZTF-Orchestrator release for this validation path: `v1.6.0`.
+
 ## Workflows
 
 - `cluster-create`: full Foundation Central cluster creation and imaging path.
@@ -26,7 +28,7 @@ does not prove imaging, bare-metal preparation, or cluster creation readiness.
 
 ```yaml
 validation_id: fc-uat-YYYYMMDD-001
-orchestrator_version: v1.5.6
+orchestrator_version: v1.6.0
 workflow: cluster-create
 environment_class: uat
 foundation_central:
@@ -50,7 +52,7 @@ validation:
 notes: Sanitized; no workplace, customer, host, IP, credential, or ticket data.
 ```
 
-## Current v1.5.6 Status
+## Current v1.6.0 Status
 
 Prism Central configuration and drift detection can be tracked separately in
 `docs/validation-status.md`. Foundation Central cluster-create and imaging

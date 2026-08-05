@@ -1,0 +1,20 @@
+ZTF-Orchestrator v1.6.0
+
+Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.6.0
+
+Highlights:
+- Added read-only Nutanix Upgrade Advisor for pre-upgrade risk assessment.
+- Added bundled upgrade guardrail rules for LCM prechecks, release-note review,
+  compatibility review, Prism Central context, dark-site bundle review,
+  Community Edition review, and AOS major-version planning.
+- Added curated Source Packs for customer-owned KB summaries, release-note
+  findings, support-case notes, lab findings, and internal upgrade standards.
+- Added Upgrade Advisor evidence export with assessment JSON and Markdown.
+- Preserved left navigation scroll position across route changes.
+- Updated AHV appliance build guidance for the v1.6.0 release line.
+
+Security and operational notes:
+- Upgrade Advisor remains read-only and does not execute LCM updates or mutate
+  Nutanix clusters.
+- Source Packs should contain curated summaries and references only. Do not
+  paste credentials, support portal session data, or unredacted secrets.
