@@ -262,6 +262,37 @@ matching checksum file against the QCOW2 image. Keep the checksum files in the
 same archive folder as the images so disconnected imports can be validated
 without reaching GitHub.
 
+### Public v1.5.6 Appliance Image
+
+A prebuilt standard AHV QCOW2 bundle for `v1.5.6` is available here:
+
+```text
+https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C?usp=sharing
+```
+
+Bundle:
+
+```text
+ztf-orchestrator-ahv-qcow2-standard-v1.5.6
+```
+
+QCOW2:
+
+```text
+ztf-orchestrator-appliance-standard-v1.5.6.qcow2
+```
+
+SHA-256:
+
+```text
+1cb68dd3a25879a66b2ad356d5b89221c56b6cd764865f3b74b5f6ee57310ca6
+```
+
+This image was generated from the GitHub Actions AHV appliance workflow with no
+private NKP bundles supplied. Runtime secrets are generated on first boot; users
+should inject their own administrator SSH access through cloud-init, AHV guest
+customization, or their normal image process.
+
 ### Build Locally
 
 The Packer template in `packer/` creates an AHV-importable QCOW2. Build
