@@ -282,6 +282,76 @@ export interface DriftRun {
   message?: string
 }
 
+export type UpgradeAdvisorStatus = 'blocked' | 'warning' | 'review' | 'unknown' | 'clear'
+export type UpgradeAdvisorSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info'
+
+export interface UpgradeAdvisorFinding {
+  id: string
+  title: string
+  status: UpgradeAdvisorStatus
+  severity: UpgradeAdvisorSeverity
+  component: string
+  sourceVersion?: string
+  targetVersion?: string
+  message: string
+  guidance: string
+  evidence: Array<{ key: string; expected: unknown; observed: unknown }>
+  source?: { label?: string; url?: string }
+}
+
+export interface UpgradeAdvisorPhase {
+  id: string
+  name: string
+  status: 'implemented' | 'planned' | string
+  outcome: string
+}
+
+export interface UpgradeAdvisorAssessment {
+  id: string
+  status: UpgradeAdvisorStatus
+  summary: Record<UpgradeAdvisorStatus | 'total', number>
+  inventory: {
+    clusterName?: string
+    components: Record<string, string>
+  }
+  targets: Record<string, string>
+  context: {
+    darkSite?: boolean
+    edition?: string
+    features?: string[]
+  }
+  findings: UpgradeAdvisorFinding[]
+  rulesVersion: string
+  sourcePacks?: Array<{ id: string; name: string; version: string; ruleCount: number }>
+  generatedAt: string
+  phases: UpgradeAdvisorPhase[]
+  readOnly: boolean
+}
+
+export interface UpgradeAdvisorRules {
+  version: string
+  name: string
+  description: string
+  phases: UpgradeAdvisorPhase[]
+  rules: unknown[]
+  sourcePacks?: Array<{ id: string; name: string; version: string; ruleCount: number }>
+  readOnly: boolean
+}
+
+export interface UpgradeAdvisorSourcePack {
+  id: string
+  name: string
+  version: string
+  description: string
+  sourceType: string
+  enabled: boolean
+  rules: unknown[]
+  createdAt: string
+  updatedAt: string
+  createdBy: string
+  updatedBy: string
+}
+
 // Workflow config types
 
 export interface NodeDetail {

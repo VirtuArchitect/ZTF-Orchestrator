@@ -116,13 +116,15 @@ def test_appliance_artifact_rejects_bad_checksum(client, auth_headers):
 
 
 def test_appliance_status_and_ztf_compatibility(client, auth_headers):
+    import server
+
     resp = client.get('/api/appliance/status', headers=auth_headers)
     assert resp.status_code == 200
     status = resp.get_json()
     assert 'checks' in status
     assert status['detected'] is True
     assert status['runtime']['status'] == 'healthy'
-    assert status['runtime']['version'] == '1.5.6'
+    assert status['runtime']['version'] == server.APP_VERSION
     assert status['hostLayout']['expected'] == len(status['checks'])
     assert status['hostLayout']['visible'] <= status['hostLayout']['expected']
     assert all(check['status'] in {'present', 'not_visible'} for check in status['checks'])
@@ -132,6 +134,106 @@ def test_appliance_status_and_ztf_compatibility(client, auth_headers):
     body = resp.get_json()
     assert body['layout'] == 'legacy-1.x'
     assert any(mode['id'] == 'ztf2-iac' for mode in body['supportedModes'])
+
+
+def test_upgrade_advisor_rules_and_assessment_api(client, auth_headers):
+    resp = client.get('/api/upgrade-advisor/rules', headers=auth_headers)
+    assert resp.status_code == 200
+    rules = resp.get_json()
+    assert rules['readOnly'] is True
+    assert any(phase['id'] == 'phase-1-manual-mvp' for phase in rules['phases'])
+    assert any(rule['id'] == 'ztf-lcm-precheck-required' for rule in rules['rules'])
+
+    resp = client.post('/api/upgrade-advisor/assess', json={}, headers=auth_headers)
+    assert resp.status_code == 400
+
+    resp = client.post('/api/upgrade-advisor/assess',
+                       json={
+                           'inventory': {
+                               'clusterName': 'api-test',
+                               'components': {'aos': '6.8.1'},
+                           },
+                           'targets': {'aos': '7.3.1'},
+                           'evidence': {},
+                           'context': {'edition': 'enterprise'},
+                       },
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['readOnly'] is True
+    assert body['status'] == 'warning'
+    assert any(finding['id'] == 'ztf-major-aOS-upgrade-path-review'
+               for finding in body['findings'])
+
+
+def test_upgrade_advisor_source_pack_and_export_api(client, auth_headers):
+    source_pack = {
+        'name': 'Customer KB Pack',
+        'version': '2026.08',
+        'rules': [{
+            'id': 'customer-block-target',
+            'title': 'Customer block for target train',
+            'status': 'blocked',
+            'severity': 'critical',
+            'match': {'targetComponents': ['aos'], 'component': 'aos', 'targetVersion': '>=7.5.0,<7.6.0'},
+            'message': 'Customer advisory blocks this train until reviewed.',
+            'guidance': 'Choose a fixed train or get support approval.',
+            'source': {'label': 'Customer KB summary', 'url': ''},
+        }],
+    }
+    resp = client.post('/api/upgrade-advisor/source-packs',
+                       json={'sourceType': 'kb-summary', 'pack': source_pack},
+                       headers=auth_headers)
+    assert resp.status_code == 201
+    pack = resp.get_json()
+    assert pack['enabled'] is True
+    assert pack['rules'][0]['id'] == 'customer-block-target'
+
+    resp = client.get('/api/upgrade-advisor/source-packs', headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['sourcePacks'][0]['name'] == 'Customer KB Pack'
+    assert resp.get_json()['sourcePacks'][0]['id'] == pack['id']
+
+    assessment_input = {
+        'inventory': {'clusterName': 'api-test', 'components': {'aos': '7.3.1'}},
+        'targets': {'aos': '7.5.1'},
+        'evidence': {
+            'lcmPrecheck': 'passed',
+            'releaseNotesReviewed': True,
+            'compatibilityReviewed': True,
+            'prismCentralVersionCaptured': True,
+        },
+        'context': {'edition': 'enterprise'},
+    }
+    resp = client.post('/api/upgrade-advisor/assess',
+                       json=assessment_input,
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assessment = resp.get_json()
+    assert assessment['status'] == 'blocked'
+    assert assessment['sourcePacks'][0]['name'] == 'Customer KB Pack'
+    assert any(finding['id'] == 'customer-block-target'
+               for finding in assessment['findings'])
+
+    resp = client.post('/api/upgrade-advisor/export',
+                       json={'assessmentInput': assessment_input},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.mimetype == 'application/zip'
+    package = zipfile.ZipFile(io.BytesIO(resp.data))
+    assert sorted(package.namelist()) == ['assessment.json', 'assessment.md']
+    exported = json.loads(package.read('assessment.json'))
+    assert exported['status'] == 'blocked'
+    assert b'Nutanix Upgrade Advisor Evidence Report' in package.read('assessment.md')
+
+    resp = client.delete(f"/api/upgrade-advisor/source-packs/{pack['id']}",
+                         headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['success'] is True
+
+    resp = client.get('/api/upgrade-advisor/source-packs', headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['sourcePacks'] == []
 
 
 def test_appliance_update_import_verify_stage_and_delete(client, auth_headers):

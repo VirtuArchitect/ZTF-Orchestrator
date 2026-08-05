@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.5.6
+# ZTF-Orchestrator · v1.6.0
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -287,8 +287,8 @@ Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
 The repository does not store QCOW2 or OVA binaries. Large appliance images are
 published as GitHub Actions artifacts or stored in an internal artifact
 repository because GitHub Release assets have a 2 GiB per-file limit. For the
-public `v1.5.6` standard AHV QCOW2 bundle and checksum, see
-[Public v1.5.6 Appliance Image](appliance/README.md#public-v156-appliance-image).
+public `v1.6.0` standard AHV QCOW2 bundle and checksum, see
+[Public v1.6.0 Appliance Image](appliance/README.md#public-v160-appliance-image).
 The repo contains:
 
 - a GHCR container publishing workflow;
@@ -480,6 +480,18 @@ Compare a saved ZTF config file against the last successful applied config or a
 pasted current-state JSON/YAML snapshot. Results are classified as **Matched**,
 **Changed**, **Missing**, **Unexpected**, or **Unknown** and stored in drift
 history for later review.
+
+### Upgrade Advisor
+Read-only Nutanix pre-upgrade risk assessment. Operators enter current and
+target component versions, mark supporting evidence such as LCM prechecks,
+release-note review, compatibility review, Prism Central context, and dark-site
+bundle review, then receive evidence-backed findings classified as **Blocked**,
+**Warning**, **Review**, **Unknown**, or **Clear**. Curated source packs let
+operators import customer-owned KB summaries, release-note findings, support-case
+notes, lab findings, or internal standards as additional rules. Results can be
+exported as a JSON/Markdown evidence bundle. The implementation does not execute
+LCM updates or mutate clusters. See
+[`docs/nutanix-upgrade-risk-advisor.md`](docs/nutanix-upgrade-risk-advisor.md).
 
 ### Execution History
 Last 1,000 execution records — workflow name, status, duration, user, timestamp.

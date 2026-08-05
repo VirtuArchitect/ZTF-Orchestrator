@@ -1,10 +1,10 @@
 import { Link, useLocation } from '../router'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -18,6 +18,7 @@ type NavGroup = { label: string; items: NavItem[] }
 const ALL_ROLES: Role[] = ['admin', 'operator', 'viewer']
 const OPERATORS: Role[] = ['admin', 'operator']
 const ADMINS: Role[] = ['admin']
+const NAV_SCROLL_KEY = 'ztf-sidebar-scroll-top'
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -52,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: '/approvals', icon: ShieldCheck, label: 'Approvals', roles: ALL_ROLES },
       { path: '/appliance', icon: Archive, label: 'Appliance Ops', roles: ALL_ROLES },
+      { path: '/upgrade-advisor', icon: ShieldAlert, label: 'Upgrade Advisor', roles: ALL_ROLES },
       { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
       { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
       { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
@@ -67,6 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
 ]
 
 export default function Sidebar() {
+  const navRef = useRef<HTMLElement | null>(null)
   const {
     sidebarOpen,
     sidebarPreferenceInitialized,
@@ -89,6 +92,16 @@ export default function Sidebar() {
       markSidebarPreferenceInitialized()
     }
   }, [markSidebarPreferenceInitialized, setSidebarOpen, sidebarPreferenceInitialized])
+
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const saved = window.sessionStorage.getItem(NAV_SCROLL_KEY)
+    if (!saved) return
+    window.requestAnimationFrame(() => {
+      nav.scrollTop = Number(saved) || 0
+    })
+  }, [role, sidebarOpen])
 
   return (
     <aside className={clsx(
@@ -117,7 +130,13 @@ export default function Sidebar() {
       )}
 
       {/* Nav */}
-      <nav className="flex-1 py-3 overflow-y-auto">
+      <nav
+        ref={navRef}
+        onScroll={event => {
+          window.sessionStorage.setItem(NAV_SCROLL_KEY, String(event.currentTarget.scrollTop))
+        }}
+        className="flex-1 py-3 overflow-y-auto"
+      >
         <div className="space-y-4 px-2">
           {visibleGroups.map(group => (
             <div key={group.label}>

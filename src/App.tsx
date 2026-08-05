@@ -20,6 +20,7 @@ import Approvals         from './pages/Approvals'
 import NKPFramework      from './pages/NKPFramework'
 import ValidationEvidence from './pages/ValidationEvidence'
 import Appliance          from './pages/Appliance'
+import UpgradeAdvisor     from './pages/UpgradeAdvisor'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
 
@@ -116,6 +117,9 @@ export default function App() {
         } />
         <Route path="/appliance" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Appliance /></RequireRole>
+        } />
+        <Route path="/upgrade-advisor" element={
+          <RequireRole roles={['admin', 'operator', 'viewer']}><UpgradeAdvisor /></RequireRole>
         } />
         <Route path="/approvals" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Approvals /></RequireRole>
