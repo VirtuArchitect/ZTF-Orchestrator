@@ -120,6 +120,19 @@ Quality gates include:
 - Security review for auth, user data, permissions, file handling,
   dependencies, and external input.
 
+## Security and Validation
+
+Every pull request to `main` runs CI with backend tests, frontend build checks,
+Python dependency auditing through `pip-audit`, and frontend dependency auditing
+through `npm audit --audit-level=high`. Merges to `main` also run the Docker
+image build and container health smoke test.
+
+The repository includes a baseline security assessment covering authentication,
+RBAC, storage, execution controls, dependency posture, and deployment hardening.
+That assessment is a repository-level review, not a third-party penetration
+test or production assurance certification. Environment-specific UAT remains
+required before representing any deployment as production validated.
+
 ## Why It Exists
 
 ZeroTouch Framework is powerful automation. ZTF-Orchestrator makes that power
