@@ -286,7 +286,7 @@ ztf-orchestrator-appliance-standard-v1.6.0.qcow2
 SHA-256:
 
 ```text
-Generated in SHA256SUMS-standard-v1.6.0.txt by the release workflow.
+706ce644c66303261022c7cafa36b1dce5085073f5416fcb232729e257f07afc
 ```
 
 This image was generated from the GitHub Actions AHV appliance workflow with no
