@@ -12,10 +12,11 @@ Unofficial community framework orchestration. This project is not affiliated wit
 
 ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
 an internal operations console: teams can define connection settings, generate
-workflow or NKP profile YAML, register NKP binaries, check CLI compatibility,
-submit execution jobs, capture validation evidence, track output, detect drift,
-schedule repeatable tasks, request approvals, and review audit history without
-every operator working directly in Git, YAML, and CLI commands.
+workflow, baseline, or NKP profile YAML through YAML Studio, register NKP
+binaries, check CLI compatibility, submit execution jobs, capture validation
+evidence, track output, detect drift, schedule repeatable tasks, request
+approvals, and review audit history without every operator working directly in
+Git, YAML, and CLI commands.
 
 ## At A Glance
 
@@ -139,6 +140,8 @@ ZeroTouch Framework is powerful automation. ZTF-Orchestrator makes that power
 easier to consume in day-to-day operations by adding:
 
 - Guided configuration instead of hand-written YAML for common workflows.
+- YAML Studio for generating, validating, saving, and exporting ZTF-compatible
+  Nutanix YAML before any approval-gated execution path.
 - Appliance operations for AHV artifact archive tracking, first-boot checks,
   NKP readiness review, ZTF compatibility mode visibility, and air-gapped
   appliance update package handling.
@@ -408,6 +411,20 @@ mirror) and installs pip dependencies. Requires `git` to be on the system PATH.
 ### Global Config
 Visual editor for `global.yml` — vault type (Local/CyberArk), IPAM method
 (Static/Infoblox), live YAML preview with download.
+
+### YAML Studio
+Operator workbench for generating, validating, saving, and exporting
+ZTF-compatible Nutanix YAML. YAML Studio includes conservative Cluster Baseline
+generation for Prism Element DNS, NTP, storage containers, subnets, HA
+reservation, Pulse, and EULA settings; Workflow YAML generation from the guarded
+script configuration schema catalogue; Global Config starter templates; and
+Upgrade Advisor rule-pack templates.
+
+Generated YAML can be validated server-side, saved into Config Files with the
+existing backup behavior, or exported as a ZIP bundle with validation metadata.
+YAML Studio does not execute workflows or mutate Nutanix infrastructure.
+Execution remains behind the existing workflow, approval, and confirmation
+paths.
 
 ### Workflows (13 supported)
 
