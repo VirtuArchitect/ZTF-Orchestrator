@@ -21,6 +21,7 @@ import NKPFramework      from './pages/NKPFramework'
 import ValidationEvidence from './pages/ValidationEvidence'
 import Appliance          from './pages/Appliance'
 import UpgradeAdvisor     from './pages/UpgradeAdvisor'
+import YamlStudio         from './pages/YamlStudio'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
 
@@ -81,6 +82,9 @@ export default function App() {
         } />
         <Route path="/configs" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ConfigFiles /></RequireRole>
+        } />
+        <Route path="/yaml-studio" element={
+          <RequireRole roles={['admin', 'operator', 'viewer']}><YamlStudio /></RequireRole>
         } />
         <Route path="/executions" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Executions /></RequireRole>

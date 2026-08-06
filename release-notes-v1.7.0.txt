@@ -1,0 +1,24 @@
+ZTF-Orchestrator v1.7.0
+
+Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.0
+
+Highlights:
+- Added Nutanix YAML Studio at /yaml-studio for generating, validating, saving,
+  and exporting ZTF-compatible YAML.
+- Added a conservative Cluster Baseline generator for Prism Element DNS, NTP,
+  storage containers, subnets, HA reservation, Pulse, and EULA settings.
+- Added Workflow YAML generation inside YAML Studio using the existing guarded
+  script configuration schema catalogue.
+- Added Global Config and Upgrade Rule Pack starter templates.
+- Added YAML Studio backend validation, Config Files save integration, and ZIP
+  export with validation metadata.
+- Fixed destructive-script warning readability in light mode.
+
+Security and operational notes:
+- YAML Studio does not execute workflows or mutate Nutanix infrastructure. It
+  generates, validates, saves, and exports YAML for operator review.
+- Destructive workflows remain explicitly flagged and still require the existing
+  approval/confirmation paths before execution.
+- Server-side validation uses safe YAML parsing, profile-specific checks, role
+  guards, existing Config Files backup behavior, and filename traversal
+  rejection for Studio saves.

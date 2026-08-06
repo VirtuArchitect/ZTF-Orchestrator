@@ -996,6 +996,99 @@ def test_backup_restore_invalid_version(client, auth_headers):
 
 # ── Executions ───────────────────────────────────────────────────────────────
 
+def test_yaml_studio_validates_cluster_baseline(client, auth_headers):
+    content = (
+        'clusters:\n'
+        '  10.20.30.200:\n'
+        '    name: DEV_LAB\n'
+        '    pe_credential: pe_user\n'
+        '    name_servers_list:\n'
+        '      - 10.20.30.10\n'
+        '    ntp_servers_list:\n'
+        '      - 0.pool.ntp.org\n'
+        '    storage_containers:\n'
+        '      - name: ztf-container\n'
+        '        replication_factor: 1\n'
+    )
+
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'cluster-baseline', 'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['valid'] is True
+    assert data['errors'] == []
+
+
+def test_yaml_studio_rejects_invalid_cluster_baseline(client, auth_headers):
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'cluster-baseline', 'content': 'pc_ip: 10.20.30.10\n'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert data['valid'] is False
+    assert 'clusters mapping' in data['errors'][0]
+
+
+def test_yaml_studio_saves_to_config_files(client, auth_headers, isolated_data_dir):
+    content = (
+        'clusters:\n'
+        '  10.20.30.200:\n'
+        '    pe_credential: pe_user\n'
+        '    ntp_servers_list:\n'
+        '      - 0.pool.ntp.org\n'
+    )
+
+    resp = client.post('/api/yaml-studio/save',
+                       json={'kind': 'cluster-baseline', 'filename': 'baseline-dev-lab', 'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['filename'] == 'baseline-dev-lab.yaml'
+    assert (isolated_data_dir / 'configs' / 'baseline-dev-lab.yaml').read_text() == content
+
+
+def test_yaml_studio_rejects_unsafe_save_filename(client, auth_headers):
+    content = (
+        'clusters:\n'
+        '  10.20.30.200:\n'
+        '    pe_credential: pe_user\n'
+        '    ntp_servers_list:\n'
+        '      - 0.pool.ntp.org\n'
+    )
+
+    resp = client.post('/api/yaml-studio/save',
+                       json={'kind': 'cluster-baseline', 'filename': '../baseline-dev-lab.yaml', 'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    assert resp.get_json()['error'] == 'Invalid filename'
+
+
+def test_yaml_studio_exports_zip_bundle(client, auth_headers):
+    content = (
+        'clusters:\n'
+        '  10.20.30.200:\n'
+        '    pe_credential: pe_user\n'
+        '    ntp_servers_list:\n'
+        '      - 0.pool.ntp.org\n'
+    )
+
+    resp = client.post('/api/yaml-studio/export',
+                       json={'kind': 'cluster-baseline', 'filename': 'baseline-dev-lab.yaml', 'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(resp.data)) as zf:
+        assert 'baseline-dev-lab.yaml' in zf.namelist()
+        assert 'validation.json' in zf.namelist()
+        validation = json.loads(zf.read('validation.json'))
+    assert validation['valid'] is True
+
+
 def test_get_executions_empty(client, auth_headers):
     resp = client.get('/api/executions', headers=auth_headers)
     assert resp.status_code == 200

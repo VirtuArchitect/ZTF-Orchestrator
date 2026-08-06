@@ -9,8 +9,40 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.6.0 and should be moved
+Changes in this section are present on `main` after v1.7.0 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.0] - 2026-08-06
+
+### Summary
+Nutanix YAML Studio release, adding an operator workbench for generating,
+validating, saving, and exporting ZTF-compatible Nutanix YAML before any
+approval-gated execution path.
+
+### Added
+- Added the YAML Studio page at `/yaml-studio` with tabs for Cluster Baseline,
+  Workflow YAML, Global Config, and Upgrade Rules.
+- Added a conservative Cluster Baseline generator for Prism Element DNS, NTP,
+  storage containers, subnets, HA reservation, Pulse, and EULA settings.
+- Reused the existing script configuration schema catalogue inside YAML Studio
+  so operators can generate script/workflow YAML from the same guarded wizard
+  contracts used elsewhere in the UI.
+- Added YAML Studio API endpoints for validation, saving generated YAML into
+  Config Files, and exporting a ZIP bundle with YAML plus validation metadata.
+- Added release-distinct appliance documentation, release notes, and air-gapped
+  checklist references for the `v1.7.0` line.
+
+### Fixed
+- Fixed destructive-script warning contrast in light mode so high-risk YAML
+  generator warnings remain readable.
+
+### Security
+- Kept YAML Studio generation read-only: it validates, saves, and exports YAML
+  but does not execute workflows or mutate Nutanix infrastructure.
+- Added server-side YAML parsing, profile-specific validation, role guards, and
+  explicit filename traversal rejection for YAML Studio saves.
 
 ---
 

@@ -3,7 +3,7 @@
 This drill validates that a ZTF-Orchestrator PostgreSQL-backed deployment can be
 backed up, restored, and returned to service without using production data.
 
-Current ZTF-Orchestrator release for this drill: `v1.6.0`.
+Current ZTF-Orchestrator release for this drill: `v1.7.0`.
 
 ## Scope
 
@@ -49,7 +49,7 @@ Current ZTF-Orchestrator release for this drill: `v1.6.0`.
 
 ```yaml
 drill_id: pg-restore-uat-YYYYMMDD
-orchestrator_version: v1.6.0
+orchestrator_version: v1.7.0
 storage_backend: postgres
 environment: uat
 backup:
@@ -68,7 +68,7 @@ verification:
 notes: Sanitized; no workplace, customer, host, IP, credential, or ticket data.
 ```
 
-## Current v1.6.0 Status
+## Current v1.7.0 Status
 
 The repository includes backup and restore API coverage plus this safe UAT drill
 pattern. The real UAT restore should be executed against the target UAT
