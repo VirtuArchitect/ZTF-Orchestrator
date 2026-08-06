@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.6.0
+# ZTF-Orchestrator · v1.7.0
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -287,8 +287,8 @@ Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
 The repository does not store QCOW2 or OVA binaries. Large appliance images are
 published as GitHub Actions artifacts or stored in an internal artifact
 repository because GitHub Release assets have a 2 GiB per-file limit. For the
-public `v1.6.0` standard AHV QCOW2 bundle and checksum, see
-[Public v1.6.0 Appliance Image](appliance/README.md#public-v160-appliance-image).
+public `v1.7.0` standard AHV QCOW2 bundle and checksum, see
+[Public v1.7.0 Appliance Image](appliance/README.md#public-v170-appliance-image).
 The repo contains:
 
 - a GHCR container publishing workflow;

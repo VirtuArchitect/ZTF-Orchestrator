@@ -4,7 +4,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -33,6 +33,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
       { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
+      { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
       { path: '/workflows', icon: Workflow, label: 'Workflows', roles: OPERATORS },
       { path: '/scripts', icon: Terminal, label: 'Scripts', roles: OPERATORS },
     ],

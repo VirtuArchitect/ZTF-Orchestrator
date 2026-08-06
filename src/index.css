@@ -268,7 +268,8 @@
 }
 
 .theme-light .text-red-300,
-.theme-light .text-red-400 {
+.theme-light .text-red-400,
+.theme-light .text-red-200 {
   color: rgb(185 28 28 / var(--tw-text-opacity, 1));
 }
 
@@ -293,10 +294,19 @@
 }
 
 .theme-light .border-red-700\/30.bg-red-900\/10,
-.theme-light .border-red-700\/40.bg-red-900\/20 {
+.theme-light .border-red-700\/40.bg-red-900\/20,
+.theme-light .border-red-900\/50.bg-red-950\/20,
+.theme-light .border-red-500\/30.bg-red-950\/20,
+.theme-light .border-red-700\/40.bg-red-950\/20 {
   background-color: rgb(254 226 226 / 1);
   border-color: rgb(252 165 165 / 1);
   color: rgb(153 27 27 / 1);
+}
+
+.theme-light .border-red-900\/50.bg-red-950\/20 .text-red-200,
+.theme-light .border-red-900\/50.bg-red-950\/20 .text-red-300,
+.theme-light .border-red-900\/50.bg-red-950\/20 .text-red-400 {
+  color: rgb(185 28 28 / 1);
 }
 
 .theme-light .border-blue-700\/20.bg-blue-900\/10,

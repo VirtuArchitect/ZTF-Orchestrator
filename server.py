@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.6.0'
+APP_VERSION = '1.7.0'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -4836,6 +4836,133 @@ def validate_yaml(content: str) -> tuple[bool, str]:
     except yaml.YAMLError as e:
         return False, str(e)
 
+
+def _yaml_studio_validate_content(kind: str, content: str) -> dict:
+    kind = str(kind or 'workflow-config').strip() or 'workflow-config'
+    result = {
+        'kind': kind,
+        'valid': False,
+        'errors': [],
+        'warnings': [],
+        'rootType': None,
+    }
+    try:
+        parsed = yaml.safe_load(content or '')
+    except yaml.YAMLError as exc:
+        result['errors'].append(f'YAML parse error: {exc}')
+        return result
+
+    result['rootType'] = type(parsed).__name__
+    if parsed is None:
+        result['errors'].append('YAML content is empty')
+        return result
+    if not isinstance(parsed, dict):
+        result['errors'].append('YAML Studio content must be a mapping at the document root')
+        return result
+
+    if kind == 'cluster-baseline':
+        clusters = parsed.get('clusters')
+        if not isinstance(clusters, dict) or not clusters:
+            result['errors'].append('Cluster baseline YAML requires a non-empty clusters mapping')
+        else:
+            managed_keys = {
+                'name_servers_list',
+                'ntp_servers_list',
+                'storage_containers',
+                'networks',
+                'ha_reservation',
+                'pulse',
+                'eula',
+            }
+            allowed_keys = managed_keys | {'name', 'pe_credential'}
+            for cluster_ip, cluster in clusters.items():
+                label = str(cluster_ip)
+                try:
+                    ipaddress.ip_address(label)
+                except ValueError:
+                    result['warnings'].append(f'Cluster key "{label}" is not an IP address; confirm the target format before execution')
+                if not isinstance(cluster, dict):
+                    result['errors'].append(f'Cluster "{label}" must be a mapping')
+                    continue
+                if not any(key in cluster for key in managed_keys):
+                    result['warnings'].append(f'Cluster "{label}" has no baseline settings enabled')
+                unsupported = sorted(set(cluster) - allowed_keys)
+                if unsupported:
+                    result['warnings'].append(f'Cluster "{label}" includes unsupported baseline keys: {", ".join(unsupported)}')
+                containers = cluster.get('storage_containers')
+                if containers is not None:
+                    if not isinstance(containers, list):
+                        result['errors'].append(f'Cluster "{label}" storage_containers must be a list')
+                    else:
+                        for idx, container in enumerate(containers, start=1):
+                            if not isinstance(container, dict) or not str(container.get('name', '')).strip():
+                                result['errors'].append(f'Cluster "{label}" storage container {idx} requires a name')
+                            replication_factor = container.get('replication_factor') if isinstance(container, dict) else None
+                            if replication_factor not in (None, ''):
+                                try:
+                                    replication_value = int(replication_factor)
+                                except (TypeError, ValueError):
+                                    result['errors'].append(f'Cluster "{label}" storage container {idx} replication_factor must be a number')
+                                else:
+                                    if replication_value > 1:
+                                        result['warnings'].append(
+                                            f'Cluster "{label}" storage container {idx} uses replication_factor {replication_factor}; one-node CE labs require 1'
+                                        )
+                networks = cluster.get('networks')
+                if networks is not None:
+                    if not isinstance(networks, list):
+                        result['errors'].append(f'Cluster "{label}" networks must be a list')
+                    else:
+                        for idx, network in enumerate(networks, start=1):
+                            if not isinstance(network, dict) or not str(network.get('name', '')).strip():
+                                result['errors'].append(f'Cluster "{label}" network {idx} requires a name')
+                            if isinstance(network, dict) and 'vlan_id' not in network:
+                                result['warnings'].append(f'Cluster "{label}" network {idx} has no vlan_id')
+    elif kind == 'global-config':
+        for key in ('vault_to_use', 'ip_allocation_method', 'vaults'):
+            if key not in parsed:
+                result['errors'].append(f'global-config YAML requires {key}')
+    elif kind == 'upgrade-rule-pack':
+        rules = parsed.get('rules')
+        if not isinstance(rules, list) or not rules:
+            result['errors'].append('upgrade-rule-pack YAML requires a non-empty rules list')
+        for idx, rule in enumerate(rules or [], start=1):
+            if not isinstance(rule, dict):
+                result['errors'].append(f'Rule {idx} must be a mapping')
+                continue
+            for key in ('id', 'title', 'status', 'severity', 'message', 'guidance'):
+                if not str(rule.get(key, '')).strip():
+                    result['errors'].append(f'Rule {idx} requires {key}')
+    else:
+        if 'clusters' not in parsed and not any(key.endswith('_ip') for key in parsed):
+            result['warnings'].append('No clusters mapping or *_ip target key found; confirm this matches the intended ZTF workflow shape')
+
+    result['valid'] = not result['errors']
+    return result
+
+
+def _yaml_studio_zip(kind: str, filename: str, content: str, validation: dict) -> BytesIO:
+    buffer = BytesIO()
+    safe_name = Path(filename or 'generated.yaml').name or 'generated.yaml'
+    with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(safe_name, content)
+        zf.writestr('validation.json', json.dumps(validation, indent=2))
+        zf.writestr(
+            'README.md',
+            '\n'.join([
+                '# ZTF YAML Studio Export',
+                '',
+                f'- Kind: {kind}',
+                f'- File: {safe_name}',
+                f"- Validation: {'pass' if validation.get('valid') else 'fail'}",
+                '',
+                'Review generated YAML before using it with approval-gated workflow execution.',
+                '',
+            ]),
+        )
+    buffer.seek(0)
+    return buffer
+
 def _sync_global_config_to_legacy() -> bool:
     """Mirror durable global.yml to the ZTF runtime path before execution."""
     global_yml = get_global_config_path()
@@ -6240,6 +6367,56 @@ def delete_config(name):
     if path.exists():
         path.unlink()
     return jsonify({'success': True})
+
+
+@app.route('/api/yaml-studio/validate', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def yaml_studio_validate():
+    data = request.json or {}
+    validation = _yaml_studio_validate_content(data.get('kind', 'workflow-config'), data.get('content', ''))
+    return jsonify(validation), 200 if validation.get('valid') else 400
+
+
+@app.route('/api/yaml-studio/save', methods=['POST'])
+@require_role('admin', 'operator')
+def yaml_studio_save():
+    data = request.json or {}
+    filename = str(data.get('filename') or 'generated.yaml').strip()
+    if not filename.lower().endswith(('.yaml', '.yml')):
+        filename = f'{filename}.yaml'
+    if Path(filename).name != filename:
+        return jsonify({'error': 'Invalid filename'}), 400
+    content = str(data.get('content') or '')
+    validation = _yaml_studio_validate_content(data.get('kind', 'workflow-config'), content)
+    if not validation.get('valid'):
+        return jsonify({'error': 'Generated YAML did not pass validation', 'validation': validation}), 400
+
+    configs_dir = get_configs_dir()
+    path = safe_config_path(filename, configs_dir)
+    if path is None:
+        return jsonify({'error': 'Invalid filename'}), 400
+    if path.suffix not in ('.yml', '.yaml'):
+        return jsonify({'error': 'Only .yml/.yaml files allowed'}), 400
+    backup_config(path)
+    _secure_write(path, content)
+    return jsonify({'success': True, 'filename': path.name, 'path': str(path), 'validation': validation})
+
+
+@app.route('/api/yaml-studio/export', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+def yaml_studio_export():
+    data = request.json or {}
+    kind = str(data.get('kind') or 'workflow-config')
+    filename = str(data.get('filename') or 'generated.yaml').strip()
+    if not filename.lower().endswith(('.yaml', '.yml')):
+        filename = f'{filename}.yaml'
+    content = str(data.get('content') or '')
+    validation = _yaml_studio_validate_content(kind, content)
+    if not validation.get('valid'):
+        return jsonify({'error': 'Generated YAML did not pass validation', 'validation': validation}), 400
+    bundle = _yaml_studio_zip(kind, filename, content, validation)
+    download_name = f"ztf-yaml-studio-{Path(filename).stem or 'generated'}.zip"
+    return send_file(bundle, mimetype='application/zip', as_attachment=True, download_name=download_name)
 
 @app.route('/api/configs/<name>/backups')
 @require_role('admin', 'operator', 'viewer')
