@@ -10,6 +10,11 @@ container, or overwrite framework trees directly. Instead, it records verified
 update metadata and stages a host-side update request. A privileged
 administrator then runs the appliance helper script on the VM.
 
+For governed operations, use [RB-003 upgrade and rollback](runbooks/RB-003-upgrade-rollback.md)
+for connected upgrades and [RB-007 air-gapped update](runbooks/RB-007-airgapped-update.md)
+for disconnected update packages. Record the pre-update backup, release tag,
+manifest, package checksum, host helper output, and post-update health result.
+
 ## What It Updates
 
 The update manager supports three target types:

@@ -6,6 +6,13 @@ for enterprise deployments that need database-backed users,
 sessions, settings, execution history, schedules, approvals, parallel runs,
 pipelines, drift results, and audit events.
 
+For controlled operations, pair PostgreSQL mode with
+[RB-002 backup and restore](runbooks/RB-002-backup-restore.md),
+[RB-010 database recovery](runbooks/RB-010-database-recovery.md), and the
+[UAT evidence checklist](uat-evidence-checklist.md). Restore can roll back
+users, sessions, settings, jobs, approvals, evidence, and audit data, so it
+requires explicit approval and post-restore validation.
+
 ## Storage Modes
 
 ```text
@@ -178,3 +185,6 @@ sessions and workers reload restored state. During restore, the execution queue
 is locked: new workflow/NKP job submissions are rejected, queued jobs are not
 started, and restore is refused if jobs are already running or cancelling. Treat
 restore as a recovery action, not a routine operational button.
+
+Document every restore with the backup filename, approval ID, safety backup,
+health result, audit event, and expected data loss window.

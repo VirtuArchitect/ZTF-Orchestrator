@@ -134,6 +134,17 @@ That assessment is a repository-level review, not a third-party penetration
 test or production assurance certification. Environment-specific UAT remains
 required before representing any deployment as production validated.
 
+## Operational Governance
+
+Operator controlled/UAT-ready deployments should use the
+[runbook index and control matrix](docs/runbooks/README.md), the
+[operator controlled UAT readiness definition](docs/operator-controlled-uat-readiness.md),
+the [UAT evidence checklist](docs/uat-evidence-checklist.md), and the
+[production readiness boundary](docs/production-readiness-boundary.md). These
+documents define the minimum procedures, approvals, backups, failed-job
+recovery, emergency stop, and evidence capture expected before treating a
+deployment as governed UAT rather than a local lab or simulator proof.
+
 ## Why It Exists
 
 ZeroTouch Framework is powerful automation. ZTF-Orchestrator makes that power
@@ -893,6 +904,10 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 | Guide | Description |
 |---|---|
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
+| [docs/runbooks/README.md](docs/runbooks/README.md) | Operator runbook index, control matrix, and standard runbook template |
+| [docs/operator-controlled-uat-readiness.md](docs/operator-controlled-uat-readiness.md) | Definition and exit criteria for operator controlled/UAT-ready deployments |
+| [docs/uat-evidence-checklist.md](docs/uat-evidence-checklist.md) | Evidence checklist for controlled UAT scenarios, approvals, jobs, and recovery |
+| [docs/production-readiness-boundary.md](docs/production-readiness-boundary.md) | Boundary between local, lab, controlled UAT, and production validation claims |
 | [docs/appliance-update-manager.md](docs/appliance-update-manager.md) | Connected and air-gapped Appliance Update Manager workflow, including offline update packages |
 | [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
 | [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |

@@ -11,6 +11,12 @@ explicitly testing a reviewed compatibility change. ZeroTouch Framework 2.x uses
 a different `ztf plan/apply` model and is detected as incompatible by the
 current workflow UI.
 
+For operator controlled/UAT-ready deployments, complete the relevant procedures
+in the [runbook index and control matrix](runbooks/README.md), capture evidence
+with the [UAT evidence checklist](uat-evidence-checklist.md), and keep the
+[production readiness boundary](production-readiness-boundary.md) with the
+deployment record.
+
 ## Installation Options
 
 | Option | Best For | Storage | ZTF Location |
@@ -38,6 +44,11 @@ If the first-run password is missed in a file-backed deployment, delete
 `users.json` from `ZTF_DATA_DIR` and restart the app. For PostgreSQL-backed
 deployments, reset the admin password from a trusted maintenance procedure
 rather than deleting database data.
+
+Before controlled UAT, create named users for the required admin, operator, and
+viewer roles, then rehearse [RB-001 start/stop/restart](runbooks/RB-001-start-stop-restart.md),
+[RB-002 backup/restore](runbooks/RB-002-backup-restore.md), and
+[RB-006 emergency stop](runbooks/RB-006-emergency-stop.md).
 
 ## Option A: One-Command Linux/macOS
 
