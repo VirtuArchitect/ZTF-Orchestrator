@@ -86,6 +86,75 @@ def test_current_operator_docs_reference_release_version():
     assert f'ZTF_ORCHESTRATOR_VERSION={expected_tag}' in ahv_build_guide
 
 
+def test_operator_runbook_baseline_is_present_and_linked():
+    package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
+    expected_tag = f"v{package['version']}"
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    runbook_index = ROOT / 'docs' / 'runbooks' / 'README.md'
+    template = ROOT / 'docs' / 'runbooks' / 'RUNBOOK-TEMPLATE.md'
+    governance_docs = [
+        ROOT / 'docs' / 'operator-controlled-uat-readiness.md',
+        ROOT / 'docs' / 'uat-evidence-checklist.md',
+        ROOT / 'docs' / 'production-readiness-boundary.md',
+    ]
+    required_runbooks = {
+        'RB-001': ROOT / 'docs' / 'runbooks' / 'RB-001-start-stop-restart.md',
+        'RB-002': ROOT / 'docs' / 'runbooks' / 'RB-002-backup-restore.md',
+        'RB-003': ROOT / 'docs' / 'runbooks' / 'RB-003-upgrade-rollback.md',
+        'RB-004': ROOT / 'docs' / 'runbooks' / 'RB-004-ztf-workflow-execution.md',
+        'RB-005': ROOT / 'docs' / 'runbooks' / 'RB-005-failed-job-recovery.md',
+        'RB-006': ROOT / 'docs' / 'runbooks' / 'RB-006-emergency-stop.md',
+        'RB-007': ROOT / 'docs' / 'runbooks' / 'RB-007-airgapped-update.md',
+        'RB-008': ROOT / 'docs' / 'runbooks' / 'RB-008-nkp-safe-phase-execution.md',
+        'RB-009': ROOT / 'docs' / 'runbooks' / 'RB-009-user-rbac-management.md',
+        'RB-010': ROOT / 'docs' / 'runbooks' / 'RB-010-database-recovery.md',
+        'RB-011': ROOT / 'docs' / 'runbooks' / 'RB-011-security-incident.md',
+        'RB-012': ROOT / 'docs' / 'runbooks' / 'RB-012-decommission.md',
+    }
+    required_headings = [
+        '## Metadata',
+        '## Purpose',
+        '## Scope',
+        '## Preconditions',
+        '## Required Role/RBAC',
+        '## Required Inputs',
+        '## Dependencies',
+        '## Risk/Impact',
+        '## Procedure',
+        '## Validation',
+        '## Expected Result',
+        '## Failure Conditions',
+        '## Recovery/Rollback',
+        '## Evidence To Capture',
+        '## Audit Requirements',
+        '## Escalation',
+        '## References',
+        '## Evidence Mapping',
+    ]
+
+    assert '[runbook index and control matrix](docs/runbooks/README.md)' in readme
+    index_text = runbook_index.read_text(encoding='utf-8')
+    assert expected_tag in index_text
+    assert 'Runbook Control Matrix' in index_text
+    assert template.exists()
+    assert expected_tag in template.read_text(encoding='utf-8')
+
+    seen_ids = set()
+    for runbook_id, path in required_runbooks.items():
+        text = path.read_text(encoding='utf-8')
+        assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+        assert f'| Runbook ID | {runbook_id} |' in text
+        assert runbook_id not in seen_ids
+        seen_ids.add(runbook_id)
+        assert f'[{runbook_id}](' in index_text
+        for heading in required_headings:
+            assert heading in text, f'{path.relative_to(ROOT)} missing {heading}'
+
+    for path in governance_docs:
+        text = path.read_text(encoding='utf-8')
+        assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+
+
 def test_frontend_script_catalogue_is_backend_allowlisted():
     import server
 
