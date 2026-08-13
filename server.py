@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.1'
+APP_VERSION = '1.7.2'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2934,9 +2934,12 @@ def _approval_automation_error(workflow: str | None) -> str | None:
 
 WORKFLOW_PREFLIGHT: dict[str, dict] = {
     'cluster-create': {
-        'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'clusters'],
+        'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'common_network_settings', 'create_clusters'],
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
+        'cluster_list_field': 'create_clusters',
+        'cluster_list_required_keys': ['cluster_name', 'cluster_vip', 'nodes'],
+        'cluster_node_required_keys': ['cvm_ip', 'host_ip'],
     },
     'imaging-only': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
@@ -3054,12 +3057,34 @@ PC_IP_WORKFLOWS = {'cluster-create', 'imaging-only', 'imaging'}
 
 
 def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]:
-    """Map legacy Orchestrator fc_ip configs to upstream ZTF's pc_ip key."""
+    """Map legacy Orchestrator configs to upstream ZTF keys."""
+    changed = False
+    normalized = dict(config)
     if workflow in PC_IP_WORKFLOWS and 'pc_ip' not in config and config.get('fc_ip'):
-        normalized = dict(config)
         normalized['pc_ip'] = normalized.pop('fc_ip')
-        return normalized, True
-    return config, False
+        changed = True
+    if workflow == 'cluster-create' and 'create_clusters' not in normalized and isinstance(normalized.get('clusters'), list):
+        legacy_clusters = normalized.pop('clusters')
+        common_network_settings = normalized.get('common_network_settings')
+        if not isinstance(common_network_settings, dict):
+            common_network_settings = {}
+        for key in ('name_servers_list', 'ntp_servers_list'):
+            if key in normalized and key not in common_network_settings:
+                common_network_settings[key] = normalized.pop(key)
+        create_clusters = []
+        for cluster in legacy_clusters:
+            if not isinstance(cluster, dict):
+                create_clusters.append(cluster)
+                continue
+            cluster_copy = dict(cluster)
+            for key in ('name_servers_list', 'ntp_servers_list'):
+                if key in cluster_copy and key not in common_network_settings:
+                    common_network_settings[key] = cluster_copy.pop(key)
+            create_clusters.append(cluster_copy)
+        normalized['common_network_settings'] = common_network_settings
+        normalized['create_clusters'] = create_clusters
+        changed = True
+    return normalized, changed
 
 
 def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[str, bool]:
@@ -3155,6 +3180,7 @@ def _init_engines():
         import tempfile
         tf_path = None
         if config_content:
+            config_content, _ = _normalize_ztf_config_content(workflow or '', config_content)
             with tempfile.NamedTemporaryFile(
                 mode='w', suffix='.yml', dir=str(configs_dir),
                 delete=False, prefix='sched_'
@@ -3755,10 +3781,10 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
     # ── 1. Parse YAML ────────────────────────────────────────────────────────
     try:
         config: dict = yaml.safe_load(config_content) or {}
-        config, normalized_pc_ip = _normalize_ztf_config_keys(workflow, config)
+        config, normalized_legacy_config = _normalize_ztf_config_keys(workflow, config)
         yield from send('stdout', '[PASS] YAML is valid and parseable')
-        if normalized_pc_ip:
-            yield from send('stdout', '[INFO] Legacy fc_ip detected; using pc_ip for Nutanix ZTF compatibility')
+        if normalized_legacy_config:
+            yield from send('stdout', '[INFO] Legacy cluster-create keys detected; using upstream ZTF-compatible schema')
         passed += 1
     except yaml.YAMLError as exc:
         yield from send('stdout', f'[FAIL] YAML parse error: {exc}')
@@ -3785,6 +3811,53 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
             passed += 1
 
     # ── 3. IP address format ─────────────────────────────────────────────────
+    cluster_list_field = preflight.get('cluster_list_field')
+    if cluster_list_field:
+        cluster_list = config.get(cluster_list_field)
+        cluster_required_keys = preflight.get('cluster_list_required_keys', [])
+        node_required_keys = preflight.get('cluster_node_required_keys', [])
+        if cluster_list is None or cluster_list == []:
+            pass
+        elif not isinstance(cluster_list, list):
+            yield from send('stdout', f'[FAIL] {cluster_list_field} must be a list')
+            failed += 1
+        else:
+            for idx, cluster in enumerate(cluster_list, start=1):
+                if not isinstance(cluster, dict):
+                    yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}] must be a mapping')
+                    failed += 1
+                    continue
+                for key in cluster_required_keys:
+                    val = cluster.get(key)
+                    empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                    if empty:
+                        yield from send('stdout', f'[FAIL] Required cluster field missing : {cluster_list_field}[{idx}].{key}')
+                        failed += 1
+                    else:
+                        yield from send('stdout', f'[PASS] Required cluster field present : {cluster_list_field}[{idx}].{key}')
+                        passed += 1
+                nodes = cluster.get('nodes')
+                if nodes is None or nodes == []:
+                    pass
+                elif not isinstance(nodes, list):
+                    yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}].nodes must be a list')
+                    failed += 1
+                else:
+                    for node_idx, node in enumerate(nodes, start=1):
+                        if not isinstance(node, dict):
+                            yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}].nodes[{node_idx}] must be a mapping')
+                            failed += 1
+                            continue
+                        for key in node_required_keys:
+                            val = node.get(key)
+                            empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                            if empty:
+                                yield from send('stdout', f'[FAIL] Required node field missing : {cluster_list_field}[{idx}].nodes[{node_idx}].{key}')
+                                failed += 1
+                            else:
+                                yield from send('stdout', f'[PASS] Required node field present : {cluster_list_field}[{idx}].nodes[{node_idx}].{key}')
+                                passed += 1
+
     for field in preflight.get('ip_fields', []):
         val = str(config.get(field, '')).strip()
         if not val:
@@ -4352,10 +4425,10 @@ class ExecutionJobManager:
                     if not ok:
                         self._emit(job_id, 'error', f'Invalid YAML: {err}')
                         return
-                    normalized_content, normalized_pc_ip = _normalize_ztf_config_content(workflow or '', effective_config_content)
-                    if normalized_pc_ip:
+                    normalized_content, normalized_legacy_config = _normalize_ztf_config_content(workflow or '', effective_config_content)
+                    if normalized_legacy_config:
                         effective_config_content = normalized_content
-                        self._emit(job_id, 'stdout', 'Legacy fc_ip detected; saved as pc_ip for Nutanix ZTF compatibility')
+                        self._emit(job_id, 'stdout', 'Legacy cluster-create keys detected; saved with upstream ZTF-compatible schema')
                 backup_config(path)
                 _secure_write(path, effective_config_content)
                 cfg_path = str(path)
@@ -6904,10 +6977,10 @@ def execute_workflow():
                         yield from send('error', f'Invalid YAML: {err}')
                         yield from send('done', {'code': -1, 'status': 'failed'})
                         return
-                    normalized_content, normalized_pc_ip = _normalize_ztf_config_content(workflow or '', effective_config_content)
-                    if normalized_pc_ip:
+                    normalized_content, normalized_legacy_config = _normalize_ztf_config_content(workflow or '', effective_config_content)
+                    if normalized_legacy_config:
                         effective_config_content = normalized_content
-                        yield from send('stdout', 'Legacy fc_ip detected; saved as pc_ip for Nutanix ZTF compatibility')
+                        yield from send('stdout', 'Legacy cluster-create keys detected; saved with upstream ZTF-compatible schema')
                 backup_config(path)
                 _secure_write(path, effective_config_content)
                 cfg_path = str(path)

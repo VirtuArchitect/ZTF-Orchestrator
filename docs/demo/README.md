@@ -1,6 +1,6 @@
-﻿# ZTF-Orchestrator Demo And Simulator
+# ZTF-Orchestrator Demo And Simulator
 
-Current release marker: `v1.7.1`.
+Current release marker: `v1.7.2`.
 
 This folder separates demo and simulator evidence from live infrastructure
 evidence. Simulator output is useful for local development and smoke testing,

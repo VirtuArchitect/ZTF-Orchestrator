@@ -79,7 +79,7 @@ export function buildClusterCreateYaml(cfg: {
     }>
   }>
 }): string {
-  const clusters: Record<string, unknown>[] = cfg.clusters.map(c => ({
+  const createClusters: Record<string, unknown>[] = cfg.clusters.map(c => ({
     cluster_name: c.name,
     cluster_vip: c.clusterVip,
     redundancy_factor: c.redundancyFactor,
@@ -88,8 +88,6 @@ export function buildClusterCreateYaml(cfg: {
     ...(c.cvmNetmask ? { cvm_netmask: c.cvmNetmask } : {}),
     ...(c.ipmiGateway ? { ipmi_gateway: c.ipmiGateway } : {}),
     ...(c.ipmiNetmask ? { ipmi_netmask: c.ipmiNetmask } : {}),
-    name_servers_list: cfg.dnsServers,
-    ntp_servers_list: cfg.ntpServers,
     nodes: c.nodes.map(n => ({
       cvm_ip: n.cvmIp,
       host_ip: n.hostIp,
@@ -103,7 +101,11 @@ export function buildClusterCreateYaml(cfg: {
     pc_credential: cfg.pcCredential,
     cvm_credential: cfg.cvmCredential,
     pc_ip: cfg.pcIp,
-    clusters,
+    common_network_settings: {
+      name_servers_list: cfg.dnsServers,
+      ntp_servers_list: cfg.ntpServers,
+    },
+    create_clusters: createClusters,
   })
 }
 

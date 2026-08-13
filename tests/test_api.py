@@ -1514,7 +1514,20 @@ def test_dry_run_valid_yaml(client, auth_headers, monkeypatch):
     # Mock TCP checks so the test doesn't hit the network
     monkeypatch.setattr(server, '_tcp_check', lambda host, port, timeout=5.0: (True, 12.0))
 
-    yaml_body = 'pc_ip: 192.168.1.1\npc_credential: pc_user\ncvm_credential: cvm_cred\nclusters:\n  - name: test\n'
+    yaml_body = (
+        'pc_ip: 192.168.1.1\n'
+        'pc_credential: pc_user\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  name_servers_list: [8.8.8.8]\n'
+        '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: test\n'
+        '    cluster_vip: 192.168.1.10\n'
+        '    nodes:\n'
+        '      - cvm_ip: 192.168.1.11\n'
+        '        host_ip: 192.168.1.12\n'
+    )
     resp = client.post('/api/execute',
                        json={'workflow': 'cluster-create',
                              'configContent': yaml_body,
@@ -1555,38 +1568,68 @@ def test_preflight_generator_pass(monkeypatch):
         'pc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
-        'clusters:\n  - name: c1\n'
+        'common_network_settings:\n'
+        '  name_servers_list: [8.8.8.8]\n'
+        '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes:\n'
+        '      - cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
     )
     output = ''.join(server._run_preflight('cluster-create', yaml_ok, 'test-id'))
     assert '[PASS]' in output
     assert '[FAIL]' not in output
 
 
-def test_preflight_accepts_legacy_fc_ip_alias(monkeypatch):
-    """Legacy Orchestrator configs with fc_ip still preflight as pc_ip."""
+def test_preflight_accepts_legacy_cluster_create_keys(monkeypatch):
+    """Legacy Orchestrator cluster-create configs still preflight after normalization."""
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
     yaml_ok = (
         'fc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
-        'clusters:\n  - name: c1\n'
+        'clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    name_servers_list: [8.8.8.8]\n'
+        '    ntp_servers_list: [0.us.pool.ntp.org]\n'
+        '    nodes:\n'
+        '      - cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
     )
     output = ''.join(server._run_preflight('cluster-create', yaml_ok, 'test-id'))
-    assert 'Legacy fc_ip detected' in output
+    assert 'Legacy cluster-create keys detected' in output
+    assert 'create_clusters[1].cluster_name' in output
     assert '[FAIL]' not in output
 
 
-def test_legacy_fc_ip_content_normalized_for_execution():
-    """Execution writes upstream-compatible pc_ip when an old fc_ip file is supplied."""
+def test_legacy_cluster_create_content_normalized_for_execution():
+    """Execution writes upstream-compatible cluster-create YAML when an old file is supplied."""
     import server
     normalized, changed = server._normalize_ztf_config_content(
         'cluster-create',
-        'fc_ip: 10.0.0.1\npc_credential: pc_user\n',
+        (
+            'fc_ip: 10.0.0.1\n'
+            'pc_credential: pc_user\n'
+            'clusters:\n'
+            '  - cluster_name: c1\n'
+            '    cluster_vip: 10.0.0.10\n'
+            '    name_servers_list: [8.8.8.8]\n'
+            '    ntp_servers_list: [0.us.pool.ntp.org]\n'
+            '    nodes:\n'
+            '      - cvm_ip: 10.0.0.11\n'
+            '        host_ip: 10.0.0.12\n'
+        ),
     )
     assert changed is True
     assert 'pc_ip: 10.0.0.1' in normalized
     assert 'fc_ip:' not in normalized
+    assert 'common_network_settings:' in normalized
+    assert 'create_clusters:' in normalized
+    assert '\nclusters:' not in normalized
 
 
 def test_preflight_generator_missing_field(monkeypatch):
@@ -1606,7 +1649,15 @@ def test_preflight_generator_unreachable(monkeypatch):
         'pc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
-        'clusters:\n  - name: c1\n'
+        'common_network_settings:\n'
+        '  name_servers_list: [8.8.8.8]\n'
+        '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes:\n'
+        '      - cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
     )
     output = ''.join(server._run_preflight('cluster-create', yaml_body, 'test-id'))
     assert 'Unreachable' in output

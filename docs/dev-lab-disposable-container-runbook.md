@@ -1,10 +1,10 @@
-﻿# DEV_LAB Disposable Container Validation Runbook
+# DEV_LAB Disposable Container Validation Runbook
 
 Date: 2026-07-22
 
-Current ZTF-Orchestrator source-tree release: `v1.7.1`.
+Current ZTF-Orchestrator source-tree release: `v1.7.2`.
 
-Purpose: preserve the historical ZTF-Orchestrator v1.5.6 DEV_LAB Prism Element low-impact create/delete lifecycle runbook until the same validation is rerun for v1.7.1 after explicit lab-owner approval.
+Purpose: preserve the historical ZTF-Orchestrator v1.5.6 DEV_LAB Prism Element low-impact create/delete lifecycle runbook until the same validation is rerun for v1.7.2 after explicit lab-owner approval.
 
 This runbook intentionally uses a temporary storage container instead of a VM because the latest read-only DEV_LAB inventory showed `0` Prism images.
 
