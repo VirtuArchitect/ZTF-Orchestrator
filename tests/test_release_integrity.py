@@ -212,6 +212,7 @@ def test_static_demo_pages_configuration_is_present():
     assert 'VITE_ZTF_BASE=/ZTF-Orchestrator/' in demo_env
     assert 'npm run build:demo' in workflow
     assert 'actions/deploy-pages' in workflow
+    assert 'enablement: true' in workflow
     assert 'cp dist/index.html dist/404.html' in workflow
 
     governance_boundary = (ROOT / 'docs' / 'governance' / 'PRODUCTION-READINESS-BOUNDARY.md').read_text(encoding='utf-8')
