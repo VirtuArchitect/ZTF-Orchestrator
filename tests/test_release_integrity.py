@@ -203,6 +203,7 @@ def test_operator_runbook_baseline_is_present_and_linked():
 
 
 def test_static_demo_pages_configuration_is_present():
+    index_html = (ROOT / 'index.html').read_text(encoding='utf-8')
     readme = (ROOT / 'README.md').read_text(encoding='utf-8')
     demo_env = (ROOT / '.env.demo').read_text(encoding='utf-8')
     workflow = (ROOT / '.github' / 'workflows' / 'pages-demo.yml').read_text(encoding='utf-8')
@@ -210,6 +211,8 @@ def test_static_demo_pages_configuration_is_present():
     assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
     assert 'VITE_ZTF_DEMO=true' in demo_env
     assert 'VITE_ZTF_BASE=/ZTF-Orchestrator/' in demo_env
+    assert "const defaultTheme = '%VITE_ZTF_DEMO%' === 'true' ? 'light' : 'system'" in index_html
+    assert "localStorage.getItem('ztf-theme-mode') || defaultTheme" in index_html
     assert 'npm run build:demo' in workflow
     assert 'actions/deploy-pages' in workflow
     assert 'enablement: true' in workflow

@@ -1,16 +1,17 @@
 export type ThemeMode = 'system' | 'dark' | 'light'
 
 export const THEME_STORAGE_KEY = 'ztf-theme-mode'
+const DEFAULT_THEME_MODE: ThemeMode = import.meta.env.VITE_ZTF_DEMO === 'true' ? 'light' : 'system'
 
 export function getStoredThemeMode(): ThemeMode {
-  if (typeof window === 'undefined') return 'system'
+  if (typeof window === 'undefined') return DEFAULT_THEME_MODE
   let stored: string | null = null
   try {
     stored = window.localStorage.getItem(THEME_STORAGE_KEY)
   } catch {
     stored = null
   }
-  return stored === 'dark' || stored === 'light' || stored === 'system' ? stored : 'system'
+  return stored === 'dark' || stored === 'light' || stored === 'system' ? stored : DEFAULT_THEME_MODE
 }
 
 export function resolveThemeMode(mode: ThemeMode): 'dark' | 'light' {
