@@ -27,10 +27,32 @@ type ParamsContextValue = Record<string, string>
 
 const RouterContext = createContext<RouterContextValue | null>(null)
 const ParamsContext = createContext<ParamsContextValue>({})
+const BASE_PATH = normalizeBasePath(import.meta.env.BASE_URL)
+
+function normalizeBasePath(value: string) {
+  if (!value || value === '/') return '/'
+  return `/${value.replace(/^\/+|\/+$/g, '')}/`
+}
+
+function stripBasePath(pathname: string) {
+  if (BASE_PATH === '/') return pathname || '/'
+  if (pathname === BASE_PATH.slice(0, -1)) return '/'
+  if (pathname.startsWith(BASE_PATH)) {
+    const stripped = pathname.slice(BASE_PATH.length - 1)
+    return stripped || '/'
+  }
+  return pathname || '/'
+}
+
+function withBasePath(appPath: string) {
+  if (BASE_PATH === '/') return appPath || '/'
+  const normalized = appPath.startsWith('/') ? appPath.slice(1) : appPath
+  return `${BASE_PATH}${normalized}`.replace(/\/$/, '') || BASE_PATH
+}
 
 function currentLocation(): LocationState {
   return {
-    pathname: window.location.pathname || '/',
+    pathname: stripBasePath(window.location.pathname),
     search: window.location.search,
     hash: window.location.hash,
   }
@@ -38,9 +60,16 @@ function currentLocation(): LocationState {
 
 function internalTarget(to: string) {
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(to) || to.startsWith('//')) return null
-  const target = new URL(to.replace(/\\/g, '/'), window.location.origin)
+  const raw = to.replace(/\\/g, '/')
+  const target = new URL(raw.startsWith('/') ? withBasePath(raw) : raw, window.location.href)
   if (target.origin !== window.location.origin) return null
-  return `${target.pathname}${target.search}${target.hash}`
+  const pathname = stripBasePath(target.pathname)
+  return `${pathname}${target.search}${target.hash}`
+}
+
+function browserTarget(appTarget: string) {
+  const target = new URL(appTarget, window.location.origin)
+  return `${withBasePath(target.pathname)}${target.search}${target.hash}`
 }
 
 function useRouter() {
@@ -64,9 +93,10 @@ export function BrowserRouter({ children }: { children: ReactNode }) {
       const next = internalTarget(to)
       if (!next) return
       const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
-      if (next !== current) {
-        if (options?.replace) window.history.replaceState(null, '', next)
-        else window.history.pushState(null, '', next)
+      const nextBrowserTarget = browserTarget(next)
+      if (nextBrowserTarget !== current) {
+        if (options?.replace) window.history.replaceState(null, '', nextBrowserTarget)
+        else window.history.pushState(null, '', nextBrowserTarget)
       }
       setLocation(currentLocation())
     },
@@ -169,7 +199,8 @@ export function Link({ to, onClick, ...props }: LinkProps) {
     navigate(target)
   }
 
-  return <a href={internalTarget(to) ?? '#'} onClick={handleClick} {...props} />
+  const target = internalTarget(to)
+  return <a href={target ? browserTarget(target) : '#'} onClick={handleClick} {...props} />
 }
 
 export function useNavigate() {
