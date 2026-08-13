@@ -9,8 +9,30 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.2 and should be moved
+Changes in this section are present on `main` after v1.7.3 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.3] - 2026-08-13
+
+### Summary
+Cluster Create upstream field-name correction release for appliance upgrades
+from v1.7.2.
+
+### Fixed
+- Fixed Cluster Create YAML generation to emit the exact upstream ZTF keys
+  `common_network_settings.dns_servers`,
+  `common_network_settings.ntp_servers`, and `create_clusters[].nodes_list`.
+- Fixed Cluster Create preflight to validate those same upstream field names
+  before runtime execution.
+- Extended Cluster Create compatibility normalization so v1.7.2-generated
+  `name_servers_list`, `ntp_servers_list`, and `nodes` keys are rewritten to
+  the upstream schema before execution.
+
+### Security
+- Preserved existing YAML safe-loading and config path containment controls
+  while adding compatibility key normalization.
 
 ---
 

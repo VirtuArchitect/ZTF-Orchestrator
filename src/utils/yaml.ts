@@ -88,7 +88,7 @@ export function buildClusterCreateYaml(cfg: {
     ...(c.cvmNetmask ? { cvm_netmask: c.cvmNetmask } : {}),
     ...(c.ipmiGateway ? { ipmi_gateway: c.ipmiGateway } : {}),
     ...(c.ipmiNetmask ? { ipmi_netmask: c.ipmiNetmask } : {}),
-    nodes: c.nodes.map(n => ({
+    nodes_list: c.nodes.map(n => ({
       cvm_ip: n.cvmIp,
       host_ip: n.hostIp,
       ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
@@ -102,8 +102,8 @@ export function buildClusterCreateYaml(cfg: {
     cvm_credential: cfg.cvmCredential,
     pc_ip: cfg.pcIp,
     common_network_settings: {
-      name_servers_list: cfg.dnsServers,
-      ntp_servers_list: cfg.ntpServers,
+      dns_servers: cfg.dnsServers,
+      ntp_servers: cfg.ntpServers,
     },
     create_clusters: createClusters,
   })

@@ -1,6 +1,6 @@
 # Production Readiness Boundary
 
-Current release marker: `v1.7.2`.
+Current release marker: `v1.7.3`.
 
 ZTF-Orchestrator can be operated in a controlled UAT posture when procedures,
 approvals, backups, evidence capture, and recovery paths are in place. It
