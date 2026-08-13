@@ -11,11 +11,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <script>
       (() => {
-        let stored = 'system'
+        const defaultTheme = '%VITE_ZTF_DEMO%' === 'true' ? 'light' : 'system'
+        let stored = defaultTheme
         try {
-          stored = localStorage.getItem('ztf-theme-mode') || 'system'
+          stored = localStorage.getItem('ztf-theme-mode') || defaultTheme
         } catch {
-          stored = 'system'
+          stored = defaultTheme
         }
         const prefersLight = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches
         const resolved = stored === 'light' || (stored === 'system' && prefersLight) ? 'light' : 'dark'
