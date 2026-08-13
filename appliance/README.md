@@ -97,6 +97,10 @@ checkout. The Setup page may report that source update is skipped; that is
 expected. Rebuild or pull a newer appliance image to change the bundled ZTF
 version, or configure Settings to point at a separate cloned ZTF 1.x checkout.
 
+Current in-place container update packages are produced for `v1.7.1`. Use the
+offline update package workflow when upgrading an existing appliance without
+rebuilding or replacing the full AHV QCOW2 image.
+
 ## Secrets
 
 The appliance kit never stores real secrets in Git. On first boot, the script:

@@ -267,6 +267,11 @@
   color: rgb(146 64 14 / var(--tw-text-opacity, 1));
 }
 
+.theme-light .text-yellow-200,
+.theme-light .text-yellow-200\/70 {
+  color: rgb(120 53 15 / 1);
+}
+
 .theme-light .text-red-300,
 .theme-light .text-red-400,
 .theme-light .text-red-200 {
@@ -392,9 +397,28 @@
   border-color: rgb(245 158 11 / 1) !important;
 }
 
+.theme-light .border-yellow-700\/40.bg-yellow-900\/10 {
+  background-color: rgb(255 251 235 / 1) !important;
+  border-color: rgb(245 158 11 / 1) !important;
+}
+
+.theme-light .border-yellow-700\/40.bg-yellow-900\/20 {
+  background-color: rgb(254 243 199 / 1) !important;
+  border-color: rgb(245 158 11 / 1) !important;
+}
+
 .theme-light .diagnostics-callout-title,
 .theme-light .border-yellow-900\/40.bg-yellow-950\/10 .text-yellow-200 {
   color: rgb(69 26 3 / 1) !important;
+}
+
+.theme-light .border-yellow-700\/40.bg-yellow-900\/10 .text-yellow-200,
+.theme-light .border-yellow-700\/40.bg-yellow-900\/20 .text-yellow-300 {
+  color: rgb(69 26 3 / 1) !important;
+}
+
+.theme-light .border-yellow-700\/40.bg-yellow-900\/10 .text-yellow-200\/70 {
+  color: rgb(120 53 15 / 1) !important;
 }
 
 .theme-light .diagnostics-callout-body,

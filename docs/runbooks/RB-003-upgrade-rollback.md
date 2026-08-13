@@ -1,6 +1,6 @@
-# RB-003 - Upgrade and Rollback
+﻿# RB-003 - Upgrade and Rollback
 
-Current release marker: `v1.7.0`.
+Current release marker: `v1.7.1`.
 
 ## Metadata
 

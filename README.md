@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.7.0
+# ZTF-Orchestrator · v1.7.1
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -138,12 +138,13 @@ required before representing any deployment as production validated.
 
 Operator controlled/UAT-ready deployments should use the
 [runbook index and control matrix](docs/runbooks/README.md), the
-[operator controlled UAT readiness definition](docs/operator-controlled-uat-readiness.md),
-the [UAT evidence checklist](docs/uat-evidence-checklist.md), and the
-[production readiness boundary](docs/production-readiness-boundary.md). These
-documents define the minimum procedures, approvals, backups, failed-job
-recovery, emergency stop, and evidence capture expected before treating a
-deployment as governed UAT rather than a local lab or simulator proof.
+[architecture index](docs/architecture/README.md), the
+[governance index](docs/governance/README.md), the
+[UAT index](docs/uat/README.md), and the
+[testing index](docs/testing/README.md). These documents define the minimum
+procedures, approvals, backups, disaster recovery, failed-job recovery,
+emergency stop, and evidence capture expected before treating a deployment as
+governed UAT rather than a local lab or simulator proof.
 
 ## Why It Exists
 
@@ -904,7 +905,12 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 | Guide | Description |
 |---|---|
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
+| [docs/architecture/README.md](docs/architecture/README.md) | Architecture index, security boundary, data flow, and deployment boundaries |
+| [docs/demo/README.md](docs/demo/README.md) | Demo and simulator boundary for local proof versus target evidence |
+| [docs/governance/README.md](docs/governance/README.md) | Production-readiness boundary, DR, supportability, limitations, and evidence mapping |
 | [docs/runbooks/README.md](docs/runbooks/README.md) | Operator runbook index, control matrix, and standard runbook template |
+| [docs/testing/README.md](docs/testing/README.md) | Testing matrix and regression guard documentation |
+| [docs/uat/README.md](docs/uat/README.md) | UAT plan, cases, evidence, and results index |
 | [docs/operator-controlled-uat-readiness.md](docs/operator-controlled-uat-readiness.md) | Definition and exit criteria for operator controlled/UAT-ready deployments |
 | [docs/uat-evidence-checklist.md](docs/uat-evidence-checklist.md) | Evidence checklist for controlled UAT scenarios, approvals, jobs, and recovery |
 | [docs/production-readiness-boundary.md](docs/production-readiness-boundary.md) | Boundary between local, lab, controlled UAT, and production validation claims |
