@@ -1,6 +1,6 @@
-# RB-012 - Decommission
+﻿# RB-012 - Decommission
 
-Current release marker: `v1.7.0`.
+Current release marker: `v1.7.1`.
 
 ## Metadata
 

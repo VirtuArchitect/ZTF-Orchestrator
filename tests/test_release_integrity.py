@@ -97,6 +97,38 @@ def test_operator_runbook_baseline_is_present_and_linked():
         ROOT / 'docs' / 'uat-evidence-checklist.md',
         ROOT / 'docs' / 'production-readiness-boundary.md',
     ]
+    documentation_baseline = {
+        'architecture': [
+            ROOT / 'docs' / 'architecture' / 'README.md',
+            ROOT / 'docs' / 'architecture' / 'SECURITY-BOUNDARY.md',
+            ROOT / 'docs' / 'architecture' / 'DATA-FLOW.md',
+            ROOT / 'docs' / 'architecture' / 'DEPLOYMENT-BOUNDARIES.md',
+        ],
+        'demo': [
+            ROOT / 'docs' / 'demo' / 'README.md',
+            ROOT / 'docs' / 'demo' / 'PRISM-CENTRAL-SIMULATOR.md',
+        ],
+        'governance': [
+            ROOT / 'docs' / 'governance' / 'README.md',
+            ROOT / 'docs' / 'governance' / 'PRODUCTION-READINESS-BOUNDARY.md',
+            ROOT / 'docs' / 'governance' / 'DISASTER-RECOVERY.md',
+            ROOT / 'docs' / 'governance' / 'SUPPORTABILITY.md',
+            ROOT / 'docs' / 'governance' / 'LIMITATIONS.md',
+            ROOT / 'docs' / 'governance' / 'EVIDENCE-MAPPING.md',
+        ],
+        'testing': [
+            ROOT / 'docs' / 'testing' / 'README.md',
+            ROOT / 'docs' / 'testing' / 'TESTING-MATRIX.md',
+            ROOT / 'docs' / 'testing' / 'REGRESSION-GUARDS.md',
+        ],
+        'uat': [
+            ROOT / 'docs' / 'uat' / 'README.md',
+            ROOT / 'docs' / 'uat' / 'UAT-PLAN.md',
+            ROOT / 'docs' / 'uat' / 'UAT-CASES.md',
+            ROOT / 'docs' / 'uat' / 'UAT-EVIDENCE.md',
+            ROOT / 'docs' / 'uat' / 'UAT-RESULTS.md',
+        ],
+    }
     required_runbooks = {
         'RB-001': ROOT / 'docs' / 'runbooks' / 'RB-001-start-stop-restart.md',
         'RB-002': ROOT / 'docs' / 'runbooks' / 'RB-002-backup-restore.md',
@@ -132,7 +164,15 @@ def test_operator_runbook_baseline_is_present_and_linked():
         '## Evidence Mapping',
     ]
 
-    assert '[runbook index and control matrix](docs/runbooks/README.md)' in readme
+    for fragment in [
+        '[runbook index and control matrix](docs/runbooks/README.md)',
+        '[architecture index](docs/architecture/README.md)',
+        '[governance index](docs/governance/README.md)',
+        '[UAT index](docs/uat/README.md)',
+        '[testing index](docs/testing/README.md)',
+    ]:
+        assert fragment in readme
+
     index_text = runbook_index.read_text(encoding='utf-8')
     assert expected_tag in index_text
     assert 'Runbook Control Matrix' in index_text
@@ -153,6 +193,16 @@ def test_operator_runbook_baseline_is_present_and_linked():
     for path in governance_docs:
         text = path.read_text(encoding='utf-8')
         assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+
+    for docs in documentation_baseline.values():
+        for path in docs:
+            text = path.read_text(encoding='utf-8')
+            assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+
+    governance_boundary = (ROOT / 'docs' / 'governance' / 'PRODUCTION-READINESS-BOUNDARY.md').read_text(encoding='utf-8')
+    disaster_recovery = (ROOT / 'docs' / 'governance' / 'DISASTER-RECOVERY.md').read_text(encoding='utf-8')
+    assert 'Claims Requiring More Evidence' in governance_boundary
+    assert 'Recovery Point Objective' in disaster_recovery
 
 
 def test_frontend_script_catalogue_is_backend_allowlisted():

@@ -9,8 +9,27 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.0 and should be moved
+Changes in this section are present on `main` after v1.7.1 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.1] - 2026-08-13
+
+### Summary
+Light-theme dashboard readability and operator documentation hardening release,
+with refreshed architecture, governance, testing, UAT, and demo documentation
+plus a rebuilt appliance update package.
+
+### Added
+- Added architecture, governance, testing, UAT, and demo documentation indexes
+  for clearer operator-controlled validation boundaries.
+- Added visual regression coverage for the dashboard drift attention banner in
+  light mode.
+
+### Fixed
+- Fixed the dashboard drift baseline warning colours in light mode so yellow
+  drift messages remain readable.
 
 ---
 

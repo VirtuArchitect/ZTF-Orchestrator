@@ -3,7 +3,18 @@ import { expect, test, type Page } from '@playwright/test'
 const username = process.env.ZTF_VISUAL_USERNAME || ''
 const password = process.env.ZTF_VISUAL_PASSWORD || ''
 
-async function seedUiSession(page: Page) {
+type VisualDriftRun = {
+  id: string
+  status: 'matched' | 'drifted' | 'unknown'
+  configFile: string
+  workflow?: string
+  message?: string
+  timestamp: string
+  summary: { changed: number; missing: number; unexpected: number }
+  findings: unknown[]
+}
+
+async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[] } = {}) {
   await page.route('**/api/**', async route => {
     const url = route.request().url()
     if (url.endsWith('/api/system/check')) {
@@ -78,6 +89,10 @@ async function seedUiSession(page: Page) {
     }
     if (url.endsWith('/api/nkp/profiles')) {
       await route.fulfill({ json: [] })
+      return
+    }
+    if (url.endsWith('/api/drift')) {
+      await route.fulfill({ json: options.driftRuns ?? [] })
       return
     }
     await route.fulfill({ json: [] })
@@ -234,6 +249,32 @@ test('dashboard supports theme toggle and appliance navigation', async ({ page }
   await expect(page.getByRole('heading', { name: 'Appliance Operations' })).toBeVisible()
   await expect(page.getByRole('button', { name: /Artifacts/i })).toBeVisible()
   await expect(page.getByRole('button', { name: /Updates/i })).toBeVisible()
+})
+
+test('dashboard drift attention message stays readable in light theme', async ({ page }) => {
+  await seedUiSession(page, {
+    driftRuns: [{
+      id: 'visual-drift-unknown',
+      status: 'unknown',
+      configFile: 'cluster-baseline.yml',
+      workflow: 'config-cluster',
+      message: 'No successful baseline was found for comparison',
+      timestamp: new Date('2026-08-13T08:30:00Z').toISOString(),
+      summary: { changed: 0, missing: 0, unexpected: 0 },
+      findings: [],
+    }],
+  })
+  await page.addInitScript(() => {
+    window.localStorage.setItem('ztf-theme-mode', 'light')
+  })
+
+  await page.goto('/')
+
+  const driftBanner = page.getByLabel('Review latest drift detection result')
+  await expect(driftBanner).toBeVisible()
+  await expect(driftBanner).toContainText('Drift baseline unavailable')
+  await expect(driftBanner).toContainText('cluster-baseline.yml')
+  await expectLightThemeReadable(page)
 })
 
 test('workflow cards stay readable in light theme', async ({ page }) => {

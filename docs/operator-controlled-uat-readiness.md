@@ -1,6 +1,6 @@
-# Operator Controlled UAT Readiness
+﻿# Operator Controlled UAT Readiness
 
-Current release marker: `v1.7.0`.
+Current release marker: `v1.7.1`.
 
 This document defines the minimum documentation and operating posture required
 to describe a ZTF-Orchestrator deployment as operator controlled/UAT-ready.
