@@ -165,6 +165,18 @@
   .theme-light .brand-logo {
     color: #10233f;
   }
+
+  .demo-banner {
+    border-color: rgb(245 158 11 / 0.4);
+    background: rgb(120 53 15 / 0.2);
+    color: rgb(254 243 199);
+  }
+
+  .theme-light .demo-banner {
+    border-color: rgb(252 211 77);
+    background: rgb(255 251 235);
+    color: rgb(120 53 15);
+  }
 }
 
 /* YAML syntax highlighting */

@@ -23,3 +23,4 @@ appliance/packer/packer-build-key.pub
 .env
 .env.*
 !.env.example
+!.env.demo

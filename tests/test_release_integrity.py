@@ -50,6 +50,7 @@ def test_release_version_metadata_is_consistent():
     assert package_lock['packages']['']['version'] == expected
     assert f"export const APP_VERSION = '{expected}'" in version_ts
     assert readme.startswith(f'# ZTF-Orchestrator · v{expected}')
+    assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
     assert f'## [{expected}]' in changelog
 
 
@@ -199,6 +200,19 @@ def test_operator_runbook_baseline_is_present_and_linked():
         for path in docs:
             text = path.read_text(encoding='utf-8')
             assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+
+
+def test_static_demo_pages_configuration_is_present():
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    demo_env = (ROOT / '.env.demo').read_text(encoding='utf-8')
+    workflow = (ROOT / '.github' / 'workflows' / 'pages-demo.yml').read_text(encoding='utf-8')
+
+    assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
+    assert 'VITE_ZTF_DEMO=true' in demo_env
+    assert 'VITE_ZTF_BASE=/ZTF-Orchestrator/' in demo_env
+    assert 'npm run build:demo' in workflow
+    assert 'actions/deploy-pages' in workflow
+    assert 'cp dist/index.html dist/404.html' in workflow
 
     governance_boundary = (ROOT / 'docs' / 'governance' / 'PRODUCTION-READINESS-BOUNDARY.md').read_text(encoding='utf-8')
     disaster_recovery = (ROOT / 'docs' / 'governance' / 'DISASTER-RECOVERY.md').read_text(encoding='utf-8')

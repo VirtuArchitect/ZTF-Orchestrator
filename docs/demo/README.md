@@ -8,6 +8,8 @@ but it must not be represented as production validation.
 
 ## Demo Boundary
 
+- Hosted static UI demo:
+  <https://virtuarchitect.github.io/ZTF-Orchestrator/>
 - Demo and simulator paths are local or lab evidence.
 - They can prove API shape, UI behavior, validation, and evidence packaging.
 - They do not prove live Prism Central, Prism Element, Foundation Central, or
