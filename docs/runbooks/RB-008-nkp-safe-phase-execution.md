@@ -1,6 +1,6 @@
-﻿# RB-008 - NKP Safe Phase Execution
+# RB-008 - NKP Safe Phase Execution
 
-Current release marker: `v1.7.1`.
+Current release marker: `v1.7.2`.
 
 ## Metadata
 

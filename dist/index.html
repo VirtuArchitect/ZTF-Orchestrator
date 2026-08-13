@@ -2,8 +2,8 @@
 <html lang="en" class="dark theme-dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/ZTF-Orchestrator/favicon.svg?v=zto-153-theme" />
-    <link rel="alternate icon" type="image/x-icon" href="/ZTF-Orchestrator/favicon.ico?v=zto-153" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=zto-153-theme" />
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=zto-153" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZeroTouch Enterprise Orchestrator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <script>
       (() => {
-        const defaultTheme = 'true' === 'true' ? 'light' : 'system'
+        const defaultTheme = '%VITE_ZTF_DEMO%' === 'true' ? 'light' : 'system'
         let stored = defaultTheme
         try {
           stored = localStorage.getItem('ztf-theme-mode') || defaultTheme
@@ -26,8 +26,8 @@
         document.documentElement.style.colorScheme = resolved
       })()
     </script>
-    <script type="module" crossorigin src="/ZTF-Orchestrator/assets/index-B5gmdd25.js"></script>
-    <link rel="stylesheet" crossorigin href="/ZTF-Orchestrator/assets/index-D92PrXQL.css">
+    <script type="module" crossorigin src="/assets/index-D6MH1nxa.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D92PrXQL.css">
   </head>
   <body class="bg-gray-950 text-gray-100">
     <div id="root"></div>

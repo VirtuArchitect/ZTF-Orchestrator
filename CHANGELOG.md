@@ -9,8 +9,29 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.1 and should be moved
+Changes in this section are present on `main` after v1.7.2 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.2] - 2026-08-13
+
+### Summary
+Cluster Create compatibility release, aligning generated workflow YAML and
+dry-run preflight validation with the upstream ZeroTouch Framework schema.
+
+### Fixed
+- Fixed Cluster Create YAML generation to emit `common_network_settings` and
+  `create_clusters` so runtime ZTF validation no longer rejects generated
+  `create_cluster.yml` files for missing required fields.
+- Fixed Cluster Create dry-run preflight to validate the same upstream schema
+  used by the runtime workflow, including required cluster and node fields.
+- Added compatibility normalization for legacy Orchestrator `fc_ip` and
+  `clusters` workflow files before direct, streaming, or scheduled execution.
+
+### Security
+- Preserved safe YAML parsing and existing safe config path handling while
+  normalizing legacy Cluster Create input keys.
 
 ---
 

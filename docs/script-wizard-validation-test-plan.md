@@ -1,10 +1,10 @@
-﻿# Script Wizard Validation Test Plan
+# Script Wizard Validation Test Plan
 
 ## Purpose
 
 Validate that every ZTF-Orchestrator script wizard schema generates YAML that
 matches real ZeroTouch Framework v1.5.2 behavior when executed through
-ZTF-Orchestrator v1.7.1.
+ZTF-Orchestrator v1.7.2.
 
 This plan covers all 75 scripts in the ZTF-Orchestrator script catalogue. The
 goal is not only to confirm that the UI generates YAML, but also to prove that
@@ -54,9 +54,9 @@ objects with a clear prefix, for example `ztf-wizard-test-*`.
 
 Before starting validation:
 
-1. Deploy ZTF-Orchestrator v1.7.1 with the latest offline package.
+1. Deploy ZTF-Orchestrator v1.7.2 with the latest offline package.
 2. Confirm `/health` returns `healthy`.
-3. Confirm the UI footer reports `ZeroTouch Orchestrator v1.7.1`.
+3. Confirm the UI footer reports `ZeroTouch Orchestrator v1.7.2`.
 4. Confirm the bundled ZTF runtime is installed and compatible.
 5. Configure global credentials:
    - `pc_user`
@@ -67,7 +67,7 @@ Before starting validation:
 6. Create a validation evidence folder:
 
 ```text
-validation/YYYY-MM-DD-script-wizard-v1.7.1/
+validation/YYYY-MM-DD-script-wizard-v1.7.2/
 ```
 
 7. For every test, capture:

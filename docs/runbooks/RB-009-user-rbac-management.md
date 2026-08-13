@@ -1,6 +1,6 @@
-﻿# RB-009 - User and RBAC Management
+# RB-009 - User and RBAC Management
 
-Current release marker: `v1.7.1`.
+Current release marker: `v1.7.2`.
 
 ## Metadata
 

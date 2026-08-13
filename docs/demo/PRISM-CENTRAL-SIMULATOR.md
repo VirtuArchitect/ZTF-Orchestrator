@@ -1,6 +1,6 @@
-﻿# Prism Central Simulator Demo Boundary
+# Prism Central Simulator Demo Boundary
 
-Current release marker: `v1.7.1`.
+Current release marker: `v1.7.2`.
 
 The Prism Central simulator is a local smoke-testing aid for Prism-shaped API
 behavior. Use it to exercise validation and UI paths without Nutanix hardware.
