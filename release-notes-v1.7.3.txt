@@ -1,0 +1,17 @@
+ZTF-Orchestrator v1.7.3
+
+Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.3
+Bundled ZTF ref: v1.5.2
+Built: 2026-08-13
+
+Verification:
+- API tests: passed
+- release integrity tests: passed
+- npm build: passed
+- docker build: passed
+- container /health: passed
+- ZTF runtime patches: passed
+
+Fixes:
+- Cluster Create now emits upstream ZTF field names for DNS, NTP, and node list settings.
+- Preflight and execution normalize v1.7.2-generated Cluster Create configs before runtime handoff.

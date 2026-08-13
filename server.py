@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.2'
+APP_VERSION = '1.7.3'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2937,8 +2937,9 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'common_network_settings', 'create_clusters'],
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
+        'mapping_required_keys': {'common_network_settings': ['dns_servers', 'ntp_servers']},
         'cluster_list_field': 'create_clusters',
-        'cluster_list_required_keys': ['cluster_name', 'cluster_vip', 'nodes'],
+        'cluster_list_required_keys': ['cluster_name', 'cluster_vip', 'nodes_list'],
         'cluster_node_required_keys': ['cvm_ip', 'host_ip'],
     },
     'imaging-only': {
@@ -3063,27 +3064,49 @@ def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]
     if workflow in PC_IP_WORKFLOWS and 'pc_ip' not in config and config.get('fc_ip'):
         normalized['pc_ip'] = normalized.pop('fc_ip')
         changed = True
-    if workflow == 'cluster-create' and 'create_clusters' not in normalized and isinstance(normalized.get('clusters'), list):
-        legacy_clusters = normalized.pop('clusters')
+    if workflow == 'cluster-create':
+        network_key_map = {
+            'name_servers_list': 'dns_servers',
+            'ntp_servers_list': 'ntp_servers',
+            'dns_servers': 'dns_servers',
+            'ntp_servers': 'ntp_servers',
+        }
         common_network_settings = normalized.get('common_network_settings')
         if not isinstance(common_network_settings, dict):
             common_network_settings = {}
-        for key in ('name_servers_list', 'ntp_servers_list'):
-            if key in normalized and key not in common_network_settings:
-                common_network_settings[key] = normalized.pop(key)
-        create_clusters = []
-        for cluster in legacy_clusters:
-            if not isinstance(cluster, dict):
-                create_clusters.append(cluster)
-                continue
-            cluster_copy = dict(cluster)
-            for key in ('name_servers_list', 'ntp_servers_list'):
-                if key in cluster_copy and key not in common_network_settings:
-                    common_network_settings[key] = cluster_copy.pop(key)
-            create_clusters.append(cluster_copy)
-        normalized['common_network_settings'] = common_network_settings
-        normalized['create_clusters'] = create_clusters
-        changed = True
+        else:
+            common_network_settings = dict(common_network_settings)
+        for old_key, new_key in network_key_map.items():
+            if old_key != new_key and old_key in common_network_settings and new_key not in common_network_settings:
+                common_network_settings[new_key] = common_network_settings.pop(old_key)
+                changed = True
+        for old_key, new_key in network_key_map.items():
+            if old_key in normalized and new_key not in common_network_settings:
+                common_network_settings[new_key] = normalized.pop(old_key)
+                changed = True
+        create_clusters_source = normalized.get('create_clusters')
+        if not isinstance(create_clusters_source, list) and isinstance(normalized.get('clusters'), list):
+            create_clusters_source = normalized.pop('clusters')
+            changed = True
+        if isinstance(create_clusters_source, list):
+            create_clusters = []
+            for cluster in create_clusters_source:
+                if not isinstance(cluster, dict):
+                    create_clusters.append(cluster)
+                    continue
+                cluster_copy = dict(cluster)
+                for old_key, new_key in network_key_map.items():
+                    if old_key in cluster_copy and new_key not in common_network_settings:
+                        common_network_settings[new_key] = cluster_copy.pop(old_key)
+                        changed = True
+                if 'nodes_list' not in cluster_copy and 'nodes' in cluster_copy:
+                    cluster_copy['nodes_list'] = cluster_copy.pop('nodes')
+                    changed = True
+                create_clusters.append(cluster_copy)
+            normalized['create_clusters'] = create_clusters
+        if normalized.get('common_network_settings') != common_network_settings:
+            normalized['common_network_settings'] = common_network_settings
+            changed = True
     return normalized, changed
 
 
@@ -3811,6 +3834,25 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
             passed += 1
 
     # ── 3. IP address format ─────────────────────────────────────────────────
+    for mapping_field, required_keys in preflight.get('mapping_required_keys', {}).items():
+        mapping_value = config.get(mapping_field)
+        if mapping_value is None or mapping_value == {}:
+            pass
+        elif not isinstance(mapping_value, dict):
+            yield from send('stdout', f'[FAIL] {mapping_field} must be a mapping')
+            failed += 1
+        else:
+            for key in required_keys:
+                val = mapping_value.get(key)
+                empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                if empty:
+                    yield from send('stdout', f'[FAIL] Required field missing : {mapping_field}.{key}')
+                    failed += 1
+                else:
+                    display = str(val) if not isinstance(val, (list, dict)) else f'({len(val)} item{"s" if len(val) != 1 else ""})'
+                    yield from send('stdout', f'[PASS] Required field present : {mapping_field}.{key} = {display}')
+                    passed += 1
+
     cluster_list_field = preflight.get('cluster_list_field')
     if cluster_list_field:
         cluster_list = config.get(cluster_list_field)
@@ -3836,26 +3878,26 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
                     else:
                         yield from send('stdout', f'[PASS] Required cluster field present : {cluster_list_field}[{idx}].{key}')
                         passed += 1
-                nodes = cluster.get('nodes')
+                nodes = cluster.get('nodes_list')
                 if nodes is None or nodes == []:
                     pass
                 elif not isinstance(nodes, list):
-                    yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}].nodes must be a list')
+                    yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}].nodes_list must be a list')
                     failed += 1
                 else:
                     for node_idx, node in enumerate(nodes, start=1):
                         if not isinstance(node, dict):
-                            yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}].nodes[{node_idx}] must be a mapping')
+                            yield from send('stdout', f'[FAIL] {cluster_list_field}[{idx}].nodes_list[{node_idx}] must be a mapping')
                             failed += 1
                             continue
                         for key in node_required_keys:
                             val = node.get(key)
                             empty = val is None or (isinstance(val, (str, list, dict)) and not val)
                             if empty:
-                                yield from send('stdout', f'[FAIL] Required node field missing : {cluster_list_field}[{idx}].nodes[{node_idx}].{key}')
+                                yield from send('stdout', f'[FAIL] Required node field missing : {cluster_list_field}[{idx}].nodes_list[{node_idx}].{key}')
                                 failed += 1
                             else:
-                                yield from send('stdout', f'[PASS] Required node field present : {cluster_list_field}[{idx}].nodes[{node_idx}].{key}')
+                                yield from send('stdout', f'[PASS] Required node field present : {cluster_list_field}[{idx}].nodes_list[{node_idx}].{key}')
                                 passed += 1
 
     for field in preflight.get('ip_fields', []):

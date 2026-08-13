@@ -1519,12 +1519,12 @@ def test_dry_run_valid_yaml(client, auth_headers, monkeypatch):
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
         'common_network_settings:\n'
-        '  name_servers_list: [8.8.8.8]\n'
-        '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
         'create_clusters:\n'
         '  - cluster_name: test\n'
         '    cluster_vip: 192.168.1.10\n'
-        '    nodes:\n'
+        '    nodes_list:\n'
         '      - cvm_ip: 192.168.1.11\n'
         '        host_ip: 192.168.1.12\n'
     )
@@ -1569,12 +1569,12 @@ def test_preflight_generator_pass(monkeypatch):
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
         'common_network_settings:\n'
-        '  name_servers_list: [8.8.8.8]\n'
-        '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
         'create_clusters:\n'
         '  - cluster_name: c1\n'
         '    cluster_vip: 10.0.0.10\n'
-        '    nodes:\n'
+        '    nodes_list:\n'
         '      - cvm_ip: 10.0.0.11\n'
         '        host_ip: 10.0.0.12\n'
     )
@@ -1628,8 +1628,40 @@ def test_legacy_cluster_create_content_normalized_for_execution():
     assert 'pc_ip: 10.0.0.1' in normalized
     assert 'fc_ip:' not in normalized
     assert 'common_network_settings:' in normalized
+    assert 'dns_servers:' in normalized
+    assert 'ntp_servers:' in normalized
     assert 'create_clusters:' in normalized
+    assert 'nodes_list:' in normalized
     assert '\nclusters:' not in normalized
+
+
+def test_partial_cluster_create_schema_normalized_for_execution():
+    """Execution normalizes the first upstream-shape attempt to exact ZTF field names."""
+    import server
+    normalized, changed = server._normalize_ztf_config_content(
+        'cluster-create',
+        (
+            'pc_ip: 10.0.0.1\n'
+            'pc_credential: pc_user\n'
+            'cvm_credential: cvm_cred\n'
+            'common_network_settings:\n'
+            '  name_servers_list: [8.8.8.8]\n'
+            '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+            'create_clusters:\n'
+            '  - cluster_name: c1\n'
+            '    cluster_vip: 10.0.0.10\n'
+            '    nodes:\n'
+            '      - cvm_ip: 10.0.0.11\n'
+            '        host_ip: 10.0.0.12\n'
+        ),
+    )
+    assert changed is True
+    assert 'dns_servers:' in normalized
+    assert 'ntp_servers:' in normalized
+    assert 'nodes_list:' in normalized
+    assert 'name_servers_list:' not in normalized
+    assert 'ntp_servers_list:' not in normalized
+    assert '\n    nodes:' not in normalized
 
 
 def test_preflight_generator_missing_field(monkeypatch):
@@ -1650,12 +1682,12 @@ def test_preflight_generator_unreachable(monkeypatch):
         'pc_credential: pc_user\n'
         'cvm_credential: cvm_cred\n'
         'common_network_settings:\n'
-        '  name_servers_list: [8.8.8.8]\n'
-        '  ntp_servers_list: [0.us.pool.ntp.org]\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
         'create_clusters:\n'
         '  - cluster_name: c1\n'
         '    cluster_vip: 10.0.0.10\n'
-        '    nodes:\n'
+        '    nodes_list:\n'
         '      - cvm_ip: 10.0.0.11\n'
         '        host_ip: 10.0.0.12\n'
     )

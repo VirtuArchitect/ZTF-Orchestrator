@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.7.2
+# ZTF-Orchestrator · v1.7.3
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
