@@ -26,7 +26,16 @@ Git, YAML, and CLI commands.
 | Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
 | What does it execute? | Allowlisted ZTF 1.x workflows/scripts and constrained NKP safe phases through background jobs. |
 | Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
+| Can I preview it? | Yes. Start with the [demo and simulator guide](docs/demo/README.md) to explore UI and workflow behavior without treating simulator output as live infrastructure validation. |
 | What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and native ZTF 2.x plan/apply mode. |
+
+## Demo
+
+Use the [demo and simulator guide](docs/demo/README.md) to preview
+ZTF-Orchestrator UI behavior, Prism-shaped simulator flows, and evidence
+boundaries before connecting to a real Nutanix environment. The demo path is
+for interface exploration and local/lab smoke testing; it does not prove live
+Prism Central, Prism Element, Foundation Central, or NKP deployment success.
 
 ## How It Works
 

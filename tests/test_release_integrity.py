@@ -170,6 +170,7 @@ def test_operator_runbook_baseline_is_present_and_linked():
         '[governance index](docs/governance/README.md)',
         '[UAT index](docs/uat/README.md)',
         '[testing index](docs/testing/README.md)',
+        '[demo and simulator guide](docs/demo/README.md)',
     ]:
         assert fragment in readme
 
