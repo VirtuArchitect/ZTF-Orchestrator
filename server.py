@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.4'
+APP_VERSION = '1.7.5'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -5103,13 +5103,49 @@ def _sync_global_config_to_legacy() -> bool:
     legacy_global_yml = get_legacy_global_config_path()
     if not global_yml.exists() or legacy_global_yml.resolve() == global_yml.resolve():
         return False
-    content = global_yml.read_text(encoding='utf-8')
+    content = _normalize_global_config_content(global_yml.read_text(encoding='utf-8'))
     if legacy_global_yml.exists() and legacy_global_yml.read_text(encoding='utf-8') == content:
         return False
     legacy_global_yml.parent.mkdir(parents=True, exist_ok=True)
     backup_config(legacy_global_yml)
     _secure_write(legacy_global_yml, content)
     return True
+
+
+def _normalize_global_config_content(content: str) -> str:
+    """Add runtime-required global.yml compatibility keys without changing secrets."""
+    try:
+        parsed = yaml.safe_load(content or '') or {}
+    except yaml.YAMLError:
+        return content
+    if not isinstance(parsed, dict):
+        return content
+
+    method = str(parsed.get('ip_allocation_method') or 'static').strip() or 'static'
+    ipam = parsed.get('ipam')
+    if not isinstance(ipam, dict):
+        ipam = {}
+    else:
+        ipam = dict(ipam)
+    ipam.setdefault('method', method)
+
+    if method == 'infoblox':
+        infoblox = parsed.get('infoblox')
+        if isinstance(infoblox, dict):
+            for source_key, target_key in {
+                'host': 'host',
+                'username': 'username',
+                'password': 'password',
+                'dns_view': 'dns_view',
+                'network_view': 'network_view',
+            }.items():
+                if source_key in infoblox and target_key not in ipam:
+                    ipam[target_key] = infoblox[source_key]
+
+    if parsed.get('ipam') == ipam:
+        return content
+    parsed['ipam'] = ipam
+    return yaml.safe_dump(parsed, sort_keys=False)
 
 def backup_config(path: Path):
     """Keep the last N versions of a config before overwriting."""
@@ -6608,6 +6644,7 @@ def save_global_config():
     ok, err = validate_yaml(content)
     if not ok:
         return jsonify({'error': f'Invalid YAML: {err}'}), 400
+    content = _normalize_global_config_content(content)
     global_yml = get_global_config_path()
     global_yml.parent.mkdir(parents=True, exist_ok=True)
     backup_config(global_yml)

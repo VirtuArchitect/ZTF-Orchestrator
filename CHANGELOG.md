@@ -9,8 +9,27 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.4 and should be moved
+Changes in this section are present on `main` after v1.7.5 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.5] - 2026-08-14
+
+### Summary
+Global Config compatibility release for ZTF workflows that require an `ipam`
+mapping even when static IP allocation is selected.
+
+### Fixed
+- Added `ipam.method` to generated `global.yml` for both static and Infoblox
+  IPAM modes.
+- Normalized older saved `global.yml` files before mirroring them into the ZTF
+  runtime path, preventing the runtime `'ipam'` key error during Cluster Create.
+- Preserved existing top-level Infoblox settings while also copying them into
+  the runtime-required `ipam` mapping.
+
+### Security
+- No credential, authorization, session, or config path boundary changes.
 
 ---
 

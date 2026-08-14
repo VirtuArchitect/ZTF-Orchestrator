@@ -7,6 +7,7 @@ import socket
 import zipfile
 from pathlib import Path
 import pytest
+import yaml
 
 
 # ── RBAC ─────────────────────────────────────────────────────────────────────
@@ -1117,7 +1118,29 @@ def test_save_global_config(client, auth_headers, isolated_data_dir):
     assert Path(data['path']).name == 'global.yml'
     assert Path(data['path']).parent.name == 'configs'
     global_yml = isolated_data_dir / 'configs' / 'global.yml'
-    assert global_yml.read_text() == 'vault_to_use: local\n'
+    saved = yaml.safe_load(global_yml.read_text())
+    assert saved['vault_to_use'] == 'local'
+    assert saved['ipam']['method'] == 'static'
+
+
+def test_global_config_sync_adds_required_static_ipam(client, auth_headers, isolated_data_dir):
+    import server
+
+    global_yml = isolated_data_dir / 'configs' / 'global.yml'
+    global_yml.parent.mkdir(exist_ok=True)
+    global_yml.write_text(
+        'vault_to_use: local\n'
+        'ip_allocation_method: static\n'
+        'vaults:\n'
+        '  local:\n'
+        '    credentials: {}\n'
+    )
+
+    assert server._sync_global_config_to_legacy() is True
+    legacy_global_yml = isolated_data_dir / 'default-legacy-ztf' / 'config' / 'global.yml'
+    mirrored = yaml.safe_load(legacy_global_yml.read_text())
+    assert mirrored['ip_allocation_method'] == 'static'
+    assert mirrored['ipam']['method'] == 'static'
 
 
 def test_save_global_config_reports_legacy_mirror_failure(client, auth_headers, monkeypatch):
