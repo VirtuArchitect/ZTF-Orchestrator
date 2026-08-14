@@ -1,6 +1,6 @@
 # Supportability
 
-Current release marker: `v1.7.6`.
+Current release marker: `v1.7.7`.
 
 ZTF-Orchestrator is an unofficial community project. It is not affiliated with
 or supported by Nutanix.

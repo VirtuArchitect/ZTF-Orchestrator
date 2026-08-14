@@ -3,7 +3,7 @@
 This guide expands the installation options from the main README into
 step-by-step deployment procedures.
 
-Current ZTF-Orchestrator release for this source tree: `v1.7.6`.
+Current ZTF-Orchestrator release for this source tree: `v1.7.7`.
 
 ZTF-Orchestrator currently targets the legacy ZeroTouch Framework 1.x
 workflow/script CLI. Keep `ZTF_REF` pinned to `v1.5.2` unless you are

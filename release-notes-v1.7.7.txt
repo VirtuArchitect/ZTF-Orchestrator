@@ -1,0 +1,21 @@
+ZTF-Orchestrator v1.7.7
+
+Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.7
+Bundled ZTF ref: v1.5.2
+Built: 2026-08-14
+
+Verification:
+- API tests: passed
+- release integrity tests: passed
+- npm audit: passed
+- npm build: passed
+- docker build: passed
+- container /health: passed
+- ZTF runtime patches: passed
+
+Fixes:
+- Adds an explicit Cluster Create Foundation Central target selector.
+- Keeps Integrated Prism Central Foundation Central on the existing bundled ZTF cluster-create path.
+- Blocks Standalone Foundation Central Appliance configs before launching bundled ZTF, with a clear compatibility message.
+- Strips Orchestrator-only target metadata before integrated-mode YAML is passed to upstream ZTF.
+- Prevents standalone FCA UAT runs from failing later with a confusing 404 on /api/fc/v1/imaged_nodes/list.
