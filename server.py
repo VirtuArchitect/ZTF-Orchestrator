@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.3'
+APP_VERSION = '1.7.4'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2940,7 +2940,7 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'mapping_required_keys': {'common_network_settings': ['dns_servers', 'ntp_servers']},
         'cluster_list_field': 'create_clusters',
         'cluster_list_required_keys': ['cluster_name', 'cluster_vip', 'nodes_list'],
-        'cluster_node_required_keys': ['cvm_ip', 'host_ip'],
+        'cluster_node_required_keys': ['node_serial', 'cvm_ip', 'host_ip'],
     },
     'imaging-only': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
@@ -3088,6 +3088,11 @@ def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]
         if not isinstance(create_clusters_source, list) and isinstance(normalized.get('clusters'), list):
             create_clusters_source = normalized.pop('clusters')
             changed = True
+        node_key_map = {
+            'serial': 'node_serial',
+            'nodeSerial': 'node_serial',
+            'node_serial': 'node_serial',
+        }
         if isinstance(create_clusters_source, list):
             create_clusters = []
             for cluster in create_clusters_source:
@@ -3102,6 +3107,20 @@ def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]
                 if 'nodes_list' not in cluster_copy and 'nodes' in cluster_copy:
                     cluster_copy['nodes_list'] = cluster_copy.pop('nodes')
                     changed = True
+                nodes_list = cluster_copy.get('nodes_list')
+                if isinstance(nodes_list, list):
+                    normalized_nodes = []
+                    for node in nodes_list:
+                        if not isinstance(node, dict):
+                            normalized_nodes.append(node)
+                            continue
+                        node_copy = dict(node)
+                        for old_key, new_key in node_key_map.items():
+                            if old_key != new_key and old_key in node_copy and new_key not in node_copy:
+                                node_copy[new_key] = node_copy.pop(old_key)
+                                changed = True
+                        normalized_nodes.append(node_copy)
+                    cluster_copy['nodes_list'] = normalized_nodes
                 create_clusters.append(cluster_copy)
             normalized['create_clusters'] = create_clusters
         if normalized.get('common_network_settings') != common_network_settings:

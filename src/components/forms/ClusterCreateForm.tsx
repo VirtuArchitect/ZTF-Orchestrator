@@ -6,6 +6,7 @@ import TagInput from './TagInput'
 import type { ConnectionProfile } from '../../types'
 
 interface Node {
+  nodeSerial: string
   cvmIp: string
   hostIp: string
   ipmiIp: string
@@ -29,7 +30,7 @@ interface Props {
 
 const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
 
-const defaultNode = (): Node => ({ cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmRamGb: 12 })
+const defaultNode = (): Node => ({ nodeSerial: '', cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmRamGb: 12 })
 const defaultCluster = (): Cluster => ({
   name: '',
   clusterVip: '',
@@ -178,7 +179,11 @@ export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
                   </div>
                   <div className="space-y-2">
                     {cluster.nodes.map((node, ni) => (
-                      <div key={ni} className="grid grid-cols-6 gap-2 p-3 rounded-lg bg-gray-900/80 border border-border/50 items-end">
+                      <div key={ni} className="grid grid-cols-7 gap-2 p-3 rounded-lg bg-gray-900/80 border border-border/50 items-end">
+                        <div>
+                          <label className="label text-xs">Node Serial</label>
+                          <input className="input text-xs py-1.5" value={node.nodeSerial} onChange={e => updateNode(ci, ni, { nodeSerial: e.target.value })} placeholder="2Z3P..." />
+                        </div>
                         <div>
                           <label className="label text-xs">CVM IP</label>
                           <input className="input text-xs py-1.5" value={node.cvmIp} onChange={e => updateNode(ci, ni, { cvmIp: e.target.value })} placeholder="10.0.0.11" />

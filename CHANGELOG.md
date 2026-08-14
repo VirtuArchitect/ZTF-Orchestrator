@@ -9,8 +9,27 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.3 and should be moved
+Changes in this section are present on `main` after v1.7.4 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.4] - 2026-08-14
+
+### Summary
+Cluster Create node serial compatibility release for upstream ZTF validation.
+
+### Fixed
+- Added `node_serial` to generated `create_clusters[].nodes_list[]` entries so
+  runtime ZTF accepts Cluster Create configs that target Foundation Central.
+- Added a Node Serial field to the Cluster Create workflow form.
+- Updated Cluster Create preflight to require `node_serial`, `cvm_ip`, and
+  `host_ip` per node before runtime execution.
+- Extended compatibility normalization so saved configs using `serial` or
+  `nodeSerial` are rewritten to upstream `node_serial`.
+
+### Security
+- No credential, authorization, or path handling changes.
 
 ---
 

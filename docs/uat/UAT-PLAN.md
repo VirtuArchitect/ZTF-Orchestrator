@@ -1,6 +1,6 @@
 # UAT Plan
 
-Current release marker: `v1.7.3`.
+Current release marker: `v1.7.4`.
 
 Controlled UAT proves that a specific ZTF-Orchestrator deployment can be
 operated with named users, approvals, backups, validation, evidence capture, and

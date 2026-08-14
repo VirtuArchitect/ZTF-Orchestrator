@@ -1,0 +1,18 @@
+ZTF-Orchestrator v1.7.4
+
+Image: ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.4
+Bundled ZTF ref: v1.5.2
+Built: 2026-08-14
+
+Verification:
+- API tests: passed
+- release integrity tests: passed
+- npm build: passed
+- docker build: passed
+- container /health: passed
+- ZTF runtime patches: passed
+
+Fixes:
+- Cluster Create now captures and emits node_serial for every node in nodes_list.
+- Preflight catches missing node_serial before runtime ZTF execution.
+- Saved configs using serial or nodeSerial are normalized to node_serial.
