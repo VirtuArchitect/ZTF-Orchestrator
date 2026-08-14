@@ -9,8 +9,31 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.5 and should be moved
+Changes in this section are present on `main` after v1.7.6 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.6] - 2026-08-14
+
+### Summary
+Foundation Central credential clarity release for Cluster Create and imaging
+workflows.
+
+### Fixed
+- Added a dedicated `foundation_central` credential reference to default Global
+  Config entries and workflow credential selectors.
+- Updated Cluster Create, Imaging Only, and Site Deploy forms to label the
+  Foundation Central credential separately from Prism Central credentials while
+  still emitting upstream ZTF's required `pc_credential` YAML key.
+- Added preflight validation for workflow credential references so missing or
+  empty Foundation Central credentials are reported before the ZTF runtime call
+  fails with HTTP 401.
+
+### Security
+- No new credential storage mechanism or authentication boundary changes.
+- Preflight now confirms referenced credentials exist and are populated without
+  logging secret values.
 
 ---
 

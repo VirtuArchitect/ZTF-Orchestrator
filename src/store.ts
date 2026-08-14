@@ -67,7 +67,7 @@ const DEFAULT_CONNECTION_PROFILE: ConnectionProfile = {
   },
   foundationCentral: {
     endpoint: '',
-    credentialRef: 'pc_user',
+    credentialRef: 'foundation_central',
     apiKeyRef: '',
     aosUrl: '',
     hypervisorType: 'kvm',

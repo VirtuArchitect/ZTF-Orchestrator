@@ -1,6 +1,6 @@
 # RB-002 - Backup and Restore
 
-Current release marker: `v1.7.5`.
+Current release marker: `v1.7.6`.
 
 ## Metadata
 

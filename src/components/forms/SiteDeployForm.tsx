@@ -30,7 +30,7 @@ const defaultSite = (): Site => ({
 })
 
 export default function SiteDeployForm({ onYamlChange, profile }: Props) {
-  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'pc_user')
+  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central')
   const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
   const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
   const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
@@ -83,11 +83,11 @@ export default function SiteDeployForm({ onYamlChange, profile }: Props) {
       <div className="form-section">
         <p className="form-section-title">Global Settings</p>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="label">PC Credential</label>
+          <div><label className="label">Foundation Central Credential</label>
             <select className="input" value={pcCred} onChange={e => setPcCred(e.target.value)}>{CREDENTIAL_KEYS.map(k => <option key={k}>{k}</option>)}</select></div>
           <div><label className="label">CVM Credential</label>
             <select className="input" value={cvmCred} onChange={e => setCvmCred(e.target.value)}>{CREDENTIAL_KEYS.map(k => <option key={k}>{k}</option>)}</select></div>
-          <div className="col-span-2"><label className="label">Prism Central IP <span className="text-red-400">*</span></label>
+          <div className="col-span-2"><label className="label">Foundation Central IP <span className="text-red-400">*</span></label>
             <input className="input" value={pcIp} onChange={e => setPcIp(e.target.value)} placeholder="10.0.0.50" /></div>
         </div>
       </div>

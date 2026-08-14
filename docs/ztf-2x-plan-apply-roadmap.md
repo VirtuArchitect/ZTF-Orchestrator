@@ -4,7 +4,7 @@ ZTF 2.x support is tracked separately from the v1.5.x ZTF 1.x orchestrator
 hardening line. The goal is to avoid blending new framework semantics with the
 current production UAT validation path.
 
-Current ZTF-Orchestrator release for this roadmap baseline: `v1.7.5`.
+Current ZTF-Orchestrator release for this roadmap baseline: `v1.7.6`.
 
 ## Principles
 

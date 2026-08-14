@@ -1,6 +1,6 @@
 # Deployment Boundaries
 
-Current release marker: `v1.7.5`.
+Current release marker: `v1.7.6`.
 
 ZTF-Orchestrator supports several deployment modes, but the operational boundary
 depends on the environment, storage backend, network, and support model.
