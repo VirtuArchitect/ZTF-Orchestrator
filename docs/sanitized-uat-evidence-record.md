@@ -4,7 +4,7 @@ Use this pattern for non-NKP ZTF workflows such as Prism Central configuration,
 cluster configuration, Foundation Central imaging, NDB setup, Calm workload
 setup, drift checks, and backup/restore drills.
 
-Current ZTF-Orchestrator release for new evidence records: `v1.7.4`.
+Current ZTF-Orchestrator release for new evidence records: `v1.7.5`.
 
 ## Evidence Rules
 
@@ -20,7 +20,7 @@ Current ZTF-Orchestrator release for new evidence records: `v1.7.4`.
 
 ```yaml
 evidence_id: ztf-uat-YYYYMMDD-001
-orchestrator_version: v1.7.4
+orchestrator_version: v1.7.5
 workflow: config-pc
 environment_class: uat
 operator_role: operator

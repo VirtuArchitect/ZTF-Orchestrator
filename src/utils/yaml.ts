@@ -28,6 +28,7 @@ export function buildGlobalYaml(config: {
   const obj: Record<string, unknown> = {
     vault_to_use: config.vaultToUse,
     ip_allocation_method: config.ipAllocationMethod,
+    ipam: { method: config.ipAllocationMethod },
     vaults: {
       local: { credentials: credMap },
     },
@@ -43,6 +44,14 @@ export function buildGlobalYaml(config: {
   }
 
   if (config.ipAllocationMethod === 'infoblox' && config.infoblox) {
+    obj.ipam = {
+      method: 'infoblox',
+      host: config.infoblox.host,
+      username: config.infoblox.username,
+      password: config.infoblox.password,
+      dns_view: config.infoblox.dnsView,
+      network_view: config.infoblox.networkView,
+    }
     obj.infoblox = {
       host: config.infoblox.host,
       username: config.infoblox.username,
