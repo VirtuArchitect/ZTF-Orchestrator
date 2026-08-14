@@ -81,7 +81,7 @@ function newProfile(seed?: Partial<ConnectionProfile>): ConnectionProfile {
     },
     foundationCentral: {
       endpoint: '',
-      credentialRef: 'pc_user',
+      credentialRef: 'foundation_central',
       apiKeyRef: '',
       aosUrl: '',
       hypervisorType: 'kvm',
@@ -959,7 +959,7 @@ export default function Settings() {
                     placeholder="Foundation Central endpoint"
                     onChange={value => patchNested('foundationCentral', 'endpoint', value)} />
                   <Field label="Credential Ref" value={activeProfile.foundationCentral.credentialRef} disabled={!isAdmin} mono
-                    placeholder="pc_user"
+                    placeholder="foundation_central"
                     onChange={value => patchNested('foundationCentral', 'credentialRef', value)} />
                   <Field label="API Key Ref" value={activeProfile.foundationCentral.apiKeyRef} disabled={!isAdmin} mono
                     placeholder="foundation_api_key"

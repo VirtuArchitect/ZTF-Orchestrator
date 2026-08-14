@@ -255,6 +255,7 @@ export const TIMEZONES = [
 
 export const CREDENTIAL_KEYS = [
   'pc_user',
+  'foundation_central',
   'pe_user',
   'ncm_user',
   'cvm_credential',

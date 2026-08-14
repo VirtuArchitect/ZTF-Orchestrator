@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.5'
+APP_VERSION = '1.7.6'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2935,6 +2935,7 @@ def _approval_automation_error(workflow: str | None) -> str | None:
 WORKFLOW_PREFLIGHT: dict[str, dict] = {
     'cluster-create': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'common_network_settings', 'create_clusters'],
+        'credential_fields': {'pc_credential': 'Foundation Central', 'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
         'mapping_required_keys': {'common_network_settings': ['dns_servers', 'ntp_servers']},
@@ -2944,16 +2945,19 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
     },
     'imaging-only': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
+        'credential_fields': {'pc_credential': 'Foundation Central', 'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
     'imaging': {
         'required':    ['pc_ip', 'cvm_credential'],
+        'credential_fields': {'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
     'site-deploy': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential'],
+        'credential_fields': {'pc_credential': 'Foundation Central', 'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Prism Central')],
     },
@@ -2971,11 +2975,13 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
     },
     'config-pc': {
         'required':    ['pc_ip', 'pc_credential'],
+        'credential_fields': {'pc_credential': 'Prism Central'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Prism Central')],
     },
     'pod-config': {
         'required':    ['pc_ip', 'pc_credential'],
+        'credential_fields': {'pc_credential': 'Prism Central'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Prism Central')],
     },
@@ -2991,16 +2997,19 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
     },
     'calm-vm-workloads': {
         'required':    ['ncm_vm_ip', 'ncm_credential'],
+        'credential_fields': {'ncm_credential': 'NCM'},
         'ip_fields':   ['ncm_vm_ip'],
         'connect':     [('ncm_vm_ip', 9440, 'NCM (Calm)')],
     },
     'calm-edgeai-vm-workload': {
         'required':    ['ncm_vm_ip', 'ncm_credential'],
+        'credential_fields': {'ncm_credential': 'NCM'},
         'ip_fields':   ['ncm_vm_ip'],
         'connect':     [('ncm_vm_ip', 9440, 'NCM (Calm)')],
     },
     'ndb': {
         'required':    ['cluster_ip', 'pe_credential', 'ndb_credential'],
+        'credential_fields': {'pe_credential': 'Prism Element', 'ndb_credential': 'NDB'},
         'ip_fields':   ['cluster_ip'],
         'connect':     [('cluster_ip', 9440, 'NDB Cluster')],
     },
@@ -3930,6 +3939,18 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         except ValueError:
             yield from send('stdout', f'[FAIL] IP address invalid      : {field} = "{val}"')
             failed += 1
+
+    for field, label in preflight.get('credential_fields', {}).items():
+        ref = str(config.get(field, '')).strip()
+        if not ref:
+            continue   # already caught by required check
+        _username, _password, error = _lookup_credential_ref(ref)
+        if error:
+            yield from send('stdout', f'[FAIL] Credential unavailable : {field} = {ref} ({error})')
+            failed += 1
+        else:
+            yield from send('stdout', f'[PASS] Credential configured  : {label} ({field} = {ref})')
+            passed += 1
 
     # ── 4. TCP reachability ──────────────────────────────────────────────────
     for (field, port, label) in preflight.get('connect', []):

@@ -41,7 +41,7 @@ const defaultCluster = (): Cluster => ({
 })
 
 export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
-  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'pc_user')
+  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central')
   const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
   const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
   const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
@@ -88,7 +88,7 @@ export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
         <p className="form-section-title"><Server size={14} /> Global Settings</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">PC Credential Reference</label>
+            <label className="label">Foundation Central Credential Reference</label>
             <select className="input" value={pcCred} onChange={e => setPcCred(e.target.value)}>
               {CREDENTIAL_KEYS.map(k => <option key={k} value={k}>{k}</option>)}
             </select>

@@ -1536,6 +1536,7 @@ def test_dry_run_valid_yaml(client, auth_headers, monkeypatch):
     import server
     # Mock TCP checks so the test doesn't hit the network
     monkeypatch.setattr(server, '_tcp_check', lambda host, port, timeout=5.0: (True, 12.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
 
     yaml_body = (
         'pc_ip: 192.168.1.1\n'
@@ -1588,6 +1589,7 @@ def test_preflight_generator_pass(monkeypatch):
     """_run_preflight produces pass events for valid cluster-create YAML."""
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
     yaml_ok = (
         'pc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
@@ -1612,6 +1614,7 @@ def test_preflight_accepts_legacy_cluster_create_keys(monkeypatch):
     """Legacy Orchestrator cluster-create configs still preflight after normalization."""
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
     yaml_ok = (
         'fc_ip: 10.0.0.1\n'
         'pc_credential: pc_user\n'
@@ -1702,6 +1705,36 @@ def test_preflight_generator_missing_field(monkeypatch):
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (False, 0.0))
     yaml_missing = 'pc_credential: pc_user\n'   # pc_ip missing
     output = ''.join(server._run_preflight('cluster-create', yaml_missing, 'test-id'))
+    assert '[FAIL]' in output
+
+
+def test_preflight_generator_missing_foundation_central_credential(monkeypatch):
+    """_run_preflight catches missing Foundation Central credentials before ZTF runtime."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(
+        server,
+        '_lookup_credential_ref',
+        lambda ref: (None, None, f'credential reference {ref} was not found in global.yml'),
+    )
+    yaml_body = (
+        'pc_ip: 10.0.0.1\n'
+        'pc_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
+    )
+    output = ''.join(server._run_preflight('cluster-create', yaml_body, 'test-id'))
+    assert 'Credential unavailable : pc_credential = foundation_central' in output
+    assert 'credential reference foundation_central was not found in global.yml' in output
     assert '[FAIL]' in output
 
 

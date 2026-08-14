@@ -14,6 +14,7 @@ interface Credential {
 
 const DEFAULT_CREDS: Credential[] = [
   { ref: 'pc_user', username: 'admin', password: '' },
+  { ref: 'foundation_central', username: 'admin', password: '' },
   { ref: 'pe_user', username: 'admin', password: '' },
   { ref: 'ncm_user', username: 'admin', password: '' },
   { ref: 'cvm_credential', username: 'nutanix', password: '' },
