@@ -71,6 +71,7 @@ export function buildClusterCreateYaml(cfg: {
     ipmiGateway?: string
     ipmiNetmask?: string
     nodes: Array<{
+      nodeSerial?: string
       cvmIp: string
       hostIp: string
       ipmiIp?: string
@@ -89,6 +90,7 @@ export function buildClusterCreateYaml(cfg: {
     ...(c.ipmiGateway ? { ipmi_gateway: c.ipmiGateway } : {}),
     ...(c.ipmiNetmask ? { ipmi_netmask: c.ipmiNetmask } : {}),
     nodes_list: c.nodes.map(n => ({
+      node_serial: n.nodeSerial,
       cvm_ip: n.cvmIp,
       host_ip: n.hostIp,
       ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
