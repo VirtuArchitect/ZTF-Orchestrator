@@ -1667,6 +1667,29 @@ def test_legacy_cluster_create_content_normalized_for_execution():
     assert '\n        serial:' not in normalized
 
 
+def test_cluster_create_normalization_strips_orchestrator_metadata():
+    """Orchestrator-only target metadata is not passed to upstream ZTF."""
+    import server
+    normalized, changed = server._normalize_ztf_config_content(
+        'cluster-create',
+        (
+            'ztf_orchestrator:\n'
+            '  foundation_central_target: integrated_pc_fc\n'
+            'pc_ip: 10.0.0.1\n'
+            'pc_credential: foundation_central\n'
+            'cvm_credential: cvm_cred\n'
+            'common_network_settings:\n'
+            '  dns_servers: [8.8.8.8]\n'
+            '  ntp_servers: [0.us.pool.ntp.org]\n'
+            'create_clusters: []\n'
+        ),
+    )
+    assert changed is True
+    assert 'ztf_orchestrator:' not in normalized
+    assert 'foundation_central_target:' not in normalized
+    assert 'pc_ip: 10.0.0.1' in normalized
+
+
 def test_partial_cluster_create_schema_normalized_for_execution():
     """Execution normalizes the first upstream-shape attempt to exact ZTF field names."""
     import server
@@ -1697,6 +1720,32 @@ def test_partial_cluster_create_schema_normalized_for_execution():
     assert 'ntp_servers_list:' not in normalized
     assert 'nodeSerial:' not in normalized
     assert '\n    nodes:' not in normalized
+
+
+def test_preflight_blocks_standalone_foundation_central_appliance(monkeypatch):
+    """Dry-run stops standalone FCA configs before the incompatible ZTF workflow."""
+    import server
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        'pc_ip: 10.0.0.1\n'
+        'pc_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
+    )
+    output = ''.join(server._run_preflight('cluster-create', yaml_body, 'test-id'))
+    assert 'Standalone Foundation Central Appliance is not supported' in output
+    assert '[FAIL]' in output
 
 
 def test_preflight_generator_missing_field(monkeypatch):
@@ -1890,6 +1939,50 @@ def test_tcp_check_failure(monkeypatch):
     ok, ms = server._tcp_check('10.0.0.1', 9440)
     assert ok is False
     assert ms == 0.0
+
+
+def test_execute_blocks_standalone_foundation_central_appliance(client, auth_headers, monkeypatch):
+    """Run execution records a clear failure instead of launching ZTF for standalone FCA."""
+    import subprocess
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+
+    def fail_popen(*args, **kwargs):
+        raise AssertionError('ZTF subprocess should not be launched for standalone FCA')
+
+    monkeypatch.setattr(subprocess, 'Popen', fail_popen)
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        'pc_ip: 10.0.0.1\n'
+        'pc_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
+    )
+    resp = client.post('/api/execute',
+                       json={'workflow': 'cluster-create',
+                             'configContent': yaml_body,
+                             'configFile': 'standalone-fca.yml'},
+                       headers=auth_headers)
+    body = resp.data.decode()
+    assert resp.status_code == 200
+    assert 'Standalone Foundation Central Appliance is not supported' in body
+    assert '"status": "failed"' in body
+
+    history = client.get('/api/executions', headers=auth_headers).get_json()
+    assert history[0]['workflow'] == 'cluster-create'
+    assert history[0]['status'] == 'failed'
 
 
 # ── Multi-script composition ──────────────────────────────────────────────────

@@ -65,6 +65,7 @@ export function buildGlobalYaml(config: {
 }
 
 export function buildClusterCreateYaml(cfg: {
+  foundationCentralTarget: 'integrated_pc_fc' | 'standalone_fca'
   pcCredential: string
   cvmCredential: string
   pcIp: string
@@ -109,6 +110,9 @@ export function buildClusterCreateYaml(cfg: {
   }))
 
   return toYaml({
+    ztf_orchestrator: {
+      foundation_central_target: cfg.foundationCentralTarget,
+    },
     pc_credential: cfg.pcCredential,
     cvm_credential: cfg.cvmCredential,
     pc_ip: cfg.pcIp,

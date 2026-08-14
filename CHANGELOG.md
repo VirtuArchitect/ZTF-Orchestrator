@@ -9,8 +9,36 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.6 and should be moved
+Changes in this section are present on `main` after v1.7.7 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.7] - 2026-08-14
+
+### Summary
+Foundation Central target-mode release for distinguishing integrated Prism
+Central Foundation Central from standalone Foundation Central Appliance.
+
+### Added
+- Added an explicit Foundation Central target selector to Cluster Create:
+  Integrated Prism Central Foundation Central or Standalone Foundation Central
+  Appliance.
+- Added Orchestrator-only YAML metadata for the selected target and stripped
+  that metadata before integrated-mode configs are passed to upstream ZTF.
+
+### Fixed
+- Dry-run, queued execution, and scheduled config-content execution now block
+  Standalone Foundation Central Appliance configs before launching the bundled
+  ZTF `cluster-create` workflow, which only supports the integrated PC FC API
+  path.
+- Standalone FCA attempts now fail with a clear compatibility message instead
+  of a confusing runtime `404 /api/fc/v1/imaged_nodes/list` error.
+
+### Security
+- No credential storage, authentication, authorization, or dependency changes.
+- The new target metadata is non-secret and removed before upstream ZTF runtime
+  execution.
 
 ---
 

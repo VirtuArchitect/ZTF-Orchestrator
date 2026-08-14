@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.6'
+APP_VERSION = '1.7.7'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -3064,6 +3064,41 @@ def _preflight_for_execution(workflow_or_script: str) -> dict:
     return {}
 
 PC_IP_WORKFLOWS = {'cluster-create', 'imaging-only', 'imaging'}
+FOUNDATION_TARGET_INTEGRATED_PC_FC = 'integrated_pc_fc'
+FOUNDATION_TARGET_STANDALONE_FCA = 'standalone_fca'
+STANDALONE_FCA_UNSUPPORTED_MESSAGE = (
+    'Standalone Foundation Central Appliance is not supported by the bundled '
+    'ZTF cluster-create workflow. Use the Foundation Central Appliance UI for '
+    'this deployment, or switch the target to Integrated Prism Central '
+    'Foundation Central.'
+)
+
+
+def _cluster_create_foundation_target(config: dict) -> str:
+    """Return the Orchestrator-only Cluster Create Foundation Central target."""
+    metadata = config.get('ztf_orchestrator')
+    value = ''
+    if isinstance(metadata, dict):
+        value = str(metadata.get('foundation_central_target') or '').strip()
+    if not value:
+        value = str(config.get('foundation_central_target') or '').strip()
+    if value in {FOUNDATION_TARGET_STANDALONE_FCA, 'foundation_central_appliance'}:
+        return FOUNDATION_TARGET_STANDALONE_FCA
+    return FOUNDATION_TARGET_INTEGRATED_PC_FC
+
+
+def _standalone_fca_execution_error(workflow: str, config_content: str) -> str:
+    if workflow != 'cluster-create' or not config_content:
+        return ''
+    try:
+        parsed = yaml.safe_load(config_content) or {}
+    except yaml.YAMLError:
+        return ''
+    if not isinstance(parsed, dict):
+        return ''
+    if _cluster_create_foundation_target(parsed) == FOUNDATION_TARGET_STANDALONE_FCA:
+        return STANDALONE_FCA_UNSUPPORTED_MESSAGE
+    return ''
 
 
 def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]:
@@ -3074,6 +3109,12 @@ def _normalize_ztf_config_keys(workflow: str, config: dict) -> tuple[dict, bool]
         normalized['pc_ip'] = normalized.pop('fc_ip')
         changed = True
     if workflow == 'cluster-create':
+        if 'ztf_orchestrator' in normalized:
+            normalized.pop('ztf_orchestrator', None)
+            changed = True
+        if 'foundation_central_target' in normalized:
+            normalized.pop('foundation_central_target', None)
+            changed = True
         network_key_map = {
             'name_servers_list': 'dns_servers',
             'ntp_servers_list': 'ntp_servers',
@@ -3231,6 +3272,27 @@ def _init_engines():
         import tempfile
         tf_path = None
         if config_content:
+            standalone_error = _standalone_fca_execution_error(workflow or '', config_content)
+            if standalone_error:
+                rc = -1
+                status = 'failed'
+                entry = {
+                    'id':         str(int(_t.time() * 1000)),
+                    'workflow':   workflow or script,
+                    'type':       'schedule',
+                    'command':    '',
+                    'status':     status,
+                    'returnCode': rc,
+                    'timestamp':  datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    'user':       'scheduler',
+                    'configFile': config_file,
+                    'output':     standalone_error,
+                }
+                hist = read_json(HISTORY_FILE, [])
+                hist.insert(0, entry)
+                write_json(HISTORY_FILE, hist[:1000])
+                _fire_configured_webhook(workflow or script, status, rc, 'scheduler', entry['id'])
+                return status
             config_content, _ = _normalize_ztf_config_content(workflow or '', config_content)
             with tempfile.NamedTemporaryFile(
                 mode='w', suffix='.yml', dir=str(configs_dir),
@@ -3832,6 +3894,7 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
     # ── 1. Parse YAML ────────────────────────────────────────────────────────
     try:
         config: dict = yaml.safe_load(config_content) or {}
+        fc_target = _cluster_create_foundation_target(config) if workflow == 'cluster-create' else ''
         config, normalized_legacy_config = _normalize_ztf_config_keys(workflow, config)
         yield from send('stdout', '[PASS] YAML is valid and parseable')
         if normalized_legacy_config:
@@ -3843,6 +3906,14 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('stdout', '')
         yield from send('stdout', f'Result: {passed} passed, {failed} failed')
         yield from send('done', {'status': 'failed', 'dryRun': True})
+        return
+
+    if fc_target == FOUNDATION_TARGET_STANDALONE_FCA:
+        yield from send('stdout', f'[FAIL] {STANDALONE_FCA_UNSUPPORTED_MESSAGE}')
+        failed += 1
+        yield from send('stdout', '')
+        yield from send('stdout', f'Result: {passed} passed, {failed} failed')
+        yield from send('done', {'status': 'failed', 'dryRun': True, 'passed': passed, 'failed': failed})
         return
 
     preflight = _preflight_for_execution(workflow)
@@ -4506,6 +4577,10 @@ class ExecutionJobManager:
                     ok, err = validate_yaml(effective_config_content)
                     if not ok:
                         self._emit(job_id, 'error', f'Invalid YAML: {err}')
+                        return
+                    target_error = _standalone_fca_execution_error(workflow or '', effective_config_content)
+                    if target_error:
+                        self._emit(job_id, 'error', target_error)
                         return
                     normalized_content, normalized_legacy_config = _normalize_ztf_config_content(workflow or '', effective_config_content)
                     if normalized_legacy_config:

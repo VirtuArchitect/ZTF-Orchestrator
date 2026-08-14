@@ -41,6 +41,7 @@ const defaultCluster = (): Cluster => ({
 })
 
 export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
+  const [fcTarget, setFcTarget] = useState<'integrated_pc_fc' | 'standalone_fca'>('integrated_pc_fc')
   const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central')
   const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
   const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
@@ -51,6 +52,7 @@ export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
   useEffect(() => {
     if (!pcIp) return
     const yaml = buildClusterCreateYaml({
+      foundationCentralTarget: fcTarget,
       pcCredential: pcCred,
       cvmCredential: cvmCred,
       pcIp,
@@ -65,7 +67,7 @@ export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
       })),
     })
     onYamlChange(yaml)
-  }, [pcCred, cvmCred, pcIp, dnsServers, ntpServers, clusters, onYamlChange])
+  }, [fcTarget, pcCred, cvmCred, pcIp, dnsServers, ntpServers, clusters, onYamlChange])
 
   const addCluster = () => setClusters(p => [...p, defaultCluster()])
   const removeCluster = (i: number) => setClusters(p => p.filter((_, idx) => idx !== i))
@@ -87,6 +89,13 @@ export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
       <div className="form-section">
         <p className="form-section-title"><Server size={14} /> Global Settings</p>
         <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="label">Foundation Central Target</label>
+            <select className="input" value={fcTarget} onChange={e => setFcTarget(e.target.value as 'integrated_pc_fc' | 'standalone_fca')}>
+              <option value="integrated_pc_fc">Integrated Prism Central Foundation Central</option>
+              <option value="standalone_fca">Standalone Foundation Central Appliance</option>
+            </select>
+          </div>
           <div>
             <label className="label">Foundation Central Credential Reference</label>
             <select className="input" value={pcCred} onChange={e => setPcCred(e.target.value)}>

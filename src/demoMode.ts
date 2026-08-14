@@ -286,7 +286,7 @@ async function demoResponse(request: Request) {
   const path = url.pathname.replace(/^\/ZTF-Orchestrator(?=\/)/, '')
   const method = request.method.toUpperCase()
 
-  if (path === '/health') return json({ status: 'healthy', version: '1.7.6', storage: 'demo' })
+  if (path === '/health') return json({ status: 'healthy', version: '1.7.7', storage: 'demo' })
   if (!path.startsWith('/api/')) return null
 
   if (path === '/api/auth/login') {
@@ -389,7 +389,7 @@ async function demoResponse(request: Request) {
   if (path === '/api/appliance/status') {
     return json({
       detected: true,
-      runtime: { status: 'healthy', version: '1.7.6', ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
+      runtime: { status: 'healthy', version: '1.7.7', ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
       hostLayout: { status: 'demo', visible: 7, expected: 7, message: 'Simulated appliance host layout' },
       checks: [{ name: 'Demo appliance', ok: true, status: 'ok', value: 'static GitHub Pages demo', message: 'No host access in demo mode' }],
       containerPaths: { nkpBundles: '/var/lib/ztf-orchestrator/bundles', nkpFramework: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework', ztfFramework: '/opt/zerotouch-framework' },
@@ -398,7 +398,7 @@ async function demoResponse(request: Request) {
   if (path === '/api/appliance/artifacts') return json({ artifacts: [], summary: { total: 0, verified: 0, archived: 0, expiring: 0, expired: 0, pending: 0 } })
   if (path === '/api/appliance/updates') {
     return json({
-      current: { version: '1.7.6', containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.6', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
+      current: { version: '1.7.7', containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.7', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
       updates: [],
       staged: null,
       allowedRepositories: ['virtuarchitect/ztf-orchestrator', 'nutanixdev/zerotouch-framework', 'virtuarchitect/nkp-zerotouch-framework'],
