@@ -303,7 +303,7 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   const config = [
     'pc_credential: foundation_central',
     'cvm_credential: cvm_credential',
-    'pc_ip: 10.4.40.122',
+    'pc_ip: 192.0.2.122',
     'common_network_settings:',
     '  dns_servers:',
     '    - 8.8.8.8',
@@ -311,13 +311,13 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
     '    - 0.us.pool.ntp.org',
     'create_clusters:',
     '  - cluster_name: imported-cluster',
-    '    cluster_vip: 10.4.40.200',
+    '    cluster_vip: 192.0.2.200',
     '    redundancy_factor: 2',
     '    timezone: UTC',
     '    nodes_list:',
     '      - node_serial: NODE-001',
-    '        cvm_ip: 10.4.40.211',
-    '        host_ip: 10.4.40.212',
+    '        cvm_ip: 192.0.2.211',
+    '        host_ip: 192.0.2.212',
     '',
   ].join('\n')
 
@@ -331,6 +331,14 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'YAML Preview' })).toHaveClass(/bg-nutanix-blue/)
   await expect(page.getByText('imported-cluster')).toBeVisible()
   await expect(page.getByRole('button', { name: /Dry Run/i })).toBeEnabled()
+
+  await page.getByRole('button', { name: 'Configure' }).click()
+  await expect(page.locator('input[placeholder="10.0.0.100"]')).toHaveValue('192.0.2.122')
+  await expect(page.locator('input[placeholder="my-cluster-01"]')).toHaveValue('imported-cluster')
+  await expect(page.locator('input[placeholder="10.0.0.10"]')).toHaveValue('192.0.2.200')
+  await expect(page.locator('input[placeholder="2Z3P..."]')).toHaveValue('NODE-001')
+  await expect(page.locator('input[placeholder="10.0.0.11"]')).toHaveValue('192.0.2.211')
+  await expect(page.locator('input[placeholder="10.0.0.12"]')).toHaveValue('192.0.2.212')
 })
 
 test('script wizard emits PE cluster name using ZTF runtime key', async ({ page }) => {

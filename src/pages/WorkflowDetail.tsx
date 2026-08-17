@@ -76,6 +76,7 @@ export default function WorkflowDetail() {
 
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Configure')
   const [yamlContent, setYamlContent] = useState('')
+  const [importedConfig, setImportedConfig] = useState<{ workflowId: string; parsed: unknown } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [showExecution, setShowExecution] = useState(false)
@@ -97,7 +98,6 @@ export default function WorkflowDetail() {
   const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
   const handleYamlGenerated = useCallback((yaml: string) => {
     setYamlContent(yaml)
-    setImportMessage(null)
   }, [])
 
   const download = () => {
@@ -135,6 +135,7 @@ export default function WorkflowDetail() {
       }
 
       setYamlContent(trimmed.endsWith('\n') ? trimmed : `${trimmed}\n`)
+      setImportedConfig({ workflowId: workflow.id, parsed })
       setActiveTab('YAML Preview')
       setImportMessage({ type: 'success', text: `Imported ${file.name} for ${workflow.name}.` })
     } catch (error) {
@@ -144,7 +145,11 @@ export default function WorkflowDetail() {
   }
 
   const renderForm = () => {
-    const props = { onYamlChange: handleYamlGenerated, profile: activeProfile }
+    const props = {
+      onYamlChange: handleYamlGenerated,
+      profile: activeProfile,
+      importedConfig: importedConfig?.workflowId === workflow.id ? importedConfig.parsed : undefined,
+    }
     switch (workflow.id) {
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'imaging-only': return <ImagingOnlyForm {...props} />

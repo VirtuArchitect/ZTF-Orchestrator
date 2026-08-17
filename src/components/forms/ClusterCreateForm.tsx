@@ -26,6 +26,7 @@ interface Cluster {
 interface Props {
   onYamlChange: (yaml: string) => void
   profile?: ConnectionProfile
+  importedConfig?: unknown
 }
 
 const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
@@ -40,14 +41,108 @@ const defaultCluster = (): Cluster => ({
   expanded: true,
 })
 
-export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
-  const [fcTarget, setFcTarget] = useState<'integrated_pc_fc' | 'standalone_fca'>('integrated_pc_fc')
-  const [pcCred, setPcCred] = useState(profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central')
-  const [cvmCred, setCvmCred] = useState(profile?.prismElement.cvmCredentialRef || 'cvm_credential')
-  const [pcIp, setPcIp] = useState(profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '')
-  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
-  const [clusters, setClusters] = useState<Cluster[]>([defaultCluster()])
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function asString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+function asStringArray(value: unknown, fallback: string[]): string[] {
+  return Array.isArray(value)
+    ? value.map(item => String(item).trim()).filter(Boolean)
+    : fallback
+}
+
+function asNumber(value: unknown, fallback: number): number {
+  const parsed = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function asRedundancyFactor(value: unknown): 2 | 3 {
+  return asNumber(value, 2) === 3 ? 3 : 2
+}
+
+function initialState(profile?: ConnectionProfile, importedConfig?: unknown) {
+  const profileDns = csv(profile?.defaults.dnsServers)
+  const profileNtp = csv(profile?.defaults.ntpServers)
+  const defaults = {
+    fcTarget: 'integrated_pc_fc' as 'integrated_pc_fc' | 'standalone_fca',
+    pcCred: profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central',
+    cvmCred: profile?.prismElement.cvmCredentialRef || 'cvm_credential',
+    pcIp: profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '',
+    dnsServers: profileDns.length ? profileDns : ['8.8.8.8'],
+    ntpServers: profileNtp.length ? profileNtp : ['0.us.pool.ntp.org'],
+    clusters: [defaultCluster()],
+  }
+
+  const root = asRecord(importedConfig)
+  if (!Object.keys(root).length) return defaults
+
+  const metadata = asRecord(root.ztf_orchestrator)
+  const network = asRecord(root.common_network_settings)
+  const importedClusters = Array.isArray(root.create_clusters)
+    ? root.create_clusters.map((item): Cluster => {
+        const cluster = asRecord(item)
+        const nodes = Array.isArray(cluster.nodes_list)
+          ? cluster.nodes_list.map((nodeItem): Node => {
+              const node = asRecord(nodeItem)
+              return {
+                nodeSerial: asString(node.node_serial),
+                cvmIp: asString(node.cvm_ip),
+                hostIp: asString(node.host_ip),
+                ipmiIp: asString(node.ipmi_ip),
+                hostname: asString(node.hypervisor_hostname),
+                cvmRamGb: asNumber(node.cvm_ram_gb, 12),
+              }
+            })
+          : [defaultNode()]
+
+        return {
+          name: asString(cluster.cluster_name),
+          clusterVip: asString(cluster.cluster_vip),
+          redundancyFactor: asRedundancyFactor(cluster.redundancy_factor),
+          timezone: asString(cluster.timezone, 'UTC'),
+          nodes: nodes.length ? nodes : [defaultNode()],
+          expanded: true,
+        }
+      })
+    : defaults.clusters
+
+  return {
+    fcTarget: metadata.foundation_central_target === 'standalone_fca' ? 'standalone_fca' as const : defaults.fcTarget,
+    pcCred: asString(root.pc_credential, defaults.pcCred),
+    cvmCred: asString(root.cvm_credential, defaults.cvmCred),
+    pcIp: asString(root.pc_ip, defaults.pcIp),
+    dnsServers: asStringArray(network.dns_servers, defaults.dnsServers),
+    ntpServers: asStringArray(network.ntp_servers, defaults.ntpServers),
+    clusters: importedClusters.length ? importedClusters : defaults.clusters,
+  }
+}
+
+export default function ClusterCreateForm({ onYamlChange, profile, importedConfig }: Props) {
+  const initial = () => initialState(profile, importedConfig)
+  const [fcTarget, setFcTarget] = useState<'integrated_pc_fc' | 'standalone_fca'>(() => initial().fcTarget)
+  const [pcCred, setPcCred] = useState(() => initial().pcCred)
+  const [cvmCred, setCvmCred] = useState(() => initial().cvmCred)
+  const [pcIp, setPcIp] = useState(() => initial().pcIp)
+  const [dnsServers, setDnsServers] = useState<string[]>(() => initial().dnsServers)
+  const [ntpServers, setNtpServers] = useState<string[]>(() => initial().ntpServers)
+  const [clusters, setClusters] = useState<Cluster[]>(() => initial().clusters)
+  const credentialOptions = Array.from(new Set([...CREDENTIAL_KEYS, pcCred, cvmCred].filter(Boolean)))
+
+  useEffect(() => {
+    if (!importedConfig) return
+    const next = initialState(profile, importedConfig)
+    setFcTarget(next.fcTarget)
+    setPcCred(next.pcCred)
+    setCvmCred(next.cvmCred)
+    setPcIp(next.pcIp)
+    setDnsServers(next.dnsServers)
+    setNtpServers(next.ntpServers)
+    setClusters(next.clusters)
+  }, [importedConfig, profile])
 
   useEffect(() => {
     if (!pcIp) return
@@ -99,13 +194,13 @@ export default function ClusterCreateForm({ onYamlChange, profile }: Props) {
           <div>
             <label className="label">Foundation Central Credential Reference</label>
             <select className="input" value={pcCred} onChange={e => setPcCred(e.target.value)}>
-              {CREDENTIAL_KEYS.map(k => <option key={k} value={k}>{k}</option>)}
+              {credentialOptions.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
           <div>
             <label className="label">CVM Credential Reference</label>
             <select className="input" value={cvmCred} onChange={e => setCvmCred(e.target.value)}>
-              {CREDENTIAL_KEYS.map(k => <option key={k} value={k}>{k}</option>)}
+              {credentialOptions.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
           <div className="col-span-2">
