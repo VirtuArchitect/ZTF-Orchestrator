@@ -204,9 +204,11 @@ def test_operator_runbook_baseline_is_present_and_linked():
 
 def test_static_demo_pages_configuration_is_present():
     index_html = (ROOT / 'index.html').read_text(encoding='utf-8')
+    dist_index = (ROOT / 'dist' / 'index.html').read_text(encoding='utf-8')
     readme = (ROOT / 'README.md').read_text(encoding='utf-8')
     demo_env = (ROOT / '.env.demo').read_text(encoding='utf-8')
     workflow = (ROOT / '.github' / 'workflows' / 'pages-demo.yml').read_text(encoding='utf-8')
+    vite_config = (ROOT / 'vite.config.ts').read_text(encoding='utf-8')
 
     assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
     assert 'VITE_ZTF_DEMO=true' in demo_env
@@ -216,7 +218,11 @@ def test_static_demo_pages_configuration_is_present():
     assert 'npm run build:demo' in workflow
     assert 'actions/deploy-pages' in workflow
     assert 'enablement: true' in workflow
-    assert 'cp dist/index.html dist/404.html' in workflow
+    assert "mode === 'demo' ? 'dist-demo' : 'dist'" in vite_config
+    assert 'cp dist-demo/index.html dist-demo/404.html' in workflow
+    assert 'path: dist-demo' in workflow
+    assert '/ZTF-Orchestrator/assets/' not in dist_index
+    assert 'src="/assets/' in dist_index
 
     governance_boundary = (ROOT / 'docs' / 'governance' / 'PRODUCTION-READINESS-BOUNDARY.md').read_text(encoding='utf-8')
     disaster_recovery = (ROOT / 'docs' / 'governance' / 'DISASTER-RECOVERY.md').read_text(encoding='utf-8')
