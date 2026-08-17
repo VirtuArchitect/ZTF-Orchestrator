@@ -25,8 +25,19 @@ For appliance or operator-facing changes, also review:
 - [ ] `docs/installation-guide.md`
 - [ ] `docs/appliance-update-manager.md`
 - [ ] `appliance/README.md`
+- [ ] `docs/runbooks/README.md`
+- [ ] Relevant `docs/runbooks/RB-*.md`
+- [ ] `docs/demo/README.md`
 - [ ] `.github/workflows/container-publish.yml`
 - [ ] `.github/workflows/ahv-appliance-image.yml`
+
+For user-facing behavior, workflow, UI, or configuration changes, also review:
+
+- [ ] `docs/`
+- [ ] `docs/uat/`
+- [ ] `docs/demo/`
+- [ ] `docs/runbooks/`
+- [ ] Any versioned install checklist for the release.
 
 ## 3. Update the Changelog
 
@@ -79,6 +90,9 @@ ZTF_VISUAL_BASE_URL=http://127.0.0.1:5173 npm run smoke:visual
 - [ ] Confirm `/health` returns success.
 - [ ] Exercise the main changed workflow.
 - [ ] For API changes, test one valid request and one invalid request.
+- [ ] For UI or documentation-affecting releases, confirm the hosted demo link
+  still resolves and reflects the expected release boundary:
+  <https://virtuarchitect.github.io/ZTF-Orchestrator/>.
 - [ ] For appliance changes, document whether the smoke test used a staging
   appliance, local Docker, or code-level verification only.
 
@@ -149,6 +163,24 @@ For AHV appliance releases:
 ## 10. Post-Release
 
 - [ ] Confirm README version and release notes point to the latest release.
+- [ ] Confirm documentation, runbooks, UAT docs, and demo docs reflect the
+  released behavior or explicitly state why no update was required.
+- [ ] Confirm the hosted demo link resolves and is documented with any static
+  demo limitations.
 - [ ] Confirm Discussions or Announcements include release notes if needed.
 - [ ] Confirm open issues or follow-ups are linked.
 - [ ] Confirm any deployment caveats are documented.
+
+## 11. Engineering Practice Review
+
+Before closing a release, confirm the change used best practice developer
+methodologies where feasible:
+
+- [ ] Small, focused branch and pull request.
+- [ ] Clear problem statement and implementation summary.
+- [ ] Existing architecture and local helper patterns followed.
+- [ ] Input validation and error handling reviewed at trust boundaries.
+- [ ] Tests added or updated in proportion to risk.
+- [ ] Security review completed when the trigger list applies.
+- [ ] Documentation, runbooks, and demo references updated with the code.
+- [ ] Rollback, operator impact, and residual risk documented.

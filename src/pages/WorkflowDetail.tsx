@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
 import { useParams, Link } from '../router'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  ArrowLeft, Play, Download, ListChecks
+  ArrowLeft, Play, Download, ListChecks, Upload
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
@@ -12,7 +13,7 @@ import { WORKFLOWS } from '../data'
 import {
   buildClusterCreateYaml, buildImagingOnlyYaml, buildSiteDeployYaml,
   buildPCDeployYaml, buildClusterConfigYaml, buildCalmWorkloadsYaml,
-  buildNDBYaml
+  buildNDBYaml, fromYaml
 } from '../utils/yaml'
 import ClusterCreateForm from '../components/forms/ClusterCreateForm'
 import ImagingOnlyForm from '../components/forms/ImagingOnlyForm'
@@ -33,11 +34,37 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; cla
 }
 
 const TABS = ['Configure', 'YAML Preview'] as const
+const MAX_IMPORT_BYTES = 1024 * 1024
+
+const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
+  'cluster-create': ['common_network_settings', 'create_clusters'],
+  'imaging-only': ['imaging_batches'],
+  'site-deploy': ['sites'],
+  'deploy-pc': ['clusters'],
+  'config-cluster': ['clusters'],
+  'calm-vm-workloads': ['bp_list', 'projects'],
+  ndb: ['cluster_ip'],
+}
 
 function formatDate(value?: string | null): string {
   if (!value) return 'not set'
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
+
+function validateWorkflowImport(workflowId: string, parsed: unknown): string | null {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return 'Imported config must be a YAML or JSON object.'
+  }
+
+  const expectedKeys = WORKFLOW_IMPORT_KEYS[workflowId]
+  if (!expectedKeys?.length) return null
+
+  const obj = parsed as Record<string, unknown>
+  const missing = expectedKeys.filter(key => !(key in obj))
+  return missing.length
+    ? `Imported config does not look like ${workflowId}; missing ${missing.join(', ')}.`
+    : null
 }
 
 export default function WorkflowDetail() {
@@ -49,6 +76,8 @@ export default function WorkflowDetail() {
 
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Configure')
   const [yamlContent, setYamlContent] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [showExecution, setShowExecution] = useState(false)
   const [isDryRun, setIsDryRun] = useState(false)
   const [approvalId, setApprovalId] = useState('')
@@ -66,9 +95,10 @@ export default function WorkflowDetail() {
 
   const Icon = ICON_MAP[workflow.icon] || Server
   const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
-  const handleYamlGenerated = (yaml: string) => {
+  const handleYamlGenerated = useCallback((yaml: string) => {
     setYamlContent(yaml)
-  }
+    setImportMessage(null)
+  }, [])
 
   const download = () => {
     if (!yamlContent) return
@@ -77,6 +107,40 @@ export default function WorkflowDetail() {
     const a = document.createElement('a')
     a.href = url; a.download = workflow.configFile; a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleImportConfig = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (file.size > MAX_IMPORT_BYTES) {
+      setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' })
+      return
+    }
+
+    try {
+      const text = await file.text()
+      const trimmed = text.trim()
+      if (!trimmed) {
+        setImportMessage({ type: 'error', text: 'Imported config is empty.' })
+        return
+      }
+
+      const parsed = fromYaml(trimmed)
+      const validationError = validateWorkflowImport(workflow.id, parsed)
+      if (validationError) {
+        setImportMessage({ type: 'error', text: validationError })
+        return
+      }
+
+      setYamlContent(trimmed.endsWith('\n') ? trimmed : `${trimmed}\n`)
+      setActiveTab('YAML Preview')
+      setImportMessage({ type: 'success', text: `Imported ${file.name} for ${workflow.name}.` })
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Unable to parse config.'
+      setImportMessage({ type: 'error', text: `Import failed: ${detail}` })
+    }
   }
 
   const renderForm = () => {
@@ -99,6 +163,17 @@ export default function WorkflowDetail() {
       subtitle={workflow.description}
       actions={
         <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".yml,.yaml,.json,text/yaml,application/x-yaml,application/json"
+            className="hidden"
+            onChange={handleImportConfig}
+          />
+          <button onClick={() => fileInputRef.current?.click()} className="btn-secondary gap-1.5">
+            <Upload size={14} />
+            Import Config
+          </button>
           {yamlContent && (
             <button onClick={download} className="btn-secondary gap-1.5">
               <Download size={14} />
@@ -144,6 +219,19 @@ export default function WorkflowDetail() {
           <p className="text-sm text-gray-400 leading-relaxed max-w-3xl">{workflow.details}</p>
         </div>
       </div>
+
+      {importMessage && (
+        <div
+          className={clsx(
+            'mb-4 rounded-lg border px-3 py-2 text-sm',
+            importMessage.type === 'success'
+              ? 'border-emerald-700/30 bg-emerald-900/10 text-emerald-300'
+              : 'border-red-700/30 bg-red-900/10 text-red-300'
+          )}
+        >
+          {importMessage.text}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-surface rounded-lg p-1 border border-border w-fit">

@@ -63,15 +63,18 @@ may leave target state partially changed, so rerun decisions require triage.
 
 1. Confirm `/health` is healthy and the dashboard has no blocking readiness
    warnings.
-2. Generate or review the YAML/config file in **YAML Studio** or **Config Files**.
-3. Run server-side validation.
-4. Confirm the target environment and operator intent.
-5. Request approval when the workflow policy requires it.
-6. Select the approved workflow or script.
-7. Attach the validated config and approval ID.
-8. Submit the job.
-9. Monitor **Jobs / Queue** until it reaches a terminal state.
-10. Capture validation evidence from job output, audit events, config hash, and
+2. Generate, import, or review the YAML/config file in the workflow page,
+   **YAML Studio**, or **Config Files**.
+3. If importing a workflow config, confirm the imported YAML/JSON matches the
+   selected workflow and review the **YAML Preview** before execution.
+4. Run server-side validation.
+5. Confirm the target environment and operator intent.
+6. Request approval when the workflow policy requires it.
+7. Select the approved workflow or script.
+8. Attach the validated config and approval ID.
+9. Submit the job.
+10. Monitor **Jobs / Queue** until it reaches a terminal state.
+11. Capture validation evidence from job output, audit events, config hash, and
     target-side checks.
 
 ## Validation

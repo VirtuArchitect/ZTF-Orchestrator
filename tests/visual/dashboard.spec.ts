@@ -294,6 +294,45 @@ test('workflow cards stay readable in light theme', async ({ page }) => {
   await expect(infrastructureBadge).toHaveCSS('background-color', 'rgb(219, 234, 254)')
 })
 
+test('workflow detail imports config into YAML preview', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/workflows/cluster-create')
+
+  await expect(page.getByRole('heading', { name: 'Cluster Create', level: 2 })).toBeVisible()
+
+  const config = [
+    'pc_credential: foundation_central',
+    'cvm_credential: cvm_credential',
+    'pc_ip: 10.4.40.122',
+    'common_network_settings:',
+    '  dns_servers:',
+    '    - 8.8.8.8',
+    '  ntp_servers:',
+    '    - 0.us.pool.ntp.org',
+    'create_clusters:',
+    '  - cluster_name: imported-cluster',
+    '    cluster_vip: 10.4.40.200',
+    '    redundancy_factor: 2',
+    '    timezone: UTC',
+    '    nodes_list:',
+    '      - node_serial: NODE-001',
+    '        cvm_ip: 10.4.40.211',
+    '        host_ip: 10.4.40.212',
+    '',
+  ].join('\n')
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'create_cluster.yml',
+    mimeType: 'text/yaml',
+    buffer: Buffer.from(config),
+  })
+
+  await expect(page.getByText('Imported create_cluster.yml for Cluster Create.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'YAML Preview' })).toHaveClass(/bg-nutanix-blue/)
+  await expect(page.getByText('imported-cluster')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Dry Run/i })).toBeEnabled()
+})
+
 test('script wizard emits PE cluster name using ZTF runtime key', async ({ page }) => {
   await seedUiSession(page)
   await page.goto('/scripts')
