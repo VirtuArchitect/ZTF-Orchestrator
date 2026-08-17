@@ -20,6 +20,9 @@ into the next numbered release section when the next version is cut.
 ### Fixed
 - Kept GitHub Pages demo builds isolated in `dist-demo` so Docker/local
   deployments continue to serve root-relative production assets from `dist`.
+- Hydrated the Cluster Create Configure tab from imported upstream-schema YAML
+  so imported configs can be reviewed and edited in the guided form, not only
+  in YAML Preview.
 
 ---
 
