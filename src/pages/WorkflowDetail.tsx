@@ -38,6 +38,7 @@ const MAX_IMPORT_BYTES = 1024 * 1024
 
 const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'cluster-create': ['common_network_settings', 'create_clusters'],
+  'cluster-create-standalone-fca': ['fca_ip', 'fca_credential', 'common_network_settings', 'create_clusters'],
   'imaging-only': ['imaging_batches'],
   'site-deploy': ['sites'],
   'deploy-pc': ['clusters'],
@@ -152,6 +153,7 @@ export default function WorkflowDetail() {
     }
     switch (workflow.id) {
       case 'cluster-create': return <ClusterCreateForm {...props} />
+      case 'cluster-create-standalone-fca': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="standalone_fca" />
       case 'imaging-only': return <ImagingOnlyForm {...props} />
       case 'site-deploy': return <SiteDeployForm {...props} />
       case 'deploy-pc': return <PCDeployForm {...props} />

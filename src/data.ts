@@ -11,6 +11,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     details: 'Automates the complete cluster creation process including node discovery, AOS/AHV imaging, and cluster formation through Foundation Central. Supports both DHCP and static IP configurations.',
   },
   {
+    id: 'cluster-create-standalone-fca',
+    name: 'Cluster Create (Standalone FCA)',
+    description: 'Preflights standalone Foundation Central Appliance cluster creation inputs',
+    category: 'Infrastructure',
+    icon: 'Server',
+    configFile: 'create_fca_cluster.yml',
+    details: 'Builds a standalone Foundation Central Appliance cluster creation intent and validates the Lifecycle v4.3 endpoint, credentials, hardware providers, connections, nodes, and images before destructive deployment support is enabled.',
+  },
+  {
     id: 'imaging-only',
     name: 'Imaging Only',
     description: 'Images nodes without creating a cluster (bare metal prep)',

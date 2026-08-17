@@ -27,6 +27,7 @@ interface Props {
   onYamlChange: (yaml: string) => void
   profile?: ConnectionProfile
   importedConfig?: unknown
+  forcedFoundationCentralTarget?: 'integrated_pc_fc' | 'standalone_fca'
 }
 
 const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
@@ -64,14 +65,24 @@ function asRedundancyFactor(value: unknown): 2 | 3 {
   return asNumber(value, 2) === 3 ? 3 : 2
 }
 
-function initialState(profile?: ConnectionProfile, importedConfig?: unknown) {
+function initialState(
+  profile?: ConnectionProfile,
+  importedConfig?: unknown,
+  forcedFoundationCentralTarget?: 'integrated_pc_fc' | 'standalone_fca',
+) {
   const profileDns = csv(profile?.defaults.dnsServers)
   const profileNtp = csv(profile?.defaults.ntpServers)
   const defaults = {
-    fcTarget: 'integrated_pc_fc' as 'integrated_pc_fc' | 'standalone_fca',
+    fcTarget: (forcedFoundationCentralTarget || 'integrated_pc_fc') as 'integrated_pc_fc' | 'standalone_fca',
     pcCred: profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central',
     cvmCred: profile?.prismElement.cvmCredentialRef || 'cvm_credential',
     pcIp: profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '',
+    fcaApiVersion: 'v4.3',
+    hardwareProviderExtId: '',
+    hardwareProviderName: '',
+    connectionExtId: '',
+    aosImageExtId: '',
+    hypervisorImageExtId: '',
     dnsServers: profileDns.length ? profileDns : ['8.8.8.8'],
     ntpServers: profileNtp.length ? profileNtp : ['0.us.pool.ntp.org'],
     clusters: [defaultCluster()],
@@ -111,22 +122,39 @@ function initialState(profile?: ConnectionProfile, importedConfig?: unknown) {
     : defaults.clusters
 
   return {
-    fcTarget: metadata.foundation_central_target === 'standalone_fca' ? 'standalone_fca' as const : defaults.fcTarget,
-    pcCred: asString(root.pc_credential, defaults.pcCred),
+    fcTarget: forcedFoundationCentralTarget || (metadata.foundation_central_target === 'standalone_fca' ? 'standalone_fca' as const : defaults.fcTarget),
+    pcCred: asString(root.fca_credential, asString(root.pc_credential, defaults.pcCred)),
     cvmCred: asString(root.cvm_credential, defaults.cvmCred),
-    pcIp: asString(root.pc_ip, defaults.pcIp),
+    pcIp: asString(root.fca_ip, asString(root.pc_ip, defaults.pcIp)),
+    fcaApiVersion: asString(root.fca_api_version, defaults.fcaApiVersion),
+    hardwareProviderExtId: asString(root.hardware_provider_ext_id, defaults.hardwareProviderExtId),
+    hardwareProviderName: asString(root.hardware_provider_name, defaults.hardwareProviderName),
+    connectionExtId: asString(root.connection_ext_id, defaults.connectionExtId),
+    aosImageExtId: asString(root.aos_image_ext_id, defaults.aosImageExtId),
+    hypervisorImageExtId: asString(root.hypervisor_image_ext_id, defaults.hypervisorImageExtId),
     dnsServers: asStringArray(network.dns_servers, defaults.dnsServers),
     ntpServers: asStringArray(network.ntp_servers, defaults.ntpServers),
     clusters: importedClusters.length ? importedClusters : defaults.clusters,
   }
 }
 
-export default function ClusterCreateForm({ onYamlChange, profile, importedConfig }: Props) {
-  const initial = () => initialState(profile, importedConfig)
+export default function ClusterCreateForm({
+  onYamlChange,
+  profile,
+  importedConfig,
+  forcedFoundationCentralTarget,
+}: Props) {
+  const initial = () => initialState(profile, importedConfig, forcedFoundationCentralTarget)
   const [fcTarget, setFcTarget] = useState<'integrated_pc_fc' | 'standalone_fca'>(() => initial().fcTarget)
   const [pcCred, setPcCred] = useState(() => initial().pcCred)
   const [cvmCred, setCvmCred] = useState(() => initial().cvmCred)
   const [pcIp, setPcIp] = useState(() => initial().pcIp)
+  const [fcaApiVersion, setFcaApiVersion] = useState(() => initial().fcaApiVersion)
+  const [hardwareProviderExtId, setHardwareProviderExtId] = useState(() => initial().hardwareProviderExtId)
+  const [hardwareProviderName, setHardwareProviderName] = useState(() => initial().hardwareProviderName)
+  const [connectionExtId, setConnectionExtId] = useState(() => initial().connectionExtId)
+  const [aosImageExtId, setAosImageExtId] = useState(() => initial().aosImageExtId)
+  const [hypervisorImageExtId, setHypervisorImageExtId] = useState(() => initial().hypervisorImageExtId)
   const [dnsServers, setDnsServers] = useState<string[]>(() => initial().dnsServers)
   const [ntpServers, setNtpServers] = useState<string[]>(() => initial().ntpServers)
   const [clusters, setClusters] = useState<Cluster[]>(() => initial().clusters)
@@ -134,15 +162,21 @@ export default function ClusterCreateForm({ onYamlChange, profile, importedConfi
 
   useEffect(() => {
     if (!importedConfig) return
-    const next = initialState(profile, importedConfig)
+    const next = initialState(profile, importedConfig, forcedFoundationCentralTarget)
     setFcTarget(next.fcTarget)
     setPcCred(next.pcCred)
     setCvmCred(next.cvmCred)
     setPcIp(next.pcIp)
+    setFcaApiVersion(next.fcaApiVersion)
+    setHardwareProviderExtId(next.hardwareProviderExtId)
+    setHardwareProviderName(next.hardwareProviderName)
+    setConnectionExtId(next.connectionExtId)
+    setAosImageExtId(next.aosImageExtId)
+    setHypervisorImageExtId(next.hypervisorImageExtId)
     setDnsServers(next.dnsServers)
     setNtpServers(next.ntpServers)
     setClusters(next.clusters)
-  }, [importedConfig, profile])
+  }, [forcedFoundationCentralTarget, importedConfig, profile])
 
   useEffect(() => {
     if (!pcIp) return
@@ -151,6 +185,12 @@ export default function ClusterCreateForm({ onYamlChange, profile, importedConfi
       pcCredential: pcCred,
       cvmCredential: cvmCred,
       pcIp,
+      fcaApiVersion,
+      hardwareProviderExtId,
+      hardwareProviderName,
+      connectionExtId,
+      aosImageExtId,
+      hypervisorImageExtId,
       dnsServers,
       ntpServers,
       clusters: clusters.map(c => ({
@@ -162,7 +202,22 @@ export default function ClusterCreateForm({ onYamlChange, profile, importedConfi
       })),
     })
     onYamlChange(yaml)
-  }, [fcTarget, pcCred, cvmCred, pcIp, dnsServers, ntpServers, clusters, onYamlChange])
+  }, [
+    aosImageExtId,
+    connectionExtId,
+    cvmCred,
+    dnsServers,
+    fcTarget,
+    fcaApiVersion,
+    hardwareProviderExtId,
+    hardwareProviderName,
+    hypervisorImageExtId,
+    ntpServers,
+    onYamlChange,
+    pcCred,
+    pcIp,
+    clusters,
+  ])
 
   const addCluster = () => setClusters(p => [...p, defaultCluster()])
   const removeCluster = (i: number) => setClusters(p => p.filter((_, idx) => idx !== i))
@@ -186,7 +241,12 @@ export default function ClusterCreateForm({ onYamlChange, profile, importedConfi
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="label">Foundation Central Target</label>
-            <select className="input" value={fcTarget} onChange={e => setFcTarget(e.target.value as 'integrated_pc_fc' | 'standalone_fca')}>
+            <select
+              className="input"
+              value={fcTarget}
+              onChange={e => setFcTarget(e.target.value as 'integrated_pc_fc' | 'standalone_fca')}
+              disabled={Boolean(forcedFoundationCentralTarget)}
+            >
               <option value="integrated_pc_fc">Integrated Prism Central Foundation Central</option>
               <option value="standalone_fca">Standalone Foundation Central Appliance</option>
             </select>
@@ -207,6 +267,34 @@ export default function ClusterCreateForm({ onYamlChange, profile, importedConfi
             <label className="label">Foundation Central IP <span className="text-red-400">*</span></label>
             <input className="input" value={pcIp} onChange={e => setPcIp(e.target.value)} placeholder="10.0.0.100" />
           </div>
+          {fcTarget === 'standalone_fca' && (
+            <>
+              <div>
+                <label className="label">Lifecycle API Version</label>
+                <input className="input" value={fcaApiVersion} onChange={e => setFcaApiVersion(e.target.value)} placeholder="v4.3" />
+              </div>
+              <div>
+                <label className="label">Hardware Provider Ext ID</label>
+                <input className="input" value={hardwareProviderExtId} onChange={e => setHardwareProviderExtId(e.target.value)} placeholder="optional provider extId" />
+              </div>
+              <div>
+                <label className="label">Hardware Provider Name</label>
+                <input className="input" value={hardwareProviderName} onChange={e => setHardwareProviderName(e.target.value)} placeholder="optional provider name" />
+              </div>
+              <div>
+                <label className="label">Connection Ext ID</label>
+                <input className="input" value={connectionExtId} onChange={e => setConnectionExtId(e.target.value)} placeholder="optional connection extId" />
+              </div>
+              <div>
+                <label className="label">AOS Image Ext ID</label>
+                <input className="input" value={aosImageExtId} onChange={e => setAosImageExtId(e.target.value)} placeholder="optional image extId" />
+              </div>
+              <div>
+                <label className="label">Hypervisor Image Ext ID</label>
+                <input className="input" value={hypervisorImageExtId} onChange={e => setHypervisorImageExtId(e.target.value)} placeholder="optional image extId" />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

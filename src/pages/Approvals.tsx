@@ -7,7 +7,7 @@ import Layout from '../components/Layout'
 import clsx from 'clsx'
 
 const WORKFLOWS = [
-  'cluster-create','imaging-only','imaging','site-deploy','config-cluster',
+  'cluster-create','cluster-create-standalone-fca','imaging-only','imaging','site-deploy','config-cluster',
   'deploy-pc','config-pc','pod-config','deploy-management-pc',
   'config-management-pc','calm-vm-workloads','calm-edgeai-vm-workload',
   'ndb','lcm-update',

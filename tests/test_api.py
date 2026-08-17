@@ -1722,8 +1722,8 @@ def test_partial_cluster_create_schema_normalized_for_execution():
     assert '\n    nodes:' not in normalized
 
 
-def test_preflight_blocks_standalone_foundation_central_appliance(monkeypatch):
-    """Dry-run stops standalone FCA configs before the incompatible ZTF workflow."""
+def test_preflight_redirects_standalone_metadata_to_fca_workflow(monkeypatch):
+    """Dry-run on the integrated workflow redirects standalone FCA configs to the separate workflow."""
     import server
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
     yaml_body = (
@@ -1744,8 +1744,60 @@ def test_preflight_blocks_standalone_foundation_central_appliance(monkeypatch):
         '        host_ip: 10.0.0.12\n'
     )
     output = ''.join(server._run_preflight('cluster-create', yaml_body, 'test-id'))
-    assert 'Standalone Foundation Central Appliance is not supported' in output
+    assert 'cluster-create-standalone-fca' in output
     assert '[FAIL]' in output
+
+
+def test_preflight_validates_standalone_fca_lifecycle_inventory(monkeypatch):
+    """Standalone FCA dry-run validates Lifecycle v4.3 inventory with read-only calls."""
+    import server
+    calls = []
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    def fake_lifecycle_get(host, credential_ref, api_version, resource_path):
+        calls.append((host, credential_ref, api_version, resource_path))
+        if resource_path == 'config/hardware-providers':
+            return True, 'HTTP 200', {'data': [{'extId': 'provider-1', 'name': 'Provider One'}]}, 7.0
+        if resource_path == 'config/nodes':
+            return True, 'HTTP 200', {'data': [{'extId': 'node-1'}]}, 8.0
+        if resource_path == 'config/images':
+            return True, 'HTTP 200', {'data': [{'extId': 'aos-image'}, {'extId': 'ahv-image'}]}, 9.0
+        if resource_path == 'config/hardware-providers/provider-1/connections':
+            return True, 'HTTP 200', {'data': [{'extId': 'connection-1'}]}, 10.0
+        return False, 'unexpected path', {}, 0.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_get', fake_lifecycle_get)
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        '  executor: orchestrator_lifecycle_v4\n'
+        'fca_api_version: v4.3\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'hardware_provider_ext_id: provider-1\n'
+        'connection_ext_id: connection-1\n'
+        'aos_image_ext_id: aos-image\n'
+        'hypervisor_image_ext_id: ahv-image\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 192.0.2.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 192.0.2.11\n'
+        '        host_ip: 192.0.2.12\n'
+    )
+    output = ''.join(server._run_preflight('cluster-create-standalone-fca', yaml_body, 'test-id'))
+    assert '[FAIL]' not in output
+    assert 'FCA Lifecycle hardware providers' in output
+    assert 'Hardware provider connection matched' in output
+    assert 'Standalone FCA dry-run is read-only' in output
+    assert ('192.0.2.122', 'foundation_central', 'v4.3', 'config/nodes') in calls
 
 
 def test_preflight_generator_missing_field(monkeypatch):
@@ -1971,17 +2023,17 @@ def test_execute_blocks_standalone_foundation_central_appliance(client, auth_hea
         '        host_ip: 10.0.0.12\n'
     )
     resp = client.post('/api/execute',
-                       json={'workflow': 'cluster-create',
+                       json={'workflow': 'cluster-create-standalone-fca',
                              'configContent': yaml_body,
-                             'configFile': 'standalone-fca.yml'},
+                             'configFile': 'create_fca_cluster.yml'},
                        headers=auth_headers)
     body = resp.data.decode()
     assert resp.status_code == 200
-    assert 'Standalone Foundation Central Appliance is not supported' in body
+    assert 'Standalone Foundation Central Appliance execution is not yet enabled' in body
     assert '"status": "failed"' in body
 
     history = client.get('/api/executions', headers=auth_headers).get_json()
-    assert history[0]['workflow'] == 'cluster-create'
+    assert history[0]['workflow'] == 'cluster-create-standalone-fca'
     assert history[0]['status'] == 'failed'
 
 

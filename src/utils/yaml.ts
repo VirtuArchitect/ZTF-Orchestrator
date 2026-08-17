@@ -69,6 +69,12 @@ export function buildClusterCreateYaml(cfg: {
   pcCredential: string
   cvmCredential: string
   pcIp: string
+  fcaApiVersion?: string
+  hardwareProviderExtId?: string
+  hardwareProviderName?: string
+  connectionExtId?: string
+  aosImageExtId?: string
+  hypervisorImageExtId?: string
   dnsServers: string[]
   ntpServers: string[]
   clusters: Array<{
@@ -108,6 +114,29 @@ export function buildClusterCreateYaml(cfg: {
       ...(n.cvmRamGb ? { cvm_ram_gb: n.cvmRamGb } : {}),
     })),
   }))
+
+  if (cfg.foundationCentralTarget === 'standalone_fca') {
+    return toYaml({
+      ztf_orchestrator: {
+        foundation_central_target: cfg.foundationCentralTarget,
+        executor: 'orchestrator_lifecycle_v4',
+      },
+      fca_api_version: cfg.fcaApiVersion || 'v4.3',
+      fca_ip: cfg.pcIp,
+      fca_credential: cfg.pcCredential,
+      cvm_credential: cfg.cvmCredential,
+      hardware_provider_ext_id: cfg.hardwareProviderExtId || '',
+      hardware_provider_name: cfg.hardwareProviderName || '',
+      connection_ext_id: cfg.connectionExtId || '',
+      aos_image_ext_id: cfg.aosImageExtId || '',
+      hypervisor_image_ext_id: cfg.hypervisorImageExtId || '',
+      common_network_settings: {
+        dns_servers: cfg.dnsServers,
+        ntp_servers: cfg.ntpServers,
+      },
+      create_clusters: createClusters,
+    })
+  }
 
   return toYaml({
     ztf_orchestrator: {
