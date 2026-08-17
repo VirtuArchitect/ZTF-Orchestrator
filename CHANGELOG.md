@@ -17,6 +17,10 @@ into the next numbered release section when the next version is cut.
   YAML/JSON file on each workflow detail page, review it in YAML Preview, and
   use it for Dry Run or Run Workflow without re-entering every field.
 
+### Fixed
+- Kept GitHub Pages demo builds isolated in `dist-demo` so Docker/local
+  deployments continue to serve root-relative production assets from `dist`.
+
 ---
 
 ## [1.7.7] - 2026-08-14
