@@ -59,6 +59,19 @@ Notes:
 
 ```
 
+## Documentation, Runbooks, and Demo
+
+- [ ] README, changelog, and release notes updated, or not applicable
+- [ ] Installation, appliance, or operator documentation updated, or not applicable
+- [ ] Runbooks updated for operator-facing behavior, or not applicable
+- [ ] Demo documentation and hosted demo link checked, or not applicable
+
+Demo link checked:
+
+```text
+
+```
+
 ## Screenshots or Evidence
 
 Add screenshots, logs, API responses, or links where useful.

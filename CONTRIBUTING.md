@@ -199,9 +199,31 @@ operational assumptions change. Common files include:
 - [Installation Guide](docs/installation-guide.md)
 - [Appliance Update Manager](docs/appliance-update-manager.md)
 - [Validation Status](docs/validation-status.md)
+- [Runbooks](docs/runbooks/README.md)
+- [Demo and Simulator Docs](docs/demo/README.md)
 
 Version bumps should keep `server.py`, `src/version.ts`, `package.json`,
 `package-lock.json`, `CHANGELOG.md`, and user-facing documentation aligned.
+
+Every release or appliance update should explicitly confirm whether
+documentation, runbooks, UAT evidence docs, and demo docs were updated. If no
+documentation change is needed, state why in the pull request.
+
+When UI or user-facing workflow changes are released, verify the hosted demo
+link and document whether the demo is static-only or backed by live APIs:
+<https://virtuarchitect.github.io/ZTF-Orchestrator/>.
+
+## Engineering Practices
+
+Use best practice developer methodologies where feasible:
+
+- Keep changes branch-oriented, reviewed, and focused on one behavior.
+- Prefer small pull requests with clear evidence over broad mixed changes.
+- Follow existing architecture, helpers, naming, and UI patterns.
+- Add or update tests in proportion to operational and security risk.
+- Run targeted checks first, then broader tests, builds, and smoke tests.
+- Validate inputs at trust boundaries and document security-sensitive decisions.
+- Record rollback, operator impact, skipped checks, and residual risk.
 
 ## Code Style
 

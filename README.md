@@ -78,7 +78,7 @@ systems.
 
 1. Configure the ZTF path, Python runtime, config directory, NKP path, and
    connection defaults.
-2. Generate or edit workflow YAML, global configuration, NKP deployment
+2. Generate, import, or edit workflow YAML, global configuration, NKP deployment
    profiles, or imported examples.
 3. Validate inputs, compatibility, readiness, and generated YAML before
    execution.
@@ -451,6 +451,10 @@ Execution remains behind the existing workflow, approval, and confirmation
 paths.
 
 ### Workflows (13 supported)
+
+Each workflow detail page can generate YAML from guided fields, import an
+existing YAML/JSON config for that workflow, preview the active config, download
+it, dry-run it, and submit it through the governed execution path.
 
 | Workflow | Category |
 |---|---|

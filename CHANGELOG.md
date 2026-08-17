@@ -12,6 +12,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.7.7 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Added
+- Added workflow-level config import so operators can load an existing
+  YAML/JSON file on each workflow detail page, review it in YAML Preview, and
+  use it for Dry Run or Run Workflow without re-entering every field.
+
 ---
 
 ## [1.7.7] - 2026-08-14
