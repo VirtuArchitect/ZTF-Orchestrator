@@ -25,6 +25,12 @@ Covers workflows and scripts exposed in the ZTF-Orchestrator catalog. It does
 not cover direct CLI execution outside the application, unsupported ZTF 2.x
 `plan/apply`, or uncontrolled destructive actions.
 
+Standalone Foundation Central Appliance cluster-create intent uses the
+`cluster-create-standalone-fca` workflow and `create_fca_cluster.yml`. Its Dry
+Run is read-only and validates Lifecycle v4.3 inventory. Run Workflow is blocked
+until the destructive standalone FCA deployment sequence is implemented and
+validated.
+
 ## Preconditions
 
 - Orchestrator is healthy.

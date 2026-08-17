@@ -341,6 +341,33 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   await expect(page.locator('input[placeholder="10.0.0.12"]')).toHaveValue('192.0.2.212')
 })
 
+test('standalone FCA cluster workflow emits standalone config keys', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/workflows/cluster-create-standalone-fca')
+
+  await expect(page.getByRole('heading', { name: 'Cluster Create (Standalone FCA)', level: 2 })).toBeVisible()
+  await expect(page.getByText('--workflow cluster-create-standalone-fca -f create_fca_cluster.yml')).toBeVisible()
+
+  const target = page.locator('select.input').first()
+  await expect(target).toHaveValue('standalone_fca')
+  await expect(target).toBeDisabled()
+
+  await page.locator('input[placeholder="10.0.0.100"]').fill('192.0.2.122')
+  await page.locator('input[placeholder="optional provider extId"]').fill('provider-1')
+  await page.locator('input[placeholder="optional connection extId"]').fill('connection-1')
+  await page.locator('input[placeholder="optional image extId"]').nth(0).fill('aos-image')
+  await page.locator('input[placeholder="optional image extId"]').nth(1).fill('ahv-image')
+  await page.getByRole('button', { name: 'YAML Preview' }).click()
+
+  await expect(page.getByText('create_fca_cluster.yml', { exact: true })).toBeVisible()
+  await expect(page.getByText('fca_ip: 192.0.2.122')).toBeVisible()
+  await expect(page.getByText('fca_credential: foundation_central')).toBeVisible()
+  await expect(page.getByText('hardware_provider_ext_id: provider-1')).toBeVisible()
+  await expect(page.getByText('connection_ext_id: connection-1')).toBeVisible()
+  await expect(page.getByText('aos_image_ext_id: aos-image')).toBeVisible()
+  await expect(page.getByText('hypervisor_image_ext_id: ahv-image')).toBeVisible()
+})
+
 test('script wizard emits PE cluster name using ZTF runtime key', async ({ page }) => {
   await seedUiSession(page)
   await page.goto('/scripts')
@@ -391,6 +418,7 @@ test('main pages keep readable text contrast in light theme', async ({ page }) =
     '/global-config',
     '/workflows',
     '/workflows/cluster-create',
+    '/workflows/cluster-create-standalone-fca',
     '/scripts',
     '/configs',
     '/executions',

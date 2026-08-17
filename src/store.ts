@@ -130,6 +130,7 @@ export const useStore = create<AppState>()(
         connectionProfiles: [DEFAULT_CONNECTION_PROFILE],
         approvalRequiredWorkflows: [
           'cluster-create',
+          'cluster-create-standalone-fca',
           'imaging-only',
           'imaging',
           'site-deploy',

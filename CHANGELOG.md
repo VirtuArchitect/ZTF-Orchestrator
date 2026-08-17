@@ -16,6 +16,10 @@ into the next numbered release section when the next version is cut.
 - Added workflow-level config import so operators can load an existing
   YAML/JSON file on each workflow detail page, review it in YAML Preview, and
   use it for Dry Run or Run Workflow without re-entering every field.
+- Added a separate `cluster-create-standalone-fca` workflow and
+  `create_fca_cluster.yml` builder for standalone Foundation Central Appliance
+  cluster-create intent, including read-only Lifecycle v4.3 dry-run checks for
+  hardware providers, connections, nodes, and images.
 
 ### Fixed
 - Kept GitHub Pages demo builds isolated in `dist-demo` so Docker/local
@@ -23,6 +27,10 @@ into the next numbered release section when the next version is cut.
 - Hydrated the Cluster Create Configure tab from imported upstream-schema YAML
   so imported configs can be reviewed and edited in the guided form, not only
   in YAML Preview.
+
+### Security
+- Standalone FCA Run Workflow remains fail-closed until the destructive
+  Lifecycle API deployment/action sequence is implemented and validated.
 
 ---
 
