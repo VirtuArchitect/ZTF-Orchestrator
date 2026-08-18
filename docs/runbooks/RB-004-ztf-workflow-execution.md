@@ -31,8 +31,11 @@ config files: `cluster-create-standalone-fca` with `create_fca_cluster.yml`,
 `imaging-standalone-fca` with `pod-deploy-fca.yml`, and
 `site-deploy-standalone-fca` with `sites-deploy-fca.yml`. Their Dry Run checks
 are read-only and validate Lifecycle v4.3 inventory and input shape. Run
-Workflow is blocked until the destructive standalone FCA deployment sequence is
-implemented and validated.
+Workflow submits guarded Lifecycle API execution requests only after the
+operator enters the exact standalone FCA acknowledgement phrase shown in the UI.
+If the target appliance requires a different Lifecycle submit or status path,
+set `fca_execution.submit_path` and `fca_execution.status_path_template` in the
+workflow YAML before execution.
 
 ## Preconditions
 

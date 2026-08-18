@@ -13,11 +13,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'cluster-create-standalone-fca',
     name: 'Cluster Create (Standalone FCA)',
-    description: 'Preflights standalone Foundation Central Appliance cluster creation inputs',
+    description: 'Creates clusters through standalone Foundation Central Appliance Lifecycle APIs',
     category: 'Infrastructure',
     icon: 'Server',
     configFile: 'create_fca_cluster.yml',
-    details: 'Builds a standalone Foundation Central Appliance cluster creation intent and validates the Lifecycle v4.3 endpoint, credentials, hardware providers, connections, nodes, and images before destructive deployment support is enabled.',
+    details: 'Builds a standalone Foundation Central Appliance cluster creation intent, validates Lifecycle v4.3 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'imaging-only',
@@ -31,11 +31,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'imaging-only-standalone-fca',
     name: 'Imaging Only (Standalone FCA)',
-    description: 'Preflights standalone Foundation Central Appliance node imaging inputs',
+    description: 'Images nodes through standalone Foundation Central Appliance Lifecycle APIs',
     category: 'Infrastructure',
     icon: 'HardDrive',
     configFile: 'imaging_only_fca.yml',
-    details: 'Builds a standalone Foundation Central Appliance imaging intent and validates the Lifecycle v4.3 endpoint, credentials, hardware providers, connections, nodes, and images before destructive imaging support is enabled.',
+    details: 'Builds a standalone Foundation Central Appliance imaging intent, validates Lifecycle v4.3 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'imaging',
@@ -49,11 +49,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'imaging-standalone-fca',
     name: 'Pod Imaging (Standalone FCA)',
-    description: 'Preflights standalone Foundation Central Appliance pod imaging inputs',
+    description: 'Runs pod imaging through standalone Foundation Central Appliance Lifecycle APIs',
     category: 'Pod Operations',
     icon: 'Layers',
     configFile: 'pod-deploy-fca.yml',
-    details: 'Builds a standalone Foundation Central Appliance pod imaging intent and validates Lifecycle v4.3 connectivity and inventory before destructive deployment support is enabled.',
+    details: 'Builds a standalone Foundation Central Appliance pod imaging intent, validates Lifecycle v4.3 connectivity and inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'site-deploy',
@@ -67,11 +67,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'site-deploy-standalone-fca',
     name: 'Site Deploy (Standalone FCA)',
-    description: 'Preflights standalone Foundation Central Appliance site deployment inputs',
+    description: 'Runs site deployment through standalone Foundation Central Appliance Lifecycle APIs',
     category: 'Infrastructure',
     icon: 'Globe',
     configFile: 'sites-deploy-fca.yml',
-    details: 'Builds a standalone Foundation Central Appliance site deployment intent and validates Lifecycle v4.3 endpoint, credentials, hardware providers, connections, nodes, and images before destructive deployment support is enabled.',
+    details: 'Builds a standalone Foundation Central Appliance site deployment intent, validates Lifecycle v4.3 endpoint inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'config-cluster',

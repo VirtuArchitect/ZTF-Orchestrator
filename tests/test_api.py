@@ -1881,9 +1881,31 @@ def test_preflight_validates_standalone_fca_site_workflow(monkeypatch):
     assert 'Required site node field present : sites[1].clusters[1].node_details[1].host_ip' in output
 
 
-def test_execute_blocks_all_standalone_fca_workflows(client, auth_headers, monkeypatch):
-    """Standalone FCA workflow runs fail closed until destructive Lifecycle execution is implemented."""
+def test_execute_requires_standalone_fca_acknowledgement(client, auth_headers):
+    """Standalone FCA workflow runs require an exact destructive acknowledgement."""
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'imaging_batches: []\n'
+    )
+    resp = client.post('/api/execute',
+                       json={'workflow': 'imaging-only-standalone-fca',
+                             'configContent': yaml_body,
+                             'configFile': 'imaging_only_fca.yml'},
+                       headers=auth_headers)
+    body = resp.get_json()
+    assert resp.status_code == 403
+    assert body['destructiveAction'] is True
+    assert 'RUN STANDALONE-FCA imaging-only-standalone-fca' in body['error']
+
+
+def test_execute_runs_standalone_fca_lifecycle_submit(client, auth_headers, monkeypatch):
+    """Standalone FCA execution submits through Orchestrator Lifecycle executor, not legacy ZTF."""
     import subprocess
+    import server
 
     client.post('/api/settings',
                 json={'approvalRequiredWorkflows': []},
@@ -1893,29 +1915,89 @@ def test_execute_blocks_all_standalone_fca_workflows(client, auth_headers, monke
         raise AssertionError('ZTF subprocess should not be launched for standalone FCA')
 
     monkeypatch.setattr(subprocess, 'Popen', fail_popen)
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    calls = []
 
-    for workflow, config_file, body_key in (
-        ('imaging-only-standalone-fca', 'imaging_only_fca.yml', 'imaging_batches: []\n'),
-        ('imaging-standalone-fca', 'pod-deploy-fca.yml', 'imaging_batches: []\n'),
-        ('site-deploy-standalone-fca', 'sites-deploy-fca.yml', 'sites: []\n'),
-    ):
-        yaml_body = (
-            'ztf_orchestrator:\n'
-            '  foundation_central_target: standalone_fca\n'
-            'fca_ip: 192.0.2.122\n'
-            'fca_credential: foundation_central\n'
-            'cvm_credential: cvm_cred\n'
-            f'{body_key}'
-        )
-        resp = client.post('/api/execute',
-                           json={'workflow': workflow,
-                                 'configContent': yaml_body,
-                                 'configFile': config_file},
-                           headers=auth_headers)
-        body = resp.data.decode()
-        assert resp.status_code == 200
-        assert 'Standalone Foundation Central Appliance execution is not yet enabled' in body
-        assert '"status": "failed"' in body
+    def fake_lifecycle_request(host, credential_ref, api_version, method, resource_path, payload=None):
+        calls.append((host, credential_ref, api_version, method, resource_path, payload))
+        assert payload['clusters'][0]['clusterName'] == 'cluster-01'
+        assert payload['clusters'][0]['nodes'][0]['nodeSerial'] == 'NODE-A'
+        return True, 'HTTP 202', {'extId': 'deployment-1'}, 12.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_request', fake_lifecycle_request)
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        'fca_api_version: v4.3\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: cluster-01\n'
+        '    cluster_vip: 192.0.2.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 192.0.2.11\n'
+        '        host_ip: 192.0.2.12\n'
+    )
+    resp = client.post('/api/execute',
+                       json={'workflow': 'cluster-create-standalone-fca',
+                             'configContent': yaml_body,
+                             'configFile': 'create_fca_cluster.yml',
+                             'riskAcknowledged': True,
+                             'destructiveConfirmation': 'RUN STANDALONE-FCA cluster-create-standalone-fca'},
+                       headers=auth_headers)
+    body = resp.data.decode()
+    assert resp.status_code == 200
+    assert 'FCA submit accepted' in body
+    assert '"status": "success"' in body
+    assert calls[0][0:5] == (
+        '192.0.2.122',
+        'foundation_central',
+        'v4.3',
+        'POST',
+        'config/compute-cluster-deployments',
+    )
+
+
+def test_standalone_fca_execution_uses_yaml_submit_path_and_payload_override(monkeypatch):
+    """Standalone FCA execution can follow appliance-specific paths without a code rebuild."""
+    import server
+    calls = []
+
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    def fake_lifecycle_request(host, credential_ref, api_version, method, resource_path, payload=None):
+        calls.append((method, resource_path, payload))
+        return True, 'HTTP 202', {'statusPath': 'config/custom-deployments/deployment-1'}, 3.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_request', fake_lifecycle_request)
+    monkeypatch.setattr(server, '_fca_lifecycle_get', lambda h, c, v, p: (
+        True, 'HTTP 200', {'status': 'completed'}, 4.0
+    ))
+    monkeypatch.setattr(server.time, 'sleep', lambda seconds: None)
+
+    ok, lines, diagnostics = server._execute_standalone_fca_lifecycle(
+        'cluster-create-standalone-fca',
+        {
+            'fca_api_version': 'v4.3',
+            'fca_ip': '192.0.2.122',
+            'fca_credential': 'foundation_central',
+            'fca_execution': {
+                'submit_path': 'config/custom-deployments',
+                'payload': {'custom': 'intent'},
+            },
+        },
+    )
+
+    assert ok is True
+    assert calls == [('POST', 'config/custom-deployments', {'custom': 'intent'})]
+    assert diagnostics['fcaSubmitPath'] == 'config/custom-deployments'
+    assert any('FCA status poll 01: completed' in line for line in lines)
 
 
 def test_preflight_generator_missing_field(monkeypatch):
@@ -2111,8 +2193,8 @@ def test_tcp_check_failure(monkeypatch):
     assert ms == 0.0
 
 
-def test_execute_blocks_standalone_foundation_central_appliance(client, auth_headers, monkeypatch):
-    """Run execution records a clear failure instead of launching ZTF for standalone FCA."""
+def test_integrated_cluster_create_rejects_standalone_fca_metadata(client, auth_headers, monkeypatch):
+    """Integrated cluster-create still refuses standalone FCA metadata instead of launching ZTF."""
     import subprocess
 
     client.post('/api/settings',
@@ -2141,17 +2223,17 @@ def test_execute_blocks_standalone_foundation_central_appliance(client, auth_hea
         '        host_ip: 10.0.0.12\n'
     )
     resp = client.post('/api/execute',
-                       json={'workflow': 'cluster-create-standalone-fca',
+                       json={'workflow': 'cluster-create',
                              'configContent': yaml_body,
-                             'configFile': 'create_fca_cluster.yml'},
+                             'configFile': 'create_cluster.yml'},
                        headers=auth_headers)
     body = resp.data.decode()
     assert resp.status_code == 200
-    assert 'Standalone Foundation Central Appliance execution is not yet enabled' in body
+    assert 'Standalone FCA configs must use workflow' in body
     assert '"status": "failed"' in body
 
     history = client.get('/api/executions', headers=auth_headers).get_json()
-    assert history[0]['workflow'] == 'cluster-create-standalone-fca'
+    assert history[0]['workflow'] == 'cluster-create'
     assert history[0]['status'] == 'failed'
 
 
