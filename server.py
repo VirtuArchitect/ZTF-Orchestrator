@@ -2708,7 +2708,10 @@ limiter = Limiter(
 # ─── Allowlists ───────────────────────────────────────────────────────────────
 
 ALLOWED_WORKFLOWS = {
-    'cluster-create', 'cluster-create-standalone-fca', 'imaging-only', 'imaging', 'site-deploy',
+    'cluster-create', 'cluster-create-standalone-fca',
+    'imaging-only', 'imaging-only-standalone-fca',
+    'imaging', 'imaging-standalone-fca',
+    'site-deploy', 'site-deploy-standalone-fca',
     'config-cluster', 'deploy-pc', 'config-pc', 'pod-config',
     'deploy-management-pc', 'config-management-pc',
     'calm-vm-workloads', 'calm-edgeai-vm-workload', 'ndb',
@@ -2716,7 +2719,10 @@ ALLOWED_WORKFLOWS = {
 }
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
-    'cluster-create', 'cluster-create-standalone-fca', 'imaging-only', 'imaging', 'site-deploy',
+    'cluster-create', 'cluster-create-standalone-fca',
+    'imaging-only', 'imaging-only-standalone-fca',
+    'imaging', 'imaging-standalone-fca',
+    'site-deploy', 'site-deploy-standalone-fca',
     'deploy-pc', 'config-pc', 'config-cluster', 'ndb', 'lcm-update',
 }
 
@@ -2960,17 +2966,48 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
+    'imaging-only-standalone-fca': {
+        'required':    ['fca_ip', 'fca_credential', 'cvm_credential', 'imaging_batches'],
+        'credential_fields': {'fca_credential': 'Standalone Foundation Central Appliance', 'cvm_credential': 'CVM'},
+        'ip_fields':   ['fca_ip'],
+        'connect':     [('fca_ip', 9440, 'Standalone Foundation Central Appliance')],
+        'batch_list_field': 'imaging_batches',
+        'batch_node_field': 'nodes',
+        'batch_node_required_keys': ['cvm_ip', 'host_ip'],
+        'fca_lifecycle': True,
+    },
     'imaging': {
         'required':    ['pc_ip', 'cvm_credential'],
         'credential_fields': {'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Foundation Central / Prism Central')],
     },
+    'imaging-standalone-fca': {
+        'required':    ['fca_ip', 'fca_credential', 'cvm_credential', 'imaging_batches'],
+        'credential_fields': {'fca_credential': 'Standalone Foundation Central Appliance', 'cvm_credential': 'CVM'},
+        'ip_fields':   ['fca_ip'],
+        'connect':     [('fca_ip', 9440, 'Standalone Foundation Central Appliance')],
+        'batch_list_field': 'imaging_batches',
+        'batch_node_field': 'nodes',
+        'batch_node_required_keys': ['cvm_ip', 'host_ip'],
+        'fca_lifecycle': True,
+    },
     'site-deploy': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential'],
         'credential_fields': {'pc_credential': 'Foundation Central', 'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Prism Central')],
+    },
+    'site-deploy-standalone-fca': {
+        'required':    ['fca_ip', 'fca_credential', 'cvm_credential', 'sites'],
+        'credential_fields': {'fca_credential': 'Standalone Foundation Central Appliance', 'cvm_credential': 'CVM'},
+        'ip_fields':   ['fca_ip'],
+        'connect':     [('fca_ip', 9440, 'Standalone Foundation Central Appliance')],
+        'site_list_field': 'sites',
+        'site_list_required_keys': ['site_name', 'clusters'],
+        'site_cluster_required_keys': ['cluster_name', 'cluster_vip', 'node_details'],
+        'site_node_required_keys': ['cvm_ip', 'host_ip'],
+        'fca_lifecycle': True,
     },
     'config-cluster': {
         'required':              ['clusters'],
@@ -3076,6 +3113,12 @@ def _preflight_for_execution(workflow_or_script: str) -> dict:
 
 PC_IP_WORKFLOWS = {'cluster-create', 'imaging-only', 'imaging'}
 STANDALONE_FCA_WORKFLOW = 'cluster-create-standalone-fca'
+STANDALONE_FCA_WORKFLOWS = {
+    'cluster-create-standalone-fca',
+    'imaging-only-standalone-fca',
+    'imaging-standalone-fca',
+    'site-deploy-standalone-fca',
+}
 FOUNDATION_TARGET_INTEGRATED_PC_FC = 'integrated_pc_fc'
 FOUNDATION_TARGET_STANDALONE_FCA = 'standalone_fca'
 STANDALONE_FCA_UNSUPPORTED_MESSAGE = (
@@ -3100,7 +3143,7 @@ def _cluster_create_foundation_target(config: dict) -> str:
 
 
 def _standalone_fca_execution_error(workflow: str, config_content: str) -> str:
-    if workflow == STANDALONE_FCA_WORKFLOW:
+    if workflow in STANDALONE_FCA_WORKFLOWS:
         return STANDALONE_FCA_UNSUPPORTED_MESSAGE
     if workflow != 'cluster-create' or not config_content:
         return ''
@@ -3393,7 +3436,7 @@ def _init_engines():
         config_file    = schedule.get('configFile') or ''
 
         standalone_error = _standalone_fca_execution_error(workflow or '', config_content)
-        if workflow == STANDALONE_FCA_WORKFLOW or standalone_error:
+        if workflow in STANDALONE_FCA_WORKFLOWS or standalone_error:
             rc = -1
             status = 'failed'
             entry = {
@@ -4187,6 +4230,114 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
                             else:
                                 yield from send('stdout', f'[PASS] Required node field present : {cluster_list_field}[{idx}].nodes_list[{node_idx}].{key}')
                                 passed += 1
+
+    batch_list_field = preflight.get('batch_list_field')
+    if batch_list_field:
+        batch_list = config.get(batch_list_field)
+        node_field = preflight.get('batch_node_field', 'nodes')
+        node_required_keys = preflight.get('batch_node_required_keys', [])
+        if batch_list is None or batch_list == []:
+            pass
+        elif not isinstance(batch_list, list):
+            yield from send('stdout', f'[FAIL] {batch_list_field} must be a list')
+            failed += 1
+        else:
+            for idx, batch in enumerate(batch_list, start=1):
+                if not isinstance(batch, dict):
+                    yield from send('stdout', f'[FAIL] {batch_list_field}[{idx}] must be a mapping')
+                    failed += 1
+                    continue
+                nodes = batch.get(node_field)
+                if nodes is None or nodes == []:
+                    yield from send('stdout', f'[FAIL] Required batch field missing : {batch_list_field}[{idx}].{node_field}')
+                    failed += 1
+                elif not isinstance(nodes, list):
+                    yield from send('stdout', f'[FAIL] {batch_list_field}[{idx}].{node_field} must be a list')
+                    failed += 1
+                else:
+                    for node_idx, node in enumerate(nodes, start=1):
+                        if not isinstance(node, dict):
+                            yield from send('stdout', f'[FAIL] {batch_list_field}[{idx}].{node_field}[{node_idx}] must be a mapping')
+                            failed += 1
+                            continue
+                        for key in node_required_keys:
+                            val = node.get(key)
+                            empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                            if empty:
+                                yield from send('stdout', f'[FAIL] Required node field missing : {batch_list_field}[{idx}].{node_field}[{node_idx}].{key}')
+                                failed += 1
+                            else:
+                                yield from send('stdout', f'[PASS] Required node field present : {batch_list_field}[{idx}].{node_field}[{node_idx}].{key}')
+                                passed += 1
+
+    site_list_field = preflight.get('site_list_field')
+    if site_list_field:
+        site_list = config.get(site_list_field)
+        site_required_keys = preflight.get('site_list_required_keys', [])
+        cluster_required_keys = preflight.get('site_cluster_required_keys', [])
+        node_required_keys = preflight.get('site_node_required_keys', [])
+        if site_list is None or site_list == []:
+            pass
+        elif not isinstance(site_list, list):
+            yield from send('stdout', f'[FAIL] {site_list_field} must be a list')
+            failed += 1
+        else:
+            for site_idx, site in enumerate(site_list, start=1):
+                if not isinstance(site, dict):
+                    yield from send('stdout', f'[FAIL] {site_list_field}[{site_idx}] must be a mapping')
+                    failed += 1
+                    continue
+                for key in site_required_keys:
+                    val = site.get(key)
+                    empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                    if empty:
+                        yield from send('stdout', f'[FAIL] Required site field missing : {site_list_field}[{site_idx}].{key}')
+                        failed += 1
+                    else:
+                        yield from send('stdout', f'[PASS] Required site field present : {site_list_field}[{site_idx}].{key}')
+                        passed += 1
+                clusters = site.get('clusters')
+                if clusters is None or clusters == []:
+                    pass
+                elif not isinstance(clusters, list):
+                    yield from send('stdout', f'[FAIL] {site_list_field}[{site_idx}].clusters must be a list')
+                    failed += 1
+                else:
+                    for cluster_idx, cluster in enumerate(clusters, start=1):
+                        if not isinstance(cluster, dict):
+                            yield from send('stdout', f'[FAIL] {site_list_field}[{site_idx}].clusters[{cluster_idx}] must be a mapping')
+                            failed += 1
+                            continue
+                        for key in cluster_required_keys:
+                            val = cluster.get(key)
+                            empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                            if empty:
+                                yield from send('stdout', f'[FAIL] Required site cluster field missing : {site_list_field}[{site_idx}].clusters[{cluster_idx}].{key}')
+                                failed += 1
+                            else:
+                                yield from send('stdout', f'[PASS] Required site cluster field present : {site_list_field}[{site_idx}].clusters[{cluster_idx}].{key}')
+                                passed += 1
+                        nodes = cluster.get('node_details')
+                        if nodes is None or nodes == []:
+                            pass
+                        elif not isinstance(nodes, list):
+                            yield from send('stdout', f'[FAIL] {site_list_field}[{site_idx}].clusters[{cluster_idx}].node_details must be a list')
+                            failed += 1
+                        else:
+                            for node_idx, node in enumerate(nodes, start=1):
+                                if not isinstance(node, dict):
+                                    yield from send('stdout', f'[FAIL] {site_list_field}[{site_idx}].clusters[{cluster_idx}].node_details[{node_idx}] must be a mapping')
+                                    failed += 1
+                                    continue
+                                for key in node_required_keys:
+                                    val = node.get(key)
+                                    empty = val is None or (isinstance(val, (str, list, dict)) and not val)
+                                    if empty:
+                                        yield from send('stdout', f'[FAIL] Required site node field missing : {site_list_field}[{site_idx}].clusters[{cluster_idx}].node_details[{node_idx}].{key}')
+                                        failed += 1
+                                    else:
+                                        yield from send('stdout', f'[PASS] Required site node field present : {site_list_field}[{site_idx}].clusters[{cluster_idx}].node_details[{node_idx}].{key}')
+                                        passed += 1
 
     for field in preflight.get('ip_fields', []):
         val = str(config.get(field, '')).strip()
@@ -7282,7 +7433,7 @@ def execute_workflow():
         )
 
     settings = get_settings()
-    if workflow != STANDALONE_FCA_WORKFLOW:
+    if workflow not in STANDALONE_FCA_WORKFLOWS:
         incompatible = _ztf_incompatible_error(settings['ztfPath'])
         if incompatible:
             body, status_code = incompatible

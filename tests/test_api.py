@@ -1800,6 +1800,124 @@ def test_preflight_validates_standalone_fca_lifecycle_inventory(monkeypatch):
     assert ('192.0.2.122', 'foundation_central', 'v4.3', 'config/nodes') in calls
 
 
+def test_preflight_validates_standalone_fca_imaging_workflows(monkeypatch):
+    """Standalone FCA imaging dry-runs validate Lifecycle inventory and imaging batch shape."""
+    import server
+    calls = []
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    def fake_lifecycle_get(host, credential_ref, api_version, resource_path):
+        calls.append((host, credential_ref, api_version, resource_path))
+        if resource_path == 'config/hardware-providers':
+            return True, 'HTTP 200', {'data': [{'extId': 'provider-1', 'name': 'Provider One'}]}, 7.0
+        if resource_path == 'config/nodes':
+            return True, 'HTTP 200', {'data': [{'extId': 'node-1'}]}, 8.0
+        if resource_path == 'config/images':
+            return True, 'HTTP 200', {'data': [{'extId': 'aos-image'}, {'extId': 'ahv-image'}]}, 9.0
+        return True, 'HTTP 200', {'data': []}, 10.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_get', fake_lifecycle_get)
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        '  executor: orchestrator_lifecycle_v4\n'
+        'fca_api_version: v4.3\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'hardware_provider_ext_id: provider-1\n'
+        'aos_image_ext_id: aos-image\n'
+        'hypervisor_image_ext_id: ahv-image\n'
+        'imaging_batches:\n'
+        '  - nodes:\n'
+        '      - cvm_ip: 192.0.2.11\n'
+        '        host_ip: 192.0.2.12\n'
+    )
+
+    for workflow in ('imaging-only-standalone-fca', 'imaging-standalone-fca'):
+        output = ''.join(server._run_preflight(workflow, yaml_body, 'test-id'))
+        assert '[FAIL]' not in output
+        assert 'Required node field present : imaging_batches[1].nodes[1].cvm_ip' in output
+        assert 'FCA Lifecycle images' in output
+
+    assert ('192.0.2.122', 'foundation_central', 'v4.3', 'config/nodes') in calls
+
+
+def test_preflight_validates_standalone_fca_site_workflow(monkeypatch):
+    """Standalone FCA site deploy dry-run validates Lifecycle inventory and site shape."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    monkeypatch.setattr(server, '_fca_lifecycle_get', lambda h, c, v, p: (
+        True,
+        'HTTP 200',
+        {'data': [{'extId': 'provider-1'}, {'extId': 'aos-image'}, {'extId': 'ahv-image'}]},
+        7.0,
+    ))
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        '  executor: orchestrator_lifecycle_v4\n'
+        'fca_api_version: v4.3\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'sites:\n'
+        '  - site_name: site-01\n'
+        '    clusters:\n'
+        '      - cluster_name: cluster-01\n'
+        '        cluster_vip: 192.0.2.10\n'
+        '        node_details:\n'
+        '          - cvm_ip: 192.0.2.11\n'
+        '            host_ip: 192.0.2.12\n'
+    )
+
+    output = ''.join(server._run_preflight('site-deploy-standalone-fca', yaml_body, 'test-id'))
+    assert '[FAIL]' not in output
+    assert 'Required site field present : sites[1].site_name' in output
+    assert 'Required site node field present : sites[1].clusters[1].node_details[1].host_ip' in output
+
+
+def test_execute_blocks_all_standalone_fca_workflows(client, auth_headers, monkeypatch):
+    """Standalone FCA workflow runs fail closed until destructive Lifecycle execution is implemented."""
+    import subprocess
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+
+    def fail_popen(*args, **kwargs):
+        raise AssertionError('ZTF subprocess should not be launched for standalone FCA')
+
+    monkeypatch.setattr(subprocess, 'Popen', fail_popen)
+
+    for workflow, config_file, body_key in (
+        ('imaging-only-standalone-fca', 'imaging_only_fca.yml', 'imaging_batches: []\n'),
+        ('imaging-standalone-fca', 'pod-deploy-fca.yml', 'imaging_batches: []\n'),
+        ('site-deploy-standalone-fca', 'sites-deploy-fca.yml', 'sites: []\n'),
+    ):
+        yaml_body = (
+            'ztf_orchestrator:\n'
+            '  foundation_central_target: standalone_fca\n'
+            'fca_ip: 192.0.2.122\n'
+            'fca_credential: foundation_central\n'
+            'cvm_credential: cvm_cred\n'
+            f'{body_key}'
+        )
+        resp = client.post('/api/execute',
+                           json={'workflow': workflow,
+                                 'configContent': yaml_body,
+                                 'configFile': config_file},
+                           headers=auth_headers)
+        body = resp.data.decode()
+        assert resp.status_code == 200
+        assert 'Standalone Foundation Central Appliance execution is not yet enabled' in body
+        assert '"status": "failed"' in body
+
+
 def test_preflight_generator_missing_field(monkeypatch):
     """_run_preflight flags missing required fields."""
     import server

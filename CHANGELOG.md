@@ -20,6 +20,9 @@ into the next numbered release section when the next version is cut.
   `create_fca_cluster.yml` builder for standalone Foundation Central Appliance
   cluster-create intent, including read-only Lifecycle v4.3 dry-run checks for
   hardware providers, connections, nodes, and images.
+- Added standalone Foundation Central Appliance variants for imaging-only,
+  pod imaging, and site deployment with dedicated config filenames and
+  read-only Lifecycle v4.3 dry-run validation.
 
 ### Fixed
 - Kept GitHub Pages demo builds isolated in `dist-demo` so Docker/local
@@ -27,6 +30,9 @@ into the next numbered release section when the next version is cut.
 - Hydrated the Cluster Create Configure tab from imported upstream-schema YAML
   so imported configs can be reviewed and edited in the guided form, not only
   in YAML Preview.
+- Hydrated imported imaging-only and site-deploy configs into their Configure
+  tabs, including standalone FCA provider, connection, image, node, and site
+  fields.
 
 ### Security
 - Standalone FCA Run Workflow remains fail-closed until the destructive
