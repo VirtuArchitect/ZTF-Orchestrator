@@ -40,7 +40,10 @@ const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'cluster-create': ['common_network_settings', 'create_clusters'],
   'cluster-create-standalone-fca': ['fca_ip', 'fca_credential', 'common_network_settings', 'create_clusters'],
   'imaging-only': ['imaging_batches'],
+  'imaging-only-standalone-fca': ['fca_ip', 'fca_credential', 'imaging_batches'],
+  'imaging-standalone-fca': ['fca_ip', 'fca_credential', 'imaging_batches'],
   'site-deploy': ['sites'],
+  'site-deploy-standalone-fca': ['fca_ip', 'fca_credential', 'sites'],
   'deploy-pc': ['clusters'],
   'config-cluster': ['clusters'],
   'calm-vm-workloads': ['bp_list', 'projects'],
@@ -155,7 +158,10 @@ export default function WorkflowDetail() {
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'cluster-create-standalone-fca': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="standalone_fca" />
       case 'imaging-only': return <ImagingOnlyForm {...props} />
+      case 'imaging-only-standalone-fca': return <ImagingOnlyForm {...props} standaloneFca />
+      case 'imaging-standalone-fca': return <ImagingOnlyForm {...props} standaloneFca />
       case 'site-deploy': return <SiteDeployForm {...props} />
+      case 'site-deploy-standalone-fca': return <SiteDeployForm {...props} standaloneFca />
       case 'deploy-pc': return <PCDeployForm {...props} />
       case 'config-cluster': return <ClusterConfigForm {...props} />
       case 'calm-vm-workloads': return <CalmWorkloadsForm {...props} />

@@ -17,9 +17,13 @@ import clsx from 'clsx'
 const ENVIRONMENTS: ConnectionProfile['environment'][] = ['lab', 'preprod', 'production', 'customer', 'other']
 const DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = [
   'cluster-create',
+  'cluster-create-standalone-fca',
   'imaging-only',
+  'imaging-only-standalone-fca',
   'imaging',
+  'imaging-standalone-fca',
   'site-deploy',
+  'site-deploy-standalone-fca',
   'deploy-pc',
   'config-pc',
   'config-cluster',

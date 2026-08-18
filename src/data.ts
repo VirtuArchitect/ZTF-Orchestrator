@@ -29,6 +29,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     details: 'Images Nutanix nodes with the specified AOS and hypervisor versions without forming clusters. Useful for pre-staging hardware or re-imaging existing nodes.',
   },
   {
+    id: 'imaging-only-standalone-fca',
+    name: 'Imaging Only (Standalone FCA)',
+    description: 'Preflights standalone Foundation Central Appliance node imaging inputs',
+    category: 'Infrastructure',
+    icon: 'HardDrive',
+    configFile: 'imaging_only_fca.yml',
+    details: 'Builds a standalone Foundation Central Appliance imaging intent and validates the Lifecycle v4.3 endpoint, credentials, hardware providers, connections, nodes, and images before destructive imaging support is enabled.',
+  },
+  {
     id: 'imaging',
     name: 'Pod Imaging',
     description: 'Pod workflow combining node imaging and cluster creation',
@@ -38,6 +47,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     details: 'Complete pod deployment workflow that images nodes and creates clusters as part of a larger pod management strategy.',
   },
   {
+    id: 'imaging-standalone-fca',
+    name: 'Pod Imaging (Standalone FCA)',
+    description: 'Preflights standalone Foundation Central Appliance pod imaging inputs',
+    category: 'Pod Operations',
+    icon: 'Layers',
+    configFile: 'pod-deploy-fca.yml',
+    details: 'Builds a standalone Foundation Central Appliance pod imaging intent and validates Lifecycle v4.3 connectivity and inventory before destructive deployment support is enabled.',
+  },
+  {
     id: 'site-deploy',
     name: 'Site Deploy',
     description: 'Full site deployment: imaging, cluster creation, and basic config',
@@ -45,6 +63,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     icon: 'Globe',
     configFile: 'sites-deploy.yml',
     details: 'Comprehensive site deployment supporting multiple sites, each with their own imaging parameters, network settings, and multiple clusters.',
+  },
+  {
+    id: 'site-deploy-standalone-fca',
+    name: 'Site Deploy (Standalone FCA)',
+    description: 'Preflights standalone Foundation Central Appliance site deployment inputs',
+    category: 'Infrastructure',
+    icon: 'Globe',
+    configFile: 'sites-deploy-fca.yml',
+    details: 'Builds a standalone Foundation Central Appliance site deployment intent and validates Lifecycle v4.3 endpoint, credentials, hardware providers, connections, nodes, and images before destructive deployment support is enabled.',
   },
   {
     id: 'config-cluster',

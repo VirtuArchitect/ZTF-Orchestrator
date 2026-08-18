@@ -368,6 +368,37 @@ test('standalone FCA cluster workflow emits standalone config keys', async ({ pa
   await expect(page.getByText('hypervisor_image_ext_id: ahv-image')).toBeVisible()
 })
 
+test('remaining standalone FCA workflows emit standalone config keys', async ({ page }) => {
+  await seedUiSession(page)
+
+  for (const workflow of [
+    { path: '/workflows/imaging-only-standalone-fca', title: 'Imaging Only (Standalone FCA)', file: 'imaging_only_fca.yml' },
+    { path: '/workflows/imaging-standalone-fca', title: 'Pod Imaging (Standalone FCA)', file: 'pod-deploy-fca.yml' },
+    { path: '/workflows/site-deploy-standalone-fca', title: 'Site Deploy (Standalone FCA)', file: 'sites-deploy-fca.yml' },
+  ]) {
+    await page.goto(workflow.path)
+    await expect(page.getByRole('heading', { name: workflow.title, level: 2 })).toBeVisible()
+    await expect(page.getByText(`-f ${workflow.file}`)).toBeVisible()
+    await page.getByRole('button', { name: 'Configure' }).click()
+
+    await page.locator('input[placeholder="10.0.0.100"], input[placeholder="10.0.0.50"]').fill('192.0.2.122')
+    await page.locator('input[placeholder="optional provider extId"]').fill('provider-1')
+    await page.locator('input[placeholder="optional connection extId"]').fill('connection-1')
+    await page.locator('input[placeholder="optional image extId"]').nth(0).fill('aos-image')
+    await page.locator('input[placeholder="optional image extId"]').nth(1).fill('ahv-image')
+    await page.getByRole('button', { name: 'YAML Preview' }).click()
+
+    await expect(page.getByText(workflow.file, { exact: true })).toBeVisible()
+    await expect(page.getByText('foundation_central_target: standalone_fca')).toBeVisible()
+    await expect(page.getByText('executor: orchestrator_lifecycle_v4')).toBeVisible()
+    await expect(page.getByText('fca_ip: 192.0.2.122')).toBeVisible()
+    await expect(page.getByText('hardware_provider_ext_id: provider-1')).toBeVisible()
+    await expect(page.getByText('connection_ext_id: connection-1')).toBeVisible()
+    await expect(page.getByText('aos_image_ext_id: aos-image')).toBeVisible()
+    await expect(page.getByText('hypervisor_image_ext_id: ahv-image')).toBeVisible()
+  }
+})
+
 test('script wizard emits PE cluster name using ZTF runtime key', async ({ page }) => {
   await seedUiSession(page)
   await page.goto('/scripts')

@@ -154,9 +154,16 @@ export function buildClusterCreateYaml(cfg: {
 }
 
 export function buildImagingOnlyYaml(cfg: {
+  foundationCentralTarget?: 'integrated_pc_fc' | 'standalone_fca'
   pcCredential: string
   cvmCredential: string
   pcIp: string
+  fcaApiVersion?: string
+  hardwareProviderExtId?: string
+  hardwareProviderName?: string
+  connectionExtId?: string
+  aosImageExtId?: string
+  hypervisorImageExtId?: string
   dnsServers: string[]
   ntpServers: string[]
   aosUrl: string
@@ -172,6 +179,39 @@ export function buildImagingOnlyYaml(cfg: {
     }>
   }>
 }): string {
+  const imagingBatches = cfg.batches.map(b => ({
+    nodes: b.nodes.map(n => ({
+      cvm_ip: n.cvmIp,
+      host_ip: n.hostIp,
+      ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
+      ...(n.hostname ? { hypervisor_hostname: n.hostname } : {}),
+      ...(n.cvmRamGb ? { cvm_ram_gb: n.cvmRamGb } : {}),
+    })),
+  }))
+
+  if (cfg.foundationCentralTarget === 'standalone_fca') {
+    return toYaml({
+      ztf_orchestrator: {
+        foundation_central_target: 'standalone_fca',
+        executor: 'orchestrator_lifecycle_v4',
+      },
+      fca_api_version: cfg.fcaApiVersion || 'v4.3',
+      fca_ip: cfg.pcIp,
+      fca_credential: cfg.pcCredential,
+      cvm_credential: cfg.cvmCredential,
+      hardware_provider_ext_id: cfg.hardwareProviderExtId || '',
+      hardware_provider_name: cfg.hardwareProviderName || '',
+      connection_ext_id: cfg.connectionExtId || '',
+      aos_image_ext_id: cfg.aosImageExtId || '',
+      hypervisor_image_ext_id: cfg.hypervisorImageExtId || '',
+      common_network_settings: {
+        dns_servers: cfg.dnsServers,
+        ntp_servers: cfg.ntpServers,
+      },
+      imaging_batches: imagingBatches,
+    })
+  }
+
   return toYaml({
     pc_credential: cfg.pcCredential,
     cvm_credential: cfg.cvmCredential,
@@ -181,22 +221,21 @@ export function buildImagingOnlyYaml(cfg: {
     aos_url: cfg.aosUrl,
     hypervisor_type: cfg.hypervisorType,
     hypervisor_url: cfg.hypervisorUrl,
-    imaging_batches: cfg.batches.map(b => ({
-      nodes: b.nodes.map(n => ({
-        cvm_ip: n.cvmIp,
-        host_ip: n.hostIp,
-        ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
-        ...(n.hostname ? { hypervisor_hostname: n.hostname } : {}),
-        ...(n.cvmRamGb ? { cvm_ram_gb: n.cvmRamGb } : {}),
-      })),
-    })),
+    imaging_batches: imagingBatches,
   })
 }
 
 export function buildSiteDeployYaml(cfg: {
+  foundationCentralTarget?: 'integrated_pc_fc' | 'standalone_fca'
   pcCredential: string
   cvmCredential: string
   pcIp: string
+  fcaApiVersion?: string
+  hardwareProviderExtId?: string
+  hardwareProviderName?: string
+  connectionExtId?: string
+  aosImageExtId?: string
+  hypervisorImageExtId?: string
   dnsServers: string[]
   ntpServers: string[]
   aosUrl: string
@@ -228,6 +267,57 @@ export function buildSiteDeployYaml(cfg: {
     }>
   }>
 }): string {
+  const sites = cfg.sites.map(s => ({
+    site_name: s.siteName,
+    use_existing_network_settings: s.useExistingNetwork,
+    're-image': s.reImage,
+    network: {
+      host_subnet: s.hostSubnet,
+      host_gateway: s.hostGateway,
+      ...(s.ipmiSubnet ? { ipmi_subnet: s.ipmiSubnet } : {}),
+      ...(s.ipmiGateway ? { ipmi_gateway: s.ipmiGateway } : {}),
+      ...(s.domain ? { domain: s.domain } : {}),
+    },
+    clusters: s.clusters.map(c => ({
+      cluster_name: c.clusterName,
+      cluster_vip: c.clusterVip,
+      redundancy_factor: c.redundancyFactor,
+      cluster_size: c.clusterSize,
+      ...(c.cvmRam ? { cvm_ram: c.cvmRam } : {}),
+      node_details: c.nodes.map(n => ({
+        ...(n.nodeSerial ? { node_serial: n.nodeSerial } : {}),
+        cvm_ip: n.cvmIp,
+        host_ip: n.hostIp,
+        ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
+        ...(n.hostname ? { hypervisor_hostname: n.hostname } : {}),
+        ...(n.cvmVlanId ? { cvm_vlan_id: n.cvmVlanId } : {}),
+      })),
+    })),
+  }))
+
+  if (cfg.foundationCentralTarget === 'standalone_fca') {
+    return toYaml({
+      ztf_orchestrator: {
+        foundation_central_target: 'standalone_fca',
+        executor: 'orchestrator_lifecycle_v4',
+      },
+      fca_api_version: cfg.fcaApiVersion || 'v4.3',
+      fca_ip: cfg.pcIp,
+      fca_credential: cfg.pcCredential,
+      cvm_credential: cfg.cvmCredential,
+      hardware_provider_ext_id: cfg.hardwareProviderExtId || '',
+      hardware_provider_name: cfg.hardwareProviderName || '',
+      connection_ext_id: cfg.connectionExtId || '',
+      aos_image_ext_id: cfg.aosImageExtId || '',
+      hypervisor_image_ext_id: cfg.hypervisorImageExtId || '',
+      common_network_settings: {
+        dns_servers: cfg.dnsServers,
+        ntp_servers: cfg.ntpServers,
+      },
+      sites,
+    })
+  }
+
   return toYaml({
     pc_ip: cfg.pcIp,
     pc_credential: cfg.pcCredential,
@@ -239,33 +329,7 @@ export function buildSiteDeployYaml(cfg: {
       hypervisor_type: cfg.hypervisorType,
       hypervisor_url: cfg.hypervisorUrl,
     },
-    sites: cfg.sites.map(s => ({
-      site_name: s.siteName,
-      use_existing_network_settings: s.useExistingNetwork,
-      're-image': s.reImage,
-      network: {
-        host_subnet: s.hostSubnet,
-        host_gateway: s.hostGateway,
-        ...(s.ipmiSubnet ? { ipmi_subnet: s.ipmiSubnet } : {}),
-        ...(s.ipmiGateway ? { ipmi_gateway: s.ipmiGateway } : {}),
-        ...(s.domain ? { domain: s.domain } : {}),
-      },
-      clusters: s.clusters.map(c => ({
-        cluster_name: c.clusterName,
-        cluster_vip: c.clusterVip,
-        redundancy_factor: c.redundancyFactor,
-        cluster_size: c.clusterSize,
-        ...(c.cvmRam ? { cvm_ram: c.cvmRam } : {}),
-        node_details: c.nodes.map(n => ({
-          ...(n.nodeSerial ? { node_serial: n.nodeSerial } : {}),
-          cvm_ip: n.cvmIp,
-          host_ip: n.hostIp,
-          ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
-          ...(n.hostname ? { hypervisor_hostname: n.hostname } : {}),
-          ...(n.cvmVlanId ? { cvm_vlan_id: n.cvmVlanId } : {}),
-        })),
-      })),
-    })),
+    sites,
   })
 }
 

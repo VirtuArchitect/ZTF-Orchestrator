@@ -15,7 +15,13 @@ Current ZTF-Orchestrator release for this validation path: `v1.7.7`.
   Destructive Run Workflow is blocked until the cluster deployment/action API
   sequence is implemented and validated.
 - `imaging-only`: image nodes without creating the cluster.
+- `imaging-only-standalone-fca`: standalone Foundation Central Appliance node
+  imaging intent with read-only Lifecycle v4.3 dry-run validation.
 - `imaging`: pod imaging path used by broader site or pod deployment flows.
+- `imaging-standalone-fca`: standalone Foundation Central Appliance pod imaging
+  intent with read-only Lifecycle v4.3 dry-run validation.
+- `site-deploy-standalone-fca`: standalone Foundation Central Appliance site
+  deployment intent with read-only Lifecycle v4.3 dry-run validation.
 
 ## Validation Gates
 
@@ -41,7 +47,7 @@ foundation_central:
   version: redacted-or-not-recorded
   target: integrated_pc_fc-or-standalone_fca
 inputs:
-  config_template: create_cluster.yml-or-create_fca_cluster.yml
+  config_template: create_cluster.yml-or-create_fca_cluster.yml-or-imaging_only_fca.yml-or-pod-deploy-fca.yml-or-sites-deploy-fca.yml
   image_references_verified: true
   config_hash_sha256: "<sha256 of sanitized YAML or canonicalized input>"
 approval:
@@ -64,5 +70,5 @@ Prism Central configuration and drift detection can be tracked separately in
 `docs/validation-status.md`. Foundation Central cluster-create and imaging
 remain their own validation lane until this checklist is completed in safe UAT.
 Standalone FCA dry-run validation can confirm endpoint, credential, hardware
-provider, node, and image visibility through Lifecycle v4.3 without invoking
-destructive deployment actions.
+provider, node, image, imaging batch, and site deployment input visibility
+through Lifecycle v4.3 without invoking destructive deployment actions.
