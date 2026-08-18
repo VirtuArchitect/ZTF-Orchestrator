@@ -35,6 +35,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; cla
 
 const TABS = ['Configure', 'YAML Preview'] as const
 const MAX_IMPORT_BYTES = 1024 * 1024
+const STANDALONE_FCA_CONFIRMATION_PREFIX = 'RUN STANDALONE-FCA'
 
 const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'cluster-create': ['common_network_settings', 'create_clusters'],
@@ -86,6 +87,7 @@ export default function WorkflowDetail() {
   const [showExecution, setShowExecution] = useState(false)
   const [isDryRun, setIsDryRun] = useState(false)
   const [approvalId, setApprovalId] = useState('')
+  const [runExtraParams, setRunExtraParams] = useState<Record<string, string> | undefined>(undefined)
 
   if (!workflow) {
     return (
@@ -111,6 +113,26 @@ export default function WorkflowDetail() {
     const a = document.createElement('a')
     a.href = url; a.download = workflow.configFile; a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const startExecution = (dryRun: boolean) => {
+    if (!yamlContent) return
+    setIsDryRun(dryRun)
+    const extraParams: Record<string, string> = {}
+    if (!dryRun && approvalId.trim()) {
+      extraParams.approvalId = approvalId.trim()
+    }
+    if (!dryRun && workflow.id.endsWith('-standalone-fca')) {
+      const expected = `${STANDALONE_FCA_CONFIRMATION_PREFIX} ${workflow.id}`
+      const entered = window.prompt(
+        `Standalone FCA execution will submit a Lifecycle API request.\n\nType exactly: ${expected}`
+      )
+      if (entered !== expected) return
+      extraParams.riskAcknowledged = 'true'
+      extraParams.destructiveConfirmation = expected
+    }
+    setRunExtraParams(Object.keys(extraParams).length ? extraParams : undefined)
+    setShowExecution(true)
   }
 
   const handleImportConfig = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +216,7 @@ export default function WorkflowDetail() {
             </button>
           )}
           <button
-            onClick={() => { if (yamlContent) { setIsDryRun(true); setShowExecution(true) } }}
+            onClick={() => startExecution(true)}
             disabled={!yamlContent}
             className="btn-secondary gap-1.5"
             title={!yamlContent ? 'Fill out the form first' : 'Validate config and check connectivity without running'}
@@ -203,7 +225,7 @@ export default function WorkflowDetail() {
             Dry Run
           </button>
           <button
-            onClick={() => { if (yamlContent) { setIsDryRun(false); setShowExecution(true) } }}
+            onClick={() => startExecution(false)}
             disabled={!yamlContent || (approvalRequired && !approvalId.trim())}
             className="btn-success gap-1.5"
             title={!yamlContent ? 'Fill out the form first' : approvalRequired && !approvalId.trim() ? 'Select an approved request first' : undefined}
@@ -289,7 +311,7 @@ export default function WorkflowDetail() {
           workflow={workflow.id}
           configContent={yamlContent}
           configFile={workflow.configFile}
-          extraParams={!isDryRun && approvalId.trim() ? { approvalId: approvalId.trim() } : undefined}
+          extraParams={runExtraParams}
           dryRun={isDryRun}
         />
       )}

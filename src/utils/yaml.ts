@@ -130,6 +130,10 @@ export function buildClusterCreateYaml(cfg: {
       connection_ext_id: cfg.connectionExtId || '',
       aos_image_ext_id: cfg.aosImageExtId || '',
       hypervisor_image_ext_id: cfg.hypervisorImageExtId || '',
+      fca_execution: {
+        submit_path: 'config/compute-cluster-deployments',
+        status_path_template: 'config/compute-cluster-deployments/{extId}',
+      },
       common_network_settings: {
         dns_servers: cfg.dnsServers,
         ntp_servers: cfg.ntpServers,
@@ -204,6 +208,10 @@ export function buildImagingOnlyYaml(cfg: {
       connection_ext_id: cfg.connectionExtId || '',
       aos_image_ext_id: cfg.aosImageExtId || '',
       hypervisor_image_ext_id: cfg.hypervisorImageExtId || '',
+      fca_execution: {
+        submit_path: 'config/node-imaging-jobs',
+        status_path_template: 'config/node-imaging-jobs/{extId}',
+      },
       common_network_settings: {
         dns_servers: cfg.dnsServers,
         ntp_servers: cfg.ntpServers,
@@ -310,6 +318,10 @@ export function buildSiteDeployYaml(cfg: {
       connection_ext_id: cfg.connectionExtId || '',
       aos_image_ext_id: cfg.aosImageExtId || '',
       hypervisor_image_ext_id: cfg.hypervisorImageExtId || '',
+      fca_execution: {
+        submit_path: 'config/site-deployments',
+        status_path_template: 'config/site-deployments/{extId}',
+      },
       common_network_settings: {
         dns_servers: cfg.dnsServers,
         ntp_servers: cfg.ntpServers,

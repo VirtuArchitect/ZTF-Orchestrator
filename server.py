@@ -3122,11 +3122,16 @@ STANDALONE_FCA_WORKFLOWS = {
 FOUNDATION_TARGET_INTEGRATED_PC_FC = 'integrated_pc_fc'
 FOUNDATION_TARGET_STANDALONE_FCA = 'standalone_fca'
 STANDALONE_FCA_UNSUPPORTED_MESSAGE = (
-    'Standalone Foundation Central Appliance execution is not yet enabled. '
-    'Dry Run validates the Lifecycle v4.3 endpoint and inventory, but Run '
-    'Workflow is blocked until the destructive cluster deployment API sequence '
-    'is implemented and validated.'
+    'Standalone Foundation Central Appliance scheduled execution requires a '
+    'direct Run Workflow submission with explicit operator acknowledgement.'
 )
+STANDALONE_FCA_CONFIRMATION_PREFIX = 'RUN STANDALONE-FCA'
+STANDALONE_FCA_DEFAULT_SUBMIT_PATHS = {
+    'cluster-create-standalone-fca': 'config/compute-cluster-deployments',
+    'imaging-only-standalone-fca': 'config/node-imaging-jobs',
+    'imaging-standalone-fca': 'config/node-imaging-jobs',
+    'site-deploy-standalone-fca': 'config/site-deployments',
+}
 
 
 def _cluster_create_foundation_target(config: dict) -> str:
@@ -3143,8 +3148,6 @@ def _cluster_create_foundation_target(config: dict) -> str:
 
 
 def _standalone_fca_execution_error(workflow: str, config_content: str) -> str:
-    if workflow in STANDALONE_FCA_WORKFLOWS:
-        return STANDALONE_FCA_UNSUPPORTED_MESSAGE
     if workflow != 'cluster-create' or not config_content:
         return ''
     try:
@@ -3154,14 +3157,32 @@ def _standalone_fca_execution_error(workflow: str, config_content: str) -> str:
     if not isinstance(parsed, dict):
         return ''
     if _cluster_create_foundation_target(parsed) == FOUNDATION_TARGET_STANDALONE_FCA:
-        return STANDALONE_FCA_UNSUPPORTED_MESSAGE
+        return (
+            'Standalone FCA configs must use workflow "cluster-create-standalone-fca" '
+            'and config file "create_fca_cluster.yml".'
+        )
     return ''
+
+
+def _standalone_fca_confirmation(workflow: str) -> str:
+    return f'{STANDALONE_FCA_CONFIRMATION_PREFIX} {workflow}'
+
+
+def _validate_standalone_fca_ack(workflow: str | None, payload: dict) -> str | None:
+    if workflow not in STANDALONE_FCA_WORKFLOWS:
+        return None
+    expected = _standalone_fca_confirmation(str(workflow))
+    if str(payload.get('destructiveConfirmation') or '').strip() != expected:
+        return (
+            f'Standalone FCA execution acknowledgement required. Type exactly: {expected}'
+        )
+    return None
 
 
 def _fca_api_version(config: dict) -> tuple[str, str]:
     api_version = str(config.get('fca_api_version') or 'v4.3').strip()
     if api_version != 'v4.3':
-        return api_version, 'Standalone FCA dry-run currently supports Lifecycle API v4.3 only'
+        return api_version, 'Standalone FCA Lifecycle execution currently supports API v4.3 only'
     return api_version, ''
 
 
@@ -3205,17 +3226,35 @@ def _find_ext_id(payload, configured_ext_id: str, configured_name: str = '') -> 
 
 
 def _fca_lifecycle_get(host: str, credential_ref: str, api_version: str, resource_path: str) -> tuple[bool, str, object, float]:
+    return _fca_lifecycle_request(host, credential_ref, api_version, 'GET', resource_path)
+
+
+def _fca_lifecycle_request(
+    host: str,
+    credential_ref: str,
+    api_version: str,
+    method: str,
+    resource_path: str,
+    payload: object | None = None,
+) -> tuple[bool, str, object, float]:
     username, password, error = _lookup_credential_ref(credential_ref)
     if error:
         return False, error, {}, 0.0
     token = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
     clean_path = resource_path.lstrip('/')
     url = f'https://{host}:9440/api/lifecycle/{api_version}/{clean_path}'
-    req = urllib.request.Request(url, headers={
+    data = None
+    headers = {
         'Authorization': f'Basic {token}',
         'Accept': 'application/json',
         'User-Agent': f'ZTF-Orchestrator/{APP_VERSION}',
-    })
+    }
+    if payload is not None:
+        data = json.dumps(payload).encode('utf-8')
+        headers['Content-Type'] = 'application/json'
+    req = urllib.request.Request(url, headers={
+        **headers,
+    }, data=data, method=method.upper())
     context = ssl._create_unverified_context()
     started = time.monotonic()
     try:
@@ -3233,6 +3272,221 @@ def _fca_lifecycle_get(host: str, credential_ref: str, api_version: str, resourc
         return False, f'request failed: {getattr(exc, "reason", exc)}', {}, 0.0
     except json.JSONDecodeError:
         return False, 'response was not valid JSON', {}, 0.0
+
+
+def _fca_execution_options(config: dict) -> dict:
+    options = config.get('fca_execution')
+    return options if isinstance(options, dict) else {}
+
+
+def _fca_submit_path(workflow: str, config: dict) -> str:
+    options = _fca_execution_options(config)
+    value = str(options.get('submit_path') or config.get('fca_submit_path') or '').strip()
+    return value or STANDALONE_FCA_DEFAULT_SUBMIT_PATHS.get(workflow, '')
+
+
+def _fca_status_path_template(config: dict) -> str:
+    options = _fca_execution_options(config)
+    return str(options.get('status_path_template') or config.get('fca_status_path_template') or '').strip()
+
+
+def _fca_payload_override(config: dict) -> object | None:
+    options = _fca_execution_options(config)
+    if 'payload' in options:
+        return options.get('payload')
+    if 'fca_payload' in config:
+        return config.get('fca_payload')
+    return None
+
+
+def _fca_node_intent(node: dict) -> dict:
+    mapped = {
+        'nodeSerial': node.get('node_serial'),
+        'cvmIp': node.get('cvm_ip'),
+        'hostIp': node.get('host_ip'),
+        'ipmiIp': node.get('ipmi_ip'),
+        'hypervisorHostname': node.get('hypervisor_hostname'),
+        'cvmRamGb': node.get('cvm_ram_gb') or node.get('cvm_ram'),
+        'cvmVlanId': node.get('cvm_vlan_id'),
+    }
+    return {key: value for key, value in mapped.items() if value not in (None, '', [])}
+
+
+def _build_standalone_fca_payload(workflow: str, config: dict) -> dict:
+    override = _fca_payload_override(config)
+    if override is not None:
+        if isinstance(override, dict):
+            return override
+        return {'payload': override}
+
+    base = {
+        'metadata': {
+            'source': 'ztf-orchestrator',
+            'workflow': workflow,
+            'foundationCentralTarget': FOUNDATION_TARGET_STANDALONE_FCA,
+        },
+        'hardwareProviderExtId': config.get('hardware_provider_ext_id') or None,
+        'hardwareProviderName': config.get('hardware_provider_name') or None,
+        'connectionExtId': config.get('connection_ext_id') or None,
+        'aosImageExtId': config.get('aos_image_ext_id') or None,
+        'hypervisorImageExtId': config.get('hypervisor_image_ext_id') or None,
+        'commonNetworkSettings': config.get('common_network_settings') or {},
+    }
+    base = {key: value for key, value in base.items() if value not in (None, '', [])}
+
+    if workflow == 'cluster-create-standalone-fca':
+        clusters = []
+        for cluster in config.get('create_clusters') or []:
+            if not isinstance(cluster, dict):
+                continue
+            item = {
+                'clusterName': cluster.get('cluster_name'),
+                'clusterVip': cluster.get('cluster_vip'),
+                'redundancyFactor': cluster.get('redundancy_factor'),
+                'timezone': cluster.get('timezone'),
+                'cvmGateway': cluster.get('cvm_gateway'),
+                'cvmNetmask': cluster.get('cvm_netmask'),
+                'ipmiGateway': cluster.get('ipmi_gateway'),
+                'ipmiNetmask': cluster.get('ipmi_netmask'),
+                'nodes': [_fca_node_intent(node) for node in cluster.get('nodes_list') or [] if isinstance(node, dict)],
+            }
+            clusters.append({key: value for key, value in item.items() if value not in (None, '', [])})
+        return {**base, 'clusters': clusters}
+
+    if workflow in {'imaging-only-standalone-fca', 'imaging-standalone-fca'}:
+        batches = []
+        for batch in config.get('imaging_batches') or []:
+            if not isinstance(batch, dict):
+                continue
+            nodes = [_fca_node_intent(node) for node in batch.get('nodes') or [] if isinstance(node, dict)]
+            batches.append({'nodes': nodes})
+        return {**base, 'imagingBatches': batches}
+
+    if workflow == 'site-deploy-standalone-fca':
+        sites = []
+        for site in config.get('sites') or []:
+            if not isinstance(site, dict):
+                continue
+            clusters = []
+            for cluster in site.get('clusters') or []:
+                if not isinstance(cluster, dict):
+                    continue
+                clusters.append({
+                    'clusterName': cluster.get('cluster_name'),
+                    'clusterVip': cluster.get('cluster_vip'),
+                    'redundancyFactor': cluster.get('redundancy_factor'),
+                    'clusterSize': cluster.get('cluster_size'),
+                    'nodes': [_fca_node_intent(node) for node in cluster.get('node_details') or [] if isinstance(node, dict)],
+                })
+            sites.append({
+                'siteName': site.get('site_name'),
+                'useExistingNetworkSettings': site.get('use_existing_network_settings'),
+                'reImage': site.get('re-image'),
+                'network': site.get('network') or {},
+                'clusters': clusters,
+            })
+        return {**base, 'sites': sites}
+
+    return base
+
+
+def _fca_response_ext_id(payload: object) -> str:
+    if not isinstance(payload, dict):
+        return ''
+    for key in ('extId', 'taskExtId', 'taskUuid', 'uuid', 'id'):
+        value = payload.get(key)
+        if value:
+            return str(value)
+    data = payload.get('data')
+    if isinstance(data, dict):
+        for key in ('extId', 'taskExtId', 'taskUuid', 'uuid', 'id'):
+            value = data.get(key)
+            if value:
+                return str(value)
+    return ''
+
+
+def _fca_response_status_path(config: dict, payload: object) -> str:
+    if isinstance(payload, dict):
+        for key in ('statusPath', 'status_path', 'statusUrl', 'status_url'):
+            value = payload.get(key)
+            if value:
+                text = str(value)
+                marker = '/api/lifecycle/'
+                if marker in text:
+                    return text.split(marker, 1)[1].split('/', 1)[1]
+                return text.lstrip('/')
+    template = _fca_status_path_template(config)
+    ext_id = _fca_response_ext_id(payload)
+    if template and ext_id:
+        return template.format(extId=urllib.parse.quote(ext_id), taskExtId=urllib.parse.quote(ext_id))
+    return ''
+
+
+def _fca_status_value(payload: object) -> str:
+    if not isinstance(payload, dict):
+        return ''
+    candidates = [
+        payload.get('status'),
+        payload.get('state'),
+        payload.get('phase'),
+        payload.get('lifecycleState'),
+    ]
+    data = payload.get('data')
+    if isinstance(data, dict):
+        candidates.extend([data.get('status'), data.get('state'), data.get('phase'), data.get('lifecycleState')])
+    for candidate in candidates:
+        if candidate:
+            return str(candidate)
+    return ''
+
+
+def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool, list[str], dict]:
+    lines: list[str] = []
+    diagnostics: dict = {}
+    host = str(config.get('fca_ip') or '').strip()
+    credential_ref = str(config.get('fca_credential') or '').strip()
+    api_version, api_error = _fca_api_version(config)
+    if api_error:
+        return False, [api_error], diagnostics
+    submit_path = _fca_submit_path(workflow, config)
+    if not submit_path:
+        return False, ['Standalone FCA submit path is not configured'], diagnostics
+    payload = _build_standalone_fca_payload(workflow, config)
+    diagnostics['fcaSubmitPath'] = submit_path
+    diagnostics['fcaWorkflow'] = workflow
+    lines.append(f'Submitting standalone FCA Lifecycle request: POST /api/lifecycle/{api_version}/{submit_path.lstrip("/")}')
+    ok, message, response_payload, latency_ms = _fca_lifecycle_request(
+        host, credential_ref, api_version, 'POST', submit_path, payload,
+    )
+    diagnostics['fcaSubmitResponse'] = response_payload
+    if not ok:
+        return False, [*lines, f'FCA submit failed: {message}'], diagnostics
+    lines.append(f'FCA submit accepted: {message} ({latency_ms:>5.0f}ms)')
+
+    status_path = _fca_response_status_path(config, response_payload)
+    if not status_path:
+        lines.append('No FCA status endpoint was returned or configured; treating accepted submission as successful handoff.')
+        return True, lines, diagnostics
+
+    diagnostics['fcaStatusPath'] = status_path
+    terminal_success = {'success', 'succeeded', 'complete', 'completed', 'done'}
+    terminal_failed = {'failed', 'failure', 'error', 'cancelled', 'canceled'}
+    for attempt in range(1, 31):
+        time.sleep(2)
+        ok, message, status_payload, latency_ms = _fca_lifecycle_get(host, credential_ref, api_version, status_path)
+        diagnostics['fcaLastStatusResponse'] = status_payload
+        if not ok:
+            return False, [*lines, f'FCA status poll failed: {message}'], diagnostics
+        status_value = _fca_status_value(status_payload)
+        display_status = status_value or 'unknown'
+        lines.append(f'FCA status poll {attempt:02d}: {display_status} ({latency_ms:>5.0f}ms)')
+        normalized = display_status.lower()
+        if normalized in terminal_success:
+            return True, lines, diagnostics
+        if normalized in terminal_failed:
+            return False, lines, diagnostics
+    return False, [*lines, 'FCA status polling timed out after 60 seconds'], diagnostics
 
 
 def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], int, int]:
@@ -3307,7 +3561,7 @@ def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], in
             lines.append(f'[FAIL] {label} not found    : {image_ext_id}')
             failed += 1
 
-    lines.append('[INFO] Standalone FCA dry-run is read-only; Run Workflow remains blocked until deployment actions are implemented.')
+    lines.append('[INFO] Standalone FCA dry-run is read-only; Run Workflow submits Lifecycle requests only after explicit acknowledgement.')
     return lines, passed, failed
 
 
@@ -4907,6 +5161,61 @@ class ExecutionJobManager:
             target_error = _standalone_fca_execution_error(workflow or '', effective_config_content)
             if target_error:
                 self._emit(job_id, 'error', target_error)
+                return
+            if workflow in STANDALONE_FCA_WORKFLOWS:
+                acknowledgement_error = _validate_standalone_fca_ack(workflow, payload)
+                if acknowledgement_error:
+                    self._emit(job_id, 'error', acknowledgement_error)
+                    return
+                configs_dir = get_configs_dir()
+                self._update_progress(job_id, 'Preparing standalone FCA request', 15, 'Validating and saving workflow YAML')
+                if effective_config_content and config_file:
+                    path = safe_config_path(config_file, configs_dir)
+                    if path is None or path.suffix not in ('.yml', '.yaml'):
+                        self._emit(job_id, 'error', 'Invalid config filename')
+                        return
+                    ok, err = validate_yaml(effective_config_content)
+                    if not ok:
+                        self._emit(job_id, 'error', f'Invalid YAML: {err}')
+                        return
+                    backup_config(path)
+                    _secure_write(path, effective_config_content)
+                    cfg_path = str(path)
+                elif config_file:
+                    path = safe_config_path(config_file, configs_dir)
+                    if path is None or not path.exists() or path.suffix not in ('.yml', '.yaml'):
+                        self._emit(job_id, 'error', 'Config file was not found')
+                        return
+                    cfg_path = str(path)
+                    effective_config_content = path.read_text(encoding='utf-8')
+                else:
+                    self._emit(job_id, 'error', 'Standalone FCA config content or config file is required')
+                    return
+                try:
+                    config = yaml.safe_load(effective_config_content) or {}
+                except yaml.YAMLError as exc:
+                    self._emit(job_id, 'error', f'Invalid YAML: {exc}')
+                    return
+                if not isinstance(config, dict):
+                    self._emit(job_id, 'error', 'Standalone FCA config must be a YAML mapping')
+                    return
+                cmd_args = ['standalone-fca', '--workflow', workflow, '-f', cfg_path or config_file]
+                self._emit(job_id, 'start', {
+                    'command': _display_command(cmd_args),
+                    'commandArgs': cmd_args,
+                    'workingDir': '',
+                    'configFile': config_file or '',
+                    'configPath': cfg_path or '',
+                })
+                self._update_progress(job_id, 'Submitting standalone FCA request', 45, 'Calling Lifecycle v4 API')
+                success, lines, fca_diagnostics = _execute_standalone_fca_lifecycle(workflow, config)
+                for line in lines:
+                    stdout_lines.append(line)
+                    self._emit(job_id, 'stdout', line)
+                status = 'success' if success else 'failed'
+                return_code = 0 if success else -1
+                if fca_diagnostics:
+                    stdout_lines.append(_redact_text(f'FCA diagnostics: {json.dumps(fca_diagnostics, sort_keys=True)}'))
                 return
             incompatible = _ztf_incompatible_error(ztf_path)
             if incompatible:
@@ -7421,6 +7730,9 @@ def execute_workflow():
         return jsonify({'error': 'Unknown workflow'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
+    standalone_fca_error = _validate_standalone_fca_ack(workflow, data)
+    if standalone_fca_error and not dry_run:
+        return jsonify({'error': standalone_fca_error, 'destructiveAction': True}), 403
 
     # Dry-run: run pre-flight checks only — no subprocess, no concurrency lock
     if dry_run:
@@ -7663,12 +7975,16 @@ def submit_job():
         return jsonify({'error': 'Unknown workflow'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
+    standalone_fca_error = _validate_standalone_fca_ack(workflow, data)
+    if standalone_fca_error:
+        return jsonify({'error': standalone_fca_error, 'destructiveAction': True}), 403
 
     settings = get_settings()
-    incompatible = _ztf_incompatible_error(settings['ztfPath'])
-    if incompatible:
-        body, status_code = incompatible
-        return jsonify(body), status_code
+    if workflow not in STANDALONE_FCA_WORKFLOWS:
+        incompatible = _ztf_incompatible_error(settings['ztfPath'])
+        if incompatible:
+            body, status_code = incompatible
+            return jsonify(body), status_code
 
     approval_error, approval = _validate_workflow_approval(data, settings)
     if approval_error:
