@@ -3126,12 +3126,18 @@ STANDALONE_FCA_UNSUPPORTED_MESSAGE = (
     'direct Run Workflow submission with explicit operator acknowledgement.'
 )
 STANDALONE_FCA_CONFIRMATION_PREFIX = 'RUN STANDALONE-FCA'
+STANDALONE_FCA_DEFAULT_API_VERSION = 'v4.2.a2'
+STANDALONE_FCA_PRISM_TASK_API_VERSION = 'v4.2'
 STANDALONE_FCA_DEFAULT_SUBMIT_PATHS = {
-    'cluster-create-standalone-fca': 'config/compute-cluster-deployments',
+    'cluster-create-standalone-fca': 'config/workflows',
     'imaging-only-standalone-fca': 'config/node-imaging-jobs',
     'imaging-standalone-fca': 'config/node-imaging-jobs',
     'site-deploy-standalone-fca': 'config/site-deployments',
 }
+STANDALONE_FCA_DEFAULT_STATUS_PATHS = {
+    'cluster-create-standalone-fca': 'config/workflows/{extId}',
+}
+STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE = 'CLUSTER_CREATE_COMPUTE_BARE_METAL'
 
 
 def _cluster_create_foundation_target(config: dict) -> str:
@@ -3180,9 +3186,9 @@ def _validate_standalone_fca_ack(workflow: str | None, payload: dict) -> str | N
 
 
 def _fca_api_version(config: dict) -> tuple[str, str]:
-    api_version = str(config.get('fca_api_version') or 'v4.3').strip()
-    if api_version != 'v4.3':
-        return api_version, 'Standalone FCA Lifecycle execution currently supports API v4.3 only'
+    api_version = str(config.get('fca_api_version') or STANDALONE_FCA_DEFAULT_API_VERSION).strip()
+    if api_version not in {'v4.2.a2', 'v4.3'}:
+        return api_version, 'Standalone FCA Lifecycle execution currently supports API v4.2.a2 or v4.3 only'
     return api_version, ''
 
 
@@ -3237,12 +3243,28 @@ def _fca_lifecycle_request(
     resource_path: str,
     payload: object | None = None,
 ) -> tuple[bool, str, object, float]:
+    return _fca_api_request(host, credential_ref, f'lifecycle/{api_version}', method, resource_path, payload)
+
+
+def _fca_prism_get(host: str, credential_ref: str, api_version: str, resource_path: str) -> tuple[bool, str, object, float]:
+    return _fca_api_request(host, credential_ref, f'prism/{api_version}', 'GET', resource_path)
+
+
+def _fca_api_request(
+    host: str,
+    credential_ref: str,
+    api_root: str,
+    method: str,
+    resource_path: str,
+    payload: object | None = None,
+) -> tuple[bool, str, object, float]:
     username, password, error = _lookup_credential_ref(credential_ref)
     if error:
         return False, error, {}, 0.0
     token = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
     clean_path = resource_path.lstrip('/')
-    url = f'https://{host}:9440/api/lifecycle/{api_version}/{clean_path}'
+    clean_root = api_root.strip('/')
+    url = f'https://{host}:9440/api/{clean_root}/{clean_path}'
     data = None
     headers = {
         'Authorization': f'Basic {token}',
@@ -3290,6 +3312,10 @@ def _fca_status_path_template(config: dict) -> str:
     return str(options.get('status_path_template') or config.get('fca_status_path_template') or '').strip()
 
 
+def _fca_default_status_path_template(workflow: str) -> str:
+    return STANDALONE_FCA_DEFAULT_STATUS_PATHS.get(workflow, '')
+
+
 def _fca_payload_override(config: dict) -> object | None:
     options = _fca_execution_options(config)
     if 'payload' in options:
@@ -3310,6 +3336,160 @@ def _fca_node_intent(node: dict) -> dict:
         'cvmVlanId': node.get('cvm_vlan_id'),
     }
     return {key: value for key, value in mapped.items() if value not in (None, '', [])}
+
+
+def _fca_ipv4(value: object, prefix_length: int | None = None) -> dict:
+    ipv4 = {'value': str(value)}
+    if prefix_length is not None:
+        ipv4['prefixLength'] = prefix_length
+    return {'ipv4': ipv4}
+
+
+def _fca_ip_or_fqdn(value: object) -> dict:
+    text = str(value)
+    if re.match(r'^\d{1,3}(?:\.\d{1,3}){3}$', text):
+        return _fca_ipv4(text)
+    return {'fqdn': {'value': text}}
+
+
+def _fca_network_list(values: object, *, ip_or_fqdn: bool = False) -> list[dict]:
+    if not isinstance(values, list):
+        return []
+    result = []
+    for value in values:
+        if value in (None, ''):
+            continue
+        result.append(_fca_ip_or_fqdn(value) if ip_or_fqdn else _fca_ipv4(value))
+    return result
+
+
+def _prefix_length_from_netmask(value: object) -> int:
+    text = str(value or '').strip()
+    if not text:
+        return 24
+    if text.isdigit():
+        number = int(text)
+        return number if 0 <= number <= 32 else 24
+    try:
+        return ipaddress.ip_network(f'0.0.0.0/{text}').prefixlen
+    except ValueError:
+        return 24
+
+
+def _fca_node_hostname(node: dict) -> str:
+    return str(node.get('hypervisor_hostname') or node.get('hostname') or node.get('node_serial') or '').strip()
+
+
+def _fca_build_cluster_workflow_payload(config: dict, resolved_nodes: dict[str, dict] | None = None) -> dict:
+    common_network = config.get('common_network_settings') if isinstance(config.get('common_network_settings'), dict) else {}
+    dns_servers = _fca_network_list(common_network.get('dns_servers'))
+    ntp_servers = _fca_network_list(common_network.get('ntp_servers'), ip_or_fqdn=True)
+    aos_image_ext_id = str(config.get('aos_image_ext_id') or '').strip()
+    hypervisor_image_ext_id = str(config.get('hypervisor_image_ext_id') or '').strip()
+    workflow_type = str(config.get('fca_workflow_type') or STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE).strip()
+
+    clusters = [cluster for cluster in config.get('create_clusters') or [] if isinstance(cluster, dict)]
+    cluster = clusters[0] if clusters else {}
+    host_prefix = _prefix_length_from_netmask(cluster.get('host_netmask') or cluster.get('cvm_netmask'))
+    cvm_prefix = _prefix_length_from_netmask(cluster.get('cvm_netmask'))
+    host_gateway = cluster.get('host_gateway') or cluster.get('cvm_gateway')
+    cvm_gateway = cluster.get('cvm_gateway') or cluster.get('host_gateway')
+    host_vlan = cluster.get('host_vlan_id') or cluster.get('cvm_vlan_id') or cluster.get('vlan_id')
+    cvm_vlan = cluster.get('cvm_vlan_id') or cluster.get('host_vlan_id') or cluster.get('vlan_id')
+    mtu = int(cluster.get('mtu') or 1500)
+
+    payload_nodes = []
+    for node in cluster.get('nodes_list') or []:
+        if not isinstance(node, dict):
+            continue
+        serial = str(node.get('node_serial') or '').strip()
+        hostname = _fca_node_hostname(node)
+        resolved = (resolved_nodes or {}).get(serial) or {}
+        node_ext_id = str(node.get('node_ext_id') or resolved.get('extId') or '').strip()
+        host_ip = node.get('host_ip')
+        cvm_ip = node.get('cvm_ip')
+        cvm_ram = node.get('cvm_ram_gb') or node.get('cvm_ram') or cluster.get('cvm_ram_gb') or cluster.get('cvm_ram') or 48
+        payload_nodes.append({
+            'aosInstallationDetails': {
+                'aosImageDetails': {'imageExtId': aos_image_ext_id},
+                'managementNetwork': {
+                    'gateway': _fca_ipv4(cvm_gateway),
+                    'ip': _fca_ipv4(cvm_ip, cvm_prefix),
+                    'vlanId': cvm_vlan,
+                },
+                'nameserverIPList': dns_servers,
+                'ntpServerIPList': ntp_servers,
+                'cvmMemoryGB': cvm_ram,
+            },
+            'hostInstallationDetails': {
+                'imageDetails': {'imageExtId': hypervisor_image_ext_id},
+                'type': str(config.get('hypervisor_type') or node.get('hypervisor_type') or 'AHV'),
+                'networkDetails': {
+                    'managementNetwork': {
+                        'ip': _fca_ipv4(host_ip, host_prefix),
+                        'gateway': _fca_ipv4(host_gateway),
+                        'mtu': mtu,
+                        'bondSettings': {},
+                        'vlan': host_vlan,
+                    },
+                },
+                'hostname': hostname,
+                'nameserverIPList': dns_servers,
+                'ntpServerIPList': ntp_servers,
+            },
+            'cvmIp': _fca_ipv4(cvm_ip, cvm_prefix),
+            'nodeExtId': node_ext_id,
+            'nodeRole': str(node.get('node_role') or 'COMPUTE'),
+            'hostIp': _fca_ipv4(host_ip, host_prefix),
+            'hostname': hostname,
+            'uniqueIdentifierValue': serial,
+        })
+
+    return {
+        'clusterDetails': {
+            'externalIp': _fca_ipv4(cluster.get('cluster_vip')),
+            'name': cluster.get('cluster_name'),
+            'timezone': cluster.get('timezone') or 'UTC',
+        },
+        'name': cluster.get('cluster_name'),
+        'nodes': payload_nodes,
+        'workflowType': workflow_type,
+    }
+
+
+def _fca_validate_cluster_workflow_payload(payload: dict) -> list[str]:
+    errors: list[str] = []
+    cluster_details = payload.get('clusterDetails') if isinstance(payload.get('clusterDetails'), dict) else {}
+    if not cluster_details.get('name'):
+        errors.append('FCA workflow payload missing clusterDetails.name')
+    if not ((cluster_details.get('externalIp') or {}).get('ipv4') or {}).get('value'):
+        errors.append('FCA workflow payload missing clusterDetails.externalIp')
+    if payload.get('workflowType') != STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE:
+        errors.append(f'FCA workflow payload workflowType must be {STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE}')
+    nodes = payload.get('nodes') if isinstance(payload.get('nodes'), list) else []
+    if not nodes:
+        errors.append('FCA workflow payload missing nodes')
+    for index, node in enumerate(nodes, start=1):
+        if not isinstance(node, dict):
+            errors.append(f'FCA workflow payload nodes[{index}] is not an object')
+            continue
+        if not node.get('nodeExtId'):
+            errors.append(f'FCA workflow payload nodes[{index}].nodeExtId was not resolved')
+        if not node.get('uniqueIdentifierValue'):
+            errors.append(f'FCA workflow payload nodes[{index}].uniqueIdentifierValue missing')
+        aos = node.get('aosInstallationDetails') if isinstance(node.get('aosInstallationDetails'), dict) else {}
+        host = node.get('hostInstallationDetails') if isinstance(node.get('hostInstallationDetails'), dict) else {}
+        if not ((aos.get('aosImageDetails') or {}).get('imageExtId')):
+            errors.append(f'FCA workflow payload nodes[{index}].aosInstallationDetails.aosImageDetails.imageExtId missing')
+        if not ((host.get('imageDetails') or {}).get('imageExtId')):
+            errors.append(f'FCA workflow payload nodes[{index}].hostInstallationDetails.imageDetails.imageExtId missing')
+        aos_network = aos.get('managementNetwork') if isinstance(aos.get('managementNetwork'), dict) else {}
+        host_network = ((host.get('networkDetails') or {}).get('managementNetwork') if isinstance(host.get('networkDetails'), dict) else {})
+        if not ((aos_network.get('gateway') or {}).get('ipv4') or {}).get('value'):
+            errors.append(f'FCA workflow payload nodes[{index}].aosInstallationDetails.managementNetwork.gateway missing')
+        if not ((host_network.get('gateway') or {}).get('ipv4') or {}).get('value'):
+            errors.append(f'FCA workflow payload nodes[{index}].hostInstallationDetails.networkDetails.managementNetwork.gateway missing')
+    return errors
 
 
 def _build_standalone_fca_payload(workflow: str, config: dict) -> dict:
@@ -3335,23 +3515,7 @@ def _build_standalone_fca_payload(workflow: str, config: dict) -> dict:
     base = {key: value for key, value in base.items() if value not in (None, '', [])}
 
     if workflow == 'cluster-create-standalone-fca':
-        clusters = []
-        for cluster in config.get('create_clusters') or []:
-            if not isinstance(cluster, dict):
-                continue
-            item = {
-                'clusterName': cluster.get('cluster_name'),
-                'clusterVip': cluster.get('cluster_vip'),
-                'redundancyFactor': cluster.get('redundancy_factor'),
-                'timezone': cluster.get('timezone'),
-                'cvmGateway': cluster.get('cvm_gateway'),
-                'cvmNetmask': cluster.get('cvm_netmask'),
-                'ipmiGateway': cluster.get('ipmi_gateway'),
-                'ipmiNetmask': cluster.get('ipmi_netmask'),
-                'nodes': [_fca_node_intent(node) for node in cluster.get('nodes_list') or [] if isinstance(node, dict)],
-            }
-            clusters.append({key: value for key, value in item.items() if value not in (None, '', [])})
-        return {**base, 'clusters': clusters}
+        return _fca_build_cluster_workflow_payload(config)
 
     if workflow in {'imaging-only-standalone-fca', 'imaging-standalone-fca'}:
         batches = []
@@ -3390,6 +3554,173 @@ def _build_standalone_fca_payload(workflow: str, config: dict) -> dict:
     return base
 
 
+def _fca_config_nodes(config: dict) -> list[dict]:
+    nodes: list[dict] = []
+    for cluster in config.get('create_clusters') or []:
+        if not isinstance(cluster, dict):
+            continue
+        nodes.extend([node for node in cluster.get('nodes_list') or [] if isinstance(node, dict)])
+    return nodes
+
+
+def _fca_node_serials(config: dict) -> list[str]:
+    serials = []
+    for node in _fca_config_nodes(config):
+        serial = str(node.get('node_serial') or '').strip()
+        if serial:
+            serials.append(serial)
+    return serials
+
+
+def _fca_node_match_key(node: dict) -> str:
+    return str(
+        node.get('uniqueIdentifierValue')
+        or node.get('blockSerialNumber')
+        or node.get('serial')
+        or node.get('node_serial')
+        or ''
+    ).strip()
+
+
+def _fca_provider_connection_path(provider_ext_id: str, connection_ext_id: str, suffix: str = '') -> str:
+    provider = urllib.parse.quote(provider_ext_id, safe='')
+    connection = urllib.parse.quote(connection_ext_id, safe='')
+    tail = suffix.lstrip('/')
+    base = f'config/hardware-providers/{provider}/connections/{connection}'
+    return f'{base}/{tail}' if tail else base
+
+
+def _fca_resolve_onboarded_nodes(
+    host: str,
+    credential_ref: str,
+    api_version: str,
+    config: dict,
+) -> tuple[bool, list[str], dict[str, dict]]:
+    lines: list[str] = []
+    serials = set(_fca_node_serials(config))
+    resolved: dict[str, dict] = {}
+    if not serials:
+        return True, lines, resolved
+
+    ok, message, payload, latency_ms = _fca_lifecycle_get(
+        host,
+        credential_ref,
+        api_version,
+        'config/nodes?$page=0&$limit=100&$filter=isOnboarded%20eq%20true&$orderby=createdTime%20asc',
+    )
+    if not ok:
+        return False, [f'FCA onboarded node lookup failed: {message}'], resolved
+    for item in _json_collection_items(payload):
+        if not isinstance(item, dict):
+            continue
+        serial = _fca_node_match_key(item)
+        if serial in serials:
+            resolved[serial] = item
+    lines.append(f'FCA onboarded node lookup: {len(resolved)}/{len(serials)} matched ({latency_ms:>5.0f}ms)')
+    return True, lines, resolved
+
+
+def _fca_poll_prism_task(host: str, credential_ref: str, task_ext_id: str) -> tuple[bool, list[str], dict]:
+    lines: list[str] = []
+    last_payload: dict = {}
+    task_path = f'config/tasks/{urllib.parse.quote(task_ext_id, safe="")}?$select=*'
+    terminal_success = {'succeeded', 'success', 'completed', 'complete'}
+    terminal_failed = {'failed', 'failure', 'error', 'cancelled', 'canceled'}
+    for attempt in range(1, 31):
+        time.sleep(2)
+        ok, message, payload, latency_ms = _fca_prism_get(
+            host, credential_ref, STANDALONE_FCA_PRISM_TASK_API_VERSION, task_path,
+        )
+        last_payload = payload if isinstance(payload, dict) else {}
+        if not ok:
+            return False, [f'FCA Prism task poll failed: {message}'], last_payload
+        data = payload.get('data') if isinstance(payload, dict) else {}
+        status = str(data.get('status') if isinstance(data, dict) else '').strip()
+        progress = data.get('progressPercentage') if isinstance(data, dict) else None
+        display = status or 'unknown'
+        suffix = f' {progress}%' if progress is not None else ''
+        lines.append(f'FCA Prism task poll {attempt:02d}: {display}{suffix} ({latency_ms:>5.0f}ms)')
+        normalized = display.lower()
+        if normalized in terminal_success:
+            return True, lines, last_payload
+        if normalized in terminal_failed:
+            return False, lines, last_payload
+    return False, [*lines, 'FCA Prism task polling timed out after 60 seconds'], last_payload
+
+
+def _fca_onboard_discovered_nodes(
+    host: str,
+    credential_ref: str,
+    api_version: str,
+    config: dict,
+    resolved_nodes: dict[str, dict],
+) -> tuple[bool, list[str], dict[str, dict], list[dict]]:
+    lines: list[str] = []
+    task_payloads: list[dict] = []
+    provider_ext_id = str(config.get('hardware_provider_ext_id') or '').strip()
+    connection_ext_id = str(config.get('connection_ext_id') or '').strip()
+    serials = set(_fca_node_serials(config))
+    missing_serials = sorted(serials - set(resolved_nodes.keys()))
+    if not missing_serials:
+        return True, lines, resolved_nodes, task_payloads
+    if not provider_ext_id or not connection_ext_id:
+        return False, [
+            'FCA node onboarding requires hardware_provider_ext_id and connection_ext_id '
+            f'for missing node serials: {", ".join(missing_serials)}'
+        ], resolved_nodes, task_payloads
+
+    nodes_path = _fca_provider_connection_path(provider_ext_id, connection_ext_id, 'nodes?$filter=')
+    ok, message, payload, latency_ms = _fca_lifecycle_get(host, credential_ref, api_version, nodes_path)
+    if not ok:
+        return False, [f'FCA discovered node lookup failed: {message}'], resolved_nodes, task_payloads
+    discovered = {
+        _fca_node_match_key(item): item
+        for item in _json_collection_items(payload)
+        if isinstance(item, dict) and _fca_node_match_key(item)
+    }
+    lines.append(f'FCA discovered node lookup: {len(discovered)} item(s) ({latency_ms:>5.0f}ms)')
+
+    tag_by_serial = {
+        str(node.get('node_serial') or '').strip(): _fca_node_hostname(node)
+        for node in _fca_config_nodes(config)
+    }
+    for serial in missing_serials:
+        item = discovered.get(serial)
+        if not item:
+            return False, [*lines, f'FCA discovered node not found for serial: {serial}'], resolved_nodes, task_payloads
+        submit_payload = {
+            'extId': item.get('extId'),
+            'vendor': str(item.get('manufacturer') or item.get('vendor') or config.get('hardware_provider_vendor') or 'Dell').split()[0],
+            'hardwareProviderConnectionExtId': connection_ext_id,
+            'uniqueIdentifierField': str(item.get('uniqueIdentifierType') or 'SERIAL'),
+            'uniqueIdentifierValue': serial,
+            'userTags': [tag_by_serial.get(serial) or serial],
+        }
+        ok, message, response_payload, latency_ms = _fca_lifecycle_request(
+            host, credential_ref, api_version, 'POST', 'config/nodes', submit_payload,
+        )
+        task_payloads.append(response_payload if isinstance(response_payload, dict) else {})
+        if not ok:
+            return False, [*lines, f'FCA node onboarding failed for {serial}: {message}'], resolved_nodes, task_payloads
+        lines.append(f'FCA node onboarding submitted for {serial}: {message} ({latency_ms:>5.0f}ms)')
+        task_ext_id = _fca_response_ext_id(response_payload)
+        if task_ext_id:
+            task_ok, task_lines, task_payload = _fca_poll_prism_task(host, credential_ref, task_ext_id)
+            task_payloads.append(task_payload)
+            lines.extend(task_lines)
+            if not task_ok:
+                return False, lines, resolved_nodes, task_payloads
+
+    ok, lookup_lines, resolved_nodes = _fca_resolve_onboarded_nodes(host, credential_ref, api_version, config)
+    lines.extend(lookup_lines)
+    if not ok:
+        return False, lines, resolved_nodes, task_payloads
+    still_missing = sorted(serials - set(resolved_nodes.keys()))
+    if still_missing:
+        return False, [*lines, f'FCA onboarded node lookup still missing: {", ".join(still_missing)}'], resolved_nodes, task_payloads
+    return True, lines, resolved_nodes, task_payloads
+
+
 def _fca_response_ext_id(payload: object) -> str:
     if not isinstance(payload, dict):
         return ''
@@ -3423,6 +3754,17 @@ def _fca_response_status_path(config: dict, payload: object) -> str:
     return ''
 
 
+def _fca_workflow_status_path(workflow: str, config: dict, payload: object) -> str:
+    explicit = _fca_response_status_path(config, payload)
+    if explicit:
+        return explicit
+    template = _fca_default_status_path_template(workflow)
+    ext_id = _fca_response_ext_id(payload)
+    if template and ext_id:
+        return template.format(extId=urllib.parse.quote(ext_id, safe=''), taskExtId=urllib.parse.quote(ext_id, safe=''))
+    return ''
+
+
 def _fca_status_value(payload: object) -> str:
     if not isinstance(payload, dict):
         return ''
@@ -3436,6 +3778,10 @@ def _fca_status_value(payload: object) -> str:
     if isinstance(data, dict):
         candidates.extend([data.get('status'), data.get('state'), data.get('phase'), data.get('lifecycleState')])
     for candidate in candidates:
+        if isinstance(candidate, dict):
+            value = candidate.get('state') or candidate.get('status') or candidate.get('phase')
+            if value:
+                return str(value)
         if candidate:
             return str(candidate)
     return ''
@@ -3452,7 +3798,27 @@ def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool
     submit_path = _fca_submit_path(workflow, config)
     if not submit_path:
         return False, ['Standalone FCA submit path is not configured'], diagnostics
-    payload = _build_standalone_fca_payload(workflow, config)
+    resolved_nodes: dict[str, dict] = {}
+    if workflow == 'cluster-create-standalone-fca' and _fca_payload_override(config) is None:
+        ok, resolve_lines, resolved_nodes = _fca_resolve_onboarded_nodes(host, credential_ref, api_version, config)
+        lines.extend(resolve_lines)
+        diagnostics['fcaResolvedNodes'] = sorted(resolved_nodes.keys())
+        if not ok:
+            return False, lines, diagnostics
+        ok, onboard_lines, resolved_nodes, task_payloads = _fca_onboard_discovered_nodes(
+            host, credential_ref, api_version, config, resolved_nodes,
+        )
+        lines.extend(onboard_lines)
+        diagnostics['fcaOnboardingTaskResponses'] = task_payloads
+        diagnostics['fcaResolvedNodes'] = sorted(resolved_nodes.keys())
+        if not ok:
+            return False, lines, diagnostics
+        payload = _fca_build_cluster_workflow_payload(config, resolved_nodes)
+        payload_errors = _fca_validate_cluster_workflow_payload(payload)
+        if payload_errors:
+            return False, [*lines, *payload_errors], diagnostics
+    else:
+        payload = _build_standalone_fca_payload(workflow, config)
     diagnostics['fcaSubmitPath'] = submit_path
     diagnostics['fcaWorkflow'] = workflow
     lines.append(f'Submitting standalone FCA Lifecycle request: POST /api/lifecycle/{api_version}/{submit_path.lstrip("/")}')
@@ -3464,7 +3830,7 @@ def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool
         return False, [*lines, f'FCA submit failed: {message}'], diagnostics
     lines.append(f'FCA submit accepted: {message} ({latency_ms:>5.0f}ms)')
 
-    status_path = _fca_response_status_path(config, response_payload)
+    status_path = _fca_workflow_status_path(workflow, config, response_payload)
     if not status_path:
         lines.append('No FCA status endpoint was returned or configured; treating accepted submission as successful handoff.')
         return True, lines, diagnostics
@@ -3504,8 +3870,10 @@ def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], in
 
     checks = [
         ('hardware providers', 'config/hardware-providers'),
-        ('nodes', 'config/nodes'),
-        ('images', 'config/images'),
+        ('nodes', 'config/nodes?$page=0&$limit=100&$filter=isOnboarded%20eq%20true&$orderby=createdTime%20asc'),
+        ('AOS images', "config/images?$page=0&$limit=100&$filter=type%20eq%20Lifecycle.Config.ImageType%27AOS%27&$orderby=name"),
+        ('hypervisor images', "config/images?$page=0&$limit=100&$filter=type%20eq%20Lifecycle.Config.ImageType%27AHV%27&$orderby=name"),
+        ('workflows', 'config/workflows?$page=0&$limit=20&$orderby=startedTime%20desc'),
     ]
     payloads: dict[str, object] = {}
     for label, path in checks:
@@ -3521,6 +3889,7 @@ def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], in
     provider_ext_id = str(config.get('hardware_provider_ext_id') or '').strip()
     provider_name = str(config.get('hardware_provider_name') or '').strip()
     provider_ok, provider_label = _find_ext_id(payloads.get('hardware providers'), provider_ext_id, provider_name)
+    resolved_provider_ext_id = provider_ext_id or (provider_label if provider_ok else '')
     if provider_ext_id or provider_name:
         if provider_ok:
             lines.append(f'[PASS] Hardware provider matched : {provider_label}')
@@ -3530,12 +3899,12 @@ def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], in
             failed += 1
 
     connection_ext_id = str(config.get('connection_ext_id') or '').strip()
-    if provider_ext_id and connection_ext_id:
+    if resolved_provider_ext_id and connection_ext_id:
         ok, message, payload, latency_ms = _fca_lifecycle_get(
             host,
             credential_ref,
             api_version,
-            f'config/hardware-providers/{urllib.parse.quote(provider_ext_id)}/connections',
+            f'config/hardware-providers/{urllib.parse.quote(resolved_provider_ext_id)}/connections',
         )
         if ok:
             connection_ok, _ = _find_ext_id(payload, connection_ext_id)
@@ -3549,16 +3918,36 @@ def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], in
             lines.append(f'[FAIL] Hardware provider connections request failed: {message}')
             failed += 1
 
-    for image_key, label in [('aos_image_ext_id', 'AOS image'), ('hypervisor_image_ext_id', 'Hypervisor image')]:
+    for image_key, label, payload_key in [
+        ('aos_image_ext_id', 'AOS image', 'AOS images'),
+        ('hypervisor_image_ext_id', 'Hypervisor image', 'hypervisor images'),
+    ]:
         image_ext_id = str(config.get(image_key) or '').strip()
         if not image_ext_id:
             continue
-        image_ok, _ = _find_ext_id(payloads.get('images'), image_ext_id)
+        image_ok, _ = _find_ext_id(payloads.get(payload_key), image_ext_id)
         if image_ok:
             lines.append(f'[PASS] {label} matched       : {image_ext_id}')
             passed += 1
         else:
             lines.append(f'[FAIL] {label} not found    : {image_ext_id}')
+            failed += 1
+
+    if resolved_provider_ext_id and connection_ext_id and _fca_node_serials(config):
+        ok, message, payload, latency_ms = _fca_lifecycle_get(
+            host,
+            credential_ref,
+            api_version,
+            _fca_provider_connection_path(resolved_provider_ext_id, connection_ext_id, 'nodes?$filter='),
+        )
+        if ok:
+            discovered = {_fca_node_match_key(item) for item in _json_collection_items(payload) if isinstance(item, dict)}
+            configured = set(_fca_node_serials(config))
+            matched = len(configured & discovered)
+            lines.append(f'[PASS] FCA discovered nodes     : {matched}/{len(configured)} configured serial(s) ({latency_ms:>5.0f}ms)')
+            passed += 1
+        else:
+            lines.append(f'[FAIL] FCA discovered node lookup failed: {message}')
             failed += 1
 
     lines.append('[INFO] Standalone FCA dry-run is read-only; Run Workflow submits Lifecycle requests only after explicit acknowledgement.')

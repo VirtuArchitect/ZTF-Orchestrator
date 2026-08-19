@@ -19,6 +19,9 @@ yarn-debug.log*
 yarn-error.log*
 playwright-report
 test-results
+release-artifacts
+update-artifacts
+appliance-update-*.md
 
 docs
 appliance

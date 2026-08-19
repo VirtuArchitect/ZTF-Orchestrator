@@ -11,17 +11,16 @@ Current ZTF-Orchestrator release for this validation path: `v1.7.7`.
 - `cluster-create`: integrated Prism Central Foundation Central cluster creation
   and imaging path through the bundled ZeroTouch Framework workflow.
 - `cluster-create-standalone-fca`: standalone Foundation Central Appliance
-  cluster creation intent with read-only Lifecycle v4.3 dry-run validation.
-  Destructive Run Workflow is blocked until the cluster deployment/action API
-  sequence is implemented and validated.
+  cluster creation intent with read-only Lifecycle v4.2.a2 dry-run validation
+  and guarded Run Workflow execution through `POST /config/workflows`.
 - `imaging-only`: image nodes without creating the cluster.
 - `imaging-only-standalone-fca`: standalone Foundation Central Appliance node
-  imaging intent with read-only Lifecycle v4.3 dry-run validation.
+  imaging intent with read-only Lifecycle v4.2.a2 dry-run validation.
 - `imaging`: pod imaging path used by broader site or pod deployment flows.
 - `imaging-standalone-fca`: standalone Foundation Central Appliance pod imaging
-  intent with read-only Lifecycle v4.3 dry-run validation.
+  intent with read-only Lifecycle v4.2.a2 dry-run validation.
 - `site-deploy-standalone-fca`: standalone Foundation Central Appliance site
-  deployment intent with read-only Lifecycle v4.3 dry-run validation.
+  deployment intent with read-only Lifecycle v4.2.a2 dry-run validation.
 
 ## Validation Gates
 
@@ -71,4 +70,4 @@ Prism Central configuration and drift detection can be tracked separately in
 remain their own validation lane until this checklist is completed in safe UAT.
 Standalone FCA dry-run validation can confirm endpoint, credential, hardware
 provider, node, image, imaging batch, and site deployment input visibility
-through Lifecycle v4.3 without invoking destructive deployment actions.
+through Lifecycle v4.2.a2 without invoking destructive deployment actions.
