@@ -19,6 +19,12 @@ interface Cluster {
   clusterVip: string
   redundancyFactor: 2 | 3
   timezone: string
+  hostGateway: string
+  hostNetmask: string
+  hostVlanId: string
+  cvmGateway: string
+  cvmNetmask: string
+  cvmVlanId: string
   nodes: Node[]
   expanded: boolean
 }
@@ -38,6 +44,12 @@ const defaultCluster = (): Cluster => ({
   clusterVip: '',
   redundancyFactor: 2,
   timezone: 'America/Los_Angeles',
+  hostGateway: '',
+  hostNetmask: '',
+  hostVlanId: '',
+  cvmGateway: '',
+  cvmNetmask: '',
+  cvmVlanId: '',
   nodes: [defaultNode()],
   expanded: true,
 })
@@ -59,6 +71,12 @@ function asStringArray(value: unknown, fallback: string[]): string[] {
 function asNumber(value: unknown, fallback: number): number {
   const parsed = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function asOptionalNumber(value: string): number | undefined {
+  if (!value.trim()) return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
 function asRedundancyFactor(value: unknown): 2 | 3 {
@@ -115,6 +133,12 @@ function initialState(
           clusterVip: asString(cluster.cluster_vip),
           redundancyFactor: asRedundancyFactor(cluster.redundancy_factor),
           timezone: asString(cluster.timezone, 'UTC'),
+          hostGateway: asString(cluster.host_gateway),
+          hostNetmask: asString(cluster.host_netmask),
+          hostVlanId: cluster.host_vlan_id === undefined ? '' : String(cluster.host_vlan_id),
+          cvmGateway: asString(cluster.cvm_gateway),
+          cvmNetmask: asString(cluster.cvm_netmask),
+          cvmVlanId: cluster.cvm_vlan_id === undefined ? '' : String(cluster.cvm_vlan_id),
           nodes: nodes.length ? nodes : [defaultNode()],
           expanded: true,
         }
@@ -198,6 +222,12 @@ export default function ClusterCreateForm({
         clusterVip: c.clusterVip,
         redundancyFactor: c.redundancyFactor,
         timezone: c.timezone,
+        hostGateway: c.hostGateway,
+        hostNetmask: c.hostNetmask,
+        hostVlanId: asOptionalNumber(c.hostVlanId),
+        cvmGateway: c.cvmGateway,
+        cvmNetmask: c.cvmNetmask,
+        cvmVlanId: asOptionalNumber(c.cvmVlanId),
         nodes: c.nodes,
       })),
     })
@@ -360,6 +390,35 @@ export default function ClusterCreateForm({
                     </select>
                   </div>
                 </div>
+
+                {fcTarget === 'standalone_fca' && (
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="label">CVM Gateway <span className="text-red-400">*</span></label>
+                      <input className="input" value={cluster.cvmGateway} onChange={e => updateCluster(ci, { cvmGateway: e.target.value })} placeholder="10.0.0.1" />
+                    </div>
+                    <div>
+                      <label className="label">CVM Netmask</label>
+                      <input className="input" value={cluster.cvmNetmask} onChange={e => updateCluster(ci, { cvmNetmask: e.target.value })} placeholder="255.255.255.0" />
+                    </div>
+                    <div>
+                      <label className="label">CVM VLAN ID</label>
+                      <input className="input" type="number" min={1} max={4094} value={cluster.cvmVlanId} onChange={e => updateCluster(ci, { cvmVlanId: e.target.value })} placeholder="optional" />
+                    </div>
+                    <div>
+                      <label className="label">Host Gateway</label>
+                      <input className="input" value={cluster.hostGateway} onChange={e => updateCluster(ci, { hostGateway: e.target.value })} placeholder="defaults to CVM gateway" />
+                    </div>
+                    <div>
+                      <label className="label">Host Netmask</label>
+                      <input className="input" value={cluster.hostNetmask} onChange={e => updateCluster(ci, { hostNetmask: e.target.value })} placeholder="defaults to CVM netmask" />
+                    </div>
+                    <div>
+                      <label className="label">Host VLAN ID</label>
+                      <input className="input" type="number" min={1} max={4094} value={cluster.hostVlanId} onChange={e => updateCluster(ci, { hostVlanId: e.target.value })} placeholder="defaults to CVM VLAN" />
+                    </div>
+                  </div>
+                )}
 
                 {/* Nodes */}
                 <div>

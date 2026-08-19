@@ -3987,6 +3987,7 @@ def _run_standalone_fca_lifecycle_preflight(workflow: str, config: dict) -> tupl
             lines.append(f'[FAIL] Hardware provider connections request failed: {message}')
             failed += 1
 
+    hydrated_config = dict(config)
     for image_key, label, payload_key, _path in STANDALONE_FCA_IMAGE_CHECKS:
         image_ext_id = str(config.get(image_key) or '').strip()
         if image_ext_id:
@@ -4000,6 +4001,7 @@ def _run_standalone_fca_lifecycle_preflight(workflow: str, config: dict) -> tupl
         elif workflow == 'cluster-create-standalone-fca':
             inferred_ext_id, detail = _fca_single_image_ext_id(payloads.get(payload_key), label)
             if inferred_ext_id:
+                hydrated_config[image_key] = inferred_ext_id
                 lines.append(f'[PASS] {label} inferred      : {detail}')
                 passed += 1
             elif payload_key in payloads:
@@ -4022,6 +4024,22 @@ def _run_standalone_fca_lifecycle_preflight(workflow: str, config: dict) -> tupl
         else:
             lines.append(f'[FAIL] FCA discovered node lookup failed: {message}')
             failed += 1
+
+    if workflow == 'cluster-create-standalone-fca' and _fca_payload_override(config) is None:
+        resolved_nodes = {
+            _fca_node_match_key(item): item
+            for item in _json_collection_items(payloads.get('nodes'))
+            if isinstance(item, dict) and _fca_node_match_key(item)
+        }
+        payload = _fca_build_cluster_workflow_payload(hydrated_config, resolved_nodes)
+        payload_errors = _fca_validate_cluster_workflow_payload(payload)
+        if payload_errors:
+            for error in payload_errors:
+                lines.append(f'[FAIL] {error}')
+                failed += 1
+        else:
+            lines.append('[PASS] FCA cluster workflow payload is complete')
+            passed += 1
 
     lines.append('[INFO] Standalone FCA dry-run is read-only; Run Workflow submits Lifecycle requests only after explicit acknowledgement.')
     return lines, passed, failed

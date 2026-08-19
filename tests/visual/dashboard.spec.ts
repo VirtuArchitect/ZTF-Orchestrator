@@ -357,6 +357,8 @@ test('standalone FCA cluster workflow emits standalone config keys', async ({ pa
   await page.locator('input[placeholder="optional connection extId"]').fill('connection-1')
   await page.locator('input[placeholder="optional image extId"]').nth(0).fill('aos-image')
   await page.locator('input[placeholder="optional image extId"]').nth(1).fill('ahv-image')
+  await page.locator('input[placeholder="10.0.0.1"]').fill('192.0.2.1')
+  await page.locator('input[placeholder="255.255.255.0"]').fill('255.255.255.0')
   await page.getByRole('button', { name: 'YAML Preview' }).click()
 
   await expect(page.getByText('create_fca_cluster.yml', { exact: true })).toBeVisible()
@@ -366,6 +368,8 @@ test('standalone FCA cluster workflow emits standalone config keys', async ({ pa
   await expect(page.getByText('connection_ext_id: connection-1')).toBeVisible()
   await expect(page.getByText('aos_image_ext_id: aos-image')).toBeVisible()
   await expect(page.getByText('hypervisor_image_ext_id: ahv-image')).toBeVisible()
+  await expect(page.getByText('cvm_gateway: 192.0.2.1')).toBeVisible()
+  await expect(page.getByText('cvm_netmask: 255.255.255.0')).toBeVisible()
 })
 
 test('remaining standalone FCA workflows emit standalone config keys', async ({ page }) => {
