@@ -17,7 +17,7 @@ export const WORKFLOWS: WorkflowDef[] = [
     category: 'Infrastructure',
     icon: 'Server',
     configFile: 'create_fca_cluster.yml',
-    details: 'Builds a standalone Foundation Central Appliance cluster creation intent, validates Lifecycle v4.3 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
+    details: 'Builds a standalone Foundation Central Appliance cluster creation intent, validates Lifecycle v4.2.a2 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'imaging-only',
@@ -35,7 +35,7 @@ export const WORKFLOWS: WorkflowDef[] = [
     category: 'Infrastructure',
     icon: 'HardDrive',
     configFile: 'imaging_only_fca.yml',
-    details: 'Builds a standalone Foundation Central Appliance imaging intent, validates Lifecycle v4.3 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
+    details: 'Builds a standalone Foundation Central Appliance imaging intent, validates Lifecycle v4.2.a2 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'imaging',
@@ -53,7 +53,7 @@ export const WORKFLOWS: WorkflowDef[] = [
     category: 'Pod Operations',
     icon: 'Layers',
     configFile: 'pod-deploy-fca.yml',
-    details: 'Builds a standalone Foundation Central Appliance pod imaging intent, validates Lifecycle v4.3 connectivity and inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
+    details: 'Builds a standalone Foundation Central Appliance pod imaging intent, validates Lifecycle v4.2.a2 connectivity and inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'site-deploy',
@@ -71,7 +71,7 @@ export const WORKFLOWS: WorkflowDef[] = [
     category: 'Infrastructure',
     icon: 'Globe',
     configFile: 'sites-deploy-fca.yml',
-    details: 'Builds a standalone Foundation Central Appliance site deployment intent, validates Lifecycle v4.3 endpoint inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
+    details: 'Builds a standalone Foundation Central Appliance site deployment intent, validates Lifecycle v4.2.a2 endpoint inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
     id: 'config-cluster',

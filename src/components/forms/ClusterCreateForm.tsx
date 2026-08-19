@@ -77,7 +77,7 @@ function initialState(
     pcCred: profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central',
     cvmCred: profile?.prismElement.cvmCredentialRef || 'cvm_credential',
     pcIp: profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '',
-    fcaApiVersion: 'v4.3',
+    fcaApiVersion: 'v4.2.a2',
     hardwareProviderExtId: '',
     hardwareProviderName: '',
     connectionExtId: '',
@@ -271,7 +271,7 @@ export default function ClusterCreateForm({
             <>
               <div>
                 <label className="label">Lifecycle API Version</label>
-                <input className="input" value={fcaApiVersion} onChange={e => setFcaApiVersion(e.target.value)} placeholder="v4.3" />
+                <input className="input" value={fcaApiVersion} onChange={e => setFcaApiVersion(e.target.value)} placeholder="v4.2.a2" />
               </div>
               <div>
                 <label className="label">Hardware Provider Ext ID</label>
