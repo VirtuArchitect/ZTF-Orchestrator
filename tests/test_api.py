@@ -1807,6 +1807,54 @@ def test_preflight_validates_standalone_fca_lifecycle_inventory(monkeypatch):
             'config/nodes?$page=0&$limit=100&$filter=isOnboarded%20eq%20true&$orderby=createdTime%20asc') in calls
 
 
+def test_preflight_infers_single_standalone_fca_images(monkeypatch):
+    """Standalone FCA dry-run accepts omitted image IDs only when inventory has one matching image."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    def fake_lifecycle_get(host, credential_ref, api_version, resource_path):
+        if resource_path == 'config/hardware-providers':
+            return True, 'HTTP 200', {'data': []}, 7.0
+        if resource_path.startswith('config/nodes'):
+            return True, 'HTTP 200', {'data': [{'extId': 'node-1', 'uniqueIdentifierValue': 'NODE-A'}]}, 8.0
+        if 'ImageType%27AOS%27' in resource_path:
+            return True, 'HTTP 200', {'data': [{'extId': 'aos-image', 'name': 'AOS_7.5.1.8'}]}, 9.0
+        if 'ImageType%27AHV%27' in resource_path:
+            return True, 'HTTP 200', {'data': [{'extId': 'ahv-image', 'name': 'AHV_10'}]}, 9.0
+        if resource_path.startswith('config/workflows'):
+            return True, 'HTTP 200', {'data': []}, 9.0
+        return False, 'unexpected path', {}, 0.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_get', fake_lifecycle_get)
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        '  executor: orchestrator_lifecycle_v4\n'
+        'fca_api_version: v4.2.a2\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 192.0.2.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 192.0.2.11\n'
+        '        host_ip: 192.0.2.12\n'
+    )
+
+    output = ''.join(server._run_preflight('cluster-create-standalone-fca', yaml_body, 'test-id'))
+
+    assert '[FAIL]' not in output
+    assert '[PASS] AOS image inferred' in output
+    assert '[PASS] Hypervisor image inferred' in output
+
+
 def test_preflight_validates_standalone_fca_imaging_workflows(monkeypatch):
     """Standalone FCA imaging dry-runs validate Lifecycle inventory and imaging batch shape."""
     import server
@@ -1993,6 +2041,77 @@ def test_execute_runs_standalone_fca_lifecycle_submit(client, auth_headers, monk
     assert any(call[3:5] == ('POST', 'config/workflows') for call in calls)
 
 
+def test_execute_infers_single_standalone_fca_images(client, auth_headers, monkeypatch):
+    """Standalone FCA cluster execution hydrates omitted image IDs from single-image inventory."""
+    import subprocess
+    import server
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **k: (_ for _ in ()).throw(
+        AssertionError('ZTF subprocess should not be launched for standalone FCA')
+    ))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    calls = []
+
+    def fake_lifecycle_request(host, credential_ref, api_version, method, resource_path, payload=None):
+        calls.append((method, resource_path, payload))
+        if method == 'GET' and 'ImageType%27AOS%27' in resource_path:
+            return True, 'HTTP 200', {'data': [{'extId': 'aos-image', 'name': 'AOS_7.5.1.8'}]}, 5.0
+        if method == 'GET' and 'ImageType%27AHV%27' in resource_path:
+            return True, 'HTTP 200', {'data': [{'extId': 'ahv-image', 'name': 'AHV_10'}]}, 5.0
+        if method == 'GET' and resource_path.startswith('config/nodes'):
+            return True, 'HTTP 200', {
+                'data': [{'extId': 'node-ext-1', 'uniqueIdentifierValue': 'NODE-A'}],
+            }, 8.0
+        if method == 'POST' and resource_path == 'config/workflows':
+            assert payload['nodes'][0]['aosInstallationDetails']['aosImageDetails']['imageExtId'] == 'aos-image'
+            assert payload['nodes'][0]['hostInstallationDetails']['imageDetails']['imageExtId'] == 'ahv-image'
+            return True, 'HTTP 201', {'data': {'extId': 'workflow-1'}}, 12.0
+        if method == 'GET' and resource_path == 'config/workflows/workflow-1':
+            return True, 'HTTP 200', {'data': {'status': {'state': 'SUCCEEDED'}}}, 4.0
+        return False, f'unexpected {method} {resource_path}', {}, 0.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_request', fake_lifecycle_request)
+    monkeypatch.setattr(server.time, 'sleep', lambda seconds: None)
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        'fca_api_version: v4.2.a2\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: cluster-01\n'
+        '    cluster_vip: 192.0.2.10\n'
+        '    cvm_gateway: 192.0.2.1\n'
+        '    cvm_netmask: 255.255.255.0\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 192.0.2.11\n'
+        '        host_ip: 192.0.2.12\n'
+    )
+    resp = client.post('/api/execute',
+                       json={'workflow': 'cluster-create-standalone-fca',
+                             'configContent': yaml_body,
+                             'configFile': 'create_fca_cluster.yml',
+                             'riskAcknowledged': True,
+                             'destructiveConfirmation': 'RUN STANDALONE-FCA cluster-create-standalone-fca'},
+                       headers=auth_headers)
+    body = resp.data.decode()
+
+    assert resp.status_code == 200
+    assert 'FCA AOS image inferred from inventory' in body
+    assert 'FCA Hypervisor image inferred from inventory' in body
+    assert '"status": "success"' in body
+    assert any(call[0:2] == ('POST', 'config/workflows') for call in calls)
+
+
 def test_standalone_fca_execution_uses_yaml_submit_path_and_payload_override(monkeypatch):
     """Standalone FCA execution can follow appliance-specific paths without a code rebuild."""
     import server
@@ -2052,6 +2171,8 @@ def test_standalone_fca_cluster_execution_rejects_incomplete_observed_payload(mo
             'fca_api_version': 'v4.2.a2',
             'fca_ip': '192.0.2.122',
             'fca_credential': 'foundation_central',
+            'aos_image_ext_id': 'aos-image',
+            'hypervisor_image_ext_id': 'ahv-image',
             'create_clusters': [{
                 'cluster_name': 'cluster-01',
                 'cluster_vip': '192.0.2.10',
@@ -2065,7 +2186,7 @@ def test_standalone_fca_cluster_execution_rejects_incomplete_observed_payload(mo
     )
 
     assert ok is False
-    assert any('aosInstallationDetails.aosImageDetails.imageExtId missing' in line for line in lines)
+    assert any('aosInstallationDetails.managementNetwork.gateway missing' in line for line in lines)
     assert all(call[0] == 'GET' for call in calls)
     assert diagnostics['fcaResolvedNodes'] == ['NODE-A']
 

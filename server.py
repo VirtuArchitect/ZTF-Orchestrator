@@ -3138,6 +3138,20 @@ STANDALONE_FCA_DEFAULT_STATUS_PATHS = {
     'cluster-create-standalone-fca': 'config/workflows/{extId}',
 }
 STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE = 'CLUSTER_CREATE_COMPUTE_BARE_METAL'
+STANDALONE_FCA_IMAGE_CHECKS = [
+    (
+        'aos_image_ext_id',
+        'AOS image',
+        'AOS images',
+        "config/images?$page=0&$limit=100&$filter=type%20eq%20Lifecycle.Config.ImageType%27AOS%27&$orderby=name",
+    ),
+    (
+        'hypervisor_image_ext_id',
+        'Hypervisor image',
+        'hypervisor images',
+        "config/images?$page=0&$limit=100&$filter=type%20eq%20Lifecycle.Config.ImageType%27AHV%27&$orderby=name",
+    ),
+]
 
 
 def _cluster_create_foundation_target(config: dict) -> str:
@@ -3229,6 +3243,43 @@ def _find_ext_id(payload, configured_ext_id: str, configured_name: str = '') -> 
                 return True, str(item.get('extId') or configured_name)
         return False, configured_name
     return True, ''
+
+
+def _fca_single_image_ext_id(payload, label: str) -> tuple[str, str]:
+    images = [
+        item for item in _json_collection_items(payload)
+        if isinstance(item, dict) and str(item.get('extId') or '').strip()
+    ]
+    if len(images) == 1:
+        image = images[0]
+        ext_id = str(image.get('extId') or '').strip()
+        name = str(image.get('name') or ext_id).strip()
+        return ext_id, f'{name} ({ext_id})'
+    if not images:
+        return '', f'{label} extId is required because no matching FCA image was found'
+    return '', f'{label} extId is required because {len(images)} matching FCA images were found'
+
+
+def _fca_hydrate_cluster_image_ext_ids(
+    host: str,
+    credential_ref: str,
+    api_version: str,
+    config: dict,
+) -> tuple[bool, list[str], dict]:
+    hydrated = dict(config)
+    lines: list[str] = []
+    for image_key, label, _payload_key, path in STANDALONE_FCA_IMAGE_CHECKS:
+        if str(hydrated.get(image_key) or '').strip():
+            continue
+        ok, message, payload, latency_ms = _fca_lifecycle_get(host, credential_ref, api_version, path)
+        if not ok:
+            return False, [*lines, f'FCA {label} lookup failed: {message}'], hydrated
+        image_ext_id, detail = _fca_single_image_ext_id(payload, label)
+        if not image_ext_id:
+            return False, [*lines, f'FCA {detail}'], hydrated
+        hydrated[image_key] = image_ext_id
+        lines.append(f'FCA {label} inferred from inventory: {detail} ({latency_ms:>5.0f}ms)')
+    return True, lines, hydrated
 
 
 def _fca_lifecycle_get(host: str, credential_ref: str, api_version: str, resource_path: str) -> tuple[bool, str, object, float]:
@@ -3457,12 +3508,22 @@ def _fca_build_cluster_workflow_payload(config: dict, resolved_nodes: dict[str, 
     }
 
 
+def _fca_has_ipv4_value(payload: object) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    ipv4 = payload.get('ipv4')
+    if not isinstance(ipv4, dict):
+        return False
+    value = str(ipv4.get('value') or '').strip()
+    return bool(value and value.lower() != 'none')
+
+
 def _fca_validate_cluster_workflow_payload(payload: dict) -> list[str]:
     errors: list[str] = []
     cluster_details = payload.get('clusterDetails') if isinstance(payload.get('clusterDetails'), dict) else {}
     if not cluster_details.get('name'):
         errors.append('FCA workflow payload missing clusterDetails.name')
-    if not ((cluster_details.get('externalIp') or {}).get('ipv4') or {}).get('value'):
+    if not _fca_has_ipv4_value(cluster_details.get('externalIp')):
         errors.append('FCA workflow payload missing clusterDetails.externalIp')
     if payload.get('workflowType') != STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE:
         errors.append(f'FCA workflow payload workflowType must be {STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE}')
@@ -3485,9 +3546,13 @@ def _fca_validate_cluster_workflow_payload(payload: dict) -> list[str]:
             errors.append(f'FCA workflow payload nodes[{index}].hostInstallationDetails.imageDetails.imageExtId missing')
         aos_network = aos.get('managementNetwork') if isinstance(aos.get('managementNetwork'), dict) else {}
         host_network = ((host.get('networkDetails') or {}).get('managementNetwork') if isinstance(host.get('networkDetails'), dict) else {})
-        if not ((aos_network.get('gateway') or {}).get('ipv4') or {}).get('value'):
+        if not _fca_has_ipv4_value(aos_network.get('ip')):
+            errors.append(f'FCA workflow payload nodes[{index}].aosInstallationDetails.managementNetwork.ip missing')
+        if not _fca_has_ipv4_value(host_network.get('ip')):
+            errors.append(f'FCA workflow payload nodes[{index}].hostInstallationDetails.networkDetails.managementNetwork.ip missing')
+        if not _fca_has_ipv4_value(aos_network.get('gateway')):
             errors.append(f'FCA workflow payload nodes[{index}].aosInstallationDetails.managementNetwork.gateway missing')
-        if not ((host_network.get('gateway') or {}).get('ipv4') or {}).get('value'):
+        if not _fca_has_ipv4_value(host_network.get('gateway')):
             errors.append(f'FCA workflow payload nodes[{index}].hostInstallationDetails.networkDetails.managementNetwork.gateway missing')
     return errors
 
@@ -3800,6 +3865,10 @@ def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool
         return False, ['Standalone FCA submit path is not configured'], diagnostics
     resolved_nodes: dict[str, dict] = {}
     if workflow == 'cluster-create-standalone-fca' and _fca_payload_override(config) is None:
+        ok, image_lines, config = _fca_hydrate_cluster_image_ext_ids(host, credential_ref, api_version, config)
+        lines.extend(image_lines)
+        if not ok:
+            return False, lines, diagnostics
         ok, resolve_lines, resolved_nodes = _fca_resolve_onboarded_nodes(host, credential_ref, api_version, config)
         lines.extend(resolve_lines)
         diagnostics['fcaResolvedNodes'] = sorted(resolved_nodes.keys())
@@ -3855,7 +3924,7 @@ def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool
     return False, [*lines, 'FCA status polling timed out after 60 seconds'], diagnostics
 
 
-def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], int, int]:
+def _run_standalone_fca_lifecycle_preflight(workflow: str, config: dict) -> tuple[list[str], int, int]:
     lines: list[str] = []
     passed = 0
     failed = 0
@@ -3918,20 +3987,24 @@ def _run_standalone_fca_lifecycle_preflight(config: dict) -> tuple[list[str], in
             lines.append(f'[FAIL] Hardware provider connections request failed: {message}')
             failed += 1
 
-    for image_key, label, payload_key in [
-        ('aos_image_ext_id', 'AOS image', 'AOS images'),
-        ('hypervisor_image_ext_id', 'Hypervisor image', 'hypervisor images'),
-    ]:
+    for image_key, label, payload_key, _path in STANDALONE_FCA_IMAGE_CHECKS:
         image_ext_id = str(config.get(image_key) or '').strip()
-        if not image_ext_id:
-            continue
-        image_ok, _ = _find_ext_id(payloads.get(payload_key), image_ext_id)
-        if image_ok:
-            lines.append(f'[PASS] {label} matched       : {image_ext_id}')
-            passed += 1
-        else:
-            lines.append(f'[FAIL] {label} not found    : {image_ext_id}')
-            failed += 1
+        if image_ext_id:
+            image_ok, _ = _find_ext_id(payloads.get(payload_key), image_ext_id)
+            if image_ok:
+                lines.append(f'[PASS] {label} matched       : {image_ext_id}')
+                passed += 1
+            else:
+                lines.append(f'[FAIL] {label} not found    : {image_ext_id}')
+                failed += 1
+        elif workflow == 'cluster-create-standalone-fca':
+            inferred_ext_id, detail = _fca_single_image_ext_id(payloads.get(payload_key), label)
+            if inferred_ext_id:
+                lines.append(f'[PASS] {label} inferred      : {detail}')
+                passed += 1
+            elif payload_key in payloads:
+                lines.append(f'[FAIL] FCA {detail}')
+                failed += 1
 
     if resolved_provider_ext_id and connection_ext_id and _fca_node_serials(config):
         ok, message, payload, latency_ms = _fca_lifecycle_get(
@@ -5093,7 +5166,7 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
                     failed += 1
 
     if preflight.get('fca_lifecycle'):
-        fca_lines, fca_passed, fca_failed = _run_standalone_fca_lifecycle_preflight(config)
+        fca_lines, fca_passed, fca_failed = _run_standalone_fca_lifecycle_preflight(workflow, config)
         for line in fca_lines:
             yield from send('stdout', line)
         passed += fca_passed
