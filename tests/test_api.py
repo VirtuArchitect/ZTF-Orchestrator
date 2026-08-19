@@ -1793,6 +1793,8 @@ def test_preflight_validates_standalone_fca_lifecycle_inventory(monkeypatch):
         'create_clusters:\n'
         '  - cluster_name: c1\n'
         '    cluster_vip: 192.0.2.10\n'
+        '    cvm_gateway: 192.0.2.1\n'
+        '    cvm_netmask: 255.255.255.0\n'
         '    nodes_list:\n'
         '      - node_serial: NODE-A\n'
         '        cvm_ip: 192.0.2.11\n'
@@ -1842,6 +1844,8 @@ def test_preflight_infers_single_standalone_fca_images(monkeypatch):
         'create_clusters:\n'
         '  - cluster_name: c1\n'
         '    cluster_vip: 192.0.2.10\n'
+        '    cvm_gateway: 192.0.2.1\n'
+        '    cvm_netmask: 255.255.255.0\n'
         '    nodes_list:\n'
         '      - node_serial: NODE-A\n'
         '        cvm_ip: 192.0.2.11\n'
@@ -1853,6 +1857,53 @@ def test_preflight_infers_single_standalone_fca_images(monkeypatch):
     assert '[FAIL]' not in output
     assert '[PASS] AOS image inferred' in output
     assert '[PASS] Hypervisor image inferred' in output
+
+
+def test_preflight_rejects_standalone_fca_cluster_missing_gateway(monkeypatch):
+    """Standalone FCA dry-run validates final cluster payload shape before destructive execution."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    def fake_lifecycle_get(host, credential_ref, api_version, resource_path):
+        if resource_path == 'config/hardware-providers':
+            return True, 'HTTP 200', {'data': []}, 7.0
+        if resource_path.startswith('config/nodes'):
+            return True, 'HTTP 200', {'data': [{'extId': 'node-1', 'uniqueIdentifierValue': 'NODE-A'}]}, 8.0
+        if 'ImageType%27AOS%27' in resource_path:
+            return True, 'HTTP 200', {'data': [{'extId': 'aos-image'}]}, 9.0
+        if 'ImageType%27AHV%27' in resource_path:
+            return True, 'HTTP 200', {'data': [{'extId': 'ahv-image'}]}, 9.0
+        if resource_path.startswith('config/workflows'):
+            return True, 'HTTP 200', {'data': []}, 9.0
+        return False, 'unexpected path', {}, 0.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_get', fake_lifecycle_get)
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        '  executor: orchestrator_lifecycle_v4\n'
+        'fca_api_version: v4.2.a2\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 192.0.2.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 192.0.2.11\n'
+        '        host_ip: 192.0.2.12\n'
+    )
+
+    output = ''.join(server._run_preflight('cluster-create-standalone-fca', yaml_body, 'test-id'))
+
+    assert '[FAIL] FCA workflow payload nodes[1].aosInstallationDetails.managementNetwork.gateway missing' in output
+    assert '[FAIL] FCA workflow payload nodes[1].hostInstallationDetails.networkDetails.managementNetwork.gateway missing' in output
 
 
 def test_preflight_validates_standalone_fca_imaging_workflows(monkeypatch):

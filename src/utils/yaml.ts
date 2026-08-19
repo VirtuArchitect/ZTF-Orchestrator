@@ -82,8 +82,12 @@ export function buildClusterCreateYaml(cfg: {
     clusterVip: string
     redundancyFactor: number
     timezone: string
+    hostGateway?: string
+    hostNetmask?: string
+    hostVlanId?: number
     cvmGateway?: string
     cvmNetmask?: string
+    cvmVlanId?: number
     ipmiGateway?: string
     ipmiNetmask?: string
     nodes: Array<{
@@ -101,8 +105,12 @@ export function buildClusterCreateYaml(cfg: {
     cluster_vip: c.clusterVip,
     redundancy_factor: c.redundancyFactor,
     timezone: c.timezone || 'UTC',
+    ...(c.hostGateway ? { host_gateway: c.hostGateway } : {}),
+    ...(c.hostNetmask ? { host_netmask: c.hostNetmask } : {}),
+    ...(c.hostVlanId ? { host_vlan_id: c.hostVlanId } : {}),
     ...(c.cvmGateway ? { cvm_gateway: c.cvmGateway } : {}),
     ...(c.cvmNetmask ? { cvm_netmask: c.cvmNetmask } : {}),
+    ...(c.cvmVlanId ? { cvm_vlan_id: c.cvmVlanId } : {}),
     ...(c.ipmiGateway ? { ipmi_gateway: c.ipmiGateway } : {}),
     ...(c.ipmiNetmask ? { ipmi_netmask: c.ipmiNetmask } : {}),
     nodes_list: c.nodes.map(n => ({
