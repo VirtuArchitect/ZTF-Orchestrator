@@ -13,6 +13,9 @@ Changes in this section are present on `main` after v1.7.7 and should be moved
 into the next numbered release section when the next version is cut.
 
 ### Added
+- Added a documentation archive index and current-scope guidance for
+  installation, appliance, and update-manager docs so historical validation
+  evidence is separated from current operator procedures.
 - Added workflow-level config import so operators can load an existing
   YAML/JSON file on each workflow detail page, review it in YAML Preview, and
   use it for Dry Run or Run Workflow without re-entering every field.

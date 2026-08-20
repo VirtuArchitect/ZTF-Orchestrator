@@ -5,6 +5,16 @@ step-by-step deployment procedures.
 
 Current ZTF-Orchestrator release for this source tree: `v1.7.7`.
 
+## Current Scope
+
+| Item | Current guidance |
+| --- | --- |
+| Current release baseline | `v1.7.7` |
+| Existing appliance update method | Appliance update package plus host-side helper |
+| Full QCOW2 appliance image | GitHub Actions artifact or durable internal artifact storage, not a GitHub Release binary |
+| ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` unless a compatibility change is explicitly reviewed |
+| Historical docs | See [Documentation Archive](archive/README.md); archived procedures are traceability records, not current install paths |
+
 ZTF-Orchestrator currently targets the legacy ZeroTouch Framework 1.x
 workflow/script CLI. Keep `ZTF_REF` pinned to `v1.5.2` unless you are
 explicitly testing a reviewed compatibility change. ZeroTouch Framework 2.x uses
@@ -389,7 +399,7 @@ For a pre-built AHV-importable QCOW2 workflow, see
 4. To pin a released image:
 
    ```bash
-   sudo ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
+   sudo ZTF_ORCHESTRATOR_VERSION=<version> \
      bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
    ```
 
@@ -635,7 +645,7 @@ staging environment, then transfer them into the disconnected site.
    docker build \
      --build-arg ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git \
      --build-arg ZTF_REF=v1.5.2 \
-     -t ztf-orchestrator:airgap-v1.4.1 .
+     -t ztf-orchestrator:airgap-<version> .
    ```
 
 3. Pull the PostgreSQL image if using the PostgreSQL Compose deployment:
@@ -647,7 +657,7 @@ staging environment, then transfer them into the disconnected site.
 4. Export images:
 
    ```bash
-   docker save ztf-orchestrator:airgap-v1.4.1 -o ztf-orchestrator-airgap-v1.4.1.tar
+   docker save ztf-orchestrator:airgap-<version> -o ztf-orchestrator-airgap-<version>.tar
    docker save postgres:16-alpine -o postgres-16-alpine.tar
    ```
 
@@ -664,7 +674,7 @@ staging environment, then transfer them into the disconnected site.
 7. Transfer these files using your approved removable-media or artifact process:
 
    ```text
-   ztf-orchestrator-airgap-v1.4.1.tar
+   ztf-orchestrator-airgap-<version>.tar
    postgres-16-alpine.tar
    ZTF-Orchestrator-source.tar.gz
    NKP framework archive, if used
@@ -676,8 +686,9 @@ staging environment, then transfer them into the disconnected site.
 Use this path when the disconnected site should receive a ready-to-import QCOW2
 rather than container tar files.
 
-ZTF-Orchestrator v1.3.0 adds named AHV appliance artifact profiles. v1.2.x
-remains the prior single-appliance workflow line.
+Current AHV appliance builds use named artifact profiles. Older single-image
+workflow lines are historical and should not be used for current appliance
+builds.
 
 1. Choose the QCOW2 build path.
 
@@ -738,8 +749,8 @@ remains the prior single-appliance workflow line.
 
    ```bash
    cd appliance
-   VERSION=v1.4.1 \
-   ZTF_ORCHESTRATOR_VERSION=v1.4.1 \
+   VERSION=<version> \
+   ZTF_ORCHESTRATOR_VERSION=<version> \
    ZTF_BUILD_CONTAINER_IMAGE=true \
    ZTF_PULL_CONTAINER_IMAGES=true \
    ZTF_FRAMEWORK_REF=v1.5.2 \
@@ -980,7 +991,7 @@ Preloaded NKP bundles are mounted into:
 2. Load images:
 
    ```bash
-   docker load -i ztf-orchestrator-airgap-v1.4.1.tar
+   docker load -i ztf-orchestrator-airgap-<version>.tar
    docker load -i postgres-16-alpine.tar
    ```
 
@@ -1010,7 +1021,7 @@ Preloaded NKP bundles are mounted into:
    image as the Compose default:
 
    ```bash
-   docker tag ztf-orchestrator:airgap-v1.4.1 ztf-orchestrator:latest
+   docker tag ztf-orchestrator:airgap-<version> ztf-orchestrator:latest
    ```
 
 7. Start:

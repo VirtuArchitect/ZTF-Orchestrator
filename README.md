@@ -313,9 +313,10 @@ Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
 
 The repository does not store QCOW2 or OVA binaries. Large appliance images are
 published as GitHub Actions artifacts or stored in an internal artifact
-repository because GitHub Release assets have a 2 GiB per-file limit. For the
-public `v1.7.0` standard AHV QCOW2 bundle and checksum, see
-[Public v1.7.0 Appliance Image](appliance/README.md#public-v170-appliance-image).
+repository because GitHub Release assets have a 2 GiB per-file limit. GitHub
+Releases should contain update packages, checksums, manifests, and release
+metadata; full QCOW2 images should be downloaded from the matching Actions run
+or durable internal artifact storage.
 The repo contains:
 
 - a GHCR container publishing workflow;
@@ -931,6 +932,7 @@ ZTF-Orchestrator is developed and maintained by **John Goulden**.
 | [docs/uat-evidence-checklist.md](docs/uat-evidence-checklist.md) | Evidence checklist for controlled UAT scenarios, approvals, jobs, and recovery |
 | [docs/production-readiness-boundary.md](docs/production-readiness-boundary.md) | Boundary between local, lab, controlled UAT, and production validation claims |
 | [docs/appliance-update-manager.md](docs/appliance-update-manager.md) | Connected and air-gapped Appliance Update Manager workflow, including offline update packages |
+| [docs/archive/README.md](docs/archive/README.md) | Historical validation and audit evidence retained for traceability only |
 | [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
 | [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
 | [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
