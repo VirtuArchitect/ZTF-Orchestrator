@@ -15,6 +15,16 @@ for connected upgrades and [RB-007 air-gapped update](runbooks/RB-007-airgapped-
 for disconnected update packages. Record the pre-update backup, release tag,
 manifest, package checksum, host helper output, and post-update health result.
 
+## Current Scope
+
+| Item | Current guidance |
+| --- | --- |
+| Current release baseline | `v1.7.7` |
+| Existing appliance update method | Offline or connected appliance update package plus host-side helper |
+| Full QCOW2 appliance image | Rebuild through the appliance image workflow; do not treat an update package as a QCOW2 replacement |
+| GitHub Release assets | Update packages, checksums, manifests, and metadata |
+| Historical examples | Version-specific v1.5.x examples are retained only for older-appliance recovery context |
+
 ## What It Updates
 
 The update manager supports three target types:
@@ -257,10 +267,15 @@ Import process:
 The package upload limit defaults to 2 GiB and can be changed with
 `ZTF_UPDATE_PACKAGE_MAX_UPLOAD`.
 
-### Validated AHV Appliance v1.5.0 to v1.5.2/v1.5.3 Flow
+### Historical AHV Appliance v1.5.0 to v1.5.2/v1.5.3 Flow
 
-Use this process for an AHV VM appliance built by the GitHub **AHV Build
-Image** workflow and deployed in an air-gapped environment. This path was
+Historical evidence only. Do not use this version-specific process as the
+current appliance update path unless you are recovering one of those older
+appliances and have explicit maintenance approval. For current updates, use the
+generic offline package flow above or [RB-007 air-gapped update](runbooks/RB-007-airgapped-update.md).
+
+This process applied to an AHV VM appliance built by the GitHub **Build AHV
+Appliance Image** workflow and deployed in an air-gapped environment. It was
 validated on a v1.5.0 appliance using the PostgreSQL storage backend, then
 hardened in v1.5.3 with mandatory pre-update state backups.
 
@@ -274,7 +289,7 @@ update helper.
    the appliance access workstation.
 2. In **Appliance Ops > Updates**, import the package, review the manifest,
    click **Verify**, then click **Stage**. Confirm the UI reports
-   `Staged v1.5.3`.
+   `Staged <version>`.
 3. SSH to the AHV appliance VM as the appliance Linux administrator:
 
    ```bash
@@ -306,15 +321,15 @@ update helper.
    example:
 
    ```powershell
-   scp "C:\Share\ztf-update-v1.5.3\images\ztf-orchestrator-v1.5.3-image.tar" ztfadmin@<appliance-ip>:/home/ztfadmin/
+   scp "C:\Share\ztf-update-<version>\images\ztf-orchestrator-<version>-image.tar" ztfadmin@<appliance-ip>:/home/ztfadmin/
    ```
 
 7. Move the image tar into the appliance update artifact directory:
 
    ```bash
    sudo mkdir -p /opt/ztf-orchestrator/update-artifacts
-   sudo mv /home/ztfadmin/ztf-orchestrator-v1.5.3-image.tar /opt/ztf-orchestrator/update-artifacts/
-   sudo ls -lh /opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.3-image.tar
+   sudo mv /home/ztfadmin/ztf-orchestrator-<version>-image.tar /opt/ztf-orchestrator/update-artifacts/
+   sudo ls -lh /opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-<version>-image.tar
    ```
 
 8. Apply the staged request with explicit host paths:
@@ -322,7 +337,7 @@ update helper.
    ```bash
    sudo env \
      ZTF_UPDATE_REQUEST_FILE=/opt/ztf-orchestrator/appliance_update_request.json \
-     ZTF_UPDATE_IMAGE_TAR=/opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-v1.5.3-image.tar \
+     ZTF_UPDATE_IMAGE_TAR=/opt/ztf-orchestrator/update-artifacts/ztf-orchestrator-<version>-image.tar \
      /opt/ztf-orchestrator/appliance/scripts/apply-update-request.sh
    ```
 
@@ -351,7 +366,7 @@ update helper.
    sudo systemctl status ztf-orchestrator --no-pager
    ```
 
-10. Sign in to the web UI, confirm the footer or settings page reports v1.5.3,
+10. Sign in to the web UI, confirm the footer or settings page reports `<version>`,
     verify the key workflows still load, then click **Mark Applied** in
     **Appliance Ops > Updates**.
 

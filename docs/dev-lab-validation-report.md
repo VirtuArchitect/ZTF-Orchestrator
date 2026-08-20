@@ -4,6 +4,12 @@ Date: 2026-07-22
 
 Latest live validation refresh: 2026-07-24 17:59:00 +02:00
 
+> Historical evidence only.
+> This report records previous DEV_LAB validation and should not be treated as
+> the current installation, appliance update, or production-readiness path.
+> Current operator guidance starts from [Installation Guide](installation-guide.md),
+> [Runbooks](runbooks/README.md), and [UAT Evidence Checklist](uat-evidence-checklist.md).
+
 Scope: ZTF-Orchestrator v1.5.6 validation against the DEV_LAB Prism Element
 lab cluster and the lab Prism Central instance deployed by ZTF-Orchestrator.
 
