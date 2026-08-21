@@ -2199,6 +2199,52 @@ def test_standalone_fca_execution_uses_yaml_submit_path_and_payload_override(mon
     assert any('FCA status poll 01: completed' in line for line in lines)
 
 
+def test_standalone_fca_execution_treats_running_poll_timeout_as_handoff(monkeypatch):
+    """Standalone FCA execution must not fail just because the FCA deployment is still running."""
+    import server
+
+    calls = []
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    monkeypatch.setattr(server.time, 'sleep', lambda seconds: None)
+
+    def fake_lifecycle_request(host, credential_ref, api_version, method, resource_path, payload=None):
+        calls.append((method, resource_path, payload))
+        return True, 'HTTP 202', {'data': {'extId': 'workflow-1'}}, 3.0
+
+    def fake_lifecycle_get(host, credential_ref, api_version, resource_path):
+        calls.append(('GET', resource_path, None))
+        return True, 'HTTP 200', {'data': {'status': {'state': 'RUNNING'}}}, 4.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_request', fake_lifecycle_request)
+    monkeypatch.setattr(server, '_fca_lifecycle_get', fake_lifecycle_get)
+
+    ok, lines, diagnostics = server._execute_standalone_fca_lifecycle(
+        'cluster-create-standalone-fca',
+        {
+            'fca_api_version': 'v4.3',
+            'fca_ip': '192.0.2.122',
+            'fca_credential': 'foundation_central',
+            'fca_execution': {
+                'submit_path': 'config/custom-deployments',
+                'status_path_template': 'config/custom-deployments/{extId}',
+                'status_poll_attempts': 2,
+                'status_poll_interval_seconds': 0,
+                'payload': {'custom': 'intent'},
+            },
+        },
+    )
+
+    assert ok is True
+    assert diagnostics['fcaStatusPollingExpired'] is True
+    assert diagnostics['fcaLastObservedStatus'] == 'RUNNING'
+    assert any('treating accepted Lifecycle submission as successful handoff' in line for line in lines)
+    assert calls == [
+        ('POST', 'config/custom-deployments', {'custom': 'intent'}),
+        ('GET', 'config/custom-deployments/workflow-1', None),
+        ('GET', 'config/custom-deployments/workflow-1', None),
+    ]
+
+
 def test_standalone_fca_cluster_execution_rejects_incomplete_observed_payload(monkeypatch):
     """Standalone FCA cluster execution fails before POST when required workflow payload fields are missing."""
     import server

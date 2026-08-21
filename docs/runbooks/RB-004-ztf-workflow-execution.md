@@ -37,6 +37,13 @@ If the target appliance requires a different Lifecycle submit or status path,
 set `fca_execution.submit_path` and `fca_execution.status_path_template` in the
 workflow YAML before execution.
 
+For standalone FCA Run Workflow, Orchestrator watches the returned Lifecycle
+status endpoint for a short local window. A terminal FCA failure still fails the
+Orchestrator job. If FCA remains non-terminal after the local watch window,
+Orchestrator records the job as a successful handoff and includes the last
+observed FCA status in diagnostics; continue tracking the deployment in the FCA
+Deployment History view.
+
 ## Preconditions
 
 - Orchestrator is healthy.

@@ -3363,6 +3363,28 @@ def _fca_status_path_template(config: dict) -> str:
     return str(options.get('status_path_template') or config.get('fca_status_path_template') or '').strip()
 
 
+def _fca_status_poll_settings(config: dict) -> tuple[int, float]:
+    options = _fca_execution_options(config)
+
+    def _int_option(key: str, default: int) -> int:
+        value = options.get(key, config.get(f'fca_{key}'))
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _float_option(key: str, default: float) -> float:
+        value = options.get(key, config.get(f'fca_{key}'))
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    attempts = max(1, _int_option('status_poll_attempts', 30))
+    interval_seconds = max(0.0, _float_option('status_poll_interval_seconds', 2.0))
+    return attempts, interval_seconds
+
+
 def _fca_default_status_path_template(workflow: str) -> str:
     return STANDALONE_FCA_DEFAULT_STATUS_PATHS.get(workflow, '')
 
@@ -3907,21 +3929,34 @@ def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool
     diagnostics['fcaStatusPath'] = status_path
     terminal_success = {'success', 'succeeded', 'complete', 'completed', 'done'}
     terminal_failed = {'failed', 'failure', 'error', 'cancelled', 'canceled'}
-    for attempt in range(1, 31):
-        time.sleep(2)
+    poll_attempts, poll_interval_seconds = _fca_status_poll_settings(config)
+    diagnostics['fcaStatusPollAttempts'] = poll_attempts
+    diagnostics['fcaStatusPollIntervalSeconds'] = poll_interval_seconds
+    for attempt in range(1, poll_attempts + 1):
+        if poll_interval_seconds:
+            time.sleep(poll_interval_seconds)
         ok, message, status_payload, latency_ms = _fca_lifecycle_get(host, credential_ref, api_version, status_path)
         diagnostics['fcaLastStatusResponse'] = status_payload
         if not ok:
             return False, [*lines, f'FCA status poll failed: {message}'], diagnostics
         status_value = _fca_status_value(status_payload)
         display_status = status_value or 'unknown'
+        diagnostics['fcaLastObservedStatus'] = display_status
         lines.append(f'FCA status poll {attempt:02d}: {display_status} ({latency_ms:>5.0f}ms)')
         normalized = display_status.lower()
         if normalized in terminal_success:
             return True, lines, diagnostics
         if normalized in terminal_failed:
             return False, lines, diagnostics
-    return False, [*lines, 'FCA status polling timed out after 60 seconds'], diagnostics
+    diagnostics['fcaStatusPollingExpired'] = True
+    watched_seconds = poll_attempts * poll_interval_seconds
+    return True, [
+        *lines,
+        (
+            f'FCA status still {display_status} after {poll_attempts} polls'
+            f' ({watched_seconds:.0f} seconds); treating accepted Lifecycle submission as successful handoff.'
+        ),
+    ], diagnostics
 
 
 def _run_standalone_fca_lifecycle_preflight(workflow: str, config: dict) -> tuple[list[str], int, int]:
