@@ -28,6 +28,9 @@ into the next numbered release section when the next version is cut.
   read-only Lifecycle v4.3 dry-run validation.
 
 ### Fixed
+- Treat standalone FCA Lifecycle submissions that are still non-terminal after
+  the local status watch window as successful handoffs instead of failed
+  Orchestrator jobs, while preserving terminal FCA failures as failures.
 - Kept GitHub Pages demo builds isolated in `dist-demo` so Docker/local
   deployments continue to serve root-relative production assets from `dist`.
 - Hydrated the Cluster Create Configure tab from imported upstream-schema YAML
