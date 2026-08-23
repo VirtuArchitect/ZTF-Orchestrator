@@ -2742,6 +2742,49 @@ def test_job_submit_persists_status_logs_and_history(client, auth_headers, monke
     assert history[0]['status'] == 'success'
 
 
+def test_standalone_fca_success_job_is_labelled_as_handoff(client, auth_headers, monkeypatch):
+    """Accepted standalone FCA jobs should not read like completed cluster deployments."""
+    import time
+    import server
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+
+    monkeypatch.setattr(server, '_execute_standalone_fca_lifecycle', lambda workflow, config: (
+        True,
+        ['FCA submit accepted: HTTP 201', 'FCA status still RUNNING after 30 polls (60 seconds); treating accepted Lifecycle submission as successful handoff.'],
+        {'fcaStatusPollingExpired': True},
+    ))
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  foundation_central_target: standalone_fca\n'
+        'fca_api_version: v4.2.a2\n'
+        'fca_ip: 192.0.2.122\n'
+        'fca_credential: foundation_central\n'
+    )
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'cluster-create-standalone-fca',
+                             'configContent': yaml_body,
+                             'configFile': 'create_fca_cluster.yml',
+                             'destructiveConfirmation': 'RUN STANDALONE-FCA cluster-create-standalone-fca'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    job = None
+    for _ in range(30):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] == 'success':
+            break
+        time.sleep(0.05)
+
+    assert job['status'] == 'success'
+    assert job['progress']['phase'] == 'FCA handoff accepted'
+    assert 'Monitor Foundation Central' in job['progress']['detail']
+
+
 def test_failed_job_records_diagnostics_and_likely_fix(client, auth_headers, monkeypatch):
     import subprocess
 

@@ -7,6 +7,7 @@ import Layout from '../components/Layout'
 import { useStore } from '../store'
 import type { ExecutionJob, ExecutionJobStatus, ExecutionProgress } from '../types'
 import { apiFetch } from '../utils/api'
+import { statusBadgeText } from '../utils/executionStatus'
 import clsx from 'clsx'
 
 type JobFilter = 'all' | 'active' | 'queued' | 'running' | 'failed' | 'success' | 'cancelled' | 'interrupted'
@@ -184,7 +185,7 @@ export default function Jobs() {
                       {job.type}
                     </span>
                     <span className={clsx('badge text-xs', statusBadge(job.status))}>
-                      {job.status}
+                      {statusBadgeText(job.workflow, job.status)}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">

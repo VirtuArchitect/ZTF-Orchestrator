@@ -3,6 +3,7 @@ import { X, Play } from 'lucide-react'
 import Terminal from './Terminal'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
+import { terminalStatusLabel, terminalSuccessProgress } from '../utils/executionStatus'
 import type { ExecutionProgress } from '../types'
 
 interface ExecutionModalProps {
@@ -80,11 +81,12 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
             } else if (event.type === 'done') {
               appendLog(event.type, typeof event.data === 'string' ? event.data : JSON.stringify(event.data))
               const status = event.data?.status === 'success' ? 'done' : 'error'
+              const successProgress = terminalSuccessProgress(workflow)
               setProgress({
-                phase: event.data?.status === 'success' ? 'Completed' : 'Failed',
+                phase: event.data?.status === 'success' ? successProgress.phase : 'Failed',
                 percent: 100,
                 detail: event.data?.status === 'success'
-                  ? 'Execution finished successfully'
+                  ? successProgress.detail
                   : 'Execution ended with an error; review the output',
                 estimated: true,
               })
@@ -153,6 +155,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
               logs={runningExecution.logs}
               status={runningExecution.status}
               title={`python main.py --workflow ${workflow}`}
+              statusLabel={terminalStatusLabel(workflow, runningExecution.status)}
             />
           )}
         </div>

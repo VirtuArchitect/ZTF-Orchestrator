@@ -6,6 +6,7 @@ import ExecutionModal from '../components/ExecutionModal'
 import type { Execution } from '../types'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
+import { executionStatusLabel } from '../utils/executionStatus'
 
 interface RerunTarget {
   workflow: string
@@ -125,6 +126,9 @@ export default function Executions() {
                   )}>
                     {exec.type}
                   </span>
+                  <span className={clsx('badge text-xs', executionStatusBadge(exec.status))}>
+                    {executionStatusLabel(exec.workflow, exec.status)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="text-xs text-gray-500">{new Date(exec.timestamp).toLocaleString()}</span>
@@ -228,4 +232,11 @@ function StatusIcon({ status }: { status: string }) {
   if (status === 'success') return <CheckCircle size={18} className="text-nutanix-teal flex-shrink-0" />
   if (status === 'failed') return <XCircle size={18} className="text-red-400 flex-shrink-0" />
   return <Clock size={18} className="text-yellow-400 flex-shrink-0 animate-pulse" />
+}
+
+function executionStatusBadge(status: string) {
+  if (status === 'success') return 'badge-green'
+  if (status === 'failed' || status === 'interrupted') return 'badge-red'
+  if (status === 'cancelled') return 'badge-gray'
+  return 'badge-yellow'
 }
