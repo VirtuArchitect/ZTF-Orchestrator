@@ -12,10 +12,11 @@ interface TerminalProps {
   logs: LogLine[]
   status: 'running' | 'done' | 'error'
   title?: string
+  statusLabel?: string
   onClose?: () => void
 }
 
-export default function Terminal({ logs, status, title, onClose }: TerminalProps) {
+export default function Terminal({ logs, status, title, statusLabel, onClose }: TerminalProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -59,19 +60,19 @@ export default function Terminal({ logs, status, title, onClose }: TerminalProps
           {status === 'running' && (
             <div className="flex items-center gap-1.5 text-xs text-yellow-400">
               <Loader size={12} className="animate-spin" />
-              <span>Running...</span>
+              <span>{statusLabel || 'Running...'}</span>
             </div>
           )}
           {status === 'done' && (
             <div className="flex items-center gap-1.5 text-xs text-nutanix-teal">
               <CheckCircle size={12} />
-              <span>Completed</span>
+              <span>{statusLabel || 'Completed'}</span>
             </div>
           )}
           {status === 'error' && (
             <div className="flex items-center gap-1.5 text-xs text-red-400">
               <XCircle size={12} />
-              <span>Failed</span>
+              <span>{statusLabel || 'Failed'}</span>
             </div>
           )}
           <button onClick={copyLogs} className="btn-ghost p-1" title="Copy logs">

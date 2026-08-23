@@ -6099,7 +6099,14 @@ class ExecutionJobManager:
         job['returnCode'] = return_code
         job['finishedAt'] = now
         job['updatedAt'] = now
-        phase, percent, detail = self.TERMINAL_PROGRESS.get(status, ('Finished', 100, 'Execution finished'))
+        if status == 'success' and job.get('workflow') == STANDALONE_FCA_WORKFLOW:
+            phase, percent, detail = (
+                'FCA handoff accepted',
+                100,
+                'Standalone FCA accepted the Lifecycle request. Monitor Foundation Central for deployment completion.',
+            )
+        else:
+            phase, percent, detail = self.TERMINAL_PROGRESS.get(status, ('Finished', 100, 'Execution finished'))
         self._set_progress(job, phase, percent, detail)
 
     def _update_progress(self, job_id: str, phase: str, percent: int, detail: str) -> None:
