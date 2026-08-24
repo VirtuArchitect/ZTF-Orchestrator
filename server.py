@@ -2707,6 +2707,96 @@ limiter = Limiter(
 
 # ─── Allowlists ───────────────────────────────────────────────────────────────
 
+POST_FOUNDATION_WORKFLOWS = {
+    'post-foundation-baseline',
+    'pe-monitoring-baseline',
+    'pe-security-hardening',
+    'pe-network-baseline',
+    'pe-certificate-baseline',
+    'hardware-out-of-band-baseline',
+}
+
+POST_FOUNDATION_ALLOWED_OPERATIONS = {
+    'post-foundation-baseline': {
+        'health_check',
+        'register_prism_central',
+        'accept_eula',
+        'update_pulse',
+        'ha_reservation',
+        'storage_containers',
+        'data_services_ip',
+        'dns_servers',
+        'ntp_servers',
+    },
+    'pe-monitoring-baseline': {
+        'ncc_health_check',
+        'smtp',
+        'alert_email_contacts',
+        'snmpv3',
+        'syslog',
+    },
+    'pe-security-hardening': {
+        'cvm_aide',
+        'ahv_aide',
+        'high_strength_passwords',
+        'scma_schedule',
+        'snmpv3_only',
+        'cluster_lockdown',
+        'ssh_access_controls',
+    },
+    'pe-network-baseline': {
+        'vm_networks',
+        'virtual_switch_descriptions',
+        'uplink_intent',
+        'lacp_sequence',
+    },
+    'pe-certificate-baseline': {
+        'generate_csr',
+        'import_certificate',
+        'validate_certificate',
+    },
+    'hardware-out-of-band-baseline': {
+        'bmc_credential_rotation',
+        'bios_secure_boot_intent',
+        'hardware_inventory_evidence',
+    },
+}
+
+POST_FOUNDATION_HIGH_RISK_OPERATIONS = {
+    'cluster_lockdown',
+    'ssh_access_controls',
+    'lacp_sequence',
+    'import_certificate',
+    'bmc_credential_rotation',
+    'bios_secure_boot_intent',
+}
+
+POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
+    'post-foundation-baseline': {
+        'health_check',
+        'register_prism_central',
+        'accept_eula',
+        'update_pulse',
+        'ha_reservation',
+        'storage_containers',
+        'data_services_ip',
+        'dns_servers',
+        'ntp_servers',
+    },
+    'pe-monitoring-baseline': {
+        'ncc_health_check',
+    },
+    'pe-network-baseline': {
+        'vm_networks',
+    },
+    'pe-certificate-baseline': {
+        'validate_certificate',
+    },
+    'hardware-out-of-band-baseline': {
+        'hardware_inventory_evidence',
+    },
+}
+
 ALLOWED_WORKFLOWS = {
     'cluster-create', 'cluster-create-standalone-fca',
     'imaging-only', 'imaging-only-standalone-fca',
@@ -2716,7 +2806,7 @@ ALLOWED_WORKFLOWS = {
     'deploy-management-pc', 'config-management-pc',
     'calm-vm-workloads', 'calm-edgeai-vm-workload', 'ndb',
     'lcm-update',
-}
+} | POST_FOUNDATION_WORKFLOWS
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
     'cluster-create', 'cluster-create-standalone-fca',
@@ -2724,7 +2814,7 @@ DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
     'imaging', 'imaging-standalone-fca',
     'site-deploy', 'site-deploy-standalone-fca',
     'deploy-pc', 'config-pc', 'config-cluster', 'ndb', 'lcm-update',
-}
+} | POST_FOUNDATION_WORKFLOWS
 
 
 def _is_allowed_approval_workflow(workflow: str) -> bool:
@@ -3137,6 +3227,8 @@ STANDALONE_FCA_DEFAULT_SUBMIT_PATHS = {
 STANDALONE_FCA_DEFAULT_STATUS_PATHS = {
     'cluster-create-standalone-fca': 'config/workflows/{extId}',
 }
+FCA_TERMINAL_SUCCESS_STATES = {'success', 'succeeded', 'complete', 'completed', 'done'}
+FCA_TERMINAL_FAILED_STATES = {'failed', 'failure', 'error', 'cancelled', 'canceled'}
 STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE = 'CLUSTER_CREATE_COMPUTE_BARE_METAL'
 STANDALONE_FCA_IMAGE_CHECKS = [
     (
@@ -3874,6 +3966,167 @@ def _fca_status_value(payload: object) -> str:
     return ''
 
 
+def _fca_status_document(payload: object) -> dict:
+    if not isinstance(payload, dict):
+        return {}
+    data = payload.get('data')
+    return data if isinstance(data, dict) else payload
+
+
+def _fca_sanitize_status_text(value: object) -> str:
+    text = str(value or '').strip()
+    text = re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', '<ip>', text)
+    text = re.sub(
+        r'\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b',
+        '<id>',
+        text,
+        flags=re.IGNORECASE,
+    )
+    return text
+
+
+def _fca_phase_percentage(value: object) -> int | None:
+    try:
+        if value is None or value == '':
+            return None
+        return int(float(str(value)))
+    except (TypeError, ValueError):
+        return None
+
+
+def _fca_phase_state(value: object) -> str:
+    if isinstance(value, dict):
+        value = value.get('state') or value.get('status') or value.get('phase')
+    return _fca_sanitize_status_text(value)
+
+
+def _fca_phase_name(value: object) -> str:
+    return _fca_sanitize_status_text(value) or 'Unnamed phase'
+
+
+def _fca_first_present(mapping: dict, *keys: str) -> object:
+    for key in keys:
+        if key in mapping and mapping[key] is not None:
+            return mapping[key]
+    return None
+
+
+def _fca_subtask_summaries(progress_items: object) -> list[dict]:
+    summaries: list[dict] = []
+    if not isinstance(progress_items, list):
+        return summaries
+    for progress in progress_items:
+        if not isinstance(progress, dict):
+            continue
+        subtasks = progress.get('subTasks') or progress.get('subtasks') or []
+        if not isinstance(subtasks, list):
+            continue
+        for subtask in subtasks:
+            if not isinstance(subtask, dict):
+                continue
+            messages = subtask.get('messages') or subtask.get('message') or []
+            if isinstance(messages, str):
+                messages = [messages]
+            elif not isinstance(messages, list):
+                messages = []
+            cleaned_messages = [
+                _fca_sanitize_status_text(message)
+                for message in messages
+                if _fca_sanitize_status_text(message)
+            ]
+            summaries.append({
+                'name': _fca_phase_name(subtask.get('name') or subtask.get('displayName')),
+                'state': _fca_phase_state(subtask.get('status') or subtask.get('state')),
+                'percentage': _fca_phase_percentage(_fca_first_present(subtask, 'progressPercentage', 'percentage')),
+                'messages': cleaned_messages[-3:],
+            })
+    return summaries
+
+
+def _fca_workflow_status_summary(payload: object) -> dict:
+    document = _fca_status_document(payload)
+    status = document.get('status') if isinstance(document, dict) else {}
+    phases = status.get('phases') if isinstance(status, dict) else document.get('phases') if isinstance(document, dict) else []
+    if not isinstance(phases, list):
+        phases = []
+
+    phase_summaries: list[dict] = []
+    failed_phase: dict | None = None
+    failed_subtask: dict | None = None
+    for phase in phases:
+        if not isinstance(phase, dict):
+            continue
+        summary = {
+            'name': _fca_phase_name(phase.get('name') or phase.get('displayName')),
+            'state': _fca_phase_state(phase.get('state') or phase.get('status')),
+            'percentage': _fca_phase_percentage(_fca_first_present(phase, 'percentage', 'progressPercentage')),
+            'subTasks': _fca_subtask_summaries(phase.get('progress')),
+        }
+        phase_summaries.append(summary)
+        if summary['state'].lower() in FCA_TERMINAL_FAILED_STATES and failed_phase is None:
+            failed_phase = summary
+        if failed_subtask is None:
+            failed_subtask = next(
+                (
+                    subtask for subtask in summary['subTasks']
+                    if str(subtask.get('state') or '').lower() in FCA_TERMINAL_FAILED_STATES
+                ),
+                None,
+            )
+
+    phase_line_parts = []
+    for phase in phase_summaries:
+        pct = phase.get('percentage')
+        suffix = f' {pct}%' if pct is not None else ''
+        phase_line_parts.append(f"{phase['name']} {phase['state'] or 'unknown'}{suffix}".strip())
+
+    failure_reason = ''
+    if failed_phase:
+        pct = failed_phase.get('percentage')
+        failure_reason = f"{failed_phase['name']} failed"
+        if pct is not None:
+            failure_reason += f' at {pct}%'
+    if failed_subtask:
+        pct = failed_subtask.get('percentage')
+        subtask_reason = f"{failed_subtask['name']} failed"
+        if pct is not None:
+            subtask_reason += f' at {pct}%'
+        failure_reason = f'{failure_reason}; {subtask_reason}' if failure_reason else subtask_reason
+        messages = failed_subtask.get('messages') or []
+        if messages:
+            failure_reason += f"; last messages: {'; '.join(messages)}"
+
+    return {
+        'state': _fca_status_value(payload),
+        'phases': phase_summaries,
+        'phaseLine': '; '.join(phase_line_parts),
+        'phaseSignature': json.dumps(phase_summaries, sort_keys=True),
+        'failureReason': failure_reason,
+    }
+
+
+def _fca_public_diagnostics(diagnostics: dict) -> dict:
+    allowed = {
+        'fcaSubmitPath',
+        'fcaWorkflow',
+        'fcaStatusPath',
+        'fcaStatusPollAttempts',
+        'fcaStatusPollIntervalSeconds',
+        'fcaLastObservedStatus',
+        'fcaLastStatusSummary',
+        'fcaStatusPollingExpired',
+        'fcaTerminalFailureReason',
+    }
+    public = {key: diagnostics[key] for key in allowed if key in diagnostics}
+    summary = public.get('fcaLastStatusSummary')
+    if isinstance(summary, dict):
+        public['fcaLastStatusSummary'] = {
+            key: value for key, value in summary.items()
+            if key != 'phaseSignature'
+        }
+    return public
+
+
 def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool, list[str], dict]:
     lines: list[str] = []
     diagnostics: dict = {}
@@ -3927,26 +4180,37 @@ def _execute_standalone_fca_lifecycle(workflow: str, config: dict) -> tuple[bool
         return True, lines, diagnostics
 
     diagnostics['fcaStatusPath'] = status_path
-    terminal_success = {'success', 'succeeded', 'complete', 'completed', 'done'}
-    terminal_failed = {'failed', 'failure', 'error', 'cancelled', 'canceled'}
     poll_attempts, poll_interval_seconds = _fca_status_poll_settings(config)
     diagnostics['fcaStatusPollAttempts'] = poll_attempts
     diagnostics['fcaStatusPollIntervalSeconds'] = poll_interval_seconds
+    last_phase_signature = ''
+    display_status = 'unknown'
     for attempt in range(1, poll_attempts + 1):
         if poll_interval_seconds:
             time.sleep(poll_interval_seconds)
         ok, message, status_payload, latency_ms = _fca_lifecycle_get(host, credential_ref, api_version, status_path)
-        diagnostics['fcaLastStatusResponse'] = status_payload
         if not ok:
             return False, [*lines, f'FCA status poll failed: {message}'], diagnostics
-        status_value = _fca_status_value(status_payload)
+        status_summary = _fca_workflow_status_summary(status_payload)
+        diagnostics['fcaLastStatusSummary'] = status_summary
+        status_value = status_summary.get('state') or ''
         display_status = status_value or 'unknown'
         diagnostics['fcaLastObservedStatus'] = display_status
         lines.append(f'FCA status poll {attempt:02d}: {display_status} ({latency_ms:>5.0f}ms)')
+        phase_line = status_summary.get('phaseLine') or ''
+        phase_signature = status_summary.get('phaseSignature') or ''
+        if phase_line and phase_signature != last_phase_signature:
+            lines.append(f'FCA phases: {phase_line}')
+            last_phase_signature = phase_signature
+        failure_reason = status_summary.get('failureReason') or ''
+        if failure_reason:
+            diagnostics['fcaTerminalFailureReason'] = failure_reason
         normalized = display_status.lower()
-        if normalized in terminal_success:
+        if normalized in FCA_TERMINAL_SUCCESS_STATES:
             return True, lines, diagnostics
-        if normalized in terminal_failed:
+        if normalized in FCA_TERMINAL_FAILED_STATES:
+            if failure_reason:
+                lines.append(f'FCA terminal failure reason: {failure_reason}')
             return False, lines, diagnostics
     diagnostics['fcaStatusPollingExpired'] = True
     watched_seconds = poll_attempts * poll_interval_seconds
@@ -4878,6 +5142,420 @@ def _prism_central_login_check(host: str, port: int, credential_ref: str, scheme
         return False, f'Prism Central login request failed: {exc}', 0.0
 
 
+def _validate_post_foundation_plan(
+    workflow: str,
+    config: dict,
+    *,
+    check_reachability: bool = True,
+) -> tuple[list[str], int, int]:
+    """Validate Orchestrator-managed post-foundation workflow plans."""
+    lines: list[str] = []
+    passed = 0
+    failed = 0
+
+    def pass_line(message: str) -> None:
+        nonlocal passed
+        lines.append(f'[PASS] {message}')
+        passed += 1
+
+    def fail_line(message: str) -> None:
+        nonlocal failed
+        lines.append(f'[FAIL] {message}')
+        failed += 1
+
+    if workflow not in POST_FOUNDATION_WORKFLOWS:
+        return lines, passed, failed
+    if not isinstance(config, dict):
+        return ['[FAIL] Config must be a YAML mapping'], 0, 1
+
+    ztf_orchestrator = config.get('ztf_orchestrator')
+    target = config.get('target')
+    plan = config.get('plan')
+
+    if not isinstance(ztf_orchestrator, dict):
+        fail_line('ztf_orchestrator must be a mapping')
+    else:
+        if ztf_orchestrator.get('workflow_family') == 'post_foundation':
+            pass_line('Workflow family is post_foundation')
+        else:
+            fail_line('ztf_orchestrator.workflow_family must be post_foundation')
+        if ztf_orchestrator.get('execution_mode') == 'orchestrator_managed_plan':
+            pass_line('Execution mode is orchestrator_managed_plan')
+        else:
+            fail_line('ztf_orchestrator.execution_mode must be orchestrator_managed_plan')
+
+    if not isinstance(target, dict):
+        fail_line('target must be a mapping')
+        target = {}
+    else:
+        pass_line('target mapping is present')
+
+    if not isinstance(plan, dict):
+        fail_line('plan must be a mapping')
+        plan = {}
+    else:
+        pass_line('plan mapping is present')
+
+    if plan.get('workflow') == workflow:
+        pass_line('Plan workflow matches selected workflow')
+    else:
+        fail_line('plan.workflow must match the selected workflow')
+
+    pe_ip = str(target.get('prism_element_ip') or '').strip()
+    if not pe_ip:
+        fail_line('target.prism_element_ip is required')
+    else:
+        try:
+            ipaddress.ip_address(pe_ip)
+            pass_line('target.prism_element_ip is a valid IP address')
+            if check_reachability:
+                reachable, ms = _tcp_check(pe_ip, 9440)
+                if reachable:
+                    pass_line(f'Prism Element API is reachable ({ms:>5.0f}ms)')
+                else:
+                    fail_line('Prism Element API is unreachable on TCP/9440')
+        except ValueError:
+            fail_line('target.prism_element_ip must be a valid IP address')
+
+    pc_ip = str(target.get('prism_central_ip') or '').strip()
+    if pc_ip:
+        try:
+            ipaddress.ip_address(pc_ip)
+            pass_line('target.prism_central_ip is a valid IP address')
+        except ValueError:
+            fail_line('target.prism_central_ip must be a valid IP address when supplied')
+
+    for field, label, required in (
+        ('pe_credential', 'Prism Element', True),
+        ('cvm_credential', 'CVM', False),
+        ('pc_credential', 'Prism Central', False),
+    ):
+        ref = str(target.get(field) or '').strip()
+        if not ref:
+            if required:
+                fail_line(f'target.{field} is required')
+            continue
+        _username, _password, error = _lookup_credential_ref(ref)
+        if error:
+            fail_line(f'{label} credential reference is unavailable: {field} = {ref} ({error})')
+        else:
+            pass_line(f'{label} credential reference is configured: {field} = {ref}')
+
+    operations = plan.get('operations')
+    allowed_operations = POST_FOUNDATION_ALLOWED_OPERATIONS.get(workflow, set())
+    if not isinstance(operations, list):
+        fail_line('plan.operations must be a list')
+    elif not operations:
+        fail_line('plan.operations must include at least one enabled operation')
+    else:
+        seen: set[str] = set()
+        for index, operation in enumerate(operations, start=1):
+            if not isinstance(operation, dict):
+                fail_line(f'plan.operations[{index}] must be a mapping')
+                continue
+            operation_id = str(operation.get('id') or '').strip()
+            if not operation_id:
+                fail_line(f'plan.operations[{index}].id is required')
+                continue
+            if operation_id in seen:
+                fail_line(f'plan.operations[{index}].id is duplicated')
+                continue
+            seen.add(operation_id)
+            if operation_id not in allowed_operations:
+                fail_line(f'Operation is not allowed for this workflow: {operation_id}')
+                continue
+            pass_line(f'Operation is allowed: {operation_id}')
+            if operation_id in POST_FOUNDATION_HIGH_RISK_OPERATIONS:
+                if operation.get('reviewed') is True:
+                    pass_line(f'High-risk operation has review acknowledgement: {operation_id}')
+                else:
+                    fail_line(f'High-risk operation requires review acknowledgement: {operation_id}')
+
+    network_settings = config.get('network_settings')
+    if network_settings is not None:
+        if not isinstance(network_settings, dict):
+            fail_line('network_settings must be a mapping when supplied')
+        else:
+            for key in ('dns_servers', 'ntp_servers'):
+                values = network_settings.get(key)
+                if values is None:
+                    continue
+                if not isinstance(values, list) or not all(str(item).strip() for item in values):
+                    fail_line(f'network_settings.{key} must be a non-empty list of values when supplied')
+                else:
+                    pass_line(f'network_settings.{key} contains {len(values)} value(s)')
+
+    script_steps, executable_errors = _build_post_foundation_script_steps(workflow, config)
+    for error in executable_errors:
+        fail_line(error)
+    if not executable_errors:
+        executable_count = sum(1 for step in script_steps if step.get('script'))
+        evidence_count = sum(1 for step in script_steps if not step.get('script'))
+        pass_line(f'Executable post-foundation plan contains {executable_count} script step(s)')
+        if evidence_count:
+            pass_line(f'Post-foundation plan contains {evidence_count} evidence-only step(s)')
+
+    return lines, passed, failed
+
+
+def _post_foundation_enabled_operations(config: dict) -> list[dict]:
+    plan = config.get('plan')
+    if not isinstance(plan, dict):
+        return []
+    operations = plan.get('operations')
+    if not isinstance(operations, list):
+        return []
+    return [
+        operation for operation in operations
+        if isinstance(operation, dict) and str(operation.get('id') or '').strip()
+    ]
+
+
+def _post_foundation_target(config: dict) -> dict:
+    target = config.get('target')
+    return target if isinstance(target, dict) else {}
+
+
+def _post_foundation_cluster_body(config: dict, body: dict) -> dict:
+    target = _post_foundation_target(config)
+    cluster_ip = str(target.get('prism_element_ip') or '').strip()
+    cluster_name = str(target.get('cluster_name') or target.get('prism_element_name') or '').strip()
+    cluster = {
+        'pe_credential': str(target.get('pe_credential') or '').strip(),
+        **({'name': cluster_name} if cluster_name else {}),
+        **body,
+    }
+    return {'clusters': {cluster_ip: cluster}}
+
+
+def _post_foundation_values(operation: dict) -> dict:
+    values = operation.get('values')
+    return values if isinstance(values, dict) else {}
+
+
+def _post_foundation_text_list(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str):
+        return [item.strip() for item in re.split(r'[\r\n,]+', value) if item.strip()]
+    return []
+
+
+def _post_foundation_bool(value: object, default: bool = True) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() not in {'false', '0', 'no', 'off'}
+    if value is None:
+        return default
+    return bool(value)
+
+
+def _post_foundation_int(value: object, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _post_foundation_required_errors(workflow: str, config: dict) -> list[str]:
+    target = _post_foundation_target(config)
+    errors: list[str] = []
+    enabled_operation_ids = [
+        str(operation.get('id') or '').strip()
+        for operation in _post_foundation_enabled_operations(config)
+    ]
+    evidence_only = {
+        'health_check',
+        'ncc_health_check',
+        'validate_certificate',
+        'hardware_inventory_evidence',
+    }
+    if any(operation_id not in evidence_only for operation_id in enabled_operation_ids):
+        if not str(target.get('cluster_name') or target.get('prism_element_name') or '').strip():
+            errors.append('target.cluster_name is required for executable post-foundation scripts')
+    for operation in _post_foundation_enabled_operations(config):
+        operation_id = str(operation.get('id') or '').strip()
+        values = _post_foundation_values(operation)
+        if operation_id not in POST_FOUNDATION_EXECUTABLE_OPERATIONS.get(workflow, set()):
+            errors.append(f'Operation is not executable yet: {operation_id}')
+        if operation_id == 'register_prism_central':
+            if not str(target.get('prism_central_ip') or '').strip():
+                errors.append('target.prism_central_ip is required for register_prism_central')
+            if not str(target.get('pc_credential') or '').strip():
+                errors.append('target.pc_credential is required for register_prism_central')
+        if operation_id == 'accept_eula':
+            for key in ('username', 'company_name'):
+                if not str(values.get(key) or '').strip():
+                    errors.append(f'plan.operations.accept_eula.values.{key} is required')
+        if operation_id == 'storage_containers':
+            containers = values.get('containers')
+            if not isinstance(containers, list) or not containers:
+                errors.append('plan.operations.storage_containers.values.containers must include at least one container')
+            elif any(not isinstance(item, dict) or not str(item.get('name') or '').strip() for item in containers):
+                errors.append('each storage container requires a name')
+        if operation_id == 'data_services_ip' and not str(values.get('dsip') or '').strip():
+            errors.append('plan.operations.data_services_ip.values.dsip is required')
+        if operation_id == 'dns_servers':
+            network_settings = config.get('network_settings') if isinstance(config.get('network_settings'), dict) else {}
+            servers = _post_foundation_text_list(values.get('servers') or network_settings.get('dns_servers'))
+            if not servers:
+                errors.append('DNS servers are required when dns_servers is selected')
+        if operation_id == 'ntp_servers':
+            network_settings = config.get('network_settings') if isinstance(config.get('network_settings'), dict) else {}
+            servers = _post_foundation_text_list(values.get('servers') or network_settings.get('ntp_servers'))
+            if not servers:
+                errors.append('NTP servers are required when ntp_servers is selected')
+        if operation_id == 'vm_networks':
+            networks = values.get('networks')
+            if not isinstance(networks, list) or not networks:
+                errors.append('plan.operations.vm_networks.values.networks must include at least one network')
+            elif any(
+                not isinstance(item, dict)
+                or not str(item.get('name') or '').strip()
+                or item.get('vlan_id') in (None, '')
+                for item in networks
+            ):
+                errors.append('each VM network requires name and vlan_id')
+    return errors
+
+
+def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[list[dict], list[str]]:
+    errors = _post_foundation_required_errors(workflow, config)
+    if errors:
+        return [], errors
+
+    target = _post_foundation_target(config)
+    network_settings = config.get('network_settings') if isinstance(config.get('network_settings'), dict) else {}
+    steps: list[dict] = []
+    for operation in _post_foundation_enabled_operations(config):
+        operation_id = str(operation.get('id') or '').strip()
+        values = _post_foundation_values(operation)
+        if operation_id in {'health_check', 'ncc_health_check', 'validate_certificate', 'hardware_inventory_evidence'}:
+            steps.append({'operation': operation_id, 'script': '', 'config': None})
+        elif operation_id == 'register_prism_central':
+            steps.append({
+                'operation': operation_id,
+                'script': 'RegisterToPc',
+                'config': {
+                    'pc_ip': str(target.get('prism_central_ip') or '').strip(),
+                    'pc_credential': str(target.get('pc_credential') or '').strip(),
+                    **_post_foundation_cluster_body(config, {}),
+                },
+            })
+        elif operation_id == 'accept_eula':
+            steps.append({
+                'operation': operation_id,
+                'script': 'AcceptEulaPe',
+                'config': _post_foundation_cluster_body(config, {
+                    'eula': {
+                        'username': str(values.get('username') or '').strip(),
+                        'company_name': str(values.get('company_name') or '').strip(),
+                        'job_title': str(values.get('job_title') or '').strip(),
+                    },
+                    'enable_pulse': _post_foundation_bool(values.get('enable_pulse'), True),
+                }),
+            })
+        elif operation_id == 'update_pulse':
+            steps.append({
+                'operation': operation_id,
+                'script': 'UpdatePulsePe',
+                'config': _post_foundation_cluster_body(config, {
+                    'enable_pulse': _post_foundation_bool(values.get('enabled'), True),
+                }),
+            })
+        elif operation_id == 'ha_reservation':
+            steps.append({
+                'operation': operation_id,
+                'script': 'HaReservation',
+                'config': _post_foundation_cluster_body(config, {
+                    'ha_reservation': {
+                        'enable_failover': _post_foundation_bool(values.get('enabled'), True),
+                        'num_host_failure_to_tolerate': _post_foundation_int(values.get('host_failures'), 1),
+                    },
+                }),
+            })
+        elif operation_id == 'storage_containers':
+            containers = []
+            for item in values.get('containers') or []:
+                if not isinstance(item, dict):
+                    continue
+                containers.append({
+                    'name': str(item.get('name') or '').strip(),
+                    'replication_factor': _post_foundation_int(item.get('replication_factor'), 1),
+                    'advertisedCapacity_in_gb': _post_foundation_int(item.get('advertised_capacity_gb'), 1024),
+                    'reserved_in_gb': _post_foundation_int(item.get('reserved_gb'), 0),
+                    'compression_enabled': _post_foundation_bool(item.get('compression_enabled'), True),
+                    'compression_delay_in_secs': 0,
+                    'erasure_code': str(item.get('erasure_code') or 'OFF').strip() or 'OFF',
+                    'on_disk_dedup': str(item.get('on_disk_dedup') or 'OFF').strip() or 'OFF',
+                    'nfsWhitelistAddress': [],
+                })
+            steps.append({
+                'operation': operation_id,
+                'script': 'CreateContainerPe',
+                'config': _post_foundation_cluster_body(config, {'containers': containers}),
+            })
+        elif operation_id == 'data_services_ip':
+            steps.append({
+                'operation': operation_id,
+                'script': 'UpdateDsip',
+                'config': _post_foundation_cluster_body(config, {'dsip': str(values.get('dsip') or '').strip()}),
+            })
+        elif operation_id == 'dns_servers':
+            steps.append({
+                'operation': operation_id,
+                'script': 'AddNameServersPe',
+                'config': _post_foundation_cluster_body(config, {
+                    'name_servers_list': _post_foundation_text_list(values.get('servers') or network_settings.get('dns_servers')),
+                }),
+            })
+        elif operation_id == 'ntp_servers':
+            steps.append({
+                'operation': operation_id,
+                'script': 'AddNtpServersPe',
+                'config': _post_foundation_cluster_body(config, {
+                    'ntp_servers_list': _post_foundation_text_list(values.get('servers') or network_settings.get('ntp_servers')),
+                }),
+            })
+        elif operation_id == 'vm_networks':
+            for item in values.get('networks') or []:
+                if not isinstance(item, dict):
+                    continue
+                network = {
+                    'name': str(item.get('name') or '').strip(),
+                    'subnet_type': str(item.get('subnet_type') or 'VLAN').strip() or 'VLAN',
+                    'vlan_id': _post_foundation_int(item.get('vlan_id'), 0),
+                }
+                ip_config = {
+                    key: value for key, value in {
+                        'network_ip': str(item.get('network_ip') or '').strip(),
+                        'network_prefix': _post_foundation_int(item.get('network_prefix'), 24)
+                            if item.get('network_prefix') not in (None, '') else None,
+                        'default_gateway_ip': str(item.get('default_gateway_ip') or '').strip(),
+                    }.items()
+                    if value not in (None, '')
+                }
+                pool_range = str(item.get('pool_range') or '').strip()
+                if pool_range:
+                    ip_config['pool_list'] = [{'range': pool_range}]
+                dhcp_dns_servers = _post_foundation_text_list(item.get('dhcp_dns_servers'))
+                dhcp_domain = str(item.get('dhcp_domain') or '').strip()
+                if dhcp_dns_servers or dhcp_domain:
+                    ip_config['dhcp_options'] = {
+                        **({'domain_name_server_list': dhcp_dns_servers} if dhcp_dns_servers else {}),
+                        **({'domain_search_list': [dhcp_domain], 'domain_name': dhcp_domain} if dhcp_domain else {}),
+                    }
+                if ip_config:
+                    network['ip_config'] = ip_config
+                steps.append({
+                    'operation': f"{operation_id}:{network['name']}",
+                    'script': 'CreateSubnetPe',
+                    'config': _post_foundation_cluster_body(config, {'networks': [network]}),
+                })
+    return steps, []
+
+
 def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Generator[str, None, None]:
     """Yield SSE events for dry-run pre-flight checks (no subprocess)."""
 
@@ -4915,6 +5593,18 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('stdout', '')
         yield from send('stdout', f'Result: {passed} passed, {failed} failed')
         yield from send('done', {'status': 'failed', 'dryRun': True, 'passed': passed, 'failed': failed})
+        return
+
+    if workflow in POST_FOUNDATION_WORKFLOWS:
+        plan_lines, plan_passed, plan_failed = _validate_post_foundation_plan(workflow, config)
+        for line in plan_lines:
+            yield from send('stdout', line)
+        passed += plan_passed
+        failed += plan_failed
+        yield from send('stdout', '-' * 52)
+        yield from send('stdout', f'Result: {passed} passed, {failed} failed')
+        status = 'success' if failed == 0 else 'failed'
+        yield from send('done', {'status': status, 'dryRun': True, 'passed': passed, 'failed': failed})
         return
 
     preflight = _preflight_for_execution(workflow)
@@ -5669,6 +6359,7 @@ class ExecutionJobManager:
         cfg_path = ''
         stdout_lines: list[str] = []
         stderr_lines: list[str] = []
+        fca_diagnostics_for_job: dict = {}
         try:
             settings = get_settings()
             ztf_path = settings['ztfPath']
@@ -5724,13 +6415,145 @@ class ExecutionJobManager:
                 })
                 self._update_progress(job_id, 'Submitting standalone FCA request', 45, 'Calling Lifecycle v4 API')
                 success, lines, fca_diagnostics = _execute_standalone_fca_lifecycle(workflow, config)
+                fca_diagnostics_for_job = _fca_public_diagnostics(fca_diagnostics)
                 for line in lines:
                     stdout_lines.append(line)
                     self._emit(job_id, 'stdout', line)
                 status = 'success' if success else 'failed'
                 return_code = 0 if success else -1
-                if fca_diagnostics:
-                    stdout_lines.append(_redact_text(f'FCA diagnostics: {json.dumps(fca_diagnostics, sort_keys=True)}'))
+                if fca_diagnostics_for_job:
+                    stdout_lines.append(_redact_text(f'FCA diagnostics: {json.dumps(fca_diagnostics_for_job, sort_keys=True)}'))
+                return
+            if workflow in POST_FOUNDATION_WORKFLOWS:
+                configs_dir = get_configs_dir()
+                self._update_progress(job_id, 'Preparing post-foundation plan', 15, 'Validating and saving workflow YAML')
+                if effective_config_content and config_file:
+                    path = safe_config_path(config_file, configs_dir)
+                    if path is None or path.suffix not in ('.yml', '.yaml'):
+                        self._emit(job_id, 'error', 'Invalid config filename')
+                        return
+                    ok, err = validate_yaml(effective_config_content)
+                    if not ok:
+                        self._emit(job_id, 'error', f'Invalid YAML: {err}')
+                        return
+                    backup_config(path)
+                    _secure_write(path, effective_config_content)
+                    cfg_path = str(path)
+                elif config_file:
+                    path = safe_config_path(config_file, configs_dir)
+                    if path is None or not path.exists() or path.suffix not in ('.yml', '.yaml'):
+                        self._emit(job_id, 'error', 'Config file was not found')
+                        return
+                    cfg_path = str(path)
+                    effective_config_content = path.read_text(encoding='utf-8')
+                else:
+                    self._emit(job_id, 'error', 'Post-foundation config content or config file is required')
+                    return
+                try:
+                    config = yaml.safe_load(effective_config_content) or {}
+                except yaml.YAMLError as exc:
+                    self._emit(job_id, 'error', f'Invalid YAML: {exc}')
+                    return
+                if not isinstance(config, dict):
+                    self._emit(job_id, 'error', 'Post-foundation config must be a YAML mapping')
+                    return
+
+                cmd_args = ['orchestrator-managed-plan', '--workflow', workflow, '-f', cfg_path or config_file]
+                self._emit(job_id, 'start', {
+                    'command': _display_command(cmd_args),
+                    'commandArgs': cmd_args,
+                    'workingDir': '',
+                    'configFile': config_file or '',
+                    'configPath': cfg_path or '',
+                })
+                self._update_progress(job_id, 'Validating post-foundation plan', 50, 'Checking target, credentials, and selected operations')
+                plan_lines, _plan_passed, plan_failed = _validate_post_foundation_plan(workflow, config)
+                for line in plan_lines:
+                    stdout_lines.append(line)
+                    self._emit(job_id, 'stdout', line)
+                if plan_failed:
+                    status = 'failed'
+                    return_code = -1
+                    return
+                incompatible = _ztf_incompatible_error(ztf_path)
+                if incompatible:
+                    self._emit(job_id, 'error', incompatible[0]['error'])
+                    return
+                script_steps, step_errors = _build_post_foundation_script_steps(workflow, config)
+                if step_errors:
+                    for error in step_errors:
+                        stdout_lines.append(f'[FAIL] {error}')
+                        self._emit(job_id, 'stdout', f'[FAIL] {error}')
+                    status = 'failed'
+                    return_code = -1
+                    return
+                total_steps = len(script_steps)
+                executable_steps = [step for step in script_steps if step.get('script')]
+                if not executable_steps:
+                    message = 'Post-foundation evidence-only plan completed. No infrastructure changes were required.'
+                    stdout_lines.append(message)
+                    self._emit(job_id, 'stdout', message)
+                    status = 'success'
+                    return_code = 0
+                    return
+
+                for index, step in enumerate(script_steps, start=1):
+                    operation_id = str(step.get('operation') or '').strip()
+                    script_id = str(step.get('script') or '').strip()
+                    percent = 50 + int((index / max(total_steps, 1)) * 40)
+                    if not script_id:
+                        message = f'Post-foundation step {index}/{total_steps}: {operation_id} is evidence-only; preflight validation completed.'
+                        stdout_lines.append(message)
+                        self._emit(job_id, 'stdout', message)
+                        self._update_progress(job_id, f'Post-foundation {operation_id}', percent, 'Evidence-only step completed')
+                        continue
+
+                    step_filename = f'{workflow}-{index:02d}-{script_id}-{job_id}.yml'
+                    step_path = safe_config_path(step_filename, configs_dir)
+                    if step_path is None:
+                        self._emit(job_id, 'error', f'Invalid generated config filename for {script_id}')
+                        status = 'failed'
+                        return_code = -1
+                        return
+                    _secure_write(step_path, yaml.safe_dump(step.get('config') or {}, sort_keys=False))
+                    step_cmd = [python_path, _ztf_main_arg(ztf_path), '--script', script_id, '-f', str(step_path)]
+                    message = f'Post-foundation step {index}/{total_steps}: running {script_id} for {operation_id}'
+                    stdout_lines.append(message)
+                    self._emit(job_id, 'stdout', message)
+                    self._update_progress(job_id, f'Running {script_id}', percent, operation_id)
+                    try:
+                        result = subprocess.run(
+                            step_cmd,
+                            cwd=ztf_path,
+                            capture_output=True,
+                            text=True,
+                            timeout=EXEC_TIMEOUT,
+                        )
+                    except subprocess.TimeoutExpired:
+                        self._emit(job_id, 'stderr', f'{script_id} timed out after {EXEC_TIMEOUT} seconds')
+                        status = 'failed'
+                        return_code = -1
+                        return
+                    for line in (result.stdout or '').splitlines():
+                        stdout_lines.append(line)
+                        self._emit(job_id, 'stdout', line)
+                    for line in (result.stderr or '').splitlines():
+                        stderr_lines.append(line)
+                        self._emit(job_id, 'stderr', line)
+                    return_code = result.returncode
+                    step_status = _ztf_process_status(return_code, result.stdout or '', result.stderr or '')
+                    if step_status != 'success':
+                        status = 'failed'
+                        return_code = return_code if return_code != 0 else -1
+                        return
+                    self._emit(job_id, 'stdout', f'Post-foundation step {index}/{total_steps}: {script_id} completed')
+
+                message = 'Post-foundation changes applied: all mapped ZTF script steps completed.'
+                stdout_lines.append(message)
+                self._emit(job_id, 'stdout', message)
+                self._update_progress(job_id, 'Post-foundation changes applied', 95, 'All mapped ZTF script steps completed')
+                status = 'success'
+                return_code = 0
                 return
             incompatible = _ztf_incompatible_error(ztf_path)
             if incompatible:
@@ -5844,6 +6667,19 @@ class ExecutionJobManager:
             stdout_text = _redact_text('\n'.join(stdout_lines))
             stderr_text = _redact_text('\n'.join(stderr_lines))
             diagnostics = _classify_execution_failure(stderr_text, stdout_text, return_code) if status != 'success' else {}
+            if fca_diagnostics_for_job:
+                diagnostics = {**diagnostics, **fca_diagnostics_for_job}
+                failure_reason = fca_diagnostics_for_job.get('fcaTerminalFailureReason')
+                if status != 'success' and failure_reason:
+                    diagnostics.update({
+                        'category': 'fca_terminal_failure',
+                        'likelyFix': (
+                            'Open the Foundation Central deployment details, review the failed phase or '
+                            'subtask, remediate the appliance-side issue, and rerun only when the failed '
+                            'operation is safe to retry.'
+                        ),
+                        'evidence': failure_reason,
+                    })
             self._set_diagnostics(
                 job_id,
                 {

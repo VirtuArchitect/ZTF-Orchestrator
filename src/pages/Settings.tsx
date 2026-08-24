@@ -27,6 +27,12 @@ const DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = [
   'deploy-pc',
   'config-pc',
   'config-cluster',
+  'post-foundation-baseline',
+  'pe-monitoring-baseline',
+  'pe-security-hardening',
+  'pe-network-baseline',
+  'pe-certificate-baseline',
+  'hardware-out-of-band-baseline',
   'ndb',
   'lcm-update',
 ]

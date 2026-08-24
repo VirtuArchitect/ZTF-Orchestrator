@@ -5,16 +5,9 @@ import { apiFetch } from '../utils/api'
 import type { ParallelRun, ParallelSiteInput } from '../types'
 import Layout from '../components/Layout'
 import clsx from 'clsx'
+import { WORKFLOWS as CATALOG_WORKFLOWS } from '../data'
 
-const WORKFLOWS = [
-  'cluster-create','cluster-create-standalone-fca',
-  'imaging-only','imaging-only-standalone-fca',
-  'imaging','imaging-standalone-fca',
-  'site-deploy','site-deploy-standalone-fca','config-cluster',
-  'deploy-pc','config-pc','pod-config','deploy-management-pc',
-  'config-management-pc','calm-vm-workloads','calm-edgeai-vm-workload',
-  'ndb','lcm-update',
-]
+const WORKFLOWS = CATALOG_WORKFLOWS.map(workflow => workflow.id)
 
 function SiteStatusIcon({ status }: { status: string }) {
   if (status === 'success')  return <CheckCircle size={14} className="text-emerald-400 flex-shrink-0" />
@@ -213,7 +206,7 @@ export default function ParallelExecution() {
                       )}
                     </div>
                     <textarea value={site.configContent} onChange={e => updateSite(i, 'configContent', e.target.value)}
-                      rows={4} placeholder="pc_ip: 10.0.0.1&#10;pc_credential: pc-cred"
+                      rows={4} placeholder="Paste workflow YAML here"
                       className="w-full bg-gray-800 border border-border rounded px-2 py-1 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue resize-none" />
                   </div>
                 ))}

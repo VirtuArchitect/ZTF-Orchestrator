@@ -5,16 +5,9 @@ import { apiFetch } from '../utils/api'
 import type { ApprovalRequest, ApprovalStatus } from '../types'
 import Layout from '../components/Layout'
 import clsx from 'clsx'
+import { WORKFLOWS as CATALOG_WORKFLOWS } from '../data'
 
-const WORKFLOWS = [
-  'cluster-create','cluster-create-standalone-fca',
-  'imaging-only','imaging-only-standalone-fca',
-  'imaging','imaging-standalone-fca',
-  'site-deploy','site-deploy-standalone-fca','config-cluster',
-  'deploy-pc','config-pc','pod-config','deploy-management-pc',
-  'config-management-pc','calm-vm-workloads','calm-edgeai-vm-workload',
-  'ndb','lcm-update',
-]
+const WORKFLOWS = CATALOG_WORKFLOWS.map(workflow => workflow.id)
 
 const STATUS_FILTERS: ApprovalStatus[] = ['pending','approved','rejected','expired']
 type LifecycleFilter = 'active' | 'history' | 'all'
@@ -266,7 +259,7 @@ export default function Approvals() {
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Config (YAML)</label>
                   <textarea value={form.configContent} onChange={e => setForm(f => ({...f, configContent: e.target.value}))}
-                    rows={6} placeholder="pc_ip: 10.0.0.1&#10;pc_credential: pc-cred"
+                    rows={6} placeholder="Paste workflow YAML here"
                     className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue resize-none" />
                 </div>
                 <div>

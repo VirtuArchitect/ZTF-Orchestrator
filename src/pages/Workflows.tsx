@@ -3,7 +3,7 @@ import { Link } from '../router'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  ChevronRight, Search
+  ChevronRight, Search, CheckCircle, ShieldCheck, Network, KeyRound, Lock
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { WORKFLOWS } from '../data'
@@ -13,6 +13,7 @@ import clsx from 'clsx'
 const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
+  CheckCircle, ShieldCheck, Network, KeyRound, Lock,
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
