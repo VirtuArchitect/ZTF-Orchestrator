@@ -4,7 +4,8 @@ import { useParams, Link } from '../router'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  ArrowLeft, Play, Download, ListChecks, Upload
+  ArrowLeft, Play, Download, ListChecks, Upload,
+  CheckCircle, ShieldCheck, Network, KeyRound, Lock
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
@@ -23,6 +24,7 @@ import ClusterConfigForm from '../components/forms/ClusterConfigForm'
 import CalmWorkloadsForm from '../components/forms/CalmWorkloadsForm'
 import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
+import PostFoundationWorkflowForm from '../components/forms/PostFoundationWorkflowForm'
 import clsx from 'clsx'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
@@ -31,11 +33,20 @@ import type { ApprovalRequest } from '../types'
 const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
+  CheckCircle, ShieldCheck, Network, KeyRound, Lock,
 }
 
 const TABS = ['Configure', 'YAML Preview'] as const
 const MAX_IMPORT_BYTES = 1024 * 1024
 const STANDALONE_FCA_CONFIRMATION_PREFIX = 'RUN STANDALONE-FCA'
+const POST_FOUNDATION_WORKFLOWS = new Set([
+  'post-foundation-baseline',
+  'pe-monitoring-baseline',
+  'pe-security-hardening',
+  'pe-network-baseline',
+  'pe-certificate-baseline',
+  'hardware-out-of-band-baseline',
+])
 
 const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'cluster-create': ['common_network_settings', 'create_clusters'],
@@ -47,6 +58,12 @@ const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'site-deploy-standalone-fca': ['fca_ip', 'fca_credential', 'sites'],
   'deploy-pc': ['clusters'],
   'config-cluster': ['clusters'],
+  'post-foundation-baseline': ['ztf_orchestrator', 'target', 'plan'],
+  'pe-monitoring-baseline': ['ztf_orchestrator', 'target', 'plan'],
+  'pe-security-hardening': ['ztf_orchestrator', 'target', 'plan'],
+  'pe-network-baseline': ['ztf_orchestrator', 'target', 'plan'],
+  'pe-certificate-baseline': ['ztf_orchestrator', 'target', 'plan'],
+  'hardware-out-of-band-baseline': ['ztf_orchestrator', 'target', 'plan'],
   'calm-vm-workloads': ['bp_list', 'projects'],
   ndb: ['cluster_ip'],
 }
@@ -175,6 +192,9 @@ export default function WorkflowDetail() {
       onYamlChange: handleYamlGenerated,
       profile: activeProfile,
       importedConfig: importedConfig?.workflowId === workflow.id ? importedConfig.parsed : undefined,
+    }
+    if (POST_FOUNDATION_WORKFLOWS.has(workflow.id)) {
+      return <PostFoundationWorkflowForm workflow={workflow} {...props} />
     }
     switch (workflow.id) {
       case 'cluster-create': return <ClusterCreateForm {...props} />

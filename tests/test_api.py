@@ -2245,6 +2245,89 @@ def test_standalone_fca_execution_treats_running_poll_timeout_as_handoff(monkeyp
     ]
 
 
+def test_standalone_fca_execution_reports_terminal_phase_failure(monkeypatch):
+    """Standalone FCA terminal failures include the failed phase and subtask evidence."""
+    import server
+
+    calls = []
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    monkeypatch.setattr(server.time, 'sleep', lambda seconds: None)
+
+    def fake_lifecycle_request(host, credential_ref, api_version, method, resource_path, payload=None):
+        calls.append((method, resource_path, payload))
+        return True, 'HTTP 202', {'data': {'extId': 'workflow-1'}}, 3.0
+
+    def fake_lifecycle_get(host, credential_ref, api_version, resource_path):
+        calls.append(('GET', resource_path, None))
+        return True, 'HTTP 200', {
+            'data': {
+                'status': {
+                    'state': 'FAILED',
+                    'phases': [
+                        {'name': 'Workflow Validation', 'state': 'SUCCEEDED', 'percentage': 100},
+                        {
+                            'name': 'Install AOS',
+                            'state': 'FAILED',
+                            'percentage': 94,
+                            'progress': [
+                                {
+                                    'subTasks': [
+                                        {
+                                            'name': 'AOS installation',
+                                            'status': 'FAILED',
+                                            'progressPercentage': 90,
+                                            'messages': [
+                                                'Preparing boot disk',
+                                                'Waiting for CVM to come up',
+                                                'Tunnel validation failed',
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {'name': 'Cluster Formation', 'state': 'QUEUED', 'percentage': 0},
+                    ],
+                },
+            },
+        }, 4.0
+
+    monkeypatch.setattr(server, '_fca_lifecycle_request', fake_lifecycle_request)
+    monkeypatch.setattr(server, '_fca_lifecycle_get', fake_lifecycle_get)
+
+    ok, lines, diagnostics = server._execute_standalone_fca_lifecycle(
+        'cluster-create-standalone-fca',
+        {
+            'fca_api_version': 'v4.3',
+            'fca_ip': '192.0.2.122',
+            'fca_credential': 'foundation_central',
+            'fca_execution': {
+                'submit_path': 'config/custom-deployments',
+                'status_path_template': 'config/custom-deployments/{extId}',
+                'status_poll_attempts': 2,
+                'status_poll_interval_seconds': 0,
+                'payload': {'custom': 'intent'},
+            },
+        },
+    )
+
+    assert ok is False
+    assert diagnostics['fcaLastObservedStatus'] == 'FAILED'
+    assert diagnostics['fcaTerminalFailureReason'] == (
+        'Install AOS failed at 94%; AOS installation failed at 90%; last messages: '
+        'Preparing boot disk; Waiting for CVM to come up; Tunnel validation failed'
+    )
+    assert any(
+        'FCA phases: Workflow Validation SUCCEEDED 100%; Install AOS FAILED 94%; Cluster Formation QUEUED 0%' in line
+        for line in lines
+    )
+    assert any('FCA terminal failure reason: Install AOS failed at 94' in line for line in lines)
+    assert calls == [
+        ('POST', 'config/custom-deployments', {'custom': 'intent'}),
+        ('GET', 'config/custom-deployments/workflow-1', None),
+    ]
+
+
 def test_standalone_fca_cluster_execution_rejects_incomplete_observed_payload(monkeypatch):
     """Standalone FCA cluster execution fails before POST when required workflow payload fields are missing."""
     import server
@@ -2432,6 +2515,208 @@ def test_pe_delete_subnet_preflight_requires_vlan_id(monkeypatch):
     output = ''.join(server._run_preflight('DeleteSubnetsPe', yaml_body, 'test-id'))
     assert 'Required item field missing : clusters.10.20.30.201.networks[0].vlan_id' in output
     assert 'dryRun' in output
+
+
+def test_post_foundation_baseline_preflight_builds_executable_script_plan(monkeypatch):
+    """Post-foundation baseline dry-run proves selected operations map to ZTF scripts."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  workflow_family: post_foundation\n'
+        '  execution_mode: orchestrator_managed_plan\n'
+        'target:\n'
+        '  prism_element_ip: 192.0.2.20\n'
+        '  cluster_name: cluster-under-test\n'
+        '  pe_credential: pe_user\n'
+        '  prism_central_ip: 192.0.2.30\n'
+        '  pc_credential: pc_user\n'
+        'network_settings:\n'
+        '  dns_servers: [192.0.2.53]\n'
+        '  ntp_servers: [time.example.invalid]\n'
+        'plan:\n'
+        '  workflow: post-foundation-baseline\n'
+        '  operations:\n'
+        '    - id: register_prism_central\n'
+        '      reviewed: true\n'
+        '    - id: dns_servers\n'
+        '      reviewed: true\n'
+        '    - id: ntp_servers\n'
+        '      reviewed: true\n'
+    )
+
+    output = ''.join(server._run_preflight('post-foundation-baseline', yaml_body, 'test-id'))
+
+    assert '[FAIL]' not in output
+    assert 'Executable post-foundation plan contains 3 script step(s)' in output
+
+
+def test_post_foundation_baseline_job_executes_mapped_scripts(client, auth_headers, monkeypatch):
+    """Run Workflow executes mapped post-foundation operations as sequential ZTF scripts."""
+    import subprocess
+    import time
+    import server
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    monkeypatch.setattr(server, '_ztf_incompatible_error', lambda path: None)
+
+    calls = []
+
+    class Result:
+        returncode = 0
+        stdout = 'script completed\n'
+        stderr = ''
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return Result()
+
+    monkeypatch.setattr(subprocess, 'run', fake_run)
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  workflow_family: post_foundation\n'
+        '  execution_mode: orchestrator_managed_plan\n'
+        'target:\n'
+        '  prism_element_ip: 192.0.2.20\n'
+        '  cluster_name: cluster-under-test\n'
+        '  pe_credential: pe_user\n'
+        '  prism_central_ip: 192.0.2.30\n'
+        '  pc_credential: pc_user\n'
+        'network_settings:\n'
+        '  dns_servers: [192.0.2.53]\n'
+        '  ntp_servers: [time.example.invalid]\n'
+        'plan:\n'
+        '  workflow: post-foundation-baseline\n'
+        '  operations:\n'
+        '    - id: register_prism_central\n'
+        '      reviewed: true\n'
+        '    - id: dns_servers\n'
+        '      reviewed: true\n'
+        '    - id: ntp_servers\n'
+        '      reviewed: true\n'
+    )
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'post-foundation-baseline',
+                             'configContent': yaml_body,
+                             'configFile': 'post-foundation-baseline.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    job = None
+    for _ in range(40):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] in {'success', 'failed'}:
+            break
+        time.sleep(0.05)
+
+    assert job['status'] == 'success'
+    scripts = [cmd[cmd.index('--script') + 1] for cmd in calls]
+    assert scripts == ['RegisterToPc', 'AddNameServersPe', 'AddNtpServersPe']
+    assert any(
+        event['type'] == 'stdout' and 'Post-foundation changes applied' in event['data']
+        for event in job['logs']
+    )
+
+
+def test_pe_network_baseline_job_executes_vm_network_mapping(client, auth_headers, monkeypatch):
+    """PE Network Baseline applies VM networks through the existing CreateSubnetPe script."""
+    import subprocess
+    import time
+    import server
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    monkeypatch.setattr(server, '_ztf_incompatible_error', lambda path: None)
+
+    calls = []
+
+    class Result:
+        returncode = 0
+        stdout = 'network created\n'
+        stderr = ''
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return Result()
+
+    monkeypatch.setattr(subprocess, 'run', fake_run)
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  workflow_family: post_foundation\n'
+        '  execution_mode: orchestrator_managed_plan\n'
+        'target:\n'
+        '  prism_element_ip: 192.0.2.20\n'
+        '  cluster_name: cluster-under-test\n'
+        '  pe_credential: pe_user\n'
+        'plan:\n'
+        '  workflow: pe-network-baseline\n'
+        '  operations:\n'
+        '    - id: vm_networks\n'
+        '      reviewed: true\n'
+        '      values:\n'
+        '        networks:\n'
+        '          - name: workload-vlan\n'
+        '            vlan_id: 120\n'
+    )
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'pe-network-baseline',
+                             'configContent': yaml_body,
+                             'configFile': 'pe-network-baseline.yml'},
+                       headers=auth_headers)
+    assert resp.status_code == 202
+    job_id = resp.get_json()['id']
+
+    job = None
+    for _ in range(40):
+        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+        if job['status'] in {'success', 'failed'}:
+            break
+        time.sleep(0.05)
+
+    assert job['status'] == 'success'
+    assert [cmd[cmd.index('--script') + 1] for cmd in calls] == ['CreateSubnetPe']
+
+
+def test_post_foundation_unsupported_operation_fails_preflight(monkeypatch):
+    """Operations without verified safe mappings remain blocked instead of being guessed."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  workflow_family: post_foundation\n'
+        '  execution_mode: orchestrator_managed_plan\n'
+        'target:\n'
+        '  prism_element_ip: 192.0.2.20\n'
+        '  cluster_name: cluster-under-test\n'
+        '  pe_credential: pe_user\n'
+        'plan:\n'
+        '  workflow: pe-monitoring-baseline\n'
+        '  operations:\n'
+        '    - id: smtp\n'
+        '      reviewed: true\n'
+    )
+
+    output = ''.join(server._run_preflight('pe-monitoring-baseline', yaml_body, 'test-id'))
+
+    assert '[FAIL] Operation is not executable yet: smtp' in output
 
 
 def test_execution_start_exception_is_recorded_as_failed(client, auth_headers, monkeypatch):

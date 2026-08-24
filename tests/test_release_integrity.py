@@ -35,6 +35,12 @@ def _frontend_script_ids() -> set[str]:
     return set(re.findall(r"\{ id: '([^']+)'", scripts_block))
 
 
+def _frontend_workflow_ids() -> set[str]:
+    text = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
+    workflows_block = text.split('export const WORKFLOWS', 1)[1].split('export const SCRIPTS', 1)[0]
+    return set(re.findall(r"id: '([^']+)'", workflows_block))
+
+
 def test_release_version_metadata_is_consistent():
     import server
 
@@ -237,6 +243,45 @@ def test_frontend_script_catalogue_is_backend_allowlisted():
     assert ids
     assert not (ids - server.ALLOWED_SCRIPTS)
     assert not (ids & set(server.AMBIGUOUS_SCRIPT_ALIASES))
+
+
+def test_post_foundation_workflows_are_guarded_and_environment_neutral():
+    import server
+
+    workflow_ids = {
+        'post-foundation-baseline',
+        'pe-monitoring-baseline',
+        'pe-security-hardening',
+        'pe-network-baseline',
+        'pe-certificate-baseline',
+        'hardware-out-of-band-baseline',
+    }
+    frontend_ids = _frontend_workflow_ids()
+    workflow_detail = (ROOT / 'src' / 'pages' / 'WorkflowDetail.tsx').read_text(encoding='utf-8')
+    form = (ROOT / 'src' / 'components' / 'forms' / 'PostFoundationWorkflowForm.tsx').read_text(encoding='utf-8')
+    data = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
+
+    assert workflow_ids <= frontend_ids
+    assert workflow_ids <= server.ALLOWED_WORKFLOWS
+    assert workflow_ids <= server.DEFAULT_APPROVAL_REQUIRED_WORKFLOWS
+    assert 'PostFoundationWorkflowForm' in workflow_detail
+    assert 'orchestrator_managed_plan' in form
+    assert 'No infrastructure changes were' in (ROOT / 'server.py').read_text(encoding='utf-8')
+
+    forbidden_environment_fragments = [
+        '10.4.',
+        '10.20.',
+        'Starten',
+        'DEUT',
+        'SMPA',
+        '6CV',
+        '6FV',
+        'CFV',
+        'HCV',
+    ]
+    implementation_text = '\n'.join([data, workflow_detail, form])
+    for fragment in forbidden_environment_fragments:
+        assert fragment not in implementation_text
 
 
 def test_offline_update_package_generator_writes_verified_manifest(tmp_path):
