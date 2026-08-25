@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Testing
 
-Current release marker: `v1.7.8`.
+Current release marker: `v1.7.9`.
 
 This folder indexes test strategy and regression guard documentation.
 

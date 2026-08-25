@@ -1,6 +1,6 @@
 # RB-005 - Failed Job Recovery
 
-Current release marker: `v1.7.8`.
+Current release marker: `v1.7.9`.
 
 ## Metadata
 

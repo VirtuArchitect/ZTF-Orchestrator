@@ -1,9 +1,9 @@
 {
   "name": "nutanix-zerotouch-framework-ui",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "private": true,
   "type": "module",
-  "author": "John Goulden",
+  "author": "ZTF-Orchestrator maintainers",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

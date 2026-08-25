@@ -9,8 +9,31 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.8 and should be moved
+Changes in this section are present on `main` after v1.7.9 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.9] - 2026-08-25
+
+### Summary
+Privacy and appliance packaging correction for the post-cluster hardening
+release. Keeps appliance images focused on runtime files and removes static
+maintainer identity from shipped metadata.
+
+### Changed
+- Updated the runtime version identity to `v1.7.9` for the corrected appliance
+  update package.
+- Replaced static maintainer identity in package, Docker, README, and Settings
+  About metadata with neutral project maintainer wording.
+- Kept the appliance Docker build context constrained so docs, tests, source
+  TypeScript, generated outputs, release artifacts, and local notes are not
+  copied into the shipped image.
+
+### Security
+- Reduced risk of embedding local names, paths, lab evidence, or generated
+  artifacts in appliance update images by relying on the runtime-only Docker
+  context.
 
 ---
 

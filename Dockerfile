@@ -1,11 +1,11 @@
 FROM python:3.11-slim
 
-LABEL maintainer="John Goulden"
+LABEL maintainer="ZTF-Orchestrator maintainers"
 LABEL application="ZTF-Orchestrator"
 
 ARG ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
 ARG ZTF_REF=v1.5.2
-ARG ZTF_ORCHESTRATOR_VERSION=v1.7.8
+ARG ZTF_ORCHESTRATOR_VERSION=v1.7.9
 ARG ZTF_BUILD_COMMIT=
 ARG ZTF_BUILD_DATE=
 ARG ZTF_ORCHESTRATOR_IMAGE=

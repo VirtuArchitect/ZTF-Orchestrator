@@ -1275,7 +1275,7 @@ export default function Settings() {
             </div>
             <div className="mt-5 grid grid-cols-1 gap-3 text-xs text-gray-500 md:grid-cols-2">
               <div>ZTF Supported: <span className="text-gray-300">AOS 6.5+, PC 2022.6+</span></div>
-              <div>Maintainer: <span className="text-gray-300">John Goulden</span></div>
+              <div>Maintainer: <span className="text-gray-300">ZTF-Orchestrator maintainers</span></div>
               <div>Project: <span className="text-gray-300">ZTF-Orchestrator</span></div>
               <div>Signed in as: <span className="text-gray-300">{user?.username}</span></div>
               <div>Role: <span className="text-gray-300">{user?.role}</span></div>

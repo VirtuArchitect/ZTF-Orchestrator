@@ -36,5 +36,6 @@ appliance
 
 dist/**/*.map
 src
+static
 tests
 tsconfig*.tsbuildinfo
