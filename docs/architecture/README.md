@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Architecture
 
-Current release marker: `v1.7.7`.
+Current release marker: `v1.7.8`.
 
 This folder indexes the architecture documentation for ZTF-Orchestrator. The
 goal is to keep the architecture, security boundary, data flow, and deployment

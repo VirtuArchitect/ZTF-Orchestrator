@@ -1,6 +1,6 @@
 # ZTF-Orchestrator UAT
 
-Current release marker: `v1.7.7`.
+Current release marker: `v1.7.8`.
 
 This folder contains controlled UAT planning and evidence structure.
 

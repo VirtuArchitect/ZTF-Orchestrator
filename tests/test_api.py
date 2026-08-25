@@ -2692,8 +2692,8 @@ def test_pe_network_baseline_job_executes_vm_network_mapping(client, auth_header
     assert [cmd[cmd.index('--script') + 1] for cmd in calls] == ['CreateSubnetPe']
 
 
-def test_post_foundation_unsupported_operation_fails_preflight(monkeypatch):
-    """Operations without verified safe mappings remain blocked instead of being guessed."""
+def test_post_foundation_manual_operation_records_without_apply(monkeypatch):
+    """Manual checklist operations are valid plan items but do not execute scripts."""
     import server
 
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
@@ -2711,6 +2711,36 @@ def test_post_foundation_unsupported_operation_fails_preflight(monkeypatch):
         '  workflow: pe-monitoring-baseline\n'
         '  operations:\n'
         '    - id: smtp\n'
+        '      mode: manual\n'
+        '      reviewed: true\n'
+    )
+
+    output = ''.join(server._run_preflight('pe-monitoring-baseline', yaml_body, 'test-id'))
+
+    assert '[FAIL]' not in output
+    assert 'Post-foundation plan contains 1 manual checklist step(s)' in output
+
+
+def test_post_foundation_unsupported_apply_operation_fails_preflight(monkeypatch):
+    """Operations without verified safe mappings cannot be promoted to apply."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 8.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    yaml_body = (
+        'ztf_orchestrator:\n'
+        '  workflow_family: post_foundation\n'
+        '  execution_mode: orchestrator_managed_plan\n'
+        'target:\n'
+        '  prism_element_ip: 192.0.2.20\n'
+        '  cluster_name: cluster-under-test\n'
+        '  pe_credential: pe_user\n'
+        'plan:\n'
+        '  workflow: pe-monitoring-baseline\n'
+        '  operations:\n'
+        '    - id: smtp\n'
+        '      mode: apply\n'
         '      reviewed: true\n'
     )
 
@@ -4442,11 +4472,15 @@ def test_security_headers_present(client, auth_headers):
 # ── Health ───────────────────────────────────────────────────────────────────
 
 def test_health_returns_json(client):
+    import server
+
     resp = client.get('/health')
     assert resp.content_type == 'application/json'
     data = resp.get_json()
     assert 'status' in data
     assert 'version' in data
+    assert data['installed']['version'] == server.APP_VERSION
+    assert data['installed']['installedIdentity']
     assert 'dataDir' not in data
     assert 'database' not in data
     assert 'jobs' not in data
@@ -4540,6 +4574,8 @@ def test_health_details_returns_operational_data_for_admin(client, auth_headers)
     data = resp.get_json()
     assert 'status' in data
     assert 'version' in data
+    assert data['installed']['versionTag'].startswith('v')
+    assert data['installed']['installedIdentity']
     assert 'dataDir' in data
     assert 'database' in data
     assert 'jobs' in data

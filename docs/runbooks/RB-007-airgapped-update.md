@@ -1,6 +1,6 @@
 # RB-007 - Air-Gapped Update
 
-Current release marker: `v1.7.7`.
+Current release marker: `v1.7.8`.
 
 ## Metadata
 

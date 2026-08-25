@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.7'
+APP_VERSION = '1.7.8'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -2771,6 +2771,37 @@ POST_FOUNDATION_HIGH_RISK_OPERATIONS = {
     'bios_secure_boot_intent',
 }
 
+POST_FOUNDATION_EVIDENCE_ONLY_OPERATIONS = {
+    'health_check',
+    'ncc_health_check',
+    'validate_certificate',
+    'hardware_inventory_evidence',
+}
+
+POST_FOUNDATION_MANUAL_OPERATIONS = {
+    'smtp',
+    'alert_email_contacts',
+    'snmpv3',
+    'syslog',
+    'cvm_aide',
+    'ahv_aide',
+    'high_strength_passwords',
+    'scma_schedule',
+    'snmpv3_only',
+    'virtual_switch_descriptions',
+    'uplink_intent',
+    'generate_csr',
+}
+
+POST_FOUNDATION_BLOCKED_OPERATIONS = {
+    'cluster_lockdown',
+    'ssh_access_controls',
+    'lacp_sequence',
+    'import_certificate',
+    'bmc_credential_rotation',
+    'bios_secure_boot_intent',
+}
+
 POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
     'post-foundation-baseline': {
         'health_check',
@@ -4899,6 +4930,82 @@ def read_json(path: Path, default=None):
 def write_json(path: Path, data):
     _storage.write_json(path, data)
 
+
+def _git_metadata_value(args: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            ['git', *args],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ''
+    if result.returncode != 0:
+        return ''
+    return result.stdout.strip()
+
+
+def _latest_applied_orchestrator_update() -> dict:
+    updates = read_json(APPLIANCE_UPDATES_FILE, [])
+    if not isinstance(updates, list):
+        return {}
+    applied = [
+        item for item in updates
+        if isinstance(item, dict)
+        and item.get('target') == 'ztf-orchestrator'
+        and str(item.get('appliedAt') or '').strip()
+    ]
+    applied.sort(key=lambda item: str(item.get('appliedAt') or ''), reverse=True)
+    latest = applied[0] if applied else {}
+    if not latest:
+        return {}
+    return {
+        'version': str(latest.get('version') or '').strip(),
+        'sourceRef': str(latest.get('sourceRef') or '').strip(),
+        'releaseUrl': str(latest.get('releaseUrl') or '').strip(),
+        'packageId': str(latest.get('packageId') or latest.get('id') or '').strip(),
+        'appliedAt': str(latest.get('appliedAt') or '').strip(),
+    }
+
+
+def _installed_build_metadata() -> dict:
+    update = _latest_applied_orchestrator_update()
+    source_ref = (
+        os.environ.get('ZTF_SOURCE_REF', '').strip()
+        or update.get('sourceRef', '')
+        or _git_metadata_value(['describe', '--tags', '--always', '--dirty'])
+    )
+    commit = (
+        os.environ.get('ZTF_BUILD_COMMIT', '').strip()
+        or _git_metadata_value(['rev-parse', '--short=12', 'HEAD'])
+    )
+    package_id = (
+        os.environ.get('ZTF_UPDATE_PACKAGE_ID', '').strip()
+        or update.get('packageId', '')
+    )
+    version_tag = os.environ.get('ZTF_ORCHESTRATOR_VERSION', '').strip() or f'v{APP_VERSION}'
+    identity_parts = [version_tag]
+    if package_id:
+        identity_parts.append(package_id)
+    elif source_ref and source_ref != version_tag:
+        identity_parts.append(source_ref)
+    if commit and commit not in identity_parts:
+        identity_parts.append(commit)
+    return {
+        'version': APP_VERSION,
+        'versionTag': version_tag,
+        'installedIdentity': ' / '.join(identity_parts),
+        'sourceRef': source_ref,
+        'commit': commit,
+        'buildDate': os.environ.get('ZTF_BUILD_DATE', '').strip(),
+        'containerImage': os.environ.get('ZTF_ORCHESTRATOR_IMAGE', '').strip(),
+        'updatePackageId': package_id,
+        'appliedUpdate': update,
+    }
+
+
 def get_settings() -> dict:
     default_profile = {
         'id': 'default',
@@ -5265,6 +5372,8 @@ def _validate_post_foundation_plan(
                 fail_line(f'Operation is not allowed for this workflow: {operation_id}')
                 continue
             pass_line(f'Operation is allowed: {operation_id}')
+            mode = _post_foundation_operation_mode(operation_id, operation)
+            pass_line(f'Operation mode is {mode}: {operation_id}')
             if operation_id in POST_FOUNDATION_HIGH_RISK_OPERATIONS:
                 if operation.get('reviewed') is True:
                     pass_line(f'High-risk operation has review acknowledgement: {operation_id}')
@@ -5290,10 +5399,16 @@ def _validate_post_foundation_plan(
         fail_line(error)
     if not executable_errors:
         executable_count = sum(1 for step in script_steps if step.get('script'))
-        evidence_count = sum(1 for step in script_steps if not step.get('script'))
+        evidence_count = sum(1 for step in script_steps if step.get('mode') == 'evidence')
+        manual_count = sum(1 for step in script_steps if step.get('mode') == 'manual')
+        blocked_count = sum(1 for step in script_steps if step.get('mode') == 'blocked')
         pass_line(f'Executable post-foundation plan contains {executable_count} script step(s)')
         if evidence_count:
             pass_line(f'Post-foundation plan contains {evidence_count} evidence-only step(s)')
+        if manual_count:
+            pass_line(f'Post-foundation plan contains {manual_count} manual checklist step(s)')
+        if blocked_count:
+            pass_line(f'Post-foundation plan contains {blocked_count} blocked checklist step(s)')
 
     return lines, passed, failed
 
@@ -5333,6 +5448,26 @@ def _post_foundation_values(operation: dict) -> dict:
     return values if isinstance(values, dict) else {}
 
 
+def _post_foundation_operation_mode(operation_id: str, operation: dict | None = None) -> str:
+    supplied = ''
+    if isinstance(operation, dict):
+        supplied = str(operation.get('mode') or '').strip().lower()
+    if supplied in {'apply', 'evidence', 'manual', 'blocked'}:
+        return supplied
+    if operation_id in POST_FOUNDATION_EXECUTABLE_OPERATIONS.get(
+        str((operation or {}).get('workflow') or ''),
+        set(),
+    ):
+        return 'apply'
+    if operation_id in POST_FOUNDATION_EVIDENCE_ONLY_OPERATIONS:
+        return 'evidence'
+    if operation_id in POST_FOUNDATION_BLOCKED_OPERATIONS:
+        return 'blocked'
+    if operation_id in POST_FOUNDATION_MANUAL_OPERATIONS:
+        return 'manual'
+    return 'apply'
+
+
 def _post_foundation_text_list(value: object) -> list[str]:
     if isinstance(value, list):
         return [str(item).strip() for item in value if str(item).strip()]
@@ -5361,23 +5496,21 @@ def _post_foundation_int(value: object, default: int) -> int:
 def _post_foundation_required_errors(workflow: str, config: dict) -> list[str]:
     target = _post_foundation_target(config)
     errors: list[str] = []
-    enabled_operation_ids = [
-        str(operation.get('id') or '').strip()
-        for operation in _post_foundation_enabled_operations(config)
-    ]
-    evidence_only = {
-        'health_check',
-        'ncc_health_check',
-        'validate_certificate',
-        'hardware_inventory_evidence',
-    }
-    if any(operation_id not in evidence_only for operation_id in enabled_operation_ids):
+    actionable_operation_ids = []
+    for operation in _post_foundation_enabled_operations(config):
+        operation_id = str(operation.get('id') or '').strip()
+        if _post_foundation_operation_mode(operation_id, operation) == 'apply':
+            actionable_operation_ids.append(operation_id)
+    if actionable_operation_ids:
         if not str(target.get('cluster_name') or target.get('prism_element_name') or '').strip():
             errors.append('target.cluster_name is required for executable post-foundation scripts')
     for operation in _post_foundation_enabled_operations(config):
         operation_id = str(operation.get('id') or '').strip()
         values = _post_foundation_values(operation)
-        if operation_id not in POST_FOUNDATION_EXECUTABLE_OPERATIONS.get(workflow, set()):
+        mode = _post_foundation_operation_mode(operation_id, operation)
+        if operation_id in POST_FOUNDATION_BLOCKED_OPERATIONS and mode != 'blocked':
+            errors.append(f'Operation is blocked and cannot be applied: {operation_id}')
+        if mode == 'apply' and operation_id not in POST_FOUNDATION_EXECUTABLE_OPERATIONS.get(workflow, set()):
             errors.append(f'Operation is not executable yet: {operation_id}')
         if operation_id == 'register_prism_central':
             if not str(target.get('prism_central_ip') or '').strip():
@@ -5431,11 +5564,18 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
     for operation in _post_foundation_enabled_operations(config):
         operation_id = str(operation.get('id') or '').strip()
         values = _post_foundation_values(operation)
-        if operation_id in {'health_check', 'ncc_health_check', 'validate_certificate', 'hardware_inventory_evidence'}:
-            steps.append({'operation': operation_id, 'script': '', 'config': None})
+        mode = _post_foundation_operation_mode(operation_id, operation)
+        if mode in {'evidence', 'manual', 'blocked'}:
+            steps.append({
+                'operation': operation_id,
+                'mode': mode,
+                'script': '',
+                'config': None,
+            })
         elif operation_id == 'register_prism_central':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'RegisterToPc',
                 'config': {
                     'pc_ip': str(target.get('prism_central_ip') or '').strip(),
@@ -5446,6 +5586,7 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
         elif operation_id == 'accept_eula':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'AcceptEulaPe',
                 'config': _post_foundation_cluster_body(config, {
                     'eula': {
@@ -5459,6 +5600,7 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
         elif operation_id == 'update_pulse':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'UpdatePulsePe',
                 'config': _post_foundation_cluster_body(config, {
                     'enable_pulse': _post_foundation_bool(values.get('enabled'), True),
@@ -5467,6 +5609,7 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
         elif operation_id == 'ha_reservation':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'HaReservation',
                 'config': _post_foundation_cluster_body(config, {
                     'ha_reservation': {
@@ -5493,18 +5636,21 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
                 })
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'CreateContainerPe',
                 'config': _post_foundation_cluster_body(config, {'containers': containers}),
             })
         elif operation_id == 'data_services_ip':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'UpdateDsip',
                 'config': _post_foundation_cluster_body(config, {'dsip': str(values.get('dsip') or '').strip()}),
             })
         elif operation_id == 'dns_servers':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'AddNameServersPe',
                 'config': _post_foundation_cluster_body(config, {
                     'name_servers_list': _post_foundation_text_list(values.get('servers') or network_settings.get('dns_servers')),
@@ -5513,6 +5659,7 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
         elif operation_id == 'ntp_servers':
             steps.append({
                 'operation': operation_id,
+                'mode': 'apply',
                 'script': 'AddNtpServersPe',
                 'config': _post_foundation_cluster_body(config, {
                     'ntp_servers_list': _post_foundation_text_list(values.get('servers') or network_settings.get('ntp_servers')),
@@ -5550,6 +5697,7 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
                     network['ip_config'] = ip_config
                 steps.append({
                     'operation': f"{operation_id}:{network['name']}",
+                    'mode': 'apply',
                     'script': 'CreateSubnetPe',
                     'config': _post_foundation_cluster_body(config, {'networks': [network]}),
                 })
@@ -6490,7 +6638,7 @@ class ExecutionJobManager:
                 total_steps = len(script_steps)
                 executable_steps = [step for step in script_steps if step.get('script')]
                 if not executable_steps:
-                    message = 'Post-foundation evidence-only plan completed. No infrastructure changes were required.'
+                    message = 'Post-foundation non-mutating checklist plan completed. No infrastructure changes were required.'
                     stdout_lines.append(message)
                     self._emit(job_id, 'stdout', message)
                     status = 'success'
@@ -6500,12 +6648,13 @@ class ExecutionJobManager:
                 for index, step in enumerate(script_steps, start=1):
                     operation_id = str(step.get('operation') or '').strip()
                     script_id = str(step.get('script') or '').strip()
+                    mode = str(step.get('mode') or 'evidence').strip()
                     percent = 50 + int((index / max(total_steps, 1)) * 40)
                     if not script_id:
-                        message = f'Post-foundation step {index}/{total_steps}: {operation_id} is evidence-only; preflight validation completed.'
+                        message = f'Post-foundation step {index}/{total_steps}: {operation_id} is {mode}; no script execution performed.'
                         stdout_lines.append(message)
                         self._emit(job_id, 'stdout', message)
-                        self._update_progress(job_id, f'Post-foundation {operation_id}', percent, 'Evidence-only step completed')
+                        self._update_progress(job_id, f'Post-foundation {operation_id}', percent, f'{mode} step completed')
                         continue
 
                     step_filename = f'{workflow}-{index:02d}-{script_id}-{job_id}.yml'
@@ -7414,9 +7563,11 @@ def health():
     ztf_info = _ztf_detect(settings['ztfPath'])
     ztf_ok = bool(ztf_info.get('compatible'))
     status  = 'healthy' if ztf_ok else 'degraded'
+    installed = _installed_build_metadata()
     return jsonify({
         'status':  status,
         'version': APP_VERSION,
+        'installed': installed,
         'ztf': ztf_info,
     }), 200 if ztf_ok else 503
 
@@ -7537,6 +7688,7 @@ def health_details():
     jobs = _job_manager.list_jobs(1000)
     binaries = _list_nkp_binaries()
     available_binaries = [item for item in binaries if item.get('exists')]
+    installed = _installed_build_metadata()
     return jsonify({
         'status':        status,
         'ztf_installed': ztf_ok,
@@ -7564,6 +7716,7 @@ def health_details():
             'default': next((item.get('name') for item in binaries if item.get('default')), None),
         },
         'version':       APP_VERSION,
+        'installed':     installed,
     }), 200 if ztf_ok else 503
 
 # ─── Auth endpoints ───────────────────────────────────────────────────────────
@@ -9593,8 +9746,10 @@ def delete_appliance_artifact(artifact_id):
 @require_role('admin', 'operator', 'viewer')
 def list_appliance_updates():
     updates = _load_appliance_updates()
+    installed = _installed_build_metadata()
     current = {
         'version': APP_VERSION,
+        'installed': installed,
         'containerImage': os.environ.get('ZTF_ORCHESTRATOR_IMAGE', ''),
         'requestPath': str(APPLIANCE_UPDATE_REQUEST_FILE),
     }

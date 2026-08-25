@@ -10,7 +10,7 @@ QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 
 | Item | Current guidance |
 | --- | --- |
-| Current release baseline | `v1.7.7` |
+| Current release baseline | `v1.7.8` |
 | Existing appliance update method | Appliance update package plus `appliance/scripts/apply-update-request.sh` |
 | Full QCOW2 appliance image | GitHub Actions artifact or durable internal artifact storage, not a GitHub Release binary |
 | GitHub Release assets | Update packages, checksums, manifests, and metadata |
@@ -108,9 +108,14 @@ checkout. The Setup page may report that source update is skipped; that is
 expected. Rebuild or pull a newer appliance image to change the bundled ZTF
 version, or configure Settings to point at a separate cloned ZTF 1.x checkout.
 
-Current in-place container update packages are produced for `v1.7.7`. Use the
+Current in-place container update packages are produced for `v1.7.8`. Use the
 offline update package workflow when upgrading an existing appliance without
 rebuilding or replacing the full AHV QCOW2 image.
+
+After applying an update, confirm **Settings > About > Installed Build** in the
+web UI. The footer only shows the base UI version; Installed Build includes the
+version tag, source ref or patch, commit, image tag, and update package metadata
+needed to distinguish patched builds.
 
 ## Secrets
 

@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.7.7
+# ZTF-Orchestrator · v1.7.8
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -169,6 +169,11 @@ easier to consume in day-to-day operations by adding:
 - Appliance operations for AHV artifact archive tracking, first-boot checks,
   NKP readiness review, ZTF compatibility mode visibility, and air-gapped
   appliance update package handling.
+- Post-cluster baseline wizards that turn operator checklists into guarded
+  plans for Prism Element, AHV/CVM security, monitoring, certificates, network,
+  and hardware baselines without embedding site-specific values.
+- Installed Build visibility so patched releases and appliance updates can be
+  identified by version tag, source ref, commit, image tag, and update package.
 - Durable job execution instead of browser-bound terminal sessions.
 - PostgreSQL-backed operational state for Docker deployments.
 - RBAC, approvals, audit logs, and validation status for governance.
@@ -451,7 +456,7 @@ YAML Studio does not execute workflows or mutate Nutanix infrastructure.
 Execution remains behind the existing workflow, approval, and confirmation
 paths.
 
-### Workflows (13 supported)
+### Workflows
 
 Each workflow detail page can generate YAML from guided fields, import an
 existing YAML/JSON config for that workflow, preview the active config, download
@@ -464,6 +469,12 @@ it, dry-run it, and submit it through the governed execution path.
 | Pod Imaging | Pod Operations |
 | Site Deploy | Infrastructure |
 | Configure Cluster | Configuration |
+| Post-Foundation Baseline | Configuration |
+| PE Monitoring Baseline | Configuration |
+| AHV Security Hardening | Configuration |
+| PE Network Baseline | Configuration |
+| PE Certificate Baseline | Configuration |
+| Hardware OOB Baseline | Configuration |
 | Deploy Prism Central | Prism Central |
 | Configure Prism Central | Prism Central |
 | Pod Config | Pod Operations |
@@ -475,7 +486,10 @@ it, dry-run it, and submit it through the governed execution path.
 | LCM Update | Lifecycle Management |
 
 Each workflow has form-based configuration, live YAML preview, and one-click
-execution with real-time terminal output.
+execution with real-time terminal output. Post-cluster baseline workflows classify
+controls as `apply`, `evidence`, `manual`, or `blocked`; only verified mappings
+execute scripts, while manual and blocked controls are recorded without mutating
+infrastructure.
 
 ### Script Library
 61 ZTF atomic scripts across 12 categories. Searchable and individually executable.
@@ -633,6 +647,12 @@ bundles capture the workflow or script name, config filename, server-computed
 config SHA-256, YAML/JSON parse result, approval/job/task references, redacted
 execution output when linked to a job, notes, and a Markdown summary. Downloads
 are ZIP bundles intended for change records, customer UAT, and handover packs.
+
+### Installed Build Traceability
+Settings > About shows the exact Installed Build for the running deployment.
+The value includes the base version tag plus source ref, commit, container image,
+and update package metadata when available. Use this field, not only the footer
+version, when confirming which patch or appliance update is installed.
 
 Use
 [`docs/sanitized-uat-evidence-record.md`](docs/sanitized-uat-evidence-record.md)

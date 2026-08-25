@@ -102,12 +102,12 @@ export const WORKFLOWS: WorkflowDef[] = [
   },
   {
     id: 'pe-security-hardening',
-    name: 'PE Security Hardening',
-    description: 'Plans Prism Element and CVM/AHV hardening controls',
+    name: 'AHV Security Hardening',
+    description: 'Plans post-cluster Prism Element, CVM, and AHV hardening controls',
     category: 'Configuration',
     icon: 'ShieldCheck',
     configFile: 'pe-security-hardening.yml',
-    details: 'Builds an approval-gated hardening plan for AIDE, high-strength password policy, SCMA schedule, SNMPv3-only mode, lockdown, and SSH access controls. Destructive or access-impacting settings remain explicitly disabled until reviewed.',
+    details: 'Builds a checklist-driven hardening plan for AIDE, high-strength password policy, SCMA schedule, SNMPv3-only mode, lockdown, and SSH access controls. Only verified mappings can apply changes; manual and blocked controls are captured as evidence without embedding site-specific values.',
   },
   {
     id: 'pe-network-baseline',

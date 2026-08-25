@@ -1,6 +1,6 @@
 # RB-003 - Upgrade and Rollback
 
-Current release marker: `v1.7.7`.
+Current release marker: `v1.7.8`.
 
 ## Metadata
 
@@ -60,7 +60,7 @@ version rollback and an operational state decision.
 ## Procedure
 
 1. Create a backup with [RB-002](RB-002-backup-restore.md).
-2. Record current version from the UI or `/health`.
+2. Record the current **Installed Build** from Settings > About or `/health`.
 3. Review release notes and compatibility notes.
 4. Stop new work by disabling schedules or pausing operator submissions.
 5. Apply the upgrade using the deployment-specific procedure.
@@ -71,8 +71,9 @@ version rollback and an operational state decision.
 
 ## Validation
 
-- `/health` reports the target version.
-- `README.md`, UI version, and package release agree for the installed build.
+- `/health` reports the target version and installed build metadata.
+- `README.md`, UI version, source ref or patch, commit, image tag, and package
+  release agree for the installed build.
 - Dashboard, Jobs, Approvals, Settings, and Audit Log load.
 - Existing state is visible.
 - No unexpected running or failed jobs appear.

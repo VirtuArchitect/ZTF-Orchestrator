@@ -19,7 +19,7 @@ manifest, package checksum, host helper output, and post-update health result.
 
 | Item | Current guidance |
 | --- | --- |
-| Current release baseline | `v1.7.7` |
+| Current release baseline | `v1.7.8` |
 | Existing appliance update method | Offline or connected appliance update package plus host-side helper |
 | Full QCOW2 appliance image | Rebuild through the appliance image workflow; do not treat an update package as a QCOW2 replacement |
 | GitHub Release assets | Update packages, checksums, manifests, and metadata |
@@ -366,9 +366,10 @@ update helper.
    sudo systemctl status ztf-orchestrator --no-pager
    ```
 
-10. Sign in to the web UI, confirm the footer or settings page reports `<version>`,
-    verify the key workflows still load, then click **Mark Applied** in
-    **Appliance Ops > Updates**.
+10. Sign in to the web UI, open **Settings > About**, and confirm
+    **Installed Build** reports the expected version tag, source ref or patch,
+    commit, image tag, and update package metadata. Verify the key workflows
+    still load, then click **Mark Applied** in **Appliance Ops > Updates**.
 
 ### Post-Upgrade State Validation and Recovery
 

@@ -9,10 +9,33 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.7 and should be moved
+Changes in this section are present on `main` after v1.7.8 and should be moved
 into the next numbered release section when the next version is cut.
 
+---
+
+## [1.7.8] - 2026-08-25
+
+### Summary
+Post-cluster configuration and installed-build traceability release. Adds a
+checklist-driven AHV security hardening wizard, keeps hardening controls
+non-mutating unless verified mappings exist, and exposes exact installed
+build/update identity in the UI and health APIs.
+
 ### Added
+- Added a sanitized post-cluster control registry for post-foundation,
+  monitoring, AHV/CVM security hardening, network, certificate, and hardware
+  baseline workflows. The registry is seeded from an operator checklist shape
+  without embedding site IPs, hostnames, domains, serial numbers, or other
+  environment-specific values.
+- Reworked the PE Security Hardening workflow into the AHV Security Hardening
+  wizard with checklist sections, risk badges, control modes, planned command
+  hints, evidence checks, and generated YAML that classifies each selected
+  control as apply, evidence, manual, or blocked.
+- Added installed build metadata to `/health`, `/api/health/details`, and the
+  Appliance Update Manager status API. Settings > About now shows Installed
+  Build, source ref/patch, commit, build date, container image, update package,
+  applied update timestamp, and a Copy Build Info action.
 - Added a documentation archive index and current-scope guidance for
   installation, appliance, and update-manager docs so historical validation
   evidence is separated from current operator procedures.
@@ -28,6 +51,9 @@ into the next numbered release section when the next version is cut.
   read-only Lifecycle v4.3 dry-run validation.
 
 ### Fixed
+- Manual post-cluster checklist controls can now be planned and recorded without
+  being treated as failed executable operations. Unsupported controls still fail
+  closed if an operator or imported YAML attempts to promote them to apply.
 - Treat standalone FCA Lifecycle submissions that are still non-terminal after
   the local status watch window as successful handoffs instead of failed
   Orchestrator jobs, while preserving terminal FCA failures as failures.
@@ -41,6 +67,12 @@ into the next numbered release section when the next version is cut.
   fields.
 
 ### Security
+- AHV/CVM hardening commands are surfaced as planned/manual controls until a
+  supported, tested executor is added. Blocked controls remain non-mutating and
+  high-risk controls retain explicit review acknowledgements.
+- Installed-build reporting redacts secrets and reports only release/build
+  identity metadata such as version, source ref, commit, image tag, and update
+  package ID.
 - Standalone FCA Run Workflow remains fail-closed until the destructive
   Lifecycle API deployment/action sequence is implemented and validated.
 

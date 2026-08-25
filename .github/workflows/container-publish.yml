@@ -48,3 +48,7 @@ jobs:
           build-args: |
             ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
             ZTF_REF=v1.5.2
+            ZTF_ORCHESTRATOR_VERSION=${{ github.ref_type == 'tag' && github.ref_name || format('sha-{0}', github.sha) }}
+            ZTF_BUILD_COMMIT=${{ github.sha }}
+            ZTF_BUILD_DATE=${{ github.event.head_commit.timestamp || github.run_id }}
+            ZTF_ORCHESTRATOR_IMAGE=ghcr.io/virtuarchitect/ztf-orchestrator:${{ github.ref_type == 'tag' && github.ref_name || github.sha }}

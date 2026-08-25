@@ -31,6 +31,8 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $repoRoot
 
 $imageTag = "${ImageRepository}:${Version}"
+$buildCommit = (git rev-parse HEAD).Trim()
+$buildDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 $imageTar = Join-Path $repoRoot "ztf-orchestrator-$Version-image.tar"
 $zipPath = Join-Path $repoRoot "ztf-update-$Version.zip"
 $releaseNotes = Join-Path $repoRoot "release-notes-$Version.txt"
@@ -48,7 +50,13 @@ Invoke-Step "Build frontend" {
 
 Invoke-Step "Build container image" {
   $env:DOCKER_BUILDKIT = "0"
-  docker build --build-arg "ZTF_REF=$ZtfRef" -t $imageTag .
+  docker build `
+    --build-arg "ZTF_REF=$ZtfRef" `
+    --build-arg "ZTF_ORCHESTRATOR_VERSION=$Version" `
+    --build-arg "ZTF_BUILD_COMMIT=$buildCommit" `
+    --build-arg "ZTF_BUILD_DATE=$buildDate" `
+    --build-arg "ZTF_ORCHESTRATOR_IMAGE=$imageTag" `
+    -t $imageTag .
 }
 
 Invoke-Step "Smoke container health" {
