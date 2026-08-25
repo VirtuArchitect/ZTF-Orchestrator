@@ -9,8 +9,28 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.9 and should be moved
+Changes in this section are present on `main` after v1.7.10 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.10] - 2026-08-25
+
+### Summary
+Appliance runtime sanitization follow-up for the post-cluster hardening release.
+Keeps repository meta-docs out of the container image and removes lab-shaped
+demo addresses from the bundled demo metadata.
+
+### Changed
+- Excluded root repository guidance and README files from the appliance Docker
+  context because they are not required at runtime.
+- Replaced demo-mode cluster, Prism, and DNS address examples with reserved
+  documentation hostnames before rebuilding the shipped frontend bundle.
+
+### Security
+- Verified the appliance image does not include repository meta-docs, source,
+  tests, legacy static assets, generated output folders, release artifacts, or
+  local recovery notes.
 
 ---
 

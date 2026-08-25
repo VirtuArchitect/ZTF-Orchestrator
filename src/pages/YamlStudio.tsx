@@ -52,10 +52,10 @@ interface BaselineValues {
 }
 
 const BASELINE_DEFAULTS: BaselineValues = {
-  clusterIp: '10.20.30.200',
+  clusterIp: 'pe-demo.example.invalid',
   clusterName: 'DEV_LAB',
   peCredential: 'pe_user',
-  dnsServers: '10.20.30.10\n10.20.30.11',
+  dnsServers: 'dns1.example.invalid\ndns2.example.invalid',
   ntpServers: '0.pool.ntp.org\n1.pool.ntp.org',
   enablePulse: true,
   haReservation: false,
@@ -330,12 +330,12 @@ export default function YamlStudio() {
                 <Field label="Replication Factor" type="number" value={baseline.replicationFactor} onChange={value => updateBaseline({ replicationFactor: Number(value) })} />
                 <Field label="Subnet Name" value={baseline.subnetName} onChange={value => updateBaseline({ subnetName: value })} />
                 <Field label="VLAN ID" type="number" value={baseline.vlanId} onChange={value => updateBaseline({ vlanId: Number(value) })} />
-                <Field label="Network IP" value={baseline.networkIp} onChange={value => updateBaseline({ networkIp: value })} placeholder="10.20.30.0" />
+                <Field label="Network IP" value={baseline.networkIp} onChange={value => updateBaseline({ networkIp: value })} placeholder="demo-network.example.invalid" />
                 <Field label="Prefix" type="number" value={baseline.prefix} onChange={value => updateBaseline({ prefix: Number(value) })} />
-                <Field label="Gateway" value={baseline.gateway} onChange={value => updateBaseline({ gateway: value })} placeholder="10.20.30.1" />
+                <Field label="Gateway" value={baseline.gateway} onChange={value => updateBaseline({ gateway: value })} placeholder="demo-gateway.example.invalid" />
                 <TextArea label="DNS Servers" value={baseline.dnsServers} onChange={value => updateBaseline({ dnsServers: value })} />
                 <TextArea label="NTP Servers" value={baseline.ntpServers} onChange={value => updateBaseline({ ntpServers: value })} />
-                <TextArea label="IP Pools" value={baseline.ipPools} onChange={value => updateBaseline({ ipPools: value })} placeholder="10.20.30.50-10.20.30.80" />
+                <TextArea label="IP Pools" value={baseline.ipPools} onChange={value => updateBaseline({ ipPools: value })} placeholder="demo-pool-start.example.invalid-demo-pool-end.example.invalid" />
                 <div className="grid gap-2">
                   <Toggle label="Pulse" checked={baseline.enablePulse} onChange={value => updateBaseline({ enablePulse: value })} />
                   <Toggle label="HA Reservation" checked={baseline.haReservation} onChange={value => updateBaseline({ haReservation: value })} />

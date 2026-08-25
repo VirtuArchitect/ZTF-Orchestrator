@@ -1,6 +1,6 @@
 {
   "name": "nutanix-zerotouch-framework-ui",
-  "version": "1.7.9",
+  "version": "1.7.10",
   "private": true,
   "type": "module",
   "author": "ZTF-Orchestrator maintainers",
