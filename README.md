@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.7.8
+# ZTF-Orchestrator · v1.7.9
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -933,7 +933,7 @@ npm run build
 
 ## Maintainer
 
-ZTF-Orchestrator is developed and maintained by **John Goulden**.
+ZTF-Orchestrator is developed and maintained by **ZTF-Orchestrator maintainers**.
 
 ---
 

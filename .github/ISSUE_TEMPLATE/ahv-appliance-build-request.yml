@@ -29,7 +29,7 @@ body:
     attributes:
       label: Source ref
       description: Git branch, tag, or commit to bake into the appliance source checkout.
-      placeholder: v1.7.8
+      placeholder: v1.7.9
       value: main
     validations:
       required: true
@@ -38,7 +38,7 @@ body:
     attributes:
       label: Container image version
       description: ZTF-Orchestrator container tag to preload and run.
-      placeholder: v1.7.8
+      placeholder: v1.7.9
       value: latest
     validations:
       required: true
