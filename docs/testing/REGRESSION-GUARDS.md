@@ -1,6 +1,6 @@
 # Regression Guards
 
-Current release marker: `v1.7.9`.
+Current release marker: `v1.7.10`.
 
 ZTF-Orchestrator uses release-integrity tests to prevent critical operational
 documentation from drifting out of the repository.
