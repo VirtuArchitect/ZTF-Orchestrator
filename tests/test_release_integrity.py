@@ -55,6 +55,10 @@ def test_release_version_metadata_is_consistent():
     assert package_lock['version'] == expected
     assert package_lock['packages']['']['version'] == expected
     assert f"export const APP_VERSION = '{expected}'" in version_ts
+    settings_tsx = (ROOT / 'src' / 'pages' / 'Settings.tsx').read_text(encoding='utf-8')
+    assert 'Installed Build' in settings_tsx
+    assert 'Copy Build Info' in settings_tsx
+    assert 'installedIdentity' in settings_tsx
     assert readme.startswith(f'# ZTF-Orchestrator · v{expected}')
     assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
     assert f'## [{expected}]' in changelog
@@ -260,12 +264,17 @@ def test_post_foundation_workflows_are_guarded_and_environment_neutral():
     workflow_detail = (ROOT / 'src' / 'pages' / 'WorkflowDetail.tsx').read_text(encoding='utf-8')
     form = (ROOT / 'src' / 'components' / 'forms' / 'PostFoundationWorkflowForm.tsx').read_text(encoding='utf-8')
     data = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
+    registry = (ROOT / 'src' / 'postClusterControls.ts').read_text(encoding='utf-8')
 
     assert workflow_ids <= frontend_ids
     assert workflow_ids <= server.ALLOWED_WORKFLOWS
     assert workflow_ids <= server.DEFAULT_APPROVAL_REQUIRED_WORKFLOWS
     assert 'PostFoundationWorkflowForm' in workflow_detail
     assert 'orchestrator_managed_plan' in form
+    assert 'POST_CLUSTER_CONTROLS' in registry
+    assert 'AHV Security Hardening' in data
+    assert 'mode: \'blocked\'' in registry
+    assert 'mode: \'manual\'' in registry
     assert 'No infrastructure changes were' in (ROOT / 'server.py').read_text(encoding='utf-8')
 
     forbidden_environment_fragments = [
@@ -278,8 +287,9 @@ def test_post_foundation_workflows_are_guarded_and_environment_neutral():
         '6FV',
         'CFV',
         'HCV',
+        'infra.',
     ]
-    implementation_text = '\n'.join([data, workflow_detail, form])
+    implementation_text = '\n'.join([data, workflow_detail, form, registry])
     for fragment in forbidden_environment_fragments:
         assert fragment not in implementation_text
 

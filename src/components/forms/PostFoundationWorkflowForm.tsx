@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { ClipboardCheck } from 'lucide-react'
 import type { ConnectionProfile, WorkflowDef } from '../../types'
 import { toYaml } from '../../utils/yaml'
+import { POST_CLUSTER_CONTROLS, POST_CLUSTER_SECTIONS } from '../../postClusterControls'
+import type { PostClusterControl } from '../../postClusterControls'
 
 interface Props {
   workflow: WorkflowDef
@@ -36,57 +38,11 @@ interface OperationValues {
   vmNetworks: string
 }
 
-const WORKFLOW_OPERATIONS: Record<string, Array<{ id: string; label: string; highRisk?: boolean }>> = {
-  'post-foundation-baseline': [
-    { id: 'health_check', label: 'Health check' },
-    { id: 'register_prism_central', label: 'Register with Prism Central' },
-    { id: 'accept_eula', label: 'Accept EULA' },
-    { id: 'update_pulse', label: 'Update Pulse' },
-    { id: 'ha_reservation', label: 'HA reservation' },
-    { id: 'storage_containers', label: 'Storage containers' },
-    { id: 'data_services_ip', label: 'Data services IP' },
-    { id: 'dns_servers', label: 'DNS servers' },
-    { id: 'ntp_servers', label: 'NTP servers' },
-  ],
-  'pe-monitoring-baseline': [
-    { id: 'ncc_health_check', label: 'NCC health evidence' },
-    { id: 'smtp', label: 'SMTP server' },
-    { id: 'alert_email_contacts', label: 'Alert email contacts' },
-    { id: 'snmpv3', label: 'SNMPv3' },
-    { id: 'syslog', label: 'Syslog' },
-  ],
-  'pe-security-hardening': [
-    { id: 'cvm_aide', label: 'CVM AIDE' },
-    { id: 'ahv_aide', label: 'AHV AIDE' },
-    { id: 'high_strength_passwords', label: 'High-strength password policy' },
-    { id: 'scma_schedule', label: 'SCMA schedule' },
-    { id: 'snmpv3_only', label: 'SNMPv3-only mode' },
-    { id: 'cluster_lockdown', label: 'Cluster lockdown', highRisk: true },
-    { id: 'ssh_access_controls', label: 'SSH access controls', highRisk: true },
-  ],
-  'pe-network-baseline': [
-    { id: 'vm_networks', label: 'VM networks' },
-    { id: 'virtual_switch_descriptions', label: 'Virtual switch descriptions' },
-    { id: 'uplink_intent', label: 'Uplink intent' },
-    { id: 'lacp_sequence', label: 'LACP sequence', highRisk: true },
-  ],
-  'pe-certificate-baseline': [
-    { id: 'generate_csr', label: 'Generate CSR' },
-    { id: 'import_certificate', label: 'Import signed certificate', highRisk: true },
-    { id: 'validate_certificate', label: 'Validate certificate' },
-  ],
-  'hardware-out-of-band-baseline': [
-    { id: 'bmc_credential_rotation', label: 'BMC credential rotation', highRisk: true },
-    { id: 'bios_secure_boot_intent', label: 'BIOS/Secure Boot intent', highRisk: true },
-    { id: 'hardware_inventory_evidence', label: 'Hardware inventory evidence' },
-  ],
-}
-
 function defaultOperations(workflowId: string): Operation[] {
-  return (WORKFLOW_OPERATIONS[workflowId] || []).map(item => ({
+  return (POST_CLUSTER_CONTROLS[workflowId] || []).map(item => ({
     id: item.id,
     enabled: false,
-    reviewed: !item.highRisk,
+    reviewed: !item.requiresReview,
   }))
 }
 
@@ -149,15 +105,22 @@ function operationValues(id: string, values: OperationValues) {
 }
 
 function enabledOperations(workflowId: string, operations: Operation[], values: OperationValues) {
-  const metadata = new Map((WORKFLOW_OPERATIONS[workflowId] || []).map(item => [item.id, item]))
+  const metadata = new Map((POST_CLUSTER_CONTROLS[workflowId] || []).map(item => [item.id, item]))
   return operations
     .filter(item => item.enabled)
     .map(item => {
+      const control = metadata.get(item.id)
       const opValues = operationValues(item.id, values)
       return {
         id: item.id,
+        mode: control?.mode || 'manual',
+        section: control?.section,
+        category: control?.category,
+        entry_point: control?.entryPoint,
         reviewed: item.reviewed,
-        high_risk: Boolean(metadata.get(item.id)?.highRisk),
+        high_risk: control?.risk === 'high',
+        ...(control?.command ? { command: control.command } : {}),
+        ...(control?.evidenceCommand ? { evidence_command: control.evidenceCommand } : {}),
         ...(opValues ? { values: opValues } : {}),
       }
     })
@@ -267,18 +230,25 @@ export default function PostFoundationWorkflowForm({ workflow, onYamlChange }: P
     setOperationInputs(prev => ({ ...prev, [key]: value }))
   }
 
-  const operationMetadata = WORKFLOW_OPERATIONS[workflow.id] || []
+  const operationMetadata = POST_CLUSTER_CONTROLS[workflow.id] || []
+  const groupedControls = POST_CLUSTER_SECTIONS
+    .map(section => ({
+      section,
+      controls: operationMetadata.filter(item => item.section === section),
+    }))
+    .filter(group => group.controls.length)
 
   return (
     <div className="space-y-4">
       <div className="card">
         <div className="flex items-center gap-2 mb-3">
           <ClipboardCheck size={16} className="text-nutanix-cyan" />
-          <h3 className="font-semibold text-gray-100">Post-Foundation Plan</h3>
+          <h3 className="font-semibold text-gray-100">Post-Cluster Baseline</h3>
         </div>
         <p className="text-sm text-gray-400 mb-4">
-          Build a neutral plan for this workflow. Values are supplied at run time; no site names, IPs,
-          serial numbers, passwords, or environment-specific settings are embedded in the template.
+          Build a neutral checklist-driven plan for this workflow. Values are supplied at run time;
+          no site names, IPs, serial numbers, passwords, domains, or environment-specific settings
+          are embedded in the template.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -293,35 +263,32 @@ export default function PostFoundationWorkflowForm({ workflow, onYamlChange }: P
 
       <div className="card">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-100">Operations</h3>
+          <h3 className="font-semibold text-gray-100">Checklist Controls</h3>
           <span className="text-xs text-gray-500">{operations.filter(item => item.enabled).length} enabled</span>
         </div>
-        <div className="space-y-2">
-          {operationMetadata.map(item => {
-            const state = operations.find(operation => operation.id === item.id)
-            if (!state) return null
-            return (
-              <div key={item.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-lg border border-border bg-surface/60 px-3 py-2">
-                <label className="flex items-center gap-2 text-sm text-gray-200">
-                  <input
-                    type="checkbox"
-                    checked={state.enabled}
-                    onChange={event => updateOperation(item.id, { enabled: event.target.checked })}
-                  />
-                  <span>{item.label}</span>
-                  {item.highRisk && <span className="badge badge-red text-[10px]">high risk</span>}
-                </label>
-                <label className="flex items-center gap-2 text-xs text-gray-400">
-                  <input
-                    type="checkbox"
-                    checked={state.reviewed}
-                    onChange={event => updateOperation(item.id, { reviewed: event.target.checked })}
-                  />
-                  Reviewed
-                </label>
+        <div className="space-y-4">
+          {groupedControls.map(group => (
+            <div key={group.section} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">{group.section}</h4>
+                <div className="h-px flex-1 bg-border" />
               </div>
-            )
-          })}
+              {group.controls.map(item => {
+                const state = operations.find(operation => operation.id === item.id)
+                if (!state) return null
+                return (
+                  <ChecklistControl
+                    key={item.id}
+                    control={item}
+                    enabled={state.enabled}
+                    reviewed={state.reviewed}
+                    onEnabledChange={enabled => updateOperation(item.id, { enabled })}
+                    onReviewedChange={reviewed => updateOperation(item.id, { reviewed })}
+                  />
+                )
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -360,9 +327,93 @@ export default function PostFoundationWorkflowForm({ workflow, onYamlChange }: P
       <div className="p-3 rounded-lg bg-blue-900/10 border border-blue-700/20">
         <p className="text-xs text-blue-300">
           This workflow is saved as <code className="font-mono bg-blue-900/30 px-1 rounded">{workflow.configFile}</code>.
-          Dry Run validates the plan. Run Workflow executes mapped ZTF script steps sequentially and stops on the first failed operation.
+          Dry Run validates the plan. Run Workflow applies only verified mappings; manual, blocked, and
+          evidence-only controls are recorded without mutating infrastructure.
         </p>
       </div>
+    </div>
+  )
+}
+
+function ChecklistControl({
+  control,
+  enabled,
+  reviewed,
+  onEnabledChange,
+  onReviewedChange,
+}: {
+  control: PostClusterControl
+  enabled: boolean
+  reviewed: boolean
+  onEnabledChange: (value: boolean) => void
+  onReviewedChange: (value: boolean) => void
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-surface/60 px-3 py-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <label className="flex items-start gap-2 text-sm text-gray-200">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={enabled}
+            onChange={event => onEnabledChange(event.target.checked)}
+          />
+          <span>
+            <span className="font-medium text-gray-100">{control.label}</span>
+            <span className="mt-1 block text-xs leading-relaxed text-gray-400">{control.description}</span>
+            <span className="mt-2 flex flex-wrap gap-1.5">
+              <span className="badge badge-gray text-[10px]">{control.category}</span>
+              <span className="badge badge-gray text-[10px]">{control.entryPoint}</span>
+              <ModeBadge mode={control.mode} />
+              {control.risk && <span className={control.risk === 'high' ? 'badge badge-red text-[10px]' : 'badge badge-yellow text-[10px]'}>{control.risk} risk</span>}
+            </span>
+          </span>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-gray-400 md:pt-1">
+          <input
+            type="checkbox"
+            checked={reviewed}
+            disabled={!control.requiresReview}
+            onChange={event => onReviewedChange(event.target.checked)}
+          />
+          Reviewed
+        </label>
+      </div>
+      {(control.command || control.evidenceCommand) && (
+        <div className="mt-3 grid grid-cols-1 gap-2 lg:grid-cols-2">
+          {control.command && (
+            <CodeHint label="Planned command" value={control.command} />
+          )}
+          {control.evidenceCommand && (
+            <CodeHint label="Evidence check" value={control.evidenceCommand} />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ModeBadge({ mode }: { mode: PostClusterControl['mode'] }) {
+  const label = {
+    apply: 'apply',
+    evidence: 'evidence',
+    manual: 'manual',
+    blocked: 'blocked',
+  }[mode]
+  const tone = {
+    apply: 'badge-green',
+    evidence: 'badge-blue',
+    manual: 'badge-yellow',
+    blocked: 'badge-red',
+  }[mode]
+  return <span className={`badge ${tone} text-[10px]`}>{label}</span>
+}
+
+function CodeHint({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-border bg-background/60 p-2">
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">{label}</div>
+      <code className="block break-words text-xs text-gray-300">{value}</code>
     </div>
   )
 }

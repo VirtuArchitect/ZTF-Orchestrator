@@ -51,6 +51,25 @@ interface PlatformHealth {
   }
   ztf_installed?: boolean
   version?: string
+  installed?: InstalledBuild
+}
+
+interface InstalledBuild {
+  version?: string
+  versionTag?: string
+  installedIdentity?: string
+  sourceRef?: string
+  commit?: string
+  buildDate?: string
+  containerImage?: string
+  updatePackageId?: string
+  appliedUpdate?: {
+    version?: string
+    sourceRef?: string
+    releaseUrl?: string
+    packageId?: string
+    appliedAt?: string
+  }
 }
 
 interface DatabaseBackup {
@@ -354,6 +373,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'runtime' | 'storage' | 'connections' | 'governance' | 'notifications' | 'about'>('runtime')
   const [copied, setCopied] = useState(false)
+  const [copiedBuild, setCopiedBuild] = useState(false)
   const [health, setHealth] = useState<PlatformHealth | null>(null)
   const [healthLoading, setHealthLoading] = useState(false)
   const [backups, setBackups] = useState<DatabaseBackup[]>([])
@@ -372,6 +392,8 @@ export default function Settings() {
   const isAdmin = user?.role === 'admin'
   const canTestConnections = user?.role === 'admin' || user?.role === 'operator'
   const storageBackend = health?.storage || backupStorage
+  const installed = health?.installed
+  const installedIdentity = installed?.installedIdentity || `v${health?.version || APP_VERSION}`
 
   useEffect(() => {
     apiFetch('/api/settings').then(r => r.json()).then(data => {
@@ -499,6 +521,23 @@ export default function Settings() {
     await navigator.clipboard.writeText(profileYaml(activeProfile))
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
+  }
+
+  const copyInstalledBuild = async () => {
+    const lines = [
+      `Installed Build: ${installedIdentity}`,
+      `UI Version: ${APP_VERSION}`,
+      installed?.versionTag ? `Version Tag: ${installed.versionTag}` : '',
+      installed?.sourceRef ? `Source Ref: ${installed.sourceRef}` : '',
+      installed?.commit ? `Commit: ${installed.commit}` : '',
+      installed?.buildDate ? `Build Date: ${installed.buildDate}` : '',
+      installed?.containerImage ? `Container Image: ${installed.containerImage}` : '',
+      installed?.updatePackageId ? `Update Package: ${installed.updatePackageId}` : '',
+      installed?.appliedUpdate?.appliedAt ? `Applied Update At: ${formatDate(installed.appliedUpdate.appliedAt)}` : '',
+    ].filter(Boolean).join('\n')
+    await navigator.clipboard.writeText(lines)
+    setCopiedBuild(true)
+    setTimeout(() => setCopiedBuild(false), 1500)
   }
 
   const connectionTestKey = (target: ConnectionTestTarget) => `${activeProfile?.id || 'profile'}:${target}`
@@ -772,7 +811,7 @@ export default function Settings() {
                   <ReadOnlyField label="Audit Retention" value={`${health?.retention?.auditDays ?? 90} days`} />
                   <ReadOnlyField label="Execution Retention" value={`${health?.retention?.executionDays ?? 180} days`} />
                   <ReadOnlyField label="ZTF Installed" value={health?.ztf_installed ? 'yes' : 'no'} />
-                  <ReadOnlyField label="Version" value={health?.version || APP_VERSION} />
+                  <ReadOnlyField label="Installed Build" value={installedIdentity} mono />
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
                   Change storage and retention values with environment variables, then restart the service.
@@ -1184,20 +1223,57 @@ export default function Settings() {
 
         {activeTab === 'about' && (
           <div className="card bg-nutanix-blue/5 border-nutanix-blue/20">
-            <h3 className="font-semibold text-gray-100 mb-2">About ZeroTouch Enterprise Orchestrator</h3>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              ZeroTouch Enterprise Orchestrator is an open-source operational interface for the{' '}
-              <a
-                href="https://github.com/nutanixdev/zerotouch-framework"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-nutanix-cyan hover:underline"
-              >
-                Nutanix ZeroTouch Framework
-              </a>.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-500">
-              <div>UI Version: <span className="text-gray-300">{APP_VERSION}</span></div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-100 mb-2">About ZeroTouch Enterprise Orchestrator</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  ZeroTouch Enterprise Orchestrator is an open-source operational interface for the{' '}
+                  <a
+                    href="https://github.com/nutanixdev/zerotouch-framework"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-nutanix-cyan hover:underline"
+                  >
+                    Nutanix ZeroTouch Framework
+                  </a>.
+                </p>
+              </div>
+              <button onClick={loadHealth} disabled={healthLoading} className="btn-secondary gap-1.5">
+                <RefreshCw size={14} className={healthLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+            </div>
+            <div className="mt-5 rounded-lg border border-border bg-background/50 p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Installed Build</div>
+                  <div className="mt-1 break-all font-mono text-sm text-gray-100">{installedIdentity}</div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Use this value to distinguish patch and update builds that share the same UI version.
+                  </p>
+                </div>
+                <button onClick={copyInstalledBuild} className="btn-secondary gap-1.5">
+                  <Copy size={14} />
+                  {copiedBuild ? 'Copied' : 'Copy Build Info'}
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <ReadOnlyField label="UI Version" value={APP_VERSION} />
+                <ReadOnlyField label="Version Tag" value={installed?.versionTag || `v${APP_VERSION}`} mono />
+                <ReadOnlyField label="Source Ref / Patch" value={installed?.sourceRef || 'not reported'} mono />
+                <ReadOnlyField label="Commit" value={installed?.commit || 'not reported'} mono />
+                <ReadOnlyField label="Build Date" value={installed?.buildDate || 'not reported'} mono />
+                <ReadOnlyField label="Update Package" value={installed?.updatePackageId || installed?.appliedUpdate?.packageId || 'not reported'} mono />
+                <ReadOnlyField label="Applied Update" value={formatDate(installed?.appliedUpdate?.appliedAt)} />
+                <ReadOnlyField label="Container Image" value={installed?.containerImage || 'not reported'} mono />
+              </div>
+              {installed?.appliedUpdate?.releaseUrl && (
+                <a href={installed.appliedUpdate.releaseUrl} target="_blank" rel="noreferrer" className="btn-secondary mt-4 inline-flex">
+                  Open Applied Release
+                </a>
+              )}
+            </div>
+            <div className="mt-5 grid grid-cols-1 gap-3 text-xs text-gray-500 md:grid-cols-2">
               <div>ZTF Supported: <span className="text-gray-300">AOS 6.5+, PC 2022.6+</span></div>
               <div>Maintainer: <span className="text-gray-300">John Goulden</span></div>
               <div>Project: <span className="text-gray-300">ZTF-Orchestrator</span></div>

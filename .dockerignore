@@ -20,8 +20,10 @@ yarn-error.log*
 playwright-report
 test-results
 release-artifacts
+outputs
 update-artifacts
 appliance-update-*.md
+fca-coredns-ikat-workaround-guide.md
 
 docs
 appliance
