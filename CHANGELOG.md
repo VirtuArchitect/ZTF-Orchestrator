@@ -9,8 +9,34 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.10 and should be moved
+Changes in this section are present on `main` after v1.7.11 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.11] - 2026-08-26
+
+### Summary
+Patch release for the Standalone FCA site deployment form. Adds the missing
+node-level IPMI and CVM memory fields and publishes a versioned appliance update
+baseline for operators.
+
+### Fixed
+- Added **IPMI IP** and **CVM RAM (GB)** controls to the
+  `site-deploy-standalone-fca` node row so Site Deploy matches the Standalone
+  FCA cluster-create node inputs.
+- Preserved imported `cvm_ram_gb` values and generated node-level
+  `ipmi_ip` / `cvm_ram_gb` YAML for the standalone FCA site deployment payload.
+
+### Changed
+- Updated runtime, demo, operator documentation, runbook, appliance, and issue
+  template release markers to `v1.7.11`.
+- Rebuilt the tracked production frontend bundle for the updated workflow UI.
+
+### Security
+- No new execution path or infrastructure mutation behavior was added. The
+  change is limited to frontend input capture, YAML generation, and release
+  metadata alignment.
 
 ---
 
