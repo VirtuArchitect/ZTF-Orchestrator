@@ -2,6 +2,9 @@ import type { ExecutionJobStatus } from '../types'
 
 export const STANDALONE_FCA_HANDOFF_WORKFLOWS = new Set([
   'cluster-create-standalone-fca',
+  'imaging-only-standalone-fca',
+  'imaging-standalone-fca',
+  'site-deploy-standalone-fca',
 ])
 
 export function isStandaloneFcaHandoff(workflow: string | undefined, status: string | undefined) {

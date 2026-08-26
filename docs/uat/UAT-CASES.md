@@ -1,6 +1,6 @@
 # UAT Cases
 
-Current release marker: `v1.7.11`.
+Current release marker: `v1.7.12`.
 
 | ID | Case | Required result | Evidence |
 |---|---|---|---|

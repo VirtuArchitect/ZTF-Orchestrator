@@ -9,8 +9,34 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.11 and should be moved
+Changes in this section are present on `main` after v1.7.12 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.7.12] - 2026-08-26
+
+### Summary
+Patch release for standalone FCA handoff labeling and dashboard navigation.
+Keeps accepted Lifecycle submissions visibly distinct from completed cluster or
+imaging work across all standalone FCA workflows.
+
+### Fixed
+- Labeled successful standalone FCA durable jobs as **FCA handoff accepted** for
+  cluster create, imaging only, pod imaging, and site deployment workflows.
+- Updated frontend execution status helpers so Jobs, Executions, and run modals
+  show handoff wording for all standalone FCA workflows.
+- Made the top-left ZeroTouch brand link navigate back to Dashboard Overview.
+
+### Changed
+- Updated runtime, demo, operator documentation, runbook, appliance, and issue
+  template release markers to `v1.7.12`.
+- Rebuilt the tracked production frontend bundle for the updated navigation and
+  workflow status behavior.
+
+### Security
+- No new infrastructure mutation behavior was added. Standalone FCA workflows
+  still require the exact operator acknowledgement before Lifecycle submission.
 
 ---
 

@@ -1,6 +1,6 @@
 # Limitations
 
-Current release marker: `v1.7.11`.
+Current release marker: `v1.7.12`.
 
 This document records current product and validation limits that matter for
 operator-controlled or production-assessable use.
