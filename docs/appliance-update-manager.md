@@ -19,7 +19,7 @@ manifest, package checksum, host helper output, and post-update health result.
 
 | Item | Current guidance |
 | --- | --- |
-| Current release baseline | `v1.7.11` |
+| Current release baseline | `v1.7.12` |
 | Existing appliance update method | Offline or connected appliance update package plus host-side helper |
 | Full QCOW2 appliance image | Rebuild through the appliance image workflow; do not treat an update package as a QCOW2 replacement |
 | GitHub Release assets | Update packages, checksums, manifests, and metadata |

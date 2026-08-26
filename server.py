@@ -70,7 +70,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.11'
+APP_VERSION = '1.7.12'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
@@ -7084,7 +7084,7 @@ class ExecutionJobManager:
         job['returnCode'] = return_code
         job['finishedAt'] = now
         job['updatedAt'] = now
-        if status == 'success' and job.get('workflow') == STANDALONE_FCA_WORKFLOW:
+        if status == 'success' and job.get('workflow') in STANDALONE_FCA_WORKFLOWS:
             phase, percent, detail = (
                 'FCA handoff accepted',
                 100,

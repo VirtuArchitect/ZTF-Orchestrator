@@ -111,11 +111,24 @@ export default function Sidebar() {
     )}>
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-border flex-shrink-0">
-        {sidebarOpen ? (
-          <BrandLogo className="h-12 w-52" />
-        ) : (
-          <BrandLogo variant="mark" className="w-8 h-8 flex-shrink-0" />
-        )}
+        <Link
+          to="/"
+          aria-label="Dashboard Overview"
+          title="Dashboard Overview"
+          onClick={() => {
+            if (window.innerWidth < 768 && sidebarOpen) toggleSidebar()
+          }}
+          className={clsx(
+            'inline-flex items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nutanix-blue',
+            sidebarOpen ? 'h-12 w-52' : 'h-10 w-10 justify-center'
+          )}
+        >
+          {sidebarOpen ? (
+            <BrandLogo className="h-12 w-52" />
+          ) : (
+            <BrandLogo variant="mark" className="w-8 h-8 flex-shrink-0" />
+          )}
+        </Link>
       </div>
 
       {/* Status indicator */}

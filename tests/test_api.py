@@ -3079,25 +3079,32 @@ def test_standalone_fca_success_job_is_labelled_as_handoff(client, auth_headers,
         'fca_ip: 192.0.2.122\n'
         'fca_credential: foundation_central\n'
     )
-    resp = client.post('/api/jobs',
-                       json={'workflow': 'cluster-create-standalone-fca',
-                             'configContent': yaml_body,
-                             'configFile': 'create_fca_cluster.yml',
-                             'destructiveConfirmation': 'RUN STANDALONE-FCA cluster-create-standalone-fca'},
-                       headers=auth_headers)
-    assert resp.status_code == 202
-    job_id = resp.get_json()['id']
+    workflows = {
+        'cluster-create-standalone-fca': 'create_fca_cluster.yml',
+        'imaging-only-standalone-fca': 'imaging_only_fca.yml',
+        'imaging-standalone-fca': 'pod-deploy-fca.yml',
+        'site-deploy-standalone-fca': 'sites-deploy-fca.yml',
+    }
+    for workflow, config_file in workflows.items():
+        resp = client.post('/api/jobs',
+                           json={'workflow': workflow,
+                                 'configContent': yaml_body,
+                                 'configFile': config_file,
+                                 'destructiveConfirmation': f'RUN STANDALONE-FCA {workflow}'},
+                           headers=auth_headers)
+        assert resp.status_code == 202
+        job_id = resp.get_json()['id']
 
-    job = None
-    for _ in range(30):
-        job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
-        if job['status'] == 'success':
-            break
-        time.sleep(0.05)
+        job = None
+        for _ in range(30):
+            job = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+            if job['status'] == 'success':
+                break
+            time.sleep(0.05)
 
-    assert job['status'] == 'success'
-    assert job['progress']['phase'] == 'FCA handoff accepted'
-    assert 'Monitor Foundation Central' in job['progress']['detail']
+        assert job['status'] == 'success'
+        assert job['progress']['phase'] == 'FCA handoff accepted'
+        assert 'Monitor Foundation Central' in job['progress']['detail']
 
 
 def test_failed_job_records_diagnostics_and_likely_fix(client, auth_headers, monkeypatch):
