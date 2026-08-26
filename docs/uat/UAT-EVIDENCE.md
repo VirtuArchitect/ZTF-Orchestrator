@@ -1,6 +1,6 @@
 # UAT Evidence
 
-Current release marker: `v1.7.10`.
+Current release marker: `v1.7.11`.
 
 Each controlled UAT record should capture:
 

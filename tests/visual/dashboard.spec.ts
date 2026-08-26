@@ -390,6 +390,13 @@ test('remaining standalone FCA workflows emit standalone config keys', async ({ 
     await page.locator('input[placeholder="optional connection extId"]').fill('connection-1')
     await page.locator('input[placeholder="optional image extId"]').nth(0).fill('aos-image')
     await page.locator('input[placeholder="optional image extId"]').nth(1).fill('ahv-image')
+    if (workflow.path === '/workflows/site-deploy-standalone-fca') {
+      await expect(page.getByText('IPMI IP')).toBeVisible()
+      await expect(page.getByText('CVM RAM (GB)')).toBeVisible()
+      const ipmiInput = page.locator('input[placeholder="10.0.0.13"]').last()
+      await ipmiInput.fill('192.0.2.213')
+      await expect(ipmiInput).toHaveValue('192.0.2.213')
+    }
     await page.getByRole('button', { name: 'YAML Preview' }).click()
 
     await expect(page.getByText(workflow.file, { exact: true })).toBeVisible()
@@ -400,6 +407,10 @@ test('remaining standalone FCA workflows emit standalone config keys', async ({ 
     await expect(page.getByText('connection_ext_id: connection-1')).toBeVisible()
     await expect(page.getByText('aos_image_ext_id: aos-image')).toBeVisible()
     await expect(page.getByText('hypervisor_image_ext_id: ahv-image')).toBeVisible()
+    if (workflow.path === '/workflows/site-deploy-standalone-fca') {
+      await expect(page.getByText('ipmi_ip: 192.0.2.213')).toBeVisible()
+      await expect(page.getByText('cvm_ram_gb: 12')).toBeVisible()
+    }
   }
 })
 

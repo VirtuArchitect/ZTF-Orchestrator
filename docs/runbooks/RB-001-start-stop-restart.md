@@ -1,6 +1,6 @@
 # RB-001 - Start, Stop, Restart
 
-Current release marker: `v1.7.10`.
+Current release marker: `v1.7.11`.
 
 ## Metadata
 

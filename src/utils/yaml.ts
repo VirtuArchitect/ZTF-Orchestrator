@@ -279,6 +279,7 @@ export function buildSiteDeployYaml(cfg: {
         ipmiIp?: string
         hostname?: string
         cvmVlanId?: number
+        cvmRamGb?: number
       }>
     }>
   }>
@@ -307,6 +308,7 @@ export function buildSiteDeployYaml(cfg: {
         ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
         ...(n.hostname ? { hypervisor_hostname: n.hostname } : {}),
         ...(n.cvmVlanId ? { cvm_vlan_id: n.cvmVlanId } : {}),
+        ...(n.cvmRamGb ? { cvm_ram_gb: n.cvmRamGb } : {}),
       })),
     })),
   }))

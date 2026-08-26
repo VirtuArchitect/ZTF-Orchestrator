@@ -6,7 +6,7 @@ import TagInput from './TagInput'
 import type { ConnectionProfile } from '../../types'
 
 interface Node {
-  nodeSerial: string; cvmIp: string; hostIp: string; ipmiIp: string; hostname: string; cvmVlanId: string
+  nodeSerial: string; cvmIp: string; hostIp: string; ipmiIp: string; hostname: string; cvmVlanId: string; cvmRamGb: number
 }
 interface Cluster {
   clusterName: string; clusterVip: string; redundancyFactor: 2 | 3; clusterSize: number; cvmRam: number; nodes: Node[]
@@ -26,7 +26,7 @@ interface Props {
 
 const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
 
-const defaultNode = (): Node => ({ nodeSerial: '', cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmVlanId: '' })
+const defaultNode = (): Node => ({ nodeSerial: '', cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmVlanId: '', cvmRamGb: 12 })
 const defaultCluster = (): Cluster => ({ clusterName: '', clusterVip: '', redundancyFactor: 2, clusterSize: 3, cvmRam: 12, nodes: [defaultNode()] })
 const defaultSite = (): Site => ({
   siteName: '', useExistingNetwork: false, reImage: true,
@@ -97,6 +97,7 @@ function initialState(profile?: ConnectionProfile, importedConfig?: unknown) {
                   ipmiIp: asString(node.ipmi_ip),
                   hostname: asString(node.hypervisor_hostname),
                   cvmVlanId: node.cvm_vlan_id === undefined ? '' : String(node.cvm_vlan_id),
+                  cvmRamGb: asNumber(node.cvm_ram_gb, asNumber(cluster.cvm_ram, 12)),
                 }
               })
               return {
@@ -206,6 +207,7 @@ export default function SiteDeployForm({ onYamlChange, profile, importedConfig, 
             ...(n.ipmiIp ? { ipmiIp: n.ipmiIp } : {}),
             ...(n.hostname ? { hostname: n.hostname } : {}),
             ...(n.cvmVlanId ? { cvmVlanId: Number(n.cvmVlanId) } : {}),
+            ...(n.cvmRamGb ? { cvmRamGb: n.cvmRamGb } : {}),
           })),
         })),
       })),
@@ -335,11 +337,13 @@ export default function SiteDeployForm({ onYamlChange, profile, importedConfig, 
                       </select></div>
                   </div>
                   {cluster.nodes.map((n, ni) => (
-                    <div key={ni} className="grid grid-cols-5 gap-2 p-2 rounded bg-gray-950/50 items-end text-xs">
+                    <div key={ni} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2 p-2 rounded bg-gray-950/50 items-end text-xs">
                       <div><label className="label text-xs">Serial (opt.)</label><input className="input text-xs py-1" value={n.nodeSerial} onChange={e => updNode(si, ci, ni, { nodeSerial: e.target.value })} placeholder="2Z3P..." /></div>
                       <div><label className="label text-xs">CVM IP</label><input className="input text-xs py-1" value={n.cvmIp} onChange={e => updNode(si, ci, ni, { cvmIp: e.target.value })} placeholder="10.0.0.11" /></div>
                       <div><label className="label text-xs">Host IP</label><input className="input text-xs py-1" value={n.hostIp} onChange={e => updNode(si, ci, ni, { hostIp: e.target.value })} placeholder="10.0.0.12" /></div>
+                      <div><label className="label text-xs">IPMI IP</label><input className="input text-xs py-1" value={n.ipmiIp} onChange={e => updNode(si, ci, ni, { ipmiIp: e.target.value })} placeholder="10.0.0.13" /></div>
                       <div><label className="label text-xs">Hostname</label><input className="input text-xs py-1" value={n.hostname} onChange={e => updNode(si, ci, ni, { hostname: e.target.value })} placeholder="ahv-01" /></div>
+                      <div><label className="label text-xs">CVM RAM (GB)</label><input className="input text-xs py-1" type="number" min={12} value={n.cvmRamGb} onChange={e => updNode(si, ci, ni, { cvmRamGb: Number(e.target.value) })} /></div>
                       <div className="flex justify-end items-end">{cluster.nodes.length > 1 && <button onClick={() => removeNode(si, ci, ni)} className="btn-ghost p-1 text-red-400"><Trash2 size={11} /></button>}</div>
                     </div>
                   ))}
