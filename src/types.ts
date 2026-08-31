@@ -8,13 +8,36 @@ export interface WorkflowDef {
   icon: string
   configFile: string
   details: string
+  runtimeMode?: 'ztf1' | 'ztf2'
+  ztf2Template?: Ztf2TemplateId | string
 }
+
+export type Ztf2TemplateId =
+  | 'prism-category'
+  | 'subnet-intent'
+  | 'project'
+  | 'image-registration'
+  | 'vm-deployment'
+  | 'security-groups'
+  | 'protection-policy'
+  | 'recovery-plan'
 
 export interface ScriptDef {
   id: string
   name: string
   category: string
   description: string
+}
+
+export interface Ztf2ScriptDef {
+  id: string
+  name: string
+  category: string
+  description: string
+  details: string
+  icon: string
+  legacyScriptIds: string[]
+  ztf2Template: Ztf2TemplateId
 }
 
 export type ScriptConfigFieldType = 'text' | 'number' | 'select' | 'list' | 'boolean'
@@ -112,7 +135,7 @@ export interface ExecutionJob {
   id: string
   status: ExecutionJobStatus
   workflow: string
-  type: 'workflow' | 'script' | 'nkp'
+  type: 'workflow' | 'script' | 'nkp' | 'ztf2'
   framework?: 'ztf' | 'nkp' | string
   user: string
   createdAt: string
@@ -126,6 +149,18 @@ export interface ExecutionJob {
   trace?: {
     framework?: string
     phase?: string
+    runtimeMode?: string
+    action?: string
+    planId?: string
+    planPath?: string
+    inputFile?: string
+    globalFile?: string
+    stateFile?: string
+    inputSha256?: string
+    globalSha256?: string
+    statePath?: string
+    ztfVersionRef?: string
+    workflowTemplate?: string
     configFile?: string
     configSource?: string
     generatedConfigFile?: string
@@ -182,6 +217,11 @@ export interface PipelineStepResult {
 
 export interface Settings {
   ztfPath: string
+  ztf1Enabled?: boolean
+  ztf2Enabled?: boolean
+  ztf2Path?: string
+  ztf2Command?: string
+  ztf2ProjectDir?: string
   nkpPath: string
   pythonPath: string
   configDir: string

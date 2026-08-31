@@ -3,6 +3,8 @@ param(
   [string]$Version,
 
   [string]$ZtfRef = "v1.5.2",
+  [string]$Ztf2Ref = "v2.0.0",
+  [bool]$Ztf2Bake = $true,
   [string]$ImageRepository = "ghcr.io/virtuarchitect/ztf-orchestrator",
   [switch]$SkipTests
 )
@@ -52,6 +54,8 @@ Invoke-Step "Build container image" {
   $env:DOCKER_BUILDKIT = "0"
   docker build `
     --build-arg "ZTF_REF=$ZtfRef" `
+    --build-arg "ZTF2_REF=$Ztf2Ref" `
+    --build-arg "ZTF2_BAKE=$($Ztf2Bake.ToString().ToLowerInvariant())" `
     --build-arg "ZTF_ORCHESTRATOR_VERSION=$Version" `
     --build-arg "ZTF_BUILD_COMMIT=$buildCommit" `
     --build-arg "ZTF_BUILD_DATE=$buildDate" `
@@ -96,7 +100,9 @@ Invoke-Step "Create release notes and install checklist" {
 ZTF-Orchestrator $Version
 
 Image: $imageTag
-Bundled ZTF ref: $ZtfRef
+Bundled ZTF 1.x ref: $ZtfRef
+Bundled ZTF 2.x ref: $Ztf2Ref
+Bundled ZTF 2.x runtime: $Ztf2Bake
 Built: $(Get-Date -Format o)
 
 Verification:

@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.7.12
+# ZTF-Orchestrator · v1.8.0
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -9,6 +9,11 @@ automation via the optional
 integration.
 
 Unofficial community framework orchestration. This project is not affiliated with or supported by Nutanix.
+
+## Appliance Downloads
+
+Download versioned ZTF-Orchestrator appliance artifacts from the
+[Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C).
 
 ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
 an internal operations console: teams can define connection settings, generate
@@ -27,7 +32,7 @@ Git, YAML, and CLI commands.
 | What does it execute? | Allowlisted ZTF 1.x workflows/scripts and constrained NKP safe phases through background jobs. |
 | Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
 | Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
-| What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and native ZTF 2.x plan/apply mode. |
+| What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
 
 ## Demo
 
@@ -104,8 +109,9 @@ systems.
 
 ZTF-Orchestrator's workflow and script launcher targets the legacy
 ZeroTouch Framework 1.x CLI (`python main.py --workflow ...` and
-`python main.py --script ...`). The default install, Docker, appliance, and
-container publishing paths therefore pin ZeroTouch Framework to **v1.5.2**.
+`python main.py --script ...`). The default legacy install, Docker, appliance,
+and container publishing paths therefore pin the ZTF 1.x runtime to
+**v1.5.2**.
 
 `nutanixdev/zerotouch-framework` v2.0.0 is a ground-up rewrite with a new
 `ztf plan/apply/refresh/destroy` command model. Upstream v2.0.0 does not yet
@@ -115,8 +121,14 @@ this Orchestrator release exposes. If a ZTF 2.x checkout is configured,
 ZTF-Orchestrator reports it as incompatible and blocks legacy workflow/script
 execution instead of launching it through the wrong CLI.
 
-Future ZTF 2.x support should be implemented as a separate IaC/plan-apply mode,
-not as a drop-in replacement for the current workflow catalog.
+ZTF 2.x support is implemented as a separate IaC/plan-apply lane, not as a
+drop-in replacement for the current workflow catalog. Admins enable the runtime
+from **Settings > Runtime** by configuring the ZTF 2.x checkout, CLI command,
+and project directory. Operators then use **ZTF 2.x IaC**, **Workflows 2.x**,
+or **Scripts 2.x** for governed `plan` submissions. `apply` and `destroy`
+remain approval-bound from the ZTF 2.x IaC path and require a successful source
+plan job plus an approved request bound to the plan ID, input hash, global
+hash, and state path.
 
 ## Engineering Quality
 
@@ -435,8 +447,11 @@ baselines, enabled schedules, next schedule run, last failed schedule, storage
 backend, latest database backup, and backup warnings.
 
 ### Setup & Install
-One-click ZTF installation — clones the framework from GitHub (or an internal
-mirror) and installs pip dependencies. Requires `git` to be on the system PATH.
+Runtime-aware ZTF installation for **ZTF 1.x Legacy** and **ZTF 2.x IaC**.
+Admins select the runtime lane, run prerequisite checks, then install or update
+the matching checkout from GitHub or an internal mirror. ZTF 2.x installs into a
+separate path and CLI runtime so it does not overwrite the legacy workflow
+runtime. Requires `git` to be on the system PATH.
 
 ### Global Config
 Visual editor for `global.yml` — vault type (Local/CyberArk), IPAM method
@@ -456,11 +471,33 @@ YAML Studio does not execute workflows or mutate Nutanix infrastructure.
 Execution remains behind the existing workflow, approval, and confirmation
 paths.
 
-### Workflows
+### Workflows 1.x
 
 Each workflow detail page can generate YAML from guided fields, import an
 existing YAML/JSON config for that workflow, preview the active config, download
-it, dry-run it, and submit it through the governed execution path.
+it, dry-run it, and submit it through the governed ZTF 1.x execution path.
+
+### Workflows 2.x
+
+ZTF 2.x workflow templates generate `input.yml` plus `global.yml`; **Run Plan**
+submits a `ztf2:plan` job and records plan evidence for later approval-bound
+apply/destroy.
+
+Initial Workflows 2.x templates:
+
+| Workflow | Category |
+|---|---|
+| ZTF 2.x Prism Category | Prism Central |
+| ZTF 2.x Project | Prism Central |
+| ZTF 2.x Subnet Intent | Configuration |
+| ZTF 2.x Image Registration | Workloads |
+| ZTF 2.x VM Deployment | Workloads |
+| ZTF 2.x Security Groups | Configuration |
+| ZTF 2.x Protection Policy | Prism Central |
+| ZTF 2.x Recovery Plan | Prism Central |
+
+These are starter IaC templates and should be validated against the installed
+ZTF 2.x resource schema before live apply.
 
 | Workflow | Category |
 |---|---|
@@ -491,10 +528,30 @@ controls as `apply`, `evidence`, `manual`, or `blocked`; only verified mappings
 execute scripts, while manual and blocked controls are recorded without mutating
 infrastructure.
 
-### Script Library
-61 ZTF atomic scripts across 12 categories. Searchable and individually executable.
-**Multi-script composition:** click to add scripts to an ordered queue, reorder
-with up/down arrows, then run all as a single ZTF invocation (`--script A,B,C`).
+### Scripts 1.x
+75 ZTF atomic scripts across 12 categories. Searchable and individually executable
+through the legacy ZTF 1.x script launcher. **Multi-script composition:** click
+to add scripts to an ordered queue, reorder with up/down arrows, then run all as
+a single ZTF invocation (`--script A,B,C`).
+
+### Scripts 2.x
+ZTF 2.x converted actions generate `input.yml` plus `global.yml` and submit
+governed `ztf2:plan` jobs. The first action set covers safe declarative
+patterns from the legacy script catalog: category, project, subnet, image, VM,
+security group, protection policy, and recovery plan intents. Imperative PE,
+CVM, Foundation, delete, and power actions remain in Scripts 1.x until a
+verified ZTF 2.x resource contract exists.
+
+| Action | Legacy mapping |
+|---|---|
+| Create Category (PC) | `CreateCategoryPc` |
+| Create Project (PC) | New ZTF 2.x declarative action |
+| Create Subnets (PC) | `CreateSubnetsPc` |
+| Upload Image (PC) | `PcImageUpload` |
+| Create VMs (PC) | `CreateVmsPc` |
+| Create Security Groups (PC) | `CreateAddressGroups`, `CreateServiceGroups` |
+| Create Protection Policy (PC) | `CreateProtectionPolicy` |
+| Create Recovery Plan (PC) | `CreateRecoveryPlan` |
 
 ### Config File Manager
 Create, edit, delete YAML/JSON config files. The last 5 versions of each file
@@ -774,9 +831,11 @@ other settings via environment variables or a `.env` file (see `.env.example`).
 |---|---|---|
 | `ZTF_DATA_DIR` | `~/.ztf-ui` | Persistent data directory |
 | `ZTF_PATH` | `~/zerotouch-framework` | ZTF installation path |
+| `ZTF2_PATH` | `/opt/zerotouch-framework-2x` in Docker/appliance | Optional ZTF 2.x checkout path used by the separate IaC lane |
+| `ZTF2_COMMAND` | `/opt/ztf2-python/bin/ztf` in Docker/appliance | ZTF 2.x CLI command used for plan/apply jobs |
 | `ZTF_NKP_PATH` | `~/nkp-zerotouch-framework` | Optional NKP ZeroTouch Framework path |
 | `ZTF_PYTHON` | current Python | Python executable for running ZTF |
-| `ZTF_REF` | `v1.5.2` | ZeroTouch Framework branch/tag used by Docker and installer paths. Current Orchestrator workflows require ZTF 1.x. |
+| `ZTF_REF` | `v1.5.2` | ZeroTouch Framework 1.x branch/tag used by Docker and installer paths. Current legacy workflows require ZTF 1.x. |
 | `ZTF_PORT` | `5001` | Flask listen port |
 | `ZTF_HOST_PORT` | `15001` | Host-side Docker Compose port mapped to container port `5001` |
 | `ZTF_HOST_BIND` | `127.0.0.1` | Host-side Docker Compose bind address |
@@ -807,35 +866,39 @@ docker compose logs -f
 docker compose down
 ```
 
-ZTF is cloned and baked into the image at build time — no separate volume mount
-or manual ZTF installation required. Use build args to pin a specific ZTF version
-or point to an internal mirror:
+ZTF 1.x and ZTF 2.x are cloned and baked into the image at build time — no
+separate volume mount or manual ZTF installation required for either default
+runtime. Use build args to pin specific ZTF versions or point to an internal
+mirror:
 
 ```bash
-ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v1.5.2 docker compose up -d
+ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v1.5.2 ZTF2_REPO_URL=https://gitea.internal/ztf.git ZTF2_REF=v2.0.0 docker compose up -d
 ```
 
 | Build arg | Default | Purpose |
 |---|---|---|
-| `ZTF_REPO_URL` | GitHub URL | Git URL to clone ZTF from during image build |
-| `ZTF_REF` | `v1.5.2` | Git branch or tag to check out during image build. Keep this on ZTF 1.x for the current workflow/script launcher. |
+| `ZTF_REPO_URL` | GitHub URL | Git URL to clone ZTF 1.x from during image build |
+| `ZTF_REF` | `v1.5.2` | Git branch or tag to check out for the legacy ZTF 1.x runtime |
+| `ZTF2_REPO_URL` | GitHub URL | Git URL to clone ZTF 2.x from during image build |
+| `ZTF2_REF` | `v2.0.0` | Git branch or tag to check out for the ZTF 2.x IaC runtime |
+| `ZTF2_BAKE` | `true` | Bake the ZTF 2.x runtime into the image; set `false` only for mirror/offline troubleshooting builds |
 
 Docker Compose publishes the container on `127.0.0.1:15001` by default and
 keeps the application listening on port `5001` inside the container. Override
 `ZTF_HOST_PORT` in `.env` if your workstation requires a different host port.
 Place nginx in front for TLS when exposing the service to a team network.
 
-In Docker and appliance images, the bundled ZeroTouch Framework directory is not
-a git checkout. The in-app Setup page can reinstall Python dependencies, but it
-cannot `git pull` that baked copy. To update the bundled framework, rebuild the
-image with the desired `ZTF_REF` or point Settings > Framework Location at a
-separate cloned ZTF 1.x checkout.
+In Docker and appliance images, the bundled ZeroTouch Framework directories are
+not git checkouts. The in-app Setup page can reinstall Python dependencies, but
+it cannot `git pull` those baked copies. To update a bundled framework, rebuild
+the image with the desired `ZTF_REF` or `ZTF2_REF`, or point Settings > Runtime
+at a separate reviewed checkout.
 
-The image also installs the pinned ZeroTouch Framework runtime dependencies in
-the dedicated `/opt/ztf-python` virtual environment. If workflow execution fails
-with a missing module such as `rainbow_logging_handler`, rebuild or update the
-container image so the baked framework and its Python dependencies are refreshed
-together.
+The image also installs pinned ZeroTouch Framework runtime dependencies in
+dedicated virtual environments: `/opt/ztf-python` for ZTF 1.x and
+`/opt/ztf2-python` for ZTF 2.x. If workflow execution fails with a missing
+module such as `rainbow_logging_handler`, rebuild or update the container image
+so the baked framework and its Python dependencies are refreshed together.
 
 ---
 

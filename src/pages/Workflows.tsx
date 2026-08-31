@@ -3,7 +3,7 @@ import { Link } from '../router'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  ChevronRight, Search, CheckCircle, ShieldCheck, Network, KeyRound, Lock
+  ChevronRight, Search, CheckCircle, ShieldCheck, Network, KeyRound, Lock, Boxes
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { WORKFLOWS } from '../data'
@@ -13,7 +13,7 @@ import clsx from 'clsx'
 const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
   Sliders, GitBranch, Monitor, Wrench, Cpu, Zap, Database,
-  CheckCircle, ShieldCheck, Network, KeyRound, Lock,
+  CheckCircle, ShieldCheck, Network, KeyRound, Lock, Boxes,
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -27,12 +27,12 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const CATEGORIES = ['All', 'Infrastructure', 'Prism Central', 'Configuration', 'Pod Operations', 'Workloads', 'Services']
 
-function WorkflowCard({ workflow }: { workflow: WorkflowDef }) {
+function WorkflowCard({ workflow, detailBasePath }: { workflow: WorkflowDef; detailBasePath: string }) {
   const Icon = ICON_MAP[workflow.icon] || Server
 
   return (
     <Link
-      to={`/workflows/${workflow.id}`}
+      to={`${detailBasePath}/${workflow.id}`}
       className="card hover:border-border-light hover:bg-surface-elevated transition-all group cursor-pointer flex flex-col"
     >
       <div className="flex items-start gap-3 mb-3">
@@ -41,25 +41,42 @@ function WorkflowCard({ workflow }: { workflow: WorkflowDef }) {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-100 group-hover:text-white transition-colors">{workflow.name}</h3>
-          <span className={clsx('badge mt-1', CATEGORY_COLORS[workflow.category] || 'badge-gray')}>
-            {workflow.category}
-          </span>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <span className={clsx('badge', CATEGORY_COLORS[workflow.category] || 'badge-gray')}>
+              {workflow.category}
+            </span>
+            {workflow.runtimeMode === 'ztf2' && (
+              <span className="badge badge-yellow">ZTF 2.x</span>
+            )}
+          </div>
         </div>
         <ChevronRight size={16} className="text-gray-600 group-hover:text-gray-400 transition-colors mt-1" />
       </div>
       <p className="text-sm text-gray-400 leading-relaxed flex-1">{workflow.description}</p>
       <div className="mt-3 pt-3 border-t border-border/50">
-        <span className="text-xs font-mono text-gray-600">{workflow.configFile}</span>
+        <span className="text-xs font-mono text-gray-600">
+          {workflow.runtimeMode === 'ztf2' ? 'ztf plan / input.yml' : workflow.configFile}
+        </span>
       </div>
     </Link>
   )
 }
 
-export default function Workflows() {
+export default function Workflows({ runtimeMode = 'ztf1' }: { runtimeMode?: 'ztf1' | 'ztf2' }) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
+  const detailBasePath = runtimeMode === 'ztf2' ? '/workflows-2x' : '/workflows'
+  const title = runtimeMode === 'ztf2' ? 'Workflows 2.x' : 'Workflows 1.x'
+  const subtitle = runtimeMode === 'ztf2'
+    ? 'ZTF 2.x IaC workflow templates for governed plan jobs'
+    : 'ZTF 1.x workflow catalog for Nutanix deployments'
 
-  const filtered = WORKFLOWS.filter(w => {
+  const runtimeWorkflows = WORKFLOWS.filter(workflow => runtimeMode === 'ztf2'
+    ? workflow.runtimeMode === 'ztf2'
+    : workflow.runtimeMode !== 'ztf2'
+  )
+
+  const filtered = runtimeWorkflows.filter(w => {
     const matchSearch = !search ||
       w.name.toLowerCase().includes(search.toLowerCase()) ||
       w.description.toLowerCase().includes(search.toLowerCase())
@@ -74,7 +91,7 @@ export default function Workflows() {
   }, {})
 
   return (
-    <Layout title="Workflows" subtitle="Pre-built automation workflows for Nutanix deployments">
+    <Layout title={title} subtitle={subtitle}>
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="relative">
@@ -111,14 +128,14 @@ export default function Workflows() {
             <section key={cat}>
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{cat}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {workflows.map(w => <WorkflowCard key={w.id} workflow={w} />)}
+                {workflows.map(w => <WorkflowCard key={w.id} workflow={w} detailBasePath={detailBasePath} />)}
               </div>
             </section>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(w => <WorkflowCard key={w.id} workflow={w} />)}
+          {filtered.map(w => <WorkflowCard key={w.id} workflow={w} detailBasePath={detailBasePath} />)}
         </div>
       )}
 

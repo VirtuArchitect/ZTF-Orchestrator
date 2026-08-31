@@ -1,6 +1,6 @@
 # RB-004 - ZTF Workflow Execution
 
-Current release marker: `v1.7.12`.
+Current release marker: `v1.8.0`.
 
 ## Metadata
 
@@ -16,14 +16,18 @@ Current release marker: `v1.7.12`.
 
 ## Purpose
 
-Execute an allowlisted ZeroTouch Framework 1.x workflow or script through
-ZTF-Orchestrator with validation, approval, job tracking, and evidence capture.
+Execute an allowlisted ZeroTouch Framework workflow, script, or ZTF 2.x IaC
+plan/apply action through ZTF-Orchestrator with validation, approval, job
+tracking, and evidence capture.
 
 ## Scope
 
-Covers workflows and scripts exposed in the ZTF-Orchestrator catalog. It does
-not cover direct CLI execution outside the application, unsupported ZTF 2.x
-`plan/apply`, or uncontrolled destructive actions.
+Covers Workflows 1.x, Workflows 2.x, Scripts 1.x, and Scripts 2.x converted
+actions exposed in the ZTF-Orchestrator catalog. It does not cover direct CLI
+execution outside the application or uncontrolled destructive actions. ZTF 2.x
+`plan/apply` jobs use the separate guarded IaC surfaces: **ZTF 2.x IaC**,
+**Workflows 2.x**, and **Scripts 2.x**. They require Admin Settings runtime
+enablement.
 
 Standalone Foundation Central Appliance intents use dedicated workflows and
 config files: `cluster-create-standalone-fca` with `create_fca_cluster.yml`,
@@ -37,6 +41,19 @@ If the target appliance requires a different Lifecycle submit or status path,
 set `fca_execution.submit_path` and `fca_execution.status_path_template` in the
 workflow YAML before execution.
 
+ZTF 2.x IaC operation:
+
+- Generate or import `input.yml` and `global.yml` through **Workflows 2.x**,
+  **Scripts 2.x**, YAML Studio, or the ZTF 2.x IaC page.
+- For operator templates or converted actions, select a catalog item from
+  **Workflows 2.x** or **Scripts 2.x**, review the generated `input.yml` and
+  editable `global.yml`, then select **Run Plan**.
+- Retain the successful source plan job ID and plan evidence.
+- Create an approval request for `ztf2:apply` or `ztf2:destroy` with metadata
+  matching the plan ID, input hash, global hash, and state path.
+- Submit apply/destroy only with the source plan job ID and approval ID from the
+  ZTF 2.x IaC page.
+
 For standalone FCA Run Workflow, Orchestrator watches the returned Lifecycle
 status endpoint for a short local window. A terminal FCA failure still fails the
 Orchestrator job. If FCA remains non-terminal after the local watch window,
@@ -47,7 +64,12 @@ Deployment History view.
 ## Preconditions
 
 - Orchestrator is healthy.
-- ZTF path and Python runtime are configured.
+- ZTF runtime is installed and verified through **Setup & Install**. Select
+  **ZTF 1.x Legacy** for Workflows 1.x and Scripts 1.x, or **ZTF 2.x IaC** for
+  ZTF 2.x IaC, Workflows 2.x, and Scripts 2.x plan/apply jobs.
+- ZTF path and Python runtime are configured. ZTF 2.x uses the configured
+  `ztf2Path`, `ztf2Command`, and project directory rather than the legacy
+  `ztfPath`.
 - Target Nutanix endpoints are reachable.
 - YAML/config validation passes.
 - Required approval is approved and unexpired.

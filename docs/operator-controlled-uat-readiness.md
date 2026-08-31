@@ -1,6 +1,6 @@
 # Operator Controlled UAT Readiness
 
-Current release marker: `v1.7.12`.
+Current release marker: `v1.8.0`.
 
 This document defines the minimum documentation and operating posture required
 to describe a ZTF-Orchestrator deployment as operator controlled/UAT-ready.
@@ -57,9 +57,10 @@ Each UAT scenario should capture:
 ## Known Boundaries
 
 - ZTF-Orchestrator targets the legacy ZeroTouch Framework 1.x workflow/script
-  CLI for current execution paths.
-- ZTF 2.x plan/apply support is a future separate mode, not a drop-in
-  replacement for the current workflow catalog.
+  CLI for Workflows 1.x and Scripts 1.x execution paths.
+- ZTF 2.x plan/apply support is implemented as a separate guarded IaC lane for
+  ZTF 2.x IaC, Workflows 2.x, and Scripts 2.x converted actions. It is not a
+  drop-in replacement for the legacy workflow or script catalog.
 - YAML Studio generates, validates, saves, and exports YAML. It does not execute
   workflows or mutate Nutanix infrastructure.
 - NKP integration is constrained to exposed safe phases; blocked phases remain

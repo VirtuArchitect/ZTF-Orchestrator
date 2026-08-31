@@ -48,8 +48,10 @@ from upgrade_advisor import (
 
 CONFIG_DIR    = Path(os.environ.get('ZTF_DATA_DIR',    Path.home() / '.ztf-ui'))
 ZTF_DEFAULT   = os.environ.get('ZTF_PATH',             str(Path.home() / 'zerotouch-framework'))
+ZTF2_DEFAULT  = os.environ.get('ZTF2_PATH',            str(Path.home() / 'zerotouch-framework-2x'))
 NKP_DEFAULT   = os.environ.get('ZTF_NKP_PATH',         str(Path.home() / 'nkp-zerotouch-framework'))
 PYTHON_DEFAULT= os.environ.get('ZTF_PYTHON',           sys.executable)
+ZTF2_COMMAND_DEFAULT = os.environ.get('ZTF2_COMMAND',  'ztf')
 PORT          = int(os.environ.get('ZTF_PORT',          5001))
 BIND_HOST     = os.environ.get('ZTF_BIND_HOST',         '127.0.0.1')
 PUBLIC_URL    = os.environ.get('ZTF_PUBLIC_URL',        '').strip()
@@ -70,8 +72,9 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.7.12'
+APP_VERSION = '1.8.0'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
+ZTF2_REF = os.environ.get('ZTF2_REF', 'v2.0.0')
 
 USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
@@ -198,6 +201,48 @@ def _ztf_detect(ztf_path: str | Path) -> dict:
     }
 
 
+def _ztf2_detect(ztf2_path: str | Path, ztf2_command: str = ZTF2_COMMAND_DEFAULT) -> dict:
+    root = Path(ztf2_path)
+    package_dir = root / 'ztf'
+    pyproject = root / 'pyproject.toml'
+    legacy_main = root / 'main.py'
+    if package_dir.exists() and pyproject.exists() and not legacy_main.exists():
+        return {
+            'installed': True,
+            'compatible': True,
+            'layout': 'ztf-2.x',
+            'entrypoint': ztf2_command,
+            'requiredRef': ZTF2_REF,
+            'message': 'ZTF 2.x plan/apply CLI layout detected',
+        }
+    if legacy_main.exists():
+        return {
+            'installed': True,
+            'compatible': False,
+            'layout': 'legacy-1.x',
+            'entrypoint': str(legacy_main),
+            'requiredRef': ZTF2_REF,
+            'message': f'Legacy ZTF 1.x detected. ZTF 2.x mode requires {ZTF2_REF} or a reviewed 2.x checkout.',
+        }
+    if root.exists():
+        return {
+            'installed': False,
+            'compatible': False,
+            'layout': 'unknown',
+            'entrypoint': '',
+            'requiredRef': ZTF2_REF,
+            'message': 'ZTF 2.x package layout was not found',
+        }
+    return {
+        'installed': False,
+        'compatible': False,
+        'layout': 'missing',
+        'entrypoint': '',
+        'requiredRef': ZTF2_REF,
+        'message': 'ZTF 2.x runtime path was not found',
+    }
+
+
 def _ztf_incompatible_error(ztf_path: str | Path) -> tuple[dict, int] | None:
     info = _ztf_detect(ztf_path)
     if info.get('compatible'):
@@ -219,6 +264,42 @@ def _ztf_requirements_file(ztf_path: str | Path) -> str | None:
         if (root / candidate).exists():
             return candidate
     return None
+
+
+def _is_git_checkout(path: str | Path) -> bool:
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(path), 'rev-parse', '--is-inside-work-tree'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=10,
+        )
+        return result.returncode == 0 and result.stdout.strip() == 'true'
+    except Exception:
+        return False
+
+
+def _ztf2_install_python(ztf2_command: str, bootstrap_python: str) -> tuple[str, Path | None]:
+    """Resolve the Python executable used to install the ZTF 2.x CLI."""
+    command = Path(ztf2_command)
+    if not command.is_absolute():
+        return bootstrap_python, None
+    if command.parent.name.lower() not in {'bin', 'scripts'}:
+        return bootstrap_python, None
+    venv_root = command.parent.parent
+    python_name = 'python.exe' if os.name == 'nt' or command.parent.name.lower() == 'scripts' else 'python'
+    return str(venv_root / command.parent.name / python_name), venv_root
+
+
+def _path_has_entries(path: Path) -> bool:
+    try:
+        next(path.iterdir())
+        return True
+    except StopIteration:
+        return False
+    except OSError:
+        return True
 
 
 def _ztf_main_arg(ztf_path: str | Path) -> str:
@@ -764,6 +845,7 @@ def _clean_artifact_payload(data: dict, existing: dict | None = None) -> tuple[d
 def _appliance_status() -> dict:
     settings = get_settings()
     ztf_info = _ztf_detect(settings['ztfPath'])
+    ztf2_info = _ztf2_detect(settings.get('ztf2Path') or ZTF2_DEFAULT, settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT)
     ztf_ok = bool(ztf_info.get('compatible'))
     source_dir = Path('/opt/ztf-orchestrator-source')
     install_dir = Path('/opt/ztf-orchestrator')
@@ -2853,6 +2935,8 @@ def _is_allowed_approval_workflow(workflow: str) -> bool:
         return True
     if workflow.startswith('nkp:'):
         return workflow.split(':', 1)[1] in NKP_SAFE_PHASES
+    if workflow in {'ztf2:apply', 'ztf2:destroy'}:
+        return True
     return False
 
 ALLOWED_SCRIPTS = {
@@ -3048,6 +3132,69 @@ def _validate_workflow_approval(data: dict, settings: dict | None = None) -> tup
         data.get('configContent') or '',
     )
     return error, approval
+
+
+ZTF2_ACTIONS = {'plan', 'apply', 'refresh', 'destroy', 'examples'}
+ZTF2_APPROVAL_ACTIONS = {'apply', 'destroy'}
+
+
+def _ztf2_runtime_error(settings: dict) -> tuple[dict, int] | None:
+    if not settings.get('ztf2Enabled'):
+        return {'error': 'ZTF 2.x plan/apply mode is disabled in Admin Settings'}, 403
+    info = _ztf2_detect(settings.get('ztf2Path') or ZTF2_DEFAULT, settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT)
+    if not info.get('compatible'):
+        return {'error': info['message'], 'ztf2': info}, 409
+    return None
+
+
+def _ztf2_project_dir(settings: dict) -> Path:
+    root = Path(settings.get('ztf2ProjectDir') or (CONFIG_DIR / 'ztf2-projects' / 'default'))
+    _secure_mkdir(root)
+    _secure_mkdir(root / 'plans')
+    return root
+
+
+def _ztf2_plan_trace(data: dict, settings: dict, plan_id: str | None = None) -> dict:
+    input_content = str(data.get('inputContent') or data.get('configContent') or '')
+    global_content = str(data.get('globalContent') or '')
+    state_file = Path(str(data.get('stateFile') or 'state.yml')).name or 'state.yml'
+    return {
+        'framework': 'ztf2',
+        'runtimeMode': 'ztf2_iac',
+        'action': str(data.get('ztf2Action') or data.get('action') or 'plan').strip().lower(),
+        'inputFile': Path(str(data.get('inputFile') or data.get('configFile') or 'input.yml')).name,
+        'globalFile': Path(str(data.get('globalFile') or 'global.yml')).name,
+        'stateFile': state_file,
+        'inputSha256': _sha256_text(input_content),
+        'globalSha256': _sha256_text(global_content),
+        'statePath': str(_ztf2_project_dir(settings) / state_file),
+        'ztfVersionRef': ZTF2_REF,
+        'workflowTemplate': str(data.get('workflowTemplate') or '').strip(),
+        'planId': plan_id or '',
+    }
+
+
+def _ztf2_approval_error(approval: dict | None, plan_job: dict | None, trace: dict) -> str | None:
+    if not approval:
+        return 'ZTF 2.x apply/destroy requires an approved plan approval request'
+    if approval.get('status') != 'approved':
+        return 'ZTF 2.x plan approval is not approved'
+    if approval.get('workflow') != f"ztf2:{trace.get('action')}":
+        return 'ZTF 2.x approval does not match the requested action'
+    expires = _parse_iso_datetime(approval.get('expiresAt'))
+    if expires and datetime.datetime.now(datetime.timezone.utc) > expires:
+        return 'ZTF 2.x plan approval has expired'
+    if not plan_job or plan_job.get('status') != 'success':
+        return 'ZTF 2.x apply/destroy requires a successful plan job'
+    plan_trace = plan_job.get('trace') or {}
+    approval_meta = approval.get('metadata') or {}
+    for key in ('planId', 'inputSha256', 'globalSha256', 'statePath'):
+        expected = str(plan_trace.get(key) or '')
+        supplied = str(trace.get(key) or '')
+        approved = str(approval_meta.get(key) or expected)
+        if supplied != expected or approved != expected:
+            return f'ZTF 2.x approval does not match the planned {key}'
+    return None
 
 
 def _approval_automation_error(workflow: str | None) -> str | None:
@@ -4467,7 +4614,9 @@ def _normalize_ztf_config_content(workflow: str, config_content: str) -> tuple[s
     return yaml.safe_dump(normalized, sort_keys=False), True
 
 ALLOWED_SETTINGS_KEYS = {
-    'ztfPath', 'nkpPath', 'pythonPath', 'configDir', 'repoUrl', 'nkpRepoUrl', 'webhookUrl',
+    'ztfPath', 'ztf1Enabled', 'ztf2Enabled', 'ztf2Path', 'ztf2Command',
+    'ztf2ProjectDir', 'nkpPath', 'pythonPath', 'configDir', 'repoUrl',
+    'nkpRepoUrl', 'webhookUrl',
     'activeProfileId', 'connectionProfiles', 'approvalRequiredWorkflows',
 }
 
@@ -5066,6 +5215,11 @@ def get_settings() -> dict:
     }
     defaults = {
         'ztfPath':    ZTF_DEFAULT,
+        'ztf1Enabled': True,
+        'ztf2Enabled': False,
+        'ztf2Path': ZTF2_DEFAULT,
+        'ztf2Command': ZTF2_COMMAND_DEFAULT,
+        'ztf2ProjectDir': str(CONFIG_DIR / 'ztf2-projects' / 'default'),
         'nkpPath':    NKP_DEFAULT,
         'pythonPath': PYTHON_DEFAULT,
         'configDir':  str(CONFIG_DIR / 'configs'),
@@ -6492,6 +6646,9 @@ class ExecutionJobManager:
         if payload.get('framework') == 'nkp':
             self._run_nkp_job(job_id, payload, user)
             return
+        if payload.get('framework') == 'ztf2':
+            self._run_ztf2_job(job_id, payload, user)
+            return
 
         proc = None
         kill_timer = None
@@ -6869,6 +7026,150 @@ class ExecutionJobManager:
                 user=user,
                 execution_id=job_id,
                 execution_type='workflow' if workflow else 'script',
+            )
+
+    def _run_ztf2_job(self, job_id: str, payload: dict, user: str) -> None:
+        proc = None
+        kill_timer = None
+        action = str(payload.get('ztf2Action') or payload.get('action') or 'plan').strip().lower()
+        input_content = str(payload.get('inputContent') or payload.get('configContent') or '')
+        global_content = str(payload.get('globalContent') or '')
+        status = 'failed'
+        return_code = -1
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
+
+        try:
+            if action not in ZTF2_ACTIONS:
+                self._emit(job_id, 'error', 'ZTF 2.x action is not allowed')
+                return
+            settings = get_settings()
+            runtime_error = _ztf2_runtime_error(settings)
+            if runtime_error:
+                self._emit(job_id, 'error', runtime_error[0]['error'])
+                return
+
+            project_dir = _ztf2_project_dir(settings)
+            input_file = Path(str(payload.get('inputFile') or payload.get('configFile') or 'input.yml')).name
+            global_file = Path(str(payload.get('globalFile') or 'global.yml')).name
+            state_file = Path(str(payload.get('stateFile') or 'state.yml')).name
+            input_path = project_dir / input_file
+            global_path = project_dir / global_file
+            state_path = project_dir / state_file
+            plan_id = str(payload.get('planId') or job_id)
+            plan_path = project_dir / 'plans' / f'{plan_id}-plan.json'
+
+            self._update_progress(job_id, f'Preparing ZTF 2.x {action}', 15, 'Validating IaC files and runtime settings')
+            if action in {'plan', 'refresh', 'destroy'} and not input_content and not input_path.exists():
+                self._emit(job_id, 'error', 'ZTF 2.x inputContent or an existing input file is required')
+                return
+            if input_content:
+                ok, err = validate_yaml(input_content)
+                if not ok:
+                    self._emit(job_id, 'error', f'Invalid ZTF 2.x input YAML: {err}')
+                    return
+                _secure_write(input_path, input_content)
+            if global_content:
+                ok, err = validate_yaml(global_content)
+                if not ok:
+                    self._emit(job_id, 'error', f'Invalid ZTF 2.x global YAML: {err}')
+                    return
+                _secure_write(global_path, global_content)
+            elif not global_path.exists() and action not in {'examples', 'apply'}:
+                self._emit(job_id, 'error', 'ZTF 2.x globalContent or an existing global.yml is required')
+                return
+
+            cmd = [settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT, action]
+            if action in {'plan', 'refresh', 'destroy'}:
+                cmd += ['--input', str(input_path), '--global-file', str(global_path), '--state', str(state_path)]
+            if action == 'plan':
+                cmd += ['--out', str(plan_path)]
+            if action == 'apply':
+                existing_plan_path = str(payload.get('planPath') or '').strip()
+                if not existing_plan_path:
+                    self._emit(job_id, 'error', 'ZTF 2.x apply requires a persisted plan path')
+                    return
+                cmd += ['--plan', existing_plan_path]
+            self._emit(job_id, 'start', {
+                'command': _display_command(cmd),
+                'commandArgs': _redact_command_args(cmd),
+                'workingDir': str(project_dir),
+                'configFile': input_file,
+                'configPath': str(input_path),
+            })
+            self._update_progress(job_id, f'Running ztf {action}', 35, 'Streaming ZTF 2.x CLI output')
+            proc = subprocess.Popen(
+                cmd,
+                cwd=str(project_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            with self._condition:
+                self._active[job_id] = proc
+
+            def _timeout_kill():
+                if proc and proc.poll() is None:
+                    proc.kill()
+                    self._emit(job_id, 'stderr', f'Execution timed out after {EXEC_TIMEOUT} seconds')
+
+            kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
+            kill_timer.start()
+            combined: queue.Queue = queue.Queue()
+
+            def _reader(stream, label):
+                for line in stream:
+                    combined.put((label, line.rstrip()))
+                combined.put(None)
+
+            threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True).start()
+            threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True).start()
+            done = 0
+            while done < 2:
+                item = combined.get()
+                if item is None:
+                    done += 1
+                    continue
+                label, line = item
+                if label == 'stdout':
+                    stdout_lines.append(line)
+                else:
+                    stderr_lines.append(line)
+                self._emit(job_id, label, line)
+
+            proc.wait()
+            return_code = proc.returncode
+            status = _ztf_process_status(return_code, '\n'.join(stdout_lines), '\n'.join(stderr_lines))
+            if status == 'success' and action == 'plan':
+                self._emit(job_id, 'stdout', f'ZTF 2.x plan artifact: {plan_path}')
+            self._update_progress(job_id, f'ZTF 2.x {action} complete', 95, 'Collecting final output')
+        except FileNotFoundError:
+            self._emit(job_id, 'error', 'ZTF 2.x command was not found on PATH or in Settings')
+        except Exception:
+            log.exception('ztf2_execution_error', extra={'user': user, 'workflow': f'ztf2:{action}', 'jobId': job_id})
+            self._emit(job_id, 'error', 'ZTF 2.x execution failed. Check server logs for details.')
+        finally:
+            if kill_timer:
+                kill_timer.cancel()
+            with self._condition:
+                self._active.pop(job_id, None)
+            self._complete(job_id, status, return_code)
+            _record_execution_history(
+                execution_id=job_id,
+                workflow_or_script=f'ztf2:{action}',
+                execution_type='workflow',
+                status=status,
+                user=user,
+                config_file=str(payload.get('inputFile') or payload.get('configFile') or 'input.yml'),
+                config_content=input_content,
+            )
+            _fire_configured_webhook(
+                workflow=f'ztf2:{action}',
+                status=status,
+                return_code=return_code,
+                user=user,
+                execution_id=job_id,
+                execution_type='workflow',
             )
 
     def _run_nkp_job(self, job_id: str, payload: dict, user: str) -> None:
@@ -7315,6 +7616,17 @@ def _yaml_studio_validate_content(kind: str, content: str) -> dict:
         for key in ('vault_to_use', 'ip_allocation_method', 'vaults'):
             if key not in parsed:
                 result['errors'].append(f'global-config YAML requires {key}')
+    elif kind == 'ztf2-iac':
+        domains = parsed.get('domains')
+        if not isinstance(domains, dict) or not domains:
+            result['errors'].append('ZTF 2.x IaC YAML requires a non-empty domains mapping')
+        else:
+            for domain_name, domain in domains.items():
+                if not isinstance(domain, dict):
+                    result['errors'].append(f'ZTF 2.x domain "{domain_name}" must be a mapping')
+                    continue
+                if 'resources' not in domain and 'data' not in domain:
+                    result['warnings'].append(f'ZTF 2.x domain "{domain_name}" has no resources or data blocks')
     elif kind == 'upgrade-rule-pack':
         rules = parsed.get('rules')
         if not isinstance(rules, list) or not rules:
@@ -7682,6 +7994,7 @@ def operational_visibility_summary():
 def health_details():
     settings = get_settings()
     ztf_info = _ztf_detect(settings['ztfPath'])
+    ztf2_info = _ztf2_detect(settings.get('ztf2Path') or ZTF2_DEFAULT, settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT)
     ztf_ok = bool(ztf_info.get('compatible'))
     nkp_ok = _nkp_installed(settings.get('nkpPath') or NKP_DEFAULT)
     status  = 'healthy' if ztf_ok else 'degraded'
@@ -7693,6 +8006,12 @@ def health_details():
         'status':        status,
         'ztf_installed': ztf_ok,
         'ztf':           ztf_info,
+        'ztf2': {
+            **ztf2_info,
+            'enabled': bool(settings.get('ztf2Enabled', False)),
+            'path': settings.get('ztf2Path') or ZTF2_DEFAULT,
+            'projectDir': settings.get('ztf2ProjectDir') or str(CONFIG_DIR / 'ztf2-projects' / 'default'),
+        },
         'nkp_installed': nkp_ok,
         'storage':       _storage.name,
         'database': {
@@ -7921,7 +8240,9 @@ def system_check():
             return {'name': name, 'ok': False, 'value': 'check failed'}
 
     ztf_info = _ztf_detect(ztf_path)
+    ztf2_info = _ztf2_detect(settings.get('ztf2Path') or ZTF2_DEFAULT, settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT)
     ztf_installed = bool(ztf_info.get('compatible'))
+    ztf2_installed = bool(ztf2_info.get('compatible'))
     nkp_installed = _nkp_installed(nkp_path)
     nkp_binaries = _list_nkp_binaries()
     available_nkp_binaries = sum(1 for item in nkp_binaries if item.get('exists'))
@@ -7930,6 +8251,7 @@ def system_check():
         run_check('pip',          [python_path, '-m', 'pip', '--version']),
         run_check('git',          ['git', '--version']),
         {'name': 'ZTF Installed', 'ok': ztf_installed, 'value': ztf_info['message'] if ztf_info.get('installed') else ''},
+        {'name': 'ZTF 2.x Plan/Apply', 'ok': ztf2_installed, 'value': ztf2_info['message']},
         {'name': 'NKP Framework', 'ok': True, 'value': 'found' if nkp_installed else 'not installed (optional)'},
         {
             'name': 'NKP Binaries',
@@ -7950,6 +8272,14 @@ def system_check():
         'checks': checks,
         'ztfInstalled': ztf_installed,
         'ztf': ztf_info,
+        'ztf2Installed': ztf2_installed,
+        'ztf2': {
+            **ztf2_info,
+            'enabled': bool(settings.get('ztf2Enabled', False)),
+            'path': settings.get('ztf2Path') or ZTF2_DEFAULT,
+            'command': settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT,
+            'projectDir': settings.get('ztf2ProjectDir') or str(CONFIG_DIR / 'ztf2-projects' / 'default'),
+        },
         'nkpInstalled': nkp_installed,
         'nkpBinaries': {'total': len(nkp_binaries), 'available': available_nkp_binaries},
     })
@@ -8075,6 +8405,95 @@ def install_ztf():
         except Exception:
             log.exception('install_error')
             yield from send('error', 'Installation failed. Check server logs for details.')
+
+    return Response(generate(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
+
+
+@app.route('/api/ztf2/status')
+@require_role('admin', 'operator', 'viewer')
+def ztf2_status():
+    settings = get_settings()
+    info = _ztf2_detect(settings.get('ztf2Path') or ZTF2_DEFAULT, settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT)
+    return jsonify({
+        **info,
+        'enabled': bool(settings.get('ztf2Enabled', False)),
+        'path': settings.get('ztf2Path') or ZTF2_DEFAULT,
+        'command': settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT,
+        'projectDir': settings.get('ztf2ProjectDir') or str(CONFIG_DIR / 'ztf2-projects' / 'default'),
+        'repoUrl': settings.get('repoUrl') or '',
+    })
+
+
+@app.route('/api/ztf2/install', methods=['POST'])
+@require_role('admin')
+@limiter.limit('2 per minute')
+def install_ztf2():
+    settings = get_settings()
+    ztf2_path = settings.get('ztf2Path') or ZTF2_DEFAULT
+    ztf2_command = settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT
+    repo_url = settings.get('repoUrl') or ''
+    bootstrap_python = settings.get('pythonPath') or PYTHON_DEFAULT
+
+    if repo_url not in ALLOWED_REPOS:
+        return jsonify({'error': 'Repository URL not allowed'}), 400
+
+    def generate() -> Generator[str, None, None]:
+        def send(t, d):
+            yield f"data: {json.dumps({'type': t, 'data': d})}\n\n"
+
+        def run_cmd(args: list, cwd=None, env=None):
+            yield from send('log', '$ ' + ' '.join(str(a) for a in args))
+            proc = subprocess.Popen(args, cwd=cwd, env=env,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in proc.stdout:
+                yield from send('stdout', line.rstrip())
+            proc.wait()
+            if proc.returncode != 0:
+                raise RuntimeError(f'Command failed (exit {proc.returncode})')
+
+        try:
+            ztf2 = Path(ztf2_path)
+            if _is_git_checkout(ztf2):
+                yield from send('step', f'Updating ZeroTouch Framework 2.x checkout to {ZTF2_REF}...')
+                yield from run_cmd(['git', 'fetch', '--depth', '1', 'origin', ZTF2_REF], cwd=ztf2_path)
+                yield from run_cmd(['git', 'checkout', 'FETCH_HEAD'], cwd=ztf2_path)
+            elif not ztf2.exists() or not _path_has_entries(ztf2):
+                yield from send('step', f'Cloning ZeroTouch Framework 2.x {ZTF2_REF}...')
+                yield from run_cmd(['git', 'clone', '--depth', '1', '--branch', ZTF2_REF, repo_url, ztf2_path])
+            elif not _ztf2_detect(ztf2, ztf2_command).get('compatible'):
+                raise RuntimeError(
+                    'Configured ZTF 2.x path exists but is not a compatible 2.x checkout. '
+                    'Point Settings at an empty path or a reviewed 2.x checkout.'
+                )
+            else:
+                yield from send('step', 'Using existing ZeroTouch Framework 2.x checkout.')
+                yield from send(
+                    'log',
+                    'Source update skipped because this ZTF 2.x path is not a git checkout. '
+                    'This is expected for Docker/appliance images where the checkout is baked into the image.'
+                )
+
+            install_python, venv_root = _ztf2_install_python(ztf2_command, bootstrap_python)
+            if venv_root and not Path(install_python).exists():
+                yield from send('step', f'Creating dedicated ZTF 2.x virtualenv at {venv_root}...')
+                yield from run_cmd([bootstrap_python, '-m', 'venv', str(venv_root)])
+
+            yield from send('step', 'Installing ZTF 2.x package into the configured runtime...')
+            yield from run_cmd([install_python, '-m', 'pip', 'install', '--upgrade', 'pip'])
+            yield from run_cmd([install_python, '-m', 'pip', 'install', str(ztf2)], cwd=ztf2_path)
+
+            info = _ztf2_detect(ztf2, ztf2_command)
+            if not info.get('compatible'):
+                raise RuntimeError(info.get('message') or 'ZTF 2.x verification failed')
+            yield from send('step', 'Verifying ZTF 2.x CLI command...')
+            yield from run_cmd([ztf2_command, '--help'], cwd=ztf2_path)
+            yield from send('done', 'ZeroTouch Framework 2.x installed successfully!')
+        except GeneratorExit:
+            return
+        except Exception as exc:
+            log.exception('ztf2_install_error')
+            yield from send('error', f'ZTF 2.x installation failed: {exc}')
 
     return Response(generate(), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
@@ -9473,6 +9892,57 @@ def submit_job():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    settings = get_settings()
+    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
+    if data.get('framework') == 'ztf2':
+        runtime_error = _ztf2_runtime_error(settings)
+        if runtime_error:
+            body, status_code = runtime_error
+            return jsonify(body), status_code
+        action = str(data.get('ztf2Action') or data.get('action') or 'plan').strip().lower()
+        if action not in ZTF2_ACTIONS:
+            return jsonify({'error': 'ZTF 2.x action is not allowed'}), 400
+        plan_id = str(data.get('planId') or uuid.uuid4()).strip()
+        trace = _ztf2_plan_trace({**data, 'ztf2Action': action}, settings, plan_id)
+        plan_path = str(_ztf2_project_dir(settings) / 'plans' / f'{plan_id}-plan.json')
+        approval = None
+        if action in ZTF2_APPROVAL_ACTIONS:
+            source_plan_id = str(data.get('sourcePlanJobId') or data.get('planJobId') or '').strip()
+            plan_job = _job_manager.get_job(source_plan_id, include_logs=False) if source_plan_id else None
+            if not plan_job:
+                return jsonify({'error': 'ZTF 2.x apply/destroy requires sourcePlanJobId for a successful plan job'}), 403
+            plan_trace = dict(plan_job.get('trace') or {})
+            trace.update({
+                'planId': str(plan_trace.get('planId') or plan_id),
+                'inputSha256': str(plan_trace.get('inputSha256') or ''),
+                'globalSha256': str(plan_trace.get('globalSha256') or ''),
+                'statePath': str(plan_trace.get('statePath') or ''),
+            })
+            approval_id = str(data.get('approvalId') or '').strip()
+            approval = _approval_manager.get_approval(approval_id) if approval_id else None
+            approval_error = _ztf2_approval_error(approval, plan_job, trace)
+            if approval_error:
+                return jsonify({'error': approval_error, 'approvalRequired': True}), 403
+            plan_path = str(plan_trace.get('planPath') or plan_path)
+        payload = {
+            'framework': 'ztf2',
+            'type': 'ztf2',
+            'workflow': f'ztf2:{action}',
+            'ztf2Action': action,
+            'inputContent': data.get('inputContent') or data.get('configContent') or '',
+            'globalContent': data.get('globalContent') or '',
+            'inputFile': data.get('inputFile') or data.get('configFile') or 'input.yml',
+            'globalFile': data.get('globalFile') or 'global.yml',
+            'stateFile': data.get('stateFile') or 'state.yml',
+            'planId': trace.get('planId') or plan_id,
+            'planPath': plan_path,
+            'approvalId': str(data.get('approvalId') or '').strip() or None,
+            'trace': {**trace, 'planPath': plan_path},
+        }
+        job = _job_manager.submit(payload, current_user)
+        if approval:
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify(job), 202
     workflow = data.get('workflow')
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
@@ -9490,7 +9960,6 @@ def submit_job():
     if standalone_fca_error:
         return jsonify({'error': standalone_fca_error, 'destructiveAction': True}), 403
 
-    settings = get_settings()
     if workflow not in STANDALONE_FCA_WORKFLOWS:
         incompatible = _ztf_incompatible_error(settings['ztfPath'])
         if incompatible:
@@ -9501,7 +9970,6 @@ def submit_job():
     if approval_error:
         return jsonify({'error': approval_error, 'approvalRequired': True}), 403
 
-    current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     job = _job_manager.submit({
         'workflow': workflow,
         'script': script,
@@ -10028,20 +10496,38 @@ def get_appliance_status():
 def get_ztf_compatibility():
     settings = get_settings()
     info = _ztf_detect(settings['ztfPath'])
+    ztf2_info = _ztf2_detect(settings.get('ztf2Path') or ZTF2_DEFAULT, settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT)
+    ztf1_enabled = settings.get('ztf1Enabled', True) is not False
+    ztf2_enabled = bool(settings.get('ztf2Enabled', False))
     return jsonify({
         **info,
+        'defaultMode': 'legacy-workflows' if ztf1_enabled else 'ztf2-iac',
+        'runtimes': {
+            'ztf1': {
+                **info,
+                'enabled': ztf1_enabled,
+                'path': settings.get('ztfPath') or ZTF_DEFAULT,
+            },
+            'ztf2': {
+                **ztf2_info,
+                'enabled': ztf2_enabled,
+                'path': settings.get('ztf2Path') or ZTF2_DEFAULT,
+                'command': settings.get('ztf2Command') or ZTF2_COMMAND_DEFAULT,
+                'projectDir': settings.get('ztf2ProjectDir') or str(CONFIG_DIR / 'ztf2-projects' / 'default'),
+            },
+        },
         'supportedModes': [
             {
                 'id': 'legacy-workflows',
                 'label': 'ZTF 1.x legacy workflows',
-                'available': bool(info.get('compatible')),
+                'available': ztf1_enabled and bool(info.get('compatible')),
                 'description': 'Runs python main.py workflow and script commands through the existing catalog.',
             },
             {
                 'id': 'ztf2-iac',
                 'label': 'ZTF 2.x plan/apply mode',
-                'available': False,
-                'description': 'Planned separate mode for ztf plan/apply/refresh/destroy projects.',
+                'available': ztf2_enabled and bool(ztf2_info.get('compatible')),
+                'description': 'Runs separate ztf plan/apply/refresh/destroy projects with approval-bound apply.',
             },
         ],
     })

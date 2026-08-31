@@ -4,7 +4,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2, Blocks
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -34,8 +34,11 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
       { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
       { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
-      { path: '/workflows', icon: Workflow, label: 'Workflows', roles: OPERATORS },
-      { path: '/scripts', icon: Terminal, label: 'Scripts', roles: OPERATORS },
+      { path: '/workflows', icon: Workflow, label: 'Workflows 1.x', roles: OPERATORS },
+      { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS },
+      { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS },
+      { path: '/scripts', icon: Terminal, label: 'Scripts 1.x', roles: OPERATORS },
+      { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS },
     ],
   },
   {
@@ -164,7 +167,7 @@ export default function Sidebar() {
               <div className="space-y-0.5">
                 {group.items.map(item => {
                   const active = location.pathname === item.path ||
-                    (item.path !== '/' && location.pathname.startsWith(item.path))
+                    (item.path !== '/' && location.pathname.startsWith(`${item.path}/`))
                   return (
                     <Link
                       key={item.path}

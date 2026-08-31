@@ -16,6 +16,8 @@ services:
     environment:
       ZTF_DATA_DIR: /var/lib/ztf-orchestrator
       ZTF_PATH: /opt/zerotouch-framework
+      ZTF2_PATH: /opt/zerotouch-framework-2x
+      ZTF2_COMMAND: ${ZTF2_COMMAND:-/opt/ztf2-python/bin/ztf}
       ZTF_NKP_PATH: /var/lib/ztf-orchestrator/nkp-zerotouch-framework
       ZTF_PORT: "5001"
       ZTF_BIND_HOST: "0.0.0.0"

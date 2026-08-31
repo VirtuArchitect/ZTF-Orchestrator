@@ -246,9 +246,10 @@ Status: mitigated by current controls; ongoing operational risk.
 ### Low: ZeroTouch Framework Major-Version Boundary
 
 ZeroTouch Framework v2.0.0 replaced the legacy `main.py --workflow/--script`
-surface with a new `ztf plan/apply` IaC model. The current Orchestrator
-workflow catalog still targets the 1.x workflow/script CLI, so default install,
-Docker, and container publishing paths pin ZTF to `v1.5.2`.
+surface with a new `ztf plan/apply` IaC model. Workflows 1.x and Scripts 1.x
+still target the 1.x workflow/script CLI. Docker and appliance images now bake
+both ZTF `v1.5.2` and ZTF `v2.0.0`, while the 2.x runtime is exposed only
+through the separate guarded IaC lane.
 
 Risk:
 
@@ -257,12 +258,20 @@ Risk:
 
 Recommendation:
 
-- Keep default installs pinned to ZTF `v1.5.2` or a reviewed 1.x branch.
+- Keep legacy workflow/script installs pinned to ZTF `v1.5.2` or a reviewed
+  1.x branch.
 - Detect ZTF 2.x layouts and block legacy workflow/script execution.
-- Add native ZTF 2.x support only as a separate reviewed plan/apply mode.
+- Keep ZTF 2.x support only as a separate reviewed plan/apply mode.
+- Keep ZTF 2.x runtime availability in Admin Settings, not at login.
+- Require apply/destroy approvals to bind to the successful source plan job,
+  plan ID, input hash, global hash, and state path.
 
-Status: mitigated by default pinning, system-health detection, and execution
-guards that reject incompatible ZTF 2.x checkouts for legacy workflows.
+Status: mitigated by default legacy pinning, separate baked runtime paths,
+system-health detection, and execution guards that reject incompatible ZTF 2.x
+checkouts for legacy workflows. The ZTF 2.x IaC lane adds admission guards for
+disabled runtime, unsupported actions, and missing or mismatched approval-bound
+plans; live resource behavior still needs environment-specific UAT before
+production claims.
 
 ## Positive Controls Observed
 

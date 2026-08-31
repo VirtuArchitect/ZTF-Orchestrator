@@ -1,6 +1,6 @@
 # Testing Matrix
 
-Current release marker: `v1.7.12`.
+Current release marker: `v1.8.0`.
 
 | Layer | Evidence | Production claim |
 |---|---|---|
