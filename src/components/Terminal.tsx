@@ -14,9 +14,10 @@ interface TerminalProps {
   title?: string
   statusLabel?: string
   onClose?: () => void
+  bodyClassName?: string
 }
 
-export default function Terminal({ logs, status, title, statusLabel, onClose }: TerminalProps) {
+export default function Terminal({ logs, status, title, statusLabel, onClose, bodyClassName }: TerminalProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -87,7 +88,10 @@ export default function Terminal({ logs, status, title, statusLabel, onClose }: 
       </div>
 
       {/* Terminal Body */}
-      <div className="flex-1 overflow-auto p-4 font-mono text-xs min-h-64 max-h-96 leading-relaxed">
+      <div className={clsx(
+        'flex-1 overflow-auto p-4 font-mono text-xs leading-relaxed',
+        bodyClassName || 'min-h-64 max-h-96'
+      )}>
         {logs.length === 0 && status === 'running' && (
           <span className="text-gray-500 cursor-blink">Initializing</span>
         )}

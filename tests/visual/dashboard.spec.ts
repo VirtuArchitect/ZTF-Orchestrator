@@ -14,9 +14,16 @@ type VisualDriftRun = {
   findings: unknown[]
 }
 
-async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[] } = {}) {
+async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[], executeEvents?: unknown[] } = {}) {
   await page.route('**/api/**', async route => {
     const url = route.request().url()
+    if (url.endsWith('/api/execute') && options.executeEvents) {
+      await route.fulfill({
+        contentType: 'text/event-stream',
+        body: options.executeEvents.map(event => `data: ${JSON.stringify(event)}\n\n`).join(''),
+      })
+      return
+    }
     if (url.endsWith('/api/system/check')) {
       await route.fulfill({ json: { checks: [], ztfInstalled: true } })
       return
@@ -296,10 +303,13 @@ test('workflow cards stay readable in light theme', async ({ page }) => {
   await page.goto('/workflows')
 
   await expect(page.locator('html')).toHaveClass(/theme-light/)
-  await expect(page.getByRole('heading', { name: 'Cluster Create' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Cluster Create', exact: true })).toBeVisible()
   await expect(page.getByText('Creates clusters using Foundation Central with full node imaging')).toBeVisible()
 
-  const infrastructureBadge = page.getByRole('link', { name: /Cluster Create/ }).locator('.badge')
+  const clusterCreateCard = page.getByRole('link').filter({
+    has: page.getByRole('heading', { name: 'Cluster Create', exact: true }),
+  })
+  const infrastructureBadge = clusterCreateCard.locator('.badge')
   await expect(infrastructureBadge).toBeVisible()
   await expect(infrastructureBadge).toHaveCSS('color', 'rgb(29, 78, 216)')
   await expect(infrastructureBadge).toHaveCSS('background-color', 'rgb(219, 234, 254)')
@@ -457,6 +467,31 @@ test('script wizard emits schema-valid PE role mapping YAML', async ({ page }) =
   expect(generatedYaml).toContain('service_account_credential:')
   expect(generatedYaml).toContain('role_mappings:')
   expect(generatedYaml).not.toContain('cluster_name:')
+})
+
+test('script execution opens a large modal terminal', async ({ page }) => {
+  await seedUiSession(page, {
+    executeEvents: [
+      { type: 'start', data: 'python main.py --script AddLocalUsers' },
+      { type: 'job', data: { progress: { phase: 'Running script queue', percent: 45, detail: 'Streaming script output', estimated: true } } },
+      { type: 'log', data: 'visible script output line\n' },
+      { type: 'done', data: { status: 'success', duration: 1 } },
+    ],
+  })
+  await page.goto('/scripts')
+
+  await page.getByPlaceholder('Search scripts...').fill('Add Local Users')
+  await page.getByRole('button', { name: /Add Local Users \(PC\)/ }).click()
+  await page.getByRole('button', { name: /Run Add Local Users \(PC\)/ }).click()
+
+  const dialog = page.locator('.fixed.inset-0')
+  await expect(dialog.getByRole('heading', { name: /Script Run: Add Local Users \(PC\)|Running: Add Local Users \(PC\)/ })).toBeVisible()
+  await expect(dialog.getByText('python main.py --script AddLocalUsers').first()).toBeVisible()
+  await expect(dialog.getByText('visible script output line')).toBeVisible()
+
+  const terminalBody = dialog.locator('.font-mono.text-xs').last()
+  const box = await terminalBody.boundingBox()
+  expect(box?.height ?? 0).toBeGreaterThan(380)
 })
 
 test('main pages keep readable text contrast in light theme', async ({ page }) => {
