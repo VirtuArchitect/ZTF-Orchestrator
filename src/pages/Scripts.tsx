@@ -12,6 +12,7 @@ import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
 
 interface LogLine { type: string; data: string; ts: number }
+interface ScriptProgress { phase: string; percent: number; detail: string; estimated: boolean }
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Authentication': 'badge-purple',
@@ -35,6 +36,14 @@ export default function Scripts() {
   const [configContent, setConfigContent] = useState('')
   const [logs,          setLogs]          = useState<LogLine[]>([])
   const [runStatus,     setRunStatus]     = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [runTitle,      setRunTitle]      = useState('')
+  const [runCommand,    setRunCommand]    = useState('')
+  const [progress,      setProgress]      = useState<ScriptProgress>({
+    phase: 'Queued',
+    percent: 0,
+    detail: 'Waiting to start script execution',
+    estimated: true,
+  })
 
   const filtered = SCRIPTS.filter(s => {
     const matchSearch = !search ||
@@ -63,20 +72,32 @@ export default function Scripts() {
   // ── Run ───────────────────────────────────────────────────────────────────
   const runScripts = async () => {
     if (!queue.length) return
-    const destructive = queue.filter(id => SCRIPT_CONFIG_SCHEMAS[id]?.riskLevel === 'destructive')
+    const selectedQueue = [...queue]
+    const destructive = selectedQueue.filter(id => SCRIPT_CONFIG_SCHEMAS[id]?.riskLevel === 'destructive')
     const confirmationPhrase = destructive.length ? `RUN ${destructive.join(',')}` : ''
     if (destructive.length) {
       const entered = window.prompt(`Destructive action confirmation required.\n\nScripts: ${destructive.join(', ')}\nType exactly: ${confirmationPhrase}`)
       if (entered !== confirmationPhrase) return
     }
+    const nextCommand = `python main.py --script ${selectedQueue.join(',')}`
+    setRunTitle(selectedQueue.length === 1
+      ? SCRIPTS.find(s => s.id === selectedQueue[0])?.name ?? selectedQueue[0]
+      : `${selectedQueue.length} scripts`)
+    setRunCommand(nextCommand)
     setRunStatus('running')
     setLogs([])
+    setProgress({
+      phase: 'Queued',
+      percent: 0,
+      detail: 'Waiting for execution stream',
+      estimated: true,
+    })
 
     const resp = await apiFetch('/api/execute', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        script:        queue,          // pass as array; server joins to A,B,C
+        script:        selectedQueue,          // pass as array; server joins to A,B,C
         configContent,
         configFile:    `multi-script-${Date.now()}.yml`,
         ...(destructive.length ? {
@@ -86,7 +107,30 @@ export default function Scripts() {
       }),
     })
 
-    if (!resp.body) { setRunStatus('error'); return }
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}))
+      const message = data.error || 'Script execution request failed'
+      setLogs(prev => [...prev, { type: 'error', data: message, ts: Date.now() }])
+      setProgress({
+        phase: 'Failed',
+        percent: 100,
+        detail: message,
+        estimated: true,
+      })
+      setRunStatus('error')
+      return
+    }
+
+    if (!resp.body) {
+      setProgress({
+        phase: 'Failed',
+        percent: 100,
+        detail: 'Script execution stream was not available',
+        estimated: true,
+      })
+      setRunStatus('error')
+      return
+    }
 
     const reader  = resp.body.getReader()
     const decoder = new TextDecoder()
@@ -107,8 +151,29 @@ export default function Scripts() {
             data: typeof evt.data === 'string' ? evt.data : JSON.stringify(evt.data),
             ts:   Date.now(),
           }])
+          if (evt.type === 'job' && evt.data?.progress) {
+            setProgress(evt.data.progress)
+          }
           if (evt.type === 'done')  setRunStatus(evt.data?.status === 'success' ? 'done' : 'error')
-          if (evt.type === 'error') setRunStatus('error')
+          if (evt.type === 'done') {
+            setProgress({
+              phase: evt.data?.status === 'success' ? 'Completed' : 'Failed',
+              percent: 100,
+              detail: evt.data?.status === 'success'
+                ? 'Script queue finished'
+                : 'Script queue ended with an error; review the output',
+              estimated: true,
+            })
+          }
+          if (evt.type === 'error') {
+            setProgress({
+              phase: 'Failed',
+              percent: 100,
+              detail: typeof evt.data === 'string' ? evt.data : 'Script execution failed',
+              estimated: true,
+            })
+            setRunStatus('error')
+          }
         } catch { /* ignore */ }
       }
     }
@@ -270,12 +335,14 @@ export default function Scripts() {
                 </div>
               </div>
 
-              {/* Terminal */}
-              {(logs.length > 0 || runStatus === 'running') && (
-                <Terminal_component
+              {runStatus !== 'idle' && (
+                <ScriptExecutionModal
+                  command={runCommand}
                   logs={logs}
+                  progress={progress}
                   status={runStatus === 'running' ? 'running' : runStatus === 'done' ? 'done' : 'error'}
-                  title={`--script ${queue.join(',')}`}
+                  title={runTitle}
+                  onClose={() => runStatus !== 'running' && setRunStatus('idle')}
                 />
               )}
             </>
@@ -296,5 +363,86 @@ export default function Scripts() {
         </div>
       </div>
     </Layout>
+  )
+}
+
+function ScriptExecutionModal({
+  command,
+  logs,
+  onClose,
+  progress,
+  status,
+  title,
+}: {
+  command: string
+  logs: LogLine[]
+  onClose: () => void
+  progress: ScriptProgress
+  status: 'running' | 'done' | 'error'
+  title: string
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+      <div className="w-full max-w-3xl max-h-[calc(100vh-3rem)] bg-gray-950 rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-nutanix-blue/20 border border-nutanix-blue/30 flex items-center justify-center flex-shrink-0">
+              <Play size={14} className="text-nutanix-cyan" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-100 truncate">
+                {status === 'running' ? 'Running: ' : 'Script Run: '}{title}
+              </h3>
+              <p className="text-xs text-gray-500 font-mono truncate">{command}</p>
+            </div>
+          </div>
+          {status !== 'running' && (
+            <button onClick={onClose} className="btn-ghost p-1.5">
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        <div className="p-4 min-h-0 overflow-hidden">
+          <ScriptProgressPanel progress={progress} />
+          <Terminal_component
+            logs={logs}
+            status={status}
+            title={command || 'python main.py --script'}
+            statusLabel={status === 'running' ? 'Running...' : status === 'done' ? 'Completed' : 'Failed'}
+            bodyClassName="min-h-[26rem] max-h-[60vh]"
+          />
+        </div>
+        {status !== 'running' && (
+          <div className="px-6 pb-4 flex justify-end">
+            <button onClick={onClose} className="btn-secondary">Close</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ScriptProgressPanel({ progress }: { progress: ScriptProgress }) {
+  const percent = Math.max(0, Math.min(100, Number(progress.percent) || 0))
+  return (
+    <div className="mb-4 rounded-lg border border-border bg-surface/70 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="font-medium text-gray-200">{progress.phase || 'Preparing script execution'}</span>
+        <span className="text-gray-500">{progress.estimated ? 'Estimated progress' : 'Progress'} - {percent}%</span>
+      </div>
+      <div
+        className="mt-2 h-2 rounded-full bg-gray-900 overflow-hidden"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-label="Estimated script execution progress"
+      >
+        <div className="h-full rounded-full bg-nutanix-cyan transition-all duration-500" style={{ width: `${percent}%` }} />
+      </div>
+      {progress.detail && (
+        <p className="mt-2 text-xs text-gray-500 break-words">{progress.detail}</p>
+      )}
+    </div>
   )
 }
