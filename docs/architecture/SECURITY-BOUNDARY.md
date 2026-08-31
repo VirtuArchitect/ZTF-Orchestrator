@@ -1,6 +1,6 @@
 # Security Boundary
 
-Current release marker: `v1.7.12`.
+Current release marker: `v1.8.0`.
 
 ZTF-Orchestrator is an internal operator console for controlled automation. It
 is not a public internet service, a Nutanix-supported product, or a replacement
@@ -25,7 +25,8 @@ incident-response controls.
 - Broad production validation without environment-specific UAT.
 - Internet exposure without reverse proxy, TLS, and hardening.
 - Uncontrolled NKP apply, upgrade, registry push, or destroy actions.
-- Native ZTF 2.x plan/apply execution in the current workflow launcher.
+- ZTF 2.x plan/apply execution through the legacy workflow/script launcher, or
+  ungoverned ZTF 2.x apply/destroy outside the approval-bound IaC lane.
 - Direct infrastructure mutation from YAML Studio.
 
 ## Sensitive Inputs

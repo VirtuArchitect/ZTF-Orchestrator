@@ -6,6 +6,7 @@ import GlobalConfig  from './pages/GlobalConfig'
 import Workflows     from './pages/Workflows'
 import WorkflowDetail from './pages/WorkflowDetail'
 import Scripts       from './pages/Scripts'
+import Scripts2x     from './pages/Scripts2x'
 import Executions    from './pages/Executions'
 import Jobs          from './pages/Jobs'
 import Settings      from './pages/Settings'
@@ -22,6 +23,7 @@ import ValidationEvidence from './pages/ValidationEvidence'
 import Appliance          from './pages/Appliance'
 import UpgradeAdvisor     from './pages/UpgradeAdvisor'
 import YamlStudio         from './pages/YamlStudio'
+import Ztf2Iac            from './pages/Ztf2Iac'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
 
@@ -72,19 +74,31 @@ export default function App() {
           <RequireRole roles={['admin', 'operator', 'viewer']}><GlobalConfig /></RequireRole>
         } />
         <Route path="/workflows" element={
-          <RequireRole roles={['admin', 'operator']}><Workflows /></RequireRole>
+          <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf1" /></RequireRole>
         } />
         <Route path="/workflows/:id" element={
           <RequireRole roles={['admin', 'operator']}><WorkflowDetail /></RequireRole>
         } />
+        <Route path="/workflows-2x" element={
+          <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf2" /></RequireRole>
+        } />
+        <Route path="/workflows-2x/:id" element={
+          <RequireRole roles={['admin', 'operator']}><WorkflowDetail /></RequireRole>
+        } />
         <Route path="/scripts" element={
           <RequireRole roles={['admin', 'operator']}><Scripts /></RequireRole>
+        } />
+        <Route path="/scripts-2x" element={
+          <RequireRole roles={['admin', 'operator']}><Scripts2x /></RequireRole>
         } />
         <Route path="/configs" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ConfigFiles /></RequireRole>
         } />
         <Route path="/yaml-studio" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><YamlStudio /></RequireRole>
+        } />
+        <Route path="/ztf2-iac" element={
+          <RequireRole roles={['admin', 'operator']}><Ztf2Iac /></RequireRole>
         } />
         <Route path="/executions" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Executions /></RequireRole>

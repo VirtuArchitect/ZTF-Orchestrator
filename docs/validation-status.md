@@ -65,7 +65,7 @@ checks, static configuration checks, or local Docker checks:
 | Authentication and RBAC | Login, sessions, logout, admin/operator/viewer restrictions, and protected routes are tested. |
 | Config file management | Create, read, update, delete, backup, restore, path traversal rejection, extension validation, and oversized body handling are tested. |
 | Workflow validation | Unknown workflow/script rejection, YAML validation, dry-run checks, and legacy `fc_ip` normalization are tested. |
-| ZeroTouch Framework compatibility | Current workflow/script execution is validated against legacy ZTF 1.x semantics. Install and container defaults pin ZTF `v1.5.2`; ZTF 2.x checkouts are detected and blocked for legacy workflow/script launch because upstream v2.0.0 has a different `ztf plan/apply` model and does not yet port the 1.x workflow surfaces. |
+| ZeroTouch Framework compatibility | Workflows 1.x and Scripts 1.x are validated against legacy ZTF 1.x semantics. Install, Docker, and appliance defaults keep the legacy lane on ZTF `v1.5.2` and bake a separate ZTF `v2.0.0` runtime for ZTF 2.x IaC, Workflows 2.x, and Scripts 2.x. ZTF 2.x checkouts are detected and blocked for legacy workflow/script launch because v2.0.0 has a different `ztf plan/apply` model. Apply/destroy submissions require a successful source plan job and approval-bound hashes. |
 | Storage abstraction | File storage round-trip, concurrent file writes, and transient replace retry behavior are tested. PostgreSQL storage document/session/audit behavior is testable when `ZTF_TEST_DATABASE_URL` is supplied. |
 | PostgreSQL backup controls | Admin-only backup list/create/download/restore endpoints, restore confirmation, safety-backup creation, restore maintenance locking, path rejection, and command secret handling are tested. |
 | Docker Compose | Default PostgreSQL-backed compose and file-backed compose validate successfully. |
@@ -146,5 +146,9 @@ configuration workflows. Full enterprise validation requires environment-specifi
 UAT against the target Nutanix infrastructure, PostgreSQL deployment,
 Kubernetes/load-balancing model, and disaster recovery process.
 
-ZTF 2.x support is intentionally tracked outside v1.5.x in the
-[ZTF 2.x Plan/Apply Roadmap](ztf-2x-plan-apply-roadmap.md).
+ZTF 2.x support is intentionally tracked outside the legacy workflow lane in the
+[ZTF 2.x Plan/Apply Roadmap](ztf-2x-plan-apply-roadmap.md). Current validation
+covers runtime detection, job admission guards, YAML Studio shape checks,
+Workflows 2.x, Scripts 2.x converted actions, demo visibility, and Docker
+default bake validation. Live `ztf plan/apply` resource behavior still requires
+environment-specific UAT against a reviewed ZeroTouch Framework 2.x checkout.

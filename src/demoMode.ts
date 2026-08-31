@@ -36,6 +36,7 @@ const systemChecks = [
   { name: 'pip', ok: true, value: 'pip 26.1.2 from /opt/ztf-python/lib/python3.11/site-packages' },
   { name: 'git', ok: true, value: 'git version 2.47.3' },
   { name: 'ZTF Installed', ok: true, value: 'Legacy ZTF 1.x workflow/script CLI detected' },
+  { name: 'ZTF 2.x Plan/Apply', ok: true, value: 'enabled for simulated plan jobs' },
   { name: 'NKP Framework', ok: true, value: 'found' },
   { name: 'Requirements File', ok: true, value: 'requirements/prod.txt' },
 ]
@@ -90,6 +91,39 @@ const executions = [
 ]
 
 const jobs = [
+  {
+    id: 'demo-job-ztf2-plan',
+    status: 'success',
+    workflow: 'ztf2:plan',
+    type: 'ztf2',
+    framework: 'ztf2',
+    user: 'demo-admin',
+    createdAt: iso(18),
+    updatedAt: iso(16),
+    startedAt: iso(18),
+    finishedAt: iso(16),
+    returnCode: 0,
+    progress: { phase: 'Completed', percent: 100, detail: 'Simulated ZTF 2.x plan generated', estimated: false, updatedAt: iso(16) },
+    logs: [
+      { type: 'start', data: { command: 'ztf plan --input input.yml --global-file global.yml --state state.yml --out demo-plan.json' }, ts: iso(18) },
+      { type: 'stdout', data: 'Plan: 1 to add, 0 to change, 0 to destroy', ts: iso(17) },
+      { type: 'done', data: { status: 'success', code: 0 }, ts: iso(16) },
+    ],
+    trace: {
+      framework: 'ztf2',
+      runtimeMode: 'ztf2_iac',
+      action: 'plan',
+      planId: 'demo-plan-001',
+      planPath: '/var/lib/ztf-orchestrator/ztf2-projects/default/plans/demo-plan-001-plan.json',
+      inputFile: 'input.yml',
+      globalFile: 'global.yml',
+      stateFile: 'state.yml',
+      inputSha256: 'demo-input-sha256',
+      globalSha256: 'demo-global-sha256',
+      statePath: '/var/lib/ztf-orchestrator/ztf2-projects/default/state.yml',
+      ztfVersionRef: 'v2.0.0',
+    },
+  },
   {
     id: 'demo-job-running',
     status: 'running',
@@ -185,6 +219,27 @@ const schedules = [
 
 const approvals = [
   {
+    id: 'demo-approval-ztf2',
+    workflow: 'ztf2:apply',
+    configFile: 'input.yml',
+    configContent: 'domains:\n  lab:\n    data: {}\n    resources: {}\n    outputs: {}\n',
+    requestedBy: 'demo-operator',
+    requestedAt: iso(15),
+    expiresAt: new Date(now.getTime() + 24 * 60 * 60_000).toISOString(),
+    status: 'pending',
+    decidedBy: null,
+    decidedAt: null,
+    notes: 'Simulated approval for the exact ZTF 2.x plan artifact.',
+    pipelineId: null,
+    jobId: null,
+    metadata: {
+      planId: 'demo-plan-001',
+      inputSha256: 'demo-input-sha256',
+      globalSha256: 'demo-global-sha256',
+      statePath: '/var/lib/ztf-orchestrator/ztf2-projects/default/state.yml',
+    },
+  },
+  {
     id: 'demo-approval-001',
     workflow: 'deploy-management-pc',
     configFile: 'pod-management-deploy-demo.yml',
@@ -204,6 +259,7 @@ const approvals = [
 const configs: Record<string, string> = {
   'pc-deploy-demo.yml': 'pc_deploy:\n  pc_name: pc-demo\n  cluster_ip: pe-demo.example.invalid\n  pe_credential: pe_user\n',
   'cluster-baseline-demo.yml': 'clusters:\n  pe-demo.example.invalid:\n    name: DEV_LAB\n    pe_credential: pe_user\n',
+  'input.yml': 'domains:\n  lab:\n    data: {}\n    resources: {}\n    outputs: {}\n',
   'global.yml': 'vault_to_use: local\nip_allocation_method: static\nvaults:\n  local:\n    credentials:\n      pe_user:\n        username: admin\n        password: <demo-secret>\n',
 }
 
@@ -213,6 +269,11 @@ function demoStoreSeed() {
   state.setSystemChecks(systemChecks, true)
   state.setSettings({
     ztfPath: '/opt/zerotouch-framework',
+    ztf1Enabled: true,
+    ztf2Enabled: true,
+    ztf2Path: '/opt/zerotouch-framework-2x',
+    ztf2Command: 'ztf',
+    ztf2ProjectDir: '/var/lib/ztf-orchestrator/ztf2-projects/default',
     nkpPath: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework',
     pythonPath: '/opt/ztf-python/bin/python',
     configDir: '/var/lib/ztf-orchestrator/configs',
@@ -282,13 +343,13 @@ function okAction(message: string, extra: Record<string, unknown> = {}) {
 }
 
 const DEMO_INSTALLED_BUILD = {
-  version: '1.7.12',
-  versionTag: 'v1.7.12',
-  installedIdentity: 'v1.7.12 / demo-build',
-  sourceRef: 'v1.7.12',
+  version: '1.8.0',
+  versionTag: 'v1.8.0',
+  installedIdentity: 'v1.8.0 / demo-build',
+  sourceRef: 'v1.8.0',
   commit: 'demo-build',
   buildDate: '2026-08-25',
-  containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.12',
+  containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.0',
   updatePackageId: 'demo-update-package',
   appliedUpdate: {},
 }
@@ -298,22 +359,70 @@ async function demoResponse(request: Request) {
   const path = url.pathname.replace(/^\/ZTF-Orchestrator(?=\/)/, '')
   const method = request.method.toUpperCase()
 
-  if (path === '/health') return json({ status: 'healthy', version: '1.7.12', installed: DEMO_INSTALLED_BUILD, storage: 'demo' })
+  if (path === '/health') return json({ status: 'healthy', version: '1.8.0', installed: DEMO_INSTALLED_BUILD, storage: 'demo' })
   if (!path.startsWith('/api/')) return null
 
   if (path === '/api/auth/login') {
     return json({ token: DEMO_TOKEN, user: { username: 'demo-admin', role: 'admin' } })
   }
   if (path === '/api/auth/logout') return okAction('Demo session reset.')
-  if (path === '/api/system/check') return json({ checks: systemChecks, ztfInstalled: true })
+  if (path === '/api/system/check') return json({
+    checks: systemChecks,
+    ztfInstalled: true,
+    ztf2Installed: true,
+    ztf2: {
+      enabled: true,
+      installed: true,
+      compatible: true,
+      layout: 'ztf-2.x',
+      path: '/opt/zerotouch-framework-2x',
+      command: 'ztf',
+      projectDir: '/var/lib/ztf-orchestrator/ztf2-projects/default',
+      message: 'ZTF 2.x plan/apply CLI layout detected',
+      requiredRef: 'v2.0.0',
+    },
+  })
+  if (path === '/api/ztf2/status') return json({
+    enabled: true,
+    installed: true,
+    compatible: true,
+    layout: 'ztf-2.x',
+    path: '/opt/zerotouch-framework-2x',
+    command: 'ztf',
+    projectDir: '/var/lib/ztf-orchestrator/ztf2-projects/default',
+    repoUrl: 'https://github.com/nutanixdev/zerotouch-framework.git',
+    message: 'ZTF 2.x plan/apply CLI layout detected',
+    requiredRef: 'v2.0.0',
+  })
+  if (path === '/api/ztf2/install' && method === 'POST') {
+    const lines = [
+      { type: 'step', data: 'Using demo ZeroTouch Framework 2.x checkout.' },
+      { type: 'stdout', data: 'Installing ZTF 2.x package into the configured runtime...' },
+      { type: 'stdout', data: 'ztf --help' },
+      { type: 'done', data: 'ZeroTouch Framework 2.x installed successfully!' },
+    ]
+    return new Response(lines.map(line => `data: ${JSON.stringify(line)}\n\n`).join(''), {
+      headers: { 'Content-Type': 'text/event-stream' },
+    })
+  }
+  if (path === '/api/install' && method === 'POST') {
+    const lines = [
+      { type: 'step', data: 'Using demo ZeroTouch Framework 1.x checkout.' },
+      { type: 'stdout', data: 'Installing Python dependencies...' },
+      { type: 'done', data: 'ZeroTouch Framework installed successfully!' },
+    ]
+    return new Response(lines.map(line => `data: ${JSON.stringify(line)}\n\n`).join(''), {
+      headers: { 'Content-Type': 'text/event-stream' },
+    })
+  }
   if (path === '/api/health/details') {
     return json({
       status: 'healthy',
       storage: 'postgres',
-      version: '1.7.12',
+      version: '1.8.0',
       installed: DEMO_INSTALLED_BUILD,
       database: { configured: true, location: 'postgresql://demo:***@postgres:5432/ztf_orchestrator' },
-      jobs: { workers: 1, queued: 0, running: 1, recent: 3 },
+      jobs: { workers: 1, queued: 0, running: 1, recent: jobs.length },
     })
   }
   if (path === '/api/visibility/summary') {
@@ -337,7 +446,33 @@ async function demoResponse(request: Request) {
     if (path.endsWith('/cancel')) return json({ ...jobs[0], status: 'cancelled', finishedAt: iso(0) })
     if (method === 'DELETE') return okAction('Job delete simulated.')
   }
-  if (path === '/api/jobs') return json(jobs)
+  if (path === '/api/jobs') {
+    if (method === 'POST') {
+      const body = await requestJson(request)
+      const action = String(body.ztf2Action || body.action || 'plan')
+      return json({
+        id: `demo-job-${Date.now()}`,
+        status: 'queued',
+        workflow: body.framework === 'ztf2' ? `ztf2:${action}` : String(body.workflow || body.script || 'demo-workflow'),
+        type: body.framework === 'ztf2' ? 'ztf2' : body.script ? 'script' : 'workflow',
+        framework: body.framework || 'ztf',
+        user: 'demo-admin',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        trace: body.framework === 'ztf2' ? {
+          framework: 'ztf2',
+          runtimeMode: 'ztf2_iac',
+          action,
+          workflowTemplate: String(body.workflowTemplate || ''),
+          planId: `demo-plan-${Date.now()}`,
+          planPath: '/var/lib/ztf-orchestrator/ztf2-projects/default/plans/demo-plan-workflow.json',
+          statePath: '/var/lib/ztf-orchestrator/ztf2-projects/default/state.yml',
+        } : undefined,
+        demo: true,
+      }, { status: 202 })
+    }
+    return json(jobs)
+  }
   if (path.startsWith('/api/jobs?') || path === '/api/jobs/') return json(jobs)
   if (path === '/api/drift') return method === 'DELETE' ? okAction('Drift history clear simulated.') : json(driftRuns)
   if (path === '/api/drift/check') return okAction('Drift check simulated.', { run: driftRuns[0] })
@@ -403,7 +538,7 @@ async function demoResponse(request: Request) {
   if (path === '/api/appliance/status') {
     return json({
       detected: true,
-      runtime: { status: 'healthy', version: '1.7.12', installed: DEMO_INSTALLED_BUILD, ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
+      runtime: { status: 'healthy', version: '1.8.0', installed: DEMO_INSTALLED_BUILD, ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
       hostLayout: { status: 'demo', visible: 7, expected: 7, message: 'Simulated appliance host layout' },
       checks: [{ name: 'Demo appliance', ok: true, status: 'ok', value: 'static GitHub Pages demo', message: 'No host access in demo mode' }],
       containerPaths: { nkpBundles: '/var/lib/ztf-orchestrator/bundles', nkpFramework: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework', ztfFramework: '/opt/zerotouch-framework' },
@@ -412,7 +547,7 @@ async function demoResponse(request: Request) {
   if (path === '/api/appliance/artifacts') return json({ artifacts: [], summary: { total: 0, verified: 0, archived: 0, expiring: 0, expired: 0, pending: 0 } })
   if (path === '/api/appliance/updates') {
     return json({
-      current: { version: '1.7.12', installed: DEMO_INSTALLED_BUILD, containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.7.12', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
+      current: { version: '1.8.0', installed: DEMO_INSTALLED_BUILD, containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.0', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
       updates: [],
       staged: null,
       allowedRepositories: ['virtuarchitect/ztf-orchestrator', 'nutanixdev/zerotouch-framework', 'virtuarchitect/nkp-zerotouch-framework'],
@@ -420,7 +555,23 @@ async function demoResponse(request: Request) {
     })
   }
   if (path.startsWith('/api/appliance/')) return okAction('Appliance action simulated.')
-  if (path === '/api/ztf/compatibility') return json({ installed: true, compatible: true, layout: 'legacy-1.x', entrypoint: 'main.py', requiredRef: 'v1.5.2', message: 'Legacy ZTF 1.x workflow/script CLI detected', supportedModes: [] })
+  if (path === '/api/ztf/compatibility') return json({
+    installed: true,
+    compatible: true,
+    layout: 'legacy-1.x',
+    entrypoint: 'main.py',
+    requiredRef: 'v1.5.2',
+    message: 'Legacy ZTF 1.x workflow/script CLI detected',
+    defaultMode: 'legacy-workflows',
+    runtimes: {
+      ztf1: { enabled: true, compatible: true, layout: 'legacy-1.x', path: '/opt/zerotouch-framework' },
+      ztf2: { enabled: true, compatible: true, layout: 'ztf-2.x', path: '/opt/zerotouch-framework-2x', command: 'ztf', projectDir: '/var/lib/ztf-orchestrator/ztf2-projects/default' },
+    },
+    supportedModes: [
+      { id: 'legacy-workflows', label: 'ZTF 1.x legacy workflows', available: true, description: 'Runs python main.py workflow and script commands through the existing catalog.' },
+      { id: 'ztf2-iac', label: 'ZTF 2.x plan/apply mode', available: true, description: 'Runs separate ztf plan/apply/refresh/destroy projects with approval-bound apply.' },
+    ],
+  })
   if (path === '/api/nkp/status') return json({ installed: true, path: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework', repoUrl: 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git', script: 'scripts/zt.sh', safePhases: ['validate', 'prepare', 'generate'], configs: ['air-gapped.example.yaml'] })
   if (path === '/api/nkp/profiles') return json([{ id: 'demo-profile', name: 'DEV_LAB Demo', environment: 'lab', createdAt: iso(500), updatedAt: iso(60), status: 'ready' }])
   if (path.startsWith('/api/nkp/')) return okAction('NKP action simulated.')

@@ -7,7 +7,11 @@ import Layout from '../components/Layout'
 import clsx from 'clsx'
 import { WORKFLOWS as CATALOG_WORKFLOWS } from '../data'
 
-const WORKFLOWS = CATALOG_WORKFLOWS.map(workflow => workflow.id)
+const WORKFLOWS = [
+  ...CATALOG_WORKFLOWS.map(workflow => workflow.id),
+  'ztf2:apply',
+  'ztf2:destroy',
+]
 
 const STATUS_FILTERS: ApprovalStatus[] = ['pending','approved','rejected','expired']
 type LifecycleFilter = 'active' | 'history' | 'all'
@@ -27,8 +31,24 @@ function StatusBadge({ status }: { status: ApprovalStatus }) {
   )
 }
 
-interface FormState { workflow: string; configContent: string; notes: string }
-const EMPTY_FORM: FormState = { workflow: WORKFLOWS[0], configContent: '', notes: '' }
+interface FormState {
+  workflow: string
+  configContent: string
+  notes: string
+  planId: string
+  inputSha256: string
+  globalSha256: string
+  statePath: string
+}
+const EMPTY_FORM: FormState = {
+  workflow: WORKFLOWS[0],
+  configContent: '',
+  notes: '',
+  planId: '',
+  inputSha256: '',
+  globalSha256: '',
+  statePath: '',
+}
 
 export default function Approvals() {
   const sessionToken = useStore(s => s.sessionToken)
@@ -58,11 +78,28 @@ export default function Approvals() {
 
   const create = async () => {
     if (!form.configContent.trim()) { setFormError('Config content is required'); return }
+    const isZtf2Approval = form.workflow === 'ztf2:apply' || form.workflow === 'ztf2:destroy'
+    if (isZtf2Approval && (!form.planId.trim() || !form.inputSha256.trim() || !form.globalSha256.trim() || !form.statePath.trim())) {
+      setFormError('ZTF 2.x approvals require plan ID, input hash, global hash, and state path')
+      return
+    }
+    const payload = {
+      workflow: form.workflow,
+      configContent: form.configContent,
+      configFile: isZtf2Approval ? 'input.yml' : undefined,
+      notes: form.notes,
+      metadata: isZtf2Approval ? {
+        planId: form.planId.trim(),
+        inputSha256: form.inputSha256.trim(),
+        globalSha256: form.globalSha256.trim(),
+        statePath: form.statePath.trim(),
+      } : undefined,
+    }
     setSaving(true); setFormError('')
     const r = await apiFetch('/api/approvals', {
       method: 'POST',
       headers: { Authorization: `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     })
     setSaving(false)
     if (!r.ok) { const e = await r.json(); setFormError(e.error || 'Failed'); return }
@@ -96,6 +133,7 @@ export default function Approvals() {
     if (filter !== 'all' && a.status !== filter) return false
     return true
   })
+  const formIsZtf2 = form.workflow === 'ztf2:apply' || form.workflow === 'ztf2:destroy'
 
   return (
     <Layout title="Approval Gates">
@@ -226,6 +264,14 @@ export default function Approvals() {
                         <p className="text-sm text-gray-300">{a.notes}</p>
                       </div>
                     )}
+                    {a.metadata && Object.keys(a.metadata).length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Approval Metadata</p>
+                        <pre className="text-xs font-mono text-gray-300 bg-gray-900/60 rounded-lg p-3 overflow-x-auto max-h-40 whitespace-pre-wrap">
+                          {JSON.stringify(a.metadata, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                     {isAdmin && a.status === 'pending' && (
                       <div>
                         <label className="text-xs text-gray-500 block mb-1">Decision note (optional)</label>
@@ -262,6 +308,30 @@ export default function Approvals() {
                     rows={6} placeholder="Paste workflow YAML here"
                     className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue resize-none" />
                 </div>
+                {formIsZtf2 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Plan ID</label>
+                      <input value={form.planId} onChange={e => setForm(f => ({...f, planId: e.target.value}))}
+                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">State Path</label>
+                      <input value={form.statePath} onChange={e => setForm(f => ({...f, statePath: e.target.value}))}
+                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Input SHA-256</label>
+                      <input value={form.inputSha256} onChange={e => setForm(f => ({...f, inputSha256: e.target.value}))}
+                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Global SHA-256</label>
+                      <input value={form.globalSha256} onChange={e => setForm(f => ({...f, globalSha256: e.target.value}))}
+                        className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono text-gray-100 focus:outline-none focus:border-nutanix-blue" />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Notes for approver (optional)</label>
                   <input value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))}

@@ -5,6 +5,9 @@ LABEL application="ZTF-Orchestrator"
 
 ARG ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
 ARG ZTF_REF=v1.5.2
+ARG ZTF2_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
+ARG ZTF2_REF=v2.0.0
+ARG ZTF2_BAKE=true
 ARG ZTF_ORCHESTRATOR_VERSION=v1.7.12
 ARG ZTF_BUILD_COMMIT=
 ARG ZTF_BUILD_DATE=
@@ -18,6 +21,8 @@ ENV ZTF_BUILD_DATE=${ZTF_BUILD_DATE}
 ENV ZTF_ORCHESTRATOR_IMAGE=${ZTF_ORCHESTRATOR_IMAGE}
 ENV ZTF_DATA_DIR=/var/lib/ztf-orchestrator
 ENV ZTF_PATH=/opt/zerotouch-framework
+ENV ZTF2_PATH=/opt/zerotouch-framework-2x
+ENV ZTF2_COMMAND=/opt/ztf2-python/bin/ztf
 ENV ZTF_NKP_PATH=/var/lib/ztf-orchestrator/nkp-zerotouch-framework
 ENV ZTF_PYTHON=/opt/ztf-python/bin/python
 ENV ZTF_PORT=5001
@@ -44,11 +49,15 @@ RUN useradd -r -s /usr/sbin/nologin -d /var/lib/ztf-orchestrator ztf-svc && \
     mkdir -p \
         /var/lib/ztf-orchestrator \
         /var/log/ztf-orchestrator \
-        /opt/zerotouch-framework && \
+        /opt/zerotouch-framework \
+        /opt/zerotouch-framework-2x \
+        /opt/ztf2-python && \
     chown -R ztf-svc:ztf-svc \
         /var/lib/ztf-orchestrator \
         /var/log/ztf-orchestrator \
-        /opt/zerotouch-framework
+        /opt/zerotouch-framework \
+        /opt/zerotouch-framework-2x \
+        /opt/ztf2-python
 
 # ============================================================================
 # Working directory
@@ -64,6 +73,11 @@ RUN git clone --depth 1 --branch "${ZTF_REF}" \
     "${ZTF_REPO_URL}" \
     /opt/zerotouch-framework && \
     rm -rf /opt/zerotouch-framework/.git
+
+RUN if [ "${ZTF2_BAKE}" = "true" ]; then \
+        git clone --depth 1 --branch "${ZTF2_REF}" "${ZTF2_REPO_URL}" /opt/zerotouch-framework-2x && \
+        rm -rf /opt/zerotouch-framework-2x/.git; \
+    fi
 
 # ZTF v1.5.x ships a pip-compiled requirements file with an upstream developer
 # file:// path for calm-dsl. Patch that path to the bundled wheel and install
@@ -81,6 +95,12 @@ RUN python -m venv /opt/ztf-python && \
     /opt/ztf-python/bin/pip install --no-cache-dir -r /tmp/ztf-requirements.txt && \
     /opt/ztf-python/bin/pip install --no-cache-dir ntnx-iam-py-client==4.0.1 && \
     /opt/ztf-python/bin/pip install --no-cache-dir --no-deps -r /tmp/ztf-calm-requirements.txt
+
+RUN python -m venv /opt/ztf2-python && \
+    if [ "${ZTF2_BAKE}" = "true" ]; then \
+        /opt/ztf2-python/bin/pip install --no-cache-dir --upgrade pip && \
+        /opt/ztf2-python/bin/pip install --no-cache-dir /opt/zerotouch-framework-2x; \
+    fi
 
 # ============================================================================
 # Install orchestrator requirements after ZTF runtime packages
@@ -100,7 +120,7 @@ COPY . /app
 # Permissions
 # ============================================================================
 
-RUN chown -R ztf-svc:ztf-svc /app /opt/zerotouch-framework /opt/ztf-python
+RUN chown -R ztf-svc:ztf-svc /app /opt/zerotouch-framework /opt/zerotouch-framework-2x /opt/ztf-python /opt/ztf2-python
 
 # ============================================================================
 # Runtime user

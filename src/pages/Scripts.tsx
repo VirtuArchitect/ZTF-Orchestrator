@@ -120,8 +120,8 @@ export default function Scripts() {
 
   return (
     <Layout
-      title="Script Library"
-      subtitle="Browse and run individual ZTF scripts — select multiple to run in sequence"
+      title="Scripts 1.x"
+      subtitle="Browse and run individual ZTF 1.x scripts — select multiple to run in sequence"
     >
       <div className="flex gap-6 h-full">
 

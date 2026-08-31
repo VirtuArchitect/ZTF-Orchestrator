@@ -77,16 +77,16 @@ jobs:
           fi
           case "$selected" in
             standard)
-              matrix='{"include":[{"profile":"standard","description":"Connected staging appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"}]}'
+              matrix='{"include":[{"profile":"standard","description":"Connected staging appliance with baked app image, PostgreSQL image, ZTF v1.5.2, ZTF v2.0.0 IaC runtime, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"}]}'
               ;;
             airgap)
-              matrix='{"include":[{"profile":"airgap","description":"Portable disconnected-site appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"}]}'
+              matrix='{"include":[{"profile":"airgap","description":"Portable disconnected-site appliance with baked app image, PostgreSQL image, ZTF v1.5.2, ZTF v2.0.0 IaC runtime, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"}]}'
               ;;
             minimal)
               matrix='{"include":[{"profile":"minimal","description":"Smaller bootstrap appliance that defers app/support image pulls and NKP framework staging to first boot or site process.","build_container_image":"false","pull_container_images":"false","bake_nkp_framework":"false"}]}'
               ;;
             all)
-              matrix='{"include":[{"profile":"standard","description":"Connected staging appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"},{"profile":"airgap","description":"Portable disconnected-site appliance with baked app image, PostgreSQL image, ZTF v1.5.2, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"},{"profile":"minimal","description":"Smaller bootstrap appliance that defers app/support image pulls and NKP framework staging to first boot or site process.","build_container_image":"false","pull_container_images":"false","bake_nkp_framework":"false"}]}'
+              matrix='{"include":[{"profile":"standard","description":"Connected staging appliance with baked app image, PostgreSQL image, ZTF v1.5.2, ZTF v2.0.0 IaC runtime, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"},{"profile":"airgap","description":"Portable disconnected-site appliance with baked app image, PostgreSQL image, ZTF v1.5.2, ZTF v2.0.0 IaC runtime, and NKP framework.","build_container_image":"true","pull_container_images":"true","bake_nkp_framework":"true"},{"profile":"minimal","description":"Smaller bootstrap appliance that defers app/support image pulls and NKP framework staging to first boot or site process.","build_container_image":"false","pull_container_images":"false","bake_nkp_framework":"false"}]}'
               ;;
             *)
               echo "Unsupported artifact_profile: $selected" >&2

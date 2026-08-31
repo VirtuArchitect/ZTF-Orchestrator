@@ -389,6 +389,45 @@ def test_script_config_wizard_covers_all_catalog_scripts():
     assert 'Missing script config schemas' in schema
 
 
+def test_ztf2_converted_script_actions_are_separate_from_legacy_launcher():
+    app = (ROOT / 'src' / 'App.tsx').read_text(encoding='utf-8')
+    sidebar = (ROOT / 'src' / 'components' / 'Sidebar.tsx').read_text(encoding='utf-8')
+    data = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
+    scripts2x = (ROOT / 'src' / 'pages' / 'Scripts2x.tsx').read_text(encoding='utf-8')
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    user_guide = (ROOT / 'docs' / 'user-guide.md').read_text(encoding='utf-8')
+    demo_guide = (ROOT / 'docs' / 'demo' / 'README.md').read_text(encoding='utf-8')
+
+    assert 'Scripts2x' in app
+    assert 'path="/scripts-2x"' in app
+    assert "label: 'Scripts 1.x'" in sidebar
+    assert "label: 'Scripts 2.x'" in sidebar
+
+    assert 'export const ZTF2_SCRIPTS' in data
+    for action_id in [
+        'ztf2-create-category-pc',
+        'ztf2-create-project-pc',
+        'ztf2-create-subnets-pc',
+        'ztf2-upload-image-pc',
+        'ztf2-create-vms-pc',
+        'ztf2-create-security-groups-pc',
+        'ztf2-create-protection-policy-pc',
+        'ztf2-create-recovery-plan-pc',
+    ]:
+        assert action_id in data
+
+    assert "ztf2Action: 'plan'" not in scripts2x
+    assert '<Ztf2WorkflowPlanModal' in scripts2x
+    assert 'workflowId={selected.id}' in scripts2x
+    assert 'Ztf2WorkflowForm' in scripts2x
+    assert '--script' not in scripts2x
+
+    for text in [readme, user_guide, demo_guide]:
+        assert 'Scripts 2.x' in text
+        assert 'ztf2:plan' in text
+        assert 'Create Security Groups' in text
+
+
 def test_destructive_and_pe_preflight_script_guards_cover_high_risk_ids():
     frontend_schema = (ROOT / 'src' / 'scriptConfigSchemas.ts').read_text(encoding='utf-8')
     frontend_data = (ROOT / 'src' / 'data.ts').read_text(encoding='utf-8')
@@ -457,6 +496,80 @@ def test_docker_build_patches_ztf_pc_entity_filter_bug():
     assert 'filter_criteria = kwargs.pop("filter", None)' in patch_script
     assert 'payload["filter"] = filter_criteria' in patch_script
     assert 'payload["spec"]["name"] = kwargs["name"]' in patch_script
+
+
+def test_docker_build_bakes_ztf2_runtime_by_default():
+    dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    compose = (ROOT / 'docker-compose.yml').read_text(encoding='utf-8')
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    install_guide = (ROOT / 'docs' / 'installation-guide.md').read_text(encoding='utf-8')
+    appliance_readme = (ROOT / 'appliance' / 'README.md').read_text(encoding='utf-8')
+
+    assert 'ARG ZTF2_REF=v2.0.0' in dockerfile
+    assert 'ARG ZTF2_BAKE=true' in dockerfile
+    assert 'ENV ZTF2_PATH=/opt/zerotouch-framework-2x' in dockerfile
+    assert 'ENV ZTF2_COMMAND=/opt/ztf2-python/bin/ztf' in dockerfile
+    assert 'git clone --depth 1 --branch "${ZTF2_REF}"' in dockerfile
+    assert '/opt/ztf2-python/bin/pip install --no-cache-dir /opt/zerotouch-framework-2x' in dockerfile
+
+    assert 'ZTF2_BAKE:     ${ZTF2_BAKE:-true}' in compose
+    assert 'ZTF2_REPO_URL: ${ZTF2_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}' in compose
+    assert 'ZTF2_COMMAND:       ${ZTF2_COMMAND:-/opt/ztf2-python/bin/ztf}' in compose
+
+    for text in [readme, install_guide, appliance_readme]:
+        assert '/opt/zerotouch-framework-2x' in text
+        assert '/opt/ztf2-python/bin/ztf' in text
+        assert 'v2.0.0' in text
+
+
+def test_docs_describe_current_ztf2_status_without_future_mode_drift():
+    docs = {
+        'README.md': (ROOT / 'README.md').read_text(encoding='utf-8'),
+        'docs/installation-guide.md': (ROOT / 'docs' / 'installation-guide.md').read_text(encoding='utf-8'),
+        'docs/operator-controlled-uat-readiness.md': (
+            ROOT / 'docs' / 'operator-controlled-uat-readiness.md'
+        ).read_text(encoding='utf-8'),
+        'docs/governance/LIMITATIONS.md': (
+            ROOT / 'docs' / 'governance' / 'LIMITATIONS.md'
+        ).read_text(encoding='utf-8'),
+        'docs/production-readiness-boundary.md': (
+            ROOT / 'docs' / 'production-readiness-boundary.md'
+        ).read_text(encoding='utf-8'),
+        'docs/runbooks/RB-004-ztf-workflow-execution.md': (
+            ROOT / 'docs' / 'runbooks' / 'RB-004-ztf-workflow-execution.md'
+        ).read_text(encoding='utf-8'),
+        'docs/security/SECURITY_ASSESSMENT.md': (
+            ROOT / 'docs' / 'security' / 'SECURITY_ASSESSMENT.md'
+        ).read_text(encoding='utf-8'),
+        'docs/user-guide.md': (ROOT / 'docs' / 'user-guide.md').read_text(encoding='utf-8'),
+        'docs/validation-status.md': (
+            ROOT / 'docs' / 'validation-status.md'
+        ).read_text(encoding='utf-8'),
+        'appliance/README.md': (ROOT / 'appliance' / 'README.md').read_text(encoding='utf-8'),
+    }
+    forbidden_fragments = [
+        'ZTF 2.x plan/apply support is a future separate mode',
+        'Native ZTF 2.x plan/apply is a future separate mode',
+        'plan/apply mode is added',
+        'Docker, and container publishing paths pin ZTF to `v1.5.2`',
+        '61 ZTF atomic scripts',
+    ]
+
+    for path, text in docs.items():
+        for fragment in forbidden_fragments:
+            assert fragment not in text, f'{path} contains stale ZTF status: {fragment}'
+
+    current_status_docs = '\n'.join(docs.values())
+    for fragment in [
+        'Workflows 1.x',
+        'Workflows 2.x',
+        'Scripts 1.x',
+        'Scripts 2.x',
+        'ZTF 2.x IaC',
+        '/opt/zerotouch-framework-2x',
+        '/opt/ztf2-python/bin/ztf',
+    ]:
+        assert fragment in current_status_docs
 
 
 def test_runtime_patch_covers_dev_lab_findings():

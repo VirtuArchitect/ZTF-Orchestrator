@@ -210,3 +210,104 @@ def test_install_skips_git_pull_for_invalid_git_marker(client, auth_headers, tmp
     assert resp.status_code == 200
     assert 'not a git checkout' in body
     assert all(call[:2] != ['git', 'pull'] for call in calls)
+
+
+def test_ztf2_install_uses_separate_checkout_and_runtime(client, auth_headers, tmp_path, monkeypatch):
+    """ZTF 2.x install must use ztf2Path/ztf2Command rather than the legacy runtime."""
+    import subprocess
+
+    ztf1_dir = tmp_path / 'legacy-runtime'
+    ztf2_dir = tmp_path / 'zerotouch-framework-2x'
+    ztf2_venv = tmp_path / 'ztf2-python'
+    ztf2_command = ztf2_venv / 'bin' / 'ztf'
+
+    client.post('/api/settings',
+                json={
+                    'ztfPath': str(ztf1_dir),
+                    'ztf2Path': str(ztf2_dir),
+                    'ztf2Command': str(ztf2_command),
+                    'pythonPath': 'python',
+                    'repoUrl': 'https://github.com/nutanixdev/zerotouch-framework.git',
+                },
+                headers=auth_headers)
+
+    calls = []
+
+    class FakeRun:
+        returncode = 1
+        stdout = ''
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['ok\n'])
+        def wait(self): pass
+
+    def fake_popen(args, **kwargs):
+        calls.append([str(arg) for arg in args])
+        if args[:2] == ['git', 'clone']:
+            (ztf2_dir / 'ztf').mkdir(parents=True)
+            (ztf2_dir / 'pyproject.toml').write_text('[project]\nname = "zerotouch-framework"\n')
+        if args[:3] == ['python', '-m', 'venv']:
+            (ztf2_venv / 'bin').mkdir(parents=True)
+            (ztf2_venv / 'bin' / 'python.exe').write_text('')
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: FakeRun())
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
+
+    resp = client.post('/api/ztf2/install', headers=auth_headers)
+    body = resp.data.decode()
+
+    assert resp.status_code == 200
+    assert 'ZeroTouch Framework 2.x installed successfully' in body
+    assert any(call[:2] == ['git', 'clone'] and str(ztf2_dir) in call for call in calls)
+    assert all(str(ztf1_dir) not in ' '.join(call) for call in calls)
+    assert any(call[:3] == ['python', '-m', 'venv'] and str(ztf2_venv) in call for call in calls)
+    assert any(call[-2:] == ['install', str(ztf2_dir)] for call in calls)
+    assert any(call == [str(ztf2_command), '--help'] for call in calls)
+
+
+def test_ztf2_install_clones_into_existing_empty_runtime_dir(client, auth_headers, tmp_path, monkeypatch):
+    """Docker/appliance images create the ZTF 2.x path before the repo is cloned."""
+    import subprocess
+
+    ztf2_dir = tmp_path / 'zerotouch-framework-2x'
+    ztf2_dir.mkdir()
+
+    client.post('/api/settings',
+                json={
+                    'ztf2Path': str(ztf2_dir),
+                    'ztf2Command': 'ztf',
+                    'pythonPath': 'python',
+                    'repoUrl': 'https://github.com/nutanixdev/zerotouch-framework.git',
+                },
+                headers=auth_headers)
+
+    calls = []
+
+    class FakeRun:
+        returncode = 1
+        stdout = ''
+
+    class FakeProc:
+        returncode = 0
+        stdout = iter(['ok\n'])
+        def wait(self): pass
+
+    def fake_popen(args, **kwargs):
+        calls.append([str(arg) for arg in args])
+        if args[:2] == ['git', 'clone']:
+            (ztf2_dir / 'ztf').mkdir(parents=True)
+            (ztf2_dir / 'pyproject.toml').write_text('[project]\nname = "zerotouch-framework"\n')
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: FakeRun())
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
+
+    resp = client.post('/api/ztf2/install', headers=auth_headers)
+    body = resp.data.decode()
+
+    assert resp.status_code == 200
+    assert 'Cloning ZeroTouch Framework 2.x' in body
+    assert 'ZeroTouch Framework 2.x installed successfully' in body
+    assert any(call[:2] == ['git', 'clone'] and str(ztf2_dir) in call for call in calls)

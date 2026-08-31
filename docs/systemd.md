@@ -14,10 +14,11 @@ unprivileged service account.
 - Python virtual environment at `/opt/ztf/venv`
 - A dedicated service account `ztf-svc` (created below)
 
-ZTF-Orchestrator's current workflow/script launcher requires the legacy
+ZTF-Orchestrator's Workflows 1.x and Scripts 1.x launchers require the legacy
 ZeroTouch Framework 1.x CLI. Use `git clone --branch v1.5.2 --depth 1` or a
-reviewed 1.x branch; ZTF 2.x is detected as incompatible until a separate
-plan/apply mode is added.
+reviewed 1.x branch for those paths. ZTF 2.x uses the separate governed
+plan/apply lane configured in Settings with its own checkout, command, and
+project directory.
 
 ---
 

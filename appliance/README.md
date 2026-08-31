@@ -10,11 +10,11 @@ QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 
 | Item | Current guidance |
 | --- | --- |
-| Current release baseline | `v1.7.12` |
+| Current release baseline | `v1.8.0` |
 | Existing appliance update method | Appliance update package plus `appliance/scripts/apply-update-request.sh` |
 | Full QCOW2 appliance image | GitHub Actions artifact or durable internal artifact storage, not a GitHub Release binary |
 | GitHub Release assets | Update packages, checksums, manifests, and metadata |
-| ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` unless a compatibility change is explicitly reviewed |
+| ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` for Workflows 1.x/Scripts 1.x, with a separate baked ZTF `v2.0.0` runtime for ZTF 2.x IaC |
 
 ## Recommended Distribution Model
 
@@ -87,11 +87,12 @@ The systemd service passes that file explicitly to Docker Compose with
 `--env-file`, so the file must remain in `/opt/ztf-orchestrator` and does not
 need to be copied into `/opt/ztf-orchestrator/appliance`.
 
-The current appliance image is built with ZeroTouch Framework `v1.5.2` because
-ZTF-Orchestrator's workflow and script launcher targets the legacy 1.x
-`main.py --workflow/--script` CLI. ZeroTouch Framework v2.0.0 uses a new
-`ztf plan/apply` model and is not a drop-in replacement for these appliance
-workflows.
+The current appliance image is built with ZeroTouch Framework `v1.5.2` for the
+legacy workflow/script lane and ZeroTouch Framework `v2.0.0` for the separate
+IaC lane. ZTF 2.x uses a separate `ztf plan/apply` model and is not a drop-in
+replacement for legacy appliance workflows. Admins enable the baked ZTF 2.x
+runtime in Settings after validating the configured checkout and command path;
+apply and destroy jobs require an approval-bound source plan.
 
 Before pinning a GHCR tag, confirm it has been published:
 
@@ -108,7 +109,7 @@ checkout. The Setup page may report that source update is skipped; that is
 expected. Rebuild or pull a newer appliance image to change the bundled ZTF
 version, or configure Settings to point at a separate cloned ZTF 1.x checkout.
 
-Current in-place container update packages are produced for `v1.7.12`. Use the
+Current in-place container update packages are produced for `v1.8.0`. Use the
 offline update package workflow when upgrading an existing appliance without
 rebuilding or replacing the full AHV QCOW2 image.
 
@@ -162,6 +163,23 @@ The locally built container image bakes the legacy ZeroTouch Framework into:
 
 inside the running `ztf-orchestrator` container. The default framework ref is
 `v1.5.2`.
+
+The same image also bakes the ZTF 2.x IaC runtime into:
+
+```text
+/opt/zerotouch-framework-2x
+/opt/ztf2-python/bin/ztf
+```
+
+inside the running container. The default ZTF 2.x ref is `v2.0.0`. Admins still
+enable runtime availability in Settings before operators use the ZTF 2.x IaC,
+Workflows 2.x, or Scripts 2.x pages.
+
+ZTF 2.x projects should use a separate state directory, for example:
+
+```text
+/var/lib/ztf-orchestrator/ztf2-projects/default
+```
 
 The NKP framework is staged on the appliance host at:
 
@@ -503,6 +521,12 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
    sudo docker compose --env-file /opt/ztf-orchestrator/.env \
      -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /opt/zerotouch-framework
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     ls -la /opt/zerotouch-framework-2x
+   sudo docker compose --env-file /opt/ztf-orchestrator/.env \
+     -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
+     /opt/ztf2-python/bin/ztf --help
    sudo docker compose --env-file /opt/ztf-orchestrator/.env \
      -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml exec ztf-orchestrator \
      ls -la /var/lib/ztf-orchestrator/nkp-zerotouch-framework

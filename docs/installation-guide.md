@@ -3,23 +3,24 @@
 This guide expands the installation options from the main README into
 step-by-step deployment procedures.
 
-Current ZTF-Orchestrator release for this source tree: `v1.7.12`.
+Current ZTF-Orchestrator release for this source tree: `v1.8.0`.
 
 ## Current Scope
 
 | Item | Current guidance |
 | --- | --- |
-| Current release baseline | `v1.7.12` |
+| Current release baseline | `v1.8.0` |
 | Existing appliance update method | Appliance update package plus host-side helper |
 | Full QCOW2 appliance image | GitHub Actions artifact or durable internal artifact storage, not a GitHub Release binary |
-| ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` unless a compatibility change is explicitly reviewed |
+| ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` for Workflows 1.x/Scripts 1.x, with a separate guarded ZTF `v2.0.0` runtime for ZTF 2.x IaC |
 | Historical docs | See [Documentation Archive](archive/README.md); archived procedures are traceability records, not current install paths |
 
-ZTF-Orchestrator currently targets the legacy ZeroTouch Framework 1.x
-workflow/script CLI. Keep `ZTF_REF` pinned to `v1.5.2` unless you are
-explicitly testing a reviewed compatibility change. ZeroTouch Framework 2.x uses
-a different `ztf plan/apply` model and is detected as incompatible by the
-current workflow UI.
+ZTF-Orchestrator keeps the legacy ZeroTouch Framework 1.x workflow/script CLI
+separate from the ZTF 2.x `ztf plan/apply` model. Keep `ZTF_REF` pinned to
+`v1.5.2` for Workflows 1.x and Scripts 1.x. Use the separate ZTF 2.x runtime
+(`ZTF2_REF`, `ZTF2_PATH`, and `ZTF2_COMMAND`) for ZTF 2.x IaC, Workflows 2.x,
+and Scripts 2.x. ZTF 2.x checkouts remain blocked from the legacy
+workflow/script launcher.
 
 For operator controlled/UAT-ready deployments, complete the relevant procedures
 in the [runbook index and control matrix](runbooks/README.md), capture evidence
@@ -33,9 +34,9 @@ deployment record.
 |---|---|---|---|
 | One-command Linux/macOS | Quick host install | File backend | `$ZTF_INSTALL_DIR/zerotouch-framework` |
 | One-command Windows | Quick workstation install | File backend | `%USERPROFILE%\ztf\zerotouch-framework` |
-| Docker Compose | Recommended server install | PostgreSQL | `/opt/zerotouch-framework` inside the container |
-| Docker Compose file backend | Local/simple Docker testing | File backend | `/opt/zerotouch-framework` inside the container |
-| Appliance | VM/AHV deployment | PostgreSQL | `/opt/zerotouch-framework` inside the container |
+| Docker Compose | Recommended server install | PostgreSQL | `/opt/zerotouch-framework` and `/opt/zerotouch-framework-2x` inside the container |
+| Docker Compose file backend | Local/simple Docker testing | File backend | `/opt/zerotouch-framework` and `/opt/zerotouch-framework-2x` inside the container |
+| Appliance | VM/AHV deployment | PostgreSQL | `/opt/zerotouch-framework` and `/opt/zerotouch-framework-2x` inside the container |
 | Manual | Development or custom layout | File backend by default | Configured by `ZTF_PATH` |
 | Kubernetes | Starter cluster deployment | PostgreSQL | `/opt/zerotouch-framework` inside the container |
 | Air-gapped | Disconnected environments | PostgreSQL or file | Prebuilt image or local clone |
@@ -132,8 +133,12 @@ Use this when you want a quick install directly on a Linux or macOS host.
    curl http://localhost:5001/health
    ```
 
-2. In the UI, open **Setup & Install** or **Settings** and confirm the framework
-   path points to the local `zerotouch-framework` checkout.
+2. In the UI, open **Setup & Install** or **Settings** and confirm the runtime
+   paths:
+   - **ZTF 1.x Legacy** points to the local `zerotouch-framework` checkout for
+     Workflows 1.x and Scripts 1.x.
+   - **ZTF 2.x IaC** points to the separate ZTF 2.x checkout and `ztf` command
+     before using ZTF 2.x IaC, Workflows 2.x, or Scripts 2.x.
 
 ## Option B: One-Command Windows PowerShell
 
@@ -278,10 +283,11 @@ ZeroTouch Framework at build time under `/opt/zerotouch-framework`.
    curl http://localhost:15001/health
    ```
 
-3. Confirm the baked framework:
+3. Confirm the baked frameworks:
 
    ```bash
    docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework
+   docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework-2x
    ```
 
 4. Confirm the baked framework runtime dependencies:
@@ -291,6 +297,8 @@ ZeroTouch Framework at build time under `/opt/zerotouch-framework`.
      /opt/ztf-python/bin/python -c "import rainbow_logging_handler; import ntnx_iam_py_client; import scrypt; import framework.helpers.log_utils"
    docker exec -w /opt/zerotouch-framework ztf-orchestrator \
      /opt/ztf-python/bin/python main.py --help
+   docker exec -w /opt/zerotouch-framework-2x ztf-orchestrator \
+     /opt/ztf2-python/bin/ztf --help
    ```
 
 5. Confirm persistent data volume:
@@ -449,7 +457,8 @@ untrusted networks.
    Packer wrapper from a Linux build host.
    The default QCOW2 build locally builds the ZTF-Orchestrator container image
    inside the appliance and bakes ZeroTouch Framework `v1.5.2` into
-   `/opt/zerotouch-framework` inside that container.
+   `/opt/zerotouch-framework` plus ZeroTouch Framework `v2.0.0` into
+   `/opt/zerotouch-framework-2x` inside that container.
 
    The GitHub **Run workflow** button is only visible to repository users with
    permission to manually dispatch workflows, typically write-level access or
@@ -639,12 +648,15 @@ staging environment, then transfer them into the disconnected site.
    cd ZTF-Orchestrator
    ```
 
-2. Build the application image with ZTF `v1.5.2` baked in:
+2. Build the application image with ZTF 1.x `v1.5.2` and ZTF 2.x `v2.0.0`
+   baked in:
 
    ```bash
    docker build \
      --build-arg ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git \
      --build-arg ZTF_REF=v1.5.2 \
+     --build-arg ZTF2_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git \
+     --build-arg ZTF2_REF=v2.0.0 \
      -t ztf-orchestrator:airgap-<version> .
    ```
 
@@ -805,12 +817,13 @@ builds.
    review, and ZeroTouch Framework compatibility mode status.
 
 The appliance includes the ZTF-Orchestrator source checkout and a Docker image
-with legacy ZeroTouch Framework baked into `/opt/zerotouch-framework` inside the
-container. The first boot can therefore start without GitHub Container Registry
-access for the application image. PostgreSQL is also preloaded when
-`ZTF_PULL_CONTAINER_IMAGES=true` succeeds during the connected build. When
-`ZTF_BAKE_NKP_FRAMEWORK=true`, the NKP framework is staged on the appliance host
-and mounted into the container at:
+with ZTF 1.x baked into `/opt/zerotouch-framework` and ZTF 2.x baked into
+`/opt/zerotouch-framework-2x` inside the container. The ZTF 2.x command path is
+`/opt/ztf2-python/bin/ztf`. The first boot can therefore start without GitHub
+Container Registry access for the application image. PostgreSQL is also
+preloaded when `ZTF_PULL_CONTAINER_IMAGES=true` succeeds during the connected
+build. When `ZTF_BAKE_NKP_FRAMEWORK=true`, the NKP framework is staged on the
+appliance host and mounted into the container at:
 
 ```text
 /var/lib/ztf-orchestrator/nkp-zerotouch-framework
@@ -1036,10 +1049,13 @@ Preloaded NKP bundles are mounted into:
    docker compose logs -f ztf-orchestrator
    ```
 
-9. Validate the baked framework:
+9. Validate the baked frameworks:
 
    ```bash
    docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework
+   docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework-2x
+   docker exec -w /opt/zerotouch-framework-2x ztf-orchestrator \
+     /opt/ztf2-python/bin/ztf --help
    curl http://localhost:5001/health
    ```
 
@@ -1057,6 +1073,8 @@ all, use these settings:
 ```text
 ZTF_REPO_URL=<internal Git mirror for zerotouch-framework>
 ZTF_REF=v1.5.2
+ZTF2_REPO_URL=<internal Git mirror for zerotouch-framework>
+ZTF2_REF=v2.0.0
 ```
 
 For manual installs, use a local PyPI mirror or pre-downloaded wheelhouse:

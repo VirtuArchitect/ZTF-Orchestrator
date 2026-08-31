@@ -135,6 +135,100 @@ def test_appliance_status_and_ztf_compatibility(client, auth_headers):
     body = resp.get_json()
     assert body['layout'] == 'legacy-1.x'
     assert any(mode['id'] == 'ztf2-iac' for mode in body['supportedModes'])
+    assert body['runtimes']['ztf1']['enabled'] is True
+    assert body['runtimes']['ztf2']['enabled'] is False
+
+
+def test_ztf2_runtime_availability_and_job_guards(client, auth_headers, isolated_data_dir):
+    ztf2_dir = isolated_data_dir / 'ztf2-runtime'
+    (ztf2_dir / 'ztf').mkdir(parents=True)
+    (ztf2_dir / 'pyproject.toml').write_text('[project]\nname = "zerotouch-framework"\n')
+
+    settings = client.get('/api/settings', headers=auth_headers).get_json()
+    settings.update({
+        'ztf2Enabled': True,
+        'ztf2Path': str(ztf2_dir),
+        'ztf2Command': 'ztf',
+        'ztf2ProjectDir': str(isolated_data_dir / 'ztf2-projects' / 'default'),
+    })
+    resp = client.post('/api/settings', json=settings, headers=auth_headers)
+    assert resp.status_code == 200
+
+    compat = client.get('/api/ztf/compatibility', headers=auth_headers).get_json()
+    assert compat['runtimes']['ztf2']['enabled'] is True
+    assert compat['runtimes']['ztf2']['compatible'] is True
+    assert any(mode['id'] == 'ztf2-iac' and mode['available'] for mode in compat['supportedModes'])
+
+    resp = client.post('/api/jobs', json={'framework': 'ztf2', 'ztf2Action': 'apply'}, headers=auth_headers)
+    assert resp.status_code == 403
+    assert 'sourcePlanJobId' in resp.get_json()['error']
+
+    resp = client.post('/api/jobs', json={
+        'framework': 'ztf2',
+        'ztf2Action': 'plan',
+        'workflowTemplate': 'ztf2-prism-category',
+        'inputContent': 'domains:\n  lab:\n    resources: {}\n',
+        'globalContent': 'vault_to_use: local\nip_allocation_method: static\nvaults: {}\n',
+        'inputFile': 'input.yml',
+        'globalFile': 'global.yml',
+        'stateFile': 'ztf2-prism-category-state.yml',
+    }, headers=auth_headers)
+    assert resp.status_code == 202
+    job = resp.get_json()
+    assert job['workflow'] == 'ztf2:plan'
+    assert job['trace']['workflowTemplate'] == 'ztf2-prism-category'
+    assert job['trace']['inputFile'] == 'input.yml'
+    assert job['trace']['globalFile'] == 'global.yml'
+
+
+def test_ztf2_status_reports_configured_runtime(client, auth_headers, isolated_data_dir):
+    ztf2_dir = isolated_data_dir / 'ztf2-runtime'
+    (ztf2_dir / 'ztf').mkdir(parents=True)
+    (ztf2_dir / 'pyproject.toml').write_text('[project]\nname = "zerotouch-framework"\n')
+
+    settings = client.get('/api/settings', headers=auth_headers).get_json()
+    settings.update({
+        'ztf2Enabled': True,
+        'ztf2Path': str(ztf2_dir),
+        'ztf2Command': 'ztf',
+        'ztf2ProjectDir': str(isolated_data_dir / 'ztf2-projects' / 'default'),
+    })
+    resp = client.post('/api/settings', json=settings, headers=auth_headers)
+    assert resp.status_code == 200
+
+    resp = client.get('/api/ztf2/status', headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['enabled'] is True
+    assert body['compatible'] is True
+    assert body['layout'] == 'ztf-2.x'
+    assert body['path'] == str(ztf2_dir)
+    assert body['command'] == 'ztf'
+
+
+def test_ztf2_jobs_reject_when_runtime_disabled(client, auth_headers):
+    resp = client.post('/api/jobs', json={
+        'framework': 'ztf2',
+        'ztf2Action': 'plan',
+        'inputContent': 'domains:\n  lab:\n    resources: {}\n',
+        'globalContent': 'vault_to_use: local\nip_allocation_method: static\nvaults: {}\n',
+    }, headers=auth_headers)
+    assert resp.status_code == 403
+    assert 'disabled' in resp.get_json()['error']
+
+
+def test_yaml_studio_validates_ztf2_iac_domains(client, auth_headers):
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'ztf2-iac', 'content': 'resources: {}\n'},
+                       headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'domains' in resp.get_json()['errors'][0]
+
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'ztf2-iac', 'content': 'domains:\n  lab:\n    resources: {}\n'},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['valid'] is True
 
 
 def test_upgrade_advisor_rules_and_assessment_api(client, auth_headers):

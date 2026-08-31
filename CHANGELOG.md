@@ -9,8 +9,44 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.7.12 and should be moved
+Changes in this section are present on `main` after v1.8.0 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.8.0] - 2026-08-31
+
+### Summary
+Feature release adding a separate governed ZTF 2.x IaC runtime lane while
+preserving the legacy ZTF 1.x workflow and script launcher.
+
+### Added
+- Added Admin Settings runtime availability controls for the separate ZTF 2.x
+  checkout, command, and project directory.
+- Added ZTF 2.x IaC plan/refresh/apply/destroy job submission with
+  approval-bound apply and destroy checks.
+- Added Workflows 1.x / Workflows 2.x navigation separation and initial ZTF 2.x
+  workflow templates for category, project, subnet, image, VM, security group,
+  protection policy, and recovery plan intents.
+- Added Scripts 1.x / Scripts 2.x navigation separation and converted ZTF 2.x
+  plan actions for safe declarative script patterns.
+- Added Setup & Install support for selecting and installing either ZTF 1.x
+  Legacy or ZTF 2.x IaC runtime lanes.
+
+### Changed
+- Docker and appliance builds now bake ZTF `v1.5.2` for legacy execution and a
+  separate ZTF `v2.0.0` IaC runtime by default.
+- Updated README, installation, appliance, demo, runbook, validation, security,
+  and governance documentation to match the current dual-runtime status.
+- Rebuilt the tracked production frontend bundle for the new version and
+  runtime/workflow/script surfaces.
+
+### Security
+- ZTF 2.x `apply` and `destroy` remain approval-bound and require a successful
+  source plan job plus matching plan/input/global/state hashes.
+- ZTF 2.x checkouts remain blocked from the legacy workflow/script launcher.
+- Live ZTF 2.x resource behavior remains environment-specific UAT scope before
+  production claims.
 
 ---
 
@@ -1281,6 +1317,8 @@ operator interface.
 
 ---
 
+[1.8.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.12...v1.8.0
+[1.7.12]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.11...v1.7.12
 [1.2.5]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.2...v1.2.3

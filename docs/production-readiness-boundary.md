@@ -1,6 +1,6 @@
 # Production Readiness Boundary
 
-Current release marker: `v1.7.12`.
+Current release marker: `v1.8.0`.
 
 This document prevents overclaiming. ZTF-Orchestrator can be operated in a
 controlled UAT posture when documented procedures and evidence exist, but broad
@@ -49,7 +49,8 @@ environment-specific proof:
 
 - Internet exposure without reverse proxy, TLS, and environment hardening.
 - Uncontrolled destructive NKP actions.
-- Native ZTF 2.x `plan/apply` mode for current workflow execution.
+- Ungoverned ZTF 2.x `apply`/`destroy` execution or use of ZTF 2.x through the
+  legacy workflow/script launcher.
 - Direct infrastructure mutation from YAML Studio.
 - Claims that this project is supported by Nutanix.
 
