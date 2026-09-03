@@ -14815,7 +14815,7 @@ def test_native_foundation_standard_job_submission_remains_blocked(client, auth_
                        headers=auth_headers)
 
     assert resp.status_code == 403
-    assert 'planning-only' in resp.get_json()['error']
+    assert resp.get_json()['error'] == 'Native Foundation Dell iDRAC UAT deployment is not enabled'
 
 
 def test_yaml_studio_saves_to_config_files(client, auth_headers, isolated_data_dir):
@@ -15375,7 +15375,7 @@ def test_native_foundation_execution_is_blocked(client, auth_headers):
                        headers=auth_headers)
 
     assert resp.status_code == 403
-    assert 'planning-only' in resp.get_json()['error']
+    assert resp.get_json()['error'] == 'Native Foundation Dell iDRAC UAT deployment is not enabled'
 
 
 def test_dry_run_invalid_yaml(client, auth_headers):
