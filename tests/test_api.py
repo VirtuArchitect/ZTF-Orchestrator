@@ -1127,6 +1127,13697 @@ def test_yaml_studio_rejects_invalid_cluster_baseline(client, auth_headers):
     assert 'clusters mapping' in data['errors'][0]
 
 
+def _native_foundation_intent(deployment_type='hci', node_roles=None):
+    node_roles = node_roles or ['hci', 'hci', 'hci']
+    nodes = ''.join(
+        f'          - node_serial: NODE-{idx}\n'
+        f'            role: {role}\n'
+        f'            bmc_address: 192.0.2.{20 + idx}\n'
+        f'            host_ip: 192.0.2.{30 + idx}\n'
+        f'            cvm_ip: 192.0.2.{40 + idx}\n'
+        for idx, role in enumerate(node_roles, start=1)
+    )
+    return (
+        'ztf_orchestrator:\n'
+        '  workflow_family: native_foundation\n'
+        'foundation_engine:\n'
+        '  mode: planning_only\n'
+        '  artifact_policy: operator_supplied\n'
+        'sites:\n'
+        '  - site_name: site-a\n'
+        '    hardware_provider: manual_static\n'
+        '    clusters:\n'
+        '      - cluster_name: hci-cluster-a\n'
+        f'        deployment_type: {deployment_type}\n'
+        '        cluster_vip: 192.0.2.10\n'
+        '        aos_image: aos-image-ref\n'
+        '        hypervisor_image: ahv-image-ref\n'
+        '        nodes:\n'
+        f'{nodes}'
+    )
+
+
+def _native_foundation_intent_with_uat_evidence():
+    return _native_foundation_intent().replace(
+        '  artifact_policy: operator_supplied\n',
+        (
+            '  artifact_policy: operator_supplied\n'
+            '  uat_evidence:\n'
+            '    hardware_provider_discovery:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-provider-uat-001\n'
+            '    image_source_verified:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-image-uat-001\n'
+            '    network_path_verified:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-network-uat-001\n'
+            '    recovery_runbook_reviewed:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-recovery-uat-001\n'
+        ),
+    )
+
+
+def _native_foundation_admission_ready_intent():
+    return _native_foundation_intent_with_uat_evidence().replace(
+        '    recovery_runbook_reviewed:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-recovery-uat-001\n',
+        (
+            '    recovery_runbook_reviewed:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-recovery-uat-001\n'
+            '    approval_binding_review:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-approval-binding-001\n'
+            '    cluster_create_validated:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-cluster-create-uat-001\n'
+            '  policy:\n'
+            '    max_parallel_sites: 1\n'
+            '    max_parallel_clusters_per_site: 1\n'
+            '    require_approval_binding: true\n'
+            '    require_validation_evidence: true\n'
+            '    failure_policy: stop_site\n'
+        ),
+    ).replace(
+        '    hardware_provider: manual_static\n'
+        '    clusters:\n',
+        (
+            '    hardware_provider: manual_static\n'
+            '    concurrency_limit: 1\n'
+            '    deployment_window:\n'
+            '      timezone: UTC\n'
+            '      days:\n'
+            '        - Sat\n'
+            '      start: "00:00"\n'
+            '      end: "06:00"\n'
+            '    clusters:\n'
+        ),
+    )
+
+
+def _native_foundation_ready_metadata_intent():
+    return _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n'
+        '    clusters:\n',
+        (
+            '    hardware_provider: manual_static\n'
+            '    bmc_credential_ref: site-a-bmc-ref\n'
+            '    network_profile:\n'
+            '      management_subnet: 192.0.2.0/24\n'
+            '      management_gateway: 192.0.2.1\n'
+            '      management_vlan_id: 120\n'
+            '      dns_servers:\n'
+            '        - 192.0.2.53\n'
+            '      ntp_servers:\n'
+            '        - 192.0.2.123\n'
+            '    clusters:\n'
+        ),
+    ).replace(
+        '        aos_image: aos-image-ref\n'
+        '        hypervisor_image: ahv-image-ref\n',
+        (
+            '        aos_image:\n'
+            '          source: http://images.example.invalid/aos.tar.gz\n'
+            '          version: "7.5.1.8"\n'
+            f'          sha256: {"a" * 64}\n'
+            '        hypervisor_image:\n'
+            '          source: http://images.example.invalid/ahv.iso\n'
+            '          version: "10.0"\n'
+            f'          sha256: {"b" * 64}\n'
+        ),
+    )
+
+
+def _native_foundation_discovery_facts():
+    return {
+        'sites': [
+            {
+                'siteName': 'site-a',
+                'clusters': [
+                    {
+                        'clusterName': 'hci-cluster-a',
+                        'nodes': [
+                            {
+                                'nodeSerial': f'NODE-{idx}',
+                                'hardwareModel': 'NX-8155-G9',
+                                'bmcAddress': f'192.0.2.{20 + idx}',
+                                'powerState': 'on',
+                                'bootMode': 'uefi',
+                                'nicInventory': [{'mac': f'00:11:22:33:44:{idx:02d}'}],
+                                'diskInventory': [{'serial': f'DISK-{idx}'}],
+                                'firmwareVersions': {'bios': '1.0.0'},
+                            }
+                            for idx in range(1, 4)
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+
+def _native_foundation_multi_site_intent():
+    return (
+        'ztf_orchestrator:\n'
+        '  workflow_family: native_foundation\n'
+        'foundation_engine:\n'
+        '  mode: planning_only\n'
+        '  artifact_policy: operator_supplied\n'
+        '  orchestration:\n'
+        '    site_strategy: parallel\n'
+        'sites:\n'
+        '  - site_name: site-a\n'
+        '    hardware_provider: manual_static\n'
+        '    concurrency_limit: 1\n'
+        '    clusters:\n'
+        '      - cluster_name: hci-cluster-a\n'
+        '        deployment_type: hci\n'
+        '        cluster_vip: 192.0.2.10\n'
+        '        aos_image: aos-image-ref\n'
+        '        hypervisor_image: ahv-image-ref\n'
+        '        nodes:\n'
+        '          - node_serial: NODE-A1\n'
+        '            role: hci\n'
+        '            bmc_address: 192.0.2.20\n'
+        '            host_ip: 192.0.2.30\n'
+        '            cvm_ip: 192.0.2.40\n'
+        '          - node_serial: NODE-A2\n'
+        '            role: hci\n'
+        '            bmc_address: 192.0.2.21\n'
+        '            host_ip: 192.0.2.31\n'
+        '            cvm_ip: 192.0.2.41\n'
+        '          - node_serial: NODE-A3\n'
+        '            role: hci\n'
+        '            bmc_address: 192.0.2.22\n'
+        '            host_ip: 192.0.2.32\n'
+        '            cvm_ip: 192.0.2.42\n'
+        '      - cluster_name: compute-cluster-a\n'
+        '        deployment_type: compute_only\n'
+        '        cluster_vip: 192.0.2.11\n'
+        '        aos_image: aos-image-ref\n'
+        '        hypervisor_image: ahv-image-ref\n'
+        '        nodes:\n'
+        '          - node_serial: NODE-A4\n'
+        '            role: compute_only\n'
+        '            bmc_address: 192.0.2.23\n'
+        '            host_ip: 192.0.2.33\n'
+        '  - site_name: site-b\n'
+        '    hardware_provider: manual_static\n'
+        '    concurrency_limit: 2\n'
+        '    clusters:\n'
+        '      - cluster_name: storage-cluster-b\n'
+        '        deployment_type: storage_only\n'
+        '        cluster_vip: 198.51.100.10\n'
+        '        aos_image: aos-image-ref\n'
+        '        hypervisor_image: ahv-image-ref\n'
+        '        nodes:\n'
+        '          - node_serial: NODE-B1\n'
+        '            role: storage_only\n'
+        '            bmc_address: 198.51.100.20\n'
+        '            host_ip: 198.51.100.30\n'
+        '            cvm_ip: 198.51.100.40\n'
+        '          - node_serial: NODE-B2\n'
+        '            role: storage_only\n'
+        '            bmc_address: 198.51.100.21\n'
+        '            host_ip: 198.51.100.31\n'
+        '            cvm_ip: 198.51.100.41\n'
+        '          - node_serial: NODE-B3\n'
+        '            role: storage_only\n'
+        '            bmc_address: 198.51.100.22\n'
+        '            host_ip: 198.51.100.32\n'
+        '            cvm_ip: 198.51.100.42\n'
+    )
+
+
+def test_yaml_studio_validates_native_foundation_intent(client, auth_headers):
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'native-foundation-intent',
+                             'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['valid'] is True
+    assert data['errors'] == []
+    assert any('planning-only' in warning for warning in data['warnings'])
+
+
+def test_yaml_studio_rejects_native_foundation_role_mismatch(client, auth_headers):
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'native-foundation-intent',
+                             'content': _native_foundation_intent(
+                                 deployment_type='storage_only',
+                                 node_roles=['compute_only'],
+                             )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert data['valid'] is False
+    assert any('node roles do not match deployment_type storage_only' in error
+               for error in data['errors'])
+
+
+def test_native_foundation_discovery_preview_normalizes_manual_static(client, auth_headers):
+    resp = client.post('/api/native-foundation/discovery/preview',
+                       json={'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['status'] == 'valid'
+    site = body['sites'][0]
+    assert site['siteName'] == 'site-a'
+    assert site['hardwareProvider'] == 'manual_static'
+    assert site['discoveryMode'] == 'manual_static'
+    cluster = site['clusters'][0]
+    assert cluster['deploymentType'] == 'hci'
+    assert cluster['nodeCount'] == 3
+    assert cluster['roleSummary'] == {'hci': 3}
+    assert cluster['nodes'][0]['nodeSerial'] == 'NODE-1'
+    assert cluster['nodes'][0]['factsVerified'] is True
+
+
+def test_native_foundation_discovery_preview_warns_for_planned_provider(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+
+    resp = client.post('/api/native-foundation/discovery/preview',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['sites'][0]['discoveryMode'] == 'dell_idrac_redfish_read_only'
+    assert body['sites'][0]['clusters'][0]['nodes'][0]['factsVerified'] is False
+    assert any('Dell iDRAC Redfish discovery requires explicit controlled UAT live probe enablement' in warning for warning in body['warnings'])
+
+
+def test_native_foundation_plan_returns_hash_bound_metadata(client, auth_headers):
+    content = _native_foundation_intent()
+
+    first = client.post('/api/native-foundation/plan',
+                        json={'content': content},
+                        headers=auth_headers)
+    second = client.post('/api/native-foundation/plan',
+                         json={'content': content},
+                         headers=auth_headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    body = first.get_json()
+    assert body['planId'] == second.get_json()['planId']
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['siteCount'] == 1
+    assert body['summary']['clusterCount'] == 1
+    assert body['summary']['nodeCount'] == 3
+    assert body['summary']['deploymentTypes'] == {'hci': 1}
+    assert body['summary']['roles'] == {'hci': 3}
+    metadata = body['approvalMetadata']
+    assert metadata['framework'] == 'native-foundation'
+    assert metadata['workflow'] == 'native-foundation-deploy'
+    assert metadata['planId'] == body['planId']
+    assert metadata['intentSha256'] == body['intentSha256']
+    assert metadata['discoverySha256'] == body['discoverySha256']
+    assert metadata['siteScope'] == ['site-a']
+    assert metadata['clusterScope'] == ['hci-cluster-a']
+
+
+def test_native_foundation_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='compute_only',
+                           node_roles=['hci', 'hci', 'hci'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['failed'] > 0
+    assert any('node roles do not match deployment_type compute_only' in line
+               for line in body['discovery']['validation'])
+
+
+def test_native_foundation_phase_catalog_is_read_only(client, auth_headers):
+    resp = client.get('/api/native-foundation/phases', headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['workflow'] == 'native-foundation-deploy'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['currentExecutionMode'] == 'planning_only'
+    assert body['summary']['phaseCount'] == 9
+    assert body['summary']['implementedPhaseCount'] == 9
+    assert body['summary']['mutatingEnabledPhaseCount'] == 0
+    assert body['supportedReadinessPhases'] == [
+        'compute_storage_topology',
+        'hci_cluster_create',
+        'imaging_only',
+        'multi_site',
+    ]
+    phase_ids = [phase['id'] for phase in body['phases']]
+    assert phase_ids == [
+        'architecture_boundary',
+        'intent_model',
+        'read_only_discovery',
+        'plan_approval_binding',
+        'imaging_only_uat',
+        'hci_cluster_create_uat',
+        'multi_site_multi_cluster',
+        'compute_storage_topologies',
+        'production_hardening',
+    ]
+    assert all(phase['readOnly'] is True for phase in body['phases'])
+    assert all(phase['mutatingActionsEnabled'] is False for phase in body['phases'])
+
+
+def test_native_foundation_phase_advancement_review_blocks_promotion(client, auth_headers):
+    resp = client.post('/api/native-foundation/phases/advancement-review',
+                       json={'phaseId': 'production_hardening',
+                             'content': _native_foundation_intent_with_uat_evidence()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['requestedPhase']['id'] == 'production_hardening'
+    assert body['summary']['predecessorPhaseCount'] == 9
+    assert body['summary']['mutatingEnabledPhaseCount'] == 0
+    assert body['summary']['requiredPhaseEvidenceCount'] == 4
+    assert body['summary']['acceptedPhaseEvidenceCount'] == 0
+    assert body['summary']['missingPhaseEvidenceCount'] == 4
+    phase_evidence = {item['requirement']: item for item in body['phaseEvidenceRequirements']}
+    assert phase_evidence['controlled_uat_completion']['status'] == 'blocked'
+    assert phase_evidence['backup_restore_review']['status'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['phase-known']['status'] == 'pass'
+    assert checks['plan-valid']['status'] == 'pass'
+    assert checks['prior-phases-implemented']['status'] == 'pass'
+    assert checks['phase-docs-bound']['status'] == 'pass'
+    assert checks['phase-evidence-accepted']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'blocked'
+    assert checks['mutating-enable-disabled']['status'] == 'blocked'
+    assert 'review-only' in body['message']
+
+
+def test_native_foundation_phase_advancement_review_reports_accepted_phase_evidence(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence().replace(
+        '    image_source_verified:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-image-uat-001\n',
+        '    image_source_verified:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-image-uat-001\n'
+        '    cluster_create_validated:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-cluster-create-validated-001\n',
+    )
+
+    resp = client.post('/api/native-foundation/phases/advancement-review',
+                       json={'phaseId': 'hci_cluster_create_uat',
+                             'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['summary']['requiredPhaseEvidenceCount'] == 3
+    assert body['summary']['acceptedPhaseEvidenceCount'] == 3
+    assert body['summary']['missingPhaseEvidenceCount'] == 0
+    phase_evidence = {item['requirement']: item for item in body['phaseEvidenceRequirements']}
+    assert phase_evidence['imaging_uat']['status'] == 'pass'
+    assert phase_evidence['imaging_uat']['evidenceKey'] == 'image_source_verified'
+    assert phase_evidence['imaging_uat']['evidenceId'] == 'nf-image-uat-001'
+    assert phase_evidence['cluster_create_uat']['evidenceKey'] == 'cluster_create_validated'
+    assert phase_evidence['cluster_create_uat']['evidenceId'] == 'nf-cluster-create-validated-001'
+    assert phase_evidence['prism_element_validation']['evidenceKey'] == 'cluster_create_validated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['phase-evidence-accepted']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'blocked'
+    assert checks['mutating-enable-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_phase_advancement_review_rejects_unknown_phase(client, auth_headers):
+    resp = client.post('/api/native-foundation/phases/advancement-review',
+                       json={'phaseId': 'unsupported_live_execution',
+                             'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'failed'
+    assert body['readOnly'] is True
+    assert 'unsupported_live_execution' == body['requestedPhaseId']
+    assert 'production_hardening' in body['supportedPhaseIds']
+
+
+def test_native_foundation_phase_advancement_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/phases/advancement-review',
+                       json={'phaseId': 'hci_cluster_create_uat',
+                             'content': _native_foundation_intent(
+                                 deployment_type='compute_only',
+                                 node_roles=['hci', 'hci', 'hci'],
+                             )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'failed'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['phase-known']['status'] == 'pass'
+    assert checks['plan-valid']['status'] == 'fail'
+    assert checks['mutating-enable-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_readiness_blocks_imaging_without_uat(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/readiness',
+                       json={'phase': 'imaging_only',
+                             'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['phase'] == 'imaging_only'
+    assert body['phaseCatalog']['mutatingEnabledPhaseCount'] == 0
+    assert 'hci_cluster_create' in body['supportedReadinessPhases']
+    gate_status = {gate['id']: gate['status'] for gate in body['gates']}
+    assert gate_status['plan-valid'] == 'pass'
+    assert gate_status['execution-adapter-enabled'] == 'blocked'
+    assert gate_status['hardware-provider-uat'] == 'blocked'
+    assert 'controlled UAT' in body['message']
+
+
+def test_native_foundation_execution_readiness_accepts_uat_evidence_but_blocks_adapter(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/readiness',
+                       json={'phase': 'imaging_only',
+                             'content': _native_foundation_intent_with_uat_evidence()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    gate_status = {gate['id']: gate['status'] for gate in body['gates']}
+    assert gate_status['plan-valid'] == 'pass'
+    assert gate_status['hardware-provider-uat'] == 'pass'
+    assert gate_status['image-source-verified'] == 'pass'
+    assert gate_status['network-path-verified'] == 'pass'
+    assert gate_status['stop-retry-recovery-reviewed'] == 'pass'
+    assert gate_status['execution-adapter-enabled'] == 'blocked'
+    evidence = {gate['id']: gate['evidence'] for gate in body['gates']}
+    assert evidence['hardware-provider-uat'] == 'nf-provider-uat-001'
+
+
+def test_native_foundation_execution_readiness_requires_evidence_ids(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence().replace(
+        '      evidence_id: nf-image-uat-001\n',
+        '',
+    )
+
+    resp = client.post('/api/native-foundation/execution/readiness',
+                       json={'phase': 'imaging_only', 'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    gates = {gate['id']: gate for gate in body['gates']}
+    assert gates['image-source-verified']['status'] == 'blocked'
+    assert 'evidence_id is required' in gates['image-source-verified']['evidence']
+
+
+def test_native_foundation_execution_readiness_rejects_unknown_phase(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/readiness',
+                       json={'phase': 'power_cycle',
+                             'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    assert 'phase is not supported' in resp.get_json()['error']
+
+
+def test_native_foundation_image_source_manifest_blocks_string_refs_without_checksums(client, auth_headers):
+    resp = client.post('/api/native-foundation/images/manifest',
+                       json={'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canStageImages'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['imageCount'] == 2
+    assert body['summary']['missingChecksumCount'] == 2
+    assert body['summary']['missingVersionCount'] == 2
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['image-sources-declared']['status'] == 'pass'
+    assert checks['image-sha256-present']['status'] == 'blocked'
+    assert checks['image-staging-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_image_source_manifest_accepts_rich_refs_but_blocks_staging(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '        aos_image: aos-image-ref\n'
+        '        hypervisor_image: ahv-image-ref\n',
+        (
+            '        aos_image:\n'
+            '          source: http://images.example.invalid/aos.tar.gz\n'
+            '          version: "7.5.1.8"\n'
+            f'          sha256: {"a" * 64}\n'
+            '        hypervisor_image:\n'
+            '          source: http://images.example.invalid/ahv.iso\n'
+            '          version: "10.0"\n'
+            f'          sha256: {"b" * 64}\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/images/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['missingChecksumCount'] == 0
+    assert body['summary']['missingVersionCount'] == 0
+    assert body['canStageImages'] is False
+    assert {image['imageKind'] for image in body['images']} == {'aos', 'hypervisor'}
+    assert all(image['sha256Valid'] is True for image in body['images'])
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['image-sha256-present']['status'] == 'pass'
+    assert checks['image-version-present']['status'] == 'pass'
+    assert checks['image-staging-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_image_source_manifest_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/images/manifest',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canStageImages'] is False
+    assert body['images'] == []
+
+
+def test_native_foundation_network_manifest_accepts_valid_ipam_but_blocks_configuration(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n'
+        '    clusters:\n',
+        (
+            '    hardware_provider: manual_static\n'
+            '    network_profile:\n'
+            '      management_subnet: 192.0.2.0/24\n'
+            '      management_gateway: 192.0.2.1\n'
+            '      management_vlan_id: 120\n'
+            '      dns_servers:\n'
+            '        - 192.0.2.53\n'
+            '      ntp_servers:\n'
+            '        - 192.0.2.123\n'
+            '    clusters:\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/network/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canConfigureNetworks'] is False
+    assert body['summary']['siteNetworkCount'] == 1
+    assert body['summary']['duplicateIpCount'] == 0
+    assert body['summary']['invalidIpCount'] == 0
+    assert body['summary']['outsideSubnetCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['network-profiles-present']['status'] == 'pass'
+    assert checks['dns-ntp-present']['status'] == 'pass'
+    assert checks['ip-addresses-valid']['status'] == 'pass'
+    assert checks['subnet-membership-reviewed']['status'] == 'pass'
+    assert checks['network-configuration-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_network_manifest_blocks_duplicates_and_outside_subnet(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n'
+        '    clusters:\n',
+        (
+            '    hardware_provider: manual_static\n'
+            '    network_profile:\n'
+            '      management_subnet: 192.0.2.0/28\n'
+            '      management_gateway: 192.0.2.1\n'
+            '      dns_servers:\n'
+            '        - 192.0.2.53\n'
+            '      ntp_servers:\n'
+            '        - 192.0.2.123\n'
+            '    clusters:\n'
+        ),
+    ).replace('            host_ip: 192.0.2.32\n', '            host_ip: 192.0.2.31\n')
+
+    resp = client.post('/api/native-foundation/network/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['duplicateIpCount'] == 1
+    assert body['summary']['outsideSubnetCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['ip-addresses-unique']['status'] == 'blocked'
+    assert checks['subnet-membership-reviewed']['status'] == 'blocked'
+    assert '192.0.2.31' in checks['ip-addresses-unique']['evidence']
+
+
+def test_native_foundation_network_manifest_blocks_invalid_ip_values(client, auth_headers):
+    content = _native_foundation_intent().replace('            bmc_address: 192.0.2.21\n', '            bmc_address: not-an-ip\n')
+
+    resp = client.post('/api/native-foundation/network/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['invalidIpCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['ip-addresses-valid']['status'] == 'blocked'
+    assert 'not-an-ip' in checks['ip-addresses-valid']['evidence']
+
+
+def test_native_foundation_network_manifest_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/network/manifest',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canConfigureNetworks'] is False
+    assert body['sites'] == []
+
+
+def test_native_foundation_secret_reference_manifest_accepts_refs_but_blocks_secret_use(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canUseSecrets'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['missingCredentialRefCount'] == 0
+    assert body['summary']['inlineSecretFindingCount'] == 0
+    assert body['summary']['siteCredentialRefCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['credential-references-present']['status'] == 'pass'
+    assert checks['inline-secrets-absent']['status'] == 'pass'
+    assert checks['secret-values-not-resolved']['status'] == 'pass'
+    assert checks['secret-use-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_reference_manifest_flags_missing_refs_for_redfish(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['missingCredentialRefCount'] == 3
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['credential-references-present']['status'] == 'blocked'
+    assert 'bmc_credential_ref' in checks['credential-references-present']['evidence']
+
+
+def test_native_foundation_secret_reference_manifest_redacts_inline_secret_findings(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n',
+        (
+            '    hardware_provider: manual_static\n'
+            '    provider_api_key: should-not-export\n'
+            '    credentials:\n'
+            '      password: map-secret\n'
+        ),
+    ).replace(
+        '            bmc_address: 192.0.2.21\n',
+        '            bmc_address: 192.0.2.21\n'
+        '            bmc_password: node-secret\n',
+        1,
+    )
+
+    resp = client.post('/api/native-foundation/secrets/manifest',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body_text = resp.get_data(as_text=True)
+    body = resp.get_json()
+    assert 'should-not-export' not in body_text
+    assert 'node-secret' not in body_text
+    assert 'map-secret' not in body_text
+    assert body['summary']['inlineSecretFindingCount'] == 3
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['inline-secrets-absent']['status'] == 'blocked'
+    assert 'provider_api_key' in checks['inline-secrets-absent']['evidence']
+    assert 'bmc_password' in checks['inline-secrets-absent']['evidence']
+    assert body['inlineSecretFindings'][0]['status'] == 'blocked'
+
+
+def test_native_foundation_secret_reference_manifest_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/secrets/manifest',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canUseSecrets'] is False
+    assert body['sites'] == []
+
+
+def test_native_foundation_secret_resolution_plan_inventories_refs_without_values(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/resolution-plan',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canResolveSecrets'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['resolutionRequestCount'] == 1
+    assert body['summary']['resolvedSecretCount'] == 0
+    assert body['resolutionPlanId'].startswith('native-foundation-secret-resolution-')
+    request = body['resolutionRequests'][0]
+    assert request['reference'] == 'site-a-bmc-ref'
+    assert request['resolved'] is False
+    assert request['secretValueExposed'] is False
+    assert 'value' not in request
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['credential-references-present']['status'] == 'pass'
+    assert checks['inline-secrets-absent']['status'] == 'pass'
+    assert checks['secret-values-not-resolved']['status'] == 'pass'
+    assert checks['secret-store-adapter-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_resolution_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/secrets/resolution-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canResolveSecrets'] is False
+    assert body['resolutionRequests'] == []
+
+
+def test_native_foundation_secret_store_binding_review_declares_leases_without_values(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/store-binding-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canBindSecretStore'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canHandoffCredentialsToAdapters'] is False
+    assert body['bindingReviewId'].startswith('native-foundation-secret-binding-review-')
+    assert body['resolutionPlanId'].startswith('native-foundation-secret-resolution-')
+    assert body['summary']['bindingCount'] == len(body['bindings']) == 1
+    assert body['summary']['resolvedBindingCount'] == 0
+    assert body['summary']['secretValueExposureCount'] == 0
+    assert body['summary']['adapterHandoffEnabledCount'] == 0
+    binding = body['bindings'][0]
+    assert binding['bindingId'].startswith('native-foundation-secret-binding-')
+    assert binding['reference'] == 'site-a-bmc-ref'
+    assert binding['leaseMode'] == 'review_only'
+    assert binding['leaseSeconds'] == 0
+    assert binding['secretStorePathExposed'] is False
+    assert binding['secretValueExposed'] is False
+    assert binding['resolved'] is False
+    assert binding['auditEventRequired'] is True
+    assert binding['adapterHandoffEnabled'] is False
+    assert 'value' not in binding
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['secret-resolution-plan-reviewed']['status'] == 'pass'
+    assert checks['secret-bindings-declared']['status'] == 'pass'
+    assert checks['secret-values-not-exposed']['status'] == 'pass'
+    assert checks['secret-audit-hooks-declared']['status'] == 'pass'
+    assert checks['secret-store-binding-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_store_binding_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/secrets/store-binding-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canBindSecretStore'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['bindingReviewId'] is None
+    assert body['bindings'] == []
+
+
+def test_native_foundation_secret_store_provider_contract_review_requires_provider_metadata(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/provider-contract-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canApproveSecretStoreProvider'] is False
+    assert body['canOpenLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canPersistProviderConfig'] is False
+    assert body['canHandoffCredentialsToAdapters'] is False
+    assert body['providerContractReviewId'].startswith('native-foundation-secret-provider-review-')
+    assert body['providerContract']['providerContractId'].startswith('native-foundation-secret-provider-')
+    assert body['providerContract']['bindingCount'] == 1
+    assert body['providerContract']['credentialReferenceCount'] == 1
+    assert body['providerContract']['secretValueExposed'] is False
+    assert body['providerContract']['canOpenLease'] is False
+    assert body['summary']['providerDeclaredCount'] == 0
+    assert body['summary']['supportedProviderCount'] == 0
+    assert body['summary']['credentialReferenceCount'] == 1
+    assert body['summary']['secretValueExposureCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['secret-store-binding-reviewed']['status'] == 'pass'
+    assert checks['secret-store-provider-declared']['status'] == 'blocked'
+    assert checks['secret-store-provider-supported']['status'] == 'blocked'
+    assert checks['secret-store-reference-declared']['status'] == 'blocked'
+    assert checks['secret-values-not-exposed']['status'] == 'pass'
+    assert checks['lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-provider-approval-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_store_provider_contract_review_accepts_known_provider_but_blocks_approval(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/provider-contract-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'secretStoreProvider': 'hashicorp_vault',
+                             'secretStoreRef': 'private-secret-store/vault-lab'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveSecretStoreProvider'] is False
+    assert body['providerContract']['providerId'] == 'hashicorp_vault'
+    assert body['providerContract']['providerLabel'] == 'HashiCorp Vault'
+    assert body['providerContract']['providerReference'] == 'private-secret-store/vault-lab'
+    assert body['providerContract']['supportedProvider'] is True
+    assert 'approle' in body['providerContract']['supportedAuthModes']
+    assert body['summary']['providerDeclaredCount'] == 1
+    assert body['summary']['supportedProviderCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['secret-store-provider-declared']['status'] == 'pass'
+    assert checks['secret-store-provider-supported']['status'] == 'pass'
+    assert checks['secret-store-reference-declared']['status'] == 'pass'
+    assert checks['lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-provider-approval-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_store_provider_contract_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/secrets/provider-contract-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canApproveSecretStoreProvider'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['providerContractReviewId'] is None
+    assert body['providerContract'] == {}
+
+
+def test_native_foundation_secret_lease_execution_review_requires_lease_metadata(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/lease-execution-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canOpenSecretLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canPersistAuditTrail'] is False
+    assert body['canHandoffCredentialsToAdapters'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['leaseExecutionReviewId'].startswith('native-foundation-secret-lease-execution-review-')
+    assert body['bindingReviewId'].startswith('native-foundation-secret-binding-review-')
+    assert body['providerContractReviewId'].startswith('native-foundation-secret-provider-review-')
+    assert body['reviewMetadata']['leaseOwner'] is None
+    assert body['reviewMetadata']['leasePolicyRef'] is None
+    assert body['reviewMetadata']['auditSinkRef'] is None
+    assert body['reviewMetadata']['adapterIdentityRef'] is None
+    assert body['reviewMetadata']['leaseRevocationRef'] is None
+    assert body['summary']['leaseExecutionRecordCount'] == len(body['leaseExecutionRecords']) == 1
+    assert body['summary']['leaseOpenedCount'] == 0
+    assert body['summary']['secretResolvedCount'] == 0
+    assert body['summary']['secretValueExposureCount'] == 0
+    assert body['summary']['auditEventPersistedCount'] == 0
+    assert body['summary']['credentialsHandedToAdapterCount'] == 0
+    assert body['summary']['leaseRevokedCount'] == 0
+    record = body['leaseExecutionRecords'][0]
+    assert record['leaseExecutionRecordId'].startswith('native-foundation-secret-lease-execution-')
+    assert record['reference'] == 'site-a-bmc-ref'
+    assert record['leaseMode'] == 'review_only'
+    assert record['leaseStatus'] == 'not_opened'
+    assert record['secretResolutionStatus'] == 'not_resolved'
+    assert record['auditPersistenceStatus'] == 'not_persisted'
+    assert record['revocationStatus'] == 'not_run'
+    assert record['leaseOpened'] is False
+    assert record['secretResolved'] is False
+    assert record['secretValueExposed'] is False
+    assert record['auditEventPersisted'] is False
+    assert record['credentialsHandedToAdapter'] is False
+    assert record['leaseRevoked'] is False
+    assert record['canOpenSecretLease'] is False
+    assert record['canResolveSecrets'] is False
+    assert record['canExposeSecretValues'] is False
+    assert record['canPersistAuditTrail'] is False
+    assert record['canHandoffCredentialsToAdapters'] is False
+    assert 'secret-store-binding-review.json' in record['requiredReviews']
+    assert 'secret-store-provider-contract-review.json' in record['requiredReviews']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['secret-store-provider-contract-reviewed']['status'] == 'pass'
+    assert checks['secret-store-binding-reviewed']['status'] == 'pass'
+    assert checks['lease-records-declared']['status'] == 'pass'
+    assert checks['lease-owner-declared']['status'] == 'blocked'
+    assert checks['lease-policy-reference-declared']['status'] == 'blocked'
+    assert checks['audit-sink-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-identity-reference-declared']['status'] == 'blocked'
+    assert checks['lease-revocation-reference-declared']['status'] == 'blocked'
+    assert checks['secret-lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-audit-persistence-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_lease_execution_review_accepts_metadata_but_opens_no_leases(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/lease-execution-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'leaseOwner': 'secret-owner',
+                             'leasePolicyRef': 'private-secret-policy/native-foundation',
+                             'auditSinkRef': 'private-audit/native-foundation-secrets',
+                             'adapterIdentityRef': 'private-identities/native-foundation-runner',
+                             'leaseRevocationRef': 'private-secret-revocation/native-foundation'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenSecretLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canHandoffCredentialsToAdapters'] is False
+    assert body['reviewMetadata']['leaseOwner'] == 'secret-owner'
+    assert body['reviewMetadata']['leasePolicyRef'] == 'private-secret-policy/native-foundation'
+    assert body['reviewMetadata']['auditSinkRef'] == 'private-audit/native-foundation-secrets'
+    assert body['reviewMetadata']['adapterIdentityRef'] == 'private-identities/native-foundation-runner'
+    assert body['reviewMetadata']['leaseRevocationRef'] == 'private-secret-revocation/native-foundation'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['lease-owner-declared']['status'] == 'pass'
+    assert checks['lease-policy-reference-declared']['status'] == 'pass'
+    assert checks['audit-sink-reference-declared']['status'] == 'pass'
+    assert checks['adapter-identity-reference-declared']['status'] == 'pass'
+    assert checks['lease-revocation-reference-declared']['status'] == 'pass'
+    assert checks['secret-lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-audit-persistence-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_lease_execution_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/secrets/lease-execution-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canOpenSecretLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canPersistAuditTrail'] is False
+    assert body['canHandoffCredentialsToAdapters'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['leaseExecutionReviewId'] is None
+    assert body['leaseExecutionRecords'] == []
+
+
+def test_native_foundation_secret_audit_persistence_review_requires_audit_metadata(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/audit-persistence-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAppendAuditEvents'] is False
+    assert body['canPersistAuditTrail'] is False
+    assert body['canReadRetainedArtifacts'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['auditPersistenceReviewId'].startswith('native-foundation-secret-audit-persistence-review-')
+    assert body['leaseExecutionReviewId'].startswith('native-foundation-secret-lease-execution-review-')
+    assert body['reviewMetadata']['auditOwner'] is None
+    assert body['reviewMetadata']['auditPolicyRef'] is None
+    assert body['reviewMetadata']['auditSinkRef'] is None
+    assert body['reviewMetadata']['auditRetentionRef'] is None
+    assert body['reviewMetadata']['auditFailureRef'] is None
+    assert body['summary']['auditEventRecordCount'] == len(body['auditEventRecords']) == 1
+    assert body['summary']['auditEventAppendedCount'] == 0
+    assert body['summary']['auditEventPersistedCount'] == 0
+    assert body['summary']['retentionArtifactWrittenCount'] == 0
+    assert body['summary']['failureClassificationPersistedCount'] == 0
+    assert body['summary']['secretValueExposureCount'] == 0
+    record = body['auditEventRecords'][0]
+    assert record['auditEventRecordId'].startswith('native-foundation-secret-audit-event-')
+    assert record['reference'] == 'site-a-bmc-ref'
+    assert record['auditMode'] == 'review_only'
+    assert record['auditPersistenceStatus'] == 'not_persisted'
+    assert record['retentionStatus'] == 'not_persisted'
+    assert record['failureClassificationStatus'] == 'not_run'
+    assert record['auditEventAppended'] is False
+    assert record['auditEventPersisted'] is False
+    assert record['retentionArtifactWritten'] is False
+    assert record['failureClassificationPersisted'] is False
+    assert record['secretValueExposed'] is False
+    assert record['canAppendAuditEvents'] is False
+    assert record['canPersistAuditTrail'] is False
+    assert record['canReadRetainedArtifacts'] is False
+    assert 'secret-lease-execution-review.json' in record['requiredReviews']
+    assert 'retained-evidence-export-review.json' in record['requiredReviews']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['secret-lease-execution-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-records-declared']['status'] == 'pass'
+    assert checks['audit-owner-declared']['status'] == 'blocked'
+    assert checks['audit-policy-reference-declared']['status'] == 'blocked'
+    assert checks['audit-sink-reference-declared']['status'] == 'blocked'
+    assert checks['audit-retention-reference-declared']['status'] == 'blocked'
+    assert checks['audit-failure-reference-declared']['status'] == 'blocked'
+    assert checks['secret-values-not-exposed']['status'] == 'pass'
+    assert checks['secret-audit-append-disabled']['status'] == 'blocked'
+    assert checks['secret-audit-persistence-disabled']['status'] == 'blocked'
+    assert checks['retained-artifact-read-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_audit_persistence_review_accepts_metadata_but_persists_nothing(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/secrets/audit-persistence-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'auditOwner': 'secret-audit-owner',
+                             'auditPolicyRef': 'private-audit-policy/native-foundation',
+                             'auditSinkRef': 'private-audit/native-foundation-secrets',
+                             'auditRetentionRef': 'private-retention/native-foundation-secrets',
+                             'auditFailureRef': 'private-failure-classification/native-foundation'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAppendAuditEvents'] is False
+    assert body['canPersistAuditTrail'] is False
+    assert body['canReadRetainedArtifacts'] is False
+    assert body['reviewMetadata']['auditOwner'] == 'secret-audit-owner'
+    assert body['reviewMetadata']['auditPolicyRef'] == 'private-audit-policy/native-foundation'
+    assert body['reviewMetadata']['auditSinkRef'] == 'private-audit/native-foundation-secrets'
+    assert body['reviewMetadata']['auditRetentionRef'] == 'private-retention/native-foundation-secrets'
+    assert body['reviewMetadata']['auditFailureRef'] == 'private-failure-classification/native-foundation'
+    assert body['summary']['auditEventPersistedCount'] == 0
+    assert body['summary']['retentionArtifactWrittenCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['audit-owner-declared']['status'] == 'pass'
+    assert checks['audit-policy-reference-declared']['status'] == 'pass'
+    assert checks['audit-sink-reference-declared']['status'] == 'pass'
+    assert checks['audit-retention-reference-declared']['status'] == 'pass'
+    assert checks['audit-failure-reference-declared']['status'] == 'pass'
+    assert checks['secret-audit-append-disabled']['status'] == 'blocked'
+    assert checks['secret-audit-persistence-disabled']['status'] == 'blocked'
+    assert checks['retained-artifact-read-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_secret_audit_persistence_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/secrets/audit-persistence-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canAppendAuditEvents'] is False
+    assert body['canPersistAuditTrail'] is False
+    assert body['canReadRetainedArtifacts'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['auditPersistenceReviewId'] is None
+    assert body['auditEventRecords'] == []
+
+
+def test_native_foundation_execution_graph_plans_multi_site_topology(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/graph',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'valid'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['siteStrategy'] == 'parallel'
+    assert body['siteWaves'] == {'site-a': 1, 'site-b': 1}
+    assert body['summary']['siteCount'] == 2
+    assert body['summary']['clusterCount'] == 3
+    assert body['summary']['deploymentTypes'] == {
+        'compute_only': 1,
+        'hci': 1,
+        'storage_only': 1,
+    }
+    actions = {step['action'] for step in body['steps']}
+    assert 'form_hci_cluster' in actions
+    assert 'register_compute_only_nodes' in actions
+    assert 'form_storage_only_cluster' in actions
+    compute_step = next(step for step in body['steps'] if step['action'] == 'register_compute_only_nodes')
+    assert compute_step['clusterWave'] == 2
+    assert all(step['mutatingActionsEnabled'] is False for step in body['steps'])
+
+
+def test_native_foundation_execution_graph_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/graph',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['steps'] == []
+
+
+def test_native_foundation_adapter_contracts_are_read_only_and_versioned(client, auth_headers):
+    resp = client.get('/api/native-foundation/adapter-contracts', headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['contractVersion'] == 'native-foundation-adapter-contract/v1.8.0-readonly'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['status'] == 'valid'
+    assert body['intentRequirements']['providersInIntent'] == []
+    assert all(contract['mutatingActionsEnabled'] is False for contract in body['providerContracts'])
+    assert all(contract['mutatingActionsEnabled'] is False for contract in body['deploymentContracts'])
+    manual_static = next(contract for contract in body['providerContracts'] if contract['providerId'] == 'manual_static')
+    assert manual_static['status'] == 'implemented_read_only'
+    assert manual_static['readOnlyDiscovery'] is True
+
+
+def test_native_foundation_adapter_contracts_evaluate_intent_requirements(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-contracts',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'valid'
+    requirements = body['intentRequirements']
+    assert requirements['providersInIntent'] == ['manual_static']
+    assert requirements['deploymentTypesInIntent'] == ['compute_only', 'hci', 'storage_only']
+    findings = {(finding['kind'], finding['id']): finding for finding in requirements['findings']}
+    assert findings[('provider', 'manual_static')]['status'] == 'implemented_read_only'
+    assert findings[('deployment_type', 'compute_only')]['status'] == 'planning_graph_only'
+    assert findings[('deployment_type', 'hci')]['mutatingActionsEnabled'] is False
+
+
+def test_native_foundation_adapter_contracts_reject_unsupported_intent_values(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: unsupported_provider',
+    ).replace(
+        'deployment_type: hci',
+        'deployment_type: unsupported_topology',
+    )
+
+    resp = client.post('/api/native-foundation/adapter-contracts',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    findings = {(finding['kind'], finding['id']): finding for finding in body['intentRequirements']['findings']}
+    assert findings[('provider', 'unsupported_provider')]['status'] == 'unsupported'
+    assert findings[('deployment_type', 'unsupported_topology')]['status'] == 'unsupported'
+
+
+def test_native_foundation_provider_topology_matrix_reports_multi_site_blockers(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-topology-matrix',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['matrixRowCount'] == 3
+    assert body['summary']['providerCount'] == 1
+    assert body['summary']['deploymentTypeCount'] == 3
+    assert body['summary']['blockedRowCount'] == 3
+    assert body['summary']['mutatingEnabledRowCount'] == 0
+    rows = {(row['siteName'], row['clusterName']): row for row in body['matrixRows']}
+    assert rows[('site-a', 'hci-cluster-a')]['deploymentType'] == 'hci'
+    assert rows[('site-a', 'compute-cluster-a')]['plannedPhases'] == ['imaging_only', 'compute_storage_topology']
+    assert rows[('site-b', 'storage-cluster-b')]['deploymentType'] == 'storage_only'
+    assert all(row['canDiscoverLive'] is False for row in body['matrixRows'])
+    assert all(row['canImageNodes'] is False for row in body['matrixRows'])
+    assert all(row['canCreateCluster'] is False for row in body['matrixRows'])
+    assert any('Missing accepted evidence' in reason for reason in rows[('site-a', 'hci-cluster-a')]['blockedReasons'])
+
+
+def test_native_foundation_provider_topology_matrix_uses_evidence_aliases(client, auth_headers):
+    base_evidence = (
+        '  artifact_policy: operator_supplied\n'
+        '  uat_evidence:\n'
+        '    hardware_provider_discovery:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-provider-uat-001\n'
+        '    image_source_verified:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-image-uat-001\n'
+        '    network_path_verified:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-network-uat-001\n'
+        '    recovery_runbook_reviewed:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-recovery-uat-001\n'
+        '    cluster_create_validated:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-cluster-create-validated-001\n'
+        '    version_support_validated:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-version-support-001\n'
+        '    compute_registration_validated:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-compute-registration-001\n'
+        '    storage_cluster_validated:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-storage-cluster-001\n'
+        '    deployment_type_support_review:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-deployment-type-support-001\n'
+        '    topology_uat:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-topology-uat-001\n'
+    )
+    content = _native_foundation_multi_site_intent().replace(
+        '  artifact_policy: operator_supplied\n',
+        base_evidence,
+    )
+
+    resp = client.post('/api/native-foundation/provider-topology-matrix',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['summary']['matrixRowCount'] == 3
+    assert body['summary']['missingEvidenceCount'] == 0
+    hci = next(row for row in body['matrixRows'] if row['deploymentType'] == 'hci')
+    deployment_requirements = {item['requirement']: item for item in hci['deploymentEvidenceRequirements']}
+    assert deployment_requirements['cluster_create_uat']['status'] == 'pass'
+    assert deployment_requirements['cluster_create_uat']['evidenceKey'] == 'cluster_create_validated'
+    assert hci['acceptedEvidenceCount'] == hci['requiredEvidenceCount']
+    assert hci['mutatingActionsEnabled'] is False
+    assert 'Provider/topology matrix is read-only' in hci['blockedReasons'][-1]
+
+
+def test_native_foundation_provider_topology_matrix_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-topology-matrix',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['matrixRows'] == []
+
+
+def test_native_foundation_provider_adapters_are_read_only_scaffold(client, auth_headers):
+    resp = client.get('/api/native-foundation/provider-adapters', headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['adapterInterfaceVersion'] == 'native-foundation-provider-adapter/v1.8.0-readonly'
+    assert body['status'] == 'blocked'
+    assert body['canLoadAdapters'] is False
+    assert body['mutatingActionsEnabled'] is False
+    providers = {adapter['providerId']: adapter for adapter in body['providerAdapters']}
+    assert {'manual_static', 'dell_idrac_redfish', 'hpe_ilo_redfish', 'lenovo_xcc_redfish'} <= providers.keys()
+    manual_ops = {operation['operationId']: operation for operation in providers['manual_static']['operations']}
+    assert manual_ops['discover_inventory']['status'] == 'implemented_read_only'
+    assert manual_ops['discover_inventory']['mutatingActionsEnabled'] is False
+    assert manual_ops['power_control']['status'] == 'blocked_mutating'
+    assert all(operation['mutatingActionsEnabled'] is False for operation in manual_ops.values())
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-contracts-known']['status'] == 'pass'
+    assert checks['mutating-provider-operations-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_adapters_scope_to_intent_provider(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-adapters',
+                       json={'content': _native_foundation_intent().replace(
+                           'hardware_provider: manual_static',
+                           'hardware_provider: dell_idrac_redfish',
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providersInIntent'] == ['dell_idrac_redfish']
+    assert [adapter['providerId'] for adapter in body['providerAdapters']] == ['dell_idrac_redfish']
+    adapter = body['providerAdapters'][0]
+    assert adapter['status'] == 'implemented_controlled_uat_read_only'
+    assert adapter['readOnlyDiscovery'] is True
+    assert adapter['environmentControls']['liveDiscovery'] == 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true'
+    operations = {operation['operationId']: operation for operation in adapter['operations']}
+    assert operations['discover_inventory']['status'] == 'implemented_read_only'
+    assert operations['discover_inventory']['mutatingActionsEnabled'] is False
+    assert operations['power_control']['status'] == 'blocked_mutating'
+    assert all(operation['mutatingActionsEnabled'] is False for operation in adapter['operations'])
+
+
+def test_native_foundation_provider_adapters_enable_dell_uat_mutation_when_env_gated(client, auth_headers, monkeypatch):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION', 'true')
+
+    resp = client.post('/api/native-foundation/provider-adapters',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'ready'
+    assert body['readOnly'] is False
+    assert body['mutatingActionsEnabled'] is True
+    assert body['canLoadAdapters'] is True
+    adapter = body['providerAdapters'][0]
+    assert adapter['providerId'] == 'dell_idrac_redfish'
+    assert adapter['status'] == 'enabled_controlled_uat_mutating'
+    assert adapter['readOnly'] is False
+    assert adapter['mutatingActionsEnabled'] is True
+    operations = {operation['operationId']: operation for operation in adapter['operations']}
+    assert operations['power_control']['status'] == 'enabled_controlled_uat'
+    assert operations['power_control']['mutatingActionsEnabled'] is True
+    assert operations['boot_order']['status'] == 'enabled_controlled_uat'
+    assert operations['image_mount']['status'] == 'enabled_controlled_uat'
+    assert operations['image_nodes']['status'] == 'blocked_mutating'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['mutating-provider-operations-disabled']['status'] == 'pass'
+
+
+def test_native_foundation_dell_idrac_redfish_probe_blocks_by_default(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+
+    resp = client.post('/api/native-foundation/providers/dell-idrac/redfish-probe',
+                       json={'content': content, 'credentialRef': 'site-a-bmc-ref'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providerId'] == 'dell_idrac_redfish'
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['liveDiscoveryEnabled'] is False
+    assert body['canRunLiveDiscovery'] is False
+    assert body['canRunMutatingOperations'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['dell-idrac-provider-selected']['status'] == 'pass'
+    assert checks['redfish-target-declared']['status'] == 'pass'
+    assert checks['credential-reference-declared']['status'] == 'pass'
+    assert checks['live-discovery-env-enabled']['status'] == 'blocked'
+    assert checks['redfish-service-root-reachable']['status'] == 'blocked'
+    assert checks['dell-idrac-mutation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_dell_idrac_redfish_probe_runs_when_enabled(client, auth_headers, monkeypatch):
+    import server
+
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('root', 'secret', ''))
+
+    class FakeResponse:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, _limit=-1):
+            return b'{"@odata.id":"/redfish/v1/","Id":"RootService","Name":"Root Service","RedfishVersion":"1.6.0"}'
+
+    captured = {}
+
+    def fake_urlopen(req, timeout=0, context=None):
+        captured['url'] = req.full_url
+        captured['auth'] = req.headers.get('Authorization')
+        captured['timeout'] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+
+    resp = client.post('/api/native-foundation/providers/dell-idrac/redfish-probe',
+                       json={'content': content, 'credentialRef': 'site-a-bmc-ref'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'ready'
+    assert body['liveDiscoveryEnabled'] is True
+    assert body['canRunLiveDiscovery'] is True
+    assert body['canRunMutatingOperations'] is False
+    assert body['redfishTarget']['serviceRootUrl'] == 'https://192.0.2.21/redfish/v1/'
+    assert body['redfishTarget']['credentialRef'] == 'site-a-bmc-ref'
+    assert body['serviceRoot']['RedfishVersion'] == '1.6.0'
+    assert body['summary']['liveProbeAttemptedCount'] == 1
+    assert captured['url'] == 'https://192.0.2.21/redfish/v1/'
+    assert captured['auth'].startswith('Basic ')
+    assert 'secret' not in json.dumps(body)
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['live-discovery-env-enabled']['status'] == 'pass'
+    assert checks['redfish-service-root-reachable']['status'] == 'pass'
+    assert checks['dell-idrac-mutation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_adapters_reject_unsupported_provider(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: unsupported_provider',
+    )
+
+    resp = client.post('/api/native-foundation/provider-adapters',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['providerAdapters'][0]['providerId'] == 'unsupported_provider'
+    assert body['providerAdapters'][0]['status'] == 'unsupported'
+
+
+def test_native_foundation_provider_operation_catalog_maps_site_topology_operations(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-catalog',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['operationCatalogVersion'] == 'native-foundation-provider-operation-catalog/v1.8.0-readonly'
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['operationCatalogRowCount'] == len(body['operationRows'])
+    assert body['summary']['operationCatalogRowCount'] > 1
+    assert body['summary']['mutatingOperationCount'] > 0
+    assert body['summary']['runnableOperationCount'] == 0
+    assert body['sourceReviews']['providerTopologyMatrixStatus'] == 'blocked'
+    rows = {(row['siteName'], row['clusterName']): row for row in body['operationRows']}
+    hci_row = next(row for row in body['operationRows'] if row['deploymentType'] == 'hci')
+    assert hci_row['matrixRowId'].startswith('native-foundation-matrix-')
+    assert hci_row['canRunLiveDiscovery'] is False
+    assert hci_row['canRunProviderOperations'] is False
+    assert hci_row['canRunDeploymentOperations'] is False
+    hci_ops = {operation['operationId']: operation for operation in hci_row['operations']}
+    assert hci_ops['discover_inventory']['status'] == 'implemented_read_only'
+    assert hci_ops['discover_inventory']['canRun'] is False
+    assert hci_ops['image_nodes']['status'] == 'blocked'
+    assert hci_ops['create_hci_cluster']['phase'] == 'hci_cluster_create'
+    assert hci_ops['create_hci_cluster']['mutatingActionsEnabled'] is False
+    assert hci_ops['validate_prism_element']['mutating'] is False
+    storage_row = next(row for row in body['operationRows'] if row['deploymentType'] == 'storage_only')
+    storage_ops = {operation['operationId']: operation for operation in storage_row['operations']}
+    assert 'create_storage_cluster' in storage_ops
+    assert 'register_compute_nodes' not in storage_ops
+    assert rows
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-topology-matrix-reviewed']['status'] == 'pass'
+    assert checks['operation-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_operation_catalog_uses_evidence_aliases(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-catalog',
+                       json={'content': _native_foundation_admission_ready_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    row = body['operationRows'][0]
+    hci_ops = {operation['operationId']: operation for operation in row['operations']}
+    create_requirements = {
+        item['requirement']: item for item in hci_ops['create_hci_cluster']['requiredEvidence']
+    }
+    assert create_requirements['cluster_create_uat']['status'] == 'pass'
+    assert create_requirements['cluster_create_uat']['evidenceKey'] == 'cluster_create_validated'
+    assert create_requirements['prism_element_validation']['status'] == 'pass'
+    assert hci_ops['create_hci_cluster']['canRun'] is False
+    assert body['summary']['runnableOperationCount'] == 0
+
+
+def test_native_foundation_provider_operation_catalog_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-catalog',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['operationRows'] == []
+
+
+def test_native_foundation_provider_operation_admission_review_blocks_operations(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['operationAdmissionReviewVersion'] == 'native-foundation-provider-operation-admission/v1.8.0-readonly'
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['operationAdmissionRecordCount'] == len(body['operationAdmissionRecords'])
+    assert body['summary']['operationAdmissionRecordCount'] > 0
+    assert body['summary']['admittedOperationCount'] == 0
+    assert body['summary']['runnableOperationCount'] == 0
+    assert body['summary']['mutatingOperationCount'] > 0
+    assert body['sourceReviews']['providerOperationCatalogStatus'] == 'blocked'
+    record = next(item for item in body['operationAdmissionRecords'] if item['operationId'] == 'create_hci_cluster')
+    assert record['operationCatalogRowId'].startswith('native-foundation-operation-catalog-')
+    assert record['matrixRowId'].startswith('native-foundation-matrix-')
+    assert record['requestedPhase'] == 'hci_cluster_create'
+    assert record['canAdmitOperation'] is False
+    assert record['canRunOperation'] is False
+    assert record['canSubmitJob'] is False
+    assert 'Provider operation execution remains disabled.' in record['blockedReasons']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-catalog-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-bindings-present']['status'] == 'blocked'
+    assert checks['operation-admission-persistence-disabled']['status'] == 'blocked'
+    assert checks['provider-operation-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_operation_admission_review_carries_bindings(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    resp = client.post('/api/native-foundation/provider-operation-admission-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'approvalId': 'approval-native-foundation-001',
+                             'evidenceId': 'evidence-native-foundation-001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == 'approval-native-foundation-001'
+    assert body['evidenceId'] == 'evidence-native-foundation-001'
+    assert body['summary']['admittedOperationCount'] == 0
+    record = next(item for item in body['operationAdmissionRecords'] if item['operationId'] == 'create_hci_cluster')
+    requirements = {item['requirement']: item for item in record['requiredEvidence']}
+    assert requirements['cluster_create_uat']['status'] == 'pass'
+    assert requirements['cluster_create_uat']['evidenceKey'] == 'cluster_create_validated'
+    assert record['approvalId'] == 'approval-native-foundation-001'
+    assert record['evidenceId'] == 'evidence-native-foundation-001'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-bindings-present']['status'] == 'pass'
+    assert checks['provider-operation-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_operation_admission_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-admission-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['operationAdmissionRecords'] == []
+
+
+def test_native_foundation_provider_operation_queue_plan_blocks_queueing(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-queue-plan',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['operationQueuePlanVersion'] == 'native-foundation-provider-operation-queue-plan/v1.8.0-readonly'
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['operationQueuePlanId'].startswith('native-foundation-operation-queue-plan-')
+    assert body['summary']['operationQueueItemCount'] == len(body['operationQueueItems'])
+    assert body['summary']['operationQueueItemCount'] > 0
+    assert body['summary']['queuedOperationCount'] == 0
+    assert body['summary']['persistedOperationQueueCount'] == 0
+    assert body['summary']['runnableOperationCount'] == 0
+    assert body['summary']['mutatingOperationCount'] > 0
+    assert body['sourceReviews']['providerOperationAdmissionStatus'] == 'blocked'
+    first_item = body['operationQueueItems'][0]
+    assert first_item['operationQueueItemId'].startswith('native-foundation-operation-queue-item-')
+    assert first_item['operationAdmissionRecordId'].startswith('native-foundation-operation-admission-')
+    assert first_item['canEnqueueOperation'] is False
+    assert first_item['canRunOperation'] is False
+    assert first_item['queuePersisted'] is False
+    assert first_item['operationAdmissionRecordId'] in first_item['dependsOn']
+    assert 'Provider operation execution remains disabled.' in first_item['blockedReasons']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['operation-admission-reviewed']['status'] == 'pass'
+    assert checks['operation-queue-persistence-disabled']['status'] == 'blocked'
+    assert checks['operation-enqueue-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_operation_queue_plan_carries_bindings(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-queue-plan',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create',
+                             'approvalId': 'approval-native-foundation-001',
+                             'evidenceId': 'evidence-native-foundation-001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == 'approval-native-foundation-001'
+    assert body['evidenceId'] == 'evidence-native-foundation-001'
+    assert body['summary']['queuedOperationCount'] == 0
+    assert body['summary']['runnableOperationCount'] == 0
+    assert body['sourceReviews']['providerOperationAdmissionRecordCount'] == len(body['operationQueueItems'])
+    item = next(item for item in body['operationQueueItems'] if item['operationId'] == 'create_hci_cluster')
+    assert item['admitted'] is False
+    assert item['queued'] is False
+    assert item['queuePersisted'] is False
+
+
+def test_native_foundation_provider_operation_queue_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-queue-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['operationQueueItems'] == []
+
+
+def test_native_foundation_provider_operation_queue_admission_review_blocks_admission(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-queue-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['operationQueueAdmissionReviewVersion'] == 'native-foundation-provider-operation-queue-admission/v1.8.0-readonly'
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['operationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert body['summary']['operationQueueAdmissionRecordCount'] == len(body['operationQueueAdmissionRecords'])
+    assert body['summary']['operationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['admittedOperationQueueCount'] == 0
+    assert body['summary']['persistedOperationQueueCount'] == 0
+    assert body['summary']['queuedOperationCount'] == 0
+    assert body['summary']['runnableOperationCount'] == 0
+    assert body['summary']['mutatingOperationCount'] > 0
+    assert body['sourceReviews']['providerOperationQueuePlanStatus'] == 'blocked'
+    record = next(item for item in body['operationQueueAdmissionRecords'] if item['operationId'] == 'create_hci_cluster')
+    assert record['operationQueueAdmissionRecordId'].startswith('native-foundation-operation-queue-admission-')
+    assert record['operationQueuePlanId'].startswith('native-foundation-operation-queue-plan-')
+    assert record['operationQueueItemId'].startswith('native-foundation-operation-queue-item-')
+    assert record['operationAdmissionRecordId'].startswith('native-foundation-operation-admission-')
+    assert record['canAdmitOperationQueue'] is False
+    assert record['canPersistOperationQueue'] is False
+    assert record['canEnqueueOperation'] is False
+    assert record['operationQueueAdmitted'] is False
+    assert record['operationQueuePersisted'] is False
+    assert record['operationQueued'] is False
+    assert 'Provider operation queue persistence and enqueue remain disabled.' in record['blockedReasons']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['operation-queue-plan-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-bindings-present']['status'] == 'blocked'
+    assert checks['operation-queue-admission-persistence-disabled']['status'] == 'blocked'
+    assert checks['operation-queue-enqueue-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_operation_queue_admission_review_carries_bindings(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-queue-admission-review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create',
+                             'approvalId': 'approval-native-foundation-001',
+                             'evidenceId': 'evidence-native-foundation-001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == 'approval-native-foundation-001'
+    assert body['evidenceId'] == 'evidence-native-foundation-001'
+    assert body['summary']['operationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['admittedOperationQueueCount'] == 0
+    record = next(item for item in body['operationQueueAdmissionRecords'] if item['operationId'] == 'create_hci_cluster')
+    assert record['approvalId'] == 'approval-native-foundation-001'
+    assert record['evidenceId'] == 'evidence-native-foundation-001'
+    assert record['operationQueueAdmitted'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-bindings-present']['status'] == 'pass'
+    assert checks['operation-queue-enqueue-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_operation_queue_admission_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-operation-queue-admission-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['operationQueueAdmissionRecords'] == []
+
+
+def test_native_foundation_provider_preflight_accepts_refs_but_blocks_live_discovery(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/provider-preflight',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canRunDiscovery'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['sitePreflightCount'] == 1
+    assert body['summary']['missingCredentialRefCount'] == 0
+    assert body['summary']['inlineSecretFindingCount'] == 0
+    site = body['sites'][0]
+    assert site['hardwareProvider'] == 'dell_idrac_redfish'
+    assert site['credentialReferenceStatus'] == 'pass'
+    assert all(node['liveDiscoveryAttempted'] is False for node in site['nodes'])
+    site_checks = {check['id']: check for check in site['checks']}
+    assert site_checks['credential-references-present']['status'] == 'pass'
+    assert site_checks['bmc-addresses-declared']['status'] == 'pass'
+    assert site_checks['live-discovery-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_preflight_blocks_missing_refs(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+
+    resp = client.post('/api/native-foundation/provider-preflight',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['missingCredentialRefCount'] == 3
+    site_checks = {check['id']: check for check in body['sites'][0]['checks']}
+    assert site_checks['credential-references-present']['status'] == 'blocked'
+    assert 'bmc_credential_ref' in site_checks['credential-references-present']['evidence']
+
+
+def test_native_foundation_provider_preflight_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/provider-preflight',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canRunDiscovery'] is False
+    assert body['sites'] == []
+
+
+def test_native_foundation_discovery_contract_accepts_redfish_refs_but_blocks_execution(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    bmc_credential_ref: site-a-bmc-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/discovery/contract',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canRunLiveDiscovery'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['providerDiscoveryContractCount'] == 1
+    contract = body['providerContracts'][0]
+    assert contract['providerId'] == 'dell_idrac_redfish'
+    assert contract['requestSchema']['source'] == 'redfish_bmc'
+    assert len(contract['requestSchema']['bmcTargets']) == 3
+    assert all(target['credentialResolved'] is False for target in contract['requestSchema']['bmcTargets'])
+    assert contract['responseSchema']['secretFieldsAllowed'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-preflight-reviewed']['status'] == 'pass'
+    assert checks['credential-references-present']['status'] == 'pass'
+    assert checks['provider-endpoints-declared']['status'] == 'pass'
+    assert checks['live-discovery-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_discovery_contract_blocks_missing_api_provider_endpoint(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: cisco_intersight\n'
+        '    provider_credential_ref: intersight-ref\n',
+    )
+
+    resp = client.post('/api/native-foundation/discovery/contract',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['credential-references-present']['status'] == 'pass'
+    assert checks['provider-endpoints-declared']['status'] == 'blocked'
+    assert 'provider_endpoint' in checks['provider-endpoints-declared']['evidence']
+
+
+def test_native_foundation_discovery_contract_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/discovery/contract',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canRunLiveDiscovery'] is False
+    assert body['providerContracts'] == []
+
+
+def test_native_foundation_discovery_reconciliation_blocks_without_facts(client, auth_headers):
+    resp = client.post('/api/native-foundation/discovery/reconcile',
+                       json={'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPromoteDiscovery'] is False
+    assert body['summary']['expectedNodeCount'] == 3
+    assert body['summary']['discoveredNodeCount'] == 0
+    assert body['summary']['missingDiscoveryNodeCount'] == 3
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['discovery-facts-present']['status'] == 'blocked'
+    assert checks['intended-nodes-discovered']['status'] == 'blocked'
+    assert checks['promotion-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_discovery_reconciliation_matches_supplied_facts_but_blocks_promotion(client, auth_headers):
+    facts = {
+        'sites': [
+            {
+                'siteName': 'site-a',
+                'clusters': [
+                    {
+                        'clusterName': 'hci-cluster-a',
+                        'nodes': [
+                            {
+                                'nodeSerial': f'NODE-{idx}',
+                                'hardwareModel': 'NX-8155-G9',
+                                'bmcAddress': f'192.0.2.{20 + idx}',
+                                'powerState': 'on',
+                                'bootMode': 'uefi',
+                                'nicInventory': [{'mac': f'00:11:22:33:44:{idx:02d}'}],
+                                'diskInventory': [{'serial': f'DISK-{idx}'}],
+                                'firmwareVersions': {'bios': '1.0.0'},
+                            }
+                            for idx in range(1, 4)
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    resp = client.post('/api/native-foundation/discovery/reconcile',
+                       json={'content': _native_foundation_intent(), 'discoveryFacts': facts},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['matchedNodeCount'] == 3
+    assert body['summary']['missingDiscoveryNodeCount'] == 0
+    assert body['summary']['unexpectedDiscoveryNodeCount'] == 0
+    assert body['summary']['mismatchedDiscoveryNodeCount'] == 0
+    assert all(match['status'] == 'matched' for match in body['matches'])
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['discovery-facts-present']['status'] == 'pass'
+    assert checks['discovery-facts-complete']['status'] == 'pass'
+    assert checks['promotion-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_discovery_reconciliation_flags_mismatch_unexpected_and_secret_paths(client, auth_headers):
+    facts = {
+        'sites': [
+            {
+                'siteName': 'site-a',
+                'clusters': [
+                    {
+                        'clusterName': 'hci-cluster-a',
+                        'nodes': [
+                            {
+                                'nodeSerial': 'NODE-1',
+                                'hardwareModel': 'NX-8155-G9',
+                                'bmcAddress': '192.0.2.200',
+                                'powerState': 'on',
+                                'bootMode': 'uefi',
+                                'nicInventory': [{'mac': '00:11:22:33:44:01'}],
+                                'diskInventory': [{'serial': 'DISK-1'}],
+                            },
+                            {
+                                'nodeSerial': 'NODE-X',
+                                'hardwareModel': 'NX-8155-G9',
+                                'bmcAddress': '192.0.2.99',
+                                'powerState': 'on',
+                                'bootMode': 'uefi',
+                                'nicInventory': [{'mac': '00:11:22:33:44:99'}],
+                                'diskInventory': [{'serial': 'DISK-X'}],
+                                'provider_token': 'do-not-return',
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+
+    resp = client.post('/api/native-foundation/discovery/reconcile',
+                       json={'content': _native_foundation_intent(), 'discoveryFacts': facts},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body_text = resp.get_data(as_text=True)
+    body = resp.get_json()
+    assert 'do-not-return' not in body_text
+    assert body['summary']['missingDiscoveryNodeCount'] == 2
+    assert body['summary']['unexpectedDiscoveryNodeCount'] == 1
+    assert body['summary']['mismatchedDiscoveryNodeCount'] == 1
+    assert body['summary']['inlineSecretFindingCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['no-unexpected-discovered-nodes']['status'] == 'blocked'
+    assert checks['inline-secrets-absent']['status'] == 'blocked'
+    assert 'provider_token' in checks['inline-secrets-absent']['evidence']
+
+
+def test_native_foundation_discovery_reconciliation_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/discovery/reconcile',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPromoteDiscovery'] is False
+    assert body['matches'] == []
+
+
+def test_native_foundation_imaging_plan_previews_node_payloads_but_blocks_imaging(client, auth_headers):
+    resp = client.post('/api/native-foundation/imaging/plan',
+                       json={
+                           'content': _native_foundation_ready_metadata_intent(),
+                           'discoveryFacts': _native_foundation_discovery_facts(),
+                       },
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canImageNodes'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['nodePlanCount'] == 3
+    assert body['summary']['readyForReviewNodeCount'] == 3
+    assert body['summary']['missingPayloadFieldCount'] == 0
+    node_plan = body['nodePlans'][0]
+    assert node_plan['canImage'] is False
+    assert node_plan['status'] == 'ready_for_review'
+    payload = node_plan['foundationPayloadPreview']
+    assert payload['aosImageSha256'] == 'a' * 64
+    assert payload['hypervisorImageSha256'] == 'b' * 64
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['image-sources-ready']['status'] == 'pass'
+    assert checks['network-metadata-ready']['status'] == 'pass'
+    assert checks['discovery-reconciliation-reviewed']['status'] == 'pass'
+    assert checks['node-imaging-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_imaging_plan_blocks_incomplete_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/imaging/plan',
+                       json={'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['nodePlanCount'] == 3
+    assert body['summary']['readyForReviewNodeCount'] == 0
+    assert body['summary']['missingPayloadFieldCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['image-sources-ready']['status'] == 'blocked'
+    assert checks['network-metadata-ready']['status'] == 'blocked'
+    assert checks['discovery-reconciliation-reviewed']['status'] == 'blocked'
+    assert checks['node-imaging-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_imaging_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/imaging/plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canImageNodes'] is False
+    assert body['nodePlans'] == []
+
+
+def test_native_foundation_cluster_formation_plan_previews_hci_payload_but_blocks_creation(client, auth_headers):
+    resp = client.post('/api/native-foundation/clusters/formation-plan',
+                       json={
+                           'content': _native_foundation_ready_metadata_intent(),
+                           'discoveryFacts': _native_foundation_discovery_facts(),
+                       },
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canCreateClusters'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['clusterPlanCount'] == 1
+    assert body['summary']['readyForReviewClusterCount'] == 1
+    cluster_plan = body['clusterPlans'][0]
+    assert cluster_plan['deploymentType'] == 'hci'
+    assert cluster_plan['imagingReady'] is True
+    assert cluster_plan['canCreateCluster'] is False
+    assert cluster_plan['status'] == 'ready_for_review'
+    assert cluster_plan['formationPayloadPreview']['hciNodes'] == ['NODE-1', 'NODE-2', 'NODE-3']
+    assert any(action['action'] == 'form_hci_cluster' for action in cluster_plan['topologyActions'])
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['node-imaging-plan-ready']['status'] == 'pass'
+    assert checks['cluster-formation-fields-complete']['status'] == 'pass'
+    assert checks['cluster-formation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_cluster_formation_plan_blocks_incomplete_prerequisites(client, auth_headers):
+    resp = client.post('/api/native-foundation/clusters/formation-plan',
+                       json={'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['clusterPlanCount'] == 1
+    assert body['summary']['readyForReviewClusterCount'] == 0
+    cluster_plan = body['clusterPlans'][0]
+    assert cluster_plan['status'] == 'blocked'
+    assert cluster_plan['imagingReady'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['node-imaging-plan-ready']['status'] == 'blocked'
+    assert checks['cluster-formation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_cluster_formation_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/clusters/formation-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canCreateClusters'] is False
+    assert body['clusterPlans'] == []
+
+
+def test_native_foundation_post_create_validation_plan_previews_checks_but_blocks_live_validation(client, auth_headers):
+    resp = client.post('/api/native-foundation/post-create/validation-plan',
+                       json={
+                           'content': _native_foundation_ready_metadata_intent(),
+                           'discoveryFacts': _native_foundation_discovery_facts(),
+                       },
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canValidateClusters'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['validationPlanCount'] == 1
+    assert body['summary']['readyForReviewValidationCount'] == 1
+    validation_plan = body['validationPlans'][0]
+    assert validation_plan['deploymentType'] == 'hci'
+    assert validation_plan['formationReady'] is True
+    assert validation_plan['canValidateCluster'] is False
+    assert validation_plan['status'] == 'ready_for_review'
+    checks = [check['id'] for check in validation_plan['validationPayloadPreview']['checks']]
+    assert 'cluster_vip_reachable' in checks
+    assert 'node_membership_matches_intent' in checks
+    assert 'cvm_services_healthy' in checks
+    top_level_checks = {check['id']: check for check in body['checks']}
+    assert top_level_checks['cluster-formation-plan-reviewed']['status'] == 'pass'
+    assert top_level_checks['post-create-validation-inputs-complete']['status'] == 'pass'
+    assert top_level_checks['post-create-validation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_post_create_validation_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/post-create/validation-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canValidateClusters'] is False
+    assert body['validationPlans'] == []
+
+
+def test_native_foundation_evidence_packs_are_cluster_scoped_and_hash_bound(client, auth_headers):
+    content = _native_foundation_multi_site_intent()
+
+    first = client.post('/api/native-foundation/evidence-packs',
+                        json={'content': content},
+                        headers=auth_headers)
+    second = client.post('/api/native-foundation/evidence-packs',
+                         json={'content': content},
+                         headers=auth_headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    body = first.get_json()
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['packCount'] == 3
+    assert [pack['packId'] for pack in body['packs']] == [
+        pack['packId'] for pack in second.get_json()['packs']
+    ]
+    packs = {pack['clusterName']: pack for pack in body['packs']}
+    hci_pack = packs['hci-cluster-a']
+    assert hci_pack['planId'] == body['planId']
+    assert hci_pack['intentSha256'] == body['intentSha256']
+    assert hci_pack['discoverySha256'] == body['discoverySha256']
+    assert hci_pack['contractVersion'] == 'native-foundation-adapter-contract/v1.8.0-readonly'
+    assert hci_pack['providerContract']['providerId'] == 'manual_static'
+    assert hci_pack['deploymentContract']['deploymentType'] == 'hci'
+    assert hci_pack['deploymentContract']['plannedPhases'] == ['imaging_only', 'hci_cluster_create']
+    assert 'cluster_create_uat' in hci_pack['requiredPromotionEvidence']
+    assert 'plan_hash_approval' in hci_pack['requiredPromotionEvidence']
+    assert any(step_id.endswith('form-hci-cluster') for step_id in hci_pack['graphStepIds'])
+    assert all(gate['id'] for gate in hci_pack['readinessGates'])
+
+
+def test_native_foundation_evidence_packs_reject_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/evidence-packs',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['packs'] == []
+
+
+def test_native_foundation_evidence_pack_approval_review_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/evidence-packs/approval-review',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveEvidencePacks'] is False
+    assert body['canStartApprovedClusters'] is False
+    assert body['summary']['packApprovalCount'] == 3
+    assert body['summary']['readyForReviewPackApprovalCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['evidence-packs-present']['status'] == 'pass'
+    assert checks['approval-evidence-binding-reviewed']['status'] == 'blocked'
+    assert checks['evidence-requirements-reviewed']['status'] == 'blocked'
+    assert checks['pack-approval-persistence-disabled']['status'] == 'blocked'
+    assert all(item['bindingStatus'] == 'blocked' for item in body['packApprovals'])
+    assert all(item['approvedForExecution'] is False for item in body['packApprovals'])
+
+
+def test_native_foundation_evidence_pack_approval_review_binds_ready_records_without_execution(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfpack_operator', 'operator')
+    operator_headers = _login(client, 'nfpack_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation pack approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for pack review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'phase': 'full_deployment',
+                                      'approvalId': approval_id,
+                                      'notes': 'captured pack approval evidence'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/evidence-packs/approval-review',
+                       json={'content': content,
+                             'phase': 'full_deployment',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['packApprovalCount'] == 1
+    assert body['summary']['readyForReviewPackApprovalCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-binding-reviewed']['status'] == 'pass'
+    assert checks['evidence-requirements-reviewed']['status'] == 'pass'
+    assert checks['pack-approval-persistence-disabled']['status'] == 'blocked'
+    pack_approval = body['packApprovals'][0]
+    assert pack_approval['goNoGoDecisionStatus'] == 'ready_for_review'
+    assert pack_approval['bindingStatus'] == 'pass'
+    assert pack_approval['evidenceRequirementStatus'] == 'pass'
+    assert pack_approval['approvedForExecution'] is False
+    assert pack_approval['canStartClusterExecution'] is False
+
+
+def test_native_foundation_adapter_readiness_reports_cluster_targets_and_missing_evidence(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-readiness',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canEnableExecution'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['adapterCount'] == 3
+    assert body['summary']['missingEvidenceCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['intent-contract-valid']['status'] == 'pass'
+    assert checks['adapter-contracts-read-only']['status'] == 'pass'
+    assert checks['uat-evidence-complete']['status'] == 'blocked'
+    assert checks['approval-binding-required']['status'] == 'blocked'
+    assert checks['execution-switch-disabled']['status'] == 'blocked'
+    hci_adapter = next(adapter for adapter in body['adapters'] if adapter['deploymentType'] == 'hci')
+    assert hci_adapter['providerId'] == 'manual_static'
+    assert hci_adapter['readOnlyDiscoveryReady'] is True
+    assert hci_adapter['mutatingActionsEnabled'] is False
+    assert any(item['requirement'] == 'cluster_create_uat' and item['status'] == 'blocked'
+               for item in hci_adapter['evidenceRequirements'])
+
+
+def test_native_foundation_adapter_readiness_accepts_evidence_aliases_but_blocks_execution(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence().replace(
+        '    recovery_runbook_reviewed:\n'
+        '      accepted: true\n'
+        '      evidence_id: nf-recovery-uat-001\n',
+        (
+            '    recovery_runbook_reviewed:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-recovery-uat-001\n'
+            '    approval_binding_review:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-approval-binding-001\n'
+            '    cluster_create_validated:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-cluster-create-uat-001\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/adapter-readiness',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['adapterCount'] == 1
+    assert body['summary']['missingEvidenceCount'] == 0
+    assert body['canEnableExecution'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['uat-evidence-complete']['status'] == 'pass'
+    assert checks['execution-switch-disabled']['status'] == 'blocked'
+    adapter = body['adapters'][0]
+    requirement_status = {item['requirement']: item for item in adapter['evidenceRequirements']}
+    assert requirement_status['imaging_uat']['evidenceKey'] == 'image_source_verified'
+    assert requirement_status['cluster_create_uat']['evidenceId'] == 'nf-cluster-create-uat-001'
+    assert requirement_status['plan_hash_approval']['evidenceKey'] == 'approval_binding_review'
+
+
+def test_native_foundation_adapter_readiness_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-readiness',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canEnableExecution'] is False
+    assert body['adapters'] == []
+
+
+def test_native_foundation_deployment_policy_accepts_conservative_windows_but_blocks_scheduling(client, auth_headers):
+    content = _native_foundation_multi_site_intent().replace(
+        '  orchestration:\n'
+        '    site_strategy: parallel\n',
+        (
+            '  orchestration:\n'
+            '    site_strategy: parallel\n'
+            '  policy:\n'
+            '    max_parallel_sites: 2\n'
+            '    max_parallel_clusters_per_site: 2\n'
+            '    require_approval_binding: true\n'
+            '    require_validation_evidence: true\n'
+            '    failure_policy: stop_site\n'
+        ),
+    ).replace(
+        '    concurrency_limit: 1\n'
+        '    clusters:\n',
+        (
+            '    concurrency_limit: 1\n'
+            '    deployment_window:\n'
+            '      timezone: UTC\n'
+            '      days:\n'
+            '        - Sat\n'
+            '      start: "00:00"\n'
+            '      end: "06:00"\n'
+            '    clusters:\n'
+        ),
+        1,
+    ).replace(
+        '    concurrency_limit: 2\n'
+        '    clusters:\n',
+        (
+            '    concurrency_limit: 2\n'
+            '    deployment_window:\n'
+            '      timezone: UTC\n'
+            '      days:\n'
+            '        - Sun\n'
+            '      start: "01:00"\n'
+            '      end: "05:00"\n'
+            '    clusters:\n'
+        ),
+        1,
+    )
+
+    resp = client.post('/api/native-foundation/deployment-policy',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canScheduleExecution'] is False
+    assert body['summary']['sitePolicyCount'] == 2
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['site-parallelism-within-policy']['status'] == 'pass'
+    assert checks['site-cluster-concurrency-within-policy']['status'] == 'pass'
+    assert checks['deployment-windows-present']['status'] == 'pass'
+    assert checks['execution-scheduling-disabled']['status'] == 'blocked'
+    assert all(site['deploymentWindow']['valid'] is True for site in body['sites'])
+
+
+def test_native_foundation_deployment_policy_blocks_over_parallel_intent(client, auth_headers):
+    content = _native_foundation_multi_site_intent().replace(
+        '  orchestration:\n'
+        '    site_strategy: parallel\n',
+        (
+            '  orchestration:\n'
+            '    site_strategy: parallel\n'
+            '  policy:\n'
+            '    max_parallel_sites: 1\n'
+            '    max_parallel_clusters_per_site: 1\n'
+            '    require_approval_binding: true\n'
+            '    require_validation_evidence: true\n'
+            '    failure_policy: stop_all\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/deployment-policy',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['site-parallelism-within-policy']['status'] == 'blocked'
+    assert checks['site-cluster-concurrency-within-policy']['status'] == 'blocked'
+    assert checks['deployment-windows-present']['status'] == 'blocked'
+    assert 'site-b' in checks['site-cluster-concurrency-within-policy']['evidence']
+
+
+def test_native_foundation_deployment_policy_blocks_missing_required_policy_flags(client, auth_headers):
+    content = _native_foundation_intent().replace(
+        '  artifact_policy: operator_supplied\n',
+        (
+            '  artifact_policy: operator_supplied\n'
+            '  policy:\n'
+            '    max_parallel_sites: 0\n'
+            '    max_parallel_clusters_per_site: 0\n'
+            '    require_approval_binding: false\n'
+            '    require_validation_evidence: false\n'
+            '    failure_policy: ignore_failures\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/deployment-policy',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    checks = {check['id']: check for check in resp.get_json()['checks']}
+    assert checks['max-parallel-sites-valid']['status'] == 'blocked'
+    assert checks['max-parallel-clusters-valid']['status'] == 'blocked'
+    assert checks['approval-binding-required']['status'] == 'blocked'
+    assert checks['validation-evidence-required']['status'] == 'blocked'
+    assert checks['failure-policy-valid']['status'] == 'blocked'
+
+
+def test_native_foundation_deployment_policy_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-policy',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canScheduleExecution'] is False
+    assert body['sites'] == []
+
+
+def _native_foundation_multi_site_intent_with_policy_windows():
+    return _native_foundation_multi_site_intent().replace(
+        '  orchestration:\n'
+        '    site_strategy: parallel\n',
+        (
+            '  orchestration:\n'
+            '    site_strategy: parallel\n'
+            '  policy:\n'
+            '    max_parallel_sites: 2\n'
+            '    max_parallel_clusters_per_site: 2\n'
+            '    require_approval_binding: true\n'
+            '    require_validation_evidence: true\n'
+            '    failure_policy: stop_site\n'
+        ),
+    ).replace(
+        '    concurrency_limit: 1\n'
+        '    clusters:\n',
+        (
+            '    concurrency_limit: 1\n'
+            '    deployment_window:\n'
+            '      timezone: UTC\n'
+            '      days:\n'
+            '        - Sat\n'
+            '      start: "00:00"\n'
+            '      end: "06:00"\n'
+            '    clusters:\n'
+        ),
+        1,
+    ).replace(
+        '    concurrency_limit: 2\n'
+        '    clusters:\n',
+        (
+            '    concurrency_limit: 2\n'
+            '    deployment_window:\n'
+            '      timezone: UTC\n'
+            '      days:\n'
+            '        - Sun\n'
+            '      start: "01:00"\n'
+            '      end: "05:00"\n'
+            '    clusters:\n'
+        ),
+        1,
+    )
+
+
+def test_native_foundation_deployment_wave_gate_review_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-wave-gates/review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenDeploymentWaves'] is False
+    assert body['phase'] == 'hci_cluster_create'
+    assert body['summary']['waveGateCount'] == 1
+    assert body['summary']['siteGateCount'] == 2
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-policy-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-binding-reviewed']['status'] == 'blocked'
+    assert checks['site-wave-gates-present']['status'] == 'pass'
+    assert checks['deployment-wave-opening-disabled']['status'] == 'blocked'
+    wave = body['waveGates'][0]
+    assert wave['siteWave'] == 1
+    assert wave['siteCount'] == 2
+    assert sorted(wave['deploymentTypes']) == ['compute_only', 'hci', 'storage_only']
+    assert all(site['status'] == 'blocked' for site in wave['siteGates'])
+    assert all('Native Foundation deployment scheduling remains disabled.' in site['blockedReasons'] for site in wave['siteGates'])
+
+
+def test_native_foundation_deployment_wave_gate_review_carries_approval_evidence_binding(client, auth_headers):
+    content = _native_foundation_multi_site_intent_with_policy_windows()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfwave_operator', 'operator')
+    operator_headers = _login(client, 'nfwave_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation wave gate approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for wave gate review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'phase': 'hci_cluster_create',
+                                      'approvalId': approval_id,
+                                      'notes': 'captured wave gate evidence packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/deployment-wave-gates/review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['sourceReviews']['approvalBindingStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-policy-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-binding-reviewed']['status'] == 'pass'
+    assert checks['deployment-wave-opening-disabled']['status'] == 'blocked'
+    wave = body['waveGates'][0]
+    assert wave['status'] == 'blocked'
+    assert wave['canOpenWave'] is False
+    assert {site['siteName'] for site in wave['siteGates']} == {'site-a', 'site-b'}
+    assert all(site['policyStatus'] == 'ready_for_review' for site in wave['siteGates'])
+    assert all(site['clusters'] for site in wave['siteGates'])
+
+
+def test_native_foundation_deployment_wave_rehearsal_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-wave-rehearsal',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canStartWaveExecution'] is False
+    assert body['canReserveDeploymentWindows'] is False
+    assert body['summary']['waveRehearsalCount'] == 1
+    assert body['summary']['rehearsalClusterCount'] == 3
+    assert body['summary']['runnerBlockerCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-wave-gates-reviewed']['status'] == 'blocked'
+    assert checks['evidence-packs-present']['status'] == 'pass'
+    assert checks['recovery-controls-declared']['status'] == 'pass'
+    assert checks['runner-blockers-declared']['status'] == 'pass'
+    assert checks['wave-execution-disabled']['status'] == 'blocked'
+    rehearsal = body['waveRehearsals'][0]
+    assert rehearsal['status'] == 'blocked'
+    assert rehearsal['canStartWaveExecution'] is False
+    assert rehearsal['canReserveDeploymentWindow'] is False
+    assert sorted(rehearsal['deploymentTypes']) == ['compute_only', 'hci', 'storage_only']
+    assert rehearsal['blastRadius']['failurePolicy'] == 'stop_site'
+    assert all(cluster['evidencePackId'] for cluster in rehearsal['clusters'])
+    assert all(cluster['recoveryActionIds'] for cluster in rehearsal['clusters'])
+
+
+def test_native_foundation_deployment_wave_rehearsal_carries_bound_package(client, auth_headers):
+    content = _native_foundation_multi_site_intent_with_policy_windows()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrehearsal_operator', 'operator')
+    operator_headers = _login(client, 'nfrehearsal_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation wave rehearsal approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for rehearsal review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'phase': 'full_deployment',
+                                      'approvalId': approval_id,
+                                      'notes': 'captured wave rehearsal evidence packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/deployment-wave-rehearsal',
+                       json={'content': content,
+                             'phase': 'full_deployment',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['sourceReviews']['deploymentWaveGateStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-wave-gates-reviewed']['status'] == 'pass'
+    assert checks['deployment-wave-rehearsals-present']['status'] == 'pass'
+    assert checks['wave-execution-disabled']['status'] == 'blocked'
+    rehearsal = body['waveRehearsals'][0]
+    assert rehearsal['siteNames'] == ['site-a', 'site-b']
+    assert rehearsal['clusterCount'] == 3
+    assert len(rehearsal['evidencePackIds']) == 3
+    assert len(rehearsal['recoveryActionIds']) >= 3
+    assert 'record_go_no_go_decision' in rehearsal['operatorControls']
+    assert all(cluster['canStartClusterExecution'] is False for cluster in rehearsal['clusters'])
+
+
+def test_native_foundation_deployment_wave_authorization_review_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-waves/authorization-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAuthorizeDeploymentWaves'] is False
+    assert body['canStartWaveExecution'] is False
+    assert body['summary']['waveAuthorizationCount'] == 1
+    assert body['summary']['authorizedWaveCount'] == 0
+    assert body['summary']['packApprovalCount'] == 3
+    assert body['summary']['readyForReviewPackApprovalCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-wave-rehearsal-reviewed']['status'] == 'pass'
+    assert checks['evidence-pack-approvals-ready']['status'] == 'blocked'
+    assert checks['execution-permit-package-reviewed']['status'] == 'pass'
+    assert checks['execution-lock-plan-reviewed']['status'] == 'pass'
+    assert checks['runner-blockers-declared']['status'] == 'pass'
+    assert checks['wave-authorization-persistence-disabled']['status'] == 'blocked'
+    authorization = body['waveAuthorizations'][0]
+    assert authorization['status'] == 'blocked'
+    assert authorization['authorized'] is False
+    assert authorization['canAuthorizeWave'] is False
+    assert authorization['runnerBlockerCount'] > 0
+    assert all(cluster['packGoNoGoDecisionStatus'] == 'blocked'
+               for cluster in authorization['clusterAuthorizations'])
+
+
+def test_native_foundation_deployment_wave_authorization_review_carries_ready_pack_records(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfwaveauth_operator', 'operator')
+    operator_headers = _login(client, 'nfwaveauth_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation wave authorization approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for wave authorization review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'phase': 'full_deployment',
+                                      'approvalId': approval_id,
+                                      'notes': 'captured wave authorization evidence'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/deployment-waves/authorization-review',
+                       json={'content': content,
+                             'phase': 'full_deployment',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['waveAuthorizationCount'] == 1
+    assert body['summary']['readyForReviewPackApprovalCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['evidence-pack-approvals-ready']['status'] == 'pass'
+    assert checks['wave-authorization-persistence-disabled']['status'] == 'blocked'
+    authorization = body['waveAuthorizations'][0]
+    assert authorization['packApprovalStatus'] == 'ready_for_review'
+    assert authorization['authorized'] is False
+    assert authorization['canStartWaveExecution'] is False
+    cluster_authorization = authorization['clusterAuthorizations'][0]
+    assert cluster_authorization['packGoNoGoDecisionStatus'] == 'ready_for_review'
+    assert cluster_authorization['packApprovalRecordId'].startswith('native-foundation-pack-approval-')
+    assert cluster_authorization['lockRequestIds']
+    assert cluster_authorization['approvedForExecution'] is False
+
+
+def test_native_foundation_deployment_window_reservation_review_blocks_reservation(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-windows/reservation-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canReserveDeploymentWindows'] is False
+    assert body['canStartReservedWaves'] is False
+    assert body['summary']['reservationRequestCount'] == 1
+    assert body['summary']['reservedWindowCount'] == 0
+    assert body['summary']['readyForReviewReservationCount'] == 1
+    assert body['summary']['siteReservationCount'] == 2
+    assert body['summary']['linkedLockRequestCount'] >= 2
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-wave-authorization-reviewed']['status'] == 'pass'
+    assert checks['deployment-windows-ready']['status'] == 'pass'
+    assert checks['lock-requests-linked']['status'] == 'pass'
+    assert checks['window-reservation-disabled']['status'] == 'blocked'
+    reservation = body['reservationRequests'][0]
+    assert reservation['windowStatus'] == 'ready_for_review'
+    assert reservation['reserved'] is False
+    assert reservation['canReserveWindow'] is False
+    assert reservation['canStartReservedWave'] is False
+    assert all(site['reserved'] is False for site in reservation['siteReservations'])
+    assert all(site['deploymentWindow']['valid'] is True for site in reservation['siteReservations'])
+
+
+def test_native_foundation_deployment_window_reservation_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfwindow_operator', 'operator')
+    operator_headers = _login(client, 'nfwindow_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation window reservation approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for window reservation review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'phase': 'full_deployment',
+                                      'approvalId': approval_id,
+                                      'notes': 'captured window reservation evidence'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/deployment-windows/reservation-review',
+                       json={'content': content,
+                             'phase': 'full_deployment',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['reservationRequestCount'] == 1
+    assert body['summary']['readyForReviewPackApprovalCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-wave-authorization-reviewed']['status'] == 'pass'
+    assert checks['window-reservation-disabled']['status'] == 'blocked'
+    reservation = body['reservationRequests'][0]
+    assert reservation['authorizationRecordId'].startswith('native-foundation-wave-authorization-')
+    assert reservation['reserved'] is False
+    assert reservation['siteReservations'][0]['canReserveSiteWindow'] is False
+
+
+def test_native_foundation_deployment_scheduler_review_blocks_wave_opening(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-scheduler/review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenDeploymentWaves'] is False
+    assert body['canEnqueueDeploymentJobs'] is False
+    assert body['summary']['scheduleItemCount'] == 1
+    assert body['summary']['openedWaveCount'] == 0
+    assert body['summary']['queuedJobCount'] == 0
+    assert body['summary']['scheduleLedgerEntryCount'] > 0
+    assert body['summary']['scheduleRecoveryActionCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['deployment-window-reservation-reviewed']['status'] == 'pass'
+    assert checks['execution-request-reviewed']['status'] == 'pass'
+    assert checks['dry-run-ledger-reviewed']['status'] == 'pass'
+    assert checks['execution-permit-reviewed']['status'] == 'pass'
+    assert checks['execution-lock-plan-reviewed']['status'] == 'pass'
+    assert checks['recovery-plan-reviewed']['status'] == 'pass'
+    assert checks['job-state-reviewed']['status'] == 'pass'
+    assert checks['deployment-scheduler-disabled']['status'] == 'blocked'
+    item = body['scheduleItems'][0]
+    assert item['reservationRequestId'].startswith('native-foundation-window-reservation-')
+    assert item['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert item['permitId'].startswith('native-foundation-execution-permit-')
+    assert item['lockPlanId'].startswith('native-foundation-lock-plan-')
+    assert item['jobStateId'].startswith('native-foundation-job-state-')
+    assert item['recoveryPlanId'].startswith('native-foundation-recovery-plan-')
+    assert item['queueName'] is None
+    assert item['jobId'] is None
+    assert item['opened'] is False
+    assert item['queued'] is False
+    assert item['canOpenWave'] is False
+    assert item['canEnqueueJob'] is False
+    assert item['mutatingActionsEnabled'] is False
+
+
+def test_native_foundation_deployment_scheduler_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfschedule_operator', 'operator')
+    operator_headers = _login(client, 'nfschedule_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation scheduler review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for scheduler review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'phase': 'full_deployment',
+                                      'approvalId': approval_id,
+                                      'notes': 'captured scheduler review evidence'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/deployment-scheduler/review',
+                       json={'content': content,
+                             'phase': 'full_deployment',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['scheduleItemCount'] == 1
+    assert body['summary']['readyForReviewPackApprovalCount'] == 1
+    assert body['sourceReviews']['deploymentWindowReservationStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['schedule-items-present']['status'] == 'pass'
+    assert checks['deployment-scheduler-disabled']['status'] == 'blocked'
+    item = body['scheduleItems'][0]
+    assert item['lockRequestIds']
+    assert item['ledgerEntryIds']
+    assert item['recoveryActionIds']
+    assert item['opened'] is False
+    assert item['queued'] is False
+    assert item['mutatingActionsEnabled'] is False
+
+
+def test_native_foundation_deployment_type_support_review_blocks_enablement(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-types/support-review',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canEnableDeploymentTypeSupport'] is False
+    assert body['canRunMutatingValidation'] is False
+    assert body['summary']['supportRecordCount'] == 3
+    assert body['summary']['deploymentTypeCount'] == 3
+    assert body['summary']['planningGraphOnlyCount'] == 3
+    assert body['summary']['missingUatEvidenceCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-graph-reviewed']['status'] == 'pass'
+    assert checks['support-records-present']['status'] == 'pass'
+    assert checks['provider-deployment-contracts-reviewed']['status'] == 'pass'
+    assert checks['formation-and-validation-inputs-reviewed']['status'] == 'blocked'
+    assert checks['uat-checklist-reviewed']['status'] == 'pass'
+    assert checks['accepted-uat-evidence-present']['status'] == 'blocked'
+    assert checks['deployment-type-support-enable-disabled']['status'] == 'blocked'
+    records = {(record['providerId'], record['deploymentType']): record for record in body['supportRecords']}
+    assert ('manual_static', 'hci') in records
+    assert ('manual_static', 'compute_only') in records
+    assert ('manual_static', 'storage_only') in records
+    storage = records[('manual_static', 'storage_only')]
+    assert storage['supportLevel'] == 'planning_graph_only'
+    assert storage['canEnableDeploymentTypeSupport'] is False
+    assert storage['clusters'][0]['formationStatus'] == 'blocked'
+    assert storage['clusters'][0]['postCreateValidationStatus'] == 'blocked'
+    assert 'One or more cluster formation previews are blocked.' in storage['blockedReasons']
+    assert 'storage_nodes_registered' in storage['validationStepIds']
+    assert storage['requiredUatCaseIds']
+    assert storage['matchingPackIds']
+
+
+def test_native_foundation_deployment_type_support_review_scopes_provider_topology(client, auth_headers):
+    resp = client.post('/api/native-foundation/deployment-types/support-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'compute_only'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'compute_only'
+    assert body['summary']['supportRecordCount'] == 1
+    record = body['supportRecords'][0]
+    assert record['providerId'] == 'manual_static'
+    assert record['deploymentType'] == 'compute_only'
+    assert record['deploymentContractStatus'] == 'planning_graph_only'
+    assert record['canRunMutatingValidation'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'compute_nodes_registered' in record['validationStepIds']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['support-records-present']['status'] == 'pass'
+    assert checks['deployment-type-support-enable-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_resume_checkpoint_starts_with_root_steps(client, auth_headers):
+    resp = client.post('/api/native-foundation/resume-checkpoint',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'ready_for_review'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['resumeMode'] == 'review_only'
+    assert body['checkpointId'].startswith('native-foundation-checkpoint-')
+    assert body['summary']['clusterCheckpointCount'] == 3
+    assert body['summary']['nextStepCount'] == 3
+    assert body['summary']['completedStepCount'] == 0
+    assert all(step['action'] == 'validate_plan' for step in body['steps'] if step['resumeStatus'] == 'next')
+
+
+def test_native_foundation_resume_checkpoint_marks_partial_progress(client, auth_headers):
+    content = _native_foundation_multi_site_intent()
+    graph_resp = client.post('/api/native-foundation/execution/graph',
+                             json={'content': content},
+                             headers=auth_headers)
+    graph_steps = graph_resp.get_json()['steps']
+    completed = [
+        step['id'] for step in graph_steps
+        if step['clusterName'] == 'hci-cluster-a' and step['action'] in {'validate_plan', 'confirm_inventory_facts'}
+    ]
+    content_with_checkpoint = content.replace(
+        '  orchestration:\n'
+        '    site_strategy: parallel\n',
+        (
+            '  orchestration:\n'
+            '    site_strategy: parallel\n'
+            '  checkpoint:\n'
+            '    completed_step_ids:\n'
+            f'      - {completed[0]}\n'
+            f'      - {completed[1]}\n'
+            '    failed_step_ids: []\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/resume-checkpoint',
+                       json={'content': content_with_checkpoint},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['completedStepCount'] == 2
+    hci_checkpoint = next(item for item in body['clusterCheckpoints'] if item['clusterName'] == 'hci-cluster-a')
+    assert hci_checkpoint['completed'] == 2
+    assert len(hci_checkpoint['next']) == 1
+    next_step = next(step for step in body['steps'] if step['id'] == hci_checkpoint['next'][0])
+    assert next_step['action'] == 'check_execution_gates'
+    assert next_step['dependencyStates'] == {completed[1]: 'completed'}
+
+
+def test_native_foundation_resume_checkpoint_blocks_dependents_after_failure(client, auth_headers):
+    content = _native_foundation_multi_site_intent()
+    graph_resp = client.post('/api/native-foundation/execution/graph',
+                             json={'content': content},
+                             headers=auth_headers)
+    failed_step = next(
+        step['id'] for step in graph_resp.get_json()['steps']
+        if step['clusterName'] == 'compute-cluster-a' and step['action'] == 'confirm_inventory_facts'
+    )
+    content_with_checkpoint = content.replace(
+        '  orchestration:\n'
+        '    site_strategy: parallel\n',
+        (
+            '  orchestration:\n'
+            '    site_strategy: parallel\n'
+            '  checkpoint:\n'
+            '    completed_step_ids: []\n'
+            '    failed_step_ids:\n'
+            f'      - {failed_step}\n'
+            '      - unknown-step\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/resume-checkpoint',
+                       json={'content': content_with_checkpoint},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['summary']['failedStepCount'] == 1
+    assert body['summary']['blockedStepCount'] > 0
+    assert any('Ignored unknown failed_step_ids: unknown-step' in warning for warning in body['warnings'])
+    compute_checkpoint = next(item for item in body['clusterCheckpoints'] if item['clusterName'] == 'compute-cluster-a')
+    assert compute_checkpoint['failed'] == 1
+    assert compute_checkpoint['blocked']
+
+
+def test_native_foundation_resume_checkpoint_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/resume-checkpoint',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['steps'] == []
+
+
+def test_native_foundation_adapter_promotion_review_blocks_without_selection(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-promotion/review',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPromote'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['matching-evidence-packs']['status'] == 'pass'
+    assert checks['provider-contract-read-only']['status'] == 'blocked'
+    assert checks['deployment-contract-read-only']['status'] == 'blocked'
+    assert checks['controlled-uat-required']['status'] == 'blocked'
+    assert any('controlled hardware UAT' in action for action in body['requiredActions'])
+
+
+def test_native_foundation_adapter_promotion_review_uses_matching_pack_and_readiness(client, auth_headers):
+    content = _native_foundation_multi_site_intent().replace(
+        '  orchestration:\n'
+        '    site_strategy: parallel\n',
+        (
+            '  orchestration:\n'
+            '    site_strategy: parallel\n'
+            '  uat_evidence:\n'
+            '    hardware_provider_discovery:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-provider-uat-001\n'
+            '    image_source_verified:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-image-uat-001\n'
+            '    network_path_verified:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-network-uat-001\n'
+            '    recovery_runbook_reviewed:\n'
+            '      accepted: true\n'
+            '      evidence_id: nf-recovery-uat-001\n'
+        ),
+    )
+
+    resp = client.post('/api/native-foundation/adapter-promotion/review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'hci'
+    assert body['matchingPackIds']
+    assert 'cluster_create_uat' in body['promotionEvidenceRequired']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-contract-read-only']['status'] == 'pass'
+    assert checks['deployment-contract-read-only']['status'] == 'pass'
+    assert checks['readiness-gates-accepted']['status'] == 'blocked'
+    assert 'execution-adapter-enabled' in checks['readiness-gates-accepted']['evidence']
+    assert checks['controlled-uat-required']['status'] == 'blocked'
+    assert body['canPromote'] is False
+
+
+def test_native_foundation_adapter_promotion_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-promotion/review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       ),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'storage_only'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPromote'] is False
+    assert body['matchingPackIds'] == []
+
+
+def test_native_foundation_uat_checklist_infers_single_intent_and_is_deterministic(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence()
+
+    first = client.post('/api/native-foundation/uat/checklist',
+                        json={'content': content},
+                        headers=auth_headers)
+    second = client.post('/api/native-foundation/uat/checklist',
+                         json={'content': content},
+                         headers=auth_headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    body = first.get_json()
+    assert body['checklistId'] == second.get_json()['checklistId']
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'hci'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['status'] == 'blocked'
+    assert body['canPromote'] is False
+    case_ids = [case['id'] for case in body['cases']]
+    assert 'uat-hci-cluster-create' in case_ids
+    assert 'uat-promotion-decision' in case_ids
+    assert all(case['status'] == 'not_started' for case in body['cases'])
+    assert all(case['mutatingActionsEnabled'] is False for case in body['cases'])
+    assert 'cluster_create_uat' in body['requiredEvidence']
+    assert body['matchingPackIds']
+
+
+def test_native_foundation_uat_checklist_blocks_ambiguous_multi_topology_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/checklist',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] is None
+    assert body['matchingPackIds'] == []
+    assert any('Select a deploymentType' in warning for warning in body['warnings'])
+    check_status = {check['id']: check['status'] for check in body['promotionChecks']}
+    assert check_status['deployment-contract-read-only'] == 'blocked'
+
+
+def test_native_foundation_uat_checklist_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/checklist',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       ),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'storage_only'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['checklistId'] is None
+    assert body['cases'] == []
+
+
+def test_native_foundation_adapter_uat_rehearsal_plans_cases_but_blocks_runner(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-uat/rehearsal',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canRunUat'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'hci'
+    assert body['rehearsalId'].startswith('native-foundation-uat-rehearsal-')
+    assert body['checklistId'].startswith('native-foundation-uat-')
+    assert body['summary']['rehearsalCaseCount'] >= 10
+    assert body['summary']['providerOperationCaseCount'] == 5
+    assert body['summary']['deploymentCaseCount'] == 2
+    assert 'imaging_uat' in body['requiredEvidence']
+    case_types = {case['caseType'] for case in body['rehearsalCases']}
+    assert {'operator_uat', 'provider_adapter_contract', 'deployment_topology_contract'} <= case_types
+    provider_power = next(case for case in body['rehearsalCases'] if case['caseId'] == 'provider-power_control')
+    assert provider_power['mutatingOperation'] is True
+    assert provider_power['canRun'] is False
+    assert provider_power['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-contract-selected']['status'] == 'pass'
+    assert checks['deployment-contract-selected']['status'] == 'pass'
+    assert checks['uat-checklist-available']['status'] == 'pass'
+    assert checks['job-state-plan-reviewed']['status'] == 'pass'
+    assert checks['uat-runner-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_uat_rehearsal_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-uat/rehearsal',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canRunUat'] is False
+    assert body['rehearsalId'] is None
+    assert body['rehearsalCases'] == []
+
+
+def test_native_foundation_uat_evidence_acceptance_review_blocks_missing_evidence(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/evidence-acceptance-review',
+                       json={'content': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAcceptUatEvidence'] is False
+    assert body['canEnableExecution'] is False
+    assert body['acceptanceReviewId'].startswith('native-foundation-uat-evidence-acceptance-')
+    assert body['summary']['selectedPackCount'] == 1
+    assert body['summary']['catalogEvidenceCount'] == 0
+    assert body['summary']['requiredEvidenceCount'] > 0
+    assert body['summary']['acceptedEvidenceCount'] == 0
+    assert body['summary']['missingEvidenceCount'] > 0
+    assert body['summary']['acceptedForExecutionCount'] == 0
+    records = {record['requirement']: record for record in body['acceptanceRecords']}
+    assert records['cluster_create_uat']['evidenceKey'] == 'cluster_create_validated'
+    assert records['operator_inventory_review']['evidenceKey'] == 'hardware_provider_discovery'
+    assert records['cluster_create_uat']['status'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['matching-evidence-packs']['status'] == 'pass'
+    assert checks['uat-evidence-declared']['status'] == 'blocked'
+    assert checks['required-uat-evidence-accepted']['status'] == 'blocked'
+    assert checks['approval-evidence-binding-present']['status'] == 'blocked'
+    assert checks['acceptance-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_uat_evidence_acceptance_review_reports_ready_when_bound(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/evidence-acceptance-review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'approvalId': 'approval-native-foundation-001',
+                             'evidenceId': 'evidence-native-foundation-001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'ready_for_review'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAcceptUatEvidence'] is False
+    assert body['canEnableExecution'] is False
+    assert body['approvalId'] == 'approval-native-foundation-001'
+    assert body['evidenceId'] == 'evidence-native-foundation-001'
+    assert body['summary']['selectedPackCount'] == 1
+    assert body['summary']['catalogEvidenceCount'] >= 6
+    assert body['summary']['requiredEvidenceCount'] > 0
+    assert body['summary']['acceptedEvidenceCount'] == body['summary']['requiredEvidenceCount']
+    assert body['summary']['missingEvidenceCount'] == 0
+    assert body['summary']['approvalBindingPresentCount'] == 1
+    assert body['summary']['acceptedForExecutionCount'] == 0
+    assert all(record['status'] == 'pass' for record in body['acceptanceRecords'])
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['required-uat-evidence-accepted']['status'] == 'pass'
+    assert checks['approval-evidence-binding-present']['status'] == 'pass'
+    assert checks['acceptance-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_review_packet_exports_redacted_zip(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: manual_static\n'
+        '    provider_api_key: should-not-export\n',
+    ).replace(
+        '            bmc_address: 192.0.2.21\n',
+        '            bmc_address: 192.0.2.21\n'
+        '            bmc_password: node-secret\n',
+        1,
+    )
+
+    first = client.post('/api/native-foundation/review-packet',
+                        json={'content': content},
+                        headers=auth_headers)
+    second = client.post('/api/native-foundation/review-packet',
+                         json={'content': content},
+                         headers=auth_headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.mimetype == 'application/zip'
+    with zipfile.ZipFile(io.BytesIO(first.data)) as zf:
+        names = set(zf.namelist())
+        assert {
+            'SHA256SUMS',
+            'adapter-activation-review.json',
+            'adapter-allow-list-review.json',
+            'adapter-enablement-review.json',
+            'adapter-load-plan-review.json',
+            'adapter-execution-preflight-review.json',
+            'adapter-package-provenance-review.json',
+            'adapter-runtime-admission-review.json',
+            'adapter-runtime-isolation-review.json',
+            'adapter-sbom-review.json',
+            'adapter-target-connectivity-review.json',
+            'adapter-uat-rehearsal.json',
+            'adapter-readiness.json',
+            'adapter-contracts.json',
+            'adapter-credential-handoff-review.json',
+            'adapter-command-invocation-review.json',
+            'adapter-output-evidence-review.json',
+            'backup-restore-review.json',
+            'retained-evidence-export-review.json',
+            'adapter-promotion-review.json',
+            'cluster-formation-plan.json',
+            'controlled-uat-entry-review.json',
+            'controlled-uat-entry-issuance-review.json',
+            'controlled-uat-entry-persistence-admission-review.json',
+            'controlled-uat-execution-authorization-review.json',
+            'controlled-uat-completion-review.json',
+            'controlled-uat-hardware-reservation-review.json',
+            'controlled-uat-lane-persistence-admission-review.json',
+            'controlled-uat-lane-selection-review.json',
+            'controlled-uat-operations-review.json',
+            'controlled-uat-reservation-persistence-admission-review.json',
+            'controlled-uat-runner-admission-review.json',
+            'controlled-uat-runner-persistence-admission-review.json',
+            'controlled-uat-runbook-review.json',
+            'controlled-uat-security-review.json',
+            'controlled-uat-signoff-review.json',
+            'controlled-uat-start-readiness-review.json',
+            'controlled-uat-start-persistence-admission-review.json',
+            'controlled-uat-scope-review.json',
+            'deployment-scheduler-review.json',
+            'deployment-type-support-review.json',
+            'deployment-window-reservation-review.json',
+            'deployment-policy.json',
+            'deployment-wave-authorization-review.json',
+            'deployment-wave-gates-review.json',
+            'deployment-wave-rehearsal.json',
+            'discovery-reconciliation.json',
+            'dry-run-ledger.json',
+            'evidence-pack-approval-review.json',
+            'evidence-packs.json',
+            'execution-audit-plan.json',
+            'execution-admission-review.json',
+            'execution-adapter-contract.json',
+            'execution-lock-plan.json',
+            'execution-permit-review.json',
+            'execution-authorization-persistence-admission-review.json',
+            'execution-retention-plan.json',
+            'execution-runner-readiness.json',
+            'execution-submission-review.json',
+            'execution-submission-persistence-admission-review.json',
+            'execution-graph.json',
+            'execution-request-review.json',
+            'execution-request-persistence-admission-review.json',
+            'image-sources.json',
+            'intent-redacted.yml',
+            'job-state-plan.json',
+            'job-persistence-admission-review.json',
+            'live-discovery-contract.json',
+            'manifest.json',
+            'mutating-enablement-review.json',
+            'mutating-adapter-binding-review.json',
+            'network-manifest.json',
+            'node-imaging-plan.json',
+            'plan.json',
+            'post-create-validation-plan.json',
+            'provider-operation-admission-review.json',
+            'provider-operation-catalog.json',
+            'provider-operation-queue-admission-review.json',
+            'provider-operation-queue-plan.json',
+            'provider-topology-matrix.json',
+            'provider-preflight.json',
+            'queue-persistence-admission-review.json',
+            'queue-persistence-review.json',
+            'recovery-plan.json',
+            'provider-adapters.json',
+            'readiness.json',
+            'resume-checkpoint.json',
+            'secret-resolution-plan.json',
+            'secret-references.json',
+            'secret-audit-persistence-review.json',
+            'secret-store-binding-review.json',
+            'secret-store-provider-contract-review.json',
+            'secret-lease-execution-review.json',
+            'uat-evidence-acceptance-review.json',
+            'uat-checklist.json',
+        } <= names
+        manifest = json.loads(zf.read('manifest.json'))
+        adapter_output_evidence = json.loads(zf.read('adapter-output-evidence-review.json'))
+        lane_persistence_admission = json.loads(zf.read('controlled-uat-lane-persistence-admission-review.json'))
+        hardware_reservation = json.loads(zf.read('controlled-uat-hardware-reservation-review.json'))
+        reservation_persistence_admission = json.loads(zf.read('controlled-uat-reservation-persistence-admission-review.json'))
+        entry_issuance = json.loads(zf.read('controlled-uat-entry-issuance-review.json'))
+        entry_persistence_admission = json.loads(zf.read('controlled-uat-entry-persistence-admission-review.json'))
+        start_readiness = json.loads(zf.read('controlled-uat-start-readiness-review.json'))
+        start_persistence_admission = json.loads(zf.read('controlled-uat-start-persistence-admission-review.json'))
+        runner_admission = json.loads(zf.read('controlled-uat-runner-admission-review.json'))
+        runner_persistence_admission = json.loads(zf.read('controlled-uat-runner-persistence-admission-review.json'))
+        execution_authorization = json.loads(zf.read('controlled-uat-execution-authorization-review.json'))
+        controlled_uat_completion = json.loads(zf.read('controlled-uat-completion-review.json'))
+        mutating_enablement = json.loads(zf.read('mutating-enablement-review.json'))
+        request_persistence_admission = json.loads(zf.read('execution-request-persistence-admission-review.json'))
+        submission_persistence_admission = json.loads(zf.read('execution-submission-persistence-admission-review.json'))
+        auth_persistence_admission = json.loads(zf.read('execution-authorization-persistence-admission-review.json'))
+        queue_persistence_admission = json.loads(zf.read('queue-persistence-admission-review.json'))
+        persistence_admission = json.loads(zf.read('job-persistence-admission-review.json'))
+        retained_evidence_export = json.loads(zf.read('retained-evidence-export-review.json'))
+        provider_operation_admission = json.loads(zf.read('provider-operation-admission-review.json'))
+        provider_operation_catalog = json.loads(zf.read('provider-operation-catalog.json'))
+        provider_operation_queue_admission = json.loads(zf.read('provider-operation-queue-admission-review.json'))
+        provider_operation_queue_plan = json.loads(zf.read('provider-operation-queue-plan.json'))
+        provider_topology_matrix = json.loads(zf.read('provider-topology-matrix.json'))
+        intent_redacted = zf.read('intent-redacted.yml').decode('utf-8')
+        secret_references = zf.read('secret-references.json').decode('utf-8')
+        sha_lines = zf.read('SHA256SUMS').decode('utf-8').splitlines()
+
+    with zipfile.ZipFile(io.BytesIO(second.data)) as zf:
+        second_manifest = json.loads(zf.read('manifest.json'))
+
+    assert manifest['packetId'] == second_manifest['packetId']
+    assert manifest['status'] == 'blocked'
+    assert manifest['readOnly'] is True
+    assert manifest['mutatingActionsEnabled'] is False
+    assert manifest['summary']['evidencePackCount'] == 1
+    assert manifest['summary']['uatCaseCount'] > 0
+    assert manifest['summary']['outputEvidenceEntryCount'] == len(adapter_output_evidence['outputEvidenceEntries'])
+    assert manifest['summary']['retainedEvidenceExportItemCount'] == len(retained_evidence_export['exportItems'])
+    assert manifest['summary']['retainedEvidencePrerequisiteArtifactCount'] == retained_evidence_export['summary']['prerequisiteArtifactCount']
+    assert manifest['summary']['controlledUatLanePersistenceAdmissionRecordCount'] == len(lane_persistence_admission['lanePersistenceAdmissionRecords'])
+    assert manifest['summary']['controlledUatHardwareReservationRecordCount'] == len(hardware_reservation['reservationRecords'])
+    assert manifest['summary']['controlledUatReservationPersistenceAdmissionRecordCount'] == len(reservation_persistence_admission['reservationPersistenceAdmissionRecords'])
+    assert manifest['summary']['controlledUatEntryIssuanceRecordCount'] == len(entry_issuance['entryIssuanceRecords'])
+    assert manifest['summary']['controlledUatEntryPersistenceAdmissionRecordCount'] == len(entry_persistence_admission['entryPersistenceAdmissionRecords'])
+    assert manifest['summary']['controlledUatStartReadinessRecordCount'] == len(start_readiness['startReadinessRecords'])
+    assert manifest['summary']['controlledUatStartPersistenceAdmissionRecordCount'] == len(start_persistence_admission['startPersistenceAdmissionRecords'])
+    assert manifest['summary']['controlledUatRunnerAdmissionRecordCount'] == len(runner_admission['runnerAdmissionRecords'])
+    assert manifest['summary']['controlledUatRunnerPersistenceAdmissionRecordCount'] == len(runner_persistence_admission['runnerPersistenceAdmissionRecords'])
+    assert manifest['summary']['controlledUatExecutionAuthorizationRecordCount'] == len(execution_authorization['executionAuthorizationRecords'])
+    assert manifest['summary']['controlledUatCompletionRecordCount'] == len(controlled_uat_completion['uatCompletionRecords'])
+    assert manifest['summary']['controlledUatCompletionRequiredCount'] == retained_evidence_export['summary']['controlledUatCompletionRequiredCount']
+    assert manifest['summary']['executionRequestPersistenceAdmissionRecordCount'] == len(request_persistence_admission['requestPersistenceAdmissionRecords'])
+    assert manifest['summary']['executionSubmissionPersistenceAdmissionRecordCount'] == len(submission_persistence_admission['submissionPersistenceAdmissionRecords'])
+    assert manifest['summary']['executionAuthorizationCarriedPersistenceRecordCount'] == mutating_enablement['summary']['executionAuthorizationCarriedPersistenceRecordCount']
+    assert manifest['summary']['executionAuthorizationMissingCarriedPersistenceRecordCount'] == mutating_enablement['summary']['executionAuthorizationMissingCarriedPersistenceRecordCount']
+    assert manifest['summary']['executionAuthorizationPersistenceAdmissionRecordCount'] == len(auth_persistence_admission['authorizationPersistenceAdmissionRecords'])
+    assert manifest['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == auth_persistence_admission['summary']['controlledUatCompletionGateSummaryCount']
+    assert manifest['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == auth_persistence_admission['summary']['controlledUatCompletionRequiredCount']
+    assert manifest['summary']['queuePersistenceAdmissionRecordCount'] == len(queue_persistence_admission['queuePersistenceAdmissionRecords'])
+    assert manifest['summary']['jobPersistenceAdmissionRecordCount'] == len(persistence_admission['persistenceAdmissionRecords'])
+    assert manifest['summary']['providerTopologyMatrixRowCount'] == len(provider_topology_matrix['matrixRows'])
+    assert manifest['summary']['providerTopologyMissingEvidenceCount'] == provider_topology_matrix['summary']['missingEvidenceCount']
+    assert manifest['summary']['providerTopologyMutatingEnabledRowCount'] == 0
+    assert manifest['summary']['providerOperationCatalogRowCount'] == len(provider_operation_catalog['operationRows'])
+    assert manifest['summary']['providerOperationCatalogOperationCount'] == provider_operation_catalog['summary']['operationCount']
+    assert manifest['summary']['providerOperationCatalogMutatingOperationCount'] == provider_operation_catalog['summary']['mutatingOperationCount']
+    assert manifest['summary']['providerOperationCatalogRunnableOperationCount'] == 0
+    assert manifest['summary']['providerOperationAdmissionRecordCount'] == len(provider_operation_admission['operationAdmissionRecords'])
+    assert manifest['summary']['providerOperationAdmittedCount'] == 0
+    assert manifest['summary']['providerOperationRunnableCount'] == 0
+    assert manifest['summary']['providerOperationQueueItemCount'] == len(provider_operation_queue_plan['operationQueueItems'])
+    assert manifest['summary']['providerOperationQueuedCount'] == 0
+    assert manifest['summary']['providerOperationQueuePersistedCount'] == 0
+    assert manifest['summary']['providerOperationQueueAdmissionRecordCount'] == len(provider_operation_queue_admission['operationQueueAdmissionRecords'])
+    assert manifest['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMatrixStatus'] == provider_topology_matrix['status']
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMatrixRowCount'] == len(provider_topology_matrix['matrixRows'])
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMissingEvidenceCount'] == provider_topology_matrix['summary']['missingEvidenceCount']
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMutatingEnabledRowCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogStatus'] == provider_operation_catalog['status']
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogRowCount'] == len(provider_operation_catalog['operationRows'])
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogOperationCount'] == provider_operation_catalog['summary']['operationCount']
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogRunnableOperationCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationAdmissionStatus'] == provider_operation_admission['status']
+    assert manifest['nativeFoundationGateSummary']['providerOperationAdmissionRecordCount'] == len(provider_operation_admission['operationAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['providerOperationAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationRunnableCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueuePlanStatus'] == provider_operation_queue_plan['status']
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueItemCount'] == len(provider_operation_queue_plan['operationQueueItems'])
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueuedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueuePersistedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueAdmissionStatus'] == provider_operation_queue_admission['status']
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueAdmissionRecordCount'] == len(provider_operation_queue_admission['operationQueueAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['jobPersistenceAdmissionStatus'] == persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['canPersistMutatingJob'] is False
+    assert manifest['nativeFoundationGateSummary']['jobStatePersistedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'carried authorization-persistence provenance' in manifest['nativeFoundationGateSummary']['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationCarriedPersistenceRecordCount'] == mutating_enablement['summary']['executionAuthorizationCarriedPersistenceRecordCount']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationMissingCarriedPersistenceRecordCount'] == mutating_enablement['summary']['executionAuthorizationMissingCarriedPersistenceRecordCount']
+    assert manifest['nativeFoundationGateSummary']['controlledUatExecutionAuthorizationStatus'] == execution_authorization['status']
+    assert manifest['nativeFoundationGateSummary']['canAuthorizeExecution'] is False
+    assert manifest['nativeFoundationGateSummary']['authorizedExecutionCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['adapterCommandInvokedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['liveOutputCapturedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['controlledUatCompletionStatus'] == controlled_uat_completion['status']
+    assert manifest['nativeFoundationGateSummary']['controlledUatCompletionRecordCount'] == len(controlled_uat_completion['uatCompletionRecords'])
+    assert manifest['nativeFoundationGateSummary']['completedUatCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canMarkUatComplete'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatCompletionRequiredCount'] == retained_evidence_export['summary']['controlledUatCompletionRequiredCount']
+    assert manifest['nativeFoundationGateSummary']['controlledUatCompletionSourceStatus'] == retained_evidence_export['sourceReviews']['controlledUatCompletionStatus']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceAdmissionStatus'] == auth_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceAdmissionRecordCount'] == len(auth_persistence_admission['authorizationPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == auth_persistence_admission['summary']['controlledUatCompletionGateSummaryCount']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == auth_persistence_admission['summary']['controlledUatCompletionRequiredCount']
+    assert manifest['nativeFoundationGateSummary']['canAdmitExecutionAuthorizationPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['executionRequestPersistenceAdmissionStatus'] == request_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['executionRequestPersistenceAdmissionRecordCount'] == len(request_persistence_admission['requestPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['requestPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitExecutionRequestPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['executionSubmissionPersistenceAdmissionStatus'] == submission_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['executionSubmissionPersistenceAdmissionRecordCount'] == len(submission_persistence_admission['submissionPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['submissionPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitExecutionSubmissionPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['queuePersistenceAdmissionStatus'] == queue_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['queuePersistenceAdmissionRecordCount'] == len(queue_persistence_admission['queuePersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['queuePersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitQueuePersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatRunnerAdmissionStatus'] == runner_admission['status']
+    assert manifest['nativeFoundationGateSummary']['canAdmitRunner'] is False
+    assert manifest['nativeFoundationGateSummary']['admittedRunnerCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['runtimeAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['adapterExecutedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['controlledUatRunnerPersistenceAdmissionStatus'] == runner_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['controlledUatRunnerPersistenceAdmissionRecordCount'] == len(runner_persistence_admission['runnerPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['runnerPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitRunnerPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatStartReadinessStatus'] == start_readiness['status']
+    assert manifest['nativeFoundationGateSummary']['canStartControlledUat'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatStartPersistenceAdmissionStatus'] == start_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['controlledUatStartPersistenceAdmissionRecordCount'] == len(start_persistence_admission['startPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['startPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitStartPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatEntryIssuanceStatus'] == entry_issuance['status']
+    assert manifest['nativeFoundationGateSummary']['canIssueControlledUatEntry'] is False
+    assert manifest['nativeFoundationGateSummary']['canPersistUatEntry'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatEntryPersistenceAdmissionStatus'] == entry_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['controlledUatEntryPersistenceAdmissionRecordCount'] == len(entry_persistence_admission['entryPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['entryPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitEntryPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatLanePersistenceAdmissionStatus'] == lane_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['controlledUatLanePersistenceAdmissionRecordCount'] == len(lane_persistence_admission['lanePersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['lanePersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitLanePersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatHardwareReservationStatus'] == hardware_reservation['status']
+    assert manifest['nativeFoundationGateSummary']['canReserveControlledUatHardware'] is False
+    assert manifest['nativeFoundationGateSummary']['canPersistHardwareReservation'] is False
+    assert manifest['nativeFoundationGateSummary']['canOpenMaintenanceWindow'] is False
+    assert manifest['nativeFoundationGateSummary']['controlledUatReservationPersistenceAdmissionStatus'] == reservation_persistence_admission['status']
+    assert manifest['nativeFoundationGateSummary']['controlledUatReservationPersistenceAdmissionRecordCount'] == len(reservation_persistence_admission['reservationPersistenceAdmissionRecords'])
+    assert manifest['nativeFoundationGateSummary']['reservationPersistenceAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['canAdmitReservationPersistence'] is False
+    assert manifest['nativeFoundationGateSummary']['adapterOutputEvidenceStatus'] == adapter_output_evidence['status']
+    assert manifest['nativeFoundationGateSummary']['retainedEvidenceExportStatus'] == retained_evidence_export['status']
+    assert manifest['nativeFoundationGateSummary']['adapterCommandInvocationStatus'] == 'blocked'
+    assert manifest['nativeFoundationGateSummary']['secretAuditPersistenceStatus'] == 'blocked'
+    assert manifest['nativeFoundationGateSummary']['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert manifest['nativeFoundationGateSummary']['canCaptureCommandOutput'] is False
+    assert manifest['nativeFoundationGateSummary']['canPersistOutputEvidence'] is False
+    assert manifest['nativeFoundationGateSummary']['canReadRetainedArtifacts'] is False
+    assert manifest['nativeFoundationGateSummary']['canExportRetainedEvidence'] is False
+    assert manifest['nativeFoundationGateSummary']['canSubmitMutatingJob'] is False
+    assert adapter_output_evidence['phase'] == 'full_deployment'
+    assert adapter_output_evidence['providerId'] is None
+    assert retained_evidence_export['phase'] == 'full_deployment'
+    assert retained_evidence_export['providerId'] is None
+    assert 'retained-evidence-export-review.json' not in retained_evidence_export['exportItems'][0]['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in retained_evidence_export['exportItems'][0]['requiredPrerequisiteArtifacts']
+    assert 'should-not-export' not in intent_redacted
+    assert 'node-secret' not in intent_redacted
+    assert 'should-not-export' not in secret_references
+    assert 'node-secret' not in secret_references
+    assert 'provider_api_key' in secret_references
+    assert 'bmc_password' in secret_references
+    assert intent_redacted.count('<redacted>') == 2
+    assert any(line.endswith('  secret-references.json') for line in sha_lines)
+    assert any(line.endswith('  plan.json') for line in sha_lines)
+
+
+def test_native_foundation_review_packet_exports_bound_packet_gate_artifacts(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfpacket_operator', 'operator')
+    operator_headers = _login(client, 'nfpacket_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation bound packet approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for bound packet export only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured bound packet source evidence'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/review-packet',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    assert resp.mimetype == 'application/zip'
+    with zipfile.ZipFile(io.BytesIO(resp.data)) as zf:
+        manifest = json.loads(zf.read('manifest.json'))
+        request_review = json.loads(zf.read('execution-request-review.json'))
+        recovery_plan = json.loads(zf.read('recovery-plan.json'))
+        job_state = json.loads(zf.read('job-state-plan.json'))
+
+    assert manifest['approvalId'] == approval_id
+    assert manifest['evidenceId'] == evidence_id
+    assert request_review['executionRequest']['approvalId'] == approval_id
+    assert request_review['executionRequest']['evidenceId'] == evidence_id
+    assert request_review['summary']['adapterRequestGateSummaryCount'] == 1
+    assert request_review['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert request_review['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert recovery_plan['summary']['adapterRequestGateSummaryCount'] == 1
+    assert recovery_plan['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert recovery_plan['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert job_state['summary']['adapterRequestGateSummaryCount'] == 1
+    assert job_state['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert job_state['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+
+
+def test_native_foundation_review_packet_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/review-packet',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['packetId'] is None
+    assert body['artifacts'] == []
+
+
+def test_validation_evidence_can_capture_native_foundation_review_packet(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence().replace(
+        '    hardware_provider: manual_static\n',
+        '    hardware_provider: manual_static\n'
+        '    provider_token: private-provider-token\n',
+    )
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfcapture_operator', 'operator')
+    operator_headers = _login(client, 'nfcapture_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation captured packet approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for captured packet binding'},
+                       headers=auth_headers).status_code == 200
+
+    evidence = client.post('/api/validation-evidence',
+                           json={'source': 'native-foundation',
+                                 'configFile': 'native-foundation-deploy.yml',
+                                 'configContent': content,
+                                 'phase': 'hci_cluster_create',
+                                 'approvalId': approval_id,
+                                 'notes': 'native foundation review checkpoint'},
+                           headers=auth_headers)
+
+    assert evidence.status_code == 201
+    record = evidence.get_json()
+    assert record['source'] == 'native-foundation'
+    assert record['type'] == 'native-foundation-review-packet'
+    assert record['status'] == 'blocked'
+    assert record['workflow'] == 'native-foundation-deploy'
+    assert record['executionStatus'] == 'planning_only'
+    assert record['approvalId'] == approval_id
+    assert record['metadata']['nativeFoundationPhase'] == 'hci_cluster_create'
+    assert record['metadata']['nativeFoundationApprovalId'] == approval_id
+    assert record['metadata']['nativeFoundationPacketId'].startswith('native-foundation-review-')
+    assert record['metadata']['nativeFoundationExecutionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'carried authorization-persistence provenance' in record['metadata']['nativeFoundationExecutionAuthorizationCarriedPersistenceGateEvidence']
+    assert record['metadata']['nativeFoundationExecutionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['metadata']['nativeFoundationExecutionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert record['metadata']['nativeFoundationExecutionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert record['metadata']['nativeFoundationControlledUatCompletionStatus'] == 'blocked'
+    assert record['metadata']['nativeFoundationControlledUatCompletionRecordCount'] > 0
+    assert record['metadata']['nativeFoundationCompletedUatCount'] == 0
+    assert record['metadata']['nativeFoundationCanMarkUatComplete'] is False
+    assert record['metadata']['nativeFoundationControlledUatCompletionRequiredCount'] > 0
+    assert record['metadata']['nativeFoundationControlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert record['metadata']['nativeFoundationProviderTopologyMatrixStatus'] == 'blocked'
+    assert record['metadata']['nativeFoundationProviderTopologyMatrixRowCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerTopologyMatrixRowCount']
+    assert record['metadata']['nativeFoundationProviderTopologyMissingEvidenceCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerTopologyMissingEvidenceCount']
+    assert record['metadata']['nativeFoundationProviderTopologyMutatingEnabledRowCount'] == 0
+    assert record['metadata']['nativeFoundationProviderOperationCatalogStatus'] == 'blocked'
+    assert record['metadata']['nativeFoundationProviderOperationCatalogRowCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerOperationCatalogRowCount']
+    assert record['metadata']['nativeFoundationProviderOperationCatalogOperationCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerOperationCatalogOperationCount']
+    assert record['metadata']['nativeFoundationProviderOperationCatalogMutatingOperationCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerOperationCatalogMutatingOperationCount']
+    assert record['metadata']['nativeFoundationProviderOperationCatalogRunnableOperationCount'] == 0
+    assert record['metadata']['nativeFoundationProviderOperationAdmissionStatus'] == 'blocked'
+    assert record['metadata']['nativeFoundationProviderOperationAdmissionRecordCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerOperationAdmissionRecordCount']
+    assert record['metadata']['nativeFoundationProviderOperationAdmittedCount'] == 0
+    assert record['metadata']['nativeFoundationProviderOperationRunnableCount'] == 0
+    assert record['metadata']['nativeFoundationProviderOperationQueuePlanStatus'] == 'blocked'
+    assert record['metadata']['nativeFoundationProviderOperationQueueItemCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerOperationQueueItemCount']
+    assert record['metadata']['nativeFoundationProviderOperationQueuedCount'] == 0
+    assert record['metadata']['nativeFoundationProviderOperationQueuePersistedCount'] == 0
+    assert record['metadata']['nativeFoundationProviderOperationQueueAdmissionStatus'] == 'blocked'
+    assert record['metadata']['nativeFoundationProviderOperationQueueAdmissionRecordCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['providerOperationQueueAdmissionRecordCount']
+    assert record['metadata']['nativeFoundationProviderOperationQueueAdmittedCount'] == 0
+    assert record['nativeFoundationReviewPacket']['packetId'] == record['metadata']['nativeFoundationPacketId']
+    assert record['nativeFoundationReviewPacket']['approvalId'] == approval_id
+    assert record['nativeFoundationReviewPacket']['evidenceId'] is None
+    assert record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['executionAuthorizationCarriedPersistenceGateStatus'] == record['metadata']['nativeFoundationExecutionAuthorizationCarriedPersistenceGateStatus']
+    assert record['metadata']['nativeFoundationExecutionAuthorizationMissingCarriedPersistenceRecordCount'] == record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['executionAuthorizationMissingCarriedPersistenceRecordCount']
+    assert record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['controlledUatCompletionStatus'] == record['metadata']['nativeFoundationControlledUatCompletionStatus']
+    assert record['nativeFoundationReviewPacket']['nativeFoundationGateSummary']['controlledUatCompletionRequiredCount'] == record['metadata']['nativeFoundationControlledUatCompletionRequiredCount']
+    assert 'private-provider-token' not in record['generatedYaml']
+    assert '<redacted>' in record['generatedYaml']
+
+    listing = client.get('/api/validation-evidence', headers=auth_headers).get_json()
+    assert any(item['id'] == record['id'] for item in listing)
+
+    download = client.get(f"/api/validation-evidence/{record['id']}/download", headers=auth_headers)
+    assert download.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(download.data)) as zf:
+        names = set(zf.namelist())
+        root = f"{record['id']}/"
+        assert f'{root}native-foundation-review-packet-manifest.json' in names
+        assert f'{root}native-foundation-artifact-hashes.json' in names
+        assert f'{root}generated.yaml' in names
+        manifest = json.loads(zf.read(f'{root}native-foundation-review-packet-manifest.json'))
+        generated = zf.read(f'{root}generated.yaml').decode('utf-8')
+        summary = zf.read(f'{root}summary.md').decode('utf-8')
+    assert manifest['approvalId'] == approval_id
+    assert manifest['evidenceId'] is None
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationMissingCarriedPersistenceRecordCount'] == record['metadata']['nativeFoundationExecutionAuthorizationMissingCarriedPersistenceRecordCount']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == record['metadata']['nativeFoundationExecutionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert manifest['nativeFoundationGateSummary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == record['metadata']['nativeFoundationExecutionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert manifest['nativeFoundationGateSummary']['controlledUatCompletionStatus'] == record['metadata']['nativeFoundationControlledUatCompletionStatus']
+    assert manifest['nativeFoundationGateSummary']['controlledUatCompletionRequiredCount'] == record['metadata']['nativeFoundationControlledUatCompletionRequiredCount']
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMatrixStatus'] == record['metadata']['nativeFoundationProviderTopologyMatrixStatus']
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMatrixRowCount'] == record['metadata']['nativeFoundationProviderTopologyMatrixRowCount']
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMissingEvidenceCount'] == record['metadata']['nativeFoundationProviderTopologyMissingEvidenceCount']
+    assert manifest['nativeFoundationGateSummary']['providerTopologyMutatingEnabledRowCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogStatus'] == record['metadata']['nativeFoundationProviderOperationCatalogStatus']
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogRowCount'] == record['metadata']['nativeFoundationProviderOperationCatalogRowCount']
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogOperationCount'] == record['metadata']['nativeFoundationProviderOperationCatalogOperationCount']
+    assert manifest['nativeFoundationGateSummary']['providerOperationCatalogRunnableOperationCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationAdmissionStatus'] == record['metadata']['nativeFoundationProviderOperationAdmissionStatus']
+    assert manifest['nativeFoundationGateSummary']['providerOperationAdmissionRecordCount'] == record['metadata']['nativeFoundationProviderOperationAdmissionRecordCount']
+    assert manifest['nativeFoundationGateSummary']['providerOperationAdmittedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationRunnableCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueuePlanStatus'] == record['metadata']['nativeFoundationProviderOperationQueuePlanStatus']
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueItemCount'] == record['metadata']['nativeFoundationProviderOperationQueueItemCount']
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueuedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueuePersistedCount'] == 0
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueAdmissionStatus'] == record['metadata']['nativeFoundationProviderOperationQueueAdmissionStatus']
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueAdmissionRecordCount'] == record['metadata']['nativeFoundationProviderOperationQueueAdmissionRecordCount']
+    assert manifest['nativeFoundationGateSummary']['providerOperationQueueAdmittedCount'] == 0
+    assert 'private-provider-token' not in generated
+    assert 'Native Foundation Review Packet' in summary
+    assert 'Provider/topology matrix status: blocked' in summary
+    assert 'Provider/topology mutating rows enabled: 0' in summary
+    assert 'Provider operation catalog status: blocked' in summary
+    assert 'Provider operation catalog runnable operations: 0' in summary
+    assert 'Provider operation admission status: blocked' in summary
+    assert 'Provider operations runnable: 0' in summary
+    assert 'Provider operation queue plan status: blocked' in summary
+    assert 'Provider operations queued: 0' in summary
+    assert 'Provider operation queues persisted: 0' in summary
+    assert 'Provider operation queue admission status: blocked' in summary
+    assert 'Provider operation queues admitted: 0' in summary
+    assert 'Controlled UAT completion status: blocked' in summary
+    assert 'Auth persistence completion gate summaries:' in summary
+    assert record['metadata']['nativeFoundationPacketId'] in summary
+
+    binding_resp = client.post('/api/native-foundation/approval-binding/review',
+                               json={'content': content,
+                                     'approvalId': approval_id,
+                                     'evidenceId': record['id']},
+                               headers=auth_headers)
+    assert binding_resp.status_code == 200
+    binding = binding_resp.get_json()
+    binding_checks = {check['id']: check for check in binding['checks']}
+    assert binding_checks['approval-status-approved']['status'] == 'pass'
+    assert binding_checks['evidence-source-native-foundation']['status'] == 'pass'
+    assert binding_checks['evidence-packet-plan-match']['status'] == 'pass'
+    assert binding_checks['evidence-controlled-uat-completion-gate-reviewed']['status'] == 'pass'
+    assert binding_checks['evidence-auth-persistence-completion-gate-reviewed']['status'] == 'pass'
+    assert binding['summary']['controlledUatCompletionGateAvailable'] is True
+    assert binding['summary']['controlledUatCompletionRequiredCount'] == record['metadata']['nativeFoundationControlledUatCompletionRequiredCount']
+    assert binding['summary']['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is True
+    assert binding['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == record['metadata']['nativeFoundationExecutionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert binding['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == record['metadata']['nativeFoundationExecutionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert binding['packetGateSummary']['controlledUatCompletionStatus'] == record['metadata']['nativeFoundationControlledUatCompletionStatus']
+    assert binding_checks['execution-still-disabled']['status'] == 'blocked'
+
+
+def test_validation_evidence_rejects_invalid_native_foundation_intent(client, auth_headers):
+    resp = client.post('/api/validation-evidence',
+                       json={'source': 'native-foundation',
+                             'configContent': _native_foundation_intent(
+                                 deployment_type='storage_only',
+                                 node_roles=['compute_only'],
+                             )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    assert 'valid planning intent' in resp.get_json()['error']
+
+
+def test_native_foundation_adapter_activation_review_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-activation/review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canActivateAdapter'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['activationRequest']['requestId'].startswith('native-foundation-adapter-activation-')
+    assert body['activationRequest']['submitted'] is False
+    assert body['activationRequest']['targetStatusAfterActivation'] == 'not_enabled'
+    assert body['activationRequest']['requiresControlledUatCompletion'] is True
+    assert body['summary']['requiredEvidenceCount'] == body['summary']['acceptedEvidenceCount']
+    assert body['summary']['completedUatCount'] == 0
+    assert body['summary']['adapterPromotionEligibleCount'] == 0
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-contract-selected']['status'] == 'pass'
+    assert checks['deployment-contract-selected']['status'] == 'pass'
+    assert checks['required-uat-evidence-accepted']['status'] == 'pass'
+    assert checks['approval-binding-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'blocked'
+    assert checks['adapter-activation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_activation_review_binds_package_but_blocks_activation(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfactivate_operator', 'operator')
+    operator_headers = _login(client, 'nfactivate_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter activation approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for activation review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured activation review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapter-activation/review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'hci'
+    assert body['canActivateAdapter'] is False
+    assert body['activationRequest']['approvalId'] == approval_id
+    assert body['activationRequest']['evidenceId'] == evidence_id
+    assert body['activationRequest']['mutatingActionsEnabled'] is False
+    assert body['activationRequest']['requiresControlledUatCompletion'] is True
+    assert body['summary']['requiredEvidenceCount'] == body['summary']['acceptedEvidenceCount']
+    assert body['summary']['completedUatCount'] == 0
+    assert body['summary']['adapterPromotionEligibleCount'] == 0
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-binding-reviewed']['status'] == 'pass'
+    assert checks['promotion-review-ready']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'blocked'
+    assert checks['adapter-activation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_activation_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-activation/review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canActivateAdapter'] is False
+    assert body['activationRequest'] is None
+
+
+def test_native_foundation_adapter_enablement_review_drafts_multi_topology_registry(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-enablements/review',
+                       json={'content': _native_foundation_multi_site_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canEnableAdapters'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['registryEntryCount'] >= 2
+    assert body['summary']['disabledRegistryEntryCount'] == body['summary']['registryEntryCount']
+    assert body['summary']['controlledUatCompletionRequiredCount'] == body['summary']['registryEntryCount']
+    keys = {entry['registryKey'] for entry in body['registryDraft']}
+    assert 'manual_static:hci' in keys
+    assert 'manual_static:compute_only' in keys
+    for entry in body['registryDraft']:
+        assert entry['registryEntryId'].startswith('native-foundation-adapter-registry-')
+        assert entry['activationRequestId'].startswith('native-foundation-adapter-activation-')
+        assert entry['requiresControlledUatCompletion'] is True
+        assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+        assert entry['enabled'] is False
+        assert entry['canLoadAdapter'] is False
+        assert entry['mutatingActionsEnabled'] is False
+        assert 'power_control' in entry['blockedMutatingOperations']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['registry-scope-selected']['status'] == 'pass'
+    assert checks['activation-reviews-linked']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['registry-entries-disabled']['status'] == 'pass'
+    assert checks['adapter-registry-mutation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_enablement_review_scopes_registry_entries(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-enablements/review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'hci'
+    assert body['summary']['registryEntryCount'] == 1
+    entry = body['registryDraft'][0]
+    assert entry['registryKey'] == 'manual_static:hci'
+    assert entry['plannedDeploymentPhases'] == ['imaging_only', 'hci_cluster_create']
+    assert entry['targetStatusAfterReview'] == 'disabled'
+    assert entry['requestedStatus'] == 'pending_controlled_uat'
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+
+
+def test_native_foundation_adapter_enablement_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-enablements/review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canEnableAdapters'] is False
+    assert body['registryDraft'] == []
+
+
+def test_native_foundation_adapter_allowlist_review_requires_owner_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-allowlist/review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canApproveAllowList'] is False
+    assert body['canPersistAllowList'] is False
+    assert body['canEnableAdapters'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['allowListReviewId'].startswith('native-foundation-adapter-allow-list-review-')
+    assert body['reviewMetadata']['allowListOwner'] is None
+    assert body['reviewMetadata']['allowListRef'] is None
+    assert body['summary']['allowListEntryCount'] == len(body['allowListEntries']) == 1
+    assert body['summary']['allowedEntryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    entry = body['allowListEntries'][0]
+    assert entry['allowListEntryId'].startswith('native-foundation-adapter-allow-list-')
+    assert entry['registryKey'] == 'manual_static:hci'
+    assert entry['allowed'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canPersistAllowList'] is False
+    assert entry['canLoadAdapter'] is False
+    assert entry['mutatingActionsEnabled'] is False
+    assert 'controlled-uat-security-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'secret-store-provider-contract-review.json' in entry['requiredReviews']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-registry-review-available']['status'] == 'pass'
+    assert checks['allow-list-owner-declared']['status'] == 'blocked'
+    assert checks['allow-list-reference-declared']['status'] == 'blocked'
+    assert checks['controlled-uat-security-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-operations-reviewed']['status'] == 'pass'
+    assert checks['secret-store-provider-contract-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['adapter-allow-list-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_allowlist_review_accepts_metadata_but_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-allowlist/review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'allowListOwner': 'platform-lead',
+                             'allowListRef': 'private-allow-list/AL-3001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveAllowList'] is False
+    assert body['canPersistAllowList'] is False
+    assert body['reviewMetadata']['allowListOwner'] == 'platform-lead'
+    assert body['reviewMetadata']['allowListRef'] == 'private-allow-list/AL-3001'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['allow-list-owner-declared']['status'] == 'pass'
+    assert checks['allow-list-reference-declared']['status'] == 'pass'
+    assert checks['adapter-allow-list-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_allowlist_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapter-allowlist/review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canApproveAllowList'] is False
+    assert body['canPersistAllowList'] is False
+    assert body['allowListReviewId'] is None
+    assert body['allowListEntries'] == []
+
+
+def test_native_foundation_adapter_load_plan_review_requires_owner_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/load-plan-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistLoadPlan'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['canHandoffCredentialsToAdapters'] is False
+    assert body['loadPlanReviewId'].startswith('native-foundation-adapter-load-plan-')
+    assert body['reviewMetadata']['loadPlanOwner'] is None
+    assert body['reviewMetadata']['loadPlanRef'] is None
+    assert body['summary']['loadPlanEntryCount'] == len(body['loadPlanEntries']) == 1
+    assert body['summary']['loadedAdapterCount'] == 0
+    assert body['summary']['instantiatedAdapterCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['loadPlanEntries'][0]
+    assert entry['loadPlanEntryId'].startswith('native-foundation-adapter-load-')
+    assert entry['registryKey'] == 'manual_static:hci'
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['allowed'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['loadPlanPersisted'] is False
+    assert entry['adapterCodeLoaded'] is False
+    assert entry['adapterInstantiated'] is False
+    assert entry['canPersistLoadPlan'] is False
+    assert entry['canLoadAdapter'] is False
+    assert entry['canInstantiateAdapter'] is False
+    assert entry['canStartRunner'] is False
+    assert 'controlled-uat-signoff-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'adapter-allow-list-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['controlledUatSignoffStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['controlled-uat-signoff-reviewed']['status'] == 'pass'
+    assert checks['adapter-allow-list-reviewed']['status'] == 'pass'
+    assert checks['execution-adapter-contract-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['provider-adapters-reviewed']['status'] == 'pass'
+    assert checks['adapter-contracts-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['load-plan-owner-declared']['status'] == 'blocked'
+    assert checks['load-plan-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-binary-source-disabled']['status'] == 'blocked'
+    assert checks['adapter-import-disabled']['status'] == 'blocked'
+    assert checks['adapter-load-plan-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_load_plan_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfload_operator', 'operator')
+    operator_headers = _login(client, 'nfload_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter load plan approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for adapter load plan review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter load plan review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/load-plan-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'loadPlanOwner': 'adapter-owner',
+                             'loadPlanRef': 'private-load-plan/LP-4001',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    entry = body['loadPlanEntries'][0]
+    assert entry['allowed'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['adapterCodeLoaded'] is False
+    assert entry['adapterInstantiated'] is False
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['load-plan-owner-declared']['status'] == 'pass'
+    assert checks['load-plan-reference-declared']['status'] == 'pass'
+    assert checks['adapter-import-disabled']['status'] == 'blocked'
+    assert checks['adapter-load-plan-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_load_plan_review_accepts_metadata_but_blocks_loading(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/load-plan-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'loadPlanOwner': 'adapter-owner',
+                             'loadPlanRef': 'private-load-plan/LP-4001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistLoadPlan'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['reviewMetadata']['loadPlanOwner'] == 'adapter-owner'
+    assert body['reviewMetadata']['loadPlanRef'] == 'private-load-plan/LP-4001'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['load-plan-owner-declared']['status'] == 'pass'
+    assert checks['load-plan-reference-declared']['status'] == 'pass'
+    assert checks['adapter-import-disabled']['status'] == 'blocked'
+    assert checks['adapter-load-plan-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_load_plan_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/load-plan-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPersistLoadPlan'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['loadPlanReviewId'] is None
+    assert body['loadPlanEntries'] == []
+
+
+def test_native_foundation_adapter_package_provenance_review_requires_package_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/package-provenance-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canReadAdapterPackage'] is False
+    assert body['canVerifySignature'] is False
+    assert body['canStagePackage'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['packageProvenanceReviewId'].startswith('native-foundation-adapter-package-provenance-')
+    assert body['reviewMetadata']['packageOwner'] is None
+    assert body['reviewMetadata']['packageRef'] is None
+    assert body['reviewMetadata']['packageSha256'] is None
+    assert body['reviewMetadata']['signatureRef'] is None
+    assert body['reviewMetadata']['signerRef'] is None
+    assert body['summary']['packageProvenanceEntryCount'] == len(body['packageProvenanceEntries']) == 1
+    assert body['summary']['packageReadableCount'] == 0
+    assert body['summary']['packageHashVerifiedCount'] == 0
+    assert body['summary']['signatureVerifiedCount'] == 0
+    assert body['summary']['packageStagedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['packageProvenanceEntries'][0]
+    assert entry['packageProvenanceEntryId'].startswith('native-foundation-adapter-package-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['packageReadable'] is False
+    assert entry['packageHashVerified'] is False
+    assert entry['signatureVerified'] is False
+    assert entry['packageStaged'] is False
+    assert entry['adapterCodeLoaded'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canReadAdapterPackage'] is False
+    assert entry['canVerifySignature'] is False
+    assert entry['canStagePackage'] is False
+    assert entry['canLoadAdapter'] is False
+    assert 'adapter-load-plan-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterLoadPlanStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-load-plan-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['package-owner-declared']['status'] == 'blocked'
+    assert checks['package-reference-declared']['status'] == 'blocked'
+    assert checks['package-sha256-declared']['status'] == 'blocked'
+    assert checks['package-sha256-format-valid']['status'] == 'blocked'
+    assert checks['signature-reference-declared']['status'] == 'blocked'
+    assert checks['signer-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-package-read-disabled']['status'] == 'blocked'
+    assert checks['adapter-package-signature-verification-disabled']['status'] == 'blocked'
+    assert checks['adapter-package-staging-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_package_provenance_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfpackage_operator', 'operator')
+    operator_headers = _login(client, 'nfpackage_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter package provenance approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for package provenance review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter package provenance review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/package-provenance-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'packageOwner': 'adapter-owner',
+                             'packageRef': 'private-adapters/manual-static-1.0.0.zip',
+                             'packageSha256': 'a' * 64,
+                             'signatureRef': 'private-signatures/manual-static-1.0.0.sig',
+                             'signerRef': 'private-signers/release-cert-2026',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canReadAdapterPackage'] is False
+    assert body['canVerifySignature'] is False
+    assert body['canStagePackage'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['packageProvenanceEntries'][0]
+    assert entry['packageReadable'] is False
+    assert entry['packageHashVerified'] is False
+    assert entry['signatureVerified'] is False
+    assert entry['packageStaged'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['package-owner-declared']['status'] == 'pass'
+    assert checks['package-reference-declared']['status'] == 'pass'
+    assert checks['package-sha256-declared']['status'] == 'pass'
+    assert checks['package-sha256-format-valid']['status'] == 'pass'
+    assert checks['signature-reference-declared']['status'] == 'pass'
+    assert checks['signer-reference-declared']['status'] == 'pass'
+    assert checks['adapter-package-read-disabled']['status'] == 'blocked'
+    assert checks['adapter-package-signature-verification-disabled']['status'] == 'blocked'
+    assert checks['adapter-package-staging-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_package_provenance_review_accepts_metadata_but_blocks_package_access(client, auth_headers):
+    digest = 'a' * 64
+    resp = client.post('/api/native-foundation/adapters/package-provenance-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'packageOwner': 'adapter-owner',
+                             'packageRef': 'private-packages/manual-static-hci-1.0.0.zip',
+                             'packageSha256': digest.upper(),
+                             'signatureRef': 'private-signatures/manual-static-hci-1.0.0.sig',
+                             'signerRef': 'private-signers/platform-release-key'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canReadAdapterPackage'] is False
+    assert body['canVerifySignature'] is False
+    assert body['reviewMetadata']['packageOwner'] == 'adapter-owner'
+    assert body['reviewMetadata']['packageRef'] == 'private-packages/manual-static-hci-1.0.0.zip'
+    assert body['reviewMetadata']['packageSha256'] == digest
+    assert body['reviewMetadata']['signatureRef'] == 'private-signatures/manual-static-hci-1.0.0.sig'
+    assert body['reviewMetadata']['signerRef'] == 'private-signers/platform-release-key'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['package-owner-declared']['status'] == 'pass'
+    assert checks['package-reference-declared']['status'] == 'pass'
+    assert checks['package-sha256-declared']['status'] == 'pass'
+    assert checks['package-sha256-format-valid']['status'] == 'pass'
+    assert checks['signature-reference-declared']['status'] == 'pass'
+    assert checks['signer-reference-declared']['status'] == 'pass'
+    assert checks['adapter-package-read-disabled']['status'] == 'blocked'
+    assert checks['adapter-package-signature-verification-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_package_provenance_review_blocks_invalid_sha256(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/package-provenance-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'packageSha256': 'not-a-sha'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['package-sha256-declared']['status'] == 'pass'
+    assert checks['package-sha256-format-valid']['status'] == 'blocked'
+    assert body['summary']['signatureVerifiedCount'] == 0
+
+
+def test_native_foundation_adapter_package_provenance_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/package-provenance-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canReadAdapterPackage'] is False
+    assert body['canVerifySignature'] is False
+    assert body['canStagePackage'] is False
+    assert body['packageProvenanceReviewId'] is None
+    assert body['packageProvenanceEntries'] == []
+
+
+def test_native_foundation_adapter_sbom_review_requires_sbom_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/sbom-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canReadAdapterPackage'] is False
+    assert body['canGenerateSbom'] is False
+    assert body['canReadSbom'] is False
+    assert body['canRunVulnerabilityScan'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['sbomReviewId'].startswith('native-foundation-adapter-sbom-review-')
+    assert body['reviewMetadata']['sbomOwner'] is None
+    assert body['reviewMetadata']['sbomRef'] is None
+    assert body['reviewMetadata']['sbomFormat'] is None
+    assert body['reviewMetadata']['sbomSha256'] is None
+    assert body['reviewMetadata']['vulnerabilityScanRef'] is None
+    assert body['summary']['sbomEntryCount'] == len(body['sbomEntries']) == 1
+    assert body['summary']['sbomReadableCount'] == 0
+    assert body['summary']['sbomGeneratedCount'] == 0
+    assert body['summary']['sbomHashVerifiedCount'] == 0
+    assert body['summary']['componentInventoryReadCount'] == 0
+    assert body['summary']['vulnerabilityScanRunCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['sbomEntries'][0]
+    assert entry['sbomEntryId'].startswith('native-foundation-adapter-sbom-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['sbomReadable'] is False
+    assert entry['sbomGenerated'] is False
+    assert entry['sbomHashVerified'] is False
+    assert entry['componentInventoryRead'] is False
+    assert entry['vulnerabilityScanRun'] is False
+    assert entry['criticalVulnerabilityGateEvaluated'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canReadAdapterPackage'] is False
+    assert entry['canGenerateSbom'] is False
+    assert entry['canReadSbom'] is False
+    assert entry['canRunVulnerabilityScan'] is False
+    assert entry['canLoadAdapter'] is False
+    assert 'adapter-package-provenance-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterPackageProvenanceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-package-provenance-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['sbom-owner-declared']['status'] == 'blocked'
+    assert checks['sbom-reference-declared']['status'] == 'blocked'
+    assert checks['sbom-format-supported']['status'] == 'blocked'
+    assert checks['sbom-sha256-declared']['status'] == 'blocked'
+    assert checks['sbom-sha256-format-valid']['status'] == 'blocked'
+    assert checks['vulnerability-scan-reference-declared']['status'] == 'blocked'
+    assert checks['sbom-generation-disabled']['status'] == 'blocked'
+    assert checks['sbom-read-disabled']['status'] == 'blocked'
+    assert checks['vulnerability-scan-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_sbom_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfsbom_operator', 'operator')
+    operator_headers = _login(client, 'nfsbom_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter SBOM approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for SBOM review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter SBOM review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/sbom-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'sbomOwner': 'security-owner',
+                             'sbomRef': 'private-sboms/manual-static-hci-1.0.0.cdx.json',
+                             'sbomFormat': 'cyclonedx_json',
+                             'sbomSha256': 'b' * 64,
+                             'vulnerabilityScanRef': 'private-scans/manual-static-hci-1.0.0-vulnscan',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canGenerateSbom'] is False
+    assert body['canReadSbom'] is False
+    assert body['canRunVulnerabilityScan'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['sbomEntries'][0]
+    assert entry['sbomReadable'] is False
+    assert entry['sbomGenerated'] is False
+    assert entry['sbomHashVerified'] is False
+    assert entry['componentInventoryRead'] is False
+    assert entry['vulnerabilityScanRun'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['sbom-owner-declared']['status'] == 'pass'
+    assert checks['sbom-reference-declared']['status'] == 'pass'
+    assert checks['sbom-format-supported']['status'] == 'pass'
+    assert checks['sbom-sha256-declared']['status'] == 'pass'
+    assert checks['sbom-sha256-format-valid']['status'] == 'pass'
+    assert checks['vulnerability-scan-reference-declared']['status'] == 'pass'
+    assert checks['sbom-generation-disabled']['status'] == 'blocked'
+    assert checks['sbom-read-disabled']['status'] == 'blocked'
+    assert checks['vulnerability-scan-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_sbom_review_accepts_metadata_but_blocks_scanning(client, auth_headers):
+    digest = 'b' * 64
+    resp = client.post('/api/native-foundation/adapters/sbom-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'sbomOwner': 'security-owner',
+                             'sbomRef': 'private-sboms/manual-static-hci-1.0.0.cdx.json',
+                             'sbomFormat': 'cyclonedx_json',
+                             'sbomSha256': digest.upper(),
+                             'vulnerabilityScanRef': 'private-scans/manual-static-hci-1.0.0-vulnscan'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canGenerateSbom'] is False
+    assert body['canReadSbom'] is False
+    assert body['canRunVulnerabilityScan'] is False
+    assert body['reviewMetadata']['sbomOwner'] == 'security-owner'
+    assert body['reviewMetadata']['sbomRef'] == 'private-sboms/manual-static-hci-1.0.0.cdx.json'
+    assert body['reviewMetadata']['sbomFormat'] == 'cyclonedx_json'
+    assert body['reviewMetadata']['sbomSha256'] == digest
+    assert body['reviewMetadata']['vulnerabilityScanRef'] == 'private-scans/manual-static-hci-1.0.0-vulnscan'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-package-provenance-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['sbom-owner-declared']['status'] == 'pass'
+    assert checks['sbom-reference-declared']['status'] == 'pass'
+    assert checks['sbom-format-supported']['status'] == 'pass'
+    assert checks['sbom-sha256-declared']['status'] == 'pass'
+    assert checks['sbom-sha256-format-valid']['status'] == 'pass'
+    assert checks['vulnerability-scan-reference-declared']['status'] == 'pass'
+    assert checks['sbom-generation-disabled']['status'] == 'blocked'
+    assert checks['sbom-read-disabled']['status'] == 'blocked'
+    assert checks['vulnerability-scan-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_sbom_review_blocks_invalid_format_and_sha256(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/sbom-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'sbomFormat': 'unknown',
+                             'sbomSha256': 'not-a-sha',
+                             'vulnerabilityScanRef': 'private-scans/manual-static-hci-1.0.0-vulnscan'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['sbom-format-supported']['status'] == 'blocked'
+    assert checks['sbom-sha256-declared']['status'] == 'pass'
+    assert checks['sbom-sha256-format-valid']['status'] == 'blocked'
+    assert checks['vulnerability-scan-reference-declared']['status'] == 'pass'
+    assert body['summary']['vulnerabilityScanRunCount'] == 0
+
+
+def test_native_foundation_adapter_sbom_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/sbom-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canReadAdapterPackage'] is False
+    assert body['canGenerateSbom'] is False
+    assert body['canReadSbom'] is False
+    assert body['canRunVulnerabilityScan'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['sbomReviewId'] is None
+    assert body['sbomEntries'] == []
+
+
+def test_native_foundation_adapter_runtime_isolation_review_requires_runtime_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-isolation-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canCreateSandbox'] is False
+    assert body['canApplyNetworkPolicy'] is False
+    assert body['canApplyFilesystemPolicy'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canReadAdapterPackage'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['runtimeIsolationReviewId'].startswith('native-foundation-adapter-runtime-isolation-')
+    assert body['reviewMetadata']['runtimeOwner'] is None
+    assert body['reviewMetadata']['isolationProfile'] is None
+    assert body['reviewMetadata']['sandboxImageRef'] is None
+    assert body['reviewMetadata']['networkPolicyRef'] is None
+    assert body['reviewMetadata']['filesystemPolicyRef'] is None
+    assert body['summary']['runtimeIsolationEntryCount'] == len(body['runtimeIsolationEntries']) == 1
+    assert body['summary']['sandboxCreatedCount'] == 0
+    assert body['summary']['networkPolicyAppliedCount'] == 0
+    assert body['summary']['filesystemPolicyAppliedCount'] == 0
+    assert body['summary']['adapterProcessStartedCount'] == 0
+    assert body['summary']['runtimeHookRegisteredCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['runtimeIsolationEntries'][0]
+    assert entry['runtimeIsolationEntryId'].startswith('native-foundation-adapter-runtime-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['sandboxCreated'] is False
+    assert entry['networkPolicyApplied'] is False
+    assert entry['filesystemPolicyApplied'] is False
+    assert entry['adapterProcessStarted'] is False
+    assert entry['runtimeHookRegistered'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canCreateSandbox'] is False
+    assert entry['canApplyNetworkPolicy'] is False
+    assert entry['canApplyFilesystemPolicy'] is False
+    assert entry['canStartAdapterProcess'] is False
+    assert entry['canLoadAdapter'] is False
+    assert 'adapter-sbom-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterSbomReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-sbom-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['runtime-owner-declared']['status'] == 'blocked'
+    assert checks['isolation-profile-supported']['status'] == 'blocked'
+    assert checks['sandbox-image-reference-declared']['status'] == 'blocked'
+    assert checks['network-policy-reference-declared']['status'] == 'blocked'
+    assert checks['filesystem-policy-reference-declared']['status'] == 'blocked'
+    assert checks['sandbox-creation-disabled']['status'] == 'blocked'
+    assert checks['runtime-policy-application-disabled']['status'] == 'blocked'
+    assert checks['adapter-process-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_runtime_isolation_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfruntime_operator', 'operator')
+    operator_headers = _login(client, 'nfruntime_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter runtime isolation approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for runtime isolation review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter runtime isolation review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/runtime-isolation-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'runtimeOwner': 'runtime-owner',
+                             'isolationProfile': 'container_sandbox',
+                             'sandboxImageRef': 'private-runtime-images/ztf-adapter-sandbox:1.0.0',
+                             'networkPolicyRef': 'private-network-policies/adapter-egress-deny',
+                             'filesystemPolicyRef': 'private-filesystem-policies/adapter-readonly',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canCreateSandbox'] is False
+    assert body['canApplyNetworkPolicy'] is False
+    assert body['canApplyFilesystemPolicy'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['runtimeIsolationEntries'][0]
+    assert entry['sandboxCreated'] is False
+    assert entry['networkPolicyApplied'] is False
+    assert entry['filesystemPolicyApplied'] is False
+    assert entry['adapterProcessStarted'] is False
+    assert entry['runtimeHookRegistered'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['runtime-owner-declared']['status'] == 'pass'
+    assert checks['isolation-profile-supported']['status'] == 'pass'
+    assert checks['sandbox-image-reference-declared']['status'] == 'pass'
+    assert checks['network-policy-reference-declared']['status'] == 'pass'
+    assert checks['filesystem-policy-reference-declared']['status'] == 'pass'
+    assert checks['sandbox-creation-disabled']['status'] == 'blocked'
+    assert checks['runtime-policy-application-disabled']['status'] == 'blocked'
+    assert checks['adapter-process-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_runtime_isolation_review_accepts_metadata_but_blocks_runtime(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-isolation-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'runtimeOwner': 'runtime-owner',
+                             'isolationProfile': 'Container Sandbox',
+                             'sandboxImageRef': 'private-runtime-images/native-foundation-adapter-runner:1.0.0',
+                             'networkPolicyRef': 'private-policies/native-foundation-network-egress-v1',
+                             'filesystemPolicyRef': 'private-policies/native-foundation-readonly-fs-v1'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canCreateSandbox'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['reviewMetadata']['runtimeOwner'] == 'runtime-owner'
+    assert body['reviewMetadata']['isolationProfile'] == 'container_sandbox'
+    assert body['reviewMetadata']['sandboxImageRef'] == 'private-runtime-images/native-foundation-adapter-runner:1.0.0'
+    assert body['reviewMetadata']['networkPolicyRef'] == 'private-policies/native-foundation-network-egress-v1'
+    assert body['reviewMetadata']['filesystemPolicyRef'] == 'private-policies/native-foundation-readonly-fs-v1'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-sbom-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['runtime-owner-declared']['status'] == 'pass'
+    assert checks['isolation-profile-supported']['status'] == 'pass'
+    assert checks['sandbox-image-reference-declared']['status'] == 'pass'
+    assert checks['network-policy-reference-declared']['status'] == 'pass'
+    assert checks['filesystem-policy-reference-declared']['status'] == 'pass'
+    assert checks['sandbox-creation-disabled']['status'] == 'blocked'
+    assert checks['runtime-policy-application-disabled']['status'] == 'blocked'
+    assert checks['adapter-process-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_runtime_isolation_review_blocks_unknown_profile(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-isolation-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'runtimeOwner': 'runtime-owner',
+                             'isolationProfile': 'bare-metal-host',
+                             'sandboxImageRef': 'private-runtime-images/native-foundation-adapter-runner:1.0.0'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['runtime-owner-declared']['status'] == 'pass'
+    assert checks['isolation-profile-supported']['status'] == 'blocked'
+    assert checks['sandbox-image-reference-declared']['status'] == 'pass'
+    assert body['summary']['sandboxCreatedCount'] == 0
+    assert body['summary']['adapterProcessStartedCount'] == 0
+
+
+def test_native_foundation_adapter_runtime_isolation_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-isolation-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canCreateSandbox'] is False
+    assert body['canApplyNetworkPolicy'] is False
+    assert body['canApplyFilesystemPolicy'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['runtimeIsolationReviewId'] is None
+    assert body['runtimeIsolationEntries'] == []
+
+
+def test_native_foundation_adapter_runtime_admission_review_requires_admission_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitAdapterRuntime'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canInstantiateAdapters'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canHandCredentialsToAdapter'] is False
+    assert body['canStartRunner'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['runtimeAdmissionReviewId'].startswith('native-foundation-adapter-runtime-admission-review-')
+    assert body['reviewMetadata']['admissionOwner'] is None
+    assert body['reviewMetadata']['runtimeAdmissionRef'] is None
+    assert body['reviewMetadata']['changeTicketRef'] is None
+    assert body['reviewMetadata']['exceptionRef'] is None
+    assert body['summary']['runtimeAdmissionEntryCount'] == len(body['runtimeAdmissionEntries']) == 1
+    assert body['summary']['runtimeAdmittedCount'] == 0
+    assert body['summary']['adapterLoadApprovedCount'] == 0
+    assert body['summary']['adapterProcessStartApprovedCount'] == 0
+    assert body['summary']['secretHandoffApprovedCount'] == 0
+    assert body['summary']['mutatingJobSubmissionApprovedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['runtimeAdmissionEntries'][0]
+    assert entry['runtimeAdmissionEntryId'].startswith('native-foundation-adapter-runtime-admission-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['runtimeAdmitted'] is False
+    assert entry['adapterLoadApproved'] is False
+    assert entry['adapterProcessStartApproved'] is False
+    assert entry['secretHandoffApproved'] is False
+    assert entry['mutatingJobSubmissionApproved'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canAdmitAdapterRuntime'] is False
+    assert entry['canLoadAdapter'] is False
+    assert entry['canStartAdapterProcess'] is False
+    assert entry['canHandCredentialsToAdapter'] is False
+    assert entry['canSubmitMutatingJob'] is False
+    assert 'adapter-runtime-isolation-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterRuntimeIsolationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-runtime-isolation-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['runtime-admission-owner-declared']['status'] == 'blocked'
+    assert checks['runtime-admission-reference-declared']['status'] == 'blocked'
+    assert checks['change-ticket-reference-declared']['status'] == 'blocked'
+    assert checks['exception-reference-reviewed']['status'] == 'blocked'
+    assert checks['adapter-runtime-admission-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_runtime_admission_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfadmission_operator', 'operator')
+    operator_headers = _login(client, 'nfadmission_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter runtime admission approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for runtime admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter runtime admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/runtime-admission-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'admissionOwner': 'platform-owner',
+                             'runtimeAdmissionRef': 'private-runtime-admissions/manual-static-hci-1.0.0',
+                             'changeTicketRef': 'private-changes/CHG-4001',
+                             'exceptionRef': 'none',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAdmitAdapterRuntime'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canHandCredentialsToAdapter'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['runtimeAdmissionEntries'][0]
+    assert entry['runtimeAdmitted'] is False
+    assert entry['adapterLoadApproved'] is False
+    assert entry['adapterProcessStartApproved'] is False
+    assert entry['secretHandoffApproved'] is False
+    assert entry['mutatingJobSubmissionApproved'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['runtime-admission-owner-declared']['status'] == 'pass'
+    assert checks['runtime-admission-reference-declared']['status'] == 'pass'
+    assert checks['change-ticket-reference-declared']['status'] == 'pass'
+    assert checks['exception-reference-reviewed']['status'] == 'pass'
+    assert checks['adapter-runtime-admission-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_runtime_admission_review_accepts_metadata_but_blocks_admission(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'admissionOwner': 'platform-owner',
+                             'runtimeAdmissionRef': 'private-runtime-admissions/manual-static-hci-1.0.0',
+                             'changeTicketRef': 'private-changes/CHG-4001',
+                             'exceptionRef': 'none'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAdmitAdapterRuntime'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['admissionOwner'] == 'platform-owner'
+    assert body['reviewMetadata']['runtimeAdmissionRef'] == 'private-runtime-admissions/manual-static-hci-1.0.0'
+    assert body['reviewMetadata']['changeTicketRef'] == 'private-changes/CHG-4001'
+    assert body['reviewMetadata']['exceptionRef'] == 'none'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-runtime-isolation-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['runtime-admission-owner-declared']['status'] == 'pass'
+    assert checks['runtime-admission-reference-declared']['status'] == 'pass'
+    assert checks['change-ticket-reference-declared']['status'] == 'pass'
+    assert checks['exception-reference-reviewed']['status'] == 'pass'
+    assert checks['adapter-runtime-admission-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_runtime_admission_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/runtime-admission-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canAdmitAdapterRuntime'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['runtimeAdmissionReviewId'] is None
+    assert body['runtimeAdmissionEntries'] == []
+
+
+def test_native_foundation_adapter_execution_preflight_review_requires_preflight_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/execution-preflight-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canRunAdapterPreflight'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canCallFoundation'] is False
+    assert body['canContactHardware'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['executionPreflightReviewId'].startswith('native-foundation-adapter-execution-preflight-review-')
+    assert body['reviewMetadata']['preflightOwner'] is None
+    assert body['reviewMetadata']['preflightRef'] is None
+    assert body['reviewMetadata']['adapterCommandRef'] is None
+    assert body['reviewMetadata']['targetConnectivityRef'] is None
+    assert body['reviewMetadata']['rollbackReadinessRef'] is None
+    assert body['summary']['executionPreflightEntryCount'] == len(body['executionPreflightEntries']) == 1
+    assert body['summary']['adapterPreflightRunCount'] == 0
+    assert body['summary']['secretsResolvedCount'] == 0
+    assert body['summary']['targetConnectionsOpenedCount'] == 0
+    assert body['summary']['foundationReachabilityCheckedCount'] == 0
+    assert body['summary']['hardwareReachabilityCheckedCount'] == 0
+    assert body['summary']['rollbackReadinessVerifiedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['executionPreflightEntries'][0]
+    assert entry['executionPreflightEntryId'].startswith('native-foundation-adapter-execution-preflight-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['adapterPreflightRun'] is False
+    assert entry['secretsResolved'] is False
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['foundationReachabilityChecked'] is False
+    assert entry['hardwareReachabilityChecked'] is False
+    assert entry['rollbackReadinessVerified'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canRunAdapterPreflight'] is False
+    assert entry['canResolveSecrets'] is False
+    assert entry['canOpenTargetConnections'] is False
+    assert entry['canCallFoundation'] is False
+    assert entry['canContactHardware'] is False
+    assert entry['canSubmitMutatingJob'] is False
+    assert entry['mutatingActionsEnabled'] is False
+    assert 'adapter-runtime-admission-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterRuntimeAdmissionStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-runtime-admission-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['execution-preflight-owner-declared']['status'] == 'blocked'
+    assert checks['execution-preflight-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-command-reference-declared']['status'] == 'blocked'
+    assert checks['target-connectivity-reference-declared']['status'] == 'blocked'
+    assert checks['rollback-readiness-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-preflight-execution-disabled']['status'] == 'blocked'
+    assert checks['target-connectivity-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_execution_preflight_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfpreflight_operator', 'operator')
+    operator_headers = _login(client, 'nfpreflight_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter execution preflight approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for execution preflight review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter execution preflight review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/execution-preflight-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'preflightOwner': 'platform-owner',
+                             'preflightRef': 'private-preflights/manual-static-hci-1.0.0',
+                             'adapterCommandRef': 'private-adapter-commands/manual-static-hci-preflight',
+                             'targetConnectivityRef': 'private-connectivity/DCU1-native-foundation',
+                             'rollbackReadinessRef': 'private-rollback/RB-4001',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canRunAdapterPreflight'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canCallFoundation'] is False
+    assert body['canContactHardware'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['executionPreflightEntries'][0]
+    assert entry['adapterPreflightRun'] is False
+    assert entry['secretsResolved'] is False
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['foundationReachabilityChecked'] is False
+    assert entry['hardwareReachabilityChecked'] is False
+    assert entry['rollbackReadinessVerified'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['execution-preflight-owner-declared']['status'] == 'pass'
+    assert checks['execution-preflight-reference-declared']['status'] == 'pass'
+    assert checks['adapter-command-reference-declared']['status'] == 'pass'
+    assert checks['target-connectivity-reference-declared']['status'] == 'pass'
+    assert checks['rollback-readiness-reference-declared']['status'] == 'pass'
+    assert checks['adapter-preflight-execution-disabled']['status'] == 'blocked'
+    assert checks['target-connectivity-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_execution_preflight_review_accepts_metadata_but_blocks_preflight(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/execution-preflight-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'preflightOwner': 'platform-owner',
+                             'preflightRef': 'private-preflights/manual-static-hci-1.0.0',
+                             'adapterCommandRef': 'private-adapter-commands/manual-static-hci-preflight',
+                             'targetConnectivityRef': 'private-connectivity/DCU1-native-foundation',
+                             'rollbackReadinessRef': 'private-rollback/RB-4001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canRunAdapterPreflight'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['preflightOwner'] == 'platform-owner'
+    assert body['reviewMetadata']['preflightRef'] == 'private-preflights/manual-static-hci-1.0.0'
+    assert body['reviewMetadata']['adapterCommandRef'] == 'private-adapter-commands/manual-static-hci-preflight'
+    assert body['reviewMetadata']['targetConnectivityRef'] == 'private-connectivity/DCU1-native-foundation'
+    assert body['reviewMetadata']['rollbackReadinessRef'] == 'private-rollback/RB-4001'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-runtime-admission-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['execution-preflight-owner-declared']['status'] == 'pass'
+    assert checks['execution-preflight-reference-declared']['status'] == 'pass'
+    assert checks['adapter-command-reference-declared']['status'] == 'pass'
+    assert checks['target-connectivity-reference-declared']['status'] == 'pass'
+    assert checks['rollback-readiness-reference-declared']['status'] == 'pass'
+    assert checks['adapter-preflight-execution-disabled']['status'] == 'blocked'
+    assert checks['target-connectivity-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_execution_preflight_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/execution-preflight-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canRunAdapterPreflight'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canCallFoundation'] is False
+    assert body['canContactHardware'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['executionPreflightReviewId'] is None
+    assert body['executionPreflightEntries'] == []
+
+
+def test_native_foundation_adapter_target_connectivity_review_requires_connectivity_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/target-connectivity-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canProbeFoundation'] is False
+    assert body['canProbePrismElement'] is False
+    assert body['canProbeBmc'] is False
+    assert body['canProbeHardwareProvider'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['targetConnectivityReviewId'].startswith('native-foundation-adapter-target-connectivity-review-')
+    assert body['reviewMetadata']['connectivityOwner'] is None
+    assert body['reviewMetadata']['connectivityScopeRef'] is None
+    assert body['reviewMetadata']['targetAllowlistRef'] is None
+    assert body['reviewMetadata']['maintenanceWindowRef'] is None
+    assert body['reviewMetadata']['probePlanRef'] is None
+    assert body['summary']['targetConnectivityEntryCount'] == len(body['targetConnectivityEntries']) == 1
+    assert body['summary']['targetConnectionsOpenedCount'] == 0
+    assert body['summary']['foundationReachabilityProbedCount'] == 0
+    assert body['summary']['prismElementReachabilityProbedCount'] == 0
+    assert body['summary']['bmcReachabilityProbedCount'] == 0
+    assert body['summary']['hardwareProviderReachabilityProbedCount'] == 0
+    assert body['summary']['secretsResolvedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['targetConnectivityEntries'][0]
+    assert entry['targetConnectivityEntryId'].startswith('native-foundation-adapter-target-connectivity-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['targetConnectionStatus'] == 'not_opened'
+    assert entry['foundationProbeStatus'] == 'not_run'
+    assert entry['prismElementProbeStatus'] == 'not_run'
+    assert entry['bmcProbeStatus'] == 'not_run'
+    assert entry['hardwareProviderProbeStatus'] == 'not_run'
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['foundationReachabilityProbed'] is False
+    assert entry['prismElementReachabilityProbed'] is False
+    assert entry['bmcReachabilityProbed'] is False
+    assert entry['hardwareProviderReachabilityProbed'] is False
+    assert entry['secretsResolved'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canOpenTargetConnections'] is False
+    assert entry['canProbeFoundation'] is False
+    assert entry['canProbePrismElement'] is False
+    assert entry['canProbeBmc'] is False
+    assert entry['canProbeHardwareProvider'] is False
+    assert entry['canResolveSecrets'] is False
+    assert entry['canSubmitMutatingJob'] is False
+    assert entry['mutatingActionsEnabled'] is False
+    assert 'adapter-execution-preflight-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterExecutionPreflightStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-execution-preflight-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['target-connectivity-owner-declared']['status'] == 'blocked'
+    assert checks['target-connectivity-scope-declared']['status'] == 'blocked'
+    assert checks['target-allowlist-reference-declared']['status'] == 'blocked'
+    assert checks['maintenance-window-reference-declared']['status'] == 'blocked'
+    assert checks['probe-plan-reference-declared']['status'] == 'blocked'
+    assert checks['target-connection-opening-disabled']['status'] == 'blocked'
+    assert checks['target-reachability-probes-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_target_connectivity_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nftarget_operator', 'operator')
+    operator_headers = _login(client, 'nftarget_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter target connectivity approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for target connectivity review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter target connectivity review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/target-connectivity-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'connectivityOwner': 'network-owner',
+                             'connectivityScopeRef': 'private-connectivity-scopes/DCU1-foundation-targets',
+                             'targetAllowlistRef': 'private-allowlists/native-foundation-targets',
+                             'maintenanceWindowRef': 'private-windows/CHG-4001',
+                             'probePlanRef': 'private-probe-plans/foundation-targets-readiness',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenTargetConnections'] is False
+    assert body['canProbeFoundation'] is False
+    assert body['canProbePrismElement'] is False
+    assert body['canProbeBmc'] is False
+    assert body['canProbeHardwareProvider'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['targetConnectivityEntries'][0]
+    assert entry['targetConnectionStatus'] == 'not_opened'
+    assert entry['foundationProbeStatus'] == 'not_run'
+    assert entry['prismElementProbeStatus'] == 'not_run'
+    assert entry['bmcProbeStatus'] == 'not_run'
+    assert entry['hardwareProviderProbeStatus'] == 'not_run'
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['foundationReachabilityProbed'] is False
+    assert entry['prismElementReachabilityProbed'] is False
+    assert entry['bmcReachabilityProbed'] is False
+    assert entry['hardwareProviderReachabilityProbed'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['target-connectivity-owner-declared']['status'] == 'pass'
+    assert checks['target-connectivity-scope-declared']['status'] == 'pass'
+    assert checks['target-allowlist-reference-declared']['status'] == 'pass'
+    assert checks['maintenance-window-reference-declared']['status'] == 'pass'
+    assert checks['probe-plan-reference-declared']['status'] == 'pass'
+    assert checks['target-connection-opening-disabled']['status'] == 'blocked'
+    assert checks['target-reachability-probes-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_target_connectivity_review_accepts_metadata_but_blocks_probes(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/target-connectivity-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'connectivityOwner': 'network-owner',
+                             'connectivityScopeRef': 'private-connectivity-scopes/DCU1-foundation-targets',
+                             'targetAllowlistRef': 'private-allowlists/native-foundation-targets',
+                             'maintenanceWindowRef': 'private-windows/CHG-4001',
+                             'probePlanRef': 'private-probe-plans/foundation-targets-readiness'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenTargetConnections'] is False
+    assert body['canProbeFoundation'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['connectivityOwner'] == 'network-owner'
+    assert body['reviewMetadata']['connectivityScopeRef'] == 'private-connectivity-scopes/DCU1-foundation-targets'
+    assert body['reviewMetadata']['targetAllowlistRef'] == 'private-allowlists/native-foundation-targets'
+    assert body['reviewMetadata']['maintenanceWindowRef'] == 'private-windows/CHG-4001'
+    assert body['reviewMetadata']['probePlanRef'] == 'private-probe-plans/foundation-targets-readiness'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-execution-preflight-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['target-connectivity-owner-declared']['status'] == 'pass'
+    assert checks['target-connectivity-scope-declared']['status'] == 'pass'
+    assert checks['target-allowlist-reference-declared']['status'] == 'pass'
+    assert checks['maintenance-window-reference-declared']['status'] == 'pass'
+    assert checks['probe-plan-reference-declared']['status'] == 'pass'
+    assert checks['target-connection-opening-disabled']['status'] == 'blocked'
+    assert checks['target-reachability-probes-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_target_connectivity_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/target-connectivity-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canOpenTargetConnections'] is False
+    assert body['canProbeFoundation'] is False
+    assert body['canProbePrismElement'] is False
+    assert body['canProbeBmc'] is False
+    assert body['canProbeHardwareProvider'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['targetConnectivityReviewId'] is None
+    assert body['targetConnectivityEntries'] == []
+
+
+def test_native_foundation_adapter_credential_handoff_review_requires_handoff_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/credential-handoff-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canOpenSecretLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canHandoffCredentialsToAdapter'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['credentialHandoffReviewId'].startswith('native-foundation-adapter-credential-handoff-review-')
+    assert body['reviewMetadata']['handoffOwner'] is None
+    assert body['reviewMetadata']['credentialHandoffRef'] is None
+    assert body['reviewMetadata']['secretLeasePolicyRef'] is None
+    assert body['reviewMetadata']['adapterIdentityRef'] is None
+    assert body['reviewMetadata']['redactionPolicyRef'] is None
+    assert body['summary']['credentialHandoffEntryCount'] == len(body['credentialHandoffEntries']) == 1
+    assert body['summary']['secretLeaseOpenedCount'] == 0
+    assert body['summary']['secretValuesResolvedCount'] == 0
+    assert body['summary']['secretValuesExposedCount'] == 0
+    assert body['summary']['credentialsHandedToAdapterCount'] == 0
+    assert body['summary']['adapterIdentityVerifiedCount'] == 0
+    assert body['summary']['redactionPolicyAppliedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['credentialHandoffEntries'][0]
+    assert entry['credentialHandoffEntryId'].startswith('native-foundation-adapter-credential-handoff-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['secretLeaseStatus'] == 'not_opened'
+    assert entry['credentialHandoffStatus'] == 'not_performed'
+    assert entry['secretValuesResolved'] is False
+    assert entry['secretValuesExposed'] is False
+    assert entry['credentialsHandedToAdapter'] is False
+    assert entry['adapterIdentityVerified'] is False
+    assert entry['redactionPolicyApplied'] is False
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canOpenSecretLease'] is False
+    assert entry['canResolveSecrets'] is False
+    assert entry['canHandoffCredentialsToAdapter'] is False
+    assert entry['canExposeSecretValues'] is False
+    assert entry['canOpenTargetConnections'] is False
+    assert entry['canSubmitMutatingJob'] is False
+    assert entry['mutatingActionsEnabled'] is False
+    assert 'adapter-target-connectivity-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterTargetConnectivityStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretStoreProviderContractStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-target-connectivity-reviewed']['status'] == 'pass'
+    assert checks['secret-store-provider-contract-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['credential-handoff-owner-declared']['status'] == 'blocked'
+    assert checks['credential-handoff-reference-declared']['status'] == 'blocked'
+    assert checks['secret-lease-policy-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-identity-reference-declared']['status'] == 'blocked'
+    assert checks['redaction-policy-reference-declared']['status'] == 'blocked'
+    assert checks['secret-lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_credential_handoff_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfhandoff_operator', 'operator')
+    operator_headers = _login(client, 'nfhandoff_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter credential handoff approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for credential handoff review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter credential handoff review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/credential-handoff-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'handoffOwner': 'security-owner',
+                             'credentialHandoffRef': 'private-handoffs/native-foundation-adapters',
+                             'secretLeasePolicyRef': 'private-secret-policies/short-lived-native-foundation',
+                             'adapterIdentityRef': 'private-identities/native-foundation-runner',
+                             'redactionPolicyRef': 'private-redaction/native-foundation-logs',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenSecretLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canHandoffCredentialsToAdapter'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['credentialHandoffEntries'][0]
+    assert entry['secretLeaseStatus'] == 'not_opened'
+    assert entry['credentialHandoffStatus'] == 'not_performed'
+    assert entry['secretValuesResolved'] is False
+    assert entry['secretValuesExposed'] is False
+    assert entry['credentialsHandedToAdapter'] is False
+    assert entry['adapterIdentityVerified'] is False
+    assert entry['redactionPolicyApplied'] is False
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['credential-handoff-owner-declared']['status'] == 'pass'
+    assert checks['credential-handoff-reference-declared']['status'] == 'pass'
+    assert checks['secret-lease-policy-reference-declared']['status'] == 'pass'
+    assert checks['adapter-identity-reference-declared']['status'] == 'pass'
+    assert checks['redaction-policy-reference-declared']['status'] == 'pass'
+    assert checks['secret-lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_credential_handoff_review_accepts_metadata_but_blocks_handoff(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/credential-handoff-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'handoffOwner': 'security-owner',
+                             'credentialHandoffRef': 'private-handoffs/native-foundation-adapters',
+                             'secretLeasePolicyRef': 'private-secret-policies/short-lived-native-foundation',
+                             'adapterIdentityRef': 'private-identities/native-foundation-runner',
+                             'redactionPolicyRef': 'private-redaction/native-foundation-logs'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canOpenSecretLease'] is False
+    assert body['canHandoffCredentialsToAdapter'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['handoffOwner'] == 'security-owner'
+    assert body['reviewMetadata']['credentialHandoffRef'] == 'private-handoffs/native-foundation-adapters'
+    assert body['reviewMetadata']['secretLeasePolicyRef'] == 'private-secret-policies/short-lived-native-foundation'
+    assert body['reviewMetadata']['adapterIdentityRef'] == 'private-identities/native-foundation-runner'
+    assert body['reviewMetadata']['redactionPolicyRef'] == 'private-redaction/native-foundation-logs'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-target-connectivity-reviewed']['status'] == 'pass'
+    assert checks['secret-store-provider-contract-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['credential-handoff-owner-declared']['status'] == 'pass'
+    assert checks['credential-handoff-reference-declared']['status'] == 'pass'
+    assert checks['secret-lease-policy-reference-declared']['status'] == 'pass'
+    assert checks['adapter-identity-reference-declared']['status'] == 'pass'
+    assert checks['redaction-policy-reference-declared']['status'] == 'pass'
+    assert checks['secret-lease-opening-disabled']['status'] == 'blocked'
+    assert checks['secret-resolution-disabled']['status'] == 'blocked'
+    assert checks['credential-handoff-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_credential_handoff_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/credential-handoff-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canOpenSecretLease'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canHandoffCredentialsToAdapter'] is False
+    assert body['canExposeSecretValues'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['credentialHandoffReviewId'] is None
+    assert body['credentialHandoffEntries'] == []
+
+
+def test_native_foundation_adapter_command_invocation_review_requires_command_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/command-invocation-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAssembleCommand'] is False
+    assert body['canWriteCommandFile'] is False
+    assert body['canInvokeAdapter'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['commandInvocationReviewId'].startswith('native-foundation-adapter-command-invocation-review-')
+    assert body['reviewMetadata']['commandOwner'] is None
+    assert body['reviewMetadata']['commandCatalogRef'] is None
+    assert body['reviewMetadata']['invocationPolicyRef'] is None
+    assert body['reviewMetadata']['executionIdentityRef'] is None
+    assert body['reviewMetadata']['outputCaptureRef'] is None
+    assert body['summary']['commandInvocationEntryCount'] == len(body['commandInvocationEntries']) == 1
+    assert body['summary']['commandAssembledCount'] == 0
+    assert body['summary']['commandFileWrittenCount'] == 0
+    assert body['summary']['adapterInvokedCount'] == 0
+    assert body['summary']['adapterProcessStartedCount'] == 0
+    assert body['summary']['targetConnectionsOpenedCount'] == 0
+    assert body['summary']['secretsResolvedCount'] == 0
+    assert body['summary']['commandOutputCapturedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['commandInvocationEntries'][0]
+    assert entry['commandInvocationEntryId'].startswith('native-foundation-adapter-command-invocation-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['commandAction'] == 'hci_hci_cluster_create'
+    assert entry['commandAssemblyStatus'] == 'not_assembled'
+    assert entry['commandInvocationStatus'] == 'not_invoked'
+    assert entry['outputCaptureStatus'] == 'not_started'
+    assert entry['commandAssembled'] is False
+    assert entry['commandFileWritten'] is False
+    assert entry['adapterInvoked'] is False
+    assert entry['adapterProcessStarted'] is False
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['secretsResolved'] is False
+    assert entry['commandOutputCaptured'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['canAssembleCommand'] is False
+    assert entry['canWriteCommandFile'] is False
+    assert entry['canInvokeAdapter'] is False
+    assert entry['canStartAdapterProcess'] is False
+    assert entry['canOpenTargetConnections'] is False
+    assert entry['canResolveSecrets'] is False
+    assert entry['canCaptureCommandOutput'] is False
+    assert entry['canSubmitMutatingJob'] is False
+    assert entry['mutatingActionsEnabled'] is False
+    assert 'adapter-credential-handoff-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterCredentialHandoffStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretStoreProviderContractStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-credential-handoff-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['adapter-command-owner-declared']['status'] == 'blocked'
+    assert checks['adapter-command-catalog-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-invocation-policy-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-execution-identity-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-output-capture-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-command-assembly-disabled']['status'] == 'blocked'
+    assert checks['adapter-command-invocation-disabled']['status'] == 'blocked'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_command_invocation_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfcommand_operator', 'operator')
+    operator_headers = _login(client, 'nfcommand_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter command invocation approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for command invocation review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter command invocation review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/command-invocation-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'commandOwner': 'platform-owner',
+                             'commandCatalogRef': 'private-command-catalogs/native-foundation-hci',
+                             'invocationPolicyRef': 'private-invocation-policies/native-foundation-safe-start',
+                             'executionIdentityRef': 'private-identities/native-foundation-runner',
+                             'outputCaptureRef': 'private-output-capture/native-foundation-redacted',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAssembleCommand'] is False
+    assert body['canWriteCommandFile'] is False
+    assert body['canInvokeAdapter'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['commandInvocationEntries'][0]
+    assert entry['commandAssemblyStatus'] == 'not_assembled'
+    assert entry['commandInvocationStatus'] == 'not_invoked'
+    assert entry['outputCaptureStatus'] == 'not_started'
+    assert entry['commandAssembled'] is False
+    assert entry['commandFileWritten'] is False
+    assert entry['adapterInvoked'] is False
+    assert entry['adapterProcessStarted'] is False
+    assert entry['targetConnectionsOpened'] is False
+    assert entry['secretsResolved'] is False
+    assert entry['commandOutputCaptured'] is False
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['adapter-command-owner-declared']['status'] == 'pass'
+    assert checks['adapter-command-catalog-reference-declared']['status'] == 'pass'
+    assert checks['adapter-invocation-policy-reference-declared']['status'] == 'pass'
+    assert checks['adapter-execution-identity-reference-declared']['status'] == 'pass'
+    assert checks['adapter-output-capture-reference-declared']['status'] == 'pass'
+    assert checks['adapter-command-assembly-disabled']['status'] == 'blocked'
+    assert checks['adapter-command-invocation-disabled']['status'] == 'blocked'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_command_invocation_review_accepts_metadata_but_blocks_invocation(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/command-invocation-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'commandOwner': 'platform-owner',
+                             'commandCatalogRef': 'private-command-catalogs/native-foundation-hci',
+                             'invocationPolicyRef': 'private-invocation-policies/native-foundation-safe-start',
+                             'executionIdentityRef': 'private-identities/native-foundation-runner',
+                             'outputCaptureRef': 'private-output-capture/native-foundation-redacted'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAssembleCommand'] is False
+    assert body['canInvokeAdapter'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['commandOwner'] == 'platform-owner'
+    assert body['reviewMetadata']['commandCatalogRef'] == 'private-command-catalogs/native-foundation-hci'
+    assert body['reviewMetadata']['invocationPolicyRef'] == 'private-invocation-policies/native-foundation-safe-start'
+    assert body['reviewMetadata']['executionIdentityRef'] == 'private-identities/native-foundation-runner'
+    assert body['reviewMetadata']['outputCaptureRef'] == 'private-output-capture/native-foundation-redacted'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-credential-handoff-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['adapter-command-owner-declared']['status'] == 'pass'
+    assert checks['adapter-command-catalog-reference-declared']['status'] == 'pass'
+    assert checks['adapter-invocation-policy-reference-declared']['status'] == 'pass'
+    assert checks['adapter-execution-identity-reference-declared']['status'] == 'pass'
+    assert checks['adapter-output-capture-reference-declared']['status'] == 'pass'
+    assert checks['adapter-command-assembly-disabled']['status'] == 'blocked'
+    assert checks['adapter-command-invocation-disabled']['status'] == 'blocked'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_command_invocation_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/command-invocation-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canAssembleCommand'] is False
+    assert body['canWriteCommandFile'] is False
+    assert body['canInvokeAdapter'] is False
+    assert body['canStartAdapterProcess'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['commandInvocationReviewId'] is None
+    assert body['commandInvocationEntries'] == []
+
+
+def test_native_foundation_adapter_output_evidence_review_requires_evidence_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/output-evidence-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canWriteArtifacts'] is False
+    assert body['canClassifyLiveFailures'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['outputEvidenceReviewId'].startswith('native-foundation-adapter-output-evidence-review-')
+    assert body['reviewMetadata']['evidenceOwner'] is None
+    assert body['reviewMetadata']['outputRetentionRef'] is None
+    assert body['reviewMetadata']['artifactRedactionRef'] is None
+    assert body['reviewMetadata']['failureClassificationRef'] is None
+    assert body['reviewMetadata']['evidenceStoreRef'] is None
+    assert body['summary']['outputEvidenceEntryCount'] == len(body['outputEvidenceEntries']) == 1
+    assert body['summary']['commandOutputCapturedCount'] == 0
+    assert body['summary']['stdoutCapturedCount'] == 0
+    assert body['summary']['stderrCapturedCount'] == 0
+    assert body['summary']['artifactsWrittenCount'] == 0
+    assert body['summary']['artifactsRedactedCount'] == 0
+    assert body['summary']['evidencePersistedCount'] == 0
+    assert body['summary']['liveFailuresClassifiedCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entry = body['outputEvidenceEntries'][0]
+    assert entry['outputEvidenceEntryId'].startswith('native-foundation-adapter-output-evidence-')
+    assert entry['providerAdapterId'] == 'manual_static'
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['outputCaptureStatus'] == 'not_started'
+    assert entry['evidencePersistenceStatus'] == 'not_persisted'
+    assert entry['failureClassificationStatus'] == 'not_run'
+    assert entry['commandOutputCaptured'] is False
+    assert entry['stdoutCaptured'] is False
+    assert entry['stderrCaptured'] is False
+    assert entry['artifactsWritten'] is False
+    assert entry['artifactsRedacted'] is False
+    assert entry['evidencePersisted'] is False
+    assert entry['liveFailuresClassified'] is False
+    assert entry['canCaptureCommandOutput'] is False
+    assert entry['canPersistEvidence'] is False
+    assert entry['canWriteArtifacts'] is False
+    assert entry['canClassifyLiveFailures'] is False
+    assert entry['canSubmitMutatingJob'] is False
+    assert entry['mutatingActionsEnabled'] is False
+    assert 'adapter-command-invocation-review.json' in entry['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in entry['requiredReviews']
+    assert 'retained-evidence-export-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in entry['requiredPrerequisiteArtifacts']
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['secretStoreProviderContractStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert entry['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-command-invocation-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['adapter-output-evidence-owner-declared']['status'] == 'blocked'
+    assert checks['adapter-output-retention-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-artifact-redaction-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-failure-classification-reference-declared']['status'] == 'blocked'
+    assert checks['adapter-evidence-store-reference-declared']['status'] == 'blocked'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['evidence-persistence-disabled']['status'] == 'blocked'
+    assert checks['live-failure-classification-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_output_evidence_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfoutput_operator', 'operator')
+    operator_headers = _login(client, 'nfoutput_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter output evidence approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for output evidence review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter output evidence review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/adapters/output-evidence-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'evidenceOwner': 'evidence-owner',
+                             'outputRetentionRef': 'private-output-retention/native-foundation',
+                             'artifactRedactionRef': 'private-redaction/native-foundation-output',
+                             'failureClassificationRef': 'private-failure-classification/native-foundation',
+                             'evidenceStoreRef': 'private-evidence-store/native-foundation',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canWriteArtifacts'] is False
+    assert body['canClassifyLiveFailures'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    entry = body['outputEvidenceEntries'][0]
+    assert entry['requiresControlledUatCompletion'] is True
+    assert entry['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert 'controlled-uat-completion-review.json' in entry['requiredReviews']
+    assert entry['outputCaptureStatus'] == 'not_started'
+    assert entry['evidencePersistenceStatus'] == 'not_persisted'
+    assert entry['failureClassificationStatus'] == 'not_run'
+    assert entry['commandOutputCaptured'] is False
+    assert entry['stdoutCaptured'] is False
+    assert entry['stderrCaptured'] is False
+    assert entry['artifactsWritten'] is False
+    assert entry['artifactsRedacted'] is False
+    assert entry['evidencePersisted'] is False
+    assert entry['liveFailuresClassified'] is False
+    assert entry['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert entry['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert entry['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert entry['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert entry['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['adapter-output-evidence-owner-declared']['status'] == 'pass'
+    assert checks['adapter-output-retention-reference-declared']['status'] == 'pass'
+    assert checks['adapter-artifact-redaction-reference-declared']['status'] == 'pass'
+    assert checks['adapter-failure-classification-reference-declared']['status'] == 'pass'
+    assert checks['adapter-evidence-store-reference-declared']['status'] == 'pass'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['evidence-persistence-disabled']['status'] == 'blocked'
+    assert checks['live-failure-classification-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_output_evidence_review_accepts_metadata_but_blocks_capture(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/output-evidence-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'evidenceOwner': 'operations-owner',
+                             'outputRetentionRef': 'private-retention/native-foundation-output',
+                             'artifactRedactionRef': 'private-redaction/native-foundation-artifacts',
+                             'failureClassificationRef': 'private-failure-taxonomy/native-foundation',
+                             'evidenceStoreRef': 'private-evidence-store/native-foundation'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['evidenceOwner'] == 'operations-owner'
+    assert body['reviewMetadata']['outputRetentionRef'] == 'private-retention/native-foundation-output'
+    assert body['reviewMetadata']['artifactRedactionRef'] == 'private-redaction/native-foundation-artifacts'
+    assert body['reviewMetadata']['failureClassificationRef'] == 'private-failure-taxonomy/native-foundation'
+    assert body['reviewMetadata']['evidenceStoreRef'] == 'private-evidence-store/native-foundation'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-command-invocation-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['upstream-secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['adapter-output-evidence-owner-declared']['status'] == 'pass'
+    assert checks['adapter-output-retention-reference-declared']['status'] == 'pass'
+    assert checks['adapter-artifact-redaction-reference-declared']['status'] == 'pass'
+    assert checks['adapter-failure-classification-reference-declared']['status'] == 'pass'
+    assert checks['adapter-evidence-store-reference-declared']['status'] == 'pass'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['evidence-persistence-disabled']['status'] == 'blocked'
+    assert checks['live-failure-classification-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_adapter_output_evidence_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/adapters/output-evidence-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canCaptureCommandOutput'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canWriteArtifacts'] is False
+    assert body['canClassifyLiveFailures'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['outputEvidenceReviewId'] is None
+    assert body['outputEvidenceEntries'] == []
+
+
+def test_native_foundation_retained_evidence_export_review_requires_export_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/retained-evidence-export-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canExportRetainedEvidence'] is False
+    assert body['canReadRetainedArtifacts'] is False
+    assert body['canGenerateZip'] is False
+    assert body['canWriteChecksumManifest'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['exportReviewId'].startswith('native-foundation-retained-evidence-export-review-')
+    assert body['retentionPlanId'].startswith('native-foundation-retention-plan-')
+    assert body['outputEvidenceReviewId'].startswith('native-foundation-adapter-output-evidence-review-')
+    assert body['reviewMetadata']['exportOwner'] is None
+    assert body['reviewMetadata']['exportRequestRef'] is None
+    assert body['reviewMetadata']['retentionStoreRef'] is None
+    assert body['reviewMetadata']['rbacReviewRef'] is None
+    assert body['reviewMetadata']['checksumManifestRef'] is None
+    assert body['summary']['exportItemCount'] == len(body['exportItems'])
+    assert body['summary']['artifactReadCount'] == 0
+    assert body['summary']['includedInExportCount'] == 0
+    assert body['summary']['zipGeneratedCount'] == 0
+    assert body['summary']['checksumWrittenCount'] == 0
+    assert body['summary']['rbacValidatedCount'] == 0
+    assert body['summary']['persistedEvidenceCount'] == 0
+    assert body['summary']['prerequisiteArtifactCount'] == 4
+    assert body['summary']['controlledUatCompletionRequiredCount'] == body['summary']['exportItemCount']
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['secretStoreProviderContractStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    item = body['exportItems'][0]
+    assert item['exportItemId'].startswith('native-foundation-retained-evidence-export-item-')
+    assert item['sourceRetentionPlanId'] == body['retentionPlanId']
+    assert item['sourceOutputEvidenceReviewId'] == body['outputEvidenceReviewId']
+    assert item['requiresControlledUatCompletion'] is True
+    assert item['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert item['artifactRead'] is False
+    assert item['includedInExport'] is False
+    assert item['zipGenerated'] is False
+    assert item['checksumWritten'] is False
+    assert item['rbacValidated'] is False
+    assert item['canReadRetainedArtifact'] is False
+    assert item['canIncludeInExport'] is False
+    assert item['canGenerateZip'] is False
+    assert item['canWriteChecksumManifest'] is False
+    assert item['canPersistEvidence'] is False
+    assert 'retained-evidence-export-review.json' not in item['requiredPrerequisiteArtifacts']
+    assert 'controlled-uat-entry-review.json' in item['requiredPrerequisiteArtifacts']
+    assert 'execution-runner-readiness.json' in item['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in item['requiredPrerequisiteArtifacts']
+    assert item['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert item['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert item['sourceReviewStatus']['secretStoreProviderContractStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert item['sourceReviewStatus']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert item['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert item['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert 'execution-retention-plan.json' in item['requiredReviews']
+    assert 'adapter-output-evidence-review.json' in item['requiredReviews']
+    assert 'controlled-uat-completion-review.json' in item['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in item['requiredReviews']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-retention-plan-reviewed']['status'] == 'pass'
+    assert checks['adapter-output-evidence-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['output-evidence-prerequisite-artifacts-reviewed']['status'] == 'pass'
+    assert checks['adapter-command-invocation-source-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['retained-export-owner-declared']['status'] == 'blocked'
+    assert checks['retained-export-request-reference-declared']['status'] == 'blocked'
+    assert checks['retention-store-reference-declared']['status'] == 'blocked'
+    assert checks['export-rbac-review-reference-declared']['status'] == 'blocked'
+    assert checks['checksum-manifest-reference-declared']['status'] == 'blocked'
+    assert checks['retained-artifact-read-disabled']['status'] == 'blocked'
+    assert checks['retained-evidence-export-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_retained_evidence_export_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfexport_operator', 'operator')
+    operator_headers = _login(client, 'nfexport_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation retained export approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for retained export review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured retained export review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/retained-evidence-export-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'exportOwner': 'evidence-owner',
+                             'exportRequestRef': 'private-change/EXPORT-2001',
+                             'retentionStoreRef': 'private-retention/native-foundation',
+                             'rbacReviewRef': 'private-rbac/native-foundation-export',
+                             'checksumManifestRef': 'private-hashes/native-foundation-export',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canExportRetainedEvidence'] is False
+    assert body['canReadRetainedArtifacts'] is False
+    assert body['canGenerateZip'] is False
+    assert body['canWriteChecksumManifest'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] == body['summary']['exportItemCount']
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    item = body['exportItems'][0]
+    assert item['requiresControlledUatCompletion'] is True
+    assert item['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert 'controlled-uat-completion-review.json' in item['requiredReviews']
+    assert item['artifactRead'] is False
+    assert item['includedInExport'] is False
+    assert item['zipGenerated'] is False
+    assert item['checksumWritten'] is False
+    assert item['rbacValidated'] is False
+    assert item['canReadRetainedArtifact'] is False
+    assert item['canIncludeInExport'] is False
+    assert item['canGenerateZip'] is False
+    assert item['canWriteChecksumManifest'] is False
+    assert item['canPersistEvidence'] is False
+    assert item['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['controlledUatCompletionStatus'] == 'required_not_generated'
+    assert item['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert item['sourceReviewStatus']['controlledUatCompletionRequiredCount'] == 1
+    assert item['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert item['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['retained-export-owner-declared']['status'] == 'pass'
+    assert checks['retained-export-request-reference-declared']['status'] == 'pass'
+    assert checks['retention-store-reference-declared']['status'] == 'pass'
+    assert checks['export-rbac-review-reference-declared']['status'] == 'pass'
+    assert checks['checksum-manifest-reference-declared']['status'] == 'pass'
+    assert checks['retained-artifact-read-disabled']['status'] == 'blocked'
+    assert checks['retained-evidence-export-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_retained_evidence_export_review_accepts_metadata_but_blocks_export(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/retained-evidence-export-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'exportOwner': 'evidence-owner',
+                             'exportRequestRef': 'private-change/EXPORT-1001',
+                             'retentionStoreRef': 'private-retention/native-foundation',
+                             'rbacReviewRef': 'private-rbac/native-foundation-export',
+                             'checksumManifestRef': 'private-hashes/native-foundation-export'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canExportRetainedEvidence'] is False
+    assert body['canGenerateZip'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['reviewMetadata']['exportOwner'] == 'evidence-owner'
+    assert body['reviewMetadata']['exportRequestRef'] == 'private-change/EXPORT-1001'
+    assert body['reviewMetadata']['retentionStoreRef'] == 'private-retention/native-foundation'
+    assert body['reviewMetadata']['rbacReviewRef'] == 'private-rbac/native-foundation-export'
+    assert body['reviewMetadata']['checksumManifestRef'] == 'private-hashes/native-foundation-export'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['output-evidence-prerequisite-artifacts-reviewed']['status'] == 'pass'
+    assert checks['adapter-command-invocation-source-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-completion-required']['status'] == 'pass'
+    assert checks['retained-export-owner-declared']['status'] == 'pass'
+    assert checks['retained-export-request-reference-declared']['status'] == 'pass'
+    assert checks['retention-store-reference-declared']['status'] == 'pass'
+    assert checks['export-rbac-review-reference-declared']['status'] == 'pass'
+    assert checks['checksum-manifest-reference-declared']['status'] == 'pass'
+    assert checks['retained-artifact-read-disabled']['status'] == 'blocked'
+    assert checks['retained-evidence-export-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_retained_evidence_export_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/retained-evidence-export-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canExportRetainedEvidence'] is False
+    assert body['canReadRetainedArtifacts'] is False
+    assert body['canGenerateZip'] is False
+    assert body['canWriteChecksumManifest'] is False
+    assert body['canPersistEvidence'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['exportReviewId'] is None
+    assert body['exportItems'] == []
+
+
+def test_native_foundation_approval_binding_review_blocks_without_ids(client, auth_headers):
+    resp = client.post('/api/native-foundation/approval-binding/review',
+                       json={'content': _native_foundation_intent_with_uat_evidence()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canExecute'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['plan-valid']['status'] == 'pass'
+    assert checks['approval-selected']['status'] == 'blocked'
+    assert checks['evidence-selected']['status'] == 'blocked'
+    assert checks['execution-still-disabled']['status'] == 'blocked'
+    assert any('Promote a specific mutating adapter' in action for action in body['requiredActions'])
+
+
+def test_native_foundation_approval_binding_review_binds_approved_request_and_evidence(client, auth_headers):
+    content = _native_foundation_intent_with_uat_evidence()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfbind_operator', 'operator')
+    operator_headers = _login(client, 'nfbind_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation plan approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    approve_resp = client.post(f'/api/approvals/{approval_id}/approve',
+                               json={'notes': 'approved for binding review only'},
+                               headers=auth_headers)
+    assert approve_resp.status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/approval-binding/review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['planId'] == plan['planId']
+    assert body['status'] == 'blocked'
+    assert body['canExecute'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-status-approved']['status'] == 'pass'
+    assert checks['approval-workflow-native-foundation']['status'] == 'pass'
+    assert checks['approval-config-hash-match']['status'] == 'pass'
+    assert checks['evidence-source-native-foundation']['status'] == 'pass'
+    assert checks['evidence-packet-plan-match']['status'] == 'pass'
+    assert checks['execution-still-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_approval_binding_review_blocks_mismatched_approval_and_evidence(client, auth_headers):
+    original = _native_foundation_intent_with_uat_evidence()
+    modified = original.replace('NODE-1', 'NODE-X', 1)
+    _create_user(client, auth_headers, 'nfbind_mismatch_operator', 'operator')
+    operator_headers = _login(client, 'nfbind_mismatch_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configContent': original,
+                                      'metadata': {'planId': 'native-foundation-stale'}},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved stale intent'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configContent': original},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/approval-binding/review',
+                       json={'content': modified,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    checks = {check['id']: check for check in resp.get_json()['checks']}
+    assert checks['approval-status-approved']['status'] == 'pass'
+    assert checks['approval-config-hash-match']['status'] == 'blocked'
+    assert checks['evidence-packet-plan-match']['status'] == 'blocked'
+
+
+def test_native_foundation_approval_binding_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/approval-binding/review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canExecute'] is False
+    assert body['checks'][0]['id'] == 'plan-valid'
+
+
+def test_native_foundation_execution_admission_review_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/admission-review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canStartExecution'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['selectedClusterCount'] == 1
+    assert body['summary']['packetGateSummaryAvailable'] is False
+    assert body['summary']['controlledUatCompletionGateAvailable'] is False
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is False
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert body['packetGateSummary'] == {}
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-readiness-reviewed']['status'] == 'pass'
+    assert checks['adapter-readiness-reviewed']['status'] == 'pass'
+    assert checks['deployment-policy-reviewed']['status'] == 'pass'
+    assert checks['approval-binding-reviewed']['status'] == 'blocked'
+    assert checks['review-packet-output-export-gates-reviewed']['status'] == 'blocked'
+    assert checks['review-packet-controlled-uat-completion-gate-reviewed']['status'] == 'blocked'
+    assert checks['review-packet-auth-persistence-completion-gate-reviewed']['status'] == 'blocked'
+    assert checks['execution-adapter-disabled']['status'] == 'blocked'
+    assert body['admissionDecisions'][0]['canStartExecution'] is False
+    assert body['admissionDecisions'][0]['packetGateSummary'] == {}
+    assert 'Review-packet output/export gate summary is missing.' in body['admissionDecisions'][0]['blockedReasons']
+    assert 'Review-packet controlled UAT completion gate summary is missing.' in body['admissionDecisions'][0]['blockedReasons']
+
+
+def test_native_foundation_execution_admission_review_binds_approval_and_evidence_but_blocks_adapter(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfadmit_operator', 'operator')
+    operator_headers = _login(client, 'nfadmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation execution admission approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create',
+                             'siteName': 'site-a',
+                             'clusterName': 'hci-cluster-a'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['phase'] == 'hci_cluster_create'
+    assert body['summary']['selectedClusterCount'] == 1
+    assert body['summary']['admissionDecisionCount'] == 1
+    assert body['summary']['packetGateSummaryAvailable'] is True
+    assert body['summary']['controlledUatCompletionGateAvailable'] is True
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is True
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == body['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert body['canStartExecution'] is False
+    assert body['packetGateSummary']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['packetGateSummary']['retainedEvidenceExportStatus'] == 'blocked'
+    assert body['packetGateSummary']['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert body['packetGateSummary']['controlledUatCompletionStatus'] == 'blocked'
+    assert body['packetGateSummary']['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert body['packetGateSummary']['controlledUatCompletionRequiredCount'] > 0
+    assert body['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert body['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert body['packetGateSummary']['canMarkUatComplete'] is False
+    assert body['packetGateSummary']['canCaptureCommandOutput'] is False
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-readiness-reviewed']['status'] == 'pass'
+    assert checks['adapter-readiness-reviewed']['status'] == 'pass'
+    assert checks['deployment-policy-reviewed']['status'] == 'pass'
+    assert checks['approval-binding-reviewed']['status'] == 'pass'
+    assert checks['review-packet-output-export-gates-reviewed']['status'] == 'pass'
+    assert checks['review-packet-controlled-uat-completion-gate-reviewed']['status'] == 'pass'
+    assert checks['review-packet-auth-persistence-completion-gate-reviewed']['status'] == 'pass'
+    assert checks['execution-adapter-disabled']['status'] == 'blocked'
+    decision = body['admissionDecisions'][0]
+    assert decision['siteName'] == 'site-a'
+    assert decision['clusterName'] == 'hci-cluster-a'
+    assert decision['status'] == 'blocked'
+    assert decision['mutatingActionsEnabled'] is False
+    assert decision['packetGateSummary']['controlledUatCompletionStatus'] == 'blocked'
+    assert decision['packetGateSummary']['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert decision['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert decision['packetGateSummary']['canExportRetainedEvidence'] is False
+    assert 'Native Foundation execution adapter is disabled.' in decision['blockedReasons']
+
+
+def test_native_foundation_execution_admission_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/admission-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canStartExecution'] is False
+    assert body['admissionDecisions'] == []
+
+
+def test_native_foundation_execution_adapter_contract_declares_request_envelope_but_blocks_loading(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/adapter-contract',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canLoadAdapter'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['adapterRequestCount'] == 1
+    assert body['summary']['packetGateSummaryAvailable'] is False
+    assert body['summary']['controlledUatCompletionGateBoundCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateBoundCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] is None
+    request = body['adapterRequests'][0]
+    assert request['requestId'].startswith('native-foundation-adapter-request-')
+    assert request['requiredBindings']['planId'] == body['planId']
+    assert request['requiredBindings']['intentSha256'] == body['intentSha256']
+    assert request['requiredBindings']['checkpointId'].startswith('native-foundation-checkpoint-')
+    assert request['canLoadAdapter'] is False
+    assert request['mutatingActionsEnabled'] is False
+    assert request['packetGateSummary'] == {}
+    assert request['controlledUatCompletionGateAvailable'] is False
+    assert request['controlledUatCompletionStatus'] is None
+    assert request['controlledUatCompletionRequiredCount'] == 0
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is False
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert request['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert 'adapter-audit-log.jsonl' in request['evidenceOutputs']
+    assert 'redacted-execution-evidence.zip' in request['evidenceOutputs']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['plan-hash-bound']['status'] == 'pass'
+    assert checks['checkpoint-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gate-bound']['status'] == 'blocked'
+    assert checks['auth-persistence-completion-gate-bound']['status'] == 'blocked'
+    assert checks['adapter-loading-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_adapter_contract_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfcontract_operator', 'operator')
+    operator_headers = _login(client, 'nfcontract_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter contract approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for adapter contract review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured adapter contract review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/adapter-contract',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['packetGateSummaryAvailable'] is True
+    assert body['summary']['controlledUatCompletionGateBoundCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateBoundCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == body['adapterRequests'][0]['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    request = body['adapterRequests'][0]
+    assert request['requiredBindings']['approvalId'] == approval_id
+    assert request['requiredBindings']['evidenceId'] == evidence_id
+    assert request['packetGateSummary']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert request['packetGateSummary']['retainedEvidenceExportStatus'] == 'blocked'
+    assert request['packetGateSummary']['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert request['controlledUatCompletionGateAvailable'] is True
+    assert request['controlledUatCompletionStatus'] == 'blocked'
+    assert request['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert request['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is True
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == request['packetGateSummary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert request['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert request['canMarkUatComplete'] is False
+    assert request['packetGateSummary']['canCaptureCommandOutput'] is False
+    assert request['packetGateSummary']['canExportRetainedEvidence'] is False
+    assert request['packetGateSummary']['canSubmitMutatingJob'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['controlled-uat-completion-gate-bound']['status'] == 'pass'
+    assert checks['auth-persistence-completion-gate-bound']['status'] == 'pass'
+
+
+def test_native_foundation_execution_adapter_contract_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/adapter-contract',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canLoadAdapter'] is False
+    assert body['adapterRequests'] == []
+
+
+def test_native_foundation_execution_request_review_builds_submission_object_but_blocks_job(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/request-review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canSubmitExecution'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['executionRequestCount'] == 1
+    assert body['summary']['submittedExecutionCount'] == 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] is None
+    assert body['sourceReviews']['controlledUatCompletionStatus'] is None
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    request = body['executionRequest']
+    assert request['requestId'].startswith('native-foundation-execution-request-')
+    assert request['submitted'] is False
+    assert request['jobId'] is None
+    assert request['queueName'] is None
+    assert request['adapterRequestIds']
+    assert request['adapterRequestGateSummary']
+    assert all(value == {} for value in request['adapterRequestGateSummary'].values())
+    assert request['controlledUatCompletionGateBoundCount'] == 0
+    assert request['controlledUatCompletionRequiredCount'] == 0
+    assert request['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in request['controlledUatCompletionGateSummary'].values())
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateBoundCount'] == 0
+    assert request['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateSummary']
+    assert all(value['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is False for value in request['executionAuthorizationPersistenceControlledUatCompletionGateSummary'].values())
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['adapter-requests-present']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['auth-persistence-completion-gates-bound']['status'] == 'blocked'
+    assert checks['job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_request_review_carries_adapter_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrequest_operator', 'operator')
+    operator_headers = _login(client, 'nfrequest_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation execution request approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for request review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured execution request review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/request-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 1
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    request = body['executionRequest']
+    assert request['approvalId'] == approval_id
+    assert request['evidenceId'] == evidence_id
+    adapter_request_id = request['adapterRequestIds'][0]
+    gate_summary = request['adapterRequestGateSummary'][adapter_request_id]
+    completion_gate = request['controlledUatCompletionGateSummary'][adapter_request_id]
+    auth_completion_gate = request['executionAuthorizationPersistenceControlledUatCompletionGateSummary'][adapter_request_id]
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == gate_summary['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert request['controlledUatCompletionGateBoundCount'] == 1
+    assert request['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert request['executionAuthorizationPersistenceControlledUatCompletionGateBoundCount'] == 1
+    assert request['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert gate_summary['adapterOutputEvidenceStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert gate_summary['canCaptureCommandOutput'] is False
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert completion_gate['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert completion_gate['canMarkUatComplete'] is False
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is True
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == gate_summary['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    assert gate_summary['canExportRetainedEvidence'] is False
+    assert gate_summary['canSubmitMutatingJob'] is False
+    assert request['submitted'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['auth-persistence-completion-gates-bound']['status'] == 'pass'
+
+
+def test_native_foundation_execution_request_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/request-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canSubmitExecution'] is False
+    assert body['executionRequest'] is None
+
+
+def test_native_foundation_dry_run_ledger_records_graph_steps_but_blocks_execution(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/dry-run-ledger',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canExecuteDryRun'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['ledgerId'].startswith('native-foundation-dry-run-ledger-')
+    assert body['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert body['jobStateId'].startswith('native-foundation-job-state-')
+    assert body['summary']['ledgerEntryCount'] == len(body['ledgerEntries'])
+    assert body['summary']['executedStepCount'] == 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['ledgerEntryGateSummaryCount'] == 0
+    assert body['summary']['mutatingOperationPlannedCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] is None
+    assert len({entry['adapterRequestId'] for entry in body['ledgerEntries']}) >= 2
+    first = body['ledgerEntries'][0]
+    assert first['sequence'] == 1
+    assert first['ledgerState'] == 'recorded_not_executed'
+    assert first['executionMode'] == 'dry_run_review'
+    assert first['canExecuteStep'] is False
+    assert first['mutatingActionsEnabled'] is False
+    assert first['packetGateSummary'] == {}
+    assert first['expectedEvidenceOutputs']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-request-reviewed']['status'] == 'pass'
+    assert checks['execution-graph-reviewed']['status'] == 'pass'
+    assert checks['adapter-request-coverage']['status'] == 'pass'
+    assert checks['dry-run-only']['status'] == 'pass'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_dry_run_ledger_carries_adapter_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfledger_operator', 'operator')
+    operator_headers = _login(client, 'nfledger_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation dry-run ledger approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for dry-run ledger review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured dry-run ledger review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/dry-run-ledger',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['ledgerEntryGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    entries_with_gate = [entry for entry in body['ledgerEntries'] if entry['packetGateSummary']]
+    assert entries_with_gate
+    assert entries_with_gate[0]['packetGateSummary']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert entries_with_gate[0]['packetGateSummary']['retainedEvidenceExportStatus'] == 'blocked'
+    assert entries_with_gate[0]['packetGateSummary']['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert entries_with_gate[0]['packetGateSummary']['canCaptureCommandOutput'] is False
+    assert entries_with_gate[0]['packetGateSummary']['canExportRetainedEvidence'] is False
+    assert entries_with_gate[0]['canExecuteStep'] is False
+
+
+def test_native_foundation_dry_run_ledger_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/dry-run-ledger',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canExecuteDryRun'] is False
+    assert body['ledgerId'] is None
+    assert body['ledgerEntries'] == []
+
+
+def test_native_foundation_execution_permit_review_blocks_without_binding(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/permit-review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canIssuePermit'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    permit = body['executionPermit']
+    assert permit['permitId'].startswith('native-foundation-execution-permit-')
+    assert permit['issued'] is False
+    assert permit['submitted'] is False
+    assert permit['targetExecutionStatus'] == 'not_permitted'
+    assert permit['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert permit['dryRunLedgerId'].startswith('native-foundation-dry-run-ledger-')
+    assert permit['jobStateId'].startswith('native-foundation-job-state-')
+    assert permit['adapterRequestIds']
+    assert permit['adapterRequestGateSummary']
+    assert all(value == {} for value in permit['adapterRequestGateSummary'].values())
+    assert permit['ledgerEntryGateSummaryCount'] == 0
+    assert permit['registryEntryIds']
+    assert 'retained-evidence-export-review.json' in permit['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in permit['requiredReviews']
+    assert permit['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert permit['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert permit['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert permit['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['summary']['permitCount'] == 1
+    assert body['summary']['issuedPermitCount'] == 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['ledgerEntryGateSummaryCount'] == 0
+    assert body['summary']['requiredReviewArtifactCount'] == 8
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-binding-reviewed']['status'] == 'blocked'
+    assert checks['execution-request-reviewed']['status'] == 'blocked'
+    assert checks['dry-run-ledger-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-bound']['status'] == 'blocked'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['adapter-enablements-reviewed']['status'] == 'pass'
+    assert checks['execution-permit-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_permit_review_binds_package_but_blocks_issuance(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfpermit_operator', 'operator')
+    operator_headers = _login(client, 'nfpermit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation permit review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for permit review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured permit review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/permit-review',
+                       json={'content': content,
+                             'phase': 'hci_cluster_create',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['canIssuePermit'] is False
+    assert body['executionPermit']['approvalId'] == approval_id
+    assert body['executionPermit']['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['ledgerEntryGateSummaryCount'] > 0
+    permit = body['executionPermit']
+    assert permit['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert permit['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert permit['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    adapter_request_id = permit['adapterRequestIds'][0]
+    gate_summary = permit['adapterRequestGateSummary'][adapter_request_id]
+    assert gate_summary['adapterOutputEvidenceStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert gate_summary['canCaptureCommandOutput'] is False
+    assert gate_summary['canExportRetainedEvidence'] is False
+    assert permit['ledgerEntryGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-binding-reviewed']['status'] == 'pass'
+    assert checks['admission-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-bound']['status'] == 'pass'
+    assert checks['recovery-plan-reviewed']['status'] == 'pass'
+    assert checks['job-state-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['execution-permit-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_permit_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/permit-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canIssuePermit'] is False
+    assert body['executionPermit'] is None
+
+
+def test_native_foundation_execution_lock_plan_declares_locks_but_acquires_none(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/lock-plan',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAcquireLocks'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['lockPlanId'].startswith('native-foundation-lock-plan-')
+    assert body['permitId'].startswith('native-foundation-execution-permit-')
+    assert body['ledgerId'].startswith('native-foundation-dry-run-ledger-')
+    assert body['summary']['lockRequestCount'] == len(body['lockRequests'])
+    assert body['summary']['acquiredLockCount'] == 0
+    assert body['summary']['siteLockCount'] >= 2
+    assert body['summary']['clusterLockCount'] >= 2
+    assert body['summary']['adapterLockCount'] >= 2
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['ledgerEntryGateSummaryCount'] == 0
+    assert body['summary']['requiredReviewArtifactCount'] >= 8
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    scopes = {item['scope'] for item in body['lockRequests']}
+    assert {'orchestration', 'site', 'cluster', 'adapter'} <= scopes
+    assert all(item['acquired'] is False for item in body['lockRequests'])
+    assert all(item['canAcquire'] is False for item in body['lockRequests'])
+    adapter_lock = next(item for item in body['lockRequests'] if item['scope'] == 'adapter')
+    assert adapter_lock['metadata']['adapterRequestGateSummary']
+    assert all(value == {} for value in adapter_lock['metadata']['adapterRequestGateSummary'].values())
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['lock-targets-declared']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['packet-gate-summary-bound']['status'] == 'blocked'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['locks-not-acquired']['status'] == 'pass'
+    assert checks['lock-acquisition-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_lock_plan_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nflock_operator', 'operator')
+    operator_headers = _login(client, 'nflock_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation lock plan approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for lock plan review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured lock plan review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/lock-plan',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['ledgerEntryGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    adapter_locks = [item for item in body['lockRequests'] if item['scope'] == 'adapter']
+    assert adapter_locks
+    gate_summaries = [
+        summary
+        for lock in adapter_locks
+        for summary in lock['metadata']['adapterRequestGateSummary'].values()
+        if summary
+    ]
+    assert gate_summaries
+    assert gate_summaries[0]['adapterOutputEvidenceStatus'] == 'blocked'
+    assert gate_summaries[0]['retainedEvidenceExportStatus'] == 'blocked'
+    assert gate_summaries[0]['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert gate_summaries[0]['canCaptureCommandOutput'] is False
+    assert gate_summaries[0]['canExportRetainedEvidence'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-permit-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-bound']['status'] == 'pass'
+    assert checks['lock-acquisition-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_lock_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/lock-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canAcquireLocks'] is False
+    assert body['lockPlanId'] is None
+    assert body['lockRequests'] == []
+
+
+def test_native_foundation_execution_audit_plan_declares_events_but_persists_none(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/audit-plan',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistAuditTrail'] is False
+    assert body['canExportRetainedEvidence'] is False
+    assert body['auditPlanId'].startswith('native-foundation-audit-plan-')
+    assert body['permitId'].startswith('native-foundation-execution-permit-')
+    assert body['lockPlanId'].startswith('native-foundation-lock-plan-')
+    assert body['ledgerId'].startswith('native-foundation-dry-run-ledger-')
+    assert body['summary']['auditEventCount'] == len(body['auditEvents'])
+    assert body['summary']['persistedAuditEventCount'] == 0
+    assert body['summary']['packetGateSummaryAuditEventCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['summary']['retentionArtifactCount'] == len(body['retentionArtifacts'])
+    assert body['summary']['persistedRetentionArtifactCount'] == 0
+    assert all(event['persisted'] is False for event in body['auditEvents'])
+    assert all(artifact['persisted'] is False for artifact in body['retentionArtifacts'])
+    event_types = {event['eventType'] for event in body['auditEvents']}
+    assert 'native_foundation_step_recorded' in event_types
+    assert 'native_foundation_permit_reviewed' in event_types
+    assert 'native_foundation_packet_gate_summary_reviewed' in event_types
+    assert 'native_foundation_retained_evidence_export_prerequisite_reviewed' in event_types
+    assert 'native_foundation_secret_audit_persistence_reviewed' in event_types
+    packet_event = next(event for event in body['auditEvents']
+                        if event['eventType'] == 'native_foundation_packet_gate_summary_reviewed')
+    assert packet_event['adapterRequestGateSummaryCount'] == 0
+    assert packet_event['ledgerEntryGateSummaryCount'] == 0
+    assert packet_event['adapterRequestGateSummary']
+    assert all(value == {} for value in packet_event['adapterRequestGateSummary'].values())
+    step_events = [event for event in body['auditEvents']
+                   if event['eventType'] == 'native_foundation_step_recorded']
+    assert step_events
+    assert all(event['packetGateSummary'] == {} for event in step_events)
+    artifacts = {artifact['name'] for artifact in body['retentionArtifacts']}
+    assert {
+        'audit-log.jsonl',
+        'redacted-execution-evidence.zip',
+        'retained-evidence-export-review.json',
+        'secret-audit-persistence-review.json',
+        'SHA256SUMS',
+    } <= artifacts
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-permit-reviewed']['status'] == 'pass'
+    assert checks['lock-plan-reviewed']['status'] == 'pass'
+    assert checks['dry-run-ledger-reviewed']['status'] == 'pass'
+    assert checks['job-state-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['audit-events-declared']['status'] == 'pass'
+    assert checks['retention-artifacts-declared']['status'] == 'pass'
+    assert checks['audit-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_audit_plan_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfaudit_operator', 'operator')
+    operator_headers = _login(client, 'nfaudit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation audit plan approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for audit plan review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured audit plan review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/audit-plan',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistAuditTrail'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['ledgerEntryGateSummaryCount'] > 0
+    assert body['summary']['packetGateSummaryAuditEventCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert all(event['persisted'] is False for event in body['auditEvents'])
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    packet_event = next(event for event in body['auditEvents']
+                        if event['eventType'] == 'native_foundation_packet_gate_summary_reviewed')
+    assert packet_event['adapterRequestGateSummaryCount'] == 1
+    assert packet_event['ledgerEntryGateSummaryCount'] > 0
+    adapter_request_id, gate_summary = next(
+        (request_id, summary)
+        for request_id, summary in packet_event['adapterRequestGateSummary'].items()
+        if summary
+    )
+    assert adapter_request_id.startswith('native-foundation-adapter-request-')
+    assert gate_summary['adapterOutputEvidenceStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert gate_summary['canCaptureCommandOutput'] is False
+    assert gate_summary['canExportRetainedEvidence'] is False
+    step_gate_summaries = [
+        event['packetGateSummary']
+        for event in body['auditEvents']
+        if event['eventType'] == 'native_foundation_step_recorded' and event['packetGateSummary']
+    ]
+    assert step_gate_summaries
+    assert step_gate_summaries[0]['adapterOutputEvidenceStatus'] == 'blocked'
+    assert step_gate_summaries[0]['retainedEvidenceExportStatus'] == 'blocked'
+    assert step_gate_summaries[0]['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert step_gate_summaries[0]['canCaptureCommandOutput'] is False
+    assert step_gate_summaries[0]['canExportRetainedEvidence'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['audit-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_audit_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/audit-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPersistAuditTrail'] is False
+    assert body['auditPlanId'] is None
+    assert body['auditEvents'] == []
+    assert body['retentionArtifacts'] == []
+
+
+def test_native_foundation_execution_retention_plan_declares_backup_restore_but_persists_none(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/retention-plan',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistRetentionArtifacts'] is False
+    assert body['canRunBackupRestore'] is False
+    assert body['canExportRetainedEvidence'] is False
+    assert body['retentionPlanId'].startswith('native-foundation-retention-plan-')
+    assert body['auditPlanId'].startswith('native-foundation-audit-plan-')
+    assert body['summary']['retentionPolicyCount'] == len(body['retentionPolicies'])
+    assert body['summary']['persistedRetentionPolicyCount'] == 0
+    assert body['summary']['backupTargetCount'] == len(body['backupTargets'])
+    assert body['summary']['backupCreatedCount'] == 0
+    assert body['summary']['restoreRehearsalCheckCount'] == len(body['restoreRehearsalChecks'])
+    assert body['summary']['restoreTestedCount'] == 0
+    assert body['summary']['packetGateSummaryAuditEventCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert all(policy['persisted'] is False for policy in body['retentionPolicies'])
+    assert all(target['backupCreated'] is False for target in body['backupTargets'])
+    assert all(target['restoreTested'] is False for target in body['backupTargets'])
+    policy_ids = {policy['policyId'] for policy in body['retentionPolicies']}
+    assert {
+        'native-foundation-audit-events',
+        'native-foundation-execution-history',
+        'native-foundation-redacted-evidence',
+        'native-foundation-review-packet',
+    } <= policy_ids
+    backup_names = {target['artifactName'] for target in body['backupTargets']}
+    assert {
+        'audit-log.jsonl',
+        'redacted-execution-evidence.zip',
+        'retained-evidence-export-review.json',
+        'secret-audit-persistence-review.json',
+        'SHA256SUMS',
+    } <= backup_names
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-audit-plan-reviewed']['status'] == 'pass'
+    assert checks['job-state-reviewed']['status'] == 'pass'
+    assert checks['recovery-plan-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['retention-policies-declared']['status'] == 'pass'
+    assert checks['backup-targets-declared']['status'] == 'pass'
+    assert checks['restore-rehearsal-declared']['status'] == 'pass'
+    assert checks['retention-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_retention_plan_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfretention_operator', 'operator')
+    operator_headers = _login(client, 'nfretention_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation retention plan approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for retention plan review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured retention plan review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/retention-plan',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistRetentionArtifacts'] is False
+    assert body['canRunBackupRestore'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['ledgerEntryGateSummaryCount'] > 0
+    assert body['summary']['packetGateSummaryAuditEventCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-audit-plan-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['retention-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_retention_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/retention-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPersistRetentionArtifacts'] is False
+    assert body['canRunBackupRestore'] is False
+    assert body['retentionPlanId'] is None
+    assert body['retentionPolicies'] == []
+    assert body['backupTargets'] == []
+    assert body['restoreRehearsalChecks'] == []
+
+
+def test_native_foundation_runner_readiness_declares_final_blockers(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/runner-readiness',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canStartRunner'] is False
+    assert body['runnerReadinessId'].startswith('native-foundation-runner-readiness-')
+    assert body['summary']['readinessItemCount'] == len(body['readinessItems'])
+    assert body['summary']['blockedReadinessItemCount'] > 0
+    assert body['summary']['runnerStartEnabledCount'] == 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['summary']['backupRestoreRecordCount'] > 0
+    assert body['summary']['restoreTestedCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['backupRestoreReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatEntryStatus'] == 'required_not_issued'
+    items = {item['id']: item for item in body['readinessItems']}
+    item_status = {item['id']: item['status'] for item in body['readinessItems']}
+    assert item_status['plan-bound'] == 'pass'
+    assert item_status['review-packet-bound'] == 'pass'
+    assert item_status['permit-issued'] == 'blocked'
+    assert item_status['locks-acquired'] == 'blocked'
+    assert item_status['audit-persistence-ready'] == 'blocked'
+    assert item_status['retention-backup-restore-ready'] == 'blocked'
+    assert items['retention-backup-restore-ready']['sourceArtifact'] == 'backup-restore-review.json'
+    assert items['retention-backup-restore-ready']['sourceId'].startswith('native-foundation-backup-restore-')
+    assert item_status['packet-gate-summary-reviewed'] == 'blocked'
+    assert item_status['retained-evidence-export-ready'] == 'blocked'
+    assert item_status['secret-store-binding-ready'] == 'blocked'
+    assert item_status['secret-audit-persistence-ready'] == 'blocked'
+    assert item_status['adapter-registry-enabled'] == 'blocked'
+    assert item_status['controlled-uat-entry-issued'] == 'blocked'
+    assert items['controlled-uat-entry-issued']['sourceArtifact'] == 'controlled-uat-entry-review.json'
+    assert item_status['controlled-uat-passed'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['runner-readiness-items-declared']['status'] == 'pass'
+    assert checks['required-runner-blockers-declared']['status'] == 'pass'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_runner_readiness_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrunner_operator', 'operator')
+    operator_headers = _login(client, 'nfrunner_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation runner readiness approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for runner readiness review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured runner readiness review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/runner-readiness',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canStartRunner'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['backupRestoreRecordCount'] > 0
+    assert body['summary']['restoreTestedCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['backupRestoreReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatEntryStatus'] == 'required_not_issued'
+    items = {item['id']: item for item in body['readinessItems']}
+    item_status = {item['id']: item['status'] for item in body['readinessItems']}
+    assert item_status['packet-gate-summary-reviewed'] == 'pass'
+    assert item_status['permit-issued'] == 'blocked'
+    assert item_status['retention-backup-restore-ready'] == 'blocked'
+    assert item_status['controlled-uat-entry-issued'] == 'blocked'
+    assert items['retention-backup-restore-ready']['sourceArtifact'] == 'backup-restore-review.json'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['runner-readiness-items-declared']['status'] == 'pass'
+    assert checks['required-runner-blockers-declared']['status'] == 'pass'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_runner_readiness_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/runner-readiness',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canStartRunner'] is False
+    assert body['runnerReadinessId'] is None
+    assert body['readinessItems'] == []
+
+
+def test_native_foundation_controlled_uat_entry_review_declares_entry_blockers(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/entry-review',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['uatEntryReviewId'].startswith('native-foundation-uat-entry-')
+    assert body['providerId'] == 'manual_static'
+    assert body['deploymentType'] == 'hci'
+    assert body['summary']['entryItemCount'] == len(body['entryItems'])
+    assert body['summary']['blockedEntryItemCount'] > 0
+    assert body['summary']['runnerBlockerCount'] > 0
+    assert body['summary']['controlledUatSignoffRequiredCount'] == 1
+    assert body['summary']['controlledUatSignoffPersistedCount'] == 0
+    assert body['summary']['controlledUatHardwareReservationRecordCount'] > 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'required_not_persisted'
+    assert body['sourceReviews']['controlledUatHardwareReservationStatus'] == 'blocked'
+    assert body['sourceReviews']['runnerSecretAuditPersistenceStatus'] == 'blocked'
+    items = {item['id']: item for item in body['entryItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert item_status['runner-readiness-reviewed'] == 'pass'
+    assert item_status['provider-deployment-scope-selected'] == 'pass'
+    assert item_status['uat-rehearsal-declared'] == 'pass'
+    assert items['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert item_status['controlled-uat-signoff-reviewed'] == 'blocked'
+    assert items['controlled-uat-hardware-reservation-reviewed']['sourceArtifact'] == 'controlled-uat-hardware-reservation-review.json'
+    assert item_status['controlled-uat-hardware-reservation-reviewed'] == 'pass'
+    assert item_status['secret-binding-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-prerequisite-reviewed'] == 'pass'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['audit-retention-reviewed'] == 'pass'
+    assert item_status['packet-gate-summary-reviewed'] == 'blocked'
+    assert item_status['adapter-registry-still-disabled'] == 'blocked'
+    assert item_status['controlled-uat-entry-disabled'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['uat-entry-items-declared']['status'] == 'pass'
+    assert checks['remaining-runner-blockers-declared']['status'] == 'pass'
+    assert checks['activation-disabled']['status'] == 'pass'
+    assert checks['registry-mutation-disabled']['status'] == 'pass'
+    assert checks['controlled-uat-hardware-reservation-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-entry-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_entry_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfentry_operator', 'operator')
+    operator_headers = _login(client, 'nfentry_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT entry approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT entry review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured UAT entry review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/entry-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canEnterControlledUat'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['controlledUatSignoffRequiredCount'] == 1
+    assert body['summary']['controlledUatSignoffPersistedCount'] == 0
+    assert body['summary']['controlledUatHardwareReservationRecordCount'] > 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'required_not_persisted'
+    assert body['sourceReviews']['controlledUatHardwareReservationStatus'] == 'blocked'
+    item_status = {item['id']: item['status'] for item in body['entryItems']}
+    assert item_status['approval-and-evidence-bound'] == 'pass'
+    assert item_status['controlled-uat-signoff-reviewed'] == 'blocked'
+    assert item_status['controlled-uat-hardware-reservation-reviewed'] == 'pass'
+    assert item_status['packet-gate-summary-reviewed'] == 'pass'
+    assert item_status['adapter-registry-still-disabled'] == 'blocked'
+    assert item_status['controlled-uat-entry-disabled'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['uat-entry-items-declared']['status'] == 'pass'
+    assert checks['remaining-runner-blockers-declared']['status'] == 'pass'
+    assert checks['controlled-uat-hardware-reservation-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-entry-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_entry_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/entry-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canEnterControlledUat'] is False
+    assert body['uatEntryReviewId'] is None
+    assert body['entryItems'] == []
+
+
+def test_native_foundation_controlled_uat_scope_review_declares_bounded_scope(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/scope-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAuthorizeScope'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canReserveHardware'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['uatScopeReviewId'].startswith('native-foundation-uat-scope-review-')
+    assert body['summary']['scopeRecordCount'] == len(body['scopeRecords'])
+    assert body['summary']['scopeRecordCount'] == 1
+    assert body['summary']['siteScopeCount'] == 1
+    assert body['summary']['nodeScopeCount'] > 0
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    scope = body['scopeRecords'][0]
+    assert scope['scopeId'].startswith('native-foundation-uat-scope-')
+    assert scope['providerId'] == 'manual_static'
+    assert scope['deploymentType'] == 'hci'
+    assert scope['canAuthorizeScope'] is False
+    assert scope['canEnterControlledUat'] is False
+    assert scope['mutatingActionsEnabled'] is False
+    assert 'native-foundation-review-packet.zip' in scope['requiredSanitizedArtifacts']
+    assert 'retained-evidence-export-review.json' in scope['requiredSanitizedArtifacts']
+    assert 'secret-audit-persistence-review.json' in scope['requiredSanitizedArtifacts']
+    assert 'redacted-provider-logs.txt' in scope['requiredSanitizedArtifacts']
+    assert 'retained-evidence-export-review.json' in scope['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in scope['requiredPrerequisiteArtifacts']
+    assert scope['sourceReviewStatus']['controlledUatEntryStatus'] == 'blocked'
+    assert scope['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert scope['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert scope['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert scope['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert scope['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert scope['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert scope['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['scope-records-declared']['status'] == 'pass'
+    assert checks['bounded-site-scope-declared']['status'] == 'pass'
+    assert checks['bounded-node-scope-declared']['status'] == 'pass'
+    assert checks['uat-entry-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['uat-scope-authorization-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_scope_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfscope_operator', 'operator')
+    operator_headers = _login(client, 'nfscope_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT scope approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT scope review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured UAT scope review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/scope-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canAuthorizeScope'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['scopeRecords']
+    scope = body['scopeRecords'][0]
+    assert scope['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert scope['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert scope['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert scope['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert scope['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['uat-entry-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['uat-scope-authorization-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_scope_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/scope-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canAuthorizeScope'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['uatScopeReviewId'] is None
+    assert body['scopeRecords'] == []
+
+
+def test_native_foundation_controlled_uat_runbook_review_requires_operator_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/runbook-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canApproveRunbook'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canStartRunner'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['uatRunbookReviewId'].startswith('native-foundation-uat-runbook-')
+    assert body['summary']['scopeRecordCount'] == 1
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['summary']['runbookStepCount'] == len(body['runbookSteps'])
+    assert body['summary']['blockedRunbookStepCount'] >= 3
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['operatorInputs']['rollbackOwner'] is None
+    assert body['operatorInputs']['uatWindow'] is None
+    assert body['operatorInputs']['evidenceRetentionTarget'] is None
+    steps = {step['id']: step for step in body['runbookSteps']}
+    assert steps['confirm-scope']['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert steps['confirm-scope']['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert steps['confirm-scope']['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert steps['confirm-scope']['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert steps['confirm-scope']['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert steps['confirm-scope']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert steps['confirm-scope']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert 'retained-evidence-export-review.json' in steps['confirm-prerequisite-artifacts']['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in steps['confirm-prerequisite-artifacts']['requiredPrerequisiteArtifacts']
+    assert steps['confirm-prerequisite-artifacts']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert steps['confirm-prerequisite-artifacts']['status'] == 'ready_for_review'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['uat-scope-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['uat-window-declared']['status'] == 'blocked'
+    assert checks['rollback-owner-declared']['status'] == 'blocked'
+    assert checks['evidence-retention-target-declared']['status'] == 'blocked'
+    assert checks['runbook-authorization-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runbook_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrunbook_operator', 'operator')
+    operator_headers = _login(client, 'nfrunbook_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT runbook approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT runbook review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured UAT runbook review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/runbook-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'rollbackOwner': 'platform-oncall',
+                             'uatWindow': '2026-09-15T20:00Z/2026-09-15T22:00Z',
+                             'evidenceRetentionTarget': 'private-evidence-vault/native-foundation/uat-001',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveRunbook'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    steps = {step['id']: step for step in body['runbookSteps']}
+    assert steps['confirm-scope']['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert steps['confirm-scope']['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert steps['confirm-scope']['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert steps['confirm-scope']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert steps['confirm-scope']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    assert steps['confirm-prerequisite-artifacts']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['uat-window-declared']['status'] == 'pass'
+    assert checks['rollback-owner-declared']['status'] == 'pass'
+    assert checks['evidence-retention-target-declared']['status'] == 'pass'
+    assert checks['runbook-authorization-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runbook_review_accepts_metadata_but_blocks_approval(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/runbook-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'rollbackOwner': 'platform-oncall',
+                             'uatWindow': '2026-09-15T20:00Z/2026-09-15T22:00Z',
+                             'evidenceRetentionTarget': 'private-evidence-vault/native-foundation/uat-001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveRunbook'] is False
+    assert body['operatorInputs']['rollbackOwner'] == 'platform-oncall'
+    assert body['operatorInputs']['uatWindow'] == '2026-09-15T20:00Z/2026-09-15T22:00Z'
+    assert body['operatorInputs']['evidenceRetentionTarget'] == 'private-evidence-vault/native-foundation/uat-001'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['uat-window-declared']['status'] == 'pass'
+    assert checks['rollback-owner-declared']['status'] == 'pass'
+    assert checks['evidence-retention-target-declared']['status'] == 'pass'
+    assert checks['runbook-authorization-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runbook_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/runbook-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canApproveRunbook'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['uatRunbookReviewId'] is None
+    assert body['runbookSteps'] == []
+
+
+def test_native_foundation_controlled_uat_security_review_requires_reviewer_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/security-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canApproveSecurity'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canPersistSignoff'] is False
+    assert body['canEnableAdapters'] is False
+    assert body['canResolveSecrets'] is False
+    assert body['canStartRunner'] is False
+    assert body['uatSecurityReviewId'].startswith('native-foundation-uat-security-')
+    assert body['summary']['scopeRecordCount'] == 1
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['summary']['securityItemCount'] == len(body['securityItems'])
+    assert body['summary']['blockedSecurityItemCount'] >= 3
+    assert body['summary']['secretValueExposureCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['reviewMetadata']['securityReviewer'] is None
+    assert body['reviewMetadata']['securityReviewRef'] is None
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['security-items-declared']['status'] == 'pass'
+    assert checks['secret-values-not-exposed']['status'] == 'pass'
+    assert checks['adapter-registry-disabled']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-security-approval-disabled']['status'] == 'blocked'
+    items = {item['id']: item for item in body['securityItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert 'retained-evidence-export-review.json' in items['prerequisite-artifacts-reviewed']['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in items['prerequisite-artifacts-reviewed']['requiredPrerequisiteArtifacts']
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert items['runbook-reviewed']['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert items['runbook-reviewed']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert item_status['prerequisite-artifacts-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-reviewed'] == 'pass'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['packet-gate-summary-reviewed'] == 'blocked'
+    assert item_status['security-reviewer-declared'] == 'blocked'
+    assert item_status['security-review-reference-declared'] == 'blocked'
+    assert item_status['security-approval-disabled'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_security_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfsecurity_operator', 'operator')
+    operator_headers = _login(client, 'nfsecurity_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT security approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT security review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured UAT security review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/security-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'securityReviewer': 'security-lead',
+                             'securityReviewRef': 'private-security-review/SR-1001',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveSecurity'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    items = {item['id']: item for item in body['securityItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert items['bounded-scope-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert items['runbook-reviewed']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    assert items['prerequisite-artifacts-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert item_status['packet-gate-summary-reviewed'] == 'pass'
+    assert item_status['security-reviewer-declared'] == 'pass'
+    assert item_status['security-review-reference-declared'] == 'pass'
+    assert item_status['security-approval-disabled'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-security-approval-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_security_review_accepts_metadata_but_blocks_approval(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/security-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'securityReviewer': 'security-lead',
+                             'securityReviewRef': 'private-security-review/SR-1001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveSecurity'] is False
+    assert body['reviewMetadata']['securityReviewer'] == 'security-lead'
+    assert body['reviewMetadata']['securityReviewRef'] == 'private-security-review/SR-1001'
+    item_status = {item['id']: item['status'] for item in body['securityItems']}
+    assert item_status['prerequisite-artifacts-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-reviewed'] == 'pass'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['security-reviewer-declared'] == 'pass'
+    assert item_status['security-review-reference-declared'] == 'pass'
+    assert item_status['security-approval-disabled'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_security_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/security-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canApproveSecurity'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['uatSecurityReviewId'] is None
+    assert body['securityItems'] == []
+
+
+def test_native_foundation_controlled_uat_operations_review_requires_operations_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/operations-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canApproveOperations'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canReserveWindow'] is False
+    assert body['canPersistTicket'] is False
+    assert body['canPersistSignoff'] is False
+    assert body['canAcquireLocks'] is False
+    assert body['canStartRunner'] is False
+    assert body['uatOperationsReviewId'].startswith('native-foundation-uat-operations-')
+    assert body['summary']['operationsItemCount'] == len(body['operationsItems'])
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['blockedOperationsItemCount'] >= 4
+    assert body['summary']['recoveryActionCount'] > 0
+    assert body['summary']['backupTargetCount'] > 0
+    assert body['summary']['lockRequestCount'] > 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['reviewMetadata']['operationsOwner'] is None
+    assert body['reviewMetadata']['maintenanceTicket'] is None
+    assert body['reviewMetadata']['backupEvidenceRef'] is None
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['operations-items-declared']['status'] == 'pass'
+    assert checks['audit-plan-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['lock-acquisition-disabled']['status'] == 'blocked'
+    assert checks['controlled-uat-operations-approval-disabled']['status'] == 'blocked'
+    items = {item['id']: item for item in body['operationsItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert 'retained-evidence-export-review.json' in items['prerequisite-artifacts-reviewed']['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in items['prerequisite-artifacts-reviewed']['requiredPrerequisiteArtifacts']
+    assert items['runbook-reviewed']['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert items['runbook-reviewed']['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert items['runbook-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert items['security-reviewed']['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert items['security-reviewed']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert item_status['prerequisite-artifacts-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-reviewed'] == 'pass'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['packet-gate-summary-reviewed'] == 'blocked'
+    assert item_status['operations-owner-declared'] == 'blocked'
+    assert item_status['maintenance-ticket-declared'] == 'blocked'
+    assert item_status['backup-evidence-reference-declared'] == 'blocked'
+    assert item_status['operations-approval-disabled'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_operations_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfoperations_operator', 'operator')
+    operator_headers = _login(client, 'nfoperations_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT operations approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT operations review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured UAT operations review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/operations-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'operationsOwner': 'ops-lead',
+                             'maintenanceTicket': 'private-change/CHG-2001',
+                             'backupEvidenceRef': 'private-backup-evidence/BKP-2001',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveOperations'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    items = {item['id']: item for item in body['operationsItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert items['runbook-reviewed']['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert items['runbook-reviewed']['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert items['runbook-reviewed']['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert items['runbook-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert items['security-reviewed']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    assert items['prerequisite-artifacts-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert item_status['packet-gate-summary-reviewed'] == 'pass'
+    assert item_status['operations-owner-declared'] == 'pass'
+    assert item_status['maintenance-ticket-declared'] == 'pass'
+    assert item_status['backup-evidence-reference-declared'] == 'pass'
+    assert item_status['operations-approval-disabled'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-operations-approval-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_operations_review_accepts_metadata_but_blocks_approval(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/operations-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'operationsOwner': 'ops-lead',
+                             'maintenanceTicket': 'private-change/CHG-2001',
+                             'backupEvidenceRef': 'private-backup-evidence/BKP-2001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canApproveOperations'] is False
+    assert body['reviewMetadata']['operationsOwner'] == 'ops-lead'
+    assert body['reviewMetadata']['maintenanceTicket'] == 'private-change/CHG-2001'
+    assert body['reviewMetadata']['backupEvidenceRef'] == 'private-backup-evidence/BKP-2001'
+    item_status = {item['id']: item['status'] for item in body['operationsItems']}
+    assert item_status['prerequisite-artifacts-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-reviewed'] == 'pass'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['operations-owner-declared'] == 'pass'
+    assert item_status['maintenance-ticket-declared'] == 'pass'
+    assert item_status['backup-evidence-reference-declared'] == 'pass'
+    assert item_status['operations-approval-disabled'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_operations_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/operations-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canApproveOperations'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['uatOperationsReviewId'] is None
+    assert body['operationsItems'] == []
+
+
+def test_native_foundation_controlled_uat_signoff_review_requires_signoff_metadata(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/signoff-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistSignoff'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canIssueUatEntry'] is False
+    assert body['canEnableAdapters'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canStartRunner'] is False
+    assert body['uatSignoffReviewId'].startswith('native-foundation-uat-signoff-')
+    assert body['summary']['signoffItemCount'] == len(body['signoffItems'])
+    assert body['summary']['sourceReviewCount'] == 9
+    assert body['summary']['prerequisiteArtifactCount'] == 5
+    assert body['summary']['blockedSignoffItemCount'] >= 3
+    assert body['summary']['acceptedUatEvidenceCount'] == 0
+    assert body['summary']['missingUatEvidenceCount'] > 0
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    assert body['sourceReviews']['upstreamSecretAuditPersistenceStatus'] == 'blocked'
+    assert body['sourceReviews']['secretAuditPersistenceStatus'] == 'blocked'
+    assert body['reviewMetadata']['signoffOwner'] is None
+    assert body['reviewMetadata']['signoffRef'] is None
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['signoff-items-declared']['status'] == 'pass'
+    assert checks['uat-evidence-acceptance-ready']['status'] == 'blocked'
+    assert checks['retained-evidence-export-prerequisite-reviewed']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['adapter-loading-disabled']['status'] == 'blocked'
+    assert checks['controlled-uat-entry-issuance-disabled']['status'] == 'blocked'
+    assert checks['signoff-persistence-disabled']['status'] == 'blocked'
+    items = {item['id']: item for item in body['signoffItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert 'retained-evidence-export-review.json' in items['prerequisite-artifacts-reviewed']['requiredPrerequisiteArtifacts']
+    assert 'secret-audit-persistence-review.json' in items['prerequisite-artifacts-reviewed']['requiredPrerequisiteArtifacts']
+    assert items['scope-reviewed']['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert items['scope-reviewed']['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert items['scope-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert items['operations-reviewed']['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert items['operations-reviewed']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert item_status['scope-reviewed'] == 'pass'
+    assert item_status['runbook-reviewed'] == 'pass'
+    assert item_status['security-reviewed'] == 'pass'
+    assert item_status['operations-reviewed'] == 'pass'
+    assert item_status['prerequisite-artifacts-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-reviewed'] == 'pass'
+    assert item_status['uat-evidence-acceptance-reviewed'] == 'blocked'
+    assert item_status['adapter-allow-list-reviewed'] == 'pass'
+    assert item_status['secret-provider-contract-reviewed'] == 'pass'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['packet-gate-summary-reviewed'] == 'blocked'
+    assert item_status['signoff-owner-declared'] == 'blocked'
+    assert item_status['signoff-reference-declared'] == 'blocked'
+    assert item_status['signoff-persistence-disabled'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_signoff_review_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfsignoff_operator', 'operator')
+    operator_headers = _login(client, 'nfsignoff_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT signoff approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT signoff review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured UAT signoff review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/signoff-review',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'signoffOwner': 'uat-approver',
+                             'signoffRef': 'private-uat-signoff/UAT-3001',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistSignoff'] is False
+    assert body['canIssueUatEntry'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['acceptedUatEvidenceCount'] == body['summary']['requiredUatEvidenceCount']
+    assert body['summary']['missingUatEvidenceCount'] == 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'ready_for_review'
+    items = {item['id']: item for item in body['signoffItems']}
+    item_status = {item_id: item['status'] for item_id, item in items.items()}
+    assert items['scope-reviewed']['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert items['scope-reviewed']['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert items['runbook-reviewed']['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert items['security-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert items['operations-reviewed']['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    assert items['prerequisite-artifacts-reviewed']['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert item_status['uat-evidence-acceptance-reviewed'] == 'pass'
+    assert item_status['packet-gate-summary-reviewed'] == 'pass'
+    assert item_status['signoff-owner-declared'] == 'pass'
+    assert item_status['signoff-reference-declared'] == 'pass'
+    assert item_status['signoff-persistence-disabled'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['uat-evidence-acceptance-ready']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-entry-issuance-disabled']['status'] == 'blocked'
+    assert checks['signoff-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_signoff_review_accepts_metadata_but_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/signoff-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'signoffOwner': 'uat-approver',
+                             'signoffRef': 'private-uat-signoff/UAT-3001'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistSignoff'] is False
+    assert body['canIssueUatEntry'] is False
+    assert body['reviewMetadata']['signoffOwner'] == 'uat-approver'
+    assert body['reviewMetadata']['signoffRef'] == 'private-uat-signoff/UAT-3001'
+    item_status = {item['id']: item['status'] for item in body['signoffItems']}
+    assert item_status['prerequisite-artifacts-reviewed'] == 'pass'
+    assert item_status['retained-evidence-export-reviewed'] == 'pass'
+    assert item_status['uat-evidence-acceptance-reviewed'] == 'blocked'
+    assert item_status['secret-audit-persistence-reviewed'] == 'pass'
+    assert item_status['signoff-owner-declared'] == 'pass'
+    assert item_status['signoff-reference-declared'] == 'pass'
+    assert item_status['signoff-persistence-disabled'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_signoff_review_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/signoff-review',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPersistSignoff'] is False
+    assert body['canEnterControlledUat'] is False
+    assert body['canIssueUatEntry'] is False
+    assert body['uatSignoffReviewId'] is None
+    assert body['signoffItems'] == []
+
+
+def test_native_foundation_recovery_plan_declares_manual_actions_but_blocks_execution(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/recovery-plan',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canExecuteRecovery'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['failurePolicy'] == 'stop_site'
+    assert body['recoveryScope'] == 'current_site'
+    assert body['summary']['recoveryActionCount'] == 1
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] is None
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] is None
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] is None
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['adapterRequestGateSummaryCount'] == 0
+    assert body['sourceReviews']['stepAuditEventGateSummaryCount'] == 0
+    action = body['recoveryActions'][0]
+    assert action['requestId'].startswith('native-foundation-recovery-')
+    assert action['retryPolicy']['mode'] == 'manual_approval_required'
+    assert action['rollbackPolicy']['mode'] == 'manual_runbook_only'
+    assert action['canExecuteRecovery'] is False
+    assert action['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] is None
+    assert action['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert action['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert action['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert action['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert 'record_validation_evidence' in action['operatorActions']
+    assert 'retained-evidence-export-review.json' in action['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in action['requiredReviews']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-request-reviewed']['status'] == 'pass'
+    assert checks['failure-policy-reviewed']['status'] == 'pass'
+    assert checks['checkpoint-state-clear']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['recovery-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_recovery_plan_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrecovery_operator', 'operator')
+    operator_headers = _login(client, 'nfrecovery_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation recovery plan approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for recovery plan review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured recovery plan review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/recovery-plan',
+                       json={'content': content,
+                             'providerId': 'manual_static',
+                             'deploymentType': 'hci',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canExecuteRecovery'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterRequestGateSummaryCount'] == 1
+    assert body['sourceReviews']['stepAuditEventGateSummaryCount'] > 0
+    action = body['recoveryActions'][0]
+    assert action['canExecuteRecovery'] is False
+    assert action['mutatingActionsEnabled'] is False
+    assert action['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert action['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert action['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert action['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert action['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['recovery-actions-declared']['status'] == 'pass'
+    assert checks['recovery-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_recovery_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/recovery-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canExecuteRecovery'] is False
+    assert body['recoveryActions'] == []
+
+
+def test_native_foundation_job_state_plan_declares_state_model_but_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/job-state-plan',
+                       json={'content': _native_foundation_admission_ready_intent(),
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistJobState'] is False
+    assert body['canReplayJobState'] is False
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['summary']['stateTransitionCount'] == 10
+    assert body['summary']['persistedStateTransitionCount'] == 0
+    assert body['summary']['requiredReviewArtifactCount'] == 5
+    assert body['summary']['adapterRequestGateSummaryCount'] == 0
+    assert body['summary']['stepAuditEventGateSummaryCount'] == 0
+    record = body['jobStateRecord']
+    assert record['stateId'].startswith('native-foundation-job-state-')
+    assert record['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert record['checkpointId'].startswith('native-foundation-checkpoint-')
+    assert record['storageMode'] == 'review_only'
+    assert record['persistenceEnabled'] is False
+    assert record['replayEnabled'] is False
+    assert record['jobId'] is None
+    assert 'retained-evidence-export-review.json' in record['requiredReviews']
+    assert 'secret-audit-persistence-review.json' in record['requiredReviews']
+    assert record['sourceReviewStatus']['retainedEvidenceExportStatus'] == 'required_not_generated'
+    assert record['sourceReviewStatus']['secretAuditPersistenceStatus'] == 'blocked'
+    assert record['sourceReviewStatus']['adapterOutputEvidenceStatus'] is None
+    assert record['sourceReviewStatus']['adapterCommandInvocationStatus'] is None
+    assert record['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 0
+    assert record['sourceReviewStatus']['stepAuditEventGateSummaryCount'] == 0
+    assert record['adapterRequestGateSummary']
+    assert all(value == {} for value in record['adapterRequestGateSummary'].values())
+    states = {item['state']: item for item in record['stateTransitions']}
+    assert {'queued', 'running', 'completed'} <= set(states)
+    assert states['queued']['persisted'] is False
+    assert states['running']['persisted'] is False
+    assert states['completed']['persisted'] is False
+    assert 'job-state.json' in record['retentionArtifacts']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['execution-request-reviewed']['status'] == 'pass'
+    assert checks['checkpoint-bound']['status'] == 'pass'
+    assert checks['recovery-plan-reviewed']['status'] == 'pass'
+    assert checks['retained-evidence-export-prerequisite-declared']['status'] == 'pass'
+    assert checks['secret-audit-persistence-reviewed']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['state-transitions-declared']['status'] == 'pass'
+    assert checks['job-state-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_job_state_plan_carries_packet_gate_summary(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfjobstate_operator', 'operator')
+    operator_headers = _login(client, 'nfjobstate_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation job state approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for job state review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured job state review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/job-state-plan',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canPersistJobState'] is False
+    assert body['canReplayJobState'] is False
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterRequestGateSummaryCount'] == 1
+    assert body['sourceReviews']['stepAuditEventGateSummaryCount'] > 0
+    record = body['jobStateRecord']
+    assert record['persistenceEnabled'] is False
+    assert record['replayEnabled'] is False
+    assert record['sourceReviewStatus']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert record['sourceReviewStatus']['adapterCommandInvocationStatus'] == 'blocked'
+    assert record['sourceReviewStatus']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    assert record['sourceReviewStatus']['adapterRequestGateSummaryCount'] == 1
+    assert record['sourceReviewStatus']['stepAuditEventGateSummaryCount'] > 0
+    assert record['adapterRequestGateSummary']
+    gate_summary = next(value for value in record['adapterRequestGateSummary'].values() if value)
+    assert gate_summary['adapterOutputEvidenceStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportStatus'] == 'blocked'
+    assert gate_summary['retainedEvidenceExportPrerequisiteStatus'] == 'required_not_generated'
+    assert gate_summary['canCaptureCommandOutput'] is False
+    assert gate_summary['canExportRetainedEvidence'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['state-transitions-declared']['status'] == 'pass'
+    assert checks['job-state-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_job_state_plan_rejects_invalid_intent(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/job-state-plan',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert body['canPersistJobState'] is False
+    assert body['canReplayJobState'] is False
+    assert body['jobStateRecord'] is None
+
+
+def test_native_foundation_restart_resume_review_blocks_replay(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/restart-resume-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['canResumeAfterRestart'] is False
+    assert body['canReplayJobState'] is False
+    assert body['canRestoreCheckpoint'] is False
+    assert body['canAcquireReplayLocks'] is False
+    assert body['canStartRunner'] is False
+    assert body['restartResumeReviewId'].startswith('native-foundation-restart-resume-')
+    assert body['checkpointId'].startswith('native-foundation-checkpoint-')
+    assert body['jobStateId'].startswith('native-foundation-job-state-')
+    assert body['retentionPlanId'].startswith('native-foundation-retention-plan-')
+    assert body['auditPlanId'].startswith('native-foundation-audit-plan-')
+    assert body['lockPlanId'].startswith('native-foundation-lock-plan-')
+    assert body['schedulerReviewId'].startswith('native-foundation-deployment-scheduler-')
+    assert body['summary']['resumeRecordCount'] == 3
+    assert body['summary']['requiredRestartArtifactCount'] > 0
+    assert body['summary']['persistedStateTransitionCount'] == 0
+    assert 'job-state.json' in body['requiredRestartArtifacts']
+    assert 'checkpoint-state.json' in body['requiredRestartArtifacts']
+    assert 'audit-log.jsonl' in body['requiredRestartArtifacts']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['checkpoint-reviewed']['status'] == 'pass'
+    assert checks['job-state-reviewed']['status'] == 'pass'
+    assert checks['state-transitions-replayable']['status'] == 'pass'
+    assert checks['retention-plan-reviewed']['status'] == 'pass'
+    assert checks['audit-plan-reviewed']['status'] == 'pass'
+    assert checks['lock-plan-reviewed']['status'] == 'pass'
+    assert checks['scheduler-reviewed']['status'] == 'pass'
+    assert checks['restart-artifacts-declared']['status'] == 'pass'
+    assert checks['job-state-not-persisted']['status'] == 'blocked'
+    assert checks['restart-resume-replay-disabled']['status'] == 'blocked'
+    first = body['resumeRecords'][0]
+    assert first['resumeRecordId'].startswith('native-foundation-resume-record-')
+    assert first['replayMode'] == 'review_only'
+    assert first['canResumeCluster'] is False
+    assert first['canReplayJobState'] is False
+    assert first['mutatingActionsEnabled'] is False
+
+
+def test_native_foundation_restart_resume_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrestart_operator', 'operator')
+    operator_headers = _login(client, 'nfrestart_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation restart resume approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for restart resume review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured restart resume review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/restart-resume-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['resumeRecordCount'] == 1
+    assert body['sourceReviews']['executionRetentionPlanStatus'] == 'blocked'
+    assert body['sourceReviews']['deploymentSchedulerStatus'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['restart-artifacts-declared']['status'] == 'pass'
+    assert checks['restart-resume-replay-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_backup_restore_review_blocks_mutating_restore(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/backup-restore-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistRetentionArtifacts'] is False
+    assert body['canCreateBackups'] is False
+    assert body['canRestoreBackups'] is False
+    assert body['canRestoreCheckpoints'] is False
+    assert body['canReplayJobState'] is False
+    assert body['canStartRunner'] is False
+    assert body['backupRestoreReviewId'].startswith('native-foundation-backup-restore-')
+    assert body['retentionPlanId'].startswith('native-foundation-retention-plan-')
+    assert body['restartResumeReviewId'].startswith('native-foundation-restart-resume-')
+    assert body['checkpointId'].startswith('native-foundation-checkpoint-')
+    assert body['auditPlanId'].startswith('native-foundation-audit-plan-')
+    assert body['jobStateId'].startswith('native-foundation-job-state-')
+    assert body['summary']['backupRestoreRecordCount'] == len(body['backupRestoreRecords'])
+    assert body['summary']['backupRestoreRecordCount'] > 0
+    assert body['summary']['backupCreatedCount'] == 0
+    assert body['summary']['restoreTestedCount'] == 0
+    assert body['summary']['checkpointRestoreCount'] == 0
+    assert body['summary']['checkpointCount'] == 3
+    artifact_names = {record['artifactName'] for record in body['backupRestoreRecords']}
+    assert {'audit-log.jsonl', 'job-state.json', 'checkpoint-state.json', 'SHA256SUMS'} <= artifact_names
+    first = body['backupRestoreRecords'][0]
+    assert first['backupCreated'] is False
+    assert first['restoreTested'] is False
+    assert first['checkpointRestored'] is False
+    assert first['replayValidated'] is False
+    assert first['canCreateBackup'] is False
+    assert first['canRestoreBackup'] is False
+    assert first['canRestoreCheckpoint'] is False
+    assert first['canReplayJobState'] is False
+    assert first['mutatingActionsEnabled'] is False
+    assert 'restart-resume-review.json' in first['requiredReviews']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['retention-plan-reviewed']['status'] == 'pass'
+    assert checks['backup-targets-reviewed']['status'] == 'pass'
+    assert checks['restore-rehearsal-reviewed']['status'] == 'pass'
+    assert checks['restart-resume-reviewed']['status'] == 'pass'
+    assert checks['checkpoint-reviewed']['status'] == 'pass'
+    assert checks['audit-plan-reviewed']['status'] == 'pass'
+    assert checks['job-state-reviewed']['status'] == 'pass'
+    assert checks['artifact-persistence-disabled']['status'] == 'blocked'
+    assert checks['backup-creation-disabled']['status'] == 'blocked'
+    assert checks['restore-execution-disabled']['status'] == 'blocked'
+    assert checks['checkpoint-restore-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_backup_restore_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfbackup_operator', 'operator')
+    operator_headers = _login(client, 'nfbackup_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation backup restore approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for backup restore review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured backup restore review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/backup-restore-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['backupRestoreRecordCount'] > 0
+    assert body['summary']['restartReplayRecordCount'] == 1
+    assert body['sourceReviews']['executionRetentionPlanStatus'] == 'blocked'
+    assert body['sourceReviews']['restartResumeReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterRequestGateSummaryCount'] == 1
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['backup-targets-reviewed']['status'] == 'pass'
+    assert checks['backup-creation-disabled']['status'] == 'blocked'
+    assert checks['restore-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_mutating_enablement_review_blocks_execution(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/mutating-enablement-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canEnableMutatingExecution'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['canAdmitRuntime'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canHandoffCredentials'] is False
+    assert body['canInvokeAdapterCommands'] is False
+    assert body['canCaptureLiveOutput'] is False
+    assert body['canExportRetainedEvidence'] is False
+    assert body['canStartRunner'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert body['summary']['sourceReviewCount'] == 12
+    assert body['summary']['enablementItemCount'] == len(body['enablementItems'])
+    assert body['summary']['blockedEnablementItemCount'] > 0
+    assert body['summary']['executionAuthorizationRecordCount'] == 0
+    assert body['summary']['authorizedExecutionCount'] == 0
+    assert body['summary']['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert body['summary']['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert body['summary']['backupRestoreRecordCount'] > 0
+    assert body['summary']['restoreTestedCount'] == 0
+    assert body['summary']['mutatingJobSubmissionEnabledCount'] == 0
+    assert body['sourceReviews']['runnerReadinessStatus'] == 'blocked'
+    assert body['sourceReviews']['backupRestoreReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatExecutionAuthorizationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterRuntimeAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterExecutionPreflightStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterTargetConnectivityStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCredentialHandoffStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportReviewStatus'] == 'blocked'
+    items = {item['id']: item for item in body['enablementItems']}
+    assert items['runner-readiness-reviewed']['sourceArtifact'] == 'execution-runner-readiness.json'
+    assert items['backup-restore-reviewed']['sourceArtifact'] == 'backup-restore-review.json'
+    assert items['uat-evidence-acceptance-reviewed']['sourceArtifact'] == 'uat-evidence-acceptance-review.json'
+    assert items['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert items['controlled-uat-execution-authorization-reviewed']['sourceArtifact'] == 'controlled-uat-execution-authorization-review.json'
+    assert items['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert items['execution-authorization-carried-persistence-reviewed']['status'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in items['execution-authorization-carried-persistence-reviewed']['evidence']
+    assert items['controlled-uat-not-issued']['status'] == 'blocked'
+    assert items['execution-not-authorized']['status'] == 'blocked'
+    assert items['adapter-runtime-not-admitted']['status'] == 'blocked'
+    assert items['target-connectivity-not-opened']['status'] == 'blocked'
+    assert items['credentials-not-handed-off']['status'] == 'blocked'
+    assert items['adapter-command-not-invoked']['status'] == 'blocked'
+    assert items['runner-start-disabled']['status'] == 'blocked'
+    assert items['mutating-execution-disabled']['status'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['packet-gate-summary-reviewed']['status'] == 'blocked'
+    assert checks['controlled-uat-entry-disabled']['status'] == 'blocked'
+    assert checks['execution-authorization-disabled']['status'] == 'blocked'
+    assert checks['adapter-runtime-start-disabled']['status'] == 'blocked'
+    assert checks['target-access-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_mutating_enablement_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfmutating_operator', 'operator')
+    operator_headers = _login(client, 'nfmutating_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation mutating enablement approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for mutating enablement review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured mutating enablement review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/mutating-enablement-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['stepAuditEventGateSummaryCount'] > 0
+    assert body['summary']['executionAuthorizationRecordCount'] == 0
+    assert body['summary']['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert body['summary']['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert body['summary']['mutatingJobSubmissionEnabledCount'] == 0
+    items = {item['id']: item for item in body['enablementItems']}
+    assert items['execution-authorization-carried-persistence-reviewed']['status'] == 'blocked'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['packet-gate-summary-reviewed']['status'] == 'pass'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_request_persistence_admission_review_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/request-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['deploymentExecutionEnabled'] is False
+    assert body['canAdmitExecutionRequestPersistence'] is False
+    assert body['canPersistExecutionRequest'] is False
+    assert body['canSubmitExecution'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['jobEnqueued'] is False
+    assert body['requestPersistenceAdmissionReviewId'].startswith('native-foundation-execution-request-persistence-admission-review-')
+    assert body['summary']['requestPersistenceAdmissionRecordCount'] == len(body['requestPersistenceAdmissionRecords'])
+    assert body['summary']['requestPersistenceAdmissionRecordCount'] == 1
+    assert body['summary']['blockedRequestPersistenceAdmissionRecordCount'] == 1
+    assert body['summary']['requestPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionRequestPersistedCount'] == 0
+    assert body['summary']['submittedExecutionCount'] == 0
+    assert body['summary']['enqueuedJobCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['executionRequestStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionStatus'] is None
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['execution-request-reviewed']['sourceArtifact'] == 'execution-request-review.json'
+    record = body['requestPersistenceAdmissionRecords'][0]
+    assert record['requestPersistenceAdmissionRecordId'].startswith('native-foundation-execution-request-persistence-admission-')
+    assert record['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert record['requestPersistenceAdmitted'] is False
+    assert record['executionRequestPersisted'] is False
+    assert record['submitted'] is False
+    assert record['jobEnqueued'] is False
+    assert record['mutatingJobSubmitted'] is False
+    assert record['canPersistExecutionRequest'] is False
+    assert record['canSubmitExecution'] is False
+    assert record['canSubmitMutatingJob'] is False
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert record['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert record['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert record['executionAuthorizationPersistenceControlledUatCompletionGateSummary']
+    assert all(value['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is False for value in record['executionAuthorizationPersistenceControlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to this execution request.' in record['blockedReasons']
+    assert 'Execution authorization persistence completion gate summary is not bound to this execution request.' in record['blockedReasons']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['request-persistence-admission-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['auth-persistence-completion-gates-bound']['status'] == 'blocked'
+    assert checks['request-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['execution-request-persistence-disabled']['status'] == 'blocked'
+    assert checks['job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_request_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrequestpersist_operator', 'operator')
+    operator_headers = _login(client, 'nfrequestpersist_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation request persistence admission approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for request persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured request persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/request-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['requestPersistenceAdmissionRecordCount'] == 1
+    assert body['summary']['requestPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionRequestPersistedCount'] == 0
+    assert body['sourceReviews']['controlledUatCompletionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert body['sourceReviews']['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    record = body['requestPersistenceAdmissionRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert record['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 1
+    assert record['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    auth_completion_gate = next(iter(record['executionAuthorizationPersistenceControlledUatCompletionGateSummary'].values()))
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount']
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert completion_gate['canMarkUatComplete'] is False
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is True
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['auth-persistence-completion-gates-bound']['status'] == 'pass'
+    assert checks['request-persistence-admission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_submission_review_blocks_job_enqueue(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/submission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['deploymentExecutionEnabled'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canHandoffCredentials'] is False
+    assert body['canInvokeAdapterCommands'] is False
+    assert body['jobEnqueued'] is False
+    assert body['submissionReviewId'].startswith('native-foundation-execution-submission-')
+    assert body['summary']['sourceReviewCount'] == 5
+    assert body['summary']['requestPersistenceAdmissionRecordCount'] == 1
+    assert body['summary']['requestPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionRequestPersistedCount'] == 0
+    assert body['summary']['submissionRecordCount'] == len(body['submissionRecords'])
+    assert body['summary']['submissionRecordCount'] > 0
+    assert body['summary']['blockedSubmissionRecordCount'] == body['summary']['submissionRecordCount']
+    assert body['summary']['enqueuedJobCount'] == 0
+    assert body['summary']['deploymentExecutionEnabledCount'] == 0
+    assert body['summary']['mutatingJobSubmissionEnabledCount'] == 0
+    assert body['summary']['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert body['summary']['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['mutatingEnablementStatus'] == 'blocked'
+    assert body['sourceReviews']['executionRequestPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['deploymentSchedulerStatus'] == 'blocked'
+    assert body['sourceReviews']['runnerReadinessStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatEntryStatus'] == 'blocked'
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['mutating-enablement-reviewed']['sourceArtifact'] == 'mutating-enablement-review.json'
+    assert artifacts['execution-request-persistence-admission-reviewed']['sourceArtifact'] == 'execution-request-persistence-admission-review.json'
+    assert artifacts['deployment-scheduler-reviewed']['sourceArtifact'] == 'deployment-scheduler-review.json'
+    assert artifacts['runner-readiness-reviewed']['sourceArtifact'] == 'execution-runner-readiness.json'
+    assert artifacts['controlled-uat-entry-reviewed']['sourceArtifact'] == 'controlled-uat-entry-review.json'
+    record = body['submissionRecords'][0]
+    assert record['jobEnqueued'] is False
+    assert record['submitted'] is False
+    assert record['canSubmitMutatingJob'] is False
+    assert record['deploymentExecutionEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert record['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert record['requestPersistenceAdmissionReviewId'].startswith('native-foundation-execution-request-persistence-admission-review-')
+    assert record['requestPersistenceAdmissionRecordId'].startswith('native-foundation-execution-request-persistence-admission-')
+    assert record['requestPersistenceAdmitted'] is False
+    assert record['executionRequestPersisted'] is False
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement review did not prove carried authorization persistence provenance.' in record['blockedReasons']
+    assert record['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 0
+    assert record['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert record['executionAuthorizationPersistenceControlledUatCompletionGateSummary']
+    assert all(value['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is False for value in record['executionAuthorizationPersistenceControlledUatCompletionGateSummary'].values())
+    assert 'Execution authorization persistence completion gate summary is not bound to this execution submission.' in record['blockedReasons']
+    assert record['runnerReadinessId'].startswith('native-foundation-runner-readiness-')
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['submission-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['auth-persistence-completion-gates-bound']['status'] == 'blocked'
+    assert checks['mutating-submission-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+    assert checks['target-mutation-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_submission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfsubmit_operator', 'operator')
+    operator_headers = _login(client, 'nfsubmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation submission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for submission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured submission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/submission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['requestPersistenceAdmissionRecordCount'] == 1
+    assert body['summary']['requestPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionRequestPersistedCount'] == 0
+    assert body['summary']['submissionRecordCount'] > 0
+    assert body['summary']['enqueuedJobCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 1
+    assert body['sourceReviews']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['auth-persistence-completion-gates-bound']['status'] == 'pass'
+    assert checks['mutating-submission-disabled']['status'] == 'blocked'
+    record = body['submissionRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    assert record['executionAuthorizationPersistenceControlledUatCompletionGateSummaryCount'] == 1
+    assert record['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    auth_completion_gate = next(iter(record['executionAuthorizationPersistenceControlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionGateAvailable'] is True
+    assert auth_completion_gate['executionAuthorizationPersistenceControlledUatCompletionRequiredCount'] == body['summary']['executionAuthorizationPersistenceControlledUatCompletionRequiredCount']
+
+
+def test_native_foundation_execution_submission_persistence_admission_review_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/submission-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['deploymentExecutionEnabled'] is False
+    assert body['canAdmitExecutionSubmissionPersistence'] is False
+    assert body['canPersistExecutionSubmission'] is False
+    assert body['canPersistQueueRecords'] is False
+    assert body['canEnqueueJobs'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canStartRunner'] is False
+    assert body['submissionPersistenceAdmissionReviewId'].startswith('native-foundation-execution-submission-persistence-admission-review-')
+    assert body['summary']['submissionPersistenceAdmissionRecordCount'] == len(body['submissionPersistenceAdmissionRecords'])
+    assert body['summary']['submissionPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedSubmissionPersistenceAdmissionRecordCount'] == body['summary']['submissionPersistenceAdmissionRecordCount']
+    assert body['summary']['submissionPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionSubmissionPersistedCount'] == 0
+    assert body['summary']['queueRecordPersistedCount'] == 0
+    assert body['summary']['enqueuedJobCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['executionSubmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['executionRequestPersistenceAdmissionStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['execution-submission-reviewed']['sourceArtifact'] == 'execution-submission-review.json'
+    record = body['submissionPersistenceAdmissionRecords'][0]
+    assert record['submissionPersistenceAdmissionRecordId'].startswith('native-foundation-execution-submission-persistence-admission-')
+    assert record['submissionRecordId'].startswith('native-foundation-submission-record-')
+    assert record['requestPersistenceAdmissionRecordId'].startswith('native-foundation-execution-request-persistence-admission-')
+    assert record['executionRequestId'].startswith('native-foundation-execution-request-')
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Mutating enablement carried authorization persistence gate is not passing for submission persistence admission.' in record['blockedReasons']
+    assert 'Controlled UAT completion gate summary is not bound to this submission persistence admission.' in record['blockedReasons']
+    assert record['submissionPersistenceAdmitted'] is False
+    assert record['executionSubmissionPersisted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['jobEnqueued'] is False
+    assert record['mutatingJobSubmitted'] is False
+    assert record['canPersistExecutionSubmission'] is False
+    assert record['canPersistQueueRecords'] is False
+    assert record['canEnqueueJobs'] is False
+    assert record['canSubmitMutatingJob'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['submission-persistence-admission-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['submission-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['execution-submission-persistence-disabled']['status'] == 'blocked'
+    assert checks['queue-persistence-disabled']['status'] == 'blocked'
+    assert checks['job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_submission_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfsubmitpersist_operator', 'operator')
+    operator_headers = _login(client, 'nfsubmitpersist_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation submission persistence admission approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for submission persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured submission persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/submission-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['submissionPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['submissionPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionSubmissionPersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['submission-persistence-admission-disabled']['status'] == 'blocked'
+    record = body['submissionPersistenceAdmissionRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+
+
+def test_native_foundation_queue_persistence_review_blocks_durable_records(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/queue-persistence-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistQueueRecords'] is False
+    assert body['canReplayQueueRecords'] is False
+    assert body['canEnqueueJobs'] is False
+    assert body['canPersistCheckpoints'] is False
+    assert body['canPersistAuditEvents'] is False
+    assert body['canPersistRetentionRecords'] is False
+    assert body['queuePersistenceReviewId'].startswith('native-foundation-queue-persistence-')
+    assert body['summary']['sourceReviewCount'] == 5
+    assert body['summary']['submissionPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['submissionPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionSubmissionPersistedCount'] == 0
+    assert body['summary']['queueRecordCount'] == len(body['queueRecords'])
+    assert body['summary']['queueRecordCount'] > 0
+    assert body['summary']['blockedQueueRecordCount'] == body['summary']['queueRecordCount']
+    assert body['summary']['persistedQueueRecordCount'] == 0
+    assert body['summary']['persistedCheckpointCount'] == 0
+    assert body['summary']['persistedAuditEventCount'] == 0
+    assert body['summary']['persistedRetentionRecordCount'] == 0
+    assert body['summary']['replayRegisteredCount'] == 0
+    assert body['summary']['queuePersistenceEnabledCount'] == 0
+    assert body['summary']['queueReplayEnabledCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['executionSubmissionPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['jobStatePlanStatus'] == 'blocked'
+    assert body['sourceReviews']['executionAuditPlanStatus'] == 'blocked'
+    assert body['sourceReviews']['executionRetentionPlanStatus'] == 'blocked'
+    assert body['sourceReviews']['restartResumeReviewStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['execution-submission-persistence-admission-reviewed']['sourceArtifact'] == 'execution-submission-persistence-admission-review.json'
+    assert artifacts['job-state-reviewed']['sourceArtifact'] == 'job-state-plan.json'
+    assert artifacts['execution-audit-reviewed']['sourceArtifact'] == 'execution-audit-plan.json'
+    assert artifacts['execution-retention-reviewed']['sourceArtifact'] == 'execution-retention-plan.json'
+    assert artifacts['restart-resume-reviewed']['sourceArtifact'] == 'restart-resume-review.json'
+    record = body['queueRecords'][0]
+    assert record['recordPersisted'] is False
+    assert record['checkpointPersisted'] is False
+    assert record['auditPersisted'] is False
+    assert record['retentionPersisted'] is False
+    assert record['replayRegistered'] is False
+    assert record['jobEnqueued'] is False
+    assert record['persistenceEnabled'] is False
+    assert record['replayEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert record['submissionRecordId'].startswith('native-foundation-submission-record-')
+    assert record['submissionPersistenceAdmissionReviewId'].startswith('native-foundation-execution-submission-persistence-admission-review-')
+    assert record['submissionPersistenceAdmissionRecordId'].startswith('native-foundation-execution-submission-persistence-admission-')
+    assert record['requestPersistenceAdmissionReviewId'].startswith('native-foundation-execution-request-persistence-admission-review-')
+    assert record['requestPersistenceAdmissionRecordId'].startswith('native-foundation-execution-request-persistence-admission-')
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Mutating enablement carried authorization persistence gate is not passing for queue persistence.' in record['blockedReasons']
+    assert 'Controlled UAT completion gate summary is not bound to queue persistence.' in record['blockedReasons']
+    assert record['jobStateId'].startswith('native-foundation-job-state-')
+    assert 'queued' in record['requiredStateTransitions']
+    assert 'checkpoint_written' in record['requiredStateTransitions']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['queue-records-declared']['status'] == 'pass'
+    assert checks['job-state-transitions-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['queue-persistence-disabled']['status'] == 'blocked'
+    assert checks['queue-replay-disabled']['status'] == 'blocked'
+    assert checks['job-enqueue-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_queue_persistence_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfqueue_operator', 'operator')
+    operator_headers = _login(client, 'nfqueue_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation queue persistence review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for queue persistence review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured queue persistence review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/queue-persistence-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['submissionPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['submissionPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionSubmissionPersistedCount'] == 0
+    assert body['summary']['queueRecordCount'] > 0
+    assert body['summary']['persistedQueueRecordCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['queue-persistence-disabled']['status'] == 'blocked'
+    record = body['queueRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+
+
+def test_native_foundation_queue_persistence_admission_review_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/queue-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitQueuePersistence'] is False
+    assert body['canPersistQueueRecords'] is False
+    assert body['canReplayQueueRecords'] is False
+    assert body['canEnqueueJobs'] is False
+    assert body['canPersistJobState'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 1
+    assert body['summary']['queueRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] == len(body['queuePersistenceAdmissionRecords'])
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedQueuePersistenceAdmissionRecordCount'] == body['summary']['queuePersistenceAdmissionRecordCount']
+    assert body['summary']['queuePersistenceAdmittedCount'] == 0
+    assert body['summary']['queueRecordPersistedCount'] == 0
+    assert body['summary']['checkpointPersistedCount'] == 0
+    assert body['summary']['auditPersistedCount'] == 0
+    assert body['summary']['retentionPersistedCount'] == 0
+    assert body['summary']['replayRegisteredCount'] == 0
+    assert body['summary']['jobEnqueuedCount'] == 0
+    assert body['summary']['jobStatePersistedCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['queuePersistenceStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['queue-persistence-reviewed']['sourceArtifact'] == 'queue-persistence-review.json'
+    record = body['queuePersistenceAdmissionRecords'][0]
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['queuePersistenceReviewId'].startswith('native-foundation-queue-persistence-')
+    assert record['queueRecordId'].startswith('native-foundation-queue-record-')
+    assert record['submissionPersistenceAdmissionReviewId'].startswith('native-foundation-execution-submission-persistence-admission-review-')
+    assert record['submissionPersistenceAdmissionRecordId'].startswith('native-foundation-execution-submission-persistence-admission-')
+    assert record['requestPersistenceAdmissionReviewId'].startswith('native-foundation-execution-request-persistence-admission-review-')
+    assert record['requestPersistenceAdmissionRecordId'].startswith('native-foundation-execution-request-persistence-admission-')
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for queue persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to queue persistence admission.' in record['blockedReasons']
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['checkpointPersisted'] is False
+    assert record['auditPersisted'] is False
+    assert record['retentionPersisted'] is False
+    assert record['replayRegistered'] is False
+    assert record['jobEnqueued'] is False
+    assert record['jobStatePersisted'] is False
+    assert record['mutatingJobSubmitted'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['queue-persistence-admission-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['queue-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['queue-record-persistence-disabled']['status'] == 'blocked'
+    assert checks['job-enqueue-disabled']['status'] == 'blocked'
+    assert checks['job-state-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_queue_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfqueueadmit_operator', 'operator')
+    operator_headers = _login(client, 'nfqueueadmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation queue persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for queue persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured queue persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/queue-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmittedCount'] == 0
+    assert body['summary']['queueRecordPersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['queuePersistenceAdmissionRecords'][0]
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for queue persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['queue-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['queue-record-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_authorization_persistence_admission_review_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/authorization-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitExecutionAuthorizationPersistence'] is False
+    assert body['canPersistExecutionAuthorization'] is False
+    assert body['canPersistJobState'] is False
+    assert body['canPersistMutatingJob'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canInvokeAdapterCommands'] is False
+    assert body['canCallFoundation'] is False
+    assert body['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 3
+    assert body['summary']['authorizationPersistenceAdmissionRecordCount'] == len(body['authorizationPersistenceAdmissionRecords'])
+    assert body['summary']['authorizationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedAuthorizationPersistenceAdmissionRecordCount'] == body['summary']['authorizationPersistenceAdmissionRecordCount']
+    assert body['summary']['executionAuthorizationRecordCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionAuthorizationPersistedCount'] == 0
+    assert body['summary']['jobStatePersistedCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatExecutionAuthorizationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatRunnerPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['executionRequestPersistenceAdmissionStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-execution-authorization-reviewed']['sourceArtifact'] == 'controlled-uat-execution-authorization-review.json'
+    assert artifacts['controlled-uat-runner-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-runner-persistence-admission-review.json'
+    assert artifacts['execution-request-persistence-admission-reviewed']['sourceArtifact'] == 'execution-request-persistence-admission-review.json'
+    record = body['authorizationPersistenceAdmissionRecords'][0]
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] is None
+    assert record['executionAuthorizationCarriedPersistenceGateEvidence'] is None
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['queuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert 'Controlled UAT execution authorization record is missing.' in record['blockedReasons']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for execution authorization persistence admission.' in record['blockedReasons']
+    assert 'Controlled UAT completion gate summary is not bound to execution authorization persistence admission.' in record['blockedReasons']
+    assert record['executionAuthorizationPersistenceAdmitted'] is False
+    assert record['executionAuthorizationPersisted'] is False
+    assert record['jobStatePersisted'] is False
+    assert record['mutatingJobPersisted'] is False
+    assert record['mutatingJobSubmitted'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'persist_execution_authorization' in record['blockedMutatingOperations']
+    assert 'submit_mutating_native_foundation_job' in record['blockedMutatingOperations']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['execution-authorization-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['authorization-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['execution-authorization-persistence-disabled']['status'] == 'blocked'
+    assert checks['job-persistence-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_execution_authorization_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfauthpersist_operator', 'operator')
+    operator_headers = _login(client, 'nfauthpersist_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation authorization persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for authorization persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured authorization persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/authorization-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['authorizationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceAdmittedCount'] == 0
+    assert body['summary']['executionAuthorizationPersistedCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['authorization-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['execution-authorization-persistence-disabled']['status'] == 'blocked'
+    record = body['authorizationPersistenceAdmissionRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+
+
+def test_native_foundation_job_persistence_admission_review_blocks_durable_writes(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/job-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canPersistJobState'] is False
+    assert body['canPersistExecutionAuthorization'] is False
+    assert body['canPersistQueueRecords'] is False
+    assert body['canPersistCheckpoints'] is False
+    assert body['canPersistAuditEvents'] is False
+    assert body['canPersistRetentionRecords'] is False
+    assert body['canRegisterReplay'] is False
+    assert body['canPersistMutatingJob'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['persistenceAdmissionReviewId'].startswith('native-foundation-job-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 5
+    assert body['summary']['persistenceAdmissionRecordCount'] == len(body['persistenceAdmissionRecords'])
+    assert body['summary']['persistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedPersistenceAdmissionRecordCount'] == body['summary']['persistenceAdmissionRecordCount']
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmittedCount'] == 0
+    assert body['summary']['authorizationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['executionAuthorizationPersistenceAdmittedCount'] == 0
+    assert body['summary']['jobStatePersistedCount'] == 0
+    assert body['summary']['executionAuthorizationPersistedCount'] == 0
+    assert body['summary']['queueRecordPersistedCount'] == 0
+    assert body['summary']['checkpointPersistedCount'] == 0
+    assert body['summary']['auditPersistedCount'] == 0
+    assert body['summary']['retentionPersistedCount'] == 0
+    assert body['summary']['replayRegisteredCount'] == 0
+    assert body['summary']['mutatingJobPersistedCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['queuePersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['executionAuthorizationPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['jobStatePlanStatus'] == 'blocked'
+    assert body['sourceReviews']['restartResumeReviewStatus'] == 'blocked'
+    assert body['sourceReviews']['backupRestoreReviewStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['queue-persistence-admission-reviewed']['sourceArtifact'] == 'queue-persistence-admission-review.json'
+    assert artifacts['execution-authorization-persistence-admission-reviewed']['sourceArtifact'] == 'execution-authorization-persistence-admission-review.json'
+    assert artifacts['job-state-reviewed']['sourceArtifact'] == 'job-state-plan.json'
+    assert artifacts['restart-resume-reviewed']['sourceArtifact'] == 'restart-resume-review.json'
+    assert artifacts['backup-restore-reviewed']['sourceArtifact'] == 'backup-restore-review.json'
+    record = body['persistenceAdmissionRecords'][0]
+    assert record['persistenceAdmissionRecordId'].startswith('native-foundation-job-persistence-admission-')
+    assert record['queueRecordId'].startswith('native-foundation-queue-record-')
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['jobStateId'].startswith('native-foundation-job-state-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for job persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to job persistence admission.' in record['blockedReasons']
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['jobStatePersisted'] is False
+    assert record['executionAuthorizationPersisted'] is False
+    assert record['checkpointPersisted'] is False
+    assert record['auditPersisted'] is False
+    assert record['retentionPersisted'] is False
+    assert record['replayRegistered'] is False
+    assert record['mutatingJobPersisted'] is False
+    assert record['mutatingJobSubmitted'] is False
+    assert record['persistenceAdmitted'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'persist_execution_authorization' in record['blockedMutatingOperations']
+    assert 'submit_mutating_native_foundation_job' in record['blockedMutatingOperations']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['queue-records-present']['status'] == 'pass'
+    assert checks['execution-authorization-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['job-state-persistence-disabled']['status'] == 'blocked'
+    assert checks['execution-authorization-persistence-disabled']['status'] == 'blocked'
+    assert checks['queue-replay-registration-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_job_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfpersist_operator', 'operator')
+    operator_headers = _login(client, 'nfpersist_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation job persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for job persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured job persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/job-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['persistenceAdmissionRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmittedCount'] == 0
+    assert body['summary']['jobStatePersistedCount'] == 0
+    assert body['summary']['executionAuthorizationPersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['job-state-persistence-disabled']['status'] == 'blocked'
+    assert checks['execution-authorization-persistence-disabled']['status'] == 'blocked'
+    record = body['persistenceAdmissionRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+
+
+def test_native_foundation_mutating_adapter_binding_review_blocks_adapter_execution(client, auth_headers):
+    resp = client.post('/api/native-foundation/execution/mutating-adapter-binding-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canBindMutatingAdapter'] is False
+    assert body['canPersistAdapterBinding'] is False
+    assert body['canLoadAdapters'] is False
+    assert body['canExecuteAdapter'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['canAdmitRuntime'] is False
+    assert body['canOpenTargetConnections'] is False
+    assert body['canHandoffCredentials'] is False
+    assert body['bindingReviewId'].startswith('native-foundation-mutating-adapter-binding-review-')
+    assert body['summary']['sourceReviewCount'] == 9
+    assert body['summary']['bindingRecordCount'] == len(body['bindingRecords'])
+    assert body['summary']['bindingRecordCount'] > 0
+    assert body['summary']['blockedBindingRecordCount'] == body['summary']['bindingRecordCount']
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['persistenceAdmissionRecordCount'] > 0
+    assert body['summary']['jobStatePersistedCount'] == 0
+    assert body['summary']['executionAuthorizationPersistedCount'] == 0
+    assert body['summary']['persistedBindingRecordCount'] == 0
+    assert body['summary']['adapterLoadedCount'] == 0
+    assert body['summary']['runtimeAdmittedCount'] == 0
+    assert body['summary']['credentialHandoffCount'] == 0
+    assert body['summary']['targetConnectionsOpenedCount'] == 0
+    assert body['summary']['adapterExecutedCount'] == 0
+    assert body['summary']['submittedJobCount'] == 0
+    assert body['summary']['mutatingAdapterBindingEnabledCount'] == 0
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmittedCount'] == 0
+    assert body['summary']['queueRecordPersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['providerOperationQueueAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    assert body['sourceReviews']['queuePersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['jobPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterActivationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterAllowListStatus'] == 'blocked'
+    assert body['sourceReviews']['runtimeAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['executionPreflightStatus'] == 'blocked'
+    assert body['sourceReviews']['targetConnectivityStatus'] == 'blocked'
+    assert body['sourceReviews']['credentialHandoffStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['provider-operation-queue-admission-reviewed']['sourceArtifact'] == 'provider-operation-queue-admission-review.json'
+    assert artifacts['queue-persistence-admission-reviewed']['sourceArtifact'] == 'queue-persistence-admission-review.json'
+    assert artifacts['job-persistence-admission-reviewed']['sourceArtifact'] == 'job-persistence-admission-review.json'
+    assert artifacts['adapter-activation-reviewed']['sourceArtifact'] == 'adapter-activation-review.json'
+    assert artifacts['adapter-allow-list-reviewed']['sourceArtifact'] == 'adapter-allow-list-review.json'
+    assert artifacts['runtime-admission-reviewed']['sourceArtifact'] == 'adapter-runtime-admission-review.json'
+    assert artifacts['execution-preflight-reviewed']['sourceArtifact'] == 'adapter-execution-preflight-review.json'
+    assert artifacts['target-connectivity-reviewed']['sourceArtifact'] == 'adapter-target-connectivity-review.json'
+    assert artifacts['credential-handoff-reviewed']['sourceArtifact'] == 'adapter-credential-handoff-review.json'
+    record = body['bindingRecords'][0]
+    assert record['bindingPersisted'] is False
+    assert record['adapterLoaded'] is False
+    assert record['runtimeAdmitted'] is False
+    assert record['credentialsHandedOff'] is False
+    assert record['targetConnectionsOpened'] is False
+    assert record['adapterExecuted'] is False
+    assert record['jobSubmitted'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert record['queueRecordId'].startswith('native-foundation-queue-record-')
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['persistenceAdmissionReviewId'].startswith('native-foundation-job-persistence-admission-review-')
+    assert record['persistenceAdmissionRecordId'].startswith('native-foundation-job-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for adapter binding.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to adapter binding.' in record['blockedReasons']
+    assert record['jobPersistenceAdmitted'] is False
+    assert record['activationRequestId'].startswith('native-foundation-adapter-activation-')
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['plan-hash-bound']['status'] == 'pass'
+    assert checks['job-persistence-admission-reviewed']['status'] == 'pass'
+    assert checks['job-persistence-disabled']['status'] == 'blocked'
+    assert checks['binding-records-declared']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['adapter-binding-persistence-disabled']['status'] == 'blocked'
+    assert checks['adapter-load-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_mutating_adapter_binding_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfbinding_operator', 'operator')
+    operator_headers = _login(client, 'nfbinding_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation adapter binding review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for adapter binding review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured adapter binding review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/mutating-adapter-binding-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['bindingRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['queuePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['queuePersistenceAdmittedCount'] == 0
+    assert body['summary']['queueRecordPersistedCount'] == 0
+    assert body['summary']['persistenceAdmissionRecordCount'] > 0
+    assert body['summary']['jobStatePersistedCount'] == 0
+    assert body['summary']['executionAuthorizationPersistedCount'] == 0
+    assert body['summary']['persistedBindingRecordCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['bindingRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for adapter binding.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['job-persistence-admission-reviewed']['status'] == 'pass'
+    assert checks['job-persistence-disabled']['status'] == 'blocked'
+    assert checks['adapter-binding-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_lane_selection_review_blocks_entry(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/lane-selection-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canSelectControlledUatLane'] is False
+    assert body['canPersistLaneSelection'] is False
+    assert body['canReserveHardware'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['canBindMutatingAdapter'] is False
+    assert body['laneSelectionReviewId'].startswith('native-foundation-controlled-uat-lane-selection-')
+    assert body['summary']['sourceReviewCount'] == 5
+    assert body['summary']['laneRecordCount'] == len(body['laneRecords'])
+    assert body['summary']['laneRecordCount'] > 0
+    assert body['summary']['blockedLaneRecordCount'] == body['summary']['laneRecordCount']
+    assert body['summary']['selectedLaneCount'] == 0
+    assert body['summary']['persistedLaneSelectionCount'] == 0
+    assert body['summary']['hardwareReservedCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['adapterBindingPersistedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['mutatingAdapterBindingStatus'] == 'blocked'
+    assert body['sourceReviews']['deploymentTypeSupportStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatScopeStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['mutating-adapter-binding-reviewed']['sourceArtifact'] == 'mutating-adapter-binding-review.json'
+    assert artifacts['deployment-type-support-reviewed']['sourceArtifact'] == 'deployment-type-support-review.json'
+    assert artifacts['controlled-uat-scope-reviewed']['sourceArtifact'] == 'controlled-uat-scope-review.json'
+    assert artifacts['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert artifacts['uat-evidence-acceptance-reviewed']['sourceArtifact'] == 'uat-evidence-acceptance-review.json'
+    record = body['laneRecords'][0]
+    assert record['selectedForControlledUat'] is False
+    assert record['selectionPersisted'] is False
+    assert record['hardwareReserved'] is False
+    assert record['uatEntryIssued'] is False
+    assert record['adapterBindingPersisted'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert record['bindingRecordId'].startswith('native-foundation-mutating-adapter-binding-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT lane selection.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT lane selection.' in record['blockedReasons']
+    assert record['jobPersistenceAdmitted'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['lane-records-declared']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['lane-selection-persistence-disabled']['status'] == 'blocked'
+    assert checks['uat-entry-issuance-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_lane_selection_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nflane_operator', 'operator')
+    operator_headers = _login(client, 'nflane_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT lane selection review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT lane selection review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT lane selection review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/lane-selection-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['laneRecordCount'] > 0
+    assert body['summary']['persistedLaneSelectionCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['laneRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT lane selection.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['lane-selection-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_lane_persistence_admission_review_blocks_hardware_admission(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/lane-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitLanePersistence'] is False
+    assert body['canPersistLaneSelection'] is False
+    assert body['canReserveHardware'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['canBindMutatingAdapter'] is False
+    assert body['lanePersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-lane-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 4
+    assert body['summary']['lanePersistenceAdmissionRecordCount'] == len(body['lanePersistenceAdmissionRecords'])
+    assert body['summary']['lanePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedLanePersistenceAdmissionRecordCount'] == body['summary']['lanePersistenceAdmissionRecordCount']
+    assert body['summary']['lanePersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedLaneSelectionCount'] == 0
+    assert body['summary']['hardwareReservationAdmittedCount'] == 0
+    assert body['summary']['hardwareReservedCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['adapterBindingPersistedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatLaneSelectionStatus'] == 'blocked'
+    assert body['sourceReviews']['jobPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['mutatingAdapterBindingStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatScopeStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-lane-selection-reviewed']['sourceArtifact'] == 'controlled-uat-lane-selection-review.json'
+    assert artifacts['job-persistence-admission-reviewed']['sourceArtifact'] == 'job-persistence-admission-review.json'
+    assert artifacts['mutating-adapter-binding-reviewed']['sourceArtifact'] == 'mutating-adapter-binding-review.json'
+    assert artifacts['controlled-uat-scope-reviewed']['sourceArtifact'] == 'controlled-uat-scope-review.json'
+    record = body['lanePersistenceAdmissionRecords'][0]
+    assert record['lanePersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-lane-persistence-admission-')
+    assert record['laneRecordId'].startswith('native-foundation-controlled-uat-lane-')
+    assert record['bindingRecordId'].startswith('native-foundation-mutating-adapter-binding-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['persistenceAdmissionRecordId'].startswith('native-foundation-job-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT lane persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to lane persistence admission.' in record['blockedReasons']
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['jobPersistenceAdmitted'] is False
+    assert record['adapterBindingPersisted'] is False
+    assert record['lanePersistenceAdmitted'] is False
+    assert record['laneSelectionPersisted'] is False
+    assert record['hardwareReservationAdmitted'] is False
+    assert record['hardwareReserved'] is False
+    assert record['uatEntryIssued'] is False
+    assert record['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['lane-records-present']['status'] == 'pass'
+    assert checks['job-persistence-admission-reviewed']['status'] == 'pass'
+    assert checks['adapter-binding-reviewed']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['lane-persistence-disabled']['status'] == 'blocked'
+    assert checks['hardware-reservation-admission-disabled']['status'] == 'blocked'
+    assert checks['uat-entry-issuance-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_lane_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nflaneadmit_operator', 'operator')
+    operator_headers = _login(client, 'nflaneadmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT lane persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT lane persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT lane persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/lane-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['lanePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['lanePersistenceAdmittedCount'] == 0
+    assert body['summary']['hardwareReservationAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['lanePersistenceAdmissionRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT lane persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['lane-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_hardware_reservation_review_blocks_reservation(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/hardware-reservation-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canReserveControlledUatHardware'] is False
+    assert body['canPersistHardwareReservation'] is False
+    assert body['canOpenMaintenanceWindow'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['canEnableAdapterExecution'] is False
+    assert body['hardwareReservationReviewId'].startswith('native-foundation-controlled-uat-hardware-reservation-review-')
+    assert body['summary']['sourceReviewCount'] == 6
+    assert body['summary']['reservationRecordCount'] == len(body['reservationRecords'])
+    assert body['summary']['reservationRecordCount'] > 0
+    assert body['summary']['blockedReservationRecordCount'] == body['summary']['reservationRecordCount']
+    assert body['summary']['lanePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['lanePersistenceAdmittedCount'] == 0
+    assert body['summary']['hardwareReservedCount'] == 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['adapterExecutionEnabledCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatLaneSelectionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatLanePersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['deploymentWindowReservationStatus'] == 'blocked'
+    assert body['sourceReviews']['deploymentSchedulerStatus'] == 'blocked'
+    assert body['sourceReviews']['executionLockPlanStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatOperationsStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-lane-selection-reviewed']['sourceArtifact'] == 'controlled-uat-lane-selection-review.json'
+    assert artifacts['controlled-uat-lane-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-lane-persistence-admission-review.json'
+    assert artifacts['deployment-window-reservation-reviewed']['sourceArtifact'] == 'deployment-window-reservation-review.json'
+    assert artifacts['deployment-scheduler-reviewed']['sourceArtifact'] == 'deployment-scheduler-review.json'
+    assert artifacts['execution-lock-plan-reviewed']['sourceArtifact'] == 'execution-lock-plan.json'
+    assert artifacts['controlled-uat-operations-reviewed']['sourceArtifact'] == 'controlled-uat-operations-review.json'
+    record = body['reservationRecords'][0]
+    assert record['hardwareReservationRecordId'].startswith('native-foundation-controlled-uat-hardware-reservation-')
+    assert record['laneRecordId'].startswith('native-foundation-controlled-uat-lane-')
+    assert record['lanePersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-lane-persistence-admission-review-')
+    assert record['lanePersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-lane-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT hardware reservation.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT hardware reservation.' in record['blockedReasons']
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['lanePersistenceAdmitted'] is False
+    assert record['deploymentWindowReservationIds']
+    assert record['lockRequestIds']
+    assert record['hardwareReservationPersisted'] is False
+    assert record['maintenanceWindowOpened'] is False
+    assert record['hardwareReserved'] is False
+    assert record['uatEntryIssued'] is False
+    assert record['adapterExecutionEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['controlled-uat-lane-records-declared']['status'] == 'pass'
+    assert checks['controlled-uat-lane-persistence-admission-reviewed']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['deployment-window-reservation-reviewed']['status'] == 'pass'
+    assert checks['execution-lock-plan-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['hardware-reservation-persistence-disabled']['status'] == 'blocked'
+    assert checks['maintenance-window-open-disabled']['status'] == 'blocked'
+    assert checks['uat-entry-issuance-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_hardware_reservation_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfreserve_operator', 'operator')
+    operator_headers = _login(client, 'nfreserve_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT hardware reservation review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT hardware reservation review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT hardware reservation review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/hardware-reservation-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['reservationRecordCount'] > 0
+    assert body['summary']['lanePersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['lanePersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['reservationRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT hardware reservation.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['hardware-reservation-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_reservation_persistence_admission_review_blocks_entry(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/reservation-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitReservationPersistence'] is False
+    assert body['canPersistHardwareReservation'] is False
+    assert body['canOpenMaintenanceWindow'] is False
+    assert body['canReserveControlledUatHardware'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['reservationPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-reservation-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 4
+    assert body['summary']['reservationPersistenceAdmissionRecordCount'] == len(body['reservationPersistenceAdmissionRecords'])
+    assert body['summary']['reservationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedReservationPersistenceAdmissionRecordCount'] == body['summary']['reservationPersistenceAdmissionRecordCount']
+    assert body['summary']['reservationPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['summary']['hardwareReservedCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatHardwareReservationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatOperationsStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-hardware-reservation-reviewed']['sourceArtifact'] == 'controlled-uat-hardware-reservation-review.json'
+    assert artifacts['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert artifacts['controlled-uat-operations-reviewed']['sourceArtifact'] == 'controlled-uat-operations-review.json'
+    assert artifacts['uat-evidence-acceptance-reviewed']['sourceArtifact'] == 'uat-evidence-acceptance-review.json'
+    record = body['reservationPersistenceAdmissionRecords'][0]
+    assert record['reservationPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-reservation-persistence-admission-')
+    assert record['hardwareReservationRecordId'].startswith('native-foundation-controlled-uat-hardware-reservation-')
+    assert record['lanePersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-lane-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT reservation persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to reservation persistence admission.' in record['blockedReasons']
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['reservationPersistenceAdmitted'] is False
+    assert record['hardwareReservationPersisted'] is False
+    assert record['maintenanceWindowOpened'] is False
+    assert record['hardwareReserved'] is False
+    assert record['uatEntryIssued'] is False
+    assert record['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['hardware-reservation-records-present']['status'] == 'pass'
+    assert checks['signoff-review-present']['status'] == 'pass'
+    assert checks['operations-review-present']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['reservation-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['maintenance-window-open-disabled']['status'] == 'blocked'
+    assert checks['uat-entry-issuance-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_reservation_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfreserveadmit_operator', 'operator')
+    operator_headers = _login(client, 'nfreserveadmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT reservation persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT reservation persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT reservation persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/reservation-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['reservationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['reservationPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['reservationPersistenceAdmissionRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT reservation persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['reservation-persistence-admission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_entry_issuance_review_blocks_issue(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/entry-issuance-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['canPersistUatEntry'] is False
+    assert body['canStartControlledUat'] is False
+    assert body['canEnableAdapterExecution'] is False
+    assert body['entryIssuanceReviewId'].startswith('native-foundation-controlled-uat-entry-issuance-review-')
+    assert body['summary']['sourceReviewCount'] == 5
+    assert body['summary']['entryIssuanceRecordCount'] == len(body['entryIssuanceRecords'])
+    assert body['summary']['entryIssuanceRecordCount'] > 0
+    assert body['summary']['blockedEntryIssuanceRecordCount'] == body['summary']['entryIssuanceRecordCount']
+    assert body['summary']['hardwareReservationRecordCount'] > 0
+    assert body['summary']['reservationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['reservationPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedHardwareReservationCount'] == 0
+    assert body['summary']['openedMaintenanceWindowCount'] == 0
+    assert body['summary']['persistedUatEntryCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['controlledUatStartedCount'] == 0
+    assert body['summary']['adapterExecutionEnabledCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatEntryStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatHardwareReservationStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatReservationPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-entry-reviewed']['sourceArtifact'] == 'controlled-uat-entry-review.json'
+    assert artifacts['controlled-uat-hardware-reservation-reviewed']['sourceArtifact'] == 'controlled-uat-hardware-reservation-review.json'
+    assert artifacts['controlled-uat-reservation-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-reservation-persistence-admission-review.json'
+    assert artifacts['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert artifacts['uat-evidence-acceptance-reviewed']['sourceArtifact'] == 'uat-evidence-acceptance-review.json'
+    record = body['entryIssuanceRecords'][0]
+    assert record['entryIssuanceRecordId'].startswith('native-foundation-controlled-uat-entry-issuance-')
+    assert record['uatEntryReviewId'].startswith('native-foundation-uat-entry-')
+    assert record['hardwareReservationReviewId'].startswith('native-foundation-controlled-uat-hardware-reservation-review-')
+    assert record['hardwareReservationRecordId'].startswith('native-foundation-controlled-uat-hardware-reservation-')
+    assert record['reservationPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-reservation-persistence-admission-review-')
+    assert record['reservationPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-reservation-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT entry issuance.' in record['blockedReasons']
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['reservationPersistenceAdmitted'] is False
+    assert record['entryPersisted'] is False
+    assert record['entryIssued'] is False
+    assert record['controlledUatStarted'] is False
+    assert record['adapterExecutionEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['entry-review-present']['status'] == 'pass'
+    assert checks['hardware-reservation-records-present']['status'] == 'pass'
+    assert checks['reservation-persistence-admission-reviewed']['status'] == 'pass'
+    assert checks['signoff-review-present']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['uat-entry-persistence-disabled']['status'] == 'blocked'
+    assert checks['uat-entry-issuance-disabled']['status'] == 'blocked'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_entry_issuance_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfissue_operator', 'operator')
+    operator_headers = _login(client, 'nfissue_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT entry issuance review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT entry issuance review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT entry issuance review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/entry-issuance-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['entryIssuanceRecordCount'] > 0
+    assert body['summary']['reservationPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['reservationPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedUatEntryCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['entryIssuanceRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT entry issuance.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['uat-entry-issuance-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_entry_persistence_admission_review_blocks_start(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/entry-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitEntryPersistence'] is False
+    assert body['canPersistUatEntry'] is False
+    assert body['canIssueControlledUatEntry'] is False
+    assert body['canStartControlledUat'] is False
+    assert body['canStartRunner'] is False
+    assert body['entryPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-entry-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 4
+    assert body['summary']['entryPersistenceAdmissionRecordCount'] == len(body['entryPersistenceAdmissionRecords'])
+    assert body['summary']['entryPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedEntryPersistenceAdmissionRecordCount'] == body['summary']['entryPersistenceAdmissionRecordCount']
+    assert body['summary']['entryPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedUatEntryCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['controlledUatStartedCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['sourceReviews']['controlledUatEntryIssuanceStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatRunbookStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-entry-issuance-reviewed']['sourceArtifact'] == 'controlled-uat-entry-issuance-review.json'
+    assert artifacts['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert artifacts['controlled-uat-runbook-reviewed']['sourceArtifact'] == 'controlled-uat-runbook-review.json'
+    assert artifacts['uat-evidence-acceptance-reviewed']['sourceArtifact'] == 'uat-evidence-acceptance-review.json'
+    record = body['entryPersistenceAdmissionRecords'][0]
+    assert record['entryPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-entry-persistence-admission-')
+    assert record['entryIssuanceRecordId'].startswith('native-foundation-controlled-uat-entry-issuance-')
+    assert record['reservationPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-reservation-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT entry persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to entry persistence admission.' in record['blockedReasons']
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['entryPersistenceAdmitted'] is False
+    assert record['entryPersisted'] is False
+    assert record['entryIssued'] is False
+    assert record['controlledUatStarted'] is False
+    assert record['runnerStarted'] is False
+    assert record['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['entry-issuance-records-present']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['entry-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['controlled-uat-start-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_entry_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfentryadmit_operator', 'operator')
+    operator_headers = _login(client, 'nfentryadmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT entry persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT entry persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT entry persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/entry-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['entryPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['entryPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedUatEntryCount'] == 0
+    assert body['summary']['issuedUatEntryCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['entryPersistenceAdmissionRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT entry persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['entry-persistence-admission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_start_readiness_review_blocks_start(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/start-readiness-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canStartControlledUat'] is False
+    assert body['canStartRunner'] is False
+    assert body['canExecuteAdapter'] is False
+    assert body['canCallFoundation'] is False
+    assert body['startReadinessReviewId'].startswith('native-foundation-controlled-uat-start-readiness-review-')
+    assert body['summary']['sourceReviewCount'] == 2
+    assert body['summary']['startReadinessRecordCount'] == len(body['startReadinessRecords'])
+    assert body['summary']['startReadinessRecordCount'] > 0
+    assert body['summary']['blockedStartReadinessRecordCount'] == body['summary']['startReadinessRecordCount']
+    assert body['summary']['entryIssuanceRecordCount'] > 0
+    assert body['summary']['entryPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['entryPersistenceAdmittedCount'] == 0
+    assert body['summary']['controlledUatStartedCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['adapterExecutionEnabledCount'] == 0
+    assert body['summary']['foundationCallEnabledCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatEntryIssuanceStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatEntryPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-entry-issuance-reviewed']['sourceArtifact'] == 'controlled-uat-entry-issuance-review.json'
+    assert artifacts['controlled-uat-entry-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-entry-persistence-admission-review.json'
+    record = body['startReadinessRecords'][0]
+    assert record['startReadinessRecordId'].startswith('native-foundation-controlled-uat-start-readiness-')
+    assert record['entryIssuanceReviewId'].startswith('native-foundation-controlled-uat-entry-issuance-review-')
+    assert record['entryIssuanceRecordId'].startswith('native-foundation-controlled-uat-entry-issuance-')
+    assert record['entryPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-entry-persistence-admission-review-')
+    assert record['entryPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-entry-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT start readiness.' in record['blockedReasons']
+    assert record['entryPersistenceAdmitted'] is False
+    assert record['controlledUatStarted'] is False
+    assert record['runnerStarted'] is False
+    assert record['adapterRuntimeAdmitted'] is False
+    assert record['adapterExecutionEnabled'] is False
+    assert record['foundationCallsEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['entry-issuance-records-present']['status'] == 'pass'
+    assert checks['entry-persistence-admission-reviewed']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-start-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_start_readiness_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfstart_operator', 'operator')
+    operator_headers = _login(client, 'nfstart_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT start readiness review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT start readiness review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT start readiness review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/start-readiness-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['startReadinessRecordCount'] > 0
+    assert body['summary']['entryPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['entryPersistenceAdmittedCount'] == 0
+    assert body['summary']['controlledUatStartedCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['startReadinessRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT start readiness.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_start_persistence_admission_review_blocks_start(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/start-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitStartPersistence'] is False
+    assert body['canPersistControlledUatStart'] is False
+    assert body['canStartControlledUat'] is False
+    assert body['canStartRunner'] is False
+    assert body['canExecuteAdapter'] is False
+    assert body['canCallFoundation'] is False
+    assert body['startPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-start-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 2
+    assert body['summary']['startPersistenceAdmissionRecordCount'] == len(body['startPersistenceAdmissionRecords'])
+    assert body['summary']['startPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedStartPersistenceAdmissionRecordCount'] == body['summary']['startPersistenceAdmissionRecordCount']
+    assert body['summary']['startReadinessRecordCount'] > 0
+    assert body['summary']['startPersistenceAdmittedCount'] == 0
+    assert body['summary']['controlledUatStartPersistedCount'] == 0
+    assert body['summary']['controlledUatStartedCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['adapterExecutionEnabledCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatStartReadinessStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatEntryPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-start-readiness-reviewed']['sourceArtifact'] == 'controlled-uat-start-readiness-review.json'
+    assert artifacts['controlled-uat-entry-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-entry-persistence-admission-review.json'
+    record = body['startPersistenceAdmissionRecords'][0]
+    assert record['startPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-start-persistence-admission-')
+    assert record['startReadinessReviewId'].startswith('native-foundation-controlled-uat-start-readiness-review-')
+    assert record['startReadinessRecordId'].startswith('native-foundation-controlled-uat-start-readiness-')
+    assert record['entryPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-entry-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT start persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT start persistence admission.' in record['blockedReasons']
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['startPersistenceAdmitted'] is False
+    assert record['controlledUatStartPersisted'] is False
+    assert record['controlledUatStarted'] is False
+    assert record['runnerStarted'] is False
+    assert record['adapterExecutionEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'start_controlled_uat' in record['blockedMutatingOperations']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['start-readiness-records-present']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['start-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['controlled-uat-start-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_start_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfstartadmit_operator', 'operator')
+    operator_headers = _login(client, 'nfstartadmit_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT start persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT start persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT start persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/start-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['startPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['startPersistenceAdmittedCount'] == 0
+    assert body['summary']['controlledUatStartPersistedCount'] == 0
+    assert body['summary']['controlledUatStartedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['startPersistenceAdmissionRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT start persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['start-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['controlled-uat-start-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runner_admission_review_blocks_admission(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/runner-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitRunner'] is False
+    assert body['canPersistRunnerAdmission'] is False
+    assert body['canStartRunner'] is False
+    assert body['canAdmitRuntime'] is False
+    assert body['canExecuteAdapter'] is False
+    assert body['runnerAdmissionReviewId'].startswith('native-foundation-controlled-uat-runner-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 4
+    assert body['summary']['runnerAdmissionRecordCount'] == len(body['runnerAdmissionRecords'])
+    assert body['summary']['runnerAdmissionRecordCount'] > 0
+    assert body['summary']['blockedRunnerAdmissionRecordCount'] == body['summary']['runnerAdmissionRecordCount']
+    assert body['summary']['startPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['startPersistenceAdmittedCount'] == 0
+    assert body['summary']['startReadinessRecordCount'] > 0
+    assert body['summary']['runtimeAdmissionEntryCount'] > 0
+    assert body['summary']['runnerReadinessItemCount'] > 0
+    assert body['summary']['admittedRunnerCount'] == 0
+    assert body['summary']['persistedRunnerAdmissionCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['runtimeAdmittedCount'] == 0
+    assert body['summary']['adapterExecutedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatStartPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterRuntimeAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterRuntimeIsolationStatus'] == 'blocked'
+    assert body['sourceReviews']['runnerReadinessStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-start-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-start-persistence-admission-review.json'
+    assert artifacts['adapter-runtime-admission-reviewed']['sourceArtifact'] == 'adapter-runtime-admission-review.json'
+    assert artifacts['adapter-runtime-isolation-reviewed']['sourceArtifact'] == 'adapter-runtime-isolation-review.json'
+    assert artifacts['runner-readiness-reviewed']['sourceArtifact'] == 'execution-runner-readiness.json'
+    record = body['runnerAdmissionRecords'][0]
+    assert record['runnerAdmissionRecordId'].startswith('native-foundation-controlled-uat-runner-admission-')
+    assert record['startPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-start-persistence-admission-review-')
+    assert record['startPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-start-persistence-admission-')
+    assert record['startReadinessRecordId'].startswith('native-foundation-controlled-uat-start-readiness-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert all(item.startswith('native-foundation-operation-queue-item-') for item in record['providerOperationQueueItemIds'])
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['runtimeAdmissionReviewId'].startswith('native-foundation-adapter-runtime-admission-review-')
+    assert record['runtimeIsolationReviewId'].startswith('native-foundation-adapter-runtime-isolation-')
+    assert record['runnerReadinessId'].startswith('native-foundation-runner-readiness-')
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT runner admission.' in record['blockedReasons']
+    assert record['runnerAdmissionPersisted'] is False
+    assert record['runnerAdmitted'] is False
+    assert record['runnerStarted'] is False
+    assert record['runtimeAdmitted'] is False
+    assert record['adapterExecutionEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'execute_adapter' in record['blockedMutatingOperations']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['start-readiness-records-present']['status'] == 'pass'
+    assert checks['runtime-admission-reviewed']['status'] == 'pass'
+    assert checks['runner-readiness-reviewed']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['runner-admission-persistence-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runner_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrunner_operator', 'operator')
+    operator_headers = _login(client, 'nfrunner_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT runner admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT runner admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT runner admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/runner-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['runnerAdmissionRecordCount'] > 0
+    assert body['summary']['admittedRunnerCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['runnerAdmissionRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT runner admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['runner-admission-persistence-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runner_persistence_admission_review_blocks_persistence(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/runner-persistence-admission-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAdmitRunnerPersistence'] is False
+    assert body['canPersistRunnerAdmission'] is False
+    assert body['canAdmitRunner'] is False
+    assert body['canStartRunner'] is False
+    assert body['canAdmitRuntime'] is False
+    assert body['canExecuteAdapter'] is False
+    assert body['canCallFoundation'] is False
+    assert body['runnerPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-runner-persistence-admission-review-')
+    assert body['summary']['sourceReviewCount'] == 2
+    assert body['summary']['runnerPersistenceAdmissionRecordCount'] == len(body['runnerPersistenceAdmissionRecords'])
+    assert body['summary']['runnerPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['blockedRunnerPersistenceAdmissionRecordCount'] == body['summary']['runnerPersistenceAdmissionRecordCount']
+    assert body['summary']['runnerAdmissionRecordCount'] > 0
+    assert body['summary']['runnerPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedRunnerAdmissionCount'] == 0
+    assert body['summary']['admittedRunnerCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['adapterExecutedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatRunnerAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatStartPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert body['sourceReviews']['providerOperationQueueAdmittedCount'] == 0
+    assert body['sourceReviews']['providerOperationQueuePersistedCount'] == 0
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-runner-admission-reviewed']['sourceArtifact'] == 'controlled-uat-runner-admission-review.json'
+    assert artifacts['controlled-uat-start-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-start-persistence-admission-review.json'
+    record = body['runnerPersistenceAdmissionRecords'][0]
+    assert record['runnerPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-runner-persistence-admission-')
+    assert record['runnerAdmissionReviewId'].startswith('native-foundation-controlled-uat-runner-admission-review-')
+    assert record['runnerAdmissionRecordId'].startswith('native-foundation-controlled-uat-runner-admission-')
+    assert record['startPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-start-persistence-admission-')
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert all(item.startswith('native-foundation-operation-queue-admission-') for item in record['providerOperationQueueAdmissionRecordIds'])
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'] is None
+    assert record['carriedExecutionAuthorizationReviewId'] is None
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'] is None
+    assert record['mutatingEnablementReviewId'].startswith('native-foundation-mutating-enablement-')
+    assert record['mutatingEnablementItemCount'] > 0
+    assert record['blockedMutatingEnablementItemCount'] > 0
+    assert record['executionAuthorizationCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationMissingCarriedPersistenceRecordCount'] == 0
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Generate execution authorization records with carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT runner persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT runner persistence admission.' in record['blockedReasons']
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['runnerPersistenceAdmitted'] is False
+    assert record['runnerAdmissionPersisted'] is False
+    assert record['runnerAdmitted'] is False
+    assert record['runnerStarted'] is False
+    assert record['runtimeAdmitted'] is False
+    assert record['adapterExecutionEnabled'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'persist_runner_admission' in record['blockedMutatingOperations']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['runner-admission-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['runner-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['runner-admission-persistence-disabled']['status'] == 'blocked'
+    assert checks['runner-start-disabled']['status'] == 'blocked'
+    assert checks['adapter-execution-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_runner_persistence_admission_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfrunnerpersist_operator', 'operator')
+    operator_headers = _login(client, 'nfrunnerpersist_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT runner persistence admission review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT runner persistence admission review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT runner persistence admission review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/runner-persistence-admission-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['runnerPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['runnerPersistenceAdmittedCount'] == 0
+    assert body['summary']['persistedRunnerAdmissionCount'] == 0
+    assert body['summary']['runnerStartedCount'] == 0
+    assert body['summary']['providerOperationQueueAdmissionRecordCount'] > 0
+    assert body['summary']['providerOperationQueueAdmittedCount'] == 0
+    assert body['summary']['providerOperationQueuePersistedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['runnerPersistenceAdmissionRecords'][0]
+    assert record['providerOperationQueueAdmissionReviewId'].startswith('native-foundation-operation-queue-admission-review-')
+    assert record['providerOperationQueueAdmissionRecordCount'] == body['summary']['providerOperationQueueAdmissionRecordCount']
+    assert record['providerOperationQueueAdmittedCount'] == 0
+    assert record['providerOperationQueuePersistedCount'] == 0
+    assert record['providerOperationQueueAdmissionRecordIds']
+    assert record['providerOperationQueueItemIds']
+    assert record['providerOperationIds']
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT runner persistence admission.' in record['blockedReasons']
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['provider-operation-queue-admission-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['runner-persistence-admission-disabled']['status'] == 'blocked'
+    assert checks['runner-admission-persistence-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_execution_authorization_review_blocks_execution(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/execution-authorization-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canAuthorizeExecution'] is False
+    assert body['canPersistExecutionAuthorization'] is False
+    assert body['canInvokeAdapterCommands'] is False
+    assert body['canCaptureLiveOutput'] is False
+    assert body['canPersistOutputEvidence'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert body['summary']['sourceReviewCount'] == 6
+    assert body['summary']['executionAuthorizationRecordCount'] == len(body['executionAuthorizationRecords'])
+    assert body['summary']['executionAuthorizationRecordCount'] > 0
+    assert body['summary']['blockedExecutionAuthorizationRecordCount'] == body['summary']['executionAuthorizationRecordCount']
+    assert body['summary']['runnerPersistenceAdmissionRecordCount'] > 0
+    assert body['summary']['runnerPersistenceAdmittedCount'] == 0
+    assert body['summary']['runnerAdmissionRecordCount'] > 0
+    assert body['summary']['commandInvocationEntryCount'] > 0
+    assert body['summary']['outputEvidenceEntryCount'] > 0
+    assert body['summary']['authorizedExecutionCount'] == 0
+    assert body['summary']['persistedExecutionAuthorizationCount'] == 0
+    assert body['summary']['adapterCommandInvokedCount'] == 0
+    assert body['summary']['liveOutputCapturedCount'] == 0
+    assert body['summary']['outputEvidencePersistedCount'] == 0
+    assert body['summary']['mutatingJobSubmittedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatRunnerPersistenceAdmissionStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterExecutionPreflightStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterTargetConnectivityStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCredentialHandoffStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterCommandInvocationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-runner-persistence-admission-reviewed']['sourceArtifact'] == 'controlled-uat-runner-persistence-admission-review.json'
+    assert artifacts['adapter-execution-preflight-reviewed']['sourceArtifact'] == 'adapter-execution-preflight-review.json'
+    assert artifacts['adapter-target-connectivity-reviewed']['sourceArtifact'] == 'adapter-target-connectivity-review.json'
+    assert artifacts['adapter-credential-handoff-reviewed']['sourceArtifact'] == 'adapter-credential-handoff-review.json'
+    assert artifacts['adapter-command-invocation-reviewed']['sourceArtifact'] == 'adapter-command-invocation-review.json'
+    assert artifacts['adapter-output-evidence-reviewed']['sourceArtifact'] == 'adapter-output-evidence-review.json'
+    record = body['executionAuthorizationRecords'][0]
+    assert record['executionAuthorizationRecordId'].startswith('native-foundation-controlled-uat-execution-authorization-')
+    assert record['runnerPersistenceAdmissionReviewId'].startswith('native-foundation-controlled-uat-runner-persistence-admission-review-')
+    assert record['runnerPersistenceAdmissionRecordId'].startswith('native-foundation-controlled-uat-runner-persistence-admission-')
+    assert record['runnerAdmissionRecordId'].startswith('native-foundation-controlled-uat-runner-admission-')
+    assert record['queuePersistenceAdmissionReviewId'].startswith('native-foundation-queue-persistence-admission-review-')
+    assert record['queuePersistenceAdmissionRecordId'].startswith('native-foundation-queue-persistence-admission-')
+    assert record['authorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['authorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['carriedExecutionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['carriedExecutionAuthorizationRecordId'] is None
+    assert record['carriedAuthorizationPersistenceAdmissionReviewId'].startswith('native-foundation-execution-authorization-persistence-admission-review-')
+    assert record['carriedAuthorizationPersistenceAdmissionRecordId'].startswith('native-foundation-execution-authorization-persistence-admission-')
+    assert record['executionAuthorizationCarriedPersistenceGateStatus'] == 'blocked'
+    assert 'carried authorization-persistence provenance' in record['executionAuthorizationCarriedPersistenceGateEvidence']
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT execution authorization.' in record['blockedReasons']
+    assert record['authorizationQueuePersistenceAdmissionRecordId'] is None
+    assert record['queuePersistenceAdmitted'] is False
+    assert record['queueRecordPersisted'] is False
+    assert record['authorizationQueuePersistenceAdmitted'] is False
+    assert record['authorizationQueueRecordPersisted'] is False
+    assert record['executionPreflightReviewId'].startswith('native-foundation-adapter-execution-preflight-review-')
+    assert record['targetConnectivityReviewId'].startswith('native-foundation-adapter-target-connectivity-review-')
+    assert record['credentialHandoffReviewId'].startswith('native-foundation-adapter-credential-handoff-review-')
+    assert record['commandInvocationReviewId'].startswith('native-foundation-adapter-command-invocation-review-')
+    assert record['outputEvidenceReviewId'].startswith('native-foundation-adapter-output-evidence-review-')
+    assert record['executionAuthorizationPersisted'] is False
+    assert record['executionAuthorized'] is False
+    assert record['adapterCommandInvoked'] is False
+    assert record['liveOutputCaptured'] is False
+    assert record['outputEvidencePersisted'] is False
+    assert record['mutatingJobSubmitted'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'submit_mutating_native_foundation_job' in record['blockedMutatingOperations']
+    assert 'Mutating enablement carried authorization persistence gate is not passing for controlled UAT execution authorization.' in record['blockedReasons']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['runner-admission-records-present']['status'] == 'pass'
+    assert checks['adapter-command-invocation-reviewed']['status'] == 'pass'
+    assert checks['adapter-output-evidence-reviewed']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['execution-authorization-persistence-disabled']['status'] == 'blocked'
+    assert checks['adapter-command-invocation-disabled']['status'] == 'blocked'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_execution_authorization_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfauthorize_operator', 'operator')
+    operator_headers = _login(client, 'nfauthorize_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT execution authorization review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT execution authorization review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT execution authorization review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/execution-authorization-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['executionAuthorizationRecordCount'] > 0
+    assert body['summary']['authorizedExecutionCount'] == 0
+    assert body['summary']['adapterCommandInvokedCount'] == 0
+    assert body['summary']['liveOutputCapturedCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['executionAuthorizationRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['execution-authorization-persistence-disabled']['status'] == 'blocked'
+    assert checks['adapter-command-invocation-disabled']['status'] == 'blocked'
+    assert checks['live-output-capture-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_completion_review_blocks_promotion(client, auth_headers):
+    resp = client.post('/api/native-foundation/uat/completion-review',
+                       json={'content': _native_foundation_multi_site_intent_with_policy_windows(),
+                             'phase': 'full_deployment'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['status'] == 'blocked'
+    assert body['readOnly'] is True
+    assert body['mutatingActionsEnabled'] is False
+    assert body['canMarkUatComplete'] is False
+    assert body['canPersistUatCompletion'] is False
+    assert body['canPromoteAdapter'] is False
+    assert body['canCertifyProductionSupport'] is False
+    assert body['canSubmitMutatingJob'] is False
+    assert body['uatCompletionReviewId'].startswith('native-foundation-controlled-uat-completion-review-')
+    assert body['summary']['sourceReviewCount'] == 5
+    assert body['summary']['uatCompletionRecordCount'] == len(body['uatCompletionRecords'])
+    assert body['summary']['uatCompletionRecordCount'] > 0
+    assert body['summary']['blockedUatCompletionRecordCount'] == body['summary']['uatCompletionRecordCount']
+    assert body['summary']['executionAuthorizationRecordCount'] > 0
+    assert body['summary']['authorizedExecutionCount'] == 0
+    assert body['summary']['persistedExecutionAuthorizationCount'] == 0
+    assert body['summary']['retainedEvidenceExportedCount'] == 0
+    assert body['summary']['completedUatCount'] == 0
+    assert body['summary']['persistedUatCompletionCount'] == 0
+    assert body['summary']['adapterPromotionEligibleCount'] == 0
+    assert body['summary']['productionSupportEligibleCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 0
+    assert body['summary']['controlledUatCompletionRequiredCount'] == 0
+    assert body['sourceReviews']['controlledUatExecutionAuthorizationStatus'] == 'blocked'
+    assert body['sourceReviews']['adapterOutputEvidenceStatus'] == 'blocked'
+    assert body['sourceReviews']['retainedEvidenceExportStatus'] == 'blocked'
+    assert body['sourceReviews']['controlledUatSignoffStatus'] == 'blocked'
+    assert body['sourceReviews']['uatEvidenceAcceptanceStatus'] == 'blocked'
+    artifacts = {item['id']: item for item in body['sourceArtifacts']}
+    assert artifacts['controlled-uat-execution-authorization-reviewed']['sourceArtifact'] == 'controlled-uat-execution-authorization-review.json'
+    assert artifacts['adapter-output-evidence-reviewed']['sourceArtifact'] == 'adapter-output-evidence-review.json'
+    assert artifacts['retained-evidence-export-reviewed']['sourceArtifact'] == 'retained-evidence-export-review.json'
+    assert artifacts['controlled-uat-signoff-reviewed']['sourceArtifact'] == 'controlled-uat-signoff-review.json'
+    assert artifacts['uat-evidence-acceptance-reviewed']['sourceArtifact'] == 'uat-evidence-acceptance-review.json'
+    record = body['uatCompletionRecords'][0]
+    assert record['uatCompletionRecordId'].startswith('native-foundation-controlled-uat-completion-')
+    assert record['executionAuthorizationReviewId'].startswith('native-foundation-controlled-uat-execution-authorization-review-')
+    assert record['executionAuthorizationRecordId'].startswith('native-foundation-controlled-uat-execution-authorization-')
+    assert record['outputEvidenceReviewId'].startswith('native-foundation-adapter-output-evidence-review-')
+    assert record['retainedEvidenceExportReviewId'].startswith('native-foundation-retained-evidence-export-')
+    assert record['controlledUatSignoffReviewId'].startswith('native-foundation-uat-signoff-')
+    assert record['uatEvidenceAcceptanceReviewId'].startswith('native-foundation-uat-evidence-acceptance-')
+    assert record['executionAuthorized'] is False
+    assert record['executionAuthorizationPersisted'] is False
+    assert record['controlledUatCompletionGateSummaryCount'] == 0
+    assert record['controlledUatCompletionRequiredCount'] == 0
+    assert record['controlledUatCompletionGateSummary']
+    assert all(value['controlledUatCompletionGateAvailable'] is False for value in record['controlledUatCompletionGateSummary'].values())
+    assert record['adapterCommandInvoked'] is False
+    assert record['liveOutputCaptured'] is False
+    assert record['outputEvidencePersisted'] is False
+    assert record['retainedEvidenceExported'] is False
+    assert record['controlledUatCompleted'] is False
+    assert record['completionPersisted'] is False
+    assert record['adapterPromotionEligible'] is False
+    assert record['productionSupportEligible'] is False
+    assert record['mutatingActionsEnabled'] is False
+    assert 'promote_adapter' in record['blockedMutatingOperations']
+    assert 'Controlled UAT execution has not been authorized.' in record['blockedReasons']
+    assert 'Controlled UAT completion gate summary is not bound to controlled UAT completion.' in record['blockedReasons']
+    assert 'Controlled UAT completion review cannot mark UAT complete, promote adapters, certify production support, submit jobs, or mutate targets.' in record['blockedReasons']
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['source-reviews-linked']['status'] == 'pass'
+    assert checks['execution-authorization-records-present']['status'] == 'pass'
+    assert checks['approval-evidence-gates-bound']['status'] == 'blocked'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'blocked'
+    assert checks['retained-evidence-export-reviewed']['status'] == 'pass'
+    assert checks['output-evidence-reviewed']['status'] == 'pass'
+    assert checks['controlled-uat-signoff-reviewed']['status'] == 'pass'
+    assert checks['uat-completion-persistence-disabled']['status'] == 'blocked'
+    assert checks['adapter-promotion-disabled']['status'] == 'blocked'
+    assert checks['production-support-certification-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_controlled_uat_completion_review_binds_approval_evidence(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfcompletion_operator', 'operator')
+    operator_headers = _login(client, 'nfcompletion_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation UAT completion review approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for UAT completion review only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'approvalId': approval_id,
+                                      'notes': 'captured UAT completion review packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/uat/completion-review',
+                       json={'content': content,
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id,
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['approvalId'] == approval_id
+    assert body['evidenceId'] == evidence_id
+    assert body['summary']['adapterRequestGateSummaryCount'] == 1
+    assert body['summary']['uatCompletionRecordCount'] > 0
+    assert body['summary']['completedUatCount'] == 0
+    assert body['summary']['adapterPromotionEligibleCount'] == 0
+    assert body['summary']['productionSupportEligibleCount'] == 0
+    assert body['summary']['controlledUatCompletionGateSummaryCount'] == 1
+    assert body['summary']['controlledUatCompletionRequiredCount'] > 0
+    record = body['uatCompletionRecords'][0]
+    assert record['controlledUatCompletionGateSummaryCount'] == 1
+    assert record['controlledUatCompletionRequiredCount'] == body['summary']['controlledUatCompletionRequiredCount']
+    completion_gate = next(iter(record['controlledUatCompletionGateSummary'].values()))
+    assert completion_gate['controlledUatCompletionGateAvailable'] is True
+    assert completion_gate['controlledUatCompletionStatus'] == 'blocked'
+    assert completion_gate['controlledUatCompletionSourceStatus'] == 'required_not_generated'
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['approval-evidence-gates-bound']['status'] == 'pass'
+    assert checks['controlled-uat-completion-gates-bound']['status'] == 'pass'
+    assert checks['uat-completion-persistence-disabled']['status'] == 'blocked'
+    assert checks['adapter-promotion-disabled']['status'] == 'blocked'
+    assert checks['production-support-certification-disabled']['status'] == 'blocked'
+    assert checks['mutating-job-submission-disabled']['status'] == 'blocked'
+
+
+def test_native_foundation_review_job_queues_durable_read_only_rehearsal(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    resp = client.post('/api/native-foundation/execution/review-job',
+                       json={'content': content,
+                             'configFile': 'native-foundation-deploy.yml',
+                             'phase': 'hci_cluster_create'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 202
+    queued = resp.get_json()
+    assert queued['framework'] == 'native-foundation'
+    assert queued['type'] == 'native-foundation-review'
+    assert queued['workflow'] == 'native-foundation-deploy'
+    assert queued['trace']['readOnly'] is True
+    assert queued['trace']['mutatingActionsEnabled'] is False
+    assert queued['trace']['planId'].startswith('native-foundation-')
+
+    job = _wait_for_job(client, auth_headers, queued['id'], {'success'}, attempts=900, delay=0.2)
+    assert job['status'] == 'success'
+    assert job['returnCode'] == 0
+    assert job['progress']['phase'] == 'Completed'
+    output = '\n'.join(str(event.get('data') or '') for event in job.get('logs') or [])
+    assert 'Native Foundation review job started for plan native-foundation-' in output
+    assert 'Review packet: native-foundation-review-' in output
+    assert 'Provider/topology matrix: rows 1; providers 1; deployment types 1;' in output
+    assert 'mutating rows enabled 0.' in output
+    assert 'Provider operation catalog: rows 1; operations' in output
+    assert 'runnable operations 0.' in output
+    assert 'Provider operation admission review: records' in output
+    assert 'admitted operations 0; runnable operations 0.' in output
+    assert 'Provider operation queue plan: items' in output
+    assert 'queued operations 0; persisted queues 0; runnable operations 0.' in output
+    assert 'Provider operation queue admission review: records' in output
+    assert 'admitted queues 0; persisted queues 0; queued operations 0; runnable operations 0.' in output
+    assert 'Execution request: native-foundation-execution-request-' in output
+    assert 'Execution request persistence admission review: native-foundation-execution-request-persistence-admission-review-' in output
+    assert 'admitted requests: 0' in output
+    assert 'requests persisted: 0' in output
+    assert 'Dry-run ledger: native-foundation-dry-run-ledger-' in output
+    assert 'Execution permit: native-foundation-execution-permit-' in output
+    assert 'Execution lock plan: native-foundation-lock-plan-' in output
+    assert 'Execution audit plan: native-foundation-audit-plan-' in output
+    assert 'Execution retention plan: native-foundation-retention-plan-' in output
+    assert 'Restart/resume review: native-foundation-restart-resume-' in output
+    assert 'Backup/restore review: native-foundation-backup-restore-' in output
+    assert 'restores tested: 0.' in output
+    assert 'Runner readiness: native-foundation-runner-readiness-' in output
+    assert 'UAT evidence acceptance review: native-foundation-uat-evidence-acceptance-' in output
+    assert 'Mutating enablement review: native-foundation-mutating-enablement-' in output
+    assert 'mutating submissions enabled: 0' in output
+    assert 'Execution authorization carried persistence gate: records carried: 0; records missing:' in output
+    assert 'Execution submission review: native-foundation-execution-submission-' in output
+    assert 'jobs enqueued: 0' in output
+    assert 'Execution submission persistence admission review: native-foundation-execution-submission-persistence-admission-review-' in output
+    assert 'admitted submissions: 0' in output
+    assert 'submissions persisted: 0' in output
+    assert 'Queue persistence review: native-foundation-queue-persistence-' in output
+    assert 'persisted queue records: 0' in output
+    assert 'Queue persistence admission review: native-foundation-queue-persistence-admission-review-' in output
+    assert 'admitted queues: 0' in output
+    assert 'queue records persisted: 0' in output
+    assert 'Job persistence admission review: native-foundation-job-persistence-admission-review-' in output
+    assert 'job state persisted: 0' in output
+    assert 'execution authorization persisted: 0' in output
+    assert 'Mutating adapter binding review: native-foundation-mutating-adapter-binding-review-' in output
+    assert 'provider operation queue admissions' in output
+    assert 'persisted bindings: 0' in output
+    assert 'adapters executed: 0' in output
+    assert 'Controlled UAT lane selection review: native-foundation-controlled-uat-lane-selection-' in output
+    assert 'persisted selections: 0' in output
+    assert 'issued UAT entries: 0' in output
+    assert 'Controlled UAT lane persistence admission review: native-foundation-controlled-uat-lane-persistence-admission-review-' in output
+    assert 'admitted lanes: 0' in output
+    assert 'hardware reservation admissions: 0' in output
+    assert 'Controlled UAT hardware reservation review: native-foundation-controlled-uat-hardware-reservation-review-' in output
+    assert 'persisted reservations: 0' in output
+    assert 'opened windows: 0' in output
+    assert 'Controlled UAT reservation persistence admission review: native-foundation-controlled-uat-reservation-persistence-admission-review-' in output
+    assert 'admitted reservations: 0' in output
+    assert 'Controlled UAT entry issuance review: native-foundation-controlled-uat-entry-issuance-review-' in output
+    assert 'persisted entries: 0' in output
+    assert 'issued entries: 0' in output
+    assert 'Controlled UAT entry persistence admission review: native-foundation-controlled-uat-entry-persistence-admission-review-' in output
+    assert 'admitted entries: 0' in output
+    assert 'Controlled UAT start readiness review: native-foundation-controlled-uat-start-readiness-review-' in output
+    assert 'UAT starts: 0' in output
+    assert 'runners started: 0' in output
+    assert 'Controlled UAT start persistence admission review: native-foundation-controlled-uat-start-persistence-admission-review-' in output
+    assert 'admitted starts: 0' in output
+    assert 'UAT starts persisted: 0' in output
+    assert 'Controlled UAT runner admission review: native-foundation-controlled-uat-runner-admission-review-' in output
+    assert 'admission records:' in output
+    assert 'admitted runners: 0' in output
+    assert 'Controlled UAT runner persistence admission review: native-foundation-controlled-uat-runner-persistence-admission-review-' in output
+    assert 'admitted persistence records: 0' in output
+    assert 'runner admissions persisted: 0' in output
+    assert 'Controlled UAT execution authorization review: native-foundation-controlled-uat-execution-authorization-review-' in output
+    assert 'authorization records:' in output
+    assert 'authorized executions: 0' in output
+    assert 'adapter commands invoked: 0' in output
+    assert 'Execution authorization persistence admission review: native-foundation-execution-authorization-persistence-admission-review-' in output
+    assert 'completion gate summaries:' in output
+    assert 'admitted authorizations: 0' in output
+    assert 'authorizations persisted: 0' in output
+    assert 'Secret-store binding review: native-foundation-secret-binding-review-' in output
+    assert 'Secret-store provider contract review: native-foundation-secret-provider-review-' in output
+    assert 'Secret lease execution review: native-foundation-secret-lease-execution-review-' in output
+    assert 'Secret audit persistence review: native-foundation-secret-audit-persistence-review-' in output
+    assert 'Adapter allow-list review: native-foundation-adapter-allow-list-review-' in output
+    assert 'Adapter load plan review: native-foundation-adapter-load-plan-' in output
+    assert 'Adapter package provenance review: native-foundation-adapter-package-provenance-' in output
+    assert 'Adapter SBOM review: native-foundation-adapter-sbom-review-' in output
+    assert 'Adapter runtime isolation review: native-foundation-adapter-runtime-isolation-' in output
+    assert 'Adapter runtime admission review: native-foundation-adapter-runtime-admission-review-' in output
+    assert 'Adapter execution preflight review: native-foundation-adapter-execution-preflight-review-' in output
+    assert 'Adapter target connectivity review: native-foundation-adapter-target-connectivity-review-' in output
+    assert 'Adapter credential handoff review: native-foundation-adapter-credential-handoff-review-' in output
+    assert 'Adapter command invocation review: native-foundation-adapter-command-invocation-review-' in output
+    assert 'Adapter output evidence review: native-foundation-adapter-output-evidence-review-' in output
+    assert 'Retained evidence export review: native-foundation-retained-evidence-export-review-' in output
+    assert 'Controlled UAT entry review: native-foundation-uat-entry-' in output
+    assert 'Controlled UAT scope review: native-foundation-uat-scope-review-' in output
+    assert 'Controlled UAT runbook review: native-foundation-uat-runbook-' in output
+    assert 'Controlled UAT security review: native-foundation-uat-security-' in output
+    assert 'Controlled UAT operations review: native-foundation-uat-operations-' in output
+    assert 'Controlled UAT signoff review: native-foundation-uat-signoff-' in output
+    assert 'Job state: native-foundation-job-state-' in output
+    assert 'deployment execution remains disabled' in output
+    assert 'No hardware, Foundation, Prism Element, adapter, queue replay, or secret operation was performed.' in output
+
+    history = client.get('/api/executions', headers=auth_headers).get_json()
+    assert history[0]['id'] == queued['id']
+    assert history[0]['workflow'] == 'native-foundation-deploy'
+    assert history[0]['type'] == 'native-foundation-review'
+    assert history[0]['status'] == 'success'
+
+
+def test_native_foundation_execute_blocks_dell_uat_deploy_by_default(client, auth_headers):
+    content = _native_foundation_admission_ready_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+
+    resp = client.post('/api/execute',
+                       json={'workflow': 'native-foundation-deploy',
+                             'configContent': content,
+                             'configFile': 'native-foundation-deploy.yml'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 403
+    body = resp.get_json()
+    assert body['error'] == 'Native Foundation Dell iDRAC UAT deployment is not enabled'
+    assert any('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true' in action for action in body['requiredActions'])
+    assert any('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true' in action for action in body['requiredActions'])
+
+
+def test_native_foundation_execute_allows_dell_uat_deploy_when_env_gated(client, auth_headers, monkeypatch):
+    content = _native_foundation_admission_ready_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION', 'true')
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfdeploy_operator', 'operator')
+    operator_headers = _login(client, 'nfdeploy_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation Dell UAT deployment'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for Dell iDRAC UAT deployment test'},
+                       headers=auth_headers).status_code == 200
+
+    resp = client.post('/api/execute',
+                       json={'workflow': 'native-foundation-deploy',
+                             'configContent': content,
+                             'configFile': 'native-foundation-deploy.yml',
+                             'phase': 'hci_cluster_create',
+                             'approvalId': approval_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    output = resp.get_data(as_text=True)
+    assert 'native-foundation-uat-deploy' in output
+    assert 'Dell iDRAC controlled-UAT mutation gate is enabled for this job.' in output
+    assert 'Native Foundation Dell iDRAC deployment UAT path completed.' in output
+    assert '"status": "success"' in output
+
+
+def test_native_foundation_review_job_carries_packet_gate_bindings(client, auth_headers):
+    content = _native_foundation_admission_ready_intent()
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': content},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    _create_user(client, auth_headers, 'nfreviewjob_operator', 'operator')
+    operator_headers = _login(client, 'nfreviewjob_operator')
+    approval_resp = client.post('/api/approvals',
+                                json={'workflow': 'native-foundation-deploy',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'metadata': plan['approvalMetadata'],
+                                      'notes': 'native Foundation review job approval'},
+                                headers=operator_headers)
+    assert approval_resp.status_code == 201
+    approval_id = approval_resp.get_json()['id']
+    assert client.post(f'/api/approvals/{approval_id}/approve',
+                       json={'notes': 'approved for review job rehearsal only'},
+                       headers=auth_headers).status_code == 200
+    evidence_resp = client.post('/api/validation-evidence',
+                                json={'source': 'native-foundation',
+                                      'configFile': 'native-foundation-deploy.yml',
+                                      'configContent': content,
+                                      'notes': 'captured review job packet'},
+                                headers=auth_headers)
+    assert evidence_resp.status_code == 201
+    evidence_id = evidence_resp.get_json()['id']
+
+    resp = client.post('/api/native-foundation/execution/review-job',
+                       json={'content': content,
+                             'configFile': 'native-foundation-deploy.yml',
+                             'phase': 'hci_cluster_create',
+                             'approvalId': approval_id,
+                             'evidenceId': evidence_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 202
+    queued = resp.get_json()
+    assert queued['trace']['approvalId'] == approval_id
+    assert queued['trace']['evidenceId'] == evidence_id
+
+    job = _wait_for_job(client, auth_headers, queued['id'], {'success'}, attempts=900, delay=0.2)
+    assert job['status'] == 'success'
+    output = '\n'.join(str(event.get('data') or '') for event in job.get('logs') or [])
+    assert f'Review bindings: approval {approval_id}; evidence {evidence_id}.' in output
+    assert 'Packet gate summaries: request 1; recovery 1; job state 1.' in output
+    assert 'Backup/restore review: native-foundation-backup-restore-' in output
+    assert 'UAT evidence acceptance review: native-foundation-uat-evidence-acceptance-' in output
+    assert 'Mutating enablement review: native-foundation-mutating-enablement-' in output
+    assert 'mutating submissions enabled: 0' in output
+    assert 'Execution authorization persistence admission review: native-foundation-execution-authorization-persistence-admission-review-' in output
+    assert 'completion gate summaries: 1' in output
+    assert 'Job persistence admission review: native-foundation-job-persistence-admission-review-' in output
+    assert 'No hardware, Foundation, Prism Element, adapter, queue replay, or secret operation was performed.' in output
+
+
+def test_native_foundation_review_job_rejects_invalid_intent_before_queue(client, auth_headers):
+    before = client.get('/api/jobs', headers=auth_headers).get_json()
+    resp = client.post('/api/native-foundation/execution/review-job',
+                       json={'content': _native_foundation_intent(
+                           deployment_type='storage_only',
+                           node_roles=['compute_only'],
+                       )},
+                       headers=auth_headers)
+    after = client.get('/api/jobs', headers=auth_headers).get_json()
+
+    assert resp.status_code == 400
+    body = resp.get_json()
+    assert body['status'] == 'invalid'
+    assert 'valid planning intent' in body['error']
+    assert len(after) == len(before)
+
+
+def test_native_foundation_standard_job_submission_remains_blocked(client, auth_headers):
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'native-foundation-deploy',
+                             'configContent': _native_foundation_admission_ready_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 403
+    assert 'planning-only' in resp.get_json()['error']
+
+
 def test_yaml_studio_saves_to_config_files(client, auth_headers, isolated_data_dir):
     content = (
         'clusters:\n'
@@ -1655,6 +15346,36 @@ def test_dry_run_valid_yaml(client, auth_headers, monkeypatch):
                        headers=auth_headers)
     assert resp.status_code == 200
     assert b'dry-run' in resp.data.lower() or b'preflight' in resp.data.lower() or b'PASS' in resp.data or b'pass' in resp.data.lower()
+
+
+def test_native_foundation_dry_run_validates_intent(client, auth_headers):
+    import server
+
+    output = ''.join(server._run_preflight(
+        'native-foundation-deploy',
+        _native_foundation_intent(),
+        'native-foundation-test',
+    ))
+
+    assert '[FAIL]' not in output
+    assert 'Workflow family is native_foundation' in output
+    assert 'deployment type: hci' in output
+    assert 'Native Foundation deployment is planning-only' in output
+
+
+def test_native_foundation_execution_is_blocked(client, auth_headers):
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'native-foundation-deploy',
+                             'configFile': 'native-foundation-deploy.yml',
+                             'configContent': _native_foundation_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 403
+    assert 'planning-only' in resp.get_json()['error']
 
 
 def test_dry_run_invalid_yaml(client, auth_headers):

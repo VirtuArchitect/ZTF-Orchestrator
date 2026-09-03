@@ -575,7 +575,31 @@ async function demoResponse(request: Request) {
   if (path === '/api/nkp/status') return json({ installed: true, path: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework', repoUrl: 'https://github.com/VirtuArchitect/nkp-zerotouch-framework.git', script: 'scripts/zt.sh', safePhases: ['validate', 'prepare', 'generate'], configs: ['air-gapped.example.yaml'] })
   if (path === '/api/nkp/profiles') return json([{ id: 'demo-profile', name: 'DEV_LAB Demo', environment: 'lab', createdAt: iso(500), updatedAt: iso(60), status: 'ready' }])
   if (path.startsWith('/api/nkp/')) return okAction('NKP action simulated.')
-  if (path === '/api/validation-evidence') return json([{ id: 'demo-evidence-001', profileId: 'demo-profile', status: 'ready', createdAt: iso(45), createdBy: 'demo-admin', notes: 'Simulated evidence package for public demo.' }])
+  if (path === '/api/validation-evidence') return json([
+    {
+      id: 'demo-evidence-native-foundation-001',
+      source: 'native-foundation',
+      type: 'native-foundation-review-packet',
+      status: 'blocked',
+      workflow: 'native-foundation-deploy',
+      executionStatus: 'planning_only',
+      configFile: 'native-foundation-deploy.yml',
+      createdAt: iso(35),
+      createdBy: 'demo-operator',
+      notes: 'Simulated native Foundation review packet for HCI, compute, and storage-only planning.',
+      readiness: { status: 'blocked', score: 0 },
+      schemaValidation: { status: 'pass' },
+      metadata: {
+        nativeFoundationPacketId: 'native-foundation-review-demo001',
+        nativeFoundationPhase: 'full_deployment',
+        nativeFoundationExecutionAuthorizationCarriedPersistenceGateStatus: 'blocked',
+        nativeFoundationExecutionAuthorizationCarriedPersistenceGateEvidence: 'Generate execution authorization records with carried authorization-persistence provenance before mutating enablement can be considered.',
+        nativeFoundationExecutionAuthorizationCarriedPersistenceRecordCount: 0,
+        nativeFoundationExecutionAuthorizationMissingCarriedPersistenceRecordCount: 1,
+      },
+    },
+    { id: 'demo-evidence-001', source: 'nkp', profileId: 'demo-profile', status: 'ready', createdAt: iso(45), createdBy: 'demo-admin', notes: 'Simulated evidence package for public demo.' },
+  ])
   if (path.startsWith('/api/validation-evidence/')) return okAction('Validation evidence action simulated.')
   if (path === '/api/pipelines') return json([{ id: 'demo-pipeline-001', name: 'Deploy and validate PC', steps: [{ workflow: 'deploy-pc', configFile: 'pc-deploy-demo.yml' }], createdAt: iso(800), updatedAt: iso(90) }])
   if (path.startsWith('/api/pipelines/')) return okAction('Pipeline action simulated.')

@@ -232,6 +232,164 @@ Workflow detail functions:
 | Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. |
 | Run Plan | Submits a Workflows 2.x item through the ZTF 2.x IaC plan path. Apply and destroy remain approval-bound from the ZTF 2.x IaC page. |
 
+For Native Foundation Deploy, the workflow detail page adds read-only review
+phase status and readiness phase selection from
+`GET /api/native-foundation/phases`, a phase advancement selector backed by
+`POST /api/native-foundation/phases/advancement-review`, plus actions for
+plan, discovery, image, network, secret, cluster formation,
+post-create validation, secret-store binding, secret-store provider contract,
+secret lease, secret audit persistence, execution admission, adapter contract, execution
+request, dry-run ledger, topology matrix, permit review, lock plan, audit plan, retention plan,
+provider operation catalog, provider operation admission,
+provider operation queue plan,
+provider operation queue admission,
+runner readiness, UAT entry, UAT entry issuance, UAT start readiness, UAT start
+persistence admission, UAT runner admission, UAT runner persistence admission,
+UAT execution authorization, authorization persistence admission, UAT scope, UAT runbook, UAT security,
+UAT Ops, UAT signoff, recovery, job state, submission gate, request persistence admission,
+submission persistence admission, queue persistence, queue admission, adapter binding, UAT lane, lane admission, UAT hardware
+reservation, reserve admission, UAT issue, entry admission, UAT start, start
+admission, UAT admit, runner persist, UAT completion, auth persist, req persist, sub persist, review packet, evidence capture, approval binding, promotion, UAT
+checklist artifacts, and a durable Queue Review Job
+rehearsal, activation, registry, allow-list, load plan, package, and SBOM
+reviews plus runtime isolation and runtime admission review. Lock, audit, and
+retention reviews carry retained-export and secret-audit prerequisite status
+without acquiring locks, appending audit records, or persisting artifacts.
+Runner Readiness carries retained-export and secret-audit blockers into the
+final pre-start review without starting jobs. UAT Entry carries those
+retained-export and secret-audit prerequisites plus the controlled UAT signoff
+requirement and controlled UAT hardware reservation review into the bounded
+hardware-UAT decision record without authorizing UAT. UAT Scope carries retained-export and
+secret-audit prerequisite artifacts plus packet output/export gate summaries
+into the bounded site, cluster, node, provider, and topology scope without
+reserving hardware. UAT Rehearsal
+generates provider, deployment, evidence, and artifact cases for controlled
+hardware testing. The review job writes persisted logs and history only.
+Dry-Run Ledger records graph steps and expected evidence outputs without
+running adapters. Permit Review binds the request, ledger, recovery, job state,
+retained-export prerequisite, secret-audit prerequisite, approval, evidence,
+and registry draft without issuing a permit.
+Secret Binding declares future lease, audit, RBAC, and adapter handoff records
+without resolving secret values. Secret Provider reviews future provider
+contract metadata without opening leases, reading secret paths, resolving
+values, or handing credentials to adapters. Secret Lease records future lease
+owner, policy, audit sink, adapter identity, and revocation metadata without
+opening leases or resolving values. Secret Audit records future audit sink,
+retention, and failure-classification metadata without appending events,
+reading retained artifacts, or persisting evidence. Lane Admit composes
+selected lanes, queue-admission provenance, authorization-persistence
+provenance, controlled UAT completion gate summaries, job persistence
+admission, adapter binding, and scope controls into a disabled lane persistence
+admission record before hardware reservation can be considered. Reserve Admit
+composes hardware
+reservation, queue-admission provenance, authorization-persistence provenance,
+controlled UAT completion gate summaries, signoff, operations, and UAT evidence
+acceptance into a disabled reservation persistence admission record before UAT
+entry issuance can be considered. UAT Entry composes the final bounded hardware-UAT entry blockers, including the
+non-persisted controlled UAT signoff requirement and non-persisted hardware
+reservation review, without authorizing testing, loading adapters, opening
+maintenance windows, or starting jobs. Entry Admit composes entry issuance,
+reservation persistence admission, queue-admission provenance,
+authorization-persistence provenance, controlled UAT completion gate summaries,
+signoff, runbook, and UAT evidence acceptance into a disabled entry
+persistence admission record before controlled UAT start can be considered.
+UAT Scope declares the selected site, cluster, node, provider, topology,
+evidence, artifact, packet output/export gate, and policy scope without
+reserving hardware or authorizing UAT.
+UAT Runbook reviews UAT window, rollback owner, evidence-retention target,
+retained-export prerequisite, secret-audit prerequisite, packet output/export
+gate summary, and operator steps without approving UAT.
+UAT Security reviews security reviewer metadata, private security review
+reference, secret boundaries, retained-export prerequisite, secret-audit
+prerequisite, packet output/export gate summary, audit/retention posture, and
+disabled adapter registry state without approving UAT.
+UAT Ops reviews operations owner metadata, private maintenance/change ticket,
+backup or restore evidence reference, retained-export prerequisite,
+secret-audit prerequisite, packet output/export gate summary, recovery posture,
+retention posture, and future lock scope without approving UAT or reserving
+hardware.
+UAT Signoff composes scope, runbook, security, operations, UAT evidence
+acceptance, allow-list, retained-export prerequisite, secret-store provider
+contract, secret audit persistence, and packet output/export gate summary
+reviews plus private signoff metadata without persisting signoff, issuing UAT entry, loading
+adapters, or starting jobs.
+Allow-List Review turns disabled registry draft entries into read-only
+allow-list approval artifacts without persisting entries, loading adapters, or
+starting jobs.
+Load Plan turns allow-list, controlled UAT signoff, retained-export
+prerequisite, secret audit persistence, and packet output/export gate summary
+artifacts into read-only adapter load entries without reading packages,
+importing code, handing credentials to adapters, or starting runners.
+Package Review records adapter package owner, private package reference, SHA256,
+signature reference, signer, retained-export prerequisite, secret-audit
+prerequisite, and packet output/export gate summary metadata without reading
+packages, hashing bytes, verifying signatures, staging files, or importing code.
+SBOM Review records adapter SBOM owner, private SBOM reference, SBOM format,
+SHA256, vulnerability scan reference, retained-export prerequisite,
+secret-audit prerequisite, and packet output/export gate summary metadata
+without generating SBOMs, reading SBOMs, parsing component inventories,
+scanning packages, staging files, exporting retained evidence, persisting secret
+audit entries, or importing code.
+Runtime Review records adapter runtime owner, isolation profile, sandbox image,
+network policy, filesystem policy, retained-export prerequisite, and
+secret-audit prerequisite plus packet output/export gate summary metadata
+without creating sandboxes, applying policies, registering hooks, handing
+credentials to adapters, exporting retained evidence, persisting secret audit
+entries, or starting adapter processes.
+Runtime Admit records adapter runtime admission owner, approval reference,
+change ticket, exception reference, retained-export prerequisite, and
+secret-audit prerequisite plus packet output/export gate summary metadata
+without admitting runtimes, loading adapters, handing credentials to adapters,
+exporting retained evidence, persisting secret audit entries, submitting
+mutating jobs, or contacting deployment targets.
+Exec Preflight records adapter execution preflight owner, evidence, command,
+connectivity, rollback, retained-export prerequisite, and secret-audit
+prerequisite plus packet output/export gate summary metadata without running
+commands, resolving secrets, opening target connections, exporting retained
+evidence, persisting secret audit entries, or submitting jobs.
+Target Links records connectivity owner, connectivity scope, target allow-list,
+maintenance window, probe plan, retained-export prerequisite, and secret-audit
+prerequisite plus packet output/export gate summary metadata without opening
+sockets, authenticating, resolving secrets, running probes, exporting retained
+evidence, persisting secret audit entries, or contacting targets.
+Secret Lease records lease owner, policy, audit sink, adapter identity, and
+revocation references without authenticating to a secret store, opening leases,
+resolving values, persisting audit events, or handing credentials to adapters.
+Credential Gate records credential handoff owner, secret lease policy, adapter
+identity, redaction policy, retained-export prerequisite, and secret-audit
+prerequisite plus packet output/export gate summary metadata without opening
+leases, resolving secrets, exposing values, handing credentials to adapters,
+exporting retained evidence, or persisting secret audit entries.
+Command Gate records command owner, command catalog, invocation policy,
+execution identity, output capture, retained-export prerequisite, and
+secret-audit prerequisite plus packet output/export gate summary metadata
+without assembling commands, writing command files, invoking adapters,
+capturing live output, exporting retained evidence, or persisting secret audit
+entries.
+Output Gate records output evidence owner, retention, redaction, failure
+classification, evidence-store, controlled UAT completion requirement,
+retained-export prerequisite, and secret-audit prerequisite plus packet
+output/export gate summary metadata without capturing stdout or stderr, writing
+artifacts, persisting evidence, exporting retained evidence, persisting secret
+audit entries, or classifying live failures.
+Export Gate records retained evidence export owner, request, retention store,
+RBAC review, checksum manifest, controlled UAT completion requirement,
+output-evidence prerequisite artifacts, and source review statuses plus packet
+output/export gate summary metadata without reading artifacts, generating ZIPs,
+writing checksums, persisting evidence, or exporting retained evidence.
+Lock Plan declares future orchestration, site, cluster, and adapter locks
+without acquiring them. Audit Plan declares future audit events, retained
+evidence artifacts, and packet output/export gate summary records without
+writing audit records. Retention Plan declares future retention policies, backup
+targets, and restore checks without persisting artifacts. Runner Readiness
+composes final permit, lock, audit, retention, packet output/export gate,
+secret, registry, activation, and controlled-UAT blockers without starting a
+runner. Activation Review checks the final evidence and
+approval package without enabling adapters. Registry Review drafts disabled provider/deployment
+registry entries for the current plan without persisting status changes. The
+Execution Disabled button is intentional until controlled adapter UAT proves
+mutating deployment paths.
+
 Workflows 1.x catalog:
 
 | Workflow | Category | Function |
@@ -244,6 +402,7 @@ Workflows 1.x catalog:
 | Pod Imaging (Standalone FCA) | Pod Operations | Runs pod imaging through standalone Foundation Central Appliance Lifecycle APIs. |
 | Site Deploy | Infrastructure | Handles multi-site deployment input for imaging, cluster creation, and basic configuration. |
 | Site Deploy (Standalone FCA) | Infrastructure | Builds standalone FCA site deployment intents and submits guarded Lifecycle requests. |
+| Native Foundation Deploy | Infrastructure | Plans Orchestrator-owned multi-site, heterogeneous cluster deployment intents for HCI, compute-only, storage-only, and mixed topology design. Execution is disabled until native adapters are validated. |
 | Configure Cluster | Configuration | Applies day-1 or day-2 Prism Element configuration such as AD, storage, networks, NTP, DNS, and HA settings. |
 | Post-Foundation Baseline | Configuration | Plans and applies verified post-foundation Prism Element baseline operations where safe mappings exist. |
 | PE Monitoring Baseline | Configuration | Plans monitoring, alerting, and validation evidence checks. Some controls are evidence-only or blocked until mappings are verified. |
@@ -695,6 +854,253 @@ Standalone Foundation Central Appliance workflows submit Lifecycle requests to
 FCA after validation and acknowledgement. An accepted handoff means the request
 was accepted by the FCA lane; operators must still monitor Foundation Central
 and collect evidence for actual imaging or cluster-completion status.
+
+Native Foundation Deploy is different from the FCA handoff workflows. It is the
+planning-only foundation for Orchestrator-owned deployment tasks across multiple
+sites, hardware providers, and cluster deployment types. Dry Run validates the
+intent shape; Run Workflow remains disabled until execution adapters have
+controlled UAT evidence. The read-only discovery preview API normalizes
+operator-supplied intent into site, cluster, and node facts without contacting
+BMCs or changing infrastructure. Discovery Contract defines provider-specific
+request, response, and evidence requirements for future live discovery adapters
+without contacting hardware providers. Discovery Reconcile compares supplied
+adapter-style discovery facts with the intended node plan and flags missing,
+unexpected, mismatched, incomplete, or secret-bearing facts without promoting
+execution. Generate Plan computes deterministic plan, intent, and discovery hashes plus approval metadata for future adapter-bound
+execution. Execution Readiness reports the UAT evidence gates that must pass
+before imaging-only or cluster-create adapters can be enabled. Image Sources
+reviews operator-supplied AOS and hypervisor references, versions, and
+SHA256-shaped checksums without staging images. Imaging Plan builds per-node
+Foundation payload previews from image, network, credential-reference, and
+discovery-reconciliation metadata without imaging nodes. Formation Plan builds
+cluster-level payload previews for HCI, compute-only, storage-only, and mixed
+topologies without creating clusters or registering nodes. Post-Create Plan
+builds Prism Element and topology validation payload previews without contacting
+live clusters. Topology Support creates fail-closed support records for HCI,
+compute-only, storage-only, and mixed provider/topology pairs without enabling
+mutating support. Network Manifest reviews VIP,
+BMC, host, CVM, gateway, DNS, NTP, duplicate IP, and subnet membership metadata
+without configuring networks. Secret Refs reviews named provider and BMC
+credential references and inline secret-like fields without resolving or
+exposing secret values. Secret Plan inventories future secret-store resolution
+requests without reading, decrypting, or exposing secret values. Execution Graph previews the read-only
+orchestration order for site waves, cluster waves, dependencies, and
+deployment-type-specific actions. Adapter Contracts reviews
+the versioned read-only provider and deployment contract registry for the
+current intent. Provider Adapters shows the read-only operation scaffold for
+future discovery, power, boot, image mount, and imaging adapters. Provider
+Preflight composes provider, credential reference, BMC address, image, and
+network metadata for live-discovery UAT review without contacting providers.
+Adapter Readiness reports cluster-scoped provider/topology capability blockers and
+missing UAT evidence. Deployment Policy checks site windows, max parallelism,
+approval binding, evidence requirements, and failure behavior before any future
+scheduling. Deployment Wave Gates turn those policy checks into per-wave,
+per-site scheduling gate records without reserving windows or opening waves.
+Deployment Wave Rehearsal packages those gates with evidence packs, recovery
+actions, runner blockers, go/no-go controls, and blast-radius metadata without
+starting execution or reserving windows.
+Wave Authorize composes rehearsed waves, pack approval, permit reviews, lock
+plans, runner blockers, recovery references, and blast-radius metadata without
+persisting authorization, acquiring locks, or starting execution.
+Window Reserve turns wave authorization, deployment windows, and site/cluster
+lock requests into read-only reservation records without persisting
+reservations, acquiring locks, or opening waves.
+Schedule Review turns reservation records, execution requests, dry-run ledgers,
+permits, locks, recovery actions, and job-state plans into disabled schedule
+items without opening waves or enqueuing jobs.
+Admission Review composes readiness, adapter, policy, approval, evidence,
+controlled UAT completion, and auth-persistence completion-gate checks before
+any future native Foundation execution start. Execution
+Contract builds deterministic future adapter request envelopes with controlled
+UAT completion gate metadata without loading or running adapters. Request
+Review builds the future execution submission object with controlled UAT
+completion gate summaries without creating a job. Recovery Plan reviews stop,
+retry, rollback,
+checkpoint, evidence, retained-export, secret-audit prerequisite, and packet
+output/export gate summary actions without executing recovery. Job State Plan models queue, running, checkpoint,
+pause, failure, recovery, retained-export prerequisite, and secret-audit
+prerequisite state plus packet output/export gate summaries without persisting durable job state. Evidence Packs prepares one read-only review record per cluster
+with plan hashes, graph step IDs, readiness gates, and contract requirements.
+Restart Resume composes checkpoint, job-state, retention, audit, lock, and
+scheduler metadata into disabled replay records without restoring checkpoints
+or replaying queues.
+Backup Restore composes retention targets, restore rehearsal checks,
+checkpoint, job-state, audit, and restart/resume metadata into disabled
+disaster-recovery records without creating backups or restoring state.
+Mutating Gate composes runner, backup/restore, controlled UAT signoff,
+controlled UAT execution authorization, carried authorization-persistence
+provenance, runtime, preflight, connectivity, credential, command, output
+evidence, and retained export reviews into a disabled execution-enable gate
+without authorizing execution or enabling deployment.
+Submission Gate builds future per-wave job submission records from mutating
+enablement, carried authorization-persistence enablement gate status, request
+persistence admission, controlled UAT completion and auth-persistence
+completion-gate summaries, scheduler, runner readiness, and controlled UAT
+entry reviews without enqueueing jobs or enabling deployment.
+Req Persist declares future execution request persistence admission records from
+request envelopes plus controlled UAT completion and auth-persistence
+completion-gate summaries without persisting request state, enqueueing jobs,
+submitting jobs, starting runners, or mutating hardware.
+Sub Persist declares future execution submission persistence admission records
+from submission envelopes and carried authorization-persistence enablement gate
+status plus controlled UAT completion gate summaries without persisting
+submission state, queue records, replay registrations, submitted jobs, or
+worker state.
+Queue Persist declares future durable queue records from submission persistence
+admission, carried authorization-persistence enablement gate status, controlled
+UAT completion gate summaries, job-state, audit, retention, and restart/resume
+reviews without persisting queue state, registering replay, or enqueueing jobs.
+Queue Admit declares future queue persistence admission records from queue
+persistence review, carried authorization-persistence enablement gate status,
+and controlled UAT completion gate summaries without admitting persistence,
+persisting queue state, registering replay, enqueueing jobs, or persisting job
+state.
+Auth Persist declares future execution authorization persistence admission
+records from controlled UAT execution authorization, runner persistence
+admission, carried queue-admission provenance, and carried
+authorization-persistence enablement gate status, controlled UAT completion
+gate summaries, and authorization-persistence provenance when present. It
+preserves a disabled placeholder cycle breaker until real authorization records
+exist, without persisting authorization, writing job state, or submitting jobs.
+Persist Admit declares future durable job, queue, checkpoint, authorization,
+audit, retention, replay, and submitted-job admission records from queue
+persistence admission, carried authorization-persistence enablement gate status,
+controlled UAT completion gate summaries, authorization persistence admission,
+and carried authorization queue-admission plus authorization-persistence
+provenance when present without writing state, registering replay, or submitting
+jobs.
+Adapter Bind declares future mutating adapter binding records from queue
+persistence admission, job persistence admission, carried
+authorization-persistence enablement gate status, controlled UAT completion
+gate summaries, authorization persistence admission provenance, carried
+authorization-persistence provenance, activation, allow-list, runtime,
+preflight, connectivity, credential, plan hash, approval, and UAT evidence
+metadata without persisting job state, persisting authorization, loading, or
+executing adapters.
+UAT Lane declares bounded provider, deployment-type, site, queue-admission,
+authorization-persistence, carried authorization-persistence enablement gate
+status, controlled UAT completion gate summaries, carried
+authorization-persistence, and adapter-binding lane records without persisting
+lane selection, reserving hardware, or issuing UAT entry.
+Lane Admit declares future lane persistence admission records from lane
+selection, queue-admission provenance, authorization-persistence provenance,
+carried authorization-persistence enablement gate status, controlled UAT
+completion gate summaries, carried authorization-persistence provenance, job
+persistence admission, adapter binding, and scope reviews without persisting
+selections, admitting hardware reservation, reserving hardware, or issuing UAT
+entry.
+UAT Reserve declares future controlled hardware reservation records from UAT
+lane persistence admission, queue-admission provenance,
+authorization-persistence provenance, carried authorization-persistence
+enablement gate status, controlled UAT completion gate summaries, carried
+authorization-persistence provenance, deployment windows, scheduler items,
+locks, and operations review without persisting reservations or opening
+maintenance windows.
+Reserve Admit declares future reservation persistence admission records from
+hardware reservation, queue-admission provenance, authorization-persistence
+provenance, carried authorization-persistence enablement gate status,
+controlled UAT completion gate summaries, carried authorization-persistence
+provenance, signoff, operations, and UAT evidence reviews without persisting
+reservations, opening maintenance windows, reserving hardware, or issuing UAT
+entry.
+UAT Issue assembles future controlled UAT entry issuance records from entry,
+hardware reservation, reservation persistence admission, queue-admission
+provenance, authorization-persistence provenance, carried
+authorization-persistence enablement gate status, controlled UAT completion
+gate summaries, carried authorization-persistence provenance, signoff, and
+evidence acceptance reviews without persisting or issuing UAT entry.
+Entry Admit declares future entry persistence admission records from entry
+issuance, reservation persistence admission, queue-admission provenance,
+authorization-persistence provenance, carried authorization-persistence
+enablement gate status, controlled UAT completion gate summaries, carried
+authorization-persistence provenance, signoff, runbook, and evidence
+acceptance reviews without persisting entry, issuing UAT entry, starting UAT,
+or starting runners.
+UAT Start declares future controlled UAT start readiness records from entry
+persistence admission, queue-admission provenance, and
+authorization-persistence provenance plus carried authorization-persistence
+enablement gate status, controlled UAT completion gate summaries, and carried
+authorization-persistence provenance controls without starting runners,
+adapters, or Foundation calls.
+Start Admit declares future controlled UAT start persistence admission records
+from start readiness, entry persistence admission, queue-admission provenance,
+authorization-persistence provenance, carried authorization-persistence
+enablement gate status, controlled UAT completion gate summaries, carried
+authorization-persistence provenance, and lock controls without persisting
+start state, starting UAT, or starting runners.
+UAT Admit declares future controlled UAT runner admission records from start
+persistence admission, queue-admission provenance, authorization-persistence
+provenance, carried authorization-persistence enablement gate status,
+controlled UAT completion gate summaries, carried authorization-persistence
+provenance, runtime admission, runtime isolation, and runner readiness reviews
+without admitting runtimes, starting runners, executing adapters, or mutating
+hardware.
+Runner Persist declares future controlled UAT runner persistence admission
+records from runner admission, start persistence admission, and
+queue-admission, authorization-persistence, and carried
+authorization-persistence enablement gate status plus controlled UAT
+completion gate summaries and carried authorization-persistence provenance
+controls without persisting admission, admitting runners, or starting runners.
+UAT Authorize declares future controlled UAT execution authorization records
+from runner persistence admission, queue-admission provenance, carried
+authorization-persistence enablement gate status, controlled UAT completion
+gate summaries, carried authorization-persistence provenance, preflight, target
+connectivity, credential handoff, command invocation, and output evidence
+reviews without invoking adapters, capturing output, submitting jobs, or
+mutating hardware.
+UAT Completion declares future controlled UAT completion records from execution
+authorization, controlled UAT completion gate summaries, output evidence,
+retained evidence export, signoff, and evidence acceptance reviews without
+marking UAT complete, promoting adapters, certifying production support, or
+submitting jobs.
+UAT Evidence maps provider and deployment-type requirements to accepted
+`foundation_engine.uat_evidence` IDs and approval/evidence bindings without
+persisting acceptance or enabling deployment.
+Pack Approval binds each evidence pack to Approval Gate, Validation Evidence,
+accepted UAT evidence, and per-cluster go/no-go review records without
+persisting decisions or enabling execution.
+Resume Checkpoint previews restart position from the current graph plus optional
+completed or failed step IDs in the intent. Promotion Review reports the
+software and UAT blockers for a provider/topology before any mutating adapter can
+be promoted. Activation, registry enablement, allow-list review, load-plan
+review, package provenance review, SBOM review, runtime isolation review,
+runtime admission review, execution preflight review, and target connectivity
+review, credential handoff review, command invocation review, output evidence
+review, and retained export review all require controlled UAT completion before
+any future adapter enablement, package approval, SBOM approval, runtime
+isolation approval, runtime admission approval, execution preflight approval,
+target connectivity approval, credential handoff approval, command invocation
+approval, output evidence approval, or retained export approval can be
+considered.
+UAT Checklist prepares scoped read-only test cases and required evidence fields for controlled hardware validation. Review Packet downloads a
+redacted ZIP containing the review artifacts, output/export gate summary, and
+SHA256 manifest, including carried authorization-persistence enablement and
+controlled UAT completion gate counts, including execution authorization
+persistence admission completion-gate counts. Capture Evidence stores the selected
+phase, optional approval ID, redacted review packet manifest, carried
+authorization-persistence gate metadata, controlled UAT completion gate
+metadata, provider/topology matrix status and counts, and hashes in Validation
+Evidence for later UAT or approval review. It also stores provider operation
+catalog, provider operation admission, and provider operation queue plan
+status/counts plus provider operation queue admission status/counts so future
+operation readiness can be reviewed from the captured packet.
+The returned Validation Evidence record ID is the
+`evidenceId` used by later Foundation reviews. Approval Binding compares the
+current plan with an approved `native-foundation-deploy` Approval Gate request
+and captured native Foundation Validation Evidence record, then reports any
+missing or mismatched binding, including missing controlled UAT completion gate
+metadata and execution authorization persistence admission completion-gate
+metadata, while keeping execution disabled. Admission Review carries the
+captured packet output/export, controlled UAT completion gate summary, and
+auth-persistence completion-gate metadata into each selected cluster decision,
+adapter request envelope, and future execution request object without allowing
+the runner to start. Execution Contract builds deterministic future adapter
+request envelopes with controlled UAT completion and auth-persistence
+completion-gate metadata without loading or running adapters. Dry-Run Ledger carries that gate summary
+onto each matching graph step while keeping every step recorded-not-executed.
+Permit Review binds the same packet gate summary into the non-issued permit
+package without allowing permit issuance. Lock Plan carries the packet gate
+summary into adapter lock metadata without acquiring locks or reserving windows.
 
 ## Where To Look During An Incident
 

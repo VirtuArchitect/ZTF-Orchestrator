@@ -479,7 +479,7 @@ export default function Dashboard() {
               <p className={clsx('font-semibold', driftAttention!.status === 'drifted' ? 'text-red-200' : 'text-yellow-200')}>
                 {driftAttention!.status === 'drifted' ? 'Drift detected' : 'Drift baseline unavailable'}
               </p>
-              <p className={clsx('text-sm mt-1', driftAttention!.status === 'drifted' ? 'text-red-200/70' : 'text-yellow-200/70')}>
+              <p className={clsx('text-sm mt-1', driftAttention!.status === 'drifted' ? 'text-red-200' : 'text-yellow-200')}>
                 {driftAttention!.configFile}
                 {driftAttention!.workflow ? ` - ${driftAttention!.workflow}` : ''}
                 {' - '}

@@ -40,14 +40,15 @@ const EVENT_FILTERS = [
 
 type EventFilterId = typeof EVENT_FILTERS[number]['id']
 
-function titleCase(value: string) {
+function titleCase(value: string = 'audit_event') {
   return value
     .replace(/_/g, ' ')
     .replace(/\b\w/g, char => char.toUpperCase())
 }
 
 function describeEntry(entry: LogEntry) {
-  const action = entry.action || entry.msg
+  const message = entry.msg || 'audit_event'
+  const action = entry.action || message
 
   if (entry.event === 'http_request' || entry.method || entry.path) {
     const target = `${entry.method || ''} ${entry.path || ''}`.trim() || action
@@ -60,21 +61,21 @@ function describeEntry(entry: LogEntry) {
   if (entry.workflow) {
     const status = entry.status ? ` - ${entry.status}` : ''
     return {
-      title: `${titleCase(entry.msg)}${status}`,
+      title: `${titleCase(message)}${status}`,
       detail: `Workflow: ${entry.workflow}`,
     }
   }
 
   if (entry.status) {
     return {
-      title: `${titleCase(entry.msg)} - ${entry.status}`,
-      detail: action !== entry.msg ? action : '',
+      title: `${titleCase(message)} - ${entry.status}`,
+      detail: action !== message ? action : '',
     }
   }
 
   return {
-    title: titleCase(entry.msg),
-    detail: action !== entry.msg ? action : '',
+    title: titleCase(message),
+    detail: action !== message ? action : '',
   }
 }
 

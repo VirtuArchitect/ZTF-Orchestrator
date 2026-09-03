@@ -14,7 +14,7 @@ type VisualDriftRun = {
   findings: unknown[]
 }
 
-async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[], executeEvents?: unknown[] } = {}) {
+async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[], executeEvents?: unknown[], nativeDellMutationEnabled?: boolean } = {}) {
   await page.route('**/api/**', async route => {
     const url = route.request().url()
     if (url.endsWith('/api/execute') && options.executeEvents) {
@@ -92,6 +92,73 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
     }
     if (url.endsWith('/api/ztf/compatibility')) {
       await route.fulfill({ json: { installed: true, compatible: true, layout: 'legacy-1.x', entrypoint: 'main.py', requiredRef: 'v1.5.2', message: 'Legacy ZTF 1.x workflow/script CLI detected', supportedModes: [] } })
+      return
+    }
+    if (url.endsWith('/api/native-foundation/phases')) {
+      await route.fulfill({ json: {
+        currentExecutionMode: 'read_only',
+        contractVersion: 'native-foundation-phase/v1.8.0-readonly',
+        mutatingActionsEnabled: false,
+        readOnly: true,
+        supportedReadinessPhases: ['imaging_only', 'cluster_create'],
+        summary: {
+          phaseCount: 9,
+          implementedPhaseCount: 9,
+          mutatingEnabledPhaseCount: 0,
+          currentBoundary: 'Planning, review, UAT evidence, and adapter hardening only; deployment mutation remains disabled.',
+        },
+        phases: [
+          {
+            id: 'architecture_boundary',
+            name: 'Architecture Boundary',
+            order: 0,
+            status: 'implemented_foundation',
+            readOnly: true,
+            mutatingActionsEnabled: false,
+            operatorOutcome: 'Defines ownership, safety boundaries, and artifact rules for native Foundation work.',
+            evidenceRequired: [],
+            nextGate: 'Intent model validation',
+          },
+          {
+            id: 'production_hardening',
+            name: 'Production Hardening',
+            order: 8,
+            status: 'implemented_read_only_hardening',
+            readOnly: true,
+            mutatingActionsEnabled: false,
+            operatorOutcome: 'Builds adapter registry, allow-list, runtime admission, queue, job-state, restart/resume, backup/restore, and review packet controls.',
+            evidenceRequired: [],
+            nextGate: 'Future explicit mutating enablement change after controlled UAT',
+          },
+        ],
+      } })
+      return
+    }
+    if (url.endsWith('/api/native-foundation/provider-adapters')) {
+      const mutationEnabled = options.nativeDellMutationEnabled === true
+      await route.fulfill({ json: {
+        adapterInterfaceVersion: mutationEnabled ? 'native-foundation-provider-adapter/v1.8.0-controlled-uat' : 'native-foundation-provider-adapter/v1.8.0-readonly',
+        status: mutationEnabled ? 'ready' : 'blocked',
+        readOnly: !mutationEnabled,
+        mutatingActionsEnabled: mutationEnabled,
+        providerAdapters: [
+          {
+            providerId: 'dell_idrac_redfish',
+            status: mutationEnabled ? 'enabled_controlled_uat_mutating' : 'implemented_controlled_uat_read_only',
+            readOnly: !mutationEnabled,
+            mutatingActionsEnabled: mutationEnabled,
+            readOnlyDiscovery: true,
+            adapterFamily: 'redfish',
+            vendor: 'Dell',
+            serviceRoot: '/redfish/v1/',
+            environmentControls: {
+              liveDiscovery: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY',
+              mutatingUat: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION',
+            },
+            controlledUatMutatingOperations: [],
+          },
+        ],
+      } })
       return
     }
     if (url.endsWith('/api/nkp/profiles')) {
@@ -360,6 +427,54 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   await expect(page.locator('input[placeholder="2Z3P..."]')).toHaveValue('NODE-001')
   await expect(page.locator('input[placeholder="10.0.0.11"]')).toHaveValue('192.0.2.211')
   await expect(page.locator('input[placeholder="10.0.0.12"]')).toHaveValue('192.0.2.212')
+})
+
+test('native Foundation detail separates phase status from Dell adapter status', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/workflows/native-foundation-deploy')
+
+  await expect(page.getByRole('heading', { name: 'Native Foundation Deploy', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Native Foundation Phase Status' })).toBeVisible()
+  await expect(page.getByText('Done')).toBeVisible()
+  await expect(page.getByText('Total')).toBeVisible()
+  await expect(page.getByText('Live')).toBeVisible()
+
+  await expect(page.getByText('Provider Adapter Status')).toBeVisible()
+  await expect(page.getByText('Dell iDRAC Redfish')).toBeVisible()
+  await expect(page.getByText('implemented controlled uat read only')).toBeVisible()
+  await expect(page.getByText('discovery gated')).toBeVisible()
+  await expect(page.getByText('mutation locked')).toBeVisible()
+  await expect(page.getByText('Probe', { exact: true })).toBeVisible()
+  await expect(page.getByText('Deploy', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Run UAT Deploy' })).toBeDisabled()
+})
+
+test('native Foundation detail enables Dell UAT deploy when adapter mutation is enabled', async ({ page }) => {
+  await seedUiSession(page, { nativeDellMutationEnabled: true })
+  await page.goto('/workflows/native-foundation-deploy')
+
+  await expect(page.getByRole('heading', { name: 'Native Foundation Deploy', level: 2 })).toBeVisible()
+  const config = [
+    'ztf_orchestrator:',
+    '  workflow_family: native_foundation',
+    'foundation_engine:',
+    '  mode: controlled_uat',
+    'sites:',
+    '  - site_name: site-a',
+    '    hardware_provider: dell_idrac_redfish',
+    '    clusters: []',
+    '',
+  ].join('\n')
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'native-foundation-deploy.yml',
+    mimeType: 'text/yaml',
+    buffer: Buffer.from(config),
+  })
+
+  await expect(page.getByText('Dell iDRAC Redfish')).toBeVisible()
+  await expect(page.getByText('enabled controlled uat mutating')).toBeVisible()
+  await expect(page.getByText('mutation enabled')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Run UAT Deploy' })).toBeEnabled()
 })
 
 test('standalone FCA cluster workflow emits standalone config keys', async ({ page }) => {
