@@ -74,6 +74,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     details: 'Builds a standalone Foundation Central Appliance site deployment intent, validates Lifecycle v4.2.a2 endpoint inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
+    id: 'native-foundation-deploy',
+    name: 'Native Foundation Deploy',
+    description: 'Plans multi-site cluster deployment with native Foundation ownership',
+    category: 'Infrastructure',
+    icon: 'Boxes',
+    configFile: 'native-foundation-deploy.yml',
+    details: 'Defines the planning-only native Foundation deployment model for heterogeneous hardware providers, multiple sites, and cluster deployment types including HCI, compute-only, storage-only, and mixed topologies. Execution adapters remain disabled until controlled UAT validates them.',
+  },
+  {
     id: 'config-cluster',
     name: 'Configure Cluster',
     description: 'Configure cluster: AD, storage, networks, NTP/DNS, HA',

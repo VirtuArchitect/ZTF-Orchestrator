@@ -236,6 +236,17 @@
   color: rgb(51 65 85 / 1);
 }
 
+.theme-light .btn-success {
+  background-color: rgb(204 251 241 / 1);
+  border: 1px solid rgb(20 184 166 / 1);
+  color: rgb(15 23 42 / 1);
+}
+
+.theme-light .bg-emerald-600.text-white,
+.theme-light .hover\:bg-emerald-500.text-white {
+  color: rgb(15 23 42 / 1);
+}
+
 .theme-light .input {
   color: rgb(15 23 42 / 1);
 }

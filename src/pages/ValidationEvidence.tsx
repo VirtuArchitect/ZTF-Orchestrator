@@ -15,7 +15,7 @@ interface NkpProfile {
 
 interface EvidenceRecord {
   id: string
-  source?: 'nkp' | 'ztf-workflow' | string
+  source?: 'nkp' | 'ztf-workflow' | 'native-foundation' | string
   type?: string
   status: 'ready' | 'needs_review' | 'blocked' | string
   createdAt: string
@@ -31,6 +31,7 @@ interface EvidenceRecord {
   approvalId?: string
   jobId?: string
   notes?: string
+  metadata?: Record<string, unknown>
   readiness?: { status: string; score: number; summary?: { passed: number; warnings: number; failed: number } }
   schemaValidation?: { status: string; missing?: string[]; warnings?: string[] }
   compatibility?: { status: string; summary?: { passed: number; warnings: number; failed: number } }
@@ -182,7 +183,7 @@ export default function ValidationEvidence() {
   return (
     <Layout
       title="Validation Evidence"
-      subtitle="Capture and export defensible UAT records for NKP readiness, ZTF workflow configs, approvals, jobs, and execution output"
+      subtitle="Capture and export defensible UAT records for NKP readiness, ZTF workflows, native Foundation reviews, approvals, jobs, and execution output"
       actions={
         <button onClick={load} disabled={loading} className="btn-secondary gap-1.5">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -334,7 +335,7 @@ export default function ValidationEvidence() {
                         <ShieldCheck size={16} className="text-nutanix-cyan" />
                         <h3 className="font-semibold text-gray-100">{record.profileName || record.workflow || record.configFile || 'Validation Evidence'}</h3>
                         <span className={clsx('badge text-xs', statusBadge(record.status))}>{record.status.replace('_', ' ')}</span>
-                        <span className="badge badge-blue text-xs">{record.source === 'ztf-workflow' ? 'ZTF UAT' : 'NKP'}</span>
+                        <span className="badge badge-blue text-xs">{sourceLabel(record.source)}</span>
                         {record.profileRevision && <span className="badge badge-blue text-xs">rev {record.profileRevision}</span>}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
@@ -347,8 +348,18 @@ export default function ValidationEvidence() {
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
                         <Metric label="Readiness" value={record.readiness ? `${record.readiness.status} ${record.readiness.score}%` : 'unknown'} />
                         <Metric label="Schema" value={record.schemaValidation?.status || 'unknown'} />
-                        <Metric label={record.source === 'ztf-workflow' ? 'Execution' : 'CLI'} value={record.source === 'ztf-workflow' ? (record.executionStatus || 'not linked') : (record.compatibility?.status || 'not captured')} />
+                        <Metric label={record.source === 'ztf-workflow' || record.source === 'native-foundation' ? 'Execution' : 'CLI'} value={record.source === 'ztf-workflow' || record.source === 'native-foundation' ? (record.executionStatus || 'not linked') : (record.compatibility?.status || 'not captured')} />
                       </div>
+                      {record.source === 'native-foundation' && (
+                        <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                          <Metric label="Auth Gate" value={nativeFoundationGateStatus(record)} />
+                          <Metric label="Auth Carried" value={nativeFoundationCarriedCount(record)} />
+                          <Metric label="Auth Missing" value={nativeFoundationMissingCount(record)} />
+                        </div>
+                      )}
+                      {record.source === 'native-foundation' && nativeFoundationGateEvidence(record) && (
+                        <p className="mt-2 text-xs text-gray-500">{nativeFoundationGateEvidence(record)}</p>
+                      )}
                       {record.notes && <p className="mt-3 text-sm text-gray-400">{record.notes}</p>}
                     </div>
                     <div className="flex flex-wrap gap-2 xl:flex-shrink-0">
@@ -416,4 +427,35 @@ function statusBadge(status: string) {
   if (status === 'ready') return 'badge-green'
   if (status === 'blocked') return 'badge-red'
   return 'badge-yellow'
+}
+
+function sourceLabel(source?: string) {
+  if (source === 'ztf-workflow') return 'ZTF UAT'
+  if (source === 'native-foundation') return 'Native Foundation'
+  return 'NKP'
+}
+
+function metadataValue(record: EvidenceRecord, key: string) {
+  return record.metadata && Object.prototype.hasOwnProperty.call(record.metadata, key)
+    ? record.metadata[key]
+    : undefined
+}
+
+function nativeFoundationGateStatus(record: EvidenceRecord) {
+  return String(metadataValue(record, 'nativeFoundationExecutionAuthorizationCarriedPersistenceGateStatus') || 'unknown')
+}
+
+function nativeFoundationCarriedCount(record: EvidenceRecord) {
+  const value = metadataValue(record, 'nativeFoundationExecutionAuthorizationCarriedPersistenceRecordCount')
+  return typeof value === 'number' ? String(value) : '0'
+}
+
+function nativeFoundationMissingCount(record: EvidenceRecord) {
+  const value = metadataValue(record, 'nativeFoundationExecutionAuthorizationMissingCarriedPersistenceRecordCount')
+  return typeof value === 'number' ? String(value) : '0'
+}
+
+function nativeFoundationGateEvidence(record: EvidenceRecord) {
+  const value = metadataValue(record, 'nativeFoundationExecutionAuthorizationCarriedPersistenceGateEvidence')
+  return typeof value === 'string' ? value : ''
 }

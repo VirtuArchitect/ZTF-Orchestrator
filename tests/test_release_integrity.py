@@ -81,6 +81,7 @@ def test_current_operator_docs_reference_release_version():
         ROOT / 'appliance' / 'README.md',
         ROOT / 'docs' / 'installation-guide.md',
         ROOT / 'docs' / 'foundation-central-validation.md',
+        ROOT / 'docs' / 'foundation-engine-roadmap.md',
         ROOT / 'docs' / 'postgresql-backup-restore-drill.md',
         ROOT / 'docs' / 'sanitized-uat-evidence-record.md',
         ROOT / 'docs' / 'script-wizard-validation-test-plan.md',
@@ -114,6 +115,102 @@ def test_operator_runbook_baseline_is_present_and_linked():
             ROOT / 'docs' / 'architecture' / 'SECURITY-BOUNDARY.md',
             ROOT / 'docs' / 'architecture' / 'DATA-FLOW.md',
             ROOT / 'docs' / 'architecture' / 'DEPLOYMENT-BOUNDARIES.md',
+            ROOT / 'docs' / 'architecture' / 'native-foundation-engine.md',
+        ],
+        'foundation-engine': [
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-contracts.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-command-invocation-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-credential-handoff-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-activation-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-allow-list-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-enablement-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-execution-preflight-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-load-plan-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-output-evidence-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-package-provenance-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-runtime-admission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-runtime-isolation-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-sbom-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-target-connectivity-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-promotion-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-readiness.md',
+            ROOT / 'docs' / 'foundation-engine' / 'adapter-uat-rehearsal.md',
+            ROOT / 'docs' / 'foundation-engine' / 'approval-binding-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'backup-restore-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'cluster-formation-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-entry-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-entry-issuance-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-completion-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-execution-authorization-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-hardware-reservation-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-lane-selection-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-operations-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-runner-admission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-runner-persistence-admission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-runbook-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-security-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-signoff-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-start-readiness-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-scope-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'post-create-validation-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-policy.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-scheduler-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-type-support-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-wave-authorization-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-window-reservation-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-wave-gates.md',
+            ROOT / 'docs' / 'foundation-engine' / 'deployment-wave-rehearsal.md',
+            ROOT / 'docs' / 'foundation-engine' / 'discovery-preview.md',
+            ROOT / 'docs' / 'foundation-engine' / 'discovery-contract.md',
+            ROOT / 'docs' / 'foundation-engine' / 'discovery-reconciliation.md',
+            ROOT / 'docs' / 'foundation-engine' / 'dry-run-ledger.md',
+            ROOT / 'docs' / 'foundation-engine' / 'evidence-pack-approval-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'evidence-packs.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-admission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-adapter-contract.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-audit-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-graph.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-lock-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-permit-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-request-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-readiness.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-retention-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-runner-readiness.md',
+            ROOT / 'docs' / 'foundation-engine' / 'execution-submission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'image-sources.md',
+            ROOT / 'docs' / 'foundation-engine' / 'job-state-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'intent-schema.md',
+            ROOT / 'docs' / 'foundation-engine' / 'mutating-adapter-binding-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'mutating-enablement-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'network-manifest.md',
+            ROOT / 'docs' / 'foundation-engine' / 'node-imaging-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'phase-advancement-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'phase-catalog.md',
+            ROOT / 'docs' / 'foundation-engine' / 'plan-approval-binding.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-adapters.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-operation-admission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-operation-catalog.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-operation-queue-admission-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-operation-queue-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-preflight.md',
+            ROOT / 'docs' / 'foundation-engine' / 'provider-topology-matrix.md',
+            ROOT / 'docs' / 'foundation-engine' / 'queue-persistence-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'recovery-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'retained-evidence-export-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'resume-checkpoint.md',
+            ROOT / 'docs' / 'foundation-engine' / 'review-packet.md',
+            ROOT / 'docs' / 'foundation-engine' / 'review-job.md',
+            ROOT / 'docs' / 'foundation-engine' / 'restart-resume-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'secret-audit-persistence-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'secret-lease-execution-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'secret-resolution-plan.md',
+            ROOT / 'docs' / 'foundation-engine' / 'secret-references.md',
+            ROOT / 'docs' / 'foundation-engine' / 'secret-store-binding-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'secret-store-provider-contract-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'support-matrix.md',
+            ROOT / 'docs' / 'foundation-engine' / 'topology-rules.md',
+            ROOT / 'docs' / 'foundation-engine' / 'uat-evidence-acceptance-review.md',
+            ROOT / 'docs' / 'foundation-engine' / 'uat-checklist.md',
         ],
         'demo': [
             ROOT / 'docs' / 'demo' / 'README.md',
@@ -210,6 +307,110 @@ def test_operator_runbook_baseline_is_present_and_linked():
         for path in docs:
             text = path.read_text(encoding='utf-8')
             assert expected_tag in text, f'{path.relative_to(ROOT)} must reference {expected_tag}'
+
+
+def test_native_foundation_phase_catalog_docs_match_server_contract():
+    import server
+
+    catalog = server._native_foundation_phase_catalog()
+    phase_doc = (ROOT / 'docs' / 'foundation-engine' / 'phase-catalog.md').read_text(encoding='utf-8')
+    advancement_doc = (ROOT / 'docs' / 'foundation-engine' / 'phase-advancement-review.md').read_text(encoding='utf-8')
+    matrix_doc = (ROOT / 'docs' / 'foundation-engine' / 'provider-topology-matrix.md').read_text(encoding='utf-8')
+    operation_catalog_doc = (ROOT / 'docs' / 'foundation-engine' / 'provider-operation-catalog.md').read_text(encoding='utf-8')
+    operation_admission_doc = (ROOT / 'docs' / 'foundation-engine' / 'provider-operation-admission-review.md').read_text(encoding='utf-8')
+    operation_queue_doc = (ROOT / 'docs' / 'foundation-engine' / 'provider-operation-queue-plan.md').read_text(encoding='utf-8')
+    operation_queue_admission_doc = (ROOT / 'docs' / 'foundation-engine' / 'provider-operation-queue-admission-review.md').read_text(encoding='utf-8')
+    mutating_adapter_binding_doc = (ROOT / 'docs' / 'foundation-engine' / 'mutating-adapter-binding-review.md').read_text(encoding='utf-8')
+    lane_persistence_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-lane-persistence-admission-review.md').read_text(encoding='utf-8')
+    reservation_persistence_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-reservation-persistence-admission-review.md').read_text(encoding='utf-8')
+    entry_issuance_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-entry-issuance-review.md').read_text(encoding='utf-8')
+    entry_persistence_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-entry-persistence-admission-review.md').read_text(encoding='utf-8')
+    start_readiness_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-start-readiness-review.md').read_text(encoding='utf-8')
+    start_persistence_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-start-persistence-admission-review.md').read_text(encoding='utf-8')
+    runner_admission_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-runner-admission-review.md').read_text(encoding='utf-8')
+    runner_persistence_doc = (ROOT / 'docs' / 'foundation-engine' / 'controlled-uat-runner-persistence-admission-review.md').read_text(encoding='utf-8')
+    provider_adapters_doc = (ROOT / 'docs' / 'foundation-engine' / 'provider-adapters.md').read_text(encoding='utf-8')
+    review_packet_doc = (ROOT / 'docs' / 'foundation-engine' / 'review-packet.md').read_text(encoding='utf-8')
+    review_job_doc = (ROOT / 'docs' / 'foundation-engine' / 'review-job.md').read_text(encoding='utf-8')
+    roadmap = (ROOT / 'docs' / 'foundation-engine-roadmap.md').read_text(encoding='utf-8')
+    architecture = (ROOT / 'docs' / 'architecture' / 'native-foundation-engine.md').read_text(encoding='utf-8')
+    support_matrix = (ROOT / 'docs' / 'foundation-engine' / 'support-matrix.md').read_text(encoding='utf-8')
+    user_guide = (ROOT / 'docs' / 'user-guide.md').read_text(encoding='utf-8')
+
+    assert 'GET /api/native-foundation/phases' in phase_doc
+    assert 'GET /api/native-foundation/phases' in roadmap
+    assert 'GET /api/native-foundation/phases' in architecture
+    assert 'GET /api/native-foundation/phases' in support_matrix
+    assert 'GET /api/native-foundation/phases' in user_guide
+    assert 'POST /api/native-foundation/phases/advancement-review' in advancement_doc
+    assert 'POST /api/native-foundation/phases/advancement-review' in architecture
+    assert 'POST /api/native-foundation/phases/advancement-review' in support_matrix
+    assert 'POST /api/native-foundation/provider-topology-matrix' in matrix_doc
+    assert 'POST /api/native-foundation/provider-topology-matrix' in architecture
+    assert 'POST /api/native-foundation/provider-topology-matrix' in support_matrix
+    assert 'POST /api/native-foundation/provider-operation-catalog' in operation_catalog_doc
+    assert 'POST /api/native-foundation/provider-operation-catalog' in architecture
+    assert 'POST /api/native-foundation/provider-operation-catalog' in support_matrix
+    assert 'POST /api/native-foundation/provider-operation-admission-review' in operation_admission_doc
+    assert 'POST /api/native-foundation/provider-operation-admission-review' in architecture
+    assert 'POST /api/native-foundation/provider-operation-admission-review' in support_matrix
+    assert 'POST /api/native-foundation/provider-operation-queue-plan' in operation_queue_doc
+    assert 'POST /api/native-foundation/provider-operation-queue-plan' in architecture
+    assert 'POST /api/native-foundation/provider-operation-queue-plan' in support_matrix
+    assert 'POST /api/native-foundation/provider-operation-queue-admission-review' in operation_queue_admission_doc
+    assert 'POST /api/native-foundation/provider-operation-queue-admission-review' in architecture
+    assert 'POST /api/native-foundation/provider-operation-queue-admission-review' in support_matrix
+    assert 'provider-topology-matrix.json' in review_packet_doc
+    assert 'provider-operation-catalog.json' in review_packet_doc
+    assert 'provider-operation-admission-review.json' in review_packet_doc
+    assert 'provider-operation-queue-plan.json' in review_packet_doc
+    assert 'provider-operation-queue-admission-review.json' in review_packet_doc
+    assert 'provider operation queue admission' in mutating_adapter_binding_doc
+    assert 'POST /api/native-foundation/uat/lane-persistence-admission-review' in lane_persistence_doc
+    assert 'provider operation queue admission provenance' in lane_persistence_doc
+    assert 'POST /api/native-foundation/uat/reservation-persistence-admission-review' in reservation_persistence_doc
+    assert 'provider operation queue admission provenance' in reservation_persistence_doc
+    assert 'POST /api/native-foundation/uat/entry-issuance-review' in entry_issuance_doc
+    assert 'provider operation queue admission provenance' in entry_issuance_doc.lower()
+    assert 'POST /api/native-foundation/uat/entry-persistence-admission-review' in entry_persistence_doc
+    assert 'provider operation queue admission provenance' in entry_persistence_doc
+    assert 'POST /api/native-foundation/uat/start-readiness-review' in start_readiness_doc
+    assert 'provider operation queue admission provenance' in start_readiness_doc.lower()
+    assert 'POST /api/native-foundation/uat/start-persistence-admission-review' in start_persistence_doc
+    assert 'provider operation queue admission provenance' in start_persistence_doc
+    assert 'POST /api/native-foundation/uat/runner-admission-review' in runner_admission_doc
+    assert 'provider operation queue admission provenance' in runner_admission_doc.lower()
+    assert 'POST /api/native-foundation/uat/runner-persistence-admission-review' in runner_persistence_doc
+    assert 'provider operation queue admission provenance' in runner_persistence_doc.lower()
+    assert 'POST /api/native-foundation/providers/dell-idrac/redfish-probe' in provider_adapters_doc
+    assert 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true' in provider_adapters_doc
+    assert 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true' in provider_adapters_doc
+    assert 'Controlled-UAT deploy gate' in support_matrix
+    assert 'Provider/topology matrix row count' in review_job_doc
+    assert 'runner persistence admission review ID' in review_job_doc
+    assert 'provider operation queue admission count' in review_job_doc
+    assert 'provider/topology matrix' in support_matrix
+    assert catalog['currentExecutionMode'] == 'planning_only'
+    assert catalog['mutatingActionsEnabled'] is False
+    assert catalog['summary']['mutatingEnabledPhaseCount'] == 0
+    assert 'zero mutating-enabled phases' in support_matrix
+
+    for phase in catalog['phases']:
+        display_status = str(phase['status']).replace('_', ' ').capitalize()
+        status_pattern = re.escape(display_status).replace(r'read\ only', r'read[- ]only')
+        row_pattern = (
+            rf"\|\s*{phase['order']}\s*\|\s*{re.escape(phase['name'])}\s*\|"
+            rf"\s*{status_pattern}\s*\|"
+        )
+        assert re.search(row_pattern, phase_doc), (
+            f"docs/foundation-engine/phase-catalog.md missing phase row for {phase['name']}"
+        )
+        assert f"## Phase {phase['order']} - {phase['name']}" in roadmap
+        assert phase['readOnly'] is True
+        assert phase['mutatingActionsEnabled'] is False
+
+    assert str(catalog['summary']['phaseCount']) in phase_doc
+    assert all(phase in phase_doc for phase in catalog['supportedReadinessPhases'])
 
 
 def test_static_demo_pages_configuration_is_present():

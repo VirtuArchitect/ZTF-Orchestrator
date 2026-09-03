@@ -14,6 +14,9 @@ the underlying automation engines:
 
 - ZeroTouch Framework 1.x remains the ZTF workflow/script execution engine.
 - NKP ZeroTouch Framework remains the optional NKP automation engine.
+- Native Foundation Engine is a planning-only deployment-intent lane until
+  execution adapters are validated in controlled UAT; it now includes read-only
+  execution graph planning for multi-site and multi-cluster ordering.
 - ZTF-Orchestrator owns UI workflow, RBAC, approvals, durable jobs, schedules,
   audit events, validation evidence, config management, and storage posture.
 - Nutanix infrastructure remains the target system; production validation is
@@ -26,6 +29,7 @@ the underlying automation engines:
 | [SECURITY-BOUNDARY.md](SECURITY-BOUNDARY.md) | Trust boundary, sensitive inputs, and non-goals |
 | [DATA-FLOW.md](DATA-FLOW.md) | Operator, API, storage, job, and target-system data flow |
 | [DEPLOYMENT-BOUNDARIES.md](DEPLOYMENT-BOUNDARIES.md) | Deployment modes and operational limits |
+| [native-foundation-engine.md](native-foundation-engine.md) | Planning-only native Foundation architecture and phase boundary |
 
 ## Related Existing Docs
 
@@ -35,3 +39,5 @@ the underlying automation engines:
 - [systemd Guide](../systemd.md)
 - [nginx TLS Guide](../nginx-tls.md)
 - [ZTF 2.x Plan/Apply Roadmap](../ztf-2x-plan-apply-roadmap.md)
+- [Native Foundation Engine Roadmap](../foundation-engine-roadmap.md)
+- [Native Foundation Phase Catalog](../foundation-engine/phase-catalog.md)

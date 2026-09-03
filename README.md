@@ -29,7 +29,7 @@ Git, YAML, and CLI commands.
 |---|---|
 | What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
 | Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
-| What does it execute? | Allowlisted ZTF 1.x workflows/scripts and constrained NKP safe phases through background jobs. |
+| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and planning-only native Foundation intents through governed jobs. |
 | Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
 | Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
 | What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
@@ -184,6 +184,44 @@ easier to consume in day-to-day operations by adding:
 - Post-cluster baseline wizards that turn operator checklists into guarded
   plans for Prism Element, AHV/CVM security, monitoring, certificates, network,
   and hardware baselines without embedding site-specific values.
+- Planning-only native Foundation deployment intents for heterogeneous
+  multi-site cluster design across HCI, compute-only, storage-only, and mixed
+  topologies, including read-only image source, node imaging plan, cluster
+  formation plan, post-create validation plan, network, secret reference,
+  secret resolution plan, secret-store binding review, discovery contract, and discovery reconciliation manifests,
+  execution graph planning for site waves, cluster waves, dependencies, deployment-type
+  actions, provider preflight, and per-cluster evidence packs plus provider adapter scaffolds,
+  adapter readiness, secret-store provider contract review, secret lease
+  execution review, secret audit persistence review, deployment policy review, execution admission review,
+  execution adapter contract review, execution request review, execution request
+  persistence admission review, resume checkpoint
+  manifests, dry-run execution ledgers, execution permit review, execution lock
+  plans, execution audit plan review, execution retention plan review, recovery
+  plan review, restart/resume review, backup/restore review, runner readiness
+  review, mutating enablement review, execution submission review, execution
+  submission persistence admission review, queue persistence review,
+  queue persistence admission review, job persistence admission review, mutating adapter binding
+  review, controlled UAT lane selection review, controlled UAT lane persistence
+  admission review, controlled UAT hardware reservation review, controlled UAT
+  reservation persistence admission review, controlled UAT entry issuance review,
+  controlled UAT entry persistence admission review, controlled UAT start
+  readiness review, controlled UAT start persistence admission review,
+  controlled UAT runner admission review, controlled UAT runner persistence
+  admission review, controlled UAT execution authorization review, execution
+  authorization persistence admission review,
+  UAT evidence acceptance review,
+  controlled UAT entry review, controlled UAT scope review, controlled UAT
+  runbook review, controlled UAT security review, controlled UAT operations
+  review, controlled UAT signoff review, job state planning, durable read-only
+  review jobs, adapter promotion review, UAT checklist, and adapter UAT
+  rehearsal generation, adapter activation review,
+  adapter enablement registry review, adapter allow-list review, adapter load
+  plan review, adapter package provenance review, adapter SBOM review, adapter
+  runtime isolation review, adapter runtime admission review, adapter execution
+  preflight review, adapter target connectivity review, adapter credential
+  handoff review, adapter command invocation review, redacted review packet
+  export, adapter output evidence review, retained evidence export review,
+  Validation Evidence capture, and approval binding review.
 - Installed Build visibility so patched releases and appliance updates can be
   identified by version tag, source ref, commit, image tag, and update package.
 - Durable job execution instead of browser-bound terminal sessions.
@@ -191,8 +229,10 @@ easier to consume in day-to-day operations by adding:
 - RBAC, approvals, audit logs, and validation status for governance.
 - Drift checks, schedules, pipelines, and parallel execution for repeatability.
 
-It complements Prism Central and Foundation Central. It does not replace them;
-it orchestrates repeatable ZeroTouch Framework workflows that call Nutanix APIs.
+It complements Prism Central and Foundation Central today. The native Foundation
+engine roadmap defines a controlled path for ZTF-Orchestrator to own
+heterogeneous deployment planning and, after UAT, selected execution adapters.
+See [Native Foundation Engine Roadmap](docs/foundation-engine-roadmap.md).
 
 ---
 
@@ -627,6 +667,14 @@ cancelled or completed before deletion. Progress percentages are orchestration
 estimates based on queue state, process launch, and observable ZTF output. When
 ZTF or NKP output includes Nutanix task UUIDs, the job captures and displays
 those task IDs for follow-up in Prism Central or Prism Element.
+Native Foundation review jobs use the same durable job surface to generate
+read-only plan, evidence, runner-readiness, backup/restore, mutating-gate,
+submission-gate, queue-persistence, queue-persistence admission,
+adapter-binding, UAT lane-selection, UAT lane persistence admission,
+hardware reservation, and reservation
+persistence admission, entry issuance, and entry persistence admission
+logs without contacting hardware, Foundation, Prism Element, providers, or
+secret stores.
 
 ### NKP Framework
 Optional integration with

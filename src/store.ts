@@ -137,6 +137,7 @@ export const useStore = create<AppState>()(
           'imaging-standalone-fca',
           'site-deploy',
           'site-deploy-standalone-fca',
+          'native-foundation-deploy',
           'deploy-pc',
           'config-pc',
           'config-cluster',
