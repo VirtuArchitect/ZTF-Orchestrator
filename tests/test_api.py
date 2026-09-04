@@ -1179,6 +1179,107 @@ def _native_foundation_intent_with_uat_evidence():
     )
 
 
+def _native_foundation_dell_hci_controlled_uat_intent():
+    return (
+        'ztf_orchestrator:\n'
+        '  workflow: native-foundation-deploy\n'
+        '  workflow_family: native_foundation\n'
+        '  execution_scope: controlled_uat\n'
+        'foundation_engine:\n'
+        '  mode: controlled_uat\n'
+        '  target: embedded_foundation\n'
+        '  compatibility_baseline: foundation_5_11\n'
+        '  foundation_version: "5.11"\n'
+        '  runner_identity_ref: private-identities/native-foundation-runner\n'
+        '  artifact_policy: operator_supplied\n'
+        '  image_repository:\n'
+        '    endpoint: https://images.lab.local\n'
+        '    credential_ref: image-repository\n'
+        '    verify_tls: true\n'
+        '  policy:\n'
+        '    max_parallel_sites: 1\n'
+        '    max_parallel_clusters_per_site: 1\n'
+        '    require_approval_binding: true\n'
+        '    require_validation_evidence: true\n'
+        '    fail_closed_unsupported_fca_dell_hci: true\n'
+        '    failure_policy: stop_site\n'
+        '  evidence_retention:\n'
+        '    target_ref: private-evidence/native-foundation-uat\n'
+        '    redact_secrets: true\n'
+        '  prism_element_validation:\n'
+        '    credential_ref: pe_user\n'
+        '    timeout_minutes: 60\n'
+        '    require_cluster_health: true\n'
+        'sites:\n'
+        '  - site_name: site-a\n'
+        '    hardware_provider: dell_idrac_redfish\n'
+        '    provider_credential_ref: dell-idrac-provider\n'
+        '    bmc_credential_ref: dell-idrac-bmc\n'
+        '    concurrency_limit: 1\n'
+        '    deployment_window:\n'
+        '      timezone: UTC\n'
+        '      days:\n'
+        '        - Sat\n'
+        '      start: "00:00"\n'
+        '      end: "06:00"\n'
+        '    network_profile:\n'
+        '      bmc_subnet: 192.0.2.0/24\n'
+        '      bmc_gateway: 192.0.2.1\n'
+        '      host_subnet: 192.0.2.0/24\n'
+        '      host_gateway: 192.0.2.1\n'
+        '      cvm_subnet: 192.0.2.0/24\n'
+        '      cvm_gateway: 192.0.2.1\n'
+        '      management_vlan_id: 120\n'
+        '      dns_servers:\n'
+        '        - 192.0.2.53\n'
+        '      ntp_servers:\n'
+        '        - 192.0.2.123\n'
+        '    clusters:\n'
+        '      - cluster_name: ahv-hci-cluster-a\n'
+        '        deployment_type: hci\n'
+        '        hypervisor: ahv\n'
+        '        cluster_vip: 192.0.2.10\n'
+        '        redundancy_factor: 2\n'
+        '        timezone: UTC\n'
+        '        aos_image:\n'
+        '          source: https://images.lab.local/aos.tar.gz\n'
+        '          version: "7.5.1"\n'
+        f'          sha256: {"a" * 64}\n'
+        '        hypervisor_image:\n'
+        '          source: https://images.lab.local/ahv.iso\n'
+        '          version: "11.0"\n'
+        f'          sha256: {"b" * 64}\n'
+        '        nodes:\n'
+        '          - node_serial: MXQ4123001\n'
+        '            role: hci\n'
+        '            hardware_model: Dell XC770 Core\n'
+        '            bmc_address: 192.0.2.21\n'
+        '            bmc_credential_ref: dell-idrac-bmc\n'
+        '            host_ip: 192.0.2.31\n'
+        '            cvm_ip: 192.0.2.41\n'
+        '            hypervisor_hostname: ahv-a-01\n'
+        '            boot_mode: uefi\n'
+        '          - node_serial: MXQ4123002\n'
+        '            role: hci\n'
+        '            hardware_model: Dell XC770 Core\n'
+        '            bmc_address: 192.0.2.22\n'
+        '            bmc_credential_ref: dell-idrac-bmc\n'
+        '            host_ip: 192.0.2.32\n'
+        '            cvm_ip: 192.0.2.42\n'
+        '            hypervisor_hostname: ahv-a-02\n'
+        '            boot_mode: uefi\n'
+        '          - node_serial: MXQ4123003\n'
+        '            role: hci\n'
+        '            hardware_model: Dell XC770 Core\n'
+        '            bmc_address: 192.0.2.23\n'
+        '            bmc_credential_ref: dell-idrac-bmc\n'
+        '            host_ip: 192.0.2.33\n'
+        '            cvm_ip: 192.0.2.43\n'
+        '            hypervisor_hostname: ahv-a-03\n'
+        '            boot_mode: uefi\n'
+    )
+
+
 def _native_foundation_admission_ready_intent():
     return _native_foundation_intent_with_uat_evidence().replace(
         '    recovery_runbook_reviewed:\n'
@@ -1363,6 +1464,43 @@ def test_yaml_studio_validates_native_foundation_intent(client, auth_headers):
     assert data['valid'] is True
     assert data['errors'] == []
     assert any('planning-only' in warning for warning in data['warnings'])
+
+
+def test_yaml_studio_validates_native_foundation_dell_hci_controlled_uat_contract(client, auth_headers):
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'native-foundation-intent',
+                             'content': _native_foundation_dell_hci_controlled_uat_intent()},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['valid'] is True
+    assert data['errors'] == []
+    assert any('controlled UAT intent is validatable' in warning for warning in data['warnings'])
+
+    plan_resp = client.post('/api/native-foundation/plan',
+                            json={'content': _native_foundation_dell_hci_controlled_uat_intent()},
+                            headers=auth_headers)
+    assert plan_resp.status_code == 200
+    plan = plan_resp.get_json()
+    assert plan['summary']['deploymentTypes'] == {'hci': 1}
+    assert plan['summary']['roles'] == {'hci': 3}
+
+
+def test_native_foundation_controlled_uat_contract_fails_closed_without_fca_dell_hci_guard(client, auth_headers):
+    content = _native_foundation_dell_hci_controlled_uat_intent().replace(
+        '    fail_closed_unsupported_fca_dell_hci: true\n',
+        '    fail_closed_unsupported_fca_dell_hci: false\n',
+    )
+
+    resp = client.post('/api/yaml-studio/validate',
+                       json={'kind': 'native-foundation-intent', 'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert data['valid'] is False
+    assert any('fail_closed_unsupported_fca_dell_hci must be true' in error for error in data['errors'])
 
 
 def test_yaml_studio_rejects_native_foundation_role_mismatch(client, auth_headers):
@@ -15361,6 +15499,41 @@ def test_native_foundation_dry_run_validates_intent(client, auth_headers):
     assert 'Workflow family is native_foundation' in output
     assert 'deployment type: hci' in output
     assert 'Native Foundation deployment is planning-only' in output
+
+
+def test_native_foundation_dry_run_rejects_controlled_uat_placeholders(client, auth_headers):
+    import server
+
+    placeholder_intent = (
+        _native_foundation_dell_hci_controlled_uat_intent()
+        .replace('site_name: site-a', 'site_name: dcu1')
+        .replace('endpoint: https://images.lab.local', 'endpoint: https://image-repo.example.invalid')
+        .replace('cluster_name: ahv-hci-cluster-a', 'cluster_name: dell-xc770-ahv-hci')
+        .replace('source: https://images.lab.local/aos.tar.gz', 'source: https://image-repo.example.invalid/aos.tar.gz')
+        .replace('source: https://images.lab.local/ahv.iso', 'source: https://image-repo.example.invalid/ahv.iso')
+        .replace('sha256: ' + ('a' * 64), 'sha256: ' + ('0' * 64))
+        .replace('sha256: ' + ('b' * 64), 'sha256: ' + ('1' * 64))
+        .replace('node_serial: MXQ4123001', 'node_serial: DELL-XC770-1')
+        .replace('node_serial: MXQ4123002', 'node_serial: DELL-XC770-2')
+        .replace('node_serial: MXQ4123003', 'node_serial: DELL-XC770-3')
+        .replace('hypervisor_hostname: ahv-a-01', 'hypervisor_hostname: xc770-1')
+        .replace('hypervisor_hostname: ahv-a-02', 'hypervisor_hostname: xc770-2')
+        .replace('hypervisor_hostname: ahv-a-03', 'hypervisor_hostname: xc770-3')
+    )
+
+    output = ''.join(server._run_preflight(
+        'native-foundation-deploy',
+        placeholder_intent,
+        'native-foundation-test',
+    ))
+
+    assert '[FAIL]' in output
+    assert 'example.invalid placeholder' in output
+    assert 'fake SHA256 placeholder' in output
+    assert 'generated Dell XC770 sample serial' in output
+    assert 'generated sample hostname' in output
+    assert 'Result:' in output
+    assert 'failed' in output
 
 
 def test_native_foundation_execution_is_blocked(client, auth_headers):

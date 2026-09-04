@@ -6748,6 +6748,26 @@ def _build_post_foundation_script_steps(workflow: str, config: dict) -> tuple[li
     return steps, []
 
 
+def _native_foundation_placeholder_reason(value: object, *, kind: str = 'value') -> str:
+    text = str(value or '').strip()
+    lower = text.lower()
+    if not text:
+        return ''
+    if 'example.invalid' in lower:
+        return f'{kind} uses example.invalid placeholder'
+    if lower in {'changeme', 'change-me', 'todo', 'placeholder', 'example'}:
+        return f'{kind} uses placeholder text'
+    if re.fullmatch(r'[01]{64}', text) and len(set(text)) == 1:
+        return f'{kind} uses a fake SHA256 placeholder'
+    if re.fullmatch(r'DELL-XC770-\d+', text, flags=re.IGNORECASE):
+        return f'{kind} uses generated Dell XC770 sample serial'
+    if re.fullmatch(r'xc770-\d+', text, flags=re.IGNORECASE):
+        return f'{kind} uses generated sample hostname'
+    if lower in {'dcu1', 'dell-xc770-ahv-hci'}:
+        return f'{kind} uses the generated sample value'
+    return ''
+
+
 def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, int]:
     lines: list[str] = []
     passed = 0
@@ -6762,13 +6782,72 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
         failed += 1
 
     foundation_engine = config.get('foundation_engine')
+    execution_scope = str((metadata or {}).get('execution_scope') or '').strip() if isinstance(metadata, dict) else ''
+    controlled_uat_mode = False
     if isinstance(foundation_engine, dict):
         mode = str(foundation_engine.get('mode') or '').strip()
         if mode == 'planning_only':
             lines.append('[PASS] Foundation engine mode is planning_only')
             passed += 1
+        elif mode == 'controlled_uat':
+            controlled_uat_mode = True
+            lines.append('[PASS] Foundation engine mode is controlled_uat')
+            passed += 1
+            if execution_scope == 'controlled_uat':
+                lines.append('[PASS] Native Foundation execution scope is controlled_uat')
+                passed += 1
+            else:
+                lines.append('[FAIL] ztf_orchestrator.execution_scope must be controlled_uat for foundation_engine.mode controlled_uat')
+                failed += 1
+            target = str(foundation_engine.get('target') or '').strip()
+            if target == 'embedded_foundation':
+                lines.append('[PASS] Foundation engine target is embedded_foundation')
+                passed += 1
+            else:
+                lines.append('[FAIL] foundation_engine.target must be embedded_foundation for controlled UAT deployment')
+                failed += 1
+            baseline = str(foundation_engine.get('compatibility_baseline') or '').strip()
+            if baseline == 'foundation_5_11':
+                lines.append('[PASS] Foundation compatibility baseline is foundation_5_11')
+                passed += 1
+            else:
+                lines.append('[FAIL] foundation_engine.compatibility_baseline must be foundation_5_11 for this UAT adapter')
+                failed += 1
+            runner_identity = str(foundation_engine.get('runner_identity_ref') or '').strip()
+            if runner_identity:
+                lines.append('[PASS] Foundation runner identity reference is declared')
+                passed += 1
+            else:
+                lines.append('[FAIL] foundation_engine.runner_identity_ref is required for controlled UAT deployment')
+                failed += 1
+            image_repository = foundation_engine.get('image_repository') if isinstance(foundation_engine.get('image_repository'), dict) else {}
+            image_repository_endpoint = str(image_repository.get('endpoint') or '').strip()
+            image_repository_placeholder = _native_foundation_placeholder_reason(image_repository_endpoint, kind='foundation_engine.image_repository.endpoint')
+            if image_repository_endpoint and not image_repository_placeholder:
+                lines.append('[PASS] Foundation image repository endpoint is declared')
+                passed += 1
+            elif image_repository_placeholder:
+                lines.append(f'[FAIL] {image_repository_placeholder}')
+                failed += 1
+            else:
+                lines.append('[FAIL] foundation_engine.image_repository.endpoint is required')
+                failed += 1
+            policy = foundation_engine.get('policy') if isinstance(foundation_engine.get('policy'), dict) else {}
+            if policy.get('fail_closed_unsupported_fca_dell_hci') is True:
+                lines.append('[PASS] Unsupported FCA Dell HCI path is fail-closed')
+                passed += 1
+            else:
+                lines.append('[FAIL] foundation_engine.policy.fail_closed_unsupported_fca_dell_hci must be true')
+                failed += 1
+            prism_validation = foundation_engine.get('prism_element_validation') if isinstance(foundation_engine.get('prism_element_validation'), dict) else {}
+            if str(prism_validation.get('credential_ref') or '').strip():
+                lines.append('[PASS] Prism Element validation credential reference is declared')
+                passed += 1
+            else:
+                lines.append('[FAIL] foundation_engine.prism_element_validation.credential_ref is required')
+                failed += 1
         else:
-            lines.append('[FAIL] foundation_engine.mode must be planning_only until execution adapters are validated')
+            lines.append('[FAIL] foundation_engine.mode must be planning_only or controlled_uat')
             failed += 1
         artifact_policy = str(foundation_engine.get('artifact_policy') or '').strip()
         if artifact_policy == 'operator_supplied':
@@ -6795,8 +6874,13 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
             continue
         site_label = str(site.get('site_name') or site.get('name') or site_index).strip()
         if site_label:
-            lines.append(f'[PASS] Site declared: {site_label}')
-            passed += 1
+            site_placeholder = _native_foundation_placeholder_reason(site_label, kind=f'sites[{site_index}].site_name')
+            if controlled_uat_mode and site_placeholder:
+                lines.append(f'[FAIL] {site_placeholder}')
+                failed += 1
+            else:
+                lines.append(f'[PASS] Site declared: {site_label}')
+                passed += 1
         else:
             lines.append(f'[FAIL] sites[{site_index}].site_name is required')
             failed += 1
@@ -6805,6 +6889,12 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
         if provider in NATIVE_FOUNDATION_HARDWARE_PROVIDERS:
             lines.append(f'[PASS] Site "{site_label}" hardware provider: {provider}')
             passed += 1
+            if controlled_uat_mode and provider == 'dell_idrac_redfish':
+                lines.append(f'[PASS] Site "{site_label}" controlled UAT provider is Dell iDRAC Redfish')
+                passed += 1
+            elif controlled_uat_mode:
+                lines.append(f'[FAIL] Site "{site_label}" hardware_provider must be dell_idrac_redfish for controlled UAT deployment')
+                failed += 1
         else:
             lines.append(
                 f'[FAIL] Site "{site_label}" hardware_provider must be one of '
@@ -6828,6 +6918,12 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
             if deployment_type in NATIVE_FOUNDATION_DEPLOYMENT_TYPES:
                 lines.append(f'[PASS] Cluster "{cluster_label}" deployment type: {deployment_type}')
                 passed += 1
+                if controlled_uat_mode and deployment_type == 'hci':
+                    lines.append(f'[PASS] Cluster "{cluster_label}" controlled UAT deployment type is hci')
+                    passed += 1
+                elif controlled_uat_mode:
+                    lines.append(f'[FAIL] Cluster "{cluster_label}" deployment_type must be hci for controlled UAT deployment')
+                    failed += 1
             else:
                 lines.append(
                     f'[FAIL] Cluster "{cluster_label}" deployment_type must be one of '
@@ -6835,13 +6931,42 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
                 )
                 failed += 1
 
+            hypervisor = str(cluster.get('hypervisor') or '').strip()
+            if controlled_uat_mode and hypervisor == 'ahv':
+                lines.append(f'[PASS] Cluster "{cluster_label}" hypervisor is ahv')
+                passed += 1
+            elif controlled_uat_mode:
+                lines.append(f'[FAIL] Cluster "{cluster_label}" hypervisor must be ahv for Dell HCI controlled UAT')
+                failed += 1
+
             for required in ('cluster_name', 'cluster_vip', 'aos_image', 'hypervisor_image'):
-                if str(cluster.get(required) or '').strip():
+                required_value = str(cluster.get(required) or '').strip()
+                placeholder = _native_foundation_placeholder_reason(required_value, kind=f'Cluster "{cluster_label}" {required}')
+                if required_value and not (controlled_uat_mode and placeholder):
                     lines.append(f'[PASS] Cluster "{cluster_label}" field present: {required}')
                     passed += 1
+                elif controlled_uat_mode and placeholder:
+                    lines.append(f'[FAIL] {placeholder}')
+                    failed += 1
                 else:
                     lines.append(f'[FAIL] Cluster "{cluster_label}" requires {required}')
                     failed += 1
+
+            if controlled_uat_mode:
+                for image_key in ('aos_image', 'hypervisor_image'):
+                    image = cluster.get(image_key) if isinstance(cluster.get(image_key), dict) else {}
+                    for image_field in ('source', 'version', 'sha256'):
+                        image_value = str(image.get(image_field) or '').strip()
+                        placeholder = _native_foundation_placeholder_reason(image_value, kind=f'Cluster "{cluster_label}" {image_key}.{image_field}')
+                        if image_value and not placeholder:
+                            lines.append(f'[PASS] Cluster "{cluster_label}" {image_key}.{image_field} is declared')
+                            passed += 1
+                        elif placeholder:
+                            lines.append(f'[FAIL] {placeholder}')
+                            failed += 1
+                        else:
+                            lines.append(f'[FAIL] Cluster "{cluster_label}" requires {image_key}.{image_field}')
+                            failed += 1
 
             nodes = cluster.get('nodes')
             if not isinstance(nodes, list) or not nodes:
@@ -6868,14 +6993,31 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
                     )
                     failed += 1
                 for required in ('node_serial', 'bmc_address', 'host_ip'):
-                    if str(node.get(required) or '').strip():
+                    required_value = str(node.get(required) or '').strip()
+                    placeholder = _native_foundation_placeholder_reason(required_value, kind=f'Node "{node_label}" {required}')
+                    if required_value and not (controlled_uat_mode and placeholder):
                         passed += 1
+                    elif controlled_uat_mode and placeholder:
+                        lines.append(f'[FAIL] {placeholder}')
+                        failed += 1
                     else:
                         lines.append(f'[FAIL] Node "{node_label}" requires {required}')
                         failed += 1
                 if role != 'compute_only' and not str(node.get('cvm_ip') or '').strip():
                     lines.append(f'[FAIL] Node "{node_label}" requires cvm_ip for role {role or "unknown"}')
                     failed += 1
+                if controlled_uat_mode:
+                    for required in ('hardware_model', 'bmc_credential_ref', 'boot_mode', 'hypervisor_hostname'):
+                        required_value = str(node.get(required) or '').strip()
+                        placeholder = _native_foundation_placeholder_reason(required_value, kind=f'Node "{node_label}" {required}')
+                        if required_value and not placeholder:
+                            passed += 1
+                        elif placeholder:
+                            lines.append(f'[FAIL] {placeholder}')
+                            failed += 1
+                        else:
+                            lines.append(f'[FAIL] Node "{node_label}" requires {required} for Dell HCI controlled UAT')
+                            failed += 1
 
             role_set = set(roles)
             if deployment_type == 'hci' and role_set and role_set <= {'hci'}:
@@ -6897,7 +7039,10 @@ def _native_foundation_validate_intent(config: dict) -> tuple[list[str], int, in
                 lines.append(f'[FAIL] Cluster "{cluster_label}" node roles do not match deployment_type {deployment_type}')
                 failed += 1
 
-    lines.append('[INFO] Native Foundation deployment is planning-only; execution adapters are not enabled in this release.')
+    if controlled_uat_mode:
+        lines.append('[INFO] Native Foundation controlled UAT intent is validatable; mutating adapter execution remains gated by Dell UAT controls.')
+    else:
+        lines.append('[INFO] Native Foundation deployment is planning-only; execution adapters are not enabled in this release.')
     return lines, passed, failed
 
 
@@ -34961,7 +35106,10 @@ def _yaml_studio_validate_content(kind: str, content: str) -> dict:
                 result['errors'].append(line.removeprefix('[FAIL] '))
             elif line.startswith('[WARN] '):
                 result['warnings'].append(line.removeprefix('[WARN] '))
-        result['warnings'].append('Native Foundation execution is planning-only until controlled UAT validates execution adapters')
+            elif line.startswith('[INFO] '):
+                result['warnings'].append(line.removeprefix('[INFO] '))
+        if not any('Native Foundation' in warning for warning in result['warnings']):
+            result['warnings'].append('Native Foundation execution is planning-only until controlled UAT validates execution adapters')
     elif kind == 'upgrade-rule-pack':
         rules = parsed.get('rules')
         if not isinstance(rules, list) or not rules:
