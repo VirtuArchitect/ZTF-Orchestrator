@@ -76,11 +76,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'native-foundation-deploy',
     name: 'Native Foundation Deploy',
-    description: 'Plans multi-site cluster deployment with native Foundation ownership',
+    description: 'Creates AHV HCI clusters through a native Foundation deployment workflow',
     category: 'Infrastructure',
     icon: 'Boxes',
     configFile: 'native-foundation-deploy.yml',
-    details: 'Defines the planning-only native Foundation deployment model for heterogeneous hardware providers, multiple sites, and cluster deployment types including HCI, compute-only, storage-only, and mixed topologies. Execution adapters remain disabled until controlled UAT validates them.',
+    details: 'Collects the deployment entry fields required for a Dell iDRAC controlled-UAT AHV HCI cluster build, including Foundation 5.11 baseline, AOS and AHV image metadata, iDRAC credentials, node IPs, cluster VIP, Prism Element validation, and fail-closed FCA/Dell HCI guardrails.',
   },
   {
     id: 'config-cluster',

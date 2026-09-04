@@ -25,6 +25,7 @@ import ClusterConfigForm from '../components/forms/ClusterConfigForm'
 import CalmWorkloadsForm from '../components/forms/CalmWorkloadsForm'
 import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
+import NativeFoundationDeployForm from '../components/forms/NativeFoundationDeployForm'
 import PostFoundationWorkflowForm from '../components/forms/PostFoundationWorkflowForm'
 import Ztf2WorkflowForm from '../components/forms/Ztf2WorkflowForm'
 import type { Ztf2WorkflowArtifacts } from '../components/forms/Ztf2WorkflowForm'
@@ -243,7 +244,7 @@ export default function WorkflowDetail() {
 
   const Icon = ICON_MAP[workflow.icon] || Server
   const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
-  const nativeFoundationDellAdapter = nativeFoundationProviderAdapters?.providerAdapters.find(adapter => adapter.providerId === 'dell_idrac_redfish')
+  const nativeFoundationDellAdapter = nativeFoundationProviderAdapters?.providerAdapters?.find(adapter => adapter.providerId === 'dell_idrac_redfish')
   const nativeFoundationDeploymentEnabled = Boolean(isNativeFoundationWorkflow && nativeFoundationDellAdapter?.mutatingActionsEnabled)
   const handleYamlGenerated = useCallback((yaml: string) => {
     setYamlContent(yaml)
@@ -3204,6 +3205,7 @@ export default function WorkflowDetail() {
       case 'imaging-standalone-fca': return <ImagingOnlyForm {...props} standaloneFca />
       case 'site-deploy': return <SiteDeployForm {...props} />
       case 'site-deploy-standalone-fca': return <SiteDeployForm {...props} standaloneFca />
+      case 'native-foundation-deploy': return <NativeFoundationDeployForm {...props} />
       case 'deploy-pc': return <PCDeployForm {...props} />
       case 'config-cluster': return <ClusterConfigForm {...props} />
       case 'calm-vm-workloads': return <CalmWorkloadsForm {...props} />
@@ -3217,7 +3219,7 @@ export default function WorkflowDetail() {
       title={workflow.name}
       subtitle={workflow.description}
       actions={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -3246,6 +3248,23 @@ export default function WorkflowDetail() {
               Dry Run
             </button>
           )}
+          <button
+            onClick={() => startExecution(false)}
+            disabled={!yamlContent || (isNativeFoundationWorkflow && !nativeFoundationDeploymentEnabled) || (approvalRequired && !approvalId.trim())}
+            className="btn-success gap-1.5"
+            title={
+              !yamlContent
+                ? 'Fill out the form first'
+                : isNativeFoundationWorkflow && !nativeFoundationDeploymentEnabled
+                  ? 'Enable Dell iDRAC controlled-UAT deployment gates in the runtime environment first'
+                  : approvalRequired && !approvalId.trim()
+                    ? 'Select an approved request first'
+                    : undefined
+            }
+          >
+            <Play size={14} />
+            {isZtf2Workflow ? 'Run Plan' : 'Run Workflow'}
+          </button>
           {isNativeFoundationWorkflow && (
             <button
               onClick={previewNativeFoundationDiscovery}
@@ -4335,23 +4354,6 @@ export default function WorkflowDetail() {
             Export Gate
           </button>
         )}
-          <button
-            onClick={() => startExecution(false)}
-            disabled={!yamlContent || (isNativeFoundationWorkflow && !nativeFoundationDeploymentEnabled) || (approvalRequired && !approvalId.trim())}
-            className="btn-success gap-1.5"
-            title={
-              !yamlContent
-                ? 'Fill out the form first'
-                : isNativeFoundationWorkflow && !nativeFoundationDeploymentEnabled
-                  ? 'Enable Dell iDRAC controlled-UAT deployment gates in the runtime environment first'
-                  : approvalRequired && !approvalId.trim()
-                    ? 'Select an approved request first'
-                    : undefined
-            }
-          >
-            <Play size={14} />
-            {isZtf2Workflow ? 'Run Plan' : isNativeFoundationWorkflow ? 'Run UAT Deploy' : 'Run Workflow'}
-          </button>
         </div>
       }
     >
@@ -4402,7 +4404,7 @@ export default function WorkflowDetail() {
                 <h3 className="text-sm font-semibold text-gray-100">Native Foundation Phase Status</h3>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                {nativeFoundationPhases?.summary.currentBoundary || nativeFoundationPhasesError || 'Loading native Foundation phase status.'}
+                {nativeFoundationPhases?.summary?.currentBoundary || nativeFoundationPhasesError || 'Loading native Foundation phase status.'}
               </p>
             </div>
             {nativeFoundationPhases && (
@@ -4417,7 +4419,7 @@ export default function WorkflowDetail() {
                     onChange={event => setNativeFoundationReadinessPhase(event.target.value)}
                     className="input h-9 text-sm"
                   >
-                    {nativeFoundationPhases.supportedReadinessPhases.map(phase => (
+                    {(nativeFoundationPhases.supportedReadinessPhases || []).map(phase => (
                       <option key={phase} value={phase}>{phase.replace(/_/g, ' ')}</option>
                     ))}
                   </select>
@@ -4433,7 +4435,7 @@ export default function WorkflowDetail() {
                       onChange={event => setNativeFoundationAdvancementPhase(event.target.value)}
                       className="input h-9 text-sm"
                     >
-                      {nativeFoundationPhases.phases.map(phase => (
+                      {(nativeFoundationPhases.phases || []).map(phase => (
                         <option key={phase.id} value={phase.id}>{phase.order}. {phase.name}</option>
                       ))}
                     </select>
@@ -4449,16 +4451,16 @@ export default function WorkflowDetail() {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="min-w-16">
-                    <div className="text-lg font-bold text-gray-100">{nativeFoundationPhases.summary.implementedPhaseCount}</div>
+                    <div className="min-w-16">
+                    <div className="text-lg font-bold text-gray-100">{nativeFoundationPhases.summary?.implementedPhaseCount || 0}</div>
                     <div className="text-[10px] uppercase leading-tight text-gray-500">Done</div>
                   </div>
-                  <div className="min-w-16">
-                    <div className="text-lg font-bold text-gray-100">{nativeFoundationPhases.summary.phaseCount}</div>
+                    <div className="min-w-16">
+                    <div className="text-lg font-bold text-gray-100">{nativeFoundationPhases.summary?.phaseCount || 0}</div>
                     <div className="text-[10px] uppercase leading-tight text-gray-500">Total</div>
                   </div>
-                  <div className="min-w-16">
-                    <div className="text-lg font-bold text-red-300">{nativeFoundationPhases.summary.mutatingEnabledPhaseCount}</div>
+                    <div className="min-w-16">
+                    <div className="text-lg font-bold text-red-300">{nativeFoundationPhases.summary?.mutatingEnabledPhaseCount || 0}</div>
                     <div className="text-[10px] uppercase leading-tight text-gray-500">Live</div>
                   </div>
                 </div>
@@ -4514,7 +4516,7 @@ export default function WorkflowDetail() {
           )}
           {nativeFoundationPhases && (
             <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-              {nativeFoundationPhases.phases.map(phase => (
+              {(nativeFoundationPhases.phases || []).map(phase => (
                 <div key={phase.id} className="rounded-md border border-border bg-gray-950/40 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>

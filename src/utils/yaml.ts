@@ -355,6 +355,230 @@ export function buildSiteDeployYaml(cfg: {
   })
 }
 
+export function buildNativeFoundationDeployYaml(cfg: {
+  executionScope: string
+  engineMode: string
+  foundationTarget: string
+  compatibilityBaseline: string
+  foundationVersion: string
+  runnerIdentityRef: string
+  artifactPolicy: string
+  imageRepository: {
+    endpoint: string
+    credentialRef: string
+    verifyTls: boolean
+  }
+  policy: {
+    maxParallelSites: number
+    maxParallelClustersPerSite: number
+    requireApprovalBinding: boolean
+    requireValidationEvidence: boolean
+    failClosedUnsupportedFcaDellHci: boolean
+    failurePolicy: string
+  }
+  evidenceRetention: {
+    targetRef: string
+    redactSecrets: boolean
+  }
+  prismElementValidation: {
+    credentialRef: string
+    timeoutMinutes: number
+    requireClusterHealth: boolean
+  }
+  sites: Array<{
+    siteName: string
+    hardwareProvider: string
+    providerCredentialRef: string
+    bmcCredentialRef: string
+    bmcCredential?: {
+      username?: string
+      password?: string
+    }
+    concurrencyLimit: number
+    deploymentWindow: {
+      timezone: string
+      days: string[]
+      start: string
+      end: string
+    }
+    networkProfile: {
+      bmcSubnet: string
+      bmcGateway: string
+      hostSubnet: string
+      hostGateway: string
+      cvmSubnet: string
+      cvmGateway: string
+      managementVlanId: number
+      dnsServers: string[]
+      ntpServers: string[]
+    }
+    clusters: Array<{
+      clusterName: string
+      deploymentType: string
+      hypervisor: string
+      clusterVip: string
+      redundancyFactor: number
+      timezone: string
+      aosImage: {
+        source: string
+        version: string
+        sha256: string
+      }
+      hypervisorImage: {
+        source: string
+        version: string
+        sha256: string
+      }
+      nodes: Array<{
+        nodeSerial: string
+        role: string
+        hardwareModel: string
+        bmcAddress: string
+        bmcCredentialRef: string
+        bmcUsername?: string
+        bmcPassword?: string
+        hostIp: string
+        cvmIp: string
+        hostname: string
+        bootMode: string
+        cvmRamGb: number
+      }>
+    }>
+  }>
+}): string {
+  return toYaml({
+    ztf_orchestrator: {
+      workflow: 'native-foundation-deploy',
+      workflow_family: 'native_foundation',
+      execution_scope: cfg.executionScope,
+      support_boundary: 'dell_ahv_hci_controlled_uat',
+    },
+    foundation_engine: {
+      mode: cfg.engineMode,
+      target: cfg.foundationTarget,
+      compatibility_baseline: cfg.compatibilityBaseline,
+      foundation_version: cfg.foundationVersion,
+      runner_identity_ref: cfg.runnerIdentityRef,
+      artifact_policy: cfg.artifactPolicy,
+      image_repository: {
+        endpoint: cfg.imageRepository.endpoint,
+        credential_ref: cfg.imageRepository.credentialRef,
+        verify_tls: cfg.imageRepository.verifyTls,
+      },
+      orchestration: {
+        site_strategy: 'sequential',
+      },
+      policy: {
+        max_parallel_sites: cfg.policy.maxParallelSites,
+        max_parallel_clusters_per_site: cfg.policy.maxParallelClustersPerSite,
+        require_approval_binding: cfg.policy.requireApprovalBinding,
+        require_validation_evidence: cfg.policy.requireValidationEvidence,
+        fail_closed_unsupported_fca_dell_hci: cfg.policy.failClosedUnsupportedFcaDellHci,
+        failure_policy: cfg.policy.failurePolicy,
+      },
+      evidence_retention: {
+        target_ref: cfg.evidenceRetention.targetRef,
+        redact_secrets: cfg.evidenceRetention.redactSecrets,
+      },
+      prism_element_validation: {
+        credential_ref: cfg.prismElementValidation.credentialRef,
+        timeout_minutes: cfg.prismElementValidation.timeoutMinutes,
+        require_cluster_health: cfg.prismElementValidation.requireClusterHealth,
+      },
+      checkpoint: {
+        completed_step_ids: [],
+        failed_step_ids: [],
+      },
+      uat_evidence: {
+        hardware_provider_discovery: {
+          accepted: false,
+          evidence_id: '',
+        },
+        image_source_verified: {
+          accepted: false,
+          evidence_id: '',
+        },
+        network_path_verified: {
+          accepted: false,
+          evidence_id: '',
+        },
+        recovery_runbook_reviewed: {
+          accepted: false,
+          evidence_id: '',
+        },
+        cluster_create_validated: {
+          accepted: false,
+          evidence_id: '',
+        },
+      },
+    },
+    sites: cfg.sites.map(site => ({
+      site_name: site.siteName,
+      hardware_provider: site.hardwareProvider,
+      provider_credential_ref: site.providerCredentialRef,
+      bmc_credential_ref: site.bmcCredentialRef,
+      ...(site.bmcCredential?.username || site.bmcCredential?.password ? {
+        bmc_credential: {
+          username: site.bmcCredential.username || '',
+          password: site.bmcCredential.password || '',
+        },
+      } : {}),
+      concurrency_limit: site.concurrencyLimit,
+      deployment_window: {
+        timezone: site.deploymentWindow.timezone,
+        days: site.deploymentWindow.days,
+        start: site.deploymentWindow.start,
+        end: site.deploymentWindow.end,
+      },
+      network_profile: {
+        bmc_subnet: site.networkProfile.bmcSubnet,
+        bmc_gateway: site.networkProfile.bmcGateway,
+        host_subnet: site.networkProfile.hostSubnet,
+        host_gateway: site.networkProfile.hostGateway,
+        cvm_subnet: site.networkProfile.cvmSubnet,
+        cvm_gateway: site.networkProfile.cvmGateway,
+        management_vlan_id: site.networkProfile.managementVlanId,
+        dns_servers: site.networkProfile.dnsServers,
+        ntp_servers: site.networkProfile.ntpServers,
+      },
+      clusters: site.clusters.map(cluster => ({
+        cluster_name: cluster.clusterName,
+        deployment_type: cluster.deploymentType,
+        hypervisor: cluster.hypervisor,
+        cluster_vip: cluster.clusterVip,
+        redundancy_factor: cluster.redundancyFactor,
+        timezone: cluster.timezone,
+        aos_image: {
+          source: cluster.aosImage.source,
+          version: cluster.aosImage.version,
+          sha256: cluster.aosImage.sha256,
+        },
+        hypervisor_image: {
+          source: cluster.hypervisorImage.source,
+          version: cluster.hypervisorImage.version,
+          sha256: cluster.hypervisorImage.sha256,
+        },
+        nodes: cluster.nodes.map(node => ({
+          node_serial: node.nodeSerial,
+          role: node.role,
+          hardware_model: node.hardwareModel,
+          bmc_address: node.bmcAddress,
+          bmc_credential_ref: node.bmcCredentialRef,
+          ...(node.bmcUsername || node.bmcPassword ? {
+            bmc_username: node.bmcUsername || '',
+            bmc_password: node.bmcPassword || '',
+          } : {}),
+          host_ip: node.hostIp,
+          cvm_ip: node.cvmIp,
+          hypervisor_hostname: node.hostname,
+          boot_mode: node.bootMode,
+          cvm_ram_gb: node.cvmRamGb,
+        })),
+      })),
+    })),
+  })
+}
+
 export function buildPCDeployYaml(cfg: {
   peCredential: string
   cvmCredential: string
