@@ -1,6 +1,6 @@
 # Native Foundation Runner Readiness
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Runner readiness review composes the final read-only blockers that must be
 cleared before a native Foundation execution runner could start mutating adapter

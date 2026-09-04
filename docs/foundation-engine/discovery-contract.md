@@ -1,6 +1,6 @@
 # Native Foundation Discovery Contract
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The discovery contract defines the provider-specific request and response shape
 that future live discovery adapters must satisfy before any imaging or cluster

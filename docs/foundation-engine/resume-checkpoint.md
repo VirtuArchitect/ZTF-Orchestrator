@@ -1,6 +1,6 @@
 # Native Foundation Resume Checkpoint
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Native Foundation resume checkpoints are read-only restart-position manifests.
 They describe where a future native Foundation job could resume after an

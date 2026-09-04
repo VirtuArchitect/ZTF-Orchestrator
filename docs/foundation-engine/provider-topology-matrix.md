@@ -1,6 +1,6 @@
 # Native Foundation Provider/Topology Matrix
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 `POST /api/native-foundation/provider-topology-matrix` evaluates each planned
 site and cluster against the read-only provider contracts, deployment topology

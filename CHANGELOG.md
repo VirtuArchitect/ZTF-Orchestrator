@@ -9,8 +9,38 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.8.0 and should be moved
+Changes in this section are present on `main` after v1.8.1 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.8.1] - 2026-09-04
+
+### Summary
+Patch release hardening the Native Foundation Deploy validation path for Dell
+AHV HCI controlled UAT workflows.
+
+### Added
+- Added a first-class `native-foundation-deploy` workflow template with
+  operator-facing fields for Foundation runner identity, image repository,
+  AOS/AHV image sources and checksums, Dell iDRAC nodes, Prism Element
+  validation, dry-run evidence, and unsupported-path controls.
+- Added UI support for selecting repository image sources through browse/upload
+  controls while preserving explicit operator-supplied artifact policy.
+- Added dry-run validation coverage that rejects placeholder and incomplete
+  Native Foundation Deploy input before any mutating execution can be attempted.
+
+### Changed
+- Updated Native Foundation engine contract markers, demo metadata, appliance
+  docs, operator docs, and tracked build assets to the `v1.8.1` baseline.
+- Kept Dell AHV HCI deployment in controlled UAT scope with fail-closed behavior
+  for unsupported FCA/Dell HCI paths.
+
+### Security
+- Native Foundation Deploy still resolves secrets by reference rather than
+  requiring cleartext credentials in public workflow YAML.
+- Mutating Foundation adapter execution remains gated by the controlled UAT
+  enablement, runner, evidence, and approval controls.
 
 ---
 
@@ -1317,6 +1347,7 @@ operator interface.
 
 ---
 
+[1.8.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.12...v1.8.0
 [1.7.12]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.11...v1.7.12
 [1.2.5]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.2.4...v1.2.5

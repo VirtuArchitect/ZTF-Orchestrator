@@ -1,6 +1,6 @@
 # Evidence Mapping
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Use this mapping to connect operational claims to evidence sources.
 

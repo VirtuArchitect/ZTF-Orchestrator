@@ -1,6 +1,6 @@
 # Native Foundation Node Imaging Plan
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The node imaging plan turns a valid native Foundation intent into per-node
 Foundation payload previews. It is a review artifact for future imaging UAT,

@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Entry Persistence Admission Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT entry persistence admission review declares the read-only
 admission records that would be required before a controlled UAT entry could

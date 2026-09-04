@@ -1,6 +1,6 @@
 # Foundation Central Appliance CoreDNS IKAT Workaround Guide
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 This guide describes how to apply the Nutanix-recommended CoreDNS workaround for
 Standalone Foundation Central Appliance deployments that fail during AOS

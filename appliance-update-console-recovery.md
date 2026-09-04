@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Appliance Update Console Recovery
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Use this when the web console does not load after applying a current
 ZTF-Orchestrator appliance update package.

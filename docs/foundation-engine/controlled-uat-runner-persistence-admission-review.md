@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Runner Persistence Admission Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT runner persistence admission review declares the read-only
 admission records that would be required before runner admission state could

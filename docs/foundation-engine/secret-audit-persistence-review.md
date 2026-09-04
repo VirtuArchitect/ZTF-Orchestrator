@@ -1,6 +1,6 @@
 # Native Foundation Secret Audit Persistence Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The secret audit persistence review declares the audit event records a future
 native Foundation adapter run would need before opening secret leases or handing

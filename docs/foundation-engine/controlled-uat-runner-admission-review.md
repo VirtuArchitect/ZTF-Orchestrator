@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Runner Admission Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT runner admission review declares the read-only controls that
 would be needed before a native Foundation runner could be admitted for bounded

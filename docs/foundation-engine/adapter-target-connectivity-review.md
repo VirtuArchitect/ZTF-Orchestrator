@@ -1,6 +1,6 @@
 # Native Foundation Adapter Target Connectivity Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Adapter target connectivity review records the owner, private connectivity
 scope reference, target allow-list reference, maintenance window reference, and

@@ -73,7 +73,7 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
-APP_VERSION = '1.8.0'
+APP_VERSION = '1.8.1'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 ZTF2_REF = os.environ.get('ZTF2_REF', 'v2.0.0')
 
@@ -3593,7 +3593,7 @@ FCA_TERMINAL_SUCCESS_STATES = {'success', 'succeeded', 'complete', 'completed', 
 FCA_TERMINAL_FAILED_STATES = {'failed', 'failure', 'error', 'cancelled', 'canceled'}
 STANDALONE_FCA_CLUSTER_WORKFLOW_TYPE = 'CLUSTER_CREATE_COMPUTE_BARE_METAL'
 NATIVE_FOUNDATION_WORKFLOW = 'native-foundation-deploy'
-NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION = 'native-foundation-adapter-contract/v1.8.0-readonly'
+NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION = 'native-foundation-adapter-contract/v1.8.1-readonly'
 NATIVE_FOUNDATION_PHASES = [
     {
         'id': 'architecture_boundary',
@@ -4109,7 +4109,7 @@ def _native_foundation_dell_idrac_redfish_probe(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterInterfaceVersion': 'native-foundation-provider-adapter/dell-idrac-redfish/v1.8.0-controlled-uat',
+        'adapterInterfaceVersion': 'native-foundation-provider-adapter/dell-idrac-redfish/v1.8.1-controlled-uat',
         'providerId': 'dell_idrac_redfish',
         'readOnly': True,
         'mutatingActionsEnabled': False,
@@ -8036,7 +8036,7 @@ def _native_foundation_secret_resolution_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'secretResolutionPlanVersion': 'native-foundation-secret-resolution-plan/v1.8.0-readonly',
+        'secretResolutionPlanVersion': 'native-foundation-secret-resolution-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -8090,7 +8090,7 @@ def _native_foundation_secret_store_binding_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'secretStoreBindingVersion': 'native-foundation-secret-store-binding/v1.8.0-readonly',
+            'secretStoreBindingVersion': 'native-foundation-secret-store-binding/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -8188,7 +8188,7 @@ def _native_foundation_secret_store_binding_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'secretStoreBindingVersion': 'native-foundation-secret-store-binding/v1.8.0-readonly',
+        'secretStoreBindingVersion': 'native-foundation-secret-store-binding/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -8245,7 +8245,7 @@ def _native_foundation_secret_store_provider_contract_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'secretStoreProviderContractVersion': 'native-foundation-secret-store-provider-contract/v1.8.0-readonly',
+            'secretStoreProviderContractVersion': 'native-foundation-secret-store-provider-contract/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -8382,7 +8382,7 @@ def _native_foundation_secret_store_provider_contract_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'secretStoreProviderContractVersion': 'native-foundation-secret-store-provider-contract/v1.8.0-readonly',
+        'secretStoreProviderContractVersion': 'native-foundation-secret-store-provider-contract/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -8445,7 +8445,7 @@ def _native_foundation_secret_lease_execution_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'secretLeaseExecutionReviewVersion': 'native-foundation-secret-lease-execution/v1.8.0-readonly',
+            'secretLeaseExecutionReviewVersion': 'native-foundation-secret-lease-execution/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -8641,7 +8641,7 @@ def _native_foundation_secret_lease_execution_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'secretLeaseExecutionReviewVersion': 'native-foundation-secret-lease-execution/v1.8.0-readonly',
+        'secretLeaseExecutionReviewVersion': 'native-foundation-secret-lease-execution/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -8723,7 +8723,7 @@ def _native_foundation_secret_audit_persistence_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'secretAuditPersistenceReviewVersion': 'native-foundation-secret-audit-persistence/v1.8.0-readonly',
+            'secretAuditPersistenceReviewVersion': 'native-foundation-secret-audit-persistence/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -8904,7 +8904,7 @@ def _native_foundation_secret_audit_persistence_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'secretAuditPersistenceReviewVersion': 'native-foundation-secret-audit-persistence/v1.8.0-readonly',
+        'secretAuditPersistenceReviewVersion': 'native-foundation-secret-audit-persistence/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -9344,7 +9344,7 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterInterfaceVersion': 'native-foundation-provider-adapter/v1.8.0-controlled-uat' if mutation_enabled_count else 'native-foundation-provider-adapter/v1.8.0-readonly',
+        'adapterInterfaceVersion': 'native-foundation-provider-adapter/v1.8.1-controlled-uat' if mutation_enabled_count else 'native-foundation-provider-adapter/v1.8.1-readonly',
         'readOnly': mutation_enabled_count == 0,
         'mutatingActionsEnabled': mutation_enabled_count > 0,
         'status': 'invalid' if unsupported or requirements['status'] == 'invalid' else 'ready' if mutation_enabled_count else 'blocked',
@@ -9771,7 +9771,7 @@ def _native_foundation_provider_operation_catalog(config: dict, content: str) ->
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'operationCatalogVersion': 'native-foundation-provider-operation-catalog/v1.8.0-readonly',
+        'operationCatalogVersion': 'native-foundation-provider-operation-catalog/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'invalid' if plan['status'] != 'valid' else 'blocked',
@@ -9909,7 +9909,7 @@ def _native_foundation_provider_operation_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'operationAdmissionReviewVersion': 'native-foundation-provider-operation-admission/v1.8.0-readonly',
+        'operationAdmissionReviewVersion': 'native-foundation-provider-operation-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'invalid' if plan['status'] != 'valid' else 'blocked',
@@ -9967,7 +9967,7 @@ def _native_foundation_provider_operation_queue_plan(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'operationQueuePlanVersion': 'native-foundation-provider-operation-queue-plan/v1.8.0-readonly',
+            'operationQueuePlanVersion': 'native-foundation-provider-operation-queue-plan/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -10094,7 +10094,7 @@ def _native_foundation_provider_operation_queue_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'operationQueuePlanVersion': 'native-foundation-provider-operation-queue-plan/v1.8.0-readonly',
+        'operationQueuePlanVersion': 'native-foundation-provider-operation-queue-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -10155,7 +10155,7 @@ def _native_foundation_provider_operation_queue_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'operationQueueAdmissionReviewVersion': 'native-foundation-provider-operation-queue-admission/v1.8.0-readonly',
+            'operationQueueAdmissionReviewVersion': 'native-foundation-provider-operation-queue-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -10274,7 +10274,7 @@ def _native_foundation_provider_operation_queue_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'operationQueueAdmissionReviewVersion': 'native-foundation-provider-operation-queue-admission/v1.8.0-readonly',
+        'operationQueueAdmissionReviewVersion': 'native-foundation-provider-operation-queue-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -10332,7 +10332,7 @@ def _native_foundation_uat_evidence_acceptance_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatEvidenceAcceptanceReviewVersion': 'native-foundation-uat-evidence-acceptance/v1.8.0-readonly',
+            'uatEvidenceAcceptanceReviewVersion': 'native-foundation-uat-evidence-acceptance/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -10478,7 +10478,7 @@ def _native_foundation_uat_evidence_acceptance_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatEvidenceAcceptanceReviewVersion': 'native-foundation-uat-evidence-acceptance/v1.8.0-readonly',
+        'uatEvidenceAcceptanceReviewVersion': 'native-foundation-uat-evidence-acceptance/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'ready_for_review' if acceptance_ready else 'blocked',
@@ -10805,7 +10805,7 @@ def _native_foundation_provider_preflight_manifest(config: dict, content: str) -
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'preflightVersion': 'native-foundation-provider-preflight/v1.8.0-readonly',
+        'preflightVersion': 'native-foundation-provider-preflight/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -11040,7 +11040,7 @@ def _native_foundation_discovery_contract_manifest(config: dict, content: str) -
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'discoveryContractVersion': 'native-foundation-live-discovery-contract/v1.8.0-readonly',
+        'discoveryContractVersion': 'native-foundation-live-discovery-contract/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -11278,7 +11278,7 @@ def _native_foundation_discovery_reconciliation_manifest(config: dict, content: 
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'reconciliationVersion': 'native-foundation-discovery-reconciliation/v1.8.0-readonly',
+        'reconciliationVersion': 'native-foundation-discovery-reconciliation/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -11466,7 +11466,7 @@ def _native_foundation_imaging_plan_manifest(config: dict, content: str, discove
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'imagingPlanVersion': 'native-foundation-node-imaging-plan/v1.8.0-readonly',
+        'imagingPlanVersion': 'native-foundation-node-imaging-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -11643,7 +11643,7 @@ def _native_foundation_cluster_formation_plan_manifest(config: dict, content: st
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'clusterFormationPlanVersion': 'native-foundation-cluster-formation-plan/v1.8.0-readonly',
+        'clusterFormationPlanVersion': 'native-foundation-cluster-formation-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -11776,7 +11776,7 @@ def _native_foundation_post_create_validation_manifest(config: dict, content: st
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'postCreateValidationVersion': 'native-foundation-post-create-validation/v1.8.0-readonly',
+        'postCreateValidationVersion': 'native-foundation-post-create-validation/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -12010,7 +12010,7 @@ def _native_foundation_deployment_wave_gate_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'deploymentWaveGateReviewVersion': 'native-foundation-deployment-wave-gates/v1.8.0-readonly',
+            'deploymentWaveGateReviewVersion': 'native-foundation-deployment-wave-gates/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -12154,7 +12154,7 @@ def _native_foundation_deployment_wave_gate_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'deploymentWaveGateReviewVersion': 'native-foundation-deployment-wave-gates/v1.8.0-readonly',
+        'deploymentWaveGateReviewVersion': 'native-foundation-deployment-wave-gates/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -12208,7 +12208,7 @@ def _native_foundation_deployment_wave_rehearsal_plan(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'deploymentWaveRehearsalVersion': 'native-foundation-deployment-wave-rehearsal/v1.8.0-readonly',
+            'deploymentWaveRehearsalVersion': 'native-foundation-deployment-wave-rehearsal/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -12406,7 +12406,7 @@ def _native_foundation_deployment_wave_rehearsal_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'deploymentWaveRehearsalVersion': 'native-foundation-deployment-wave-rehearsal/v1.8.0-readonly',
+        'deploymentWaveRehearsalVersion': 'native-foundation-deployment-wave-rehearsal/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -12460,7 +12460,7 @@ def _native_foundation_evidence_pack_approval_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'evidencePackApprovalReviewVersion': 'native-foundation-evidence-pack-approval/v1.8.0-readonly',
+            'evidencePackApprovalReviewVersion': 'native-foundation-evidence-pack-approval/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -12585,7 +12585,7 @@ def _native_foundation_evidence_pack_approval_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'evidencePackApprovalReviewVersion': 'native-foundation-evidence-pack-approval/v1.8.0-readonly',
+        'evidencePackApprovalReviewVersion': 'native-foundation-evidence-pack-approval/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -12640,7 +12640,7 @@ def _native_foundation_deployment_wave_authorization_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'deploymentWaveAuthorizationReviewVersion': 'native-foundation-deployment-wave-authorization/v1.8.0-readonly',
+            'deploymentWaveAuthorizationReviewVersion': 'native-foundation-deployment-wave-authorization/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -12856,7 +12856,7 @@ def _native_foundation_deployment_wave_authorization_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'deploymentWaveAuthorizationReviewVersion': 'native-foundation-deployment-wave-authorization/v1.8.0-readonly',
+        'deploymentWaveAuthorizationReviewVersion': 'native-foundation-deployment-wave-authorization/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -12917,7 +12917,7 @@ def _native_foundation_deployment_window_reservation_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'deploymentWindowReservationReviewVersion': 'native-foundation-deployment-window-reservation/v1.8.0-readonly',
+            'deploymentWindowReservationReviewVersion': 'native-foundation-deployment-window-reservation/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -13090,7 +13090,7 @@ def _native_foundation_deployment_window_reservation_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'deploymentWindowReservationReviewVersion': 'native-foundation-deployment-window-reservation/v1.8.0-readonly',
+        'deploymentWindowReservationReviewVersion': 'native-foundation-deployment-window-reservation/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -13150,7 +13150,7 @@ def _native_foundation_deployment_scheduler_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'deploymentSchedulerReviewVersion': 'native-foundation-deployment-scheduler/v1.8.0-readonly',
+            'deploymentSchedulerReviewVersion': 'native-foundation-deployment-scheduler/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -13370,7 +13370,7 @@ def _native_foundation_deployment_scheduler_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'deploymentSchedulerReviewVersion': 'native-foundation-deployment-scheduler/v1.8.0-readonly',
+        'deploymentSchedulerReviewVersion': 'native-foundation-deployment-scheduler/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -13434,7 +13434,7 @@ def _native_foundation_deployment_type_support_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'deploymentTypeSupportReviewVersion': 'native-foundation-deployment-type-support/v1.8.0-readonly',
+            'deploymentTypeSupportReviewVersion': 'native-foundation-deployment-type-support/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -13679,7 +13679,7 @@ def _native_foundation_deployment_type_support_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'deploymentTypeSupportReviewVersion': 'native-foundation-deployment-type-support/v1.8.0-readonly',
+        'deploymentTypeSupportReviewVersion': 'native-foundation-deployment-type-support/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -14122,7 +14122,7 @@ def _native_foundation_adapter_uat_rehearsal_plan(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatRehearsalPlanVersion': 'native-foundation-adapter-uat-rehearsal/v1.8.0-readonly',
+            'uatRehearsalPlanVersion': 'native-foundation-adapter-uat-rehearsal/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -14267,7 +14267,7 @@ def _native_foundation_adapter_uat_rehearsal_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatRehearsalPlanVersion': 'native-foundation-adapter-uat-rehearsal/v1.8.0-readonly',
+        'uatRehearsalPlanVersion': 'native-foundation-adapter-uat-rehearsal/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -14329,7 +14329,7 @@ def _native_foundation_adapter_activation_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterActivationReviewVersion': 'native-foundation-adapter-activation-review/v1.8.0-readonly',
+            'adapterActivationReviewVersion': 'native-foundation-adapter-activation-review/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -14465,7 +14465,7 @@ def _native_foundation_adapter_activation_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterActivationReviewVersion': 'native-foundation-adapter-activation-review/v1.8.0-readonly',
+        'adapterActivationReviewVersion': 'native-foundation-adapter-activation-review/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -14514,7 +14514,7 @@ def _native_foundation_adapter_enablement_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterEnablementReviewVersion': 'native-foundation-adapter-enablements/v1.8.0-readonly',
+            'adapterEnablementReviewVersion': 'native-foundation-adapter-enablements/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -14669,7 +14669,7 @@ def _native_foundation_adapter_enablement_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterEnablementReviewVersion': 'native-foundation-adapter-enablements/v1.8.0-readonly',
+        'adapterEnablementReviewVersion': 'native-foundation-adapter-enablements/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -14722,7 +14722,7 @@ def _native_foundation_adapter_allowlist_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterAllowListReviewVersion': 'native-foundation-adapter-allow-list/v1.8.0-readonly',
+            'adapterAllowListReviewVersion': 'native-foundation-adapter-allow-list/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -14853,7 +14853,7 @@ def _native_foundation_adapter_allowlist_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterAllowListReviewVersion': 'native-foundation-adapter-allow-list/v1.8.0-readonly',
+        'adapterAllowListReviewVersion': 'native-foundation-adapter-allow-list/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -15911,7 +15911,7 @@ def _native_foundation_execution_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionAdmissionVersion': 'native-foundation-execution-admission/v1.8.0-readonly',
+        'executionAdmissionVersion': 'native-foundation-execution-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -16161,7 +16161,7 @@ def _native_foundation_execution_adapter_contract(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionAdapterContractVersion': 'native-foundation-execution-adapter-contract/v1.8.0-readonly',
+        'executionAdapterContractVersion': 'native-foundation-execution-adapter-contract/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -16348,7 +16348,7 @@ def _native_foundation_execution_request_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionRequestReviewVersion': 'native-foundation-execution-request-review/v1.8.0-readonly',
+        'executionRequestReviewVersion': 'native-foundation-execution-request-review/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -16411,7 +16411,7 @@ def _native_foundation_execution_request_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionRequestPersistenceAdmissionReviewVersion': 'native-foundation-execution-request-persistence-admission/v1.8.0-readonly',
+            'executionRequestPersistenceAdmissionReviewVersion': 'native-foundation-execution-request-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -16566,7 +16566,7 @@ def _native_foundation_execution_request_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionRequestPersistenceAdmissionReviewVersion': 'native-foundation-execution-request-persistence-admission/v1.8.0-readonly',
+        'executionRequestPersistenceAdmissionReviewVersion': 'native-foundation-execution-request-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'deploymentExecutionEnabled': False,
@@ -16645,7 +16645,7 @@ def _native_foundation_dry_run_execution_ledger(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'dryRunLedgerVersion': 'native-foundation-dry-run-ledger/v1.8.0-readonly',
+            'dryRunLedgerVersion': 'native-foundation-dry-run-ledger/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -16798,7 +16798,7 @@ def _native_foundation_dry_run_execution_ledger(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'dryRunLedgerVersion': 'native-foundation-dry-run-ledger/v1.8.0-readonly',
+        'dryRunLedgerVersion': 'native-foundation-dry-run-ledger/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -16855,7 +16855,7 @@ def _native_foundation_execution_permit_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionPermitReviewVersion': 'native-foundation-execution-permit/v1.8.0-readonly',
+            'executionPermitReviewVersion': 'native-foundation-execution-permit/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -17094,7 +17094,7 @@ def _native_foundation_execution_permit_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionPermitReviewVersion': 'native-foundation-execution-permit/v1.8.0-readonly',
+        'executionPermitReviewVersion': 'native-foundation-execution-permit/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -17161,7 +17161,7 @@ def _native_foundation_execution_lock_plan(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionLockPlanVersion': 'native-foundation-execution-lock-plan/v1.8.0-readonly',
+            'executionLockPlanVersion': 'native-foundation-execution-lock-plan/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -17376,7 +17376,7 @@ def _native_foundation_execution_lock_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionLockPlanVersion': 'native-foundation-execution-lock-plan/v1.8.0-readonly',
+        'executionLockPlanVersion': 'native-foundation-execution-lock-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -17441,7 +17441,7 @@ def _native_foundation_execution_audit_plan(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionAuditPlanVersion': 'native-foundation-execution-audit-plan/v1.8.0-readonly',
+            'executionAuditPlanVersion': 'native-foundation-execution-audit-plan/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -17763,7 +17763,7 @@ def _native_foundation_execution_audit_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionAuditPlanVersion': 'native-foundation-execution-audit-plan/v1.8.0-readonly',
+        'executionAuditPlanVersion': 'native-foundation-execution-audit-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -17832,7 +17832,7 @@ def _native_foundation_execution_retention_plan(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionRetentionPlanVersion': 'native-foundation-execution-retention-plan/v1.8.0-readonly',
+            'executionRetentionPlanVersion': 'native-foundation-execution-retention-plan/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -18029,7 +18029,7 @@ def _native_foundation_execution_retention_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionRetentionPlanVersion': 'native-foundation-execution-retention-plan/v1.8.0-readonly',
+        'executionRetentionPlanVersion': 'native-foundation-execution-retention-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -18102,7 +18102,7 @@ def _native_foundation_execution_runner_readiness(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'runnerReadinessVersion': 'native-foundation-runner-readiness/v1.8.0-readonly',
+            'runnerReadinessVersion': 'native-foundation-runner-readiness/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -18369,7 +18369,7 @@ def _native_foundation_execution_runner_readiness(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'runnerReadinessVersion': 'native-foundation-runner-readiness/v1.8.0-readonly',
+        'runnerReadinessVersion': 'native-foundation-runner-readiness/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -18435,7 +18435,7 @@ def _native_foundation_controlled_uat_entry_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatEntryReviewVersion': 'native-foundation-controlled-uat-entry/v1.8.0-readonly',
+            'uatEntryReviewVersion': 'native-foundation-controlled-uat-entry/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -18733,7 +18733,7 @@ def _native_foundation_controlled_uat_entry_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatEntryReviewVersion': 'native-foundation-controlled-uat-entry/v1.8.0-readonly',
+        'uatEntryReviewVersion': 'native-foundation-controlled-uat-entry/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -18808,7 +18808,7 @@ def _native_foundation_controlled_uat_scope_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatScopeReviewVersion': 'native-foundation-controlled-uat-scope/v1.8.0-readonly',
+            'uatScopeReviewVersion': 'native-foundation-controlled-uat-scope/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -18997,7 +18997,7 @@ def _native_foundation_controlled_uat_scope_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatScopeReviewVersion': 'native-foundation-controlled-uat-scope/v1.8.0-readonly',
+        'uatScopeReviewVersion': 'native-foundation-controlled-uat-scope/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -19065,7 +19065,7 @@ def _native_foundation_controlled_uat_runbook_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatRunbookReviewVersion': 'native-foundation-controlled-uat-runbook/v1.8.0-readonly',
+            'uatRunbookReviewVersion': 'native-foundation-controlled-uat-runbook/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -19262,7 +19262,7 @@ def _native_foundation_controlled_uat_runbook_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatRunbookReviewVersion': 'native-foundation-controlled-uat-runbook/v1.8.0-readonly',
+        'uatRunbookReviewVersion': 'native-foundation-controlled-uat-runbook/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -19334,7 +19334,7 @@ def _native_foundation_controlled_uat_security_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatSecurityReviewVersion': 'native-foundation-controlled-uat-security/v1.8.0-readonly',
+            'uatSecurityReviewVersion': 'native-foundation-controlled-uat-security/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -19637,7 +19637,7 @@ def _native_foundation_controlled_uat_security_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatSecurityReviewVersion': 'native-foundation-controlled-uat-security/v1.8.0-readonly',
+        'uatSecurityReviewVersion': 'native-foundation-controlled-uat-security/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -19713,7 +19713,7 @@ def _native_foundation_controlled_uat_operations_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatOperationsReviewVersion': 'native-foundation-controlled-uat-operations/v1.8.0-readonly',
+            'uatOperationsReviewVersion': 'native-foundation-controlled-uat-operations/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -20046,7 +20046,7 @@ def _native_foundation_controlled_uat_operations_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatOperationsReviewVersion': 'native-foundation-controlled-uat-operations/v1.8.0-readonly',
+        'uatOperationsReviewVersion': 'native-foundation-controlled-uat-operations/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -20124,7 +20124,7 @@ def _native_foundation_controlled_uat_signoff_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'uatSignoffReviewVersion': 'native-foundation-controlled-uat-signoff/v1.8.0-readonly',
+            'uatSignoffReviewVersion': 'native-foundation-controlled-uat-signoff/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -20521,7 +20521,7 @@ def _native_foundation_controlled_uat_signoff_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'uatSignoffReviewVersion': 'native-foundation-controlled-uat-signoff/v1.8.0-readonly',
+        'uatSignoffReviewVersion': 'native-foundation-controlled-uat-signoff/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -20608,7 +20608,7 @@ def _native_foundation_adapter_load_plan_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterLoadPlanReviewVersion': 'native-foundation-adapter-load-plan/v1.8.0-readonly',
+            'adapterLoadPlanReviewVersion': 'native-foundation-adapter-load-plan/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -20860,7 +20860,7 @@ def _native_foundation_adapter_load_plan_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterLoadPlanReviewVersion': 'native-foundation-adapter-load-plan/v1.8.0-readonly',
+        'adapterLoadPlanReviewVersion': 'native-foundation-adapter-load-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -20945,7 +20945,7 @@ def _native_foundation_adapter_package_provenance_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterPackageProvenanceReviewVersion': 'native-foundation-adapter-package-provenance/v1.8.0-readonly',
+            'adapterPackageProvenanceReviewVersion': 'native-foundation-adapter-package-provenance/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -21165,7 +21165,7 @@ def _native_foundation_adapter_package_provenance_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterPackageProvenanceReviewVersion': 'native-foundation-adapter-package-provenance/v1.8.0-readonly',
+        'adapterPackageProvenanceReviewVersion': 'native-foundation-adapter-package-provenance/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -21254,7 +21254,7 @@ def _native_foundation_adapter_sbom_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterSbomReviewVersion': 'native-foundation-adapter-sbom/v1.8.0-readonly',
+            'adapterSbomReviewVersion': 'native-foundation-adapter-sbom/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -21481,7 +21481,7 @@ def _native_foundation_adapter_sbom_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterSbomReviewVersion': 'native-foundation-adapter-sbom/v1.8.0-readonly',
+        'adapterSbomReviewVersion': 'native-foundation-adapter-sbom/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -21573,7 +21573,7 @@ def _native_foundation_adapter_runtime_isolation_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterRuntimeIsolationReviewVersion': 'native-foundation-adapter-runtime-isolation/v1.8.0-readonly',
+            'adapterRuntimeIsolationReviewVersion': 'native-foundation-adapter-runtime-isolation/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -21797,7 +21797,7 @@ def _native_foundation_adapter_runtime_isolation_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterRuntimeIsolationReviewVersion': 'native-foundation-adapter-runtime-isolation/v1.8.0-readonly',
+        'adapterRuntimeIsolationReviewVersion': 'native-foundation-adapter-runtime-isolation/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -21889,7 +21889,7 @@ def _native_foundation_adapter_runtime_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterRuntimeAdmissionReviewVersion': 'native-foundation-adapter-runtime-admission/v1.8.0-readonly',
+            'adapterRuntimeAdmissionReviewVersion': 'native-foundation-adapter-runtime-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -22106,7 +22106,7 @@ def _native_foundation_adapter_runtime_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterRuntimeAdmissionReviewVersion': 'native-foundation-adapter-runtime-admission/v1.8.0-readonly',
+        'adapterRuntimeAdmissionReviewVersion': 'native-foundation-adapter-runtime-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -22198,7 +22198,7 @@ def _native_foundation_adapter_execution_preflight_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterExecutionPreflightReviewVersion': 'native-foundation-adapter-execution-preflight/v1.8.0-readonly',
+            'adapterExecutionPreflightReviewVersion': 'native-foundation-adapter-execution-preflight/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -22435,7 +22435,7 @@ def _native_foundation_adapter_execution_preflight_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterExecutionPreflightReviewVersion': 'native-foundation-adapter-execution-preflight/v1.8.0-readonly',
+        'adapterExecutionPreflightReviewVersion': 'native-foundation-adapter-execution-preflight/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -22530,7 +22530,7 @@ def _native_foundation_adapter_target_connectivity_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterTargetConnectivityReviewVersion': 'native-foundation-adapter-target-connectivity/v1.8.0-readonly',
+            'adapterTargetConnectivityReviewVersion': 'native-foundation-adapter-target-connectivity/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -22776,7 +22776,7 @@ def _native_foundation_adapter_target_connectivity_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterTargetConnectivityReviewVersion': 'native-foundation-adapter-target-connectivity/v1.8.0-readonly',
+        'adapterTargetConnectivityReviewVersion': 'native-foundation-adapter-target-connectivity/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -22878,7 +22878,7 @@ def _native_foundation_adapter_credential_handoff_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterCredentialHandoffReviewVersion': 'native-foundation-adapter-credential-handoff/v1.8.0-readonly',
+            'adapterCredentialHandoffReviewVersion': 'native-foundation-adapter-credential-handoff/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -23134,7 +23134,7 @@ def _native_foundation_adapter_credential_handoff_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterCredentialHandoffReviewVersion': 'native-foundation-adapter-credential-handoff/v1.8.0-readonly',
+        'adapterCredentialHandoffReviewVersion': 'native-foundation-adapter-credential-handoff/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -23236,7 +23236,7 @@ def _native_foundation_adapter_command_invocation_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterCommandInvocationReviewVersion': 'native-foundation-adapter-command-invocation/v1.8.0-readonly',
+            'adapterCommandInvocationReviewVersion': 'native-foundation-adapter-command-invocation/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -23486,7 +23486,7 @@ def _native_foundation_adapter_command_invocation_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterCommandInvocationReviewVersion': 'native-foundation-adapter-command-invocation/v1.8.0-readonly',
+        'adapterCommandInvocationReviewVersion': 'native-foundation-adapter-command-invocation/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -23588,7 +23588,7 @@ def _native_foundation_adapter_output_evidence_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'adapterOutputEvidenceReviewVersion': 'native-foundation-adapter-output-evidence/v1.8.0-readonly',
+            'adapterOutputEvidenceReviewVersion': 'native-foundation-adapter-output-evidence/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -23828,7 +23828,7 @@ def _native_foundation_adapter_output_evidence_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'adapterOutputEvidenceReviewVersion': 'native-foundation-adapter-output-evidence/v1.8.0-readonly',
+        'adapterOutputEvidenceReviewVersion': 'native-foundation-adapter-output-evidence/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -23929,7 +23929,7 @@ def _native_foundation_retained_evidence_export_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'retainedEvidenceExportReviewVersion': 'native-foundation-retained-evidence-export/v1.8.0-readonly',
+            'retainedEvidenceExportReviewVersion': 'native-foundation-retained-evidence-export/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -24218,7 +24218,7 @@ def _native_foundation_retained_evidence_export_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'retainedEvidenceExportReviewVersion': 'native-foundation-retained-evidence-export/v1.8.0-readonly',
+        'retainedEvidenceExportReviewVersion': 'native-foundation-retained-evidence-export/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -24497,7 +24497,7 @@ def _native_foundation_recovery_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'recoveryPlanVersion': 'native-foundation-recovery-plan/v1.8.0-readonly',
+        'recoveryPlanVersion': 'native-foundation-recovery-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -24736,7 +24736,7 @@ def _native_foundation_job_state_plan(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'jobStatePlanVersion': 'native-foundation-job-state-plan/v1.8.0-readonly',
+        'jobStatePlanVersion': 'native-foundation-job-state-plan/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -24802,7 +24802,7 @@ def _native_foundation_restart_resume_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'restartResumeReviewVersion': 'native-foundation-restart-resume/v1.8.0-readonly',
+            'restartResumeReviewVersion': 'native-foundation-restart-resume/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -24990,7 +24990,7 @@ def _native_foundation_restart_resume_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'restartResumeReviewVersion': 'native-foundation-restart-resume/v1.8.0-readonly',
+        'restartResumeReviewVersion': 'native-foundation-restart-resume/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -25072,7 +25072,7 @@ def _native_foundation_backup_restore_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'backupRestoreReviewVersion': 'native-foundation-backup-restore/v1.8.0-readonly',
+            'backupRestoreReviewVersion': 'native-foundation-backup-restore/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -25290,7 +25290,7 @@ def _native_foundation_backup_restore_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'backupRestoreReviewVersion': 'native-foundation-backup-restore/v1.8.0-readonly',
+        'backupRestoreReviewVersion': 'native-foundation-backup-restore/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -25389,7 +25389,7 @@ def _native_foundation_mutating_enablement_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'mutatingEnablementReviewVersion': 'native-foundation-mutating-enablement/v1.8.0-readonly',
+            'mutatingEnablementReviewVersion': 'native-foundation-mutating-enablement/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -25808,7 +25808,7 @@ def _native_foundation_mutating_enablement_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'mutatingEnablementReviewVersion': 'native-foundation-mutating-enablement/v1.8.0-readonly',
+        'mutatingEnablementReviewVersion': 'native-foundation-mutating-enablement/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -25901,7 +25901,7 @@ def _native_foundation_execution_submission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionSubmissionReviewVersion': 'native-foundation-execution-submission/v1.8.0-readonly',
+            'executionSubmissionReviewVersion': 'native-foundation-execution-submission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'deploymentExecutionEnabled': False,
@@ -26152,7 +26152,7 @@ def _native_foundation_execution_submission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionSubmissionReviewVersion': 'native-foundation-execution-submission/v1.8.0-readonly',
+        'executionSubmissionReviewVersion': 'native-foundation-execution-submission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'deploymentExecutionEnabled': False,
@@ -26252,7 +26252,7 @@ def _native_foundation_execution_submission_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionSubmissionPersistenceAdmissionReviewVersion': 'native-foundation-execution-submission-persistence-admission/v1.8.0-readonly',
+            'executionSubmissionPersistenceAdmissionReviewVersion': 'native-foundation-execution-submission-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'deploymentExecutionEnabled': False,
@@ -26430,7 +26430,7 @@ def _native_foundation_execution_submission_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionSubmissionPersistenceAdmissionReviewVersion': 'native-foundation-execution-submission-persistence-admission/v1.8.0-readonly',
+        'executionSubmissionPersistenceAdmissionReviewVersion': 'native-foundation-execution-submission-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'deploymentExecutionEnabled': False,
@@ -26531,7 +26531,7 @@ def _native_foundation_queue_persistence_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'queuePersistenceReviewVersion': 'native-foundation-queue-persistence/v1.8.0-readonly',
+            'queuePersistenceReviewVersion': 'native-foundation-queue-persistence/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -26762,7 +26762,7 @@ def _native_foundation_queue_persistence_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'queuePersistenceReviewVersion': 'native-foundation-queue-persistence/v1.8.0-readonly',
+        'queuePersistenceReviewVersion': 'native-foundation-queue-persistence/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -26858,7 +26858,7 @@ def _native_foundation_queue_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'queuePersistenceAdmissionReviewVersion': 'native-foundation-queue-persistence-admission/v1.8.0-readonly',
+            'queuePersistenceAdmissionReviewVersion': 'native-foundation-queue-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -27039,7 +27039,7 @@ def _native_foundation_queue_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'queuePersistenceAdmissionReviewVersion': 'native-foundation-queue-persistence-admission/v1.8.0-readonly',
+        'queuePersistenceAdmissionReviewVersion': 'native-foundation-queue-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'deploymentExecutionEnabled': False,
@@ -27147,7 +27147,7 @@ def _native_foundation_execution_authorization_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'executionAuthorizationPersistenceAdmissionReviewVersion': 'native-foundation-execution-authorization-persistence-admission/v1.8.0-readonly',
+            'executionAuthorizationPersistenceAdmissionReviewVersion': 'native-foundation-execution-authorization-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -27435,7 +27435,7 @@ def _native_foundation_execution_authorization_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'executionAuthorizationPersistenceAdmissionReviewVersion': 'native-foundation-execution-authorization-persistence-admission/v1.8.0-readonly',
+        'executionAuthorizationPersistenceAdmissionReviewVersion': 'native-foundation-execution-authorization-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -27538,7 +27538,7 @@ def _native_foundation_job_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'jobPersistenceAdmissionReviewVersion': 'native-foundation-job-persistence-admission/v1.8.0-readonly',
+            'jobPersistenceAdmissionReviewVersion': 'native-foundation-job-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -27822,7 +27822,7 @@ def _native_foundation_job_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'jobPersistenceAdmissionReviewVersion': 'native-foundation-job-persistence-admission/v1.8.0-readonly',
+        'jobPersistenceAdmissionReviewVersion': 'native-foundation-job-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -27949,7 +27949,7 @@ def _native_foundation_mutating_adapter_binding_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'mutatingAdapterBindingReviewVersion': 'native-foundation-mutating-adapter-binding/v1.8.0-readonly',
+            'mutatingAdapterBindingReviewVersion': 'native-foundation-mutating-adapter-binding/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -28321,7 +28321,7 @@ def _native_foundation_mutating_adapter_binding_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'mutatingAdapterBindingReviewVersion': 'native-foundation-mutating-adapter-binding/v1.8.0-readonly',
+        'mutatingAdapterBindingReviewVersion': 'native-foundation-mutating-adapter-binding/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -28439,7 +28439,7 @@ def _native_foundation_controlled_uat_lane_selection_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatLaneSelectionReviewVersion': 'native-foundation-controlled-uat-lane-selection/v1.8.0-readonly',
+            'controlledUatLaneSelectionReviewVersion': 'native-foundation-controlled-uat-lane-selection/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -28725,7 +28725,7 @@ def _native_foundation_controlled_uat_lane_selection_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatLaneSelectionReviewVersion': 'native-foundation-controlled-uat-lane-selection/v1.8.0-readonly',
+        'controlledUatLaneSelectionReviewVersion': 'native-foundation-controlled-uat-lane-selection/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -28819,7 +28819,7 @@ def _native_foundation_controlled_uat_lane_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatLanePersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-lane-persistence-admission/v1.8.0-readonly',
+            'controlledUatLanePersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-lane-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -29092,7 +29092,7 @@ def _native_foundation_controlled_uat_lane_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatLanePersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-lane-persistence-admission/v1.8.0-readonly',
+        'controlledUatLanePersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-lane-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -29190,7 +29190,7 @@ def _native_foundation_controlled_uat_hardware_reservation_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatHardwareReservationReviewVersion': 'native-foundation-controlled-uat-hardware-reservation/v1.8.0-readonly',
+            'controlledUatHardwareReservationReviewVersion': 'native-foundation-controlled-uat-hardware-reservation/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -29587,7 +29587,7 @@ def _native_foundation_controlled_uat_hardware_reservation_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatHardwareReservationReviewVersion': 'native-foundation-controlled-uat-hardware-reservation/v1.8.0-readonly',
+        'controlledUatHardwareReservationReviewVersion': 'native-foundation-controlled-uat-hardware-reservation/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -29691,7 +29691,7 @@ def _native_foundation_controlled_uat_reservation_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatReservationPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-reservation-persistence-admission/v1.8.0-readonly',
+            'controlledUatReservationPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-reservation-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -29968,7 +29968,7 @@ def _native_foundation_controlled_uat_reservation_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatReservationPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-reservation-persistence-admission/v1.8.0-readonly',
+        'controlledUatReservationPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-reservation-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -30070,7 +30070,7 @@ def _native_foundation_controlled_uat_entry_issuance_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatEntryIssuanceReviewVersion': 'native-foundation-controlled-uat-entry-issuance/v1.8.0-readonly',
+            'controlledUatEntryIssuanceReviewVersion': 'native-foundation-controlled-uat-entry-issuance/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -30382,7 +30382,7 @@ def _native_foundation_controlled_uat_entry_issuance_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatEntryIssuanceReviewVersion': 'native-foundation-controlled-uat-entry-issuance/v1.8.0-readonly',
+        'controlledUatEntryIssuanceReviewVersion': 'native-foundation-controlled-uat-entry-issuance/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -30490,7 +30490,7 @@ def _native_foundation_controlled_uat_entry_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatEntryPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-entry-persistence-admission/v1.8.0-readonly',
+            'controlledUatEntryPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-entry-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -30751,7 +30751,7 @@ def _native_foundation_controlled_uat_entry_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatEntryPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-entry-persistence-admission/v1.8.0-readonly',
+        'controlledUatEntryPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-entry-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -30855,7 +30855,7 @@ def _native_foundation_controlled_uat_start_readiness_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatStartReadinessReviewVersion': 'native-foundation-controlled-uat-start-readiness/v1.8.0-readonly',
+            'controlledUatStartReadinessReviewVersion': 'native-foundation-controlled-uat-start-readiness/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -31101,7 +31101,7 @@ def _native_foundation_controlled_uat_start_readiness_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatStartReadinessReviewVersion': 'native-foundation-controlled-uat-start-readiness/v1.8.0-readonly',
+        'controlledUatStartReadinessReviewVersion': 'native-foundation-controlled-uat-start-readiness/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -31202,7 +31202,7 @@ def _native_foundation_controlled_uat_start_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatStartPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-start-persistence-admission/v1.8.0-readonly',
+            'controlledUatStartPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-start-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -31429,7 +31429,7 @@ def _native_foundation_controlled_uat_start_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatStartPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-start-persistence-admission/v1.8.0-readonly',
+        'controlledUatStartPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-start-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -31559,7 +31559,7 @@ def _native_foundation_controlled_uat_runner_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatRunnerAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-admission/v1.8.0-readonly',
+            'controlledUatRunnerAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -31834,7 +31834,7 @@ def _native_foundation_controlled_uat_runner_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatRunnerAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-admission/v1.8.0-readonly',
+        'controlledUatRunnerAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -31941,7 +31941,7 @@ def _native_foundation_controlled_uat_runner_persistence_admission_review(
         return {
             'workflow': NATIVE_FOUNDATION_WORKFLOW,
             'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-            'controlledUatRunnerPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-persistence-admission/v1.8.0-readonly',
+            'controlledUatRunnerPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-persistence-admission/v1.8.1-readonly',
             'readOnly': True,
             'mutatingActionsEnabled': False,
             'status': 'invalid',
@@ -32172,7 +32172,7 @@ def _native_foundation_controlled_uat_runner_persistence_admission_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatRunnerPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-persistence-admission/v1.8.0-readonly',
+        'controlledUatRunnerPersistenceAdmissionReviewVersion': 'native-foundation-controlled-uat-runner-persistence-admission/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -32599,7 +32599,7 @@ def _native_foundation_controlled_uat_execution_authorization_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatExecutionAuthorizationReviewVersion': 'native-foundation-controlled-uat-execution-authorization/v1.8.0-readonly',
+        'controlledUatExecutionAuthorizationReviewVersion': 'native-foundation-controlled-uat-execution-authorization/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',
@@ -32952,7 +32952,7 @@ def _native_foundation_controlled_uat_completion_review(
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
-        'controlledUatCompletionReviewVersion': 'native-foundation-controlled-uat-completion/v1.8.0-readonly',
+        'controlledUatCompletionReviewVersion': 'native-foundation-controlled-uat-completion/v1.8.1-readonly',
         'readOnly': True,
         'mutatingActionsEnabled': False,
         'status': 'blocked',

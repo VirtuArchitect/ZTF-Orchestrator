@@ -1,6 +1,6 @@
 # Native Foundation Discovery Reconciliation
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Discovery reconciliation compares the intended node plan with supplied
 adapter-style discovery facts. It is the review step between a live discovery

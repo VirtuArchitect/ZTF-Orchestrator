@@ -1,6 +1,6 @@
 # Native Foundation Adapter Activation Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The adapter activation review is the final read-only gate before any future
 native Foundation adapter could be considered for mutating execution. It

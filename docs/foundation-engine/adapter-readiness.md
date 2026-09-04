@@ -1,6 +1,6 @@
 # Native Foundation Adapter Readiness
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Adapter readiness reports whether the provider and deployment-type targets in a
 `native-foundation-deploy` intent have enough evidence to be considered for a

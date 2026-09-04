@@ -1,6 +1,6 @@
 # Native Foundation Execution Retention Plan
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Execution retention plan review declares the retention policies, backup targets,
 and restore rehearsal checks a future native Foundation run would need before

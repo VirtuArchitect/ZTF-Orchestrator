@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Operations Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT operations review collects the operational readiness blockers
 that must be reviewed before any future native Foundation hardware-UAT adapter

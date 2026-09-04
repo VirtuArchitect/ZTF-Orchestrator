@@ -1,6 +1,6 @@
 # Native Foundation Adapter UAT Rehearsal
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The adapter UAT rehearsal plan turns the provider contract, deployment contract,
 UAT checklist, preflight review, promotion review, and job state plan into one
