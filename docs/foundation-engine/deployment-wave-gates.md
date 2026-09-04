@@ -1,6 +1,6 @@
 # Native Foundation Deployment Wave Gates
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Deployment wave gate review turns the read-only execution graph and deployment
 policy into per-wave, per-site gate records. It is the scheduling-adjacent

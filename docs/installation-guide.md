@@ -3,13 +3,13 @@
 This guide expands the installation options from the main README into
 step-by-step deployment procedures.
 
-Current ZTF-Orchestrator release for this source tree: `v1.8.0`.
+Current ZTF-Orchestrator release for this source tree: `v1.8.1`.
 
 ## Current Scope
 
 | Item | Current guidance |
 | --- | --- |
-| Current release baseline | `v1.8.0` |
+| Current release baseline | `v1.8.1` |
 | Existing appliance update method | Appliance update package plus host-side helper |
 | Full QCOW2 appliance image | GitHub Actions artifact or durable internal artifact storage, not a GitHub Release binary |
 | ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` for Workflows 1.x/Scripts 1.x, with a separate guarded ZTF `v2.0.0` runtime for ZTF 2.x IaC |

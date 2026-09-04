@@ -97,7 +97,7 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
     if (url.endsWith('/api/native-foundation/phases')) {
       await route.fulfill({ json: {
         currentExecutionMode: 'read_only',
-        contractVersion: 'native-foundation-phase/v1.8.0-readonly',
+        contractVersion: 'native-foundation-phase/v1.8.1-readonly',
         mutatingActionsEnabled: false,
         readOnly: true,
         supportedReadinessPhases: ['imaging_only', 'cluster_create'],
@@ -137,7 +137,7 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
     if (url.endsWith('/api/native-foundation/provider-adapters')) {
       const mutationEnabled = options.nativeDellMutationEnabled === true
       await route.fulfill({ json: {
-        adapterInterfaceVersion: mutationEnabled ? 'native-foundation-provider-adapter/v1.8.0-controlled-uat' : 'native-foundation-provider-adapter/v1.8.0-readonly',
+        adapterInterfaceVersion: mutationEnabled ? 'native-foundation-provider-adapter/v1.8.1-controlled-uat' : 'native-foundation-provider-adapter/v1.8.1-readonly',
         status: mutationEnabled ? 'ready' : 'blocked',
         readOnly: !mutationEnabled,
         mutatingActionsEnabled: mutationEnabled,

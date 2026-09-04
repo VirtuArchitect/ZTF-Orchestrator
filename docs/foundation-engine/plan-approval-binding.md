@@ -1,6 +1,6 @@
 # Native Foundation Plan And Approval Binding
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Native Foundation plan generation creates deterministic read-only metadata for
 a `native-foundation-deploy` intent. The plan does not authorize or run

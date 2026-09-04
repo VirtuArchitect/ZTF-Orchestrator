@@ -1,6 +1,6 @@
 # Native Foundation Adapter Contracts
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Adapter contracts define the versioned boundary between native Foundation
 planning and future provider or deployment execution adapters. They are
@@ -30,7 +30,7 @@ Request body for `POST`:
 Current contract version:
 
 ```text
-native-foundation-adapter-contract/v1.8.0-readonly
+native-foundation-adapter-contract/v1.8.1-readonly
 ```
 
 Future mutating adapters must bind to a specific contract version. Changing

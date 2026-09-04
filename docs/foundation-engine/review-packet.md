@@ -1,6 +1,6 @@
 # Native Foundation Review Packet
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The native Foundation review packet is a downloadable ZIP bundle for approval
 and controlled-UAT review. It collects the read-only artifacts generated from a

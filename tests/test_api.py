@@ -2582,7 +2582,7 @@ def test_native_foundation_adapter_contracts_are_read_only_and_versioned(client,
 
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['contractVersion'] == 'native-foundation-adapter-contract/v1.8.0-readonly'
+    assert body['contractVersion'] == 'native-foundation-adapter-contract/v1.8.1-readonly'
     assert body['readOnly'] is True
     assert body['mutatingActionsEnabled'] is False
     assert body['status'] == 'valid'
@@ -2734,7 +2734,7 @@ def test_native_foundation_provider_adapters_are_read_only_scaffold(client, auth
 
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['adapterInterfaceVersion'] == 'native-foundation-provider-adapter/v1.8.0-readonly'
+    assert body['adapterInterfaceVersion'] == 'native-foundation-provider-adapter/v1.8.1-readonly'
     assert body['status'] == 'blocked'
     assert body['canLoadAdapters'] is False
     assert body['mutatingActionsEnabled'] is False
@@ -2913,7 +2913,7 @@ def test_native_foundation_provider_operation_catalog_maps_site_topology_operati
 
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['operationCatalogVersion'] == 'native-foundation-provider-operation-catalog/v1.8.0-readonly'
+    assert body['operationCatalogVersion'] == 'native-foundation-provider-operation-catalog/v1.8.1-readonly'
     assert body['status'] == 'blocked'
     assert body['readOnly'] is True
     assert body['mutatingActionsEnabled'] is False
@@ -2986,7 +2986,7 @@ def test_native_foundation_provider_operation_admission_review_blocks_operations
 
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['operationAdmissionReviewVersion'] == 'native-foundation-provider-operation-admission/v1.8.0-readonly'
+    assert body['operationAdmissionReviewVersion'] == 'native-foundation-provider-operation-admission/v1.8.1-readonly'
     assert body['status'] == 'blocked'
     assert body['readOnly'] is True
     assert body['mutatingActionsEnabled'] is False
@@ -3058,7 +3058,7 @@ def test_native_foundation_provider_operation_queue_plan_blocks_queueing(client,
 
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['operationQueuePlanVersion'] == 'native-foundation-provider-operation-queue-plan/v1.8.0-readonly'
+    assert body['operationQueuePlanVersion'] == 'native-foundation-provider-operation-queue-plan/v1.8.1-readonly'
     assert body['status'] == 'blocked'
     assert body['readOnly'] is True
     assert body['mutatingActionsEnabled'] is False
@@ -3127,7 +3127,7 @@ def test_native_foundation_provider_operation_queue_admission_review_blocks_admi
 
     assert resp.status_code == 200
     body = resp.get_json()
-    assert body['operationQueueAdmissionReviewVersion'] == 'native-foundation-provider-operation-queue-admission/v1.8.0-readonly'
+    assert body['operationQueueAdmissionReviewVersion'] == 'native-foundation-provider-operation-queue-admission/v1.8.1-readonly'
     assert body['status'] == 'blocked'
     assert body['readOnly'] is True
     assert body['mutatingActionsEnabled'] is False
@@ -3647,7 +3647,7 @@ def test_native_foundation_evidence_packs_are_cluster_scoped_and_hash_bound(clie
     assert hci_pack['planId'] == body['planId']
     assert hci_pack['intentSha256'] == body['intentSha256']
     assert hci_pack['discoverySha256'] == body['discoverySha256']
-    assert hci_pack['contractVersion'] == 'native-foundation-adapter-contract/v1.8.0-readonly'
+    assert hci_pack['contractVersion'] == 'native-foundation-adapter-contract/v1.8.1-readonly'
     assert hci_pack['providerContract']['providerId'] == 'manual_static'
     assert hci_pack['deploymentContract']['deploymentType'] == 'hci'
     assert hci_pack['deploymentContract']['plannedPhases'] == ['imaging_only', 'hci_cluster_create']

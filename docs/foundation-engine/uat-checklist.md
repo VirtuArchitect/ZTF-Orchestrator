@@ -1,6 +1,6 @@
 # Native Foundation UAT Checklist
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The native Foundation UAT checklist turns an adapter promotion review into
 read-only test cases and required evidence fields for controlled hardware UAT.

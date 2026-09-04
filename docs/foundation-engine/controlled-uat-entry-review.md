@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Entry Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT entry review composes the final read-only decision record before
 any native Foundation adapter can enter a bounded hardware UAT lane. It brings

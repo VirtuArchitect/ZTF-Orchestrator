@@ -1,6 +1,6 @@
 # Native Foundation Execution Lock Plan
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Execution lock plan review defines the future lock requests a native Foundation
 run would need before any adapter execution can start. It covers the global

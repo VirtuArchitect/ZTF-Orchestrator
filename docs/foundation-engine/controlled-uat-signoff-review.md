@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Signoff Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT signoff review composes the final read-only signoff dependency
 chain before any future native Foundation hardware-UAT lane can be explicitly

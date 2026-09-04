@@ -1,6 +1,6 @@
 # Native Foundation Provider Operation Queue Plan
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 `POST /api/native-foundation/provider-operation-queue-plan` converts the
 provider operation admission review into deterministic read-only queue items

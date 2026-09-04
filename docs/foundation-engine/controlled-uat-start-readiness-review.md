@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Start Readiness Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT start readiness review declares the final read-only controls that
 would be needed before a bounded native Foundation hardware UAT could start. It

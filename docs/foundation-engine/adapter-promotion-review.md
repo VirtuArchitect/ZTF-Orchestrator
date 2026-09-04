@@ -1,6 +1,6 @@
 # Native Foundation Adapter Promotion Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Adapter promotion review is a read-only control for deciding whether a native
 Foundation provider and deployment type are ready to move toward controlled UAT.

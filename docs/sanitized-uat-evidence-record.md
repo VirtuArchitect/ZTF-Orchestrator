@@ -5,7 +5,7 @@ cluster configuration, Foundation Central imaging, NDB setup, Calm workload
 setup, drift checks, backup/restore drills, and native Foundation planning
 reviews.
 
-Current ZTF-Orchestrator release for new evidence records: `v1.8.0`.
+Current ZTF-Orchestrator release for new evidence records: `v1.8.1`.
 
 ## Evidence Rules
 
@@ -21,7 +21,7 @@ Current ZTF-Orchestrator release for new evidence records: `v1.8.0`.
 
 ```yaml
 evidence_id: ztf-uat-YYYYMMDD-001
-orchestrator_version: v1.8.0
+orchestrator_version: v1.8.1
 workflow: config-pc
 environment_class: uat
 operator_role: operator
@@ -53,7 +53,7 @@ fields:
 native_foundation:
   packet_id: native-foundation-review-...
   plan_id: native-foundation-...
-  contract_version: native-foundation-adapter-contract/v1.8.0-readonly
+  contract_version: native-foundation-adapter-contract/v1.8.1-readonly
   phase: hci_cluster_create
   approval_id: "<sanitized approval record id or alias>"
   validation_evidence_id: "<sanitized captured evidence record id or alias>"

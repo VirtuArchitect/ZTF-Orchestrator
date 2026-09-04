@@ -1,6 +1,6 @@
 # Native Foundation Mutating Adapter Binding Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Mutating adapter binding review declares the exact adapter binding records that
 a future controlled native Foundation execution path would need before any

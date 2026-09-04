@@ -1,6 +1,6 @@
 # UAT Results
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 This file is an index for controlled UAT outcomes. Keep detailed evidence in
 the approved evidence store or sanitized Markdown records.

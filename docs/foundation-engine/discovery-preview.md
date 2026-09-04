@@ -1,6 +1,6 @@
 # Native Foundation Discovery Preview
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Discovery preview is the first read-only native Foundation engine capability.
 It converts a `native-foundation-deploy` intent into normalized site, cluster,

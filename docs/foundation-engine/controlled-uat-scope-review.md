@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Scope Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Controlled UAT scope review declares the bounded site, cluster, provider,
 deployment type, node, wave, and artifact scope that would be required before a

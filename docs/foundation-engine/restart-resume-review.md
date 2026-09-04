@@ -1,6 +1,6 @@
 # Native Foundation Restart/Resume Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Restart/resume review composes the read-only resume checkpoint, job-state plan,
 retention plan, audit plan, lock plan, and deployment scheduler review into a

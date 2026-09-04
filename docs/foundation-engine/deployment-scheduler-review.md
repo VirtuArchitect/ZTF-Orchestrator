@@ -1,6 +1,6 @@
 # Native Foundation Deployment Scheduler Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Deployment scheduler review converts read-only deployment window reservations,
 execution requests, dry-run ledgers, non-issued permits, lock plans, recovery

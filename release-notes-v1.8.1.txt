@@ -1,0 +1,44 @@
+ZTF-Orchestrator v1.8.1 - Native Foundation Deploy validation hardening
+========================================================================
+
+Release date: 2026-09-04
+
+Summary
+-------
+v1.8.1 is a patch release for the Native Foundation Deploy controlled UAT path.
+It aligns the runtime, UI, workflow templates, operator documentation, and
+release metadata around the hardened Dell AHV HCI validation behavior.
+
+Highlights
+----------
+- Adds the `native-foundation-deploy` workflow as a first-class operator entry
+  point for controlled UAT Dell AHV HCI deployment intent.
+- Exposes the expected deployment inputs in the workflow UI, including runner
+  identity, image repository details, AOS/AHV image source/version/checksum
+  fields, Dell iDRAC node details, Prism Element validation details, and dry-run
+  evidence controls.
+- Adds browse/upload controls for Foundation image source selection while
+  keeping artifacts explicitly operator supplied.
+- Hardens dry-run validation so placeholder site, cluster, node, image, and
+  repository values fail before mutating adapter execution.
+- Keeps unsupported FCA Dell HCI deployment paths fail-closed.
+
+Security and support boundary
+-----------------------------
+- Secrets continue to be handled through credential references; release assets
+  and documentation do not require publishing cleartext iDRAC, Prism Element, or
+  repository credentials.
+- Native Foundation Deploy remains a controlled UAT path. The release does not
+  claim Nutanix or Dell production certification, nor does it convert planning
+  validation into evidence of a completed live deployment.
+- Mutating adapter execution remains gated by explicit controlled UAT readiness,
+  runner, evidence, and authorization controls.
+
+Validation
+----------
+Recommended release validation:
+- `python -m pytest tests/test_release_integrity.py -q`
+- Focused Native Foundation Deploy dry-run validation tests.
+- `npm audit --audit-level=high`
+- `npm run build`
+- `git diff --check`

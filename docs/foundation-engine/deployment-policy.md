@@ -1,6 +1,6 @@
 # Native Foundation Deployment Policy
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Deployment policy review evaluates maintenance windows and blast-radius limits
 for a `native-foundation-deploy` intent. It is a read-only scheduling gate. It

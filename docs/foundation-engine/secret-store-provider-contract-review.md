@@ -1,6 +1,6 @@
 # Native Foundation Secret Store Provider Contract Review
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Secret store provider contract review declares the provider-side contract that a
 future native Foundation execution adapter would need before resolving named

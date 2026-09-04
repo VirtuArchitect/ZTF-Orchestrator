@@ -1,6 +1,6 @@
 # Native Foundation Job State Plan
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 The job state plan describes the durable state model a future native Foundation
 deployment worker would use to track queueing, running, checkpoint, pause,

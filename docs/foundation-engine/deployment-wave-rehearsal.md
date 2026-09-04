@@ -1,6 +1,6 @@
 # Native Foundation Deployment Wave Rehearsal
 
-Current release marker: `v1.8.0`.
+Current release marker: `v1.8.1`.
 
 Deployment wave rehearsal converts deployment wave gates, per-cluster evidence
 packs, recovery actions, and runner readiness into an operator-facing
