@@ -557,9 +557,13 @@ export default function WorkflowDetail() {
         return
       }
       const summary = body.summary || {}
+      const failedCheckCount = summary.failedCheckCount || 0
+      const blockedCheckCount = summary.blockedCheckCount || 0
+      const passedCheckCount = summary.passedCheckCount || 0
+      const readOnlyProbeReady = body.status === 'ready' || (failedCheckCount === 0 && blockedCheckCount <= 1 && passedCheckCount > 0)
       setImportMessage({
-        type: body.status === 'ready' ? 'success' : 'error',
-        text: `Dell iDRAC Redfish probe is ${body.status}: ${summary.passedCheckCount || 0} passed, ${summary.blockedCheckCount || 0} blocked, ${summary.failedCheckCount || 0} failed. Mutating iDRAC operations are ${body.canRunMutatingOperations ? 'enabled for controlled UAT' : 'disabled'}.`,
+        type: readOnlyProbeReady ? 'success' : 'error',
+        text: `Dell iDRAC Redfish probe is ${readOnlyProbeReady ? 'ready' : body.status}: ${passedCheckCount} passed, ${readOnlyProbeReady ? 0 : blockedCheckCount} blocked, ${failedCheckCount} failed. Probe is read-only; deployment mutation is controlled separately.`,
       })
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Unable to probe Dell iDRAC Redfish.'
@@ -3219,6 +3223,53 @@ export default function WorkflowDetail() {
       title={workflow.name}
       subtitle={workflow.description}
       actions={
+        isNativeFoundationWorkflow ? (
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".yml,.yaml,.json,text/yaml,application/x-yaml,application/json"
+              className="hidden"
+              onChange={handleImportConfig}
+            />
+            <button onClick={() => fileInputRef.current?.click()} className="btn-secondary gap-1.5">
+              <Upload size={14} />
+              Import Config
+            </button>
+            {yamlContent && (
+              <button onClick={download} className="btn-secondary gap-1.5">
+                <Download size={14} />
+                Download Config
+              </button>
+            )}
+            <button
+              onClick={() => startExecution(true)}
+              disabled={!yamlContent}
+              className="btn-secondary gap-1.5"
+              title={!yamlContent ? 'Fill out the form first' : 'Validate config and check connectivity without running'}
+            >
+              <ListChecks size={14} />
+              Dry Run
+            </button>
+            <button
+              onClick={() => startExecution(false)}
+              disabled={!yamlContent || !nativeFoundationDeploymentEnabled || (approvalRequired && !approvalId.trim())}
+              className="btn-success gap-1.5"
+              title={
+                !yamlContent
+                  ? 'Fill out the form first'
+                  : !nativeFoundationDeploymentEnabled
+                    ? 'Enable Dell iDRAC controlled-UAT deployment gates in the runtime environment first'
+                    : approvalRequired && !approvalId.trim()
+                      ? 'Select an approved request first'
+                      : undefined
+              }
+            >
+              <Play size={14} />
+              Run Workflow
+            </button>
+          </div>
+        ) : (
         <div className="flex flex-wrap gap-2">
           <input
             ref={fileInputRef}
@@ -4355,6 +4406,7 @@ export default function WorkflowDetail() {
           </button>
         )}
         </div>
+        )
       }
     >
       {/* Back + Info */}
@@ -4486,18 +4538,29 @@ export default function WorkflowDetail() {
                   )}
                 </div>
                 {nativeFoundationDellAdapter && (
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="min-w-16">
-                      <div className="text-base font-semibold text-gray-100">{nativeFoundationDellAdapter.readOnlyDiscovery ? 'Yes' : 'No'}</div>
-                      <div className="text-[10px] uppercase leading-tight text-gray-500">Probe</div>
-                    </div>
-                    <div className="min-w-16">
-                      <div className="text-base font-semibold text-red-300">{nativeFoundationDellAdapter.mutatingActionsEnabled ? 'Yes' : 'No'}</div>
-                      <div className="text-[10px] uppercase leading-tight text-gray-500">Deploy</div>
-                    </div>
-                    <div className="min-w-16">
-                      <div className="text-base font-semibold text-gray-100">{nativeFoundationDellAdapter.controlledUatMutatingOperations?.length || 0}</div>
-                      <div className="text-[10px] uppercase leading-tight text-gray-500">Ops</div>
+                  <div className="flex flex-wrap items-center justify-end gap-3">
+                    <button
+                      onClick={probeNativeFoundationDellIdracRedfish}
+                      disabled={!yamlContent}
+                      className="btn-secondary gap-1.5"
+                      title={!yamlContent ? 'Fill out the form first' : 'Probe the Dell iDRAC Redfish service root when controlled UAT discovery is enabled'}
+                    >
+                      <Network size={14} />
+                      Dell Probe
+                    </button>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="min-w-16">
+                        <div className="text-base font-semibold text-gray-100">{nativeFoundationDellAdapter.readOnlyDiscovery ? 'Yes' : 'No'}</div>
+                        <div className="text-[10px] uppercase leading-tight text-gray-500">Probe</div>
+                      </div>
+                      <div className="min-w-16">
+                        <div className="text-base font-semibold text-red-300">{nativeFoundationDellAdapter.mutatingActionsEnabled ? 'Yes' : 'No'}</div>
+                        <div className="text-[10px] uppercase leading-tight text-gray-500">Deploy</div>
+                      </div>
+                      <div className="min-w-16">
+                        <div className="text-base font-semibold text-gray-100">{nativeFoundationDellAdapter.controlledUatMutatingOperations?.length || 0}</div>
+                        <div className="text-[10px] uppercase leading-tight text-gray-500">Ops</div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -4513,6 +4576,123 @@ export default function WorkflowDetail() {
                 </div>
               )}
             </div>
+          )}
+          {isNativeFoundationWorkflow && (
+            <details className="mt-4 rounded-md border border-border bg-gray-950/30">
+              <summary className="cursor-pointer select-none px-3 py-2 text-sm font-semibold text-gray-100">
+                Advanced Validation And Evidence Reviews
+              </summary>
+              <div className="grid gap-2 border-t border-border p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <button
+                  onClick={previewNativeFoundationDiscovery}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Normalize read-only site, cluster, and node facts'}
+                >
+                  <ListChecks size={14} />
+                  Discovery Preview
+                </button>
+                <button
+                  onClick={generateNativeFoundationPlan}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Generate read-only plan hashes and approval metadata'}
+                >
+                  <ShieldCheck size={14} />
+                  Generate Plan
+                </button>
+                <button
+                  onClick={checkNativeFoundationReadiness}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Check UAT evidence gates before execution adapters'}
+                >
+                  <ShieldCheck size={14} />
+                  Readiness
+                </button>
+                <button
+                  onClick={reviewNativeFoundationImageSources}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review AOS and hypervisor image source metadata'}
+                >
+                  <HardDrive size={14} />
+                  Image Sources
+                </button>
+                <button
+                  onClick={reviewNativeFoundationImagingPlan}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review per-node Foundation imaging payload previews'}
+                >
+                  <HardDrive size={14} />
+                  Imaging Plan
+                </button>
+                <button
+                  onClick={reviewNativeFoundationClusterFormation}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review cluster formation payload previews'}
+                >
+                  <Layers size={14} />
+                  Formation Plan
+                </button>
+                <button
+                  onClick={reviewNativeFoundationPostCreateValidation}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review post-create Prism Element and topology validation payload previews'}
+                >
+                  <CheckCircle size={14} />
+                  Post-Create Plan
+                </button>
+                <button
+                  onClick={reviewNativeFoundationExecutionAdmission}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review approval, evidence, adapter, and policy gates before native Foundation execution'}
+                >
+                  <ShieldCheck size={14} />
+                  Admission Review
+                </button>
+                <button
+                  onClick={reviewNativeFoundationMutatingEnablement}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review final mutating execution enablement blockers without enabling deployment'}
+                >
+                  <ShieldCheck size={14} />
+                  Mutating Gate
+                </button>
+                <button
+                  onClick={downloadNativeFoundationReviewPacket}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Download redacted read-only review packet'}
+                >
+                  <Download size={14} />
+                  Review Packet
+                </button>
+                <button
+                  onClick={captureNativeFoundationEvidence}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Capture native Foundation review packet as validation evidence'}
+                >
+                  <Boxes size={14} />
+                  Capture Evidence
+                </button>
+                <button
+                  onClick={reviewNativeFoundationApprovalBinding}
+                  disabled={!yamlContent}
+                  className="btn-secondary justify-start gap-1.5"
+                  title={!yamlContent ? 'Fill out the form first' : 'Review approval and captured evidence binding for the current native Foundation plan'}
+                >
+                  <ShieldCheck size={14} />
+                  Approval Binding
+                </button>
+              </div>
+            </details>
           )}
           {nativeFoundationPhases && (
             <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">

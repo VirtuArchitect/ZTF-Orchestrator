@@ -54,7 +54,13 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
         {subtitle && <p className="text-xs text-gray-500 truncate">{subtitle}</p>}
       </div>
 
-      {actions && <div className="hidden sm:flex items-center gap-2 flex-shrink-0">{actions}</div>}
+      {actions && (
+        <div className="hidden min-w-0 max-w-[70vw] flex-shrink overflow-x-auto sm:flex">
+          <div className="flex items-center gap-2 whitespace-nowrap pr-1">
+            {actions}
+          </div>
+        </div>
+      )}
 
       <button
         onClick={cycleTheme}
