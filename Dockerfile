@@ -1,3 +1,16 @@
+FROM node:22-slim AS ui-build
+
+WORKDIR /ui
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.json tailwind.config.js postcss.config.js ./
+COPY public ./public
+COPY src ./src
+
+RUN npm run build
+
 FROM python:3.11-slim
 
 LABEL maintainer="ZTF-Orchestrator maintainers"
@@ -115,6 +128,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ============================================================================
 
 COPY . /app
+COPY --from=ui-build /ui/dist /app/dist
 
 # ============================================================================
 # Permissions

@@ -10,6 +10,8 @@ __pycache__
 htmlcov
 
 node_modules
+dist
+dist-demo
 venv
 *.egg-info
 *.tar
@@ -37,7 +39,6 @@ appliance
 !.env.example
 
 dist/**/*.map
-src
 static
 tests
 tsconfig*.tsbuildinfo

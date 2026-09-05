@@ -119,6 +119,8 @@ export default function Sidebar() {
           aria-label="Dashboard Overview"
           title="Dashboard Overview"
           onClick={() => {
+            window.sessionStorage.setItem(NAV_SCROLL_KEY, '0')
+            if (navRef.current) navRef.current.scrollTop = 0
             if (window.innerWidth < 768 && sidebarOpen) toggleSidebar()
           }}
           className={clsx(

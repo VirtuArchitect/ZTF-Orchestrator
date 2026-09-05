@@ -4101,9 +4101,9 @@ def _native_foundation_dell_idrac_redfish_probe(
         },
         {
             'id': 'dell-idrac-mutation-disabled',
-            'label': 'Dell iDRAC mutating operations remain disabled',
-            'status': 'blocked' if not mutation_enabled else 'pass',
-            'evidence': 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION is not enabled.' if not mutation_enabled else 'Mutation environment flag is enabled; execution gates must still pass before operations run.',
+            'label': 'Dell iDRAC probe is read-only',
+            'status': 'pass',
+            'evidence': 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION is not enabled; probe remains read-only.' if not mutation_enabled else 'Mutation environment flag is enabled separately; this probe still performs read-only service-root discovery.',
         },
     ]
     return {

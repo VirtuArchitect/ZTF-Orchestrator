@@ -2831,7 +2831,7 @@ def test_native_foundation_dell_idrac_redfish_probe_blocks_by_default(client, au
     assert checks['credential-reference-declared']['status'] == 'pass'
     assert checks['live-discovery-env-enabled']['status'] == 'blocked'
     assert checks['redfish-service-root-reachable']['status'] == 'blocked'
-    assert checks['dell-idrac-mutation-disabled']['status'] == 'blocked'
+    assert checks['dell-idrac-mutation-disabled']['status'] == 'pass'
 
 
 def test_native_foundation_dell_idrac_redfish_probe_runs_when_enabled(client, auth_headers, monkeypatch):
@@ -2886,7 +2886,7 @@ def test_native_foundation_dell_idrac_redfish_probe_runs_when_enabled(client, au
     checks = {check['id']: check for check in body['checks']}
     assert checks['live-discovery-env-enabled']['status'] == 'pass'
     assert checks['redfish-service-root-reachable']['status'] == 'pass'
-    assert checks['dell-idrac-mutation-disabled']['status'] == 'blocked'
+    assert checks['dell-idrac-mutation-disabled']['status'] == 'pass'
 
 
 def test_native_foundation_provider_adapters_reject_unsupported_provider(client, auth_headers):
