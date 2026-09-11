@@ -17,6 +17,10 @@ into the next numbered release section when the next version is cut.
   ZTF-Orchestrator branding, documentation access, and accessible password
   visibility and error controls. Authentication behavior is unchanged.
 
+### Security
+- Updated the locked js-yaml dependency from 4.3.1 to 4.3.2 to address
+  GHSA-2883-xcg3-v3hh (excessive CPU use from empty YAML merge sources).
+
 ---
 
 ## [1.8.1] - 2026-09-04
