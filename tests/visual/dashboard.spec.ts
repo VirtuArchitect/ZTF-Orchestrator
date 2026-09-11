@@ -293,17 +293,17 @@ async function expectLightThemeReadable(page: Page) {
 
 test('login page renders', async ({ page }) => {
   await page.goto('/login')
-  await expect(page.getByLabel('ZeroTouch Enterprise Orchestrator')).toBeVisible()
+  await expect(page.getByText('Infrastructure orchestration', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Sign in/i })).toBeVisible()
   await expect(page.getByLabel('Username')).toBeVisible()
-  await expect(page.getByLabel('Password')).toBeVisible()
+  await expect(page.getByLabel('Password', { exact: true })).toBeVisible()
 })
 
 test('dashboard supports theme toggle and appliance navigation', async ({ page }) => {
   if (username && password) {
     await page.goto('/login')
     await page.getByLabel('Username').fill(username)
-    await page.getByLabel('Password').fill(password)
+    await page.getByLabel('Password', { exact: true }).fill(password)
     await page.getByRole('button', { name: /sign in/i }).click()
   } else {
     await seedUiSession(page)
