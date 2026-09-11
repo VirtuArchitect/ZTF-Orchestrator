@@ -571,12 +571,23 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
    sudo docker compose --env-file /opt/ztf-orchestrator/.env \
      -f /opt/ztf-orchestrator/appliance/docker-compose.appliance.yml logs --tail=200
    sudo ls -l /opt/ztf-orchestrator/.env
-   sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL)=' /opt/ztf-orchestrator/.env
+   sudo grep -E '^(ZTF_ORCHESTRATOR_VERSION|ZTF_HOST_BIND|ZTF_LOG_LEVEL|ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY|ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION|ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER|ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND|ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS|ZTF_NATIVE_FOUNDATION_ADAPTER_TIMEOUT)=' /opt/ztf-orchestrator/.env
    ```
 
    Keep `/opt/ztf-orchestrator/.env` local to the appliance. It contains the
    generated database password and must not be copied into Git or into the
    `appliance/` source directory.
+
+   The Dell iDRAC Native Foundation discovery and mutation flags are enabled in
+   the appliance defaults for controlled UAT so operators can run the read-only
+   Dell Probe and exercise the Dell-only UAT job gate. Real AHV image mounting,
+   AOS deployment, HCI cluster formation, Foundation log capture, and Prism
+   Element post-create validation require
+   `ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true` and
+   `ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND` pointing to the reviewed local
+   Foundation deployment adapter executable. The orchestrator passes only the
+   intent file, adapter request file, job id, and evidence directory; credential
+   values remain in the appliance credential store.
 
 ### Offline or Restricted Sites
 

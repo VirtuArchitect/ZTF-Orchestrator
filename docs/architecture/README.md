@@ -30,6 +30,7 @@ the underlying automation engines:
 | [DATA-FLOW.md](DATA-FLOW.md) | Operator, API, storage, job, and target-system data flow |
 | [DEPLOYMENT-BOUNDARIES.md](DEPLOYMENT-BOUNDARIES.md) | Deployment modes and operational limits |
 | [native-foundation-engine.md](native-foundation-engine.md) | Planning-only native Foundation architecture and phase boundary |
+| [../foundation-engine/dell-xc770-hci-deployment-requirements.md](../foundation-engine/dell-xc770-hci-deployment-requirements.md) | Missing requirements for real Dell XC770 AHV HCI deployment |
 
 ## Related Existing Docs
 

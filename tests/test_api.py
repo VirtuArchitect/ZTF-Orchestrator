@@ -14828,13 +14828,25 @@ def test_native_foundation_execute_blocks_dell_uat_deploy_by_default(client, aut
     assert any('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true' in action for action in body['requiredActions'])
 
 
-def test_native_foundation_execute_allows_dell_uat_deploy_when_env_gated(client, auth_headers, monkeypatch):
-    content = _native_foundation_admission_ready_intent().replace(
-        'hardware_provider: manual_static',
-        'hardware_provider: dell_idrac_redfish',
-    )
-    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
-    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION', 'true')
+def _configure_native_foundation_live_credentials(client, auth_headers):
+    resp = client.post('/api/global-config',
+                       json={'content': (
+                           'vault_to_use: local\n'
+                           'vaults:\n'
+                           '  local:\n'
+                           '    credentials:\n'
+                           '      dell-idrac-bmc:\n'
+                           '        username: root\n'
+                           '        password: secret\n'
+                           '      pe_user:\n'
+                           '        username: admin\n'
+                           '        password: secret\n'
+                       )},
+                       headers=auth_headers)
+    assert resp.status_code == 200
+
+
+def _approve_native_foundation_deployment(client, auth_headers, content):
     plan_resp = client.post('/api/native-foundation/plan',
                             json={'content': content},
                             headers=auth_headers)
@@ -14854,6 +14866,103 @@ def test_native_foundation_execute_allows_dell_uat_deploy_when_env_gated(client,
     assert client.post(f'/api/approvals/{approval_id}/approve',
                        json={'notes': 'approved for Dell iDRAC UAT deployment test'},
                        headers=auth_headers).status_code == 200
+    return approval_id
+
+
+def test_native_foundation_execute_fails_closed_without_real_adapter_command(client, auth_headers, monkeypatch):
+    import server
+
+    content = _native_foundation_dell_hci_controlled_uat_intent()
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION', 'true')
+    _configure_native_foundation_live_credentials(client, auth_headers)
+    approval_id = _approve_native_foundation_deployment(client, auth_headers, content)
+
+    class FakeResponse:
+        status = 200
+        headers = {'Content-Length': '4096'}
+
+        def __init__(self, body):
+            self._body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, size=-1):
+            return self._body
+
+    def fake_urlopen(req, timeout=0, context=None):
+        if req.full_url.endswith('/redfish/v1/'):
+            return FakeResponse(b'{"Id":"RootService","Name":"iDRAC","RedfishVersion":"1.15.0"}')
+        if req.full_url in {'https://images.lab.local/aos.tar.gz', 'https://images.lab.local/ahv.iso'}:
+            return FakeResponse(b'')
+        raise AssertionError(f'unexpected URL before adapter gate: {req.full_url}')
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+
+    resp = client.post('/api/execute',
+                       json={'workflow': 'native-foundation-deploy',
+                             'configContent': content,
+                             'configFile': 'native-foundation-deploy.yml',
+                             'phase': 'hci_cluster_create',
+                             'approvalId': approval_id},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    output = resp.get_data(as_text=True)
+    assert 'Set ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true' in output
+    assert '"status": "failed"' in output
+
+
+def test_native_foundation_execute_runs_real_adapter_contract_when_configured(client, auth_headers, tmp_path, monkeypatch):
+    import server
+
+    content = _native_foundation_dell_hci_controlled_uat_intent()
+    _configure_native_foundation_live_credentials(client, auth_headers)
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER', 'true')
+    adapter_script = tmp_path / 'native_foundation_adapter.py'
+    adapter_script.write_text(
+        'import os, pathlib\n'
+        'evidence_dir = pathlib.Path(os.environ["ZTF_NATIVE_FOUNDATION_EVIDENCE_DIR"])\n'
+        '(evidence_dir / "foundation-deployment.log").write_text("mounted AHV, deployed AOS, formed cluster\\n")\n'
+        'print("adapter completed")\n',
+        encoding='utf-8',
+    )
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND', server.sys.executable)
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS', str(adapter_script))
+
+    class FakeResponse:
+        status = 200
+        headers = {'Content-Length': '4096'}
+
+        def __init__(self, body):
+            self._body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self, size=-1):
+            return self._body
+
+    def fake_urlopen(req, timeout=0, context=None):
+        if req.full_url.endswith('/redfish/v1/'):
+            return FakeResponse(b'{"Id":"RootService","Name":"iDRAC","RedfishVersion":"1.15.0"}')
+        if req.full_url.endswith('/PrismGateway/services/rest/v2.0/cluster/'):
+            return FakeResponse(b'{"name":"ahv-hci-cluster-a","cluster_external_ipaddress":"192.0.2.10"}')
+        if req.full_url in {'https://images.lab.local/aos.tar.gz', 'https://images.lab.local/ahv.iso'}:
+            return FakeResponse(b'')
+        raise AssertionError(f'unexpected URL: {req.full_url}')
+
+    monkeypatch.setattr(server.urllib.request, 'urlopen', fake_urlopen)
+    approval_id = _approve_native_foundation_deployment(client, auth_headers, content)
 
     resp = client.post('/api/execute',
                        json={'workflow': 'native-foundation-deploy',
@@ -14867,7 +14976,11 @@ def test_native_foundation_execute_allows_dell_uat_deploy_when_env_gated(client,
     output = resp.get_data(as_text=True)
     assert 'native-foundation-uat-deploy' in output
     assert 'Dell iDRAC controlled-UAT mutation gate is enabled for this job.' in output
-    assert 'Native Foundation Dell iDRAC deployment UAT path completed.' in output
+    assert 'Dell iDRAC probe: 3 passed, 0 failed across 3 nodes.' in output
+    assert 'Foundation image validation: 2 passed, 0 failed across 2 images.' in output
+    assert 'Foundation deployment evidence directory:' in output
+    assert 'Prism Element validation passed at https://192.0.2.10:9440.' in output
+    assert 'Native Foundation Dell iDRAC deployment UAT path completed with real adapter evidence.' in output
     assert '"status": "success"' in output
 
 

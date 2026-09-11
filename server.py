@@ -12,6 +12,7 @@ import os
 import queue
 import re
 import shutil
+import shlex
 import secrets
 import socket
 import ssl
@@ -3960,6 +3961,27 @@ def _native_foundation_dell_idrac_mutation_enabled() -> bool:
     return _env_flag('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION')
 
 
+def _native_foundation_real_deployment_adapter_enabled() -> bool:
+    return _env_flag('ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER')
+
+
+def _native_foundation_adapter_command() -> tuple[list[str], str]:
+    command = str(os.environ.get('ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND') or '').strip()
+    if not command:
+        return [], 'Set ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND to the reviewed Foundation deployment adapter executable.'
+    command_path = Path(command).expanduser()
+    if not command_path.is_absolute():
+        return [], 'ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND must be an absolute path.'
+    if not command_path.exists():
+        return [], f'Native Foundation deployment adapter command was not found: {command_path}'
+    args_text = str(os.environ.get('ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS') or '').strip()
+    try:
+        args = shlex.split(args_text, posix=os.name != 'nt') if args_text else []
+    except ValueError as exc:
+        return [], f'ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS is invalid: {exc}'
+    return [str(command_path), *args], ''
+
+
 def _native_foundation_dell_idrac_uat_execution_gate(config: dict | None) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     config = config if isinstance(config, dict) else {}
@@ -3977,6 +3999,344 @@ def _native_foundation_dell_idrac_uat_execution_gate(config: dict | None) -> tup
     if not _native_foundation_dell_idrac_mutation_enabled():
         reasons.append('Set ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true before Dell iDRAC UAT deployment.')
     return not reasons, reasons
+
+
+def _native_foundation_dell_idrac_nodes(config: dict) -> list[dict]:
+    targets: list[dict] = []
+    for site_index, site in enumerate(config.get('sites') or [], start=1):
+        if not isinstance(site, dict):
+            continue
+        if str(site.get('hardware_provider') or '').strip() != 'dell_idrac_redfish':
+            continue
+        site_name = str(site.get('site_name') or site.get('name') or f'site-{site_index}').strip()
+        site_credential_ref = str(site.get('bmc_credential_ref') or site.get('provider_credential_ref') or '').strip()
+        for cluster_index, cluster in enumerate(site.get('clusters') or [], start=1):
+            if not isinstance(cluster, dict):
+                continue
+            cluster_name = str(cluster.get('cluster_name') or cluster.get('name') or f'cluster-{cluster_index}').strip()
+            for node_index, node in enumerate(cluster.get('nodes') or [], start=1):
+                if not isinstance(node, dict):
+                    continue
+                node_name = str(node.get('node_serial') or node.get('serial') or node.get('hypervisor_hostname') or f'node-{node_index}').strip()
+                credential_ref = str(node.get('bmc_credential_ref') or site_credential_ref).strip()
+                targets.append({
+                    'siteName': site_name,
+                    'clusterName': cluster_name,
+                    'nodeName': node_name,
+                    'nodeSerial': str(node.get('node_serial') or '').strip(),
+                    'bmcAddress': str(node.get('bmc_address') or '').strip(),
+                    'credentialRef': credential_ref,
+                    'hostIp': str(node.get('host_ip') or '').strip(),
+                    'cvmIp': str(node.get('cvm_ip') or '').strip(),
+                    'hypervisorHostname': str(node.get('hypervisor_hostname') or '').strip(),
+                })
+    return targets
+
+
+def _redfish_service_root_url(address: str) -> str:
+    address = str(address or '').strip()
+    if not address:
+        return ''
+    redfish_url = address if '://' in address else f'https://{address}'
+    parsed_url = urllib.parse.urlparse(redfish_url)
+    return urllib.parse.urlunparse((
+        parsed_url.scheme or 'https',
+        parsed_url.netloc or parsed_url.path,
+        '/redfish/v1/',
+        '',
+        '',
+        '',
+    ))
+
+
+def _native_foundation_probe_dell_idrac_node(target: dict, verify_tls: bool = False, timeout: int = 10) -> dict:
+    address = str(target.get('bmcAddress') or '').strip()
+    credential_ref = str(target.get('credentialRef') or '').strip()
+    url = _redfish_service_root_url(address)
+    if not address:
+        return {**target, 'status': 'failed', 'serviceRootUrl': '', 'error': 'bmc_address is required'}
+    if not credential_ref:
+        return {**target, 'status': 'failed', 'serviceRootUrl': url, 'error': 'bmc_credential_ref is required'}
+    username, password, error = _lookup_credential_ref(credential_ref)
+    if error:
+        return {**target, 'status': 'failed', 'serviceRootUrl': url, 'error': error}
+    credentials = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
+    req = urllib.request.Request(
+        url,
+        headers={
+            'Authorization': f'Basic {credentials}',
+            'Accept': 'application/json',
+            'User-Agent': 'ZTF-Orchestrator Native Foundation Dell iDRAC Deployment Adapter',
+        },
+        method='GET',
+    )
+    context = ssl.create_default_context() if verify_tls else ssl._create_unverified_context()
+    started = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:  # nosec B310 - operator-configured iDRAC endpoint gated by env flags.
+            raw_body = resp.read(128 * 1024)
+            body = json.loads(raw_body.decode('utf-8') or '{}')
+            status_code = int(getattr(resp, 'status', 200))
+            return {
+                **target,
+                'status': 'pass' if 200 <= status_code < 300 else 'failed',
+                'serviceRootUrl': url,
+                'httpStatus': status_code,
+                'latencyMs': round((time.monotonic() - started) * 1000, 1),
+                'serviceRoot': {
+                    key: body.get(key)
+                    for key in ('@odata.id', '@odata.type', 'Id', 'Name', 'RedfishVersion', 'UUID')
+                    if isinstance(body, dict) and key in body
+                },
+            }
+    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError) as exc:
+        return {
+            **target,
+            'status': 'failed',
+            'serviceRootUrl': url,
+            'latencyMs': round((time.monotonic() - started) * 1000, 1),
+            'error': str(exc),
+        }
+
+
+def _native_foundation_probe_all_dell_idracs(config: dict, verify_tls: bool = False) -> dict:
+    targets = _native_foundation_dell_idrac_nodes(config)
+    results = [_native_foundation_probe_dell_idrac_node(target, verify_tls=verify_tls) for target in targets]
+    failed = [item for item in results if item.get('status') != 'pass']
+    return {
+        'status': 'pass' if targets and not failed else 'failed',
+        'targetCount': len(targets),
+        'passedCount': len(results) - len(failed),
+        'failedCount': len(failed),
+        'nodes': results,
+    }
+
+
+def _native_foundation_clusters(config: dict) -> list[dict]:
+    clusters: list[dict] = []
+    for site_index, site in enumerate(config.get('sites') or [], start=1):
+        if not isinstance(site, dict):
+            continue
+        site_name = str(site.get('site_name') or site.get('name') or f'site-{site_index}').strip()
+        for cluster_index, cluster in enumerate(site.get('clusters') or [], start=1):
+            if not isinstance(cluster, dict):
+                continue
+            clusters.append({
+                'siteName': site_name,
+                'clusterName': str(cluster.get('cluster_name') or cluster.get('name') or f'cluster-{cluster_index}').strip(),
+                'clusterVip': str(cluster.get('cluster_vip') or '').strip(),
+                'aosImage': cluster.get('aos_image') if isinstance(cluster.get('aos_image'), dict) else {},
+                'hypervisorImage': cluster.get('hypervisor_image') if isinstance(cluster.get('hypervisor_image'), dict) else {},
+            })
+    return clusters
+
+
+def _native_foundation_validate_image_source(image: dict, label: str, verify_tls: bool = False) -> dict:
+    source = str(image.get('source') or '').strip()
+    expected_sha = str(image.get('sha256') or image.get('checksum') or '').strip().lower()
+    version = str(image.get('version') or '').strip()
+    result = {'label': label, 'source': source, 'version': version, 'sha256': expected_sha, 'status': 'failed', 'evidence': ''}
+    if not source:
+        result['evidence'] = f'{label} source is required'
+        return result
+    if not re.fullmatch(r'[0-9a-f]{64}', expected_sha):
+        result['evidence'] = f'{label} sha256 must be a SHA-256 hex digest'
+        return result
+
+    parsed = urllib.parse.urlparse(source)
+    local_path = None
+    if parsed.scheme == 'file':
+        local_path = Path(urllib.request.url2pathname(parsed.path))
+    elif parsed.scheme == '':
+        local_path = Path(source).expanduser()
+    if local_path is not None:
+        if not local_path.exists() or not local_path.is_file():
+            result['evidence'] = f'{label} local image was not found'
+            return result
+        actual_sha = _sha256_file(local_path)
+        result['actualSha256'] = actual_sha
+        result['sizeBytes'] = local_path.stat().st_size
+        result['status'] = 'pass' if actual_sha == expected_sha else 'failed'
+        result['evidence'] = 'Local image checksum verified' if actual_sha == expected_sha else 'Local image checksum mismatch'
+        return result
+
+    if parsed.scheme not in {'http', 'https'}:
+        result['evidence'] = f'{label} source must be a local file, file URL, HTTP URL, or HTTPS URL'
+        return result
+    req = urllib.request.Request(source, headers={'User-Agent': 'ZTF-Orchestrator Native Foundation Image Validation'}, method='HEAD')
+    context = ssl.create_default_context() if verify_tls else ssl._create_unverified_context()
+    try:
+        with urllib.request.urlopen(req, timeout=15, context=context) as resp:  # nosec B310 - operator-configured image repository endpoint.
+            status_code = int(getattr(resp, 'status', 200))
+            result['httpStatus'] = status_code
+            result['contentLength'] = resp.headers.get('Content-Length') if getattr(resp, 'headers', None) else None
+            result['status'] = 'pass' if 200 <= status_code < 400 else 'failed'
+            result['evidence'] = 'Remote image source is reachable; checksum value is declared for downstream Foundation validation.'
+    except (urllib.error.URLError, OSError) as exc:
+        result['evidence'] = str(exc)
+    return result
+
+
+def _native_foundation_validate_deployment_images(config: dict) -> dict:
+    engine = config.get('foundation_engine') if isinstance(config.get('foundation_engine'), dict) else {}
+    repo = engine.get('image_repository') if isinstance(engine.get('image_repository'), dict) else {}
+    verify_tls = bool(repo.get('verify_tls'))
+    results: list[dict] = []
+    for cluster in _native_foundation_clusters(config):
+        cluster_name = cluster.get('clusterName') or 'cluster'
+        results.append(_native_foundation_validate_image_source(cluster.get('aosImage') or {}, f'{cluster_name} AOS image', verify_tls=verify_tls))
+        results.append(_native_foundation_validate_image_source(cluster.get('hypervisorImage') or {}, f'{cluster_name} AHV image', verify_tls=verify_tls))
+    failed = [item for item in results if item.get('status') != 'pass']
+    return {
+        'status': 'pass' if results and not failed else 'failed',
+        'imageCount': len(results),
+        'passedCount': len(results) - len(failed),
+        'failedCount': len(failed),
+        'images': results,
+    }
+
+
+def _native_foundation_evidence_dir(job_id: str) -> Path:
+    safe_job_id = re.sub(r'[^A-Za-z0-9._-]+', '-', str(job_id or uuid.uuid4().hex)).strip('.-')
+    path = CONFIG_DIR / 'native-foundation-evidence' / safe_job_id
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _native_foundation_run_real_deployment_adapter(config: dict, config_content: str, job_id: str, plan: dict) -> dict:
+    if not _native_foundation_real_deployment_adapter_enabled():
+        return {
+            'status': 'failed',
+            'error': 'Set ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true before running the real Native Foundation deployment adapter.',
+        }
+    command, command_error = _native_foundation_adapter_command()
+    if command_error:
+        return {'status': 'failed', 'error': command_error}
+
+    evidence_dir = _native_foundation_evidence_dir(job_id)
+    intent_path = evidence_dir / 'native-foundation-intent.yml'
+    request_path = evidence_dir / 'adapter-request.json'
+    stdout_path = evidence_dir / 'adapter-stdout.log'
+    stderr_path = evidence_dir / 'adapter-stderr.log'
+    manifest_path = evidence_dir / 'deployment-evidence.json'
+    intent_path.write_text(config_content, encoding='utf-8')
+    request_payload = {
+        'workflow': NATIVE_FOUNDATION_WORKFLOW,
+        'jobId': job_id,
+        'planId': plan.get('planId'),
+        'intentSha256': plan.get('intentSha256'),
+        'discoverySha256': plan.get('discoverySha256'),
+        'executionScope': 'controlled_uat',
+        'provider': 'dell_idrac_redfish',
+        'credentialHandling': 'credential_refs_only',
+        'expectedOperations': [
+            'mount_install_ahv',
+            'deploy_aos',
+            'form_hci_cluster',
+            'collect_foundation_logs',
+        ],
+    }
+    request_path.write_text(json.dumps(request_payload, indent=2) + '\n', encoding='utf-8')
+    env = os.environ.copy()
+    env.update({
+        'ZTF_NATIVE_FOUNDATION_INTENT_FILE': str(intent_path),
+        'ZTF_NATIVE_FOUNDATION_ADAPTER_REQUEST_FILE': str(request_path),
+        'ZTF_NATIVE_FOUNDATION_EVIDENCE_DIR': str(evidence_dir),
+        'ZTF_NATIVE_FOUNDATION_JOB_ID': str(job_id),
+        'ZTF_NATIVE_FOUNDATION_PLAN_ID': str(plan.get('planId') or ''),
+    })
+    timeout = int(os.environ.get('ZTF_NATIVE_FOUNDATION_ADAPTER_TIMEOUT', '14400') or '14400')
+    started = datetime.datetime.now(datetime.timezone.utc)
+    try:
+        completed = subprocess.run(  # nosec B603 - executable path is explicit operator configuration and env-gated.
+            command,
+            cwd=str(evidence_dir),
+            env=env,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout_path.write_text(exc.stdout or '', encoding='utf-8')
+        stderr_path.write_text(exc.stderr or '', encoding='utf-8')
+        return {
+            'status': 'failed',
+            'error': f'Native Foundation deployment adapter timed out after {timeout} seconds.',
+            'evidenceDir': str(evidence_dir),
+            'stdoutPath': str(stdout_path),
+            'stderrPath': str(stderr_path),
+        }
+
+    stdout_path.write_text(completed.stdout or '', encoding='utf-8')
+    stderr_path.write_text(completed.stderr or '', encoding='utf-8')
+    finished = datetime.datetime.now(datetime.timezone.utc)
+    manifest = {
+        'workflow': NATIVE_FOUNDATION_WORKFLOW,
+        'jobId': job_id,
+        'planId': plan.get('planId'),
+        'startedAt': started.isoformat(),
+        'finishedAt': finished.isoformat(),
+        'returnCode': completed.returncode,
+        'command': Path(command[0]).name,
+        'intentFile': str(intent_path),
+        'adapterRequestFile': str(request_path),
+        'stdoutPath': str(stdout_path),
+        'stderrPath': str(stderr_path),
+        'evidenceDir': str(evidence_dir),
+        'status': 'success' if completed.returncode == 0 else 'failed',
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    if completed.returncode != 0:
+        return {
+            'status': 'failed',
+            'error': f'Native Foundation deployment adapter exited with code {completed.returncode}.',
+            **manifest,
+        }
+    return {'status': 'success', **manifest}
+
+
+def _native_foundation_validate_prism_element(config: dict) -> dict:
+    engine = config.get('foundation_engine') if isinstance(config.get('foundation_engine'), dict) else {}
+    prism = engine.get('prism_element_validation') if isinstance(engine.get('prism_element_validation'), dict) else {}
+    if not prism:
+        return {'status': 'skipped', 'evidence': 'foundation_engine.prism_element_validation is not configured.'}
+    credential_ref = str(prism.get('credential_ref') or '').strip()
+    if not credential_ref:
+        return {'status': 'failed', 'evidence': 'foundation_engine.prism_element_validation.credential_ref is required.'}
+    username, password, error = _lookup_credential_ref(credential_ref)
+    if error:
+        return {'status': 'failed', 'evidence': error}
+    endpoint = str(prism.get('endpoint') or '').strip()
+    if not endpoint:
+        first_cluster = next((cluster for cluster in _native_foundation_clusters(config) if cluster.get('clusterVip')), {})
+        vip = str(first_cluster.get('clusterVip') or '').strip()
+        if not vip:
+            return {'status': 'failed', 'evidence': 'Prism Element endpoint or cluster_vip is required.'}
+        endpoint = f'https://{vip}:9440'
+    parsed = urllib.parse.urlparse(endpoint if '://' in endpoint else f'https://{endpoint}')
+    base_url = urllib.parse.urlunparse((parsed.scheme or 'https', parsed.netloc or parsed.path, '', '', '', '')).rstrip('/')
+    url = f'{base_url}/PrismGateway/services/rest/v2.0/cluster/'
+    token = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
+    req = urllib.request.Request(url, headers={'Authorization': f'Basic {token}', 'Accept': 'application/json'}, method='GET')
+    context = ssl.create_default_context() if bool(prism.get('verify_tls')) else ssl._create_unverified_context()
+    started = time.monotonic()
+    try:
+        with urllib.request.urlopen(req, timeout=15, context=context) as resp:  # nosec B310 - operator-configured Prism Element endpoint.
+            raw_body = resp.read(128 * 1024)
+            body = json.loads(raw_body.decode('utf-8') or '{}')
+            status_code = int(getattr(resp, 'status', 200))
+            return {
+                'status': 'pass' if 200 <= status_code < 300 else 'failed',
+                'endpoint': base_url,
+                'httpStatus': status_code,
+                'latencyMs': round((time.monotonic() - started) * 1000, 1),
+                'clusterName': body.get('name') if isinstance(body, dict) else None,
+                'clusterExternalIpaddress': body.get('cluster_external_ipaddress') if isinstance(body, dict) else None,
+                'evidence': 'Prism Element cluster endpoint responded successfully.',
+            }
+    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError) as exc:
+        return {'status': 'failed', 'endpoint': base_url, 'latencyMs': round((time.monotonic() - started) * 1000, 1), 'evidence': str(exc)}
 
 
 def _native_foundation_dell_idrac_target(config: dict, bmc_address: str = '', credential_ref: str = '') -> tuple[str, str]:
@@ -4012,18 +4372,7 @@ def _native_foundation_dell_idrac_redfish_probe(
     target_address, target_credential_ref = _native_foundation_dell_idrac_target(config, bmc_address, credential_ref)
     live_enabled = _native_foundation_dell_idrac_live_discovery_enabled()
     mutation_enabled = _native_foundation_dell_idrac_mutation_enabled()
-    redfish_url = ''
-    if target_address:
-        redfish_url = target_address if '://' in target_address else f'https://{target_address}'
-        parsed_url = urllib.parse.urlparse(redfish_url)
-        redfish_url = urllib.parse.urlunparse((
-            parsed_url.scheme or 'https',
-            parsed_url.netloc or parsed_url.path,
-            '/redfish/v1/',
-            '',
-            '',
-            '',
-        ))
+    redfish_url = _redfish_service_root_url(target_address)
 
     probe_status = 'not_attempted'
     service_root: dict = {}
@@ -7081,9 +7430,14 @@ def _native_foundation_discovery_preview(config: dict) -> dict:
             'clusters': [],
         }
         if provider == 'dell_idrac_redfish':
-            preview['warnings'].append(
-                f'Site "{site_record["siteName"] or "unnamed"}" Dell iDRAC Redfish discovery requires explicit controlled UAT live probe enablement.'
-            )
+            if _native_foundation_dell_idrac_live_discovery_enabled():
+                preview['warnings'].append(
+                    f'Site "{site_record["siteName"] or "unnamed"}" Dell iDRAC Redfish discovery is handled by the Dell Probe action; Discovery Preview remains operator-supplied and read-only.'
+                )
+            else:
+                preview['warnings'].append(
+                    f'Site "{site_record["siteName"] or "unnamed"}" Dell iDRAC Redfish discovery requires explicit controlled UAT live probe enablement.'
+                )
         elif provider != 'manual_static':
             preview['warnings'].append(
                 f'Site "{site_record["siteName"] or "unnamed"}" provider {provider or "unset"} has no live discovery adapter enabled yet.'
@@ -34606,9 +34960,60 @@ class ExecutionJobManager:
             self._emit(job_id, 'stdout', f'Recovery actions declared: {(recovery.get("summary") or {}).get("recoveryActionCount", 0)}.')
 
             if deployment_uat:
-                self._update_progress(job_id, 'Native Foundation deployment UAT complete', 95, 'Dell iDRAC controlled-UAT deployment gate was exercised')
-                self._emit(job_id, 'stdout', 'Native Foundation Dell iDRAC deployment UAT path completed.')
-                self._emit(job_id, 'stderr', 'Adapter command execution is still limited to the controlled-UAT gate implemented in this build; verify hardware-side effects separately before treating this as production deployment proof.')
+                self._update_progress(job_id, 'Probing Dell iDRAC targets', 55, 'Running read-only Redfish service-root checks against every declared Dell node')
+                engine = config.get('foundation_engine') if isinstance(config.get('foundation_engine'), dict) else {}
+                image_repo = engine.get('image_repository') if isinstance(engine.get('image_repository'), dict) else {}
+                verify_tls = bool(image_repo.get('verify_tls'))
+                redfish_probe = _native_foundation_probe_all_dell_idracs(config, verify_tls=verify_tls)
+                self._emit(job_id, 'stdout', f'Dell iDRAC probe: {redfish_probe.get("passedCount", 0)} passed, {redfish_probe.get("failedCount", 0)} failed across {redfish_probe.get("targetCount", 0)} nodes.')
+                for node_probe in redfish_probe.get('nodes') or []:
+                    node_label = node_probe.get('nodeName') or node_probe.get('bmcAddress') or 'node'
+                    if node_probe.get('status') == 'pass':
+                        self._emit(job_id, 'stdout', f'Dell iDRAC reachable: {node_label} at {node_probe.get("serviceRootUrl")}.')
+                    else:
+                        self._emit(job_id, 'stderr', f'Dell iDRAC probe failed for {node_label}: {node_probe.get("error") or node_probe.get("serviceRootUrl") or "unknown error"}.')
+                if redfish_probe.get('status') != 'pass':
+                    self._emit(job_id, 'error', 'Native Foundation Dell iDRAC deployment blocked because one or more iDRAC targets are not reachable.')
+                    return
+
+                self._update_progress(job_id, 'Validating Foundation image sources', 62, 'Checking AOS and AHV image source reachability and checksum declarations')
+                image_validation = _native_foundation_validate_deployment_images(config)
+                self._emit(job_id, 'stdout', f'Foundation image validation: {image_validation.get("passedCount", 0)} passed, {image_validation.get("failedCount", 0)} failed across {image_validation.get("imageCount", 0)} images.')
+                for image_result in image_validation.get('images') or []:
+                    if image_result.get('status') == 'pass':
+                        self._emit(job_id, 'stdout', f'Image source ready: {image_result.get("label")} ({image_result.get("source")}).')
+                    else:
+                        self._emit(job_id, 'stderr', f'Image validation failed for {image_result.get("label")}: {image_result.get("evidence")}.')
+                if image_validation.get('status') != 'pass':
+                    self._emit(job_id, 'error', 'Native Foundation deployment blocked because AOS/AHV image validation failed.')
+                    return
+
+                self._update_progress(job_id, 'Running Native Foundation deployment adapter', 70, 'Handing the intent to the configured Foundation deployment command')
+                adapter_result = _native_foundation_run_real_deployment_adapter(config, config_content, job_id, plan)
+                if adapter_result.get('evidenceDir'):
+                    self._emit(job_id, 'stdout', f'Foundation deployment evidence directory: {adapter_result.get("evidenceDir")}.')
+                if adapter_result.get('stdoutPath'):
+                    self._emit(job_id, 'stdout', f'Foundation adapter stdout: {adapter_result.get("stdoutPath")}.')
+                if adapter_result.get('stderrPath'):
+                    self._emit(job_id, 'stdout', f'Foundation adapter stderr: {adapter_result.get("stderrPath")}.')
+                if adapter_result.get('status') != 'success':
+                    self._emit(job_id, 'error', adapter_result.get('error') or 'Native Foundation deployment adapter failed.')
+                    return
+
+                self._update_progress(job_id, 'Validating Prism Element cluster', 88, 'Checking the created cluster through Prism Element')
+                prism_validation = _native_foundation_validate_prism_element(config)
+                if prism_validation.get('status') == 'pass':
+                    self._emit(job_id, 'stdout', f'Prism Element validation passed at {prism_validation.get("endpoint")}.')
+                    if prism_validation.get('clusterName'):
+                        self._emit(job_id, 'stdout', f'Prism Element cluster name: {prism_validation.get("clusterName")}.')
+                elif prism_validation.get('status') == 'skipped':
+                    self._emit(job_id, 'stderr', prism_validation.get('evidence') or 'Prism Element validation was skipped.')
+                else:
+                    self._emit(job_id, 'error', f'Prism Element validation failed: {prism_validation.get("evidence") or "unknown error"}.')
+                    return
+
+                self._update_progress(job_id, 'Native Foundation deployment UAT complete', 95, 'Dell iDRAC controlled-UAT deployment adapter completed and Prism Element validation passed')
+                self._emit(job_id, 'stdout', 'Native Foundation Dell iDRAC deployment UAT path completed with real adapter evidence.')
             else:
                 self._update_progress(job_id, 'Native Foundation review complete', 95, 'Review-only job captured durable execution rehearsal data')
                 self._emit(job_id, 'stderr', 'Native Foundation deployment execution remains disabled. No hardware, Foundation, Prism Element, adapter, queue replay, or secret operation was performed.')
