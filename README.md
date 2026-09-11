@@ -484,6 +484,11 @@ The pre-built frontend is served directly by Flask from `dist/`.
 
 ## First Login
 
+The sign-in page presents ZTF-Orchestrator in a single responsive light panel,
+with password visibility controls and a documentation link. Its appearance does
+not change your saved dashboard theme. For access to an existing installation,
+contact your administrator; first-start setup instructions are below.
+
 On the **very first start**, the server creates a default admin account and
 prints the credentials to the terminal:
 

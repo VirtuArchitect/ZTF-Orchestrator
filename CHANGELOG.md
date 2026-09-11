@@ -12,6 +12,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.8.1 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Changed
+- Unified the sign-in page into a responsive enterprise-style panel with
+  ZTF-Orchestrator branding, documentation access, and accessible password
+  visibility and error controls. Authentication behavior is unchanged.
+
+### Security
+- Updated the locked js-yaml dependency from 4.3.1 to 4.3.2 to address
+  GHSA-2883-xcg3-v3hh (excessive CPU use from empty YAML merge sources).
+
 ---
 
 ## [1.8.1] - 2026-09-04

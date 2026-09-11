@@ -1,8 +1,8 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, Navigate } from '../router'
-import { Eye, EyeOff, LogIn } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useStore } from '../store'
-import BrandLogo from '../components/BrandLogo'
+import './Login.css'
 
 export default function Login() {
   const { setAuth, sessionToken } = useStore()
@@ -43,72 +43,84 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-
-        {/* Logo */}
-        <div className="mx-auto mb-5 flex h-[172px] w-full max-w-[654px] items-center justify-center rounded-lg bg-surface px-12 ring-1 ring-border">
-          <BrandLogo className="h-[142px] w-full max-w-[560px]" />
-        </div>
-
-        {/* Card */}
-        <form onSubmit={submit} className="card space-y-4 max-w-sm mx-auto">
-          <h2 className="font-semibold text-gray-200 text-center">Sign in</h2>
-
-          {error && (
-            <div className="p-3 rounded-lg bg-red-900/20 border border-red-700/40 text-sm text-red-400">
-              {error}
+    <main className="login-page">
+      <div className="login-shell">
+        <section className="login-card" aria-labelledby="login-heading">
+          <header className="login-brand">
+            <img src={`${import.meta.env.BASE_URL}zto-logo-mark.svg`} alt="" width="72" height="72" />
+            <div>
+              <p className="login-product">ZTF-Orchestrator</p>
+              <p className="login-tagline">Infrastructure orchestration</p>
             </div>
-          )}
+          </header>
+          <form onSubmit={submit} className="login-form" aria-busy={loading}>
+            <div className="login-intro">
+              <h1 id="login-heading">Sign in</h1>
+              <p>Access your orchestration workspace.</p>
+            </div>
 
-          <div>
-            <label htmlFor="login-username" className="label">Username</label>
-            <input
-              id="login-username"
-              className="input"
-              type="text"
-              autoComplete="username"
-              autoFocus
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
+            {error && (
+              <div id="login-error" role="alert" className="login-error">
+                {error}
+              </div>
+            )}
 
-          <div>
-            <label htmlFor="login-password" className="label">Password</label>
-            <div className="relative">
+            <div>
+              <label htmlFor="login-username">Username</label>
               <input
-                id="login-password"
-                className="input pr-10"
-                type={showPw ? 'text' : 'password'}
-                autoComplete="current-password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
+                id="login-username"
+                className="login-input"
+                aria-describedby={error ? 'login-error' : undefined}
+                type="text"
+                autoComplete="username"
+                autoFocus
+                value={username}
+                onChange={e => setUsername(e.target.value)}
                 disabled={loading}
                 required
               />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-                onClick={() => setShowPw(v => !v)}
-              >
-                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
             </div>
-          </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full justify-center gap-2">
-            <LogIn size={14} />
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+            <div>
+              <label htmlFor="login-password">Password</label>
+              <div className="relative">
+                <input
+                  id="login-password"
+                  className="login-input login-password"
+                  aria-describedby={error ? 'login-error' : undefined}
+                  type={showPw ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPw}
+                  aria-controls="login-password"
+                  disabled={loading}
+                  onClick={() => setShowPw(v => !v)}
+                >
+                  {showPw ? <EyeOff size={22} aria-hidden="true" /> : <Eye size={22} aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
 
-        <p className="text-center text-xs text-gray-600 mt-6 max-w-sm mx-auto">
-          Default credentials are printed in the server console on first start.
-        </p>
+            <button type="submit" disabled={loading} className="login-submit">
+              {loading ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+          <p className="login-help">Need access? Contact your administrator.</p>
+        </section>
+        <footer className="login-footer">
+          <span>ZTF-Orchestrator</span>
+          <span aria-hidden="true">|</span>
+          <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+        </footer>
       </div>
-    </div>
+    </main>
   )
 }
