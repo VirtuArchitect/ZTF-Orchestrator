@@ -293,9 +293,13 @@ export default function WorkflowDetail() {
       })
       const body = await resp.json()
       if (!resp.ok) {
+        const validationLines = Array.isArray(body.validation) ? body.validation : []
+        const firstFailedValidation = validationLines.find((line: unknown) => (
+          typeof line === 'string' && line.includes('[FAIL]')
+        ))
         setImportMessage({
           type: 'error',
-          text: body.error || body.warnings?.[0] || 'Native Foundation discovery preview failed.',
+          text: body.error || firstFailedValidation || body.warnings?.[0] || 'Native Foundation discovery preview failed.',
         })
         return
       }

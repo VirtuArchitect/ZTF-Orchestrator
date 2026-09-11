@@ -47,10 +47,15 @@ Each provider reports these operations:
 | `image_mount` | Yes | Controlled-UAT enabled for Dell iDRAC only when both Dell UAT env gates are true; otherwise blocked. |
 | `image_nodes` | Yes | Blocked. |
 
-Non-Dell providers and node imaging remain blocked. Dell mutating operations
-return `mutatingActionsEnabled: true` only when
+Non-Dell providers remain blocked. Dell mutating operations return
+`mutatingActionsEnabled: true` only when
 `ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true` and
-`ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true`.
+`ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true`. Actual AHV mounting,
+AOS deployment, HCI cluster formation, Foundation log capture, and Prism
+Element post-create validation also require
+`ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true` and
+`ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND` pointing to a reviewed local Foundation
+deployment adapter executable.
 
 ## Dell iDRAC Redfish Probe
 
@@ -68,9 +73,12 @@ controlled UAT evidence.
 
 `ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true`, together with the live
 discovery gate, enables Dell-only native Foundation controlled-UAT deployment
-jobs. The job path remains explicitly scoped to `dell_idrac_redfish` provider
-intents and must not be treated as production enablement until hardware-side UAT
-evidence is reviewed.
+job admission. The deployment job then probes every declared iDRAC, validates
+image sources, writes an adapter request/evidence directory, invokes the
+configured real adapter command, and checks Prism Element after the adapter
+returns success. The job path remains explicitly scoped to `dell_idrac_redfish`
+provider intents and must not be treated as production enablement until
+hardware-side UAT evidence is reviewed.
 
 ## Boundary
 

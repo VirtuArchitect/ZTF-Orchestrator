@@ -92,6 +92,10 @@ Status: implemented planning graph; mutating UAT planned.
   compute-only, storage-only, and mixed clusters.
 - Add read-only post-create validation plan with Prism Element and topology
   verification payload previews.
+- Track the Dell XC770 AHV HCI deployment requirements in
+  `docs/foundation-engine/dell-xc770-hci-deployment-requirements.md`; the
+  workflow remains blocked for real deployment until those adapter, gate,
+  failure, and evidence requirements are implemented.
 - Future work: enable HCI cluster-create execution only after imaging-only
   evidence is accepted and adapter UAT proves the mutating path.
 - Optionally trigger the post-foundation baseline workflow after approval.
