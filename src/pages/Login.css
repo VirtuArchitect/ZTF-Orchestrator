@@ -30,9 +30,9 @@
 .login-product { font-size: 38px; font-weight: 700; letter-spacing: -0.8px; line-height: 1.25; }
 .login-tagline { margin-top: 2px; color: #5b6f8b; font-size: 21px; }
 .login-form { display: grid; gap: 26px; margin-top: 24px; }
-.login-intro { margin-bottom: 6px; }
-.login-intro h1 { font-size: 40px; font-weight: 650; letter-spacing: -0.8px; line-height: 1.4; }
-.login-intro p { margin-top: 2px; color: #5b6f8b; font-size: 20px; }
+.login-intro { margin-bottom: 4px; }
+.login-intro h1 { font-size: 32px; font-weight: 650; letter-spacing: 0; line-height: 1.25; }
+.login-intro p { margin-top: 8px; color: #5b6f8b; font-size: 18px; }
 .login-form label { display: block; margin-bottom: 6px; font-size: 18px; font-weight: 500; }
 .login-input {
   width: 100%;
