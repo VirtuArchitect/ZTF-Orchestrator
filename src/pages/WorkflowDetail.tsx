@@ -3185,7 +3185,7 @@ export default function WorkflowDetail() {
       setYamlContent(trimmed.endsWith('\n') ? trimmed : `${trimmed}\n`)
       setNativeFoundationEvidenceId('')
       setImportedConfig({ workflowId: workflow.id, parsed })
-      setActiveTab('YAML Preview')
+      setActiveTab('Configure')
       setImportMessage({ type: 'success', text: `Imported ${file.name} for ${workflow.name}.` })
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Unable to parse config.'
