@@ -1,6 +1,6 @@
 # Dell XC770 AHV HCI Deployment Requirements
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 This document defines the requirements and guarded execution contract for using
 Native Foundation Deploy as a Dell XC770 Core AHV HCI deployment path.

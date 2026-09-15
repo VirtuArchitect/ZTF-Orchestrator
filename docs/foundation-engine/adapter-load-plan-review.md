@@ -1,6 +1,6 @@
 # Native Foundation Adapter Load Plan Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Adapter load plan review converts adapter allow-list and controlled UAT signoff
 artifacts into read-only load plan entries for future native Foundation

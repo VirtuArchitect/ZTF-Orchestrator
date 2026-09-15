@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Reservation Persistence Admission Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Controlled UAT reservation persistence admission review declares the read-only
 admission records that would be required before hardware reservation state

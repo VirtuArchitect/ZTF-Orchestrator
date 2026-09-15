@@ -1,6 +1,6 @@
 # Native Foundation Adapter Allow-List Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Adapter allow-list review turns disabled adapter registry drafts into read-only
 allow-list entries for future controlled-UAT approval review. Each entry carries

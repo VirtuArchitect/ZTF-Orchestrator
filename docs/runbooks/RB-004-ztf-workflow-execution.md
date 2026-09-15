@@ -1,6 +1,6 @@
 # RB-004 - ZTF Workflow Execution
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 ## Metadata
 

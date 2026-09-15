@@ -1,6 +1,6 @@
 # RB-XXX - Title
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 ## Metadata
 

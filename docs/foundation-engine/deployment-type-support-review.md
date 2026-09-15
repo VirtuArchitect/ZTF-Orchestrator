@@ -1,6 +1,6 @@
 # Native Foundation Deployment Type Support Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Deployment type support review creates fail-closed support records for each
 provider/deployment-type pair in a native Foundation intent. It connects the

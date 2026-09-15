@@ -1,6 +1,6 @@
 # Native Foundation Secret Store Binding Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Secret store binding review turns credential-reference inventory into
 read-only lease, audit, RBAC, and adapter-handoff records for a future native
