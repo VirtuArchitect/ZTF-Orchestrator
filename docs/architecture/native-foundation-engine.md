@@ -1,6 +1,6 @@
 # Native Foundation Engine Architecture
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 The native Foundation engine is the planned ZTF-Orchestrator capability for
 operator-owned bare-metal deployment planning across multiple sites, hardware

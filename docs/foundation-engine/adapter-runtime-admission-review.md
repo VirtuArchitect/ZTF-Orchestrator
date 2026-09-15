@@ -1,6 +1,6 @@
 # Native Foundation Adapter Runtime Admission Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Adapter runtime admission review records the operator admission owner, private
 runtime admission reference, private change ticket reference, private exception

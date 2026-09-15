@@ -1,0 +1,36 @@
+ZTF-Orchestrator v1.8.2 - Native Foundation Deploy progress visibility
+====================================================================
+
+Release date: 2026-09-15
+
+Summary
+-------
+v1.8.2 is a patch release focused on operator visibility and UI maturity
+signals. It keeps the v1.8.1 Native Foundation controlled-UAT safety model while
+making live deployment runs easier to follow.
+
+Highlights
+----------
+- Adds an FCA-style Native Foundation Deploy progress panel in the execution
+  modal.
+- Maps streamed deployment logs into phases for workflow validation, Dell iDRAC
+  provider checks, image validation, AHV install, AOS install, and cluster
+  formation.
+- Marks Workflows 2.x and Scripts 2.x with Preview badges in the sidebar.
+- Includes the v1.8.1 follow-up login/import polish already merged to main.
+
+Operational Notes
+-----------------
+- Native Foundation Deploy execution remains controlled by the existing Dell
+  iDRAC discovery, mutation, real-adapter, runner, and evidence gates.
+- The progress panel is display-only. It does not introduce new deployment
+  permissions, backend mutation paths, or credential handling behavior.
+- ZTF 2.x Workflows and Scripts remain Preview areas and should be treated as
+  governed work in progress.
+
+Recommended Validation
+----------------------
+- Confirm `/health` reports version `1.8.2`.
+- Open Native Foundation Deploy, start a deployment or controlled UAT adapter
+  test, and confirm the deployment details panel appears above terminal output.
+- Confirm Workflows 2.x and Scripts 2.x show Preview tags in the sidebar.

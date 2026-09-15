@@ -1,6 +1,6 @@
 # Native Foundation Secret References
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 The secret reference manifest records named credential references required for
 future native Foundation provider adapters. It is read-only and does not resolve

@@ -1,6 +1,6 @@
 # RB-010 - Database Recovery
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 ## Metadata
 

@@ -1,6 +1,6 @@
 # Native Foundation Deployment Window Reservation Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Deployment window reservation review converts wave authorization records,
 deployment policy windows, and execution lock plans into read-only reservation

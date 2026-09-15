@@ -1,6 +1,6 @@
 # Native Foundation Post-Create Validation Plan
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 The post-create validation plan turns native Foundation cluster formation output
 into read-only validation payload previews for HCI, compute-only, storage-only,

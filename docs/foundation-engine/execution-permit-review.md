@@ -1,6 +1,6 @@
 # Native Foundation Execution Permit Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Execution permit review composes the final read-only gate package a future
 native Foundation run would need before job submission. It binds the current

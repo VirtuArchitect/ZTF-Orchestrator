@@ -12,7 +12,7 @@ import BrandLogo from './BrandLogo'
 import clsx from 'clsx'
 
 type Role = 'admin' | 'operator' | 'viewer'
-type NavItem = { path: string; icon: ElementType; label: string; roles: Role[] }
+type NavItem = { path: string; icon: ElementType; label: string; roles: Role[]; badge?: string }
 type NavGroup = { label: string; items: NavItem[] }
 
 const ALL_ROLES: Role[] = ['admin', 'operator', 'viewer']
@@ -35,10 +35,10 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
       { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
       { path: '/workflows', icon: Workflow, label: 'Workflows 1.x', roles: OPERATORS },
-      { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS },
+      { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS, badge: 'Preview' },
       { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS },
       { path: '/scripts', icon: Terminal, label: 'Scripts 1.x', roles: OPERATORS },
-      { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS },
+      { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
     ],
   },
   {
@@ -183,12 +183,22 @@ export default function Sidebar() {
                           ? 'bg-nutanix-blue text-white'
                           : 'text-gray-400 hover:text-gray-200 hover:bg-surface'
                       )}
-                      title={!sidebarOpen ? item.label : undefined}
+                      title={!sidebarOpen ? `${item.label}${item.badge ? ` (${item.badge})` : ''}` : undefined}
                     >
                       <item.icon size={18} className="flex-shrink-0" />
                       {sidebarOpen && (
                         <>
                           <span className="flex-1 truncate font-medium">{item.label}</span>
+                          {item.badge && (
+                            <span className={clsx(
+                              'rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                              active
+                                ? 'bg-white/15 text-white'
+                                : 'border border-blue-200 bg-blue-50 text-blue-700'
+                            )}>
+                              {item.badge}
+                            </span>
+                          )}
                           {active && <ChevronRight size={14} className="flex-shrink-0 opacity-60" />}
                         </>
                       )}

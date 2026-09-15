@@ -1,6 +1,6 @@
 # Native Foundation Adapter Package Provenance Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Adapter package provenance review records the package ownership, private package
 reference, SHA256 digest, signature reference, and signer reference that a

@@ -1,6 +1,6 @@
 # Native Foundation Execution Graph
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 The native Foundation execution graph is the read-only orchestration contract
 for multi-site and multi-cluster deployment. It does not execute imaging,
