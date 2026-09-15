@@ -1,6 +1,6 @@
 # Data Flow
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 This document summarizes the high-level data flow for operator-controlled
 deployments.

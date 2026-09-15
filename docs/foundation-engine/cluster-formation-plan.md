@@ -1,6 +1,6 @@
 # Native Foundation Cluster Formation Plan
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 The cluster formation plan turns native Foundation intent and node imaging
 readiness into read-only payload previews for HCI, compute-only, storage-only,

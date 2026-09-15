@@ -1,6 +1,6 @@
 # Native Foundation Provider Preflight
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Provider preflight composes the native Foundation plan, provider adapter
 manifest, image manifest, network manifest, and secret reference manifest into a

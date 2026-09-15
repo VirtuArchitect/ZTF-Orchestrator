@@ -9,13 +9,31 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.8.1 and should be moved
+Changes in this section are present on `main` after v1.8.2 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.8.2] - 2026-09-15
+
+### Summary
+Patch release improving Native Foundation Deploy operator visibility and marking
+early ZTF 2.x navigation areas as Preview.
+
+### Added
+- Added an FCA-style live progress panel for Native Foundation Deploy runs,
+  mapping execution logs into workflow validation, Dell iDRAC provider checks,
+  image validation, AHV install, AOS install, and cluster formation phases.
+- Added compact Preview badges for Workflows 2.x and Scripts 2.x sidebar
+  entries so operators can distinguish work-in-progress areas from the stable
+  1.x execution lanes.
 
 ### Changed
 - Unified the sign-in page into a responsive enterprise-style panel with
   ZTF-Orchestrator branding, documentation access, and accessible password
   visibility and error controls. Authentication behavior is unchanged.
+- Kept imported workflow YAML on the Configure tab so operators can continue
+  editing after importing a configuration.
 
 ### Security
 - Updated the locked js-yaml dependency from 4.3.1 to 4.3.2 to address
@@ -1356,6 +1374,7 @@ operator interface.
 
 ---
 
+[1.8.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.12...v1.8.0
 [1.7.12]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.11...v1.7.12

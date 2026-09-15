@@ -1,6 +1,6 @@
 # Native Foundation UAT Evidence Acceptance Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 The UAT evidence acceptance review summarizes whether the selected native
 Foundation provider and deployment-type requirements have accepted evidence IDs

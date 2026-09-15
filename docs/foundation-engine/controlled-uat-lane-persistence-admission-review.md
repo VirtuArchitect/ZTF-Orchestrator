@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Lane Persistence Admission Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Controlled UAT lane persistence admission review declares the read-only
 admission records that would be required before a selected controlled UAT lane

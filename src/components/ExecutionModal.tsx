@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Play } from 'lucide-react'
 import Terminal from './Terminal'
+import NativeFoundationProgress from './NativeFoundationProgress'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
 import { terminalStatusLabel, terminalSuccessProgress } from '../utils/executionStatus'
@@ -18,6 +19,7 @@ interface ExecutionModalProps {
 export default function ExecutionModal({ onClose, workflow, configContent, configFile, extraParams, dryRun }: ExecutionModalProps) {
   const { runningExecution, startExecution, appendLog, finishExecution, addExecution } = useStore()
   const evtSourceRef = useRef<EventSource | null>(null)
+  const showNativeFoundationProgress = workflow === 'native-foundation-deploy' && !dryRun
   const [progress, setProgress] = useState<ExecutionProgress>({
     phase: dryRun ? 'Running pre-flight checks' : 'Queued',
     percent: dryRun ? 20 : 0,
@@ -129,7 +131,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-      <div className="w-full max-w-3xl bg-gray-950 rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden">
+      <div className={`w-full ${showNativeFoundationProgress ? 'max-w-5xl' : 'max-w-3xl'} bg-gray-950 rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-nutanix-blue/20 border border-nutanix-blue/30 flex items-center justify-center">
@@ -148,8 +150,15 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
             </button>
           )}
         </div>
-        <div className="p-4">
+        <div className="p-4 overflow-auto max-h-[calc(100vh-10rem)]">
           <ProgressPanel progress={progress} />
+          {showNativeFoundationProgress && runningExecution && (
+            <NativeFoundationProgress
+              logs={runningExecution.logs}
+              status={runningExecution.status}
+              progress={progress}
+            />
+          )}
           {runningExecution && (
             <Terminal
               logs={runningExecution.logs}

@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Hardware Reservation Review
 
-Current release marker: `v1.8.1`.
+Current release marker: `v1.8.2`.
 
 Controlled UAT hardware reservation review declares the hardware, deployment
 window, scheduler, lock, and operations controls that a future bounded native
