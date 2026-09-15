@@ -1,6 +1,6 @@
 # Native Foundation Review Job
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 The native Foundation review job queues a durable, read-only rehearsal through
 the existing Jobs / Queue worker. It validates the deployment intent, generates

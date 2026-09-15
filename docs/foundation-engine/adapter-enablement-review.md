@@ -1,6 +1,6 @@
 # Native Foundation Adapter Enablement Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Adapter enablement review produces the disabled registry draft that a future
 native Foundation adapter enablement change would have to update after

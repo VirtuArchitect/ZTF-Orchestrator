@@ -1,6 +1,6 @@
 # Native Foundation Recovery Plan
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 The recovery plan describes how a future native Foundation execution request
 would be stopped, retried, or reviewed after failure across sites and clusters,

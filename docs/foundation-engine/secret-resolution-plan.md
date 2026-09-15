@@ -1,6 +1,6 @@
 # Native Foundation Secret Resolution Plan
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 The secret resolution plan inventories credential references that a future
 native Foundation adapter would need after approval, evidence, policy, and

@@ -1,6 +1,6 @@
 # Security Boundary
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 ZTF-Orchestrator is an internal operator console for controlled automation. It
 is not a public internet service, a Nutanix-supported product, or a replacement

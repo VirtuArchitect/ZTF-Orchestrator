@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Security Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Controlled UAT security review collects the security blockers that must be
 reviewed before any future native Foundation hardware-UAT adapter lane can be

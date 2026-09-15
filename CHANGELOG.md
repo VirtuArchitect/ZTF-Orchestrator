@@ -9,8 +9,20 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.8.2 and should be moved
+Changes in this section are present on `main` after v1.8.3 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.8.3] - 2026-09-15
+
+### Summary
+Patch release fixing Native Foundation Deploy execution details readability in
+the light theme.
+
+### Fixed
+- Kept Native Foundation Deploy event detail panes light and readable by
+  replacing remapped gray utility colors with explicit slate and white surfaces.
 
 ---
 
@@ -1374,6 +1386,7 @@ operator interface.
 
 ---
 
+[1.8.3]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.2...v1.8.3
 [1.8.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.7.12...v1.8.0

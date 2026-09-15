@@ -1,0 +1,18 @@
+ZTF-Orchestrator v1.8.3
+=======================
+
+Release date: 2026-09-15
+
+Summary
+-------
+- Fixes the Native Foundation Deploy execution details pane so event details
+  remain light and readable in the light theme.
+
+Validation
+----------
+- python -m pytest tests/test_release_integrity.py -q
+- npm ci
+- npm run build
+- npm audit --audit-level=high
+- git diff --check
+

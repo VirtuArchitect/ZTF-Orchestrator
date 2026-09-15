@@ -1,6 +1,6 @@
 # Native Foundation Adapter Credential Handoff Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Adapter credential handoff review records the owner, private credential handoff
 reference, secret lease policy reference, adapter identity reference, and

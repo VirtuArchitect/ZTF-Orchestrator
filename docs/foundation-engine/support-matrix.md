@@ -1,6 +1,6 @@
 # Native Foundation Support Matrix
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 This matrix separates implemented planning behavior from future deployment
 execution.

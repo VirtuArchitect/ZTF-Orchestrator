@@ -1,6 +1,6 @@
 # Native Foundation Adapter Execution Preflight Review
 
-Current release marker: `v1.8.2`.
+Current release marker: `v1.8.3`.
 
 Adapter execution preflight review records the operator preflight owner, private
 preflight evidence reference, adapter command reference, target connectivity
