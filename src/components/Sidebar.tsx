@@ -49,7 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/pipelines', icon: GitBranch, label: 'Pipelines', roles: ALL_ROLES },
       { path: '/schedules', icon: Clock, label: 'Schedules', roles: ALL_ROLES },
       { path: '/parallel', icon: Layers, label: 'Parallel Exec', roles: ALL_ROLES },
-      { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES },
+      { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES, badge: 'Preview' },
     ],
   },
   {
