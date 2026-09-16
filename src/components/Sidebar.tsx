@@ -36,7 +36,7 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
       { path: '/workflows', icon: Workflow, label: 'Workflows 1.x', roles: OPERATORS },
       { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS, badge: 'Preview' },
-      { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS },
+      { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS, badge: 'Preview' },
       { path: '/scripts', icon: Terminal, label: 'Scripts 1.x', roles: OPERATORS },
       { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
     ],
