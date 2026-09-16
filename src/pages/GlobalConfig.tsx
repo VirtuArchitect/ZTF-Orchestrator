@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, Eye, EyeOff, Download, Upload } from 'lucide-react'
+import { Plus, Trash2, Save, Eye, EyeOff, Download, KeyRound, Network, ShieldCheck } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
 import { buildGlobalYaml, fromYaml } from '../utils/yaml'
@@ -12,6 +12,58 @@ interface Credential {
   password: string
 }
 
+type VaultType =
+  | 'local'
+  | 'environment'
+  | 'hashicorp_vault'
+  | 'cyberark'
+  | 'azure_key_vault'
+  | 'aws_secrets_manager'
+  | 'delinea'
+  | 'beyondtrust'
+  | 'custom_api'
+
+type IpamMethod =
+  | 'static'
+  | 'csv'
+  | 'netbox'
+  | 'nautobot'
+  | 'phpipam'
+  | 'infoblox'
+  | 'bluecat'
+  | 'efficientip'
+  | 'microsoft_ipam'
+  | 'custom_api'
+
+interface ProviderOption<T extends string> {
+  id: T
+  label: string
+  description: string
+  status: 'Built-in' | 'Configured' | 'Adapter Target' | 'Custom'
+}
+
+interface ProviderFieldLabels {
+  title: string
+  endpoint: string
+  credentialRef: string
+  namespace: string
+  endpointPlaceholder: string
+  credentialPlaceholder: string
+  namespacePlaceholder: string
+}
+
+interface IpamFieldLabels {
+  title: string
+  endpoint: string
+  credentialRef: string
+  networkView: string
+  dnsView: string
+  endpointPlaceholder: string
+  credentialPlaceholder: string
+  networkViewPlaceholder: string
+  dnsViewPlaceholder: string
+}
+
 const DEFAULT_CREDS: Credential[] = [
   { ref: 'pc_user', username: 'admin', password: '' },
   { ref: 'foundation_central', username: 'admin', password: '' },
@@ -21,9 +73,224 @@ const DEFAULT_CREDS: Credential[] = [
   { ref: 'admin_cred', username: 'admin', password: '' },
 ]
 
+const VAULT_OPTIONS: ProviderOption<VaultType>[] = [
+  { id: 'local', label: 'Local', description: 'Store credentials in global.yml for lab and isolated use.', status: 'Built-in' },
+  { id: 'environment', label: 'Environment', description: 'Resolve credentials from appliance or container environment variables.', status: 'Built-in' },
+  { id: 'hashicorp_vault', label: 'HashiCorp Vault', description: 'Configuration target for Vault-backed credential retrieval.', status: 'Adapter Target' },
+  { id: 'cyberark', label: 'CyberArk', description: 'Configured CyberArk credential source using host and certificate material.', status: 'Configured' },
+  { id: 'azure_key_vault', label: 'Azure Key Vault', description: 'Configuration target for Microsoft cloud secret management.', status: 'Adapter Target' },
+  { id: 'aws_secrets_manager', label: 'AWS Secrets Manager', description: 'Configuration target for AWS-hosted or hybrid secret retrieval.', status: 'Adapter Target' },
+  { id: 'delinea', label: 'Delinea', description: 'Configuration target for Delinea Secret Server or PAM-backed retrieval.', status: 'Adapter Target' },
+  { id: 'beyondtrust', label: 'BeyondTrust', description: 'Configuration target for BeyondTrust Password Safe or PAM handoff.', status: 'Adapter Target' },
+  { id: 'custom_api', label: 'Custom API', description: 'Configuration target for a site-specific vault adapter.', status: 'Custom' },
+]
+
+const IPAM_OPTIONS: ProviderOption<IpamMethod>[] = [
+  { id: 'static', label: 'Static', description: 'Manually specify IP addresses in workflow configuration.', status: 'Built-in' },
+  { id: 'csv', label: 'CSV / Reservation File', description: 'Use an operator-supplied reservation file for offline or UAT runs.', status: 'Built-in' },
+  { id: 'netbox', label: 'NetBox', description: 'Configuration target for DCIM/IPAM prefixes, addresses, and sites.', status: 'Adapter Target' },
+  { id: 'nautobot', label: 'Nautobot', description: 'Configuration target for automation-focused DCIM/IPAM data.', status: 'Adapter Target' },
+  { id: 'phpipam', label: 'phpIPAM', description: 'Configuration target for lightweight open-source IPAM data.', status: 'Adapter Target' },
+  { id: 'infoblox', label: 'Infoblox', description: 'Configured enterprise DDI/IPAM allocation source.', status: 'Configured' },
+  { id: 'bluecat', label: 'BlueCat', description: 'Configuration target for enterprise DDI/IPAM address allocation.', status: 'Adapter Target' },
+  { id: 'efficientip', label: 'EfficientIP', description: 'Configuration target for SOLIDserver DDI/IPAM allocation.', status: 'Adapter Target' },
+  { id: 'microsoft_ipam', label: 'Microsoft DHCP/IPAM', description: 'Configuration target for Windows-aligned address management.', status: 'Adapter Target' },
+  { id: 'custom_api', label: 'Custom API', description: 'Configuration target for a site-specific IPAM adapter.', status: 'Custom' },
+]
+
+const VAULT_FIELD_LABELS: Record<Exclude<VaultType, 'local' | 'environment' | 'cyberark'>, ProviderFieldLabels> = {
+  hashicorp_vault: {
+    title: 'HashiCorp Vault Config Target',
+    endpoint: 'Vault Address',
+    credentialRef: 'Token / AppRole Credential Ref',
+    namespace: 'Namespace / Mount Prefix',
+    endpointPlaceholder: 'https://vault.example.com',
+    credentialPlaceholder: 'vault_approle',
+    namespacePlaceholder: 'admin/kv/platform',
+  },
+  azure_key_vault: {
+    title: 'Azure Key Vault Config Target',
+    endpoint: 'Vault URI',
+    credentialRef: 'Client Credential Ref',
+    namespace: 'Tenant ID / Secret Prefix',
+    endpointPlaceholder: 'https://ztf-kv.vault.azure.net',
+    credentialPlaceholder: 'azure_key_vault_client',
+    namespacePlaceholder: 'tenant-id/platform',
+  },
+  aws_secrets_manager: {
+    title: 'AWS Secrets Manager Config Target',
+    endpoint: 'Region / Endpoint URL',
+    credentialRef: 'Role / Credential Ref',
+    namespace: 'Secret Path Prefix',
+    endpointPlaceholder: 'eu-central-1',
+    credentialPlaceholder: 'aws_secrets_role',
+    namespacePlaceholder: 'ztf/platform/',
+  },
+  delinea: {
+    title: 'Delinea Config Target',
+    endpoint: 'Secret Server URL',
+    credentialRef: 'Credential Ref',
+    namespace: 'Folder / Secret Path',
+    endpointPlaceholder: 'https://delinea.example.com/SecretServer',
+    credentialPlaceholder: 'delinea_provider',
+    namespacePlaceholder: 'Infrastructure/ZTF',
+  },
+  beyondtrust: {
+    title: 'BeyondTrust Config Target',
+    endpoint: 'API Base URL',
+    credentialRef: 'Credential Ref',
+    namespace: 'Managed Account Scope',
+    endpointPlaceholder: 'https://passwordsafe.example.com/BeyondTrust/api/public/v3',
+    credentialPlaceholder: 'beyondtrust_provider',
+    namespacePlaceholder: 'ZTF managed accounts',
+  },
+  custom_api: {
+    title: 'Custom Vault API Config Target',
+    endpoint: 'Base URL',
+    credentialRef: 'Credential Ref',
+    namespace: 'Path / Scope',
+    endpointPlaceholder: 'https://vault-api.example.com',
+    credentialPlaceholder: 'custom_vault_provider',
+    namespacePlaceholder: 'ztf/platform',
+  },
+}
+
+const IPAM_FIELD_LABELS: Record<Exclude<IpamMethod, 'static' | 'csv' | 'infoblox'>, IpamFieldLabels> = {
+  netbox: {
+    title: 'NetBox Config Target',
+    endpoint: 'NetBox URL',
+    credentialRef: 'API Token Credential Ref',
+    networkView: 'Tenant / VRF',
+    dnsView: 'Role / Address Scope',
+    endpointPlaceholder: 'https://netbox.example.com',
+    credentialPlaceholder: 'netbox_api_token',
+    networkViewPlaceholder: 'tenant-a / vrf-prod',
+    dnsViewPlaceholder: 'ztf-addresses',
+  },
+  nautobot: {
+    title: 'Nautobot Config Target',
+    endpoint: 'Nautobot URL',
+    credentialRef: 'API Token Credential Ref',
+    networkView: 'Tenant / Namespace',
+    dnsView: 'Role / Address Scope',
+    endpointPlaceholder: 'https://nautobot.example.com',
+    credentialPlaceholder: 'nautobot_api_token',
+    networkViewPlaceholder: 'tenant-a',
+    dnsViewPlaceholder: 'ztf-addresses',
+  },
+  phpipam: {
+    title: 'phpIPAM Config Target',
+    endpoint: 'phpIPAM URL',
+    credentialRef: 'App / Credential Ref',
+    networkView: 'Section / Customer',
+    dnsView: 'Subnet Group / Scope',
+    endpointPlaceholder: 'https://phpipam.example.com',
+    credentialPlaceholder: 'phpipam_app',
+    networkViewPlaceholder: 'Datacenter',
+    dnsViewPlaceholder: 'UAT',
+  },
+  bluecat: {
+    title: 'BlueCat Config Target',
+    endpoint: 'BAM URL',
+    credentialRef: 'Credential Ref',
+    networkView: 'Configuration / View',
+    dnsView: 'DNS View / Scope',
+    endpointPlaceholder: 'https://bluecat.example.com',
+    credentialPlaceholder: 'bluecat_provider',
+    networkViewPlaceholder: 'Production',
+    dnsViewPlaceholder: 'default',
+  },
+  efficientip: {
+    title: 'EfficientIP Config Target',
+    endpoint: 'SOLIDserver URL',
+    credentialRef: 'Credential Ref',
+    networkView: 'Space / View',
+    dnsView: 'DNS Space / Scope',
+    endpointPlaceholder: 'https://solidserver.example.com',
+    credentialPlaceholder: 'efficientip_provider',
+    networkViewPlaceholder: 'default',
+    dnsViewPlaceholder: 'default',
+  },
+  microsoft_ipam: {
+    title: 'Microsoft DHCP/IPAM Config Target',
+    endpoint: 'Server / FQDN',
+    credentialRef: 'Credential Ref',
+    networkView: 'DHCP Scope / Policy',
+    dnsView: 'DNS Zone / Scope',
+    endpointPlaceholder: 'ipam01.example.com',
+    credentialPlaceholder: 'microsoft_ipam_provider',
+    networkViewPlaceholder: '10.20.30.0/24',
+    dnsViewPlaceholder: 'example.com',
+  },
+  custom_api: {
+    title: 'Custom IPAM API Config Target',
+    endpoint: 'Base URL',
+    credentialRef: 'Credential Ref',
+    networkView: 'Path / Tenant',
+    dnsView: 'Scope / View',
+    endpointPlaceholder: 'https://ipam-api.example.com',
+    credentialPlaceholder: 'custom_ipam_provider',
+    networkViewPlaceholder: 'tenant-a',
+    dnsViewPlaceholder: 'default',
+  },
+}
+
+const isVaultType = (value: unknown): value is VaultType =>
+  typeof value === 'string' && VAULT_OPTIONS.some(option => option.id === value)
+
+const isIpamMethod = (value: unknown): value is IpamMethod =>
+  typeof value === 'string' && IPAM_OPTIONS.some(option => option.id === value)
+
+function ProviderCard<T extends string>({
+  option,
+  selected,
+  name,
+  onSelect,
+}: {
+  option: ProviderOption<T>
+  selected: boolean
+  name: string
+  onSelect: (id: T) => void
+}) {
+  const statusTone = option.status === 'Built-in'
+    ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+    : option.status === 'Configured'
+      ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+    : option.status === 'Custom'
+      ? 'border-amber-300 bg-amber-50 text-amber-700'
+      : 'border-blue-300 bg-blue-50 text-blue-700'
+
+  return (
+    <label className={clsx(
+      'flex min-h-[118px] cursor-pointer gap-3 rounded-lg border p-4 transition-all',
+      selected
+        ? 'border-nutanix-blue bg-nutanix-blue/10 shadow-sm'
+        : 'border-border bg-surface-elevated hover:border-border-light'
+    )}>
+      <input
+        type="radio"
+        name={name}
+        value={option.id}
+        checked={selected}
+        onChange={() => onSelect(option.id)}
+        className="mt-1 text-nutanix-blue"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium text-gray-100">{option.label}</p>
+          <span className={clsx('rounded border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide', statusTone)}>
+            {option.status}
+          </span>
+        </div>
+        <p className="mt-1 text-sm leading-5 text-gray-500">{option.description}</p>
+      </div>
+    </label>
+  )
+}
+
 export default function GlobalConfig() {
-  const [vaultType, setVaultType] = useState<'local' | 'cyberark'>('local')
-  const [ipMethod, setIpMethod] = useState<'static' | 'infoblox'>('static')
+  const [vaultType, setVaultType] = useState<VaultType>('local')
+  const [ipMethod, setIpMethod] = useState<IpamMethod>('static')
   const [credentials, setCredentials] = useState<Credential[]>(DEFAULT_CREDS)
   const [showPasswords, setShowPasswords] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -32,7 +299,15 @@ export default function GlobalConfig() {
   const [activeTab, setActiveTab] = useState<'credentials' | 'vault' | 'ipam' | 'preview'>('credentials')
 
   const [cyberark, setCyberark] = useState({ host: '', certFile: '', keyFile: '' })
+  const [vaultProvider, setVaultProvider] = useState({ endpoint: '', credentialRef: '', namespace: '' })
   const [infoblox, setInfoblox] = useState({ host: '', username: '', password: '', dnsView: 'default', networkView: 'default' })
+  const [ipamProvider, setIpamProvider] = useState({ endpoint: '', credentialRef: '', networkView: '', dnsView: '' })
+  const vaultFieldLabels = vaultType !== 'local' && vaultType !== 'environment' && vaultType !== 'cyberark'
+    ? VAULT_FIELD_LABELS[vaultType]
+    : null
+  const ipamFieldLabels = ipMethod !== 'static' && ipMethod !== 'csv' && ipMethod !== 'infoblox'
+    ? IPAM_FIELD_LABELS[ipMethod]
+    : null
 
   useEffect(() => {
     apiFetch('/api/global-config').then(r => r.json()).then(data => {
@@ -41,11 +316,11 @@ export default function GlobalConfig() {
         const parsed = fromYaml(data.content) as Record<string, unknown>
         if (!parsed || typeof parsed !== 'object') return
 
-        if (parsed.vault_to_use === 'cyberark' || parsed.vault_to_use === 'local') {
+        if (isVaultType(parsed.vault_to_use)) {
           setVaultType(parsed.vault_to_use)
         }
-        if (parsed.ip_allocation_method === 'infoblox' || parsed.ip_allocation_method === 'static') {
-          setIpMethod(parsed.ip_allocation_method as 'static' | 'infoblox')
+        if (isIpamMethod(parsed.ip_allocation_method)) {
+          setIpMethod(parsed.ip_allocation_method)
         }
 
         const vaults = parsed.vaults as Record<string, unknown> | undefined
@@ -62,6 +337,15 @@ export default function GlobalConfig() {
           setCyberark({ host: ca.host ?? '', certFile: ca.cert_file ?? '', keyFile: ca.key_file ?? '' })
         }
 
+        const selectedVault = typeof parsed.vault_to_use === 'string' ? vaults?.[parsed.vault_to_use] as Record<string, string> | undefined : undefined
+        if (selectedVault && parsed.vault_to_use !== 'local' && parsed.vault_to_use !== 'cyberark') {
+          setVaultProvider({
+            endpoint: selectedVault.endpoint ?? selectedVault.host ?? '',
+            credentialRef: selectedVault.credential_ref ?? selectedVault.credential ?? '',
+            namespace: selectedVault.namespace ?? selectedVault.path_prefix ?? '',
+          })
+        }
+
         const ib = parsed.infoblox as Record<string, string> | undefined
         if (ib) {
           setInfoblox({
@@ -70,6 +354,16 @@ export default function GlobalConfig() {
             password: ib.password ?? '',
             dnsView: ib.dns_view ?? 'default',
             networkView: ib.network_view ?? 'default',
+          })
+        }
+
+        const parsedIpam = parsed.ipam as Record<string, string> | undefined
+        if (parsedIpam && parsedIpam.method !== 'static' && parsedIpam.method !== 'infoblox') {
+          setIpamProvider({
+            endpoint: parsedIpam.endpoint ?? parsedIpam.host ?? '',
+            credentialRef: parsedIpam.credential_ref ?? parsedIpam.credential ?? '',
+            networkView: parsedIpam.network_view ?? '',
+            dnsView: parsedIpam.dns_view ?? '',
           })
         }
       } catch { /* ignore malformed YAML */ }
@@ -93,7 +387,9 @@ export default function GlobalConfig() {
     ipAllocationMethod: ipMethod,
     credentials,
     ...(vaultType === 'cyberark' ? { cyberark } : {}),
+    ...(vaultType !== 'local' && vaultType !== 'cyberark' ? { vaultProvider } : {}),
     ...(ipMethod === 'infoblox' ? { infoblox } : {}),
+    ...(ipMethod !== 'static' && ipMethod !== 'infoblox' ? { ipamProvider } : {}),
   })
 
   const save = async () => {
@@ -259,37 +555,46 @@ export default function GlobalConfig() {
       {/* Vault Settings Tab */}
       {activeTab === 'vault' && (
         <div className="card">
-          <h3 className="font-semibold text-gray-100 mb-4">Vault Configuration</h3>
+          <div className="mb-5 flex items-start gap-3">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-nutanix-blue">
+              <KeyRound size={18} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-100">Vault Configuration</h3>
+              <p className="mt-1 text-sm text-gray-500">Select how workflow credentials are resolved at execution time.</p>
+            </div>
+          </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <label className="label">Vault Type</label>
-              <div className="flex gap-3">
-                {(['local', 'cyberark'] as const).map(v => (
-                  <label key={v} className={clsx(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all flex-1',
-                    vaultType === v
-                      ? 'border-nutanix-blue bg-nutanix-blue/10 text-gray-100'
-                      : 'border-border bg-surface-elevated text-gray-400 hover:border-border-light'
-                  )}>
-                    <input
-                      type="radio"
-                      name="vaultType"
-                      value={v}
-                      checked={vaultType === v}
-                      onChange={() => setVaultType(v)}
-                      className="text-nutanix-blue"
-                    />
-                    <div>
-                      <p className="font-medium capitalize">{v === 'cyberark' ? 'CyberArk' : 'Local'}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {v === 'local' ? 'Store credentials in global.yml' : 'Fetch credentials from CyberArk vault'}
-                      </p>
-                    </div>
-                  </label>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+                {VAULT_OPTIONS.map(option => (
+                  <ProviderCard
+                    key={option.id}
+                    option={option}
+                    selected={vaultType === option.id}
+                    name="vaultType"
+                    onSelect={setVaultType}
+                  />
                 ))}
               </div>
             </div>
+
+            {vaultType === 'local' && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Local storage is practical for labs and isolated UAT. Use an external provider for production credential custody.
+              </div>
+            )}
+
+            {vaultType === 'environment' && (
+              <div className="form-section">
+                <p className="form-section-title">Environment Resolution</p>
+                <div className="rounded-lg border border-border bg-surface-elevated px-4 py-3 text-sm text-gray-500">
+                  Credentials are resolved from runtime environment variables by reference key. Store only references in workflow YAML.
+                </div>
+              </div>
+            )}
 
             {vaultType === 'cyberark' && (
               <div className="form-section">
@@ -310,6 +615,41 @@ export default function GlobalConfig() {
                 </div>
               </div>
             )}
+
+            {vaultType !== 'local' && vaultType !== 'environment' && vaultType !== 'cyberark' && (
+              <div className="form-section">
+                <p className="form-section-title">{vaultFieldLabels?.title}</p>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                  <div>
+                    <label className="label">{vaultFieldLabels?.endpoint}</label>
+                    <input
+                      className="input font-mono"
+                      value={vaultProvider.endpoint}
+                      onChange={event => setVaultProvider(prev => ({ ...prev, endpoint: event.target.value }))}
+                      placeholder={vaultFieldLabels?.endpointPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{vaultFieldLabels?.credentialRef}</label>
+                    <input
+                      className="input font-mono"
+                      value={vaultProvider.credentialRef}
+                      onChange={event => setVaultProvider(prev => ({ ...prev, credentialRef: event.target.value }))}
+                      placeholder={vaultFieldLabels?.credentialPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{vaultFieldLabels?.namespace}</label>
+                    <input
+                      className="input font-mono"
+                      value={vaultProvider.namespace}
+                      onChange={event => setVaultProvider(prev => ({ ...prev, namespace: event.target.value }))}
+                      placeholder={vaultFieldLabels?.namespacePlaceholder}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -317,33 +657,113 @@ export default function GlobalConfig() {
       {/* IPAM Tab */}
       {activeTab === 'ipam' && (
         <div className="card">
-          <h3 className="font-semibold text-gray-100 mb-4">IP Allocation Method</h3>
-
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              {(['static', 'infoblox'] as const).map(v => (
-                <label key={v} className={clsx(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all flex-1',
-                  ipMethod === v
-                    ? 'border-nutanix-blue bg-nutanix-blue/10 text-gray-100'
-                    : 'border-border bg-surface-elevated text-gray-400 hover:border-border-light'
-                )}>
-                  <input type="radio" name="ipMethod" value={v} checked={ipMethod === v} onChange={() => setIpMethod(v)} className="text-nutanix-blue" />
-                  <div>
-                    <p className="font-medium capitalize">{v === 'infoblox' ? 'Infoblox' : 'Static'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {v === 'static' ? 'Manually specify IP addresses in configs' : 'Use Infoblox IPAM for automatic IP allocation'}
-                    </p>
-                  </div>
-                </label>
-              ))}
+          <div className="mb-5 flex items-start gap-3">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-nutanix-blue">
+              <Network size={18} />
             </div>
+            <div>
+              <h3 className="font-semibold text-gray-100">IP Allocation Method</h3>
+              <p className="mt-1 text-sm text-gray-500">Choose the source of truth for addresses used in generated workflow configurations.</p>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className="label">IPAM Provider</label>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+                {IPAM_OPTIONS.map(option => (
+                  <ProviderCard
+                    key={option.id}
+                    option={option}
+                    selected={ipMethod === option.id}
+                    name="ipMethod"
+                    onSelect={setIpMethod}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {(ipMethod === 'static' || ipMethod === 'csv') && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                {ipMethod === 'static'
+                  ? 'Static allocation keeps IP ownership in workflow inputs and is the safest default for controlled UAT.'
+                  : 'CSV reservations are operator supplied and suitable for offline or air-gapped planning workflows.'}
+              </div>
+            )}
+
+            {ipMethod !== 'static' && ipMethod !== 'csv' && (
+              <div className="rounded-lg border border-border bg-surface-elevated px-4 py-3 text-sm text-gray-500">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-nutanix-blue" />
+                  <span>Use a read-only credential first. Enable mutating address allocation only after the provider adapter is validated in UAT.</span>
+                </div>
+              </div>
+            )}
+
+            {ipMethod === 'csv' && (
+              <div className="form-section">
+                <p className="form-section-title">Reservation File</p>
+                <div>
+                  <label className="label">CSV Path / Reference</label>
+                  <input
+                    className="input font-mono"
+                    value={ipamProvider.endpoint}
+                    onChange={event => setIpamProvider(prev => ({ ...prev, endpoint: event.target.value }))}
+                    placeholder="/var/lib/ztf-orchestrator/ipam/reservations.csv"
+                  />
+                </div>
+              </div>
+            )}
+
+            {ipMethod !== 'static' && ipMethod !== 'csv' && ipMethod !== 'infoblox' && (
+              <div className="form-section">
+                <p className="form-section-title">{ipamFieldLabels?.title}</p>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div>
+                    <label className="label">{ipamFieldLabels?.endpoint}</label>
+                    <input
+                      className="input font-mono"
+                      value={ipamProvider.endpoint}
+                      onChange={event => setIpamProvider(prev => ({ ...prev, endpoint: event.target.value }))}
+                      placeholder={ipamFieldLabels?.endpointPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{ipamFieldLabels?.credentialRef}</label>
+                    <input
+                      className="input font-mono"
+                      value={ipamProvider.credentialRef}
+                      onChange={event => setIpamProvider(prev => ({ ...prev, credentialRef: event.target.value }))}
+                      placeholder={ipamFieldLabels?.credentialPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{ipamFieldLabels?.networkView}</label>
+                    <input
+                      className="input"
+                      value={ipamProvider.networkView}
+                      onChange={event => setIpamProvider(prev => ({ ...prev, networkView: event.target.value }))}
+                      placeholder={ipamFieldLabels?.networkViewPlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{ipamFieldLabels?.dnsView}</label>
+                    <input
+                      className="input"
+                      value={ipamProvider.dnsView}
+                      onChange={event => setIpamProvider(prev => ({ ...prev, dnsView: event.target.value }))}
+                      placeholder={ipamFieldLabels?.dnsViewPlaceholder}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {ipMethod === 'infoblox' && (
               <div className="form-section">
                 <p className="form-section-title">Infoblox Settings</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className="lg:col-span-2">
                     <label className="label">Infoblox Host</label>
                     <input className="input" value={infoblox.host} onChange={e => setInfoblox(p => ({ ...p, host: e.target.value }))} placeholder="infoblox.domain.com" />
                   </div>

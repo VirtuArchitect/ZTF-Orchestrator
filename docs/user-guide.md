@@ -141,8 +141,8 @@ Tabs and functions:
 | Tab | Function |
 |---|---|
 | Credentials | Defines named credential references such as `pc_user`, `foundation_central`, `pe_user`, `ncm_user`, and `cvm_credential`. Workflow YAML uses these references instead of embedding usernames everywhere. |
-| Vault Settings | Selects local credentials or CyberArk integration and captures vault connection fields. |
-| IPAM | Selects static IP assignment or Infoblox-backed allocation and captures Infoblox host, DNS view, and network view values. |
+| Vault Settings | Selects the credential source. Built-in options include local and environment-based resolution; configured and adapter-target options include HashiCorp Vault, CyberArk, Azure Key Vault, AWS Secrets Manager, Delinea, BeyondTrust, and a custom API profile. |
+| IPAM | Selects the address source of truth. Built-in options include static and CSV/reservation-file allocation; configured and adapter-target options include NetBox, Nautobot, phpIPAM, Infoblox, BlueCat, EfficientIP, Microsoft DHCP/IPAM, and a custom API profile. |
 | YAML Preview | Shows the generated `global.yml` content before saving or downloading. |
 
 Actions:
@@ -157,6 +157,11 @@ Actions:
 
 Use this page before running workflows that reference credentials, vaults, or
 IPAM settings.
+
+Provider selections marked as configuration targets write provider metadata into
+`global.yml`; they do not imply that live credential retrieval or mutating IP
+allocation is enabled. Live provider operations depend on the corresponding
+adapter being configured, permitted, and validated for the environment.
 
 ### Config Files
 
