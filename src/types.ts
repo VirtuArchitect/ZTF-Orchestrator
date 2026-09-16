@@ -71,9 +71,32 @@ export interface Credential {
   password: string
 }
 
+export type GlobalVaultProvider =
+  | 'local'
+  | 'environment'
+  | 'hashicorp_vault'
+  | 'cyberark'
+  | 'azure_key_vault'
+  | 'aws_secrets_manager'
+  | 'delinea'
+  | 'beyondtrust'
+  | 'custom_api'
+
+export type GlobalIpamProvider =
+  | 'static'
+  | 'csv'
+  | 'netbox'
+  | 'nautobot'
+  | 'phpipam'
+  | 'infoblox'
+  | 'bluecat'
+  | 'efficientip'
+  | 'microsoft_ipam'
+  | 'custom_api'
+
 export interface GlobalConfig {
-  vault_to_use: 'local' | 'cyberark'
-  ip_allocation_method: 'static' | 'infoblox'
+  vault_to_use: GlobalVaultProvider
+  ip_allocation_method: GlobalIpamProvider
   vaults: {
     local?: {
       credentials: Record<string, { username: string; password: string }>
@@ -84,6 +107,14 @@ export interface GlobalConfig {
       key_file: string
       credentials: Record<string, { username: string; password: string }>
     }
+    [provider: string]: unknown
+  }
+  ipam?: {
+    method: GlobalIpamProvider
+    endpoint?: string
+    credential_ref?: string
+    dns_view?: string
+    network_view?: string
   }
   infoblox?: {
     host: string

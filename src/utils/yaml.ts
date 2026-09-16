@@ -18,7 +18,9 @@ export function buildGlobalYaml(config: {
   ipAllocationMethod: string
   credentials: Array<{ ref: string; username: string; password: string }>
   cyberark?: { host: string; certFile: string; keyFile: string }
+  vaultProvider?: { endpoint: string; credentialRef: string; namespace: string }
   infoblox?: { host: string; username: string; password: string; dnsView: string; networkView: string }
+  ipamProvider?: { endpoint: string; credentialRef: string; networkView: string; dnsView: string }
 }): string {
   const credMap: Record<string, { username: string; password: string }> = {}
   config.credentials.forEach(c => {
@@ -43,6 +45,20 @@ export function buildGlobalYaml(config: {
     }
   }
 
+  if (config.vaultToUse === 'environment') {
+    ;(obj.vaults as Record<string, unknown>).environment = {
+      variable_prefix: 'ZTF_CREDENTIAL_',
+    }
+  }
+
+  if (config.vaultToUse !== 'local' && config.vaultToUse !== 'cyberark' && config.vaultToUse !== 'environment') {
+    ;(obj.vaults as Record<string, unknown>)[config.vaultToUse] = {
+      endpoint: config.vaultProvider?.endpoint || '',
+      credential_ref: config.vaultProvider?.credentialRef || '',
+      namespace: config.vaultProvider?.namespace || '',
+    }
+  }
+
   if (config.ipAllocationMethod === 'infoblox' && config.infoblox) {
     obj.ipam = {
       method: 'infoblox',
@@ -58,6 +74,16 @@ export function buildGlobalYaml(config: {
       password: config.infoblox.password,
       dns_view: config.infoblox.dnsView,
       network_view: config.infoblox.networkView,
+    }
+  }
+
+  if (config.ipAllocationMethod !== 'static' && config.ipAllocationMethod !== 'infoblox') {
+    obj.ipam = {
+      method: config.ipAllocationMethod,
+      endpoint: config.ipamProvider?.endpoint || '',
+      credential_ref: config.ipamProvider?.credentialRef || '',
+      network_view: config.ipamProvider?.networkView || '',
+      dns_view: config.ipamProvider?.dnsView || '',
     }
   }
 
