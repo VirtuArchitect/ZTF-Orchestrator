@@ -343,23 +343,35 @@ function okAction(message: string, extra: Record<string, unknown> = {}) {
 }
 
 const DEMO_INSTALLED_BUILD = {
-  version: '1.8.1',
-  versionTag: 'v1.8.1',
-  installedIdentity: 'v1.8.1 / demo-build',
-  sourceRef: 'v1.8.1',
+  version: '1.8.3',
+  versionTag: 'v1.8.3',
+  installedIdentity: 'v1.8.3 / demo-build',
+  sourceRef: 'v1.8.3',
   commit: 'demo-build',
   buildDate: '2026-08-25',
-  containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.1',
+  containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.3',
   updatePackageId: 'demo-update-package',
   appliedUpdate: {},
 }
+
+const nativeFoundationDemoPhases = [
+  ['architecture_boundary', 'Architecture Boundary', 'implemented_foundation', 'Defines ownership, safety boundaries, and artifact rules for native Foundation work.', 'Intent model validation'],
+  ['intent_model', 'Intent Model', 'implemented_foundation', 'Validates multi-site, provider, cluster, deployment type, node, and role intent.', 'Read-only discovery preview'],
+  ['read_only_discovery', 'Read-Only Discovery', 'implemented_foundation', 'Normalizes operator-supplied inventory and reconciles discovery-style facts without contacting providers.', 'Plan and approval binding'],
+  ['plan_approval_binding', 'Plan And Approval Binding', 'implemented_foundation', 'Creates deterministic plan, intent, discovery, approval, and evidence metadata for future execution gating.', 'Imaging-only controlled UAT readiness'],
+  ['imaging_only_uat', 'Imaging-Only UAT', 'implemented_readiness_gate', 'Builds image, network, secret, discovery, and per-node imaging plans with execution blocked.', 'First bounded mutating adapter UAT'],
+  ['hci_cluster_create_uat', 'HCI Cluster Create UAT', 'implemented_planning_graph', 'Builds HCI formation and post-create validation previews without creating clusters.', 'Controlled HCI cluster-create adapter UAT'],
+  ['multi_site_multi_cluster', 'Multi-Site And Multi-Cluster', 'implemented_planning_graph', 'Builds site waves, cluster waves, policy, evidence packs, reservations, scheduler, and recovery reviews.', 'Validated per-site concurrency and recovery UAT'],
+  ['compute_storage_topology', 'Compute-Only And Storage-Only', 'implemented_planning_graph', 'Builds topology-specific support and validation previews for HCI, compute-only, storage-only, and mixed clusters.', 'Version-specific topology support validation'],
+  ['production_hardening', 'Production Hardening', 'implemented_read_only_hardening', 'Builds adapter registry, allow-list, runtime admission, queue, job-state, restart/resume, backup/restore, and review-packet controls.', 'Future explicit mutating enablement change after controlled UAT'],
+] as const
 
 async function demoResponse(request: Request) {
   const url = new URL(request.url)
   const path = url.pathname.replace(/^\/ZTF-Orchestrator(?=\/)/, '')
   const method = request.method.toUpperCase()
 
-  if (path === '/health') return json({ status: 'healthy', version: '1.8.1', installed: DEMO_INSTALLED_BUILD, storage: 'demo' })
+  if (path === '/health') return json({ status: 'healthy', version: '1.8.3', installed: DEMO_INSTALLED_BUILD, storage: 'demo' })
   if (!path.startsWith('/api/')) return null
 
   if (path === '/api/auth/login') {
@@ -419,7 +431,7 @@ async function demoResponse(request: Request) {
     return json({
       status: 'healthy',
       storage: 'postgres',
-      version: '1.8.1',
+      version: '1.8.3',
       installed: DEMO_INSTALLED_BUILD,
       database: { configured: true, location: 'postgresql://demo:***@postgres:5432/ztf_orchestrator' },
       jobs: { workers: 1, queued: 0, running: 1, recent: jobs.length },
@@ -538,7 +550,7 @@ async function demoResponse(request: Request) {
   if (path === '/api/appliance/status') {
     return json({
       detected: true,
-      runtime: { status: 'healthy', version: '1.8.1', installed: DEMO_INSTALLED_BUILD, ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
+      runtime: { status: 'healthy', version: '1.8.3', installed: DEMO_INSTALLED_BUILD, ztfCompatible: true, message: 'Legacy ZTF 1.x workflow/script CLI detected' },
       hostLayout: { status: 'demo', visible: 7, expected: 7, message: 'Simulated appliance host layout' },
       checks: [{ name: 'Demo appliance', ok: true, status: 'ok', value: 'static GitHub Pages demo', message: 'No host access in demo mode' }],
       containerPaths: { nkpBundles: '/var/lib/ztf-orchestrator/bundles', nkpFramework: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework', ztfFramework: '/opt/zerotouch-framework' },
@@ -547,7 +559,7 @@ async function demoResponse(request: Request) {
   if (path === '/api/appliance/artifacts') return json({ artifacts: [], summary: { total: 0, verified: 0, archived: 0, expiring: 0, expired: 0, pending: 0 } })
   if (path === '/api/appliance/updates') {
     return json({
-      current: { version: '1.8.1', installed: DEMO_INSTALLED_BUILD, containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.1', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
+      current: { version: '1.8.3', installed: DEMO_INSTALLED_BUILD, containerImage: 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.3', requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },
       updates: [],
       staged: null,
       allowedRepositories: ['virtuarchitect/ztf-orchestrator', 'nutanixdev/zerotouch-framework', 'virtuarchitect/nkp-zerotouch-framework'],
@@ -608,6 +620,69 @@ async function demoResponse(request: Request) {
   if (path === '/api/users') return json([{ username: 'demo-admin', role: 'admin' }, { username: 'demo-operator', role: 'operator' }, { username: 'demo-viewer', role: 'viewer' }])
   if (path.startsWith('/api/users/')) return okAction('User action simulated.')
   if (path === '/api/audit-log') return json([{ id: 'demo-audit-001', actor: 'demo-admin', action: 'demo.started', resource: 'github-pages', timestamp: iso(5), details: { mode: 'simulated' } }])
+  if (path === '/api/native-foundation/phases') return json({
+    workflow: 'native-foundation-deploy',
+    contractVersion: 'native-foundation-adapter-contract/v1.8.3-readonly',
+    readOnly: true,
+    mutatingActionsEnabled: false,
+    currentReleaseMarker: '1.8.3',
+    currentExecutionMode: 'planning_only',
+    supportedReadinessPhases: ['compute_storage_topology', 'hci_cluster_create', 'imaging_only', 'multi_site'],
+    summary: {
+      phaseCount: nativeFoundationDemoPhases.length,
+      implementedPhaseCount: nativeFoundationDemoPhases.length,
+      mutatingEnabledPhaseCount: 0,
+      currentBoundary: 'Planning, review, UAT evidence, and adapter hardening only; deployment mutation remains disabled.',
+    },
+    phases: nativeFoundationDemoPhases.map(([id, name, status, operatorOutcome, nextGate], order) => ({
+      id,
+      name,
+      order,
+      status,
+      readOnly: true,
+      mutatingActionsEnabled: false,
+      operatorOutcome,
+      evidenceRequired: [`${id}_review`],
+      nextGate,
+    })),
+  })
+  if (path === '/api/native-foundation/provider-adapters') return json({
+    workflow: 'native-foundation-deploy',
+    contractVersion: 'native-foundation-adapter-contract/v1.8.3-readonly',
+    adapterInterfaceVersion: 'native-foundation-provider-adapter/v1.8.3-readonly',
+    readOnly: true,
+    mutatingActionsEnabled: false,
+    status: 'blocked',
+    canLoadAdapters: false,
+    providersInIntent: ['dell_idrac_redfish'],
+    providerAdapters: [{
+      providerId: 'dell_idrac_redfish',
+      status: 'implemented_controlled_uat_read_only',
+      readOnly: true,
+      mutatingActionsEnabled: false,
+      readOnlyDiscovery: true,
+      adapterFamily: 'redfish',
+      vendor: 'Dell iDRAC',
+      serviceRoot: '/redfish/v1/',
+      environmentControls: {
+        liveDiscovery: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true',
+        mutatingUat: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true',
+      },
+      controlledUatMutatingOperations: ['power_control', 'boot_order', 'image_mount'],
+      supportedReadOnlyPhases: ['discovery_preview', 'provider_adapter_manifest', 'redfish_service_root_probe'],
+      supportedMutatingPhases: [],
+      operations: [
+        { operationId: 'discover_inventory', label: 'Discover hardware inventory', mutating: false, status: 'implemented_read_only', readOnly: true, mutatingActionsEnabled: false, requiredEvidence: ['provider_discovery_uat'] },
+        { operationId: 'image_mount', label: 'Image mount or virtual media', mutating: true, status: 'blocked_mutating', readOnly: true, mutatingActionsEnabled: false, requiredEvidence: ['image_source_verified', 'power_boot_uat'] },
+        { operationId: 'image_nodes', label: 'Node imaging orchestration', mutating: true, status: 'blocked_mutating', readOnly: true, mutatingActionsEnabled: false, requiredEvidence: ['imaging_uat'] },
+      ],
+      evidenceRequired: ['redfish_discovery_uat', 'hardware_support_record', 'network_path_verified'],
+    }],
+    requiredEnvironment: {
+      liveDiscovery: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true',
+      mutatingUat: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true',
+    },
+  })
   if (path.startsWith('/api/upgrade-advisor/')) return json({ version: 'demo', name: 'Demo upgrade rules', description: 'Read-only simulated advisory data', phases: [], rules: [], sourcePacks: [], readOnly: true })
   if (path === '/api/maintenance/database-backups') return json({ backups: [{ filename: 'ztf-demo-backup-20260813.sql', size: 82491, createdAt: iso(90) }] })
   if (path.startsWith('/api/maintenance/database-backups')) return okAction('Database maintenance action simulated.')
