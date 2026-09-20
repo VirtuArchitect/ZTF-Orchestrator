@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle, CheckCircle, ChevronDown, ChevronUp, FileSearch,
-  HelpCircle, MinusCircle, PlusCircle, RefreshCw, Shuffle
+  AlertTriangle, CalendarClock, CheckCircle, ChevronDown, ChevronUp, FileSearch,
+  HelpCircle, MinusCircle, Play, PlusCircle, RefreshCw, Save, Shuffle, Trash2,
+  X
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch } from '../utils/api'
-import type { DriftFinding, DriftRun, WorkflowDef } from '../types'
+import type { DriftFinding, DriftPolicy, DriftPolicyNotifyOn, DriftRun, WorkflowDef } from '../types'
 import { WORKFLOWS } from '../data'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -25,35 +26,79 @@ const STATUS_BADGE: Record<string, string> = {
   unexpected: 'badge-purple',
 }
 
+const CRON_PRESETS = [
+  { label: 'Hourly', value: '0 * * * *' },
+  { label: 'Daily 02:00', value: '0 2 * * *' },
+  { label: 'Weekdays 06:00', value: '0 6 * * 1-5' },
+  { label: 'Sunday 03:00', value: '0 3 * * 0' },
+]
+
+interface PolicyForm {
+  name: string
+  configFile: string
+  workflow: string
+  baseline: 'last_applied' | 'current_state'
+  currentStateContent: string
+  cronExpr: string
+  notifyOn: DriftPolicyNotifyOn
+  enabled: boolean
+}
+
+const EMPTY_POLICY: PolicyForm = {
+  name: '',
+  configFile: '',
+  workflow: '',
+  baseline: 'last_applied',
+  currentStateContent: '',
+  cronExpr: '0 2 * * *',
+  notifyOn: 'drift_or_unknown',
+  enabled: true,
+}
+
 export default function DriftDetection() {
   const user = useStore(s => s.user)
   const [configs, setConfigs] = useState<ConfigFile[]>([])
   const [runs, setRuns] = useState<DriftRun[]>([])
+  const [policies, setPolicies] = useState<DriftPolicy[]>([])
   const [configFile, setConfigFile] = useState('')
   const [workflow, setWorkflow] = useState('')
   const [baseline, setBaseline] = useState<'last_applied' | 'current_state'>('last_applied')
   const [currentStateContent, setCurrentStateContent] = useState('')
+  const [policyForm, setPolicyForm] = useState<PolicyForm>(EMPTY_POLICY)
+  const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null)
+  const [showPolicyForm, setShowPolicyForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [checking, setChecking] = useState(false)
+  const [savingPolicy, setSavingPolicy] = useState(false)
+  const [runningPolicyId, setRunningPolicyId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [policyError, setPolicyError] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
   const canRunChecks = user?.role === 'admin' || user?.role === 'operator'
   const canClearRuns = user?.role === 'admin'
+  const canManagePolicies = user?.role === 'admin' || user?.role === 'operator'
 
   const load = async () => {
     setLoading(true)
     setError('')
     try {
-      const [configResp, driftResp] = await Promise.all([
+      const [configResp, driftResp, policyResp] = await Promise.all([
         apiFetch('/api/configs'),
         apiFetch('/api/drift'),
+        apiFetch('/api/drift/policies'),
       ])
       if (configResp.ok) {
-        const data: ConfigFile[] = await configResp.json()
+        const rawConfigs: Array<ConfigFile | string> = await configResp.json()
+        const data = rawConfigs.map(item => typeof item === 'string'
+          ? { name: item, size: 0, modified: 0 }
+          : item
+        )
         setConfigs(data)
         setConfigFile(current => current || data[0]?.name || '')
+        setPolicyForm(current => ({ ...current, configFile: current.configFile || data[0]?.name || '' }))
       }
       if (driftResp.ok) setRuns(await driftResp.json())
+      if (policyResp.ok) setPolicies(await policyResp.json())
     } finally {
       setLoading(false)
     }
@@ -101,10 +146,107 @@ export default function DriftDetection() {
     if (resp.ok) setRuns([])
   }
 
+  const openPolicyCreate = () => {
+    setEditingPolicyId(null)
+    setPolicyForm({ ...EMPTY_POLICY, configFile: configFile || configs[0]?.name || '' })
+    setPolicyError('')
+    setShowPolicyForm(true)
+  }
+
+  const openPolicyEdit = (policy: DriftPolicy) => {
+    setEditingPolicyId(policy.id)
+    setPolicyForm({
+      name: policy.name,
+      configFile: policy.configFile,
+      workflow: policy.workflow || '',
+      baseline: policy.baseline,
+      currentStateContent: policy.currentStateContent || '',
+      cronExpr: policy.cronExpr,
+      notifyOn: policy.notifyOn || 'drift_or_unknown',
+      enabled: policy.enabled,
+    })
+    setPolicyError('')
+    setShowPolicyForm(true)
+  }
+
+  const savePolicy = async () => {
+    if (!policyForm.name.trim()) {
+      setPolicyError('Policy name is required.')
+      return
+    }
+    if (!policyForm.configFile) {
+      setPolicyError('Config file is required.')
+      return
+    }
+    if (policyForm.cronExpr.trim().split(/\s+/).length !== 5) {
+      setPolicyError('Cron expression must have 5 fields.')
+      return
+    }
+    if (policyForm.baseline === 'current_state' && !policyForm.currentStateContent.trim()) {
+      setPolicyError('Snapshot content is required for Snapshot baseline policies.')
+      return
+    }
+    setSavingPolicy(true)
+    setPolicyError('')
+    try {
+      const resp = await apiFetch(editingPolicyId ? `/api/drift/policies/${editingPolicyId}` : '/api/drift/policies', {
+        method: editingPolicyId ? 'PUT' : 'POST',
+        body: JSON.stringify({
+          ...policyForm,
+          currentStateContent: policyForm.baseline === 'current_state' ? policyForm.currentStateContent : '',
+        }),
+      })
+      const body = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setPolicyError(body.error || `Server returned ${resp.status}`)
+        return
+      }
+      setShowPolicyForm(false)
+      await load()
+    } finally {
+      setSavingPolicy(false)
+    }
+  }
+
+  const togglePolicy = async (policy: DriftPolicy) => {
+    await apiFetch(`/api/drift/policies/${policy.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ enabled: !policy.enabled }),
+    })
+    await load()
+  }
+
+  const runPolicyNow = async (policy: DriftPolicy) => {
+    setRunningPolicyId(policy.id)
+    setPolicyError('')
+    try {
+      const resp = await apiFetch(`/api/drift/policies/${policy.id}/run-now`, { method: 'POST' })
+      const body = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setPolicyError(body.error || `Server returned ${resp.status}`)
+        return
+      }
+      if (body.run) {
+        setRuns(current => [body.run, ...current.filter(run => run.id !== body.run.id)])
+        setExpanded(body.run.id)
+      }
+      await load()
+    } finally {
+      setRunningPolicyId(null)
+    }
+  }
+
+  const deletePolicy = async (policy: DriftPolicy) => {
+    if (!confirm(`Delete drift policy "${policy.name}"?`)) return
+    await apiFetch(`/api/drift/policies/${policy.id}`, { method: 'DELETE' })
+    await load()
+  }
+
   const latest = runs[0]
   const drifted = runs.filter(run => run.status === 'drifted').length
   const matched = runs.filter(run => run.status === 'matched').length
   const unknown = runs.filter(run => run.status === 'unknown').length
+  const enabledPolicies = policies.filter(policy => policy.enabled).length
 
   return (
     <Layout
@@ -222,11 +364,153 @@ export default function DriftDetection() {
             </div>
           </div>
 
+          <div className="card">
+            <div className="flex items-start justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-900/30 border border-blue-700/30 flex items-center justify-center">
+                  <CalendarClock size={16} className="text-blue-300" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-100">Automation</h3>
+                  <p className="text-xs text-gray-500">Scheduled config drift checks</p>
+                </div>
+              </div>
+              {canManagePolicies && (
+                <button onClick={openPolicyCreate} className="btn-secondary gap-1.5 px-3 py-1.5 text-xs">
+                  <PlusCircle size={13} />
+                  Add
+                </button>
+              )}
+            </div>
+
+            {policyError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-900/20 border border-red-700/40 text-sm text-red-300 flex items-center gap-2">
+                <AlertTriangle size={14} className="flex-shrink-0" />
+                {policyError}
+              </div>
+            )}
+
+            {showPolicyForm && (
+              <div className="mb-4 rounded-lg border border-border/70 bg-gray-950/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm text-gray-200">{editingPolicyId ? 'Edit Policy' : 'New Policy'}</p>
+                  <button onClick={() => setShowPolicyForm(false)} className="text-gray-500 hover:text-gray-200">
+                    <X size={14} />
+                  </button>
+                </div>
+                <div>
+                  <label className="label">Policy Name</label>
+                  <input className="input" value={policyForm.name} onChange={e => setPolicyForm(form => ({ ...form, name: e.target.value }))} placeholder="Nightly baseline drift" />
+                </div>
+                <div>
+                  <label className="label">Config File</label>
+                  <select className="input" value={policyForm.configFile} onChange={e => setPolicyForm(form => ({ ...form, configFile: e.target.value }))}>
+                    {configs.length === 0 && <option value="">No config files found</option>}
+                    {configs.map(config => <option key={config.name} value={config.name}>{config.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Workflow Scope</label>
+                  <select className="input" value={policyForm.workflow} onChange={e => setPolicyForm(form => ({ ...form, workflow: e.target.value }))}>
+                    <option value="">Any workflow</option>
+                    {WORKFLOWS.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Baseline</label>
+                  <select className="input" value={policyForm.baseline} onChange={e => setPolicyForm(form => ({ ...form, baseline: e.target.value as PolicyForm['baseline'] }))}>
+                    <option value="last_applied">Last Applied</option>
+                    <option value="current_state">Stored Snapshot</option>
+                  </select>
+                </div>
+                {policyForm.baseline === 'current_state' && (
+                  <div>
+                    <label className="label">Stored Snapshot JSON/YAML</label>
+                    <textarea className="input font-mono min-h-28 resize-y" value={policyForm.currentStateContent} onChange={e => setPolicyForm(form => ({ ...form, currentStateContent: e.target.value }))} />
+                  </div>
+                )}
+                <div>
+                  <label className="label">Schedule</label>
+                  <div className="flex gap-2">
+                    <input className="input font-mono" value={policyForm.cronExpr} onChange={e => setPolicyForm(form => ({ ...form, cronExpr: e.target.value }))} />
+                    <select className="input max-w-36" defaultValue="" onChange={e => e.target.value && setPolicyForm(form => ({ ...form, cronExpr: e.target.value }))}>
+                      <option value="">Preset</option>
+                      {CRON_PRESETS.map(preset => <option key={preset.value} value={preset.value}>{preset.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Notify</label>
+                  <select className="input" value={policyForm.notifyOn} onChange={e => setPolicyForm(form => ({ ...form, notifyOn: e.target.value as DriftPolicyNotifyOn }))}>
+                    <option value="drift_or_unknown">Drift or unknown</option>
+                    <option value="drift_only">Drift only</option>
+                    <option value="every_run">Every run</option>
+                    <option value="never">Never</option>
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-gray-300">
+                  <input type="checkbox" checked={policyForm.enabled} onChange={e => setPolicyForm(form => ({ ...form, enabled: e.target.checked }))} />
+                  Enabled
+                </label>
+                <button onClick={savePolicy} disabled={savingPolicy || !canManagePolicies} className="btn-primary w-full justify-center">
+                  {savingPolicy ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                  {savingPolicy ? 'Saving...' : 'Save Policy'}
+                </button>
+              </div>
+            )}
+
+            {policies.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border p-4 text-sm text-gray-500">
+                No automated drift policies yet.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {policies.map(policy => (
+                  <div key={policy.id} className="rounded-lg border border-border/70 bg-gray-950/30 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <button onClick={() => openPolicyEdit(policy)} className="min-w-0 text-left">
+                        <p className="font-medium text-sm text-gray-200 truncate">{policy.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{policy.configFile} - {policy.cronExpr}</p>
+                      </button>
+                      <span className={clsx('badge text-xs', policy.enabled ? 'badge-green' : 'badge-gray')}>
+                        {policy.enabled ? 'enabled' : 'paused'}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2 text-xs text-gray-500">
+                      <span>{policy.lastRun ? `Last ${new Date(policy.lastRun).toLocaleString()}` : 'Not run yet'}</span>
+                      <span className={clsx('capitalize', policy.lastStatus === 'drifted' ? 'text-red-400' : policy.lastStatus === 'matched' ? 'text-nutanix-teal' : 'text-gray-500')}>
+                        {policy.lastStatus || 'pending'}
+                      </span>
+                    </div>
+                    {canManagePolicies && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <button onClick={() => runPolicyNow(policy)} disabled={runningPolicyId === policy.id} className="btn-secondary gap-1.5 px-3 py-1.5 text-xs">
+                          {runningPolicyId === policy.id ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
+                          Run
+                        </button>
+                        <button onClick={() => togglePolicy(policy)} className="btn-secondary px-3 py-1.5 text-xs">
+                          {policy.enabled ? 'Pause' : 'Enable'}
+                        </button>
+                        {canClearRuns && (
+                          <button onClick={() => deletePolicy(policy)} className="btn-danger gap-1.5 px-3 py-1.5 text-xs ml-auto">
+                            <Trash2 size={12} />
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <Metric label="Matched" value={matched} tone="text-nutanix-teal" />
             <Metric label="Drifted" value={drifted} tone="text-red-400" />
             <Metric label="Unknown" value={unknown} tone="text-yellow-300" />
           </div>
+          <Metric label="Automated Policies" value={enabledPolicies} tone="text-blue-300" />
         </div>
 
         <div className="space-y-4">
@@ -281,6 +565,8 @@ export default function DriftDetection() {
                         <span className="text-xs text-gray-500">{new Date(run.timestamp).toLocaleString()}</span>
                         <span className="text-xs text-gray-600">{run.observedLabel}</span>
                         {run.workflow && <span className="text-xs font-mono text-gray-600">{run.workflow}</span>}
+                        {run.trigger === 'scheduled' && <span className="badge badge-blue text-xs">scheduled</span>}
+                        {run.trigger === 'manual_policy' && <span className="badge badge-gray text-xs">policy run</span>}
                       </div>
                     </div>
                     {isExpanded ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}

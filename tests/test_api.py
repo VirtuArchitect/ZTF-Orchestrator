@@ -5,6 +5,7 @@ import hashlib
 import json
 import socket
 import zipfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import pytest
 import yaml
@@ -66,6 +67,7 @@ def test_viewer_can_read_configs(client, auth_headers):
 
 
 def test_appliance_artifact_archive_crud(client, auth_headers):
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=14)).strftime('%Y-%m-%dT%H:%M:%SZ')
     payload = {
         'profile': 'airgap',
         'version': 'v1.3.1',
@@ -73,7 +75,7 @@ def test_appliance_artifact_archive_crud(client, auth_headers):
         'archiveLocation': 'Nutanix Files release share',
         'checksum': 'a' * 64,
         'checksumFile': 'SHA256SUMS-airgap-v1.3.1.txt',
-        'expiresAt': '2026-09-18T14:22:19Z',
+        'expiresAt': expires_at,
         'sizeBytes': 1523522046,
     }
     resp = client.post('/api/appliance/artifacts', json=payload, headers=auth_headers)
@@ -15306,6 +15308,102 @@ def test_drift_check_viewer_forbidden(client, auth_headers):
                        headers=vh)
 
     assert resp.status_code == 403
+
+
+def test_drift_policy_can_be_created_and_run_now(client, auth_headers):
+    import server
+
+    client.post('/api/configs/drift_policy.yml',
+                json={'content': 'pc_ip: 10.0.0.1\nntp:\n  - 1.1.1.1\n'},
+                headers=auth_headers)
+    server._record_execution_history(
+        execution_id='exec-drift-policy',
+        workflow_or_script='config-pc',
+        execution_type='workflow',
+        status='success',
+        user='admin',
+        config_file='drift_policy.yml',
+        config_content='pc_ip: 10.0.0.1\nntp:\n  - 1.1.1.1\n',
+    )
+
+    resp = client.post('/api/drift/policies',
+                       json={
+                           'name': 'Nightly drift policy',
+                           'configFile': 'drift_policy.yml',
+                           'workflow': 'config-pc',
+                           'baseline': 'last_applied',
+                           'cronExpr': '0 2 * * *',
+                           'notifyOn': 'drift_or_unknown',
+                           'enabled': True,
+                       },
+                       headers=auth_headers)
+
+    assert resp.status_code == 201
+    policy = resp.get_json()
+    assert policy['type'] == 'drift_check'
+    assert policy['configFile'] == 'drift_policy.yml'
+
+    resp = client.post(f"/api/drift/policies/{policy['id']}/run-now",
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['run']['status'] == 'matched'
+    assert body['run']['trigger'] == 'manual_policy'
+    assert body['run']['policyId'] == policy['id']
+
+    policies = client.get('/api/drift/policies', headers=auth_headers).get_json()
+    updated = next(item for item in policies if item['id'] == policy['id'])
+    assert updated['lastStatus'] == 'matched'
+    assert updated['lastRun']
+
+
+def test_drift_policy_rejects_snapshot_without_content(client, auth_headers):
+    resp = client.post('/api/drift/policies',
+                       json={
+                           'name': 'Bad snapshot policy',
+                           'configFile': 'snapshot.yml',
+                           'baseline': 'current_state',
+                           'cronExpr': '0 2 * * *',
+                       },
+                       headers=auth_headers)
+
+    assert resp.status_code == 400
+    assert 'currentStateContent is required' in resp.get_json()['error']
+
+
+def test_scheduled_drift_policy_records_scheduled_run(client, auth_headers):
+    import server
+
+    client.post('/api/configs/drift_scheduled.yml',
+                json={'content': 'pc_ip: 10.0.0.1\n'},
+                headers=auth_headers)
+    server._record_execution_history(
+        execution_id='exec-drift-scheduled',
+        workflow_or_script='config-pc',
+        execution_type='workflow',
+        status='success',
+        user='admin',
+        config_file='drift_scheduled.yml',
+        config_content='pc_ip: 10.0.0.2\n',
+    )
+
+    policy = client.post('/api/drift/policies',
+                         json={
+                             'name': 'Scheduled drift policy',
+                             'configFile': 'drift_scheduled.yml',
+                             'workflow': 'config-pc',
+                             'cronExpr': '0 2 * * *',
+                         },
+                         headers=auth_headers).get_json()
+
+    status = server._drift_policy_engine._run_cb(policy)
+
+    assert status == 'drifted'
+    runs = client.get('/api/drift', headers=auth_headers).get_json()
+    assert runs[0]['status'] == 'drifted'
+    assert runs[0]['trigger'] == 'scheduled'
+    assert runs[0]['policyId'] == policy['id']
 
 
 # ── v1.2.8 feature endpoints ─────────────────────────────────────────────────
