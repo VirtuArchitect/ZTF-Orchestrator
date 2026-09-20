@@ -83,6 +83,7 @@ HISTORY_FILE   = CONFIG_DIR / 'history.json'
 SETTINGS_FILE  = CONFIG_DIR / 'settings.json'
 PIPELINES_FILE = CONFIG_DIR / 'pipelines.json'
 DRIFT_FILE     = CONFIG_DIR / 'drift.json'
+DRIFT_POLICIES_FILE = CONFIG_DIR / 'drift-policies.json'
 SCHEDULES_FILE = CONFIG_DIR / 'schedules.json'
 PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
@@ -5866,12 +5867,13 @@ from parallel_exec import ParallelEngine
 from approvals    import ApprovalManager
 
 _schedule_engine:  ScheduleEngine  | None = None
+_drift_policy_engine: ScheduleEngine | None = None
 _parallel_engine:  ParallelEngine  | None = None
 _approval_manager: ApprovalManager | None = None
 
 def _init_engines():
-    global _schedule_engine, _parallel_engine, _approval_manager
-    if _schedule_engine and _parallel_engine and _approval_manager:
+    global _schedule_engine, _drift_policy_engine, _parallel_engine, _approval_manager
+    if _schedule_engine and _drift_policy_engine and _parallel_engine and _approval_manager:
         return
 
     def _sched_run_callback(schedule: dict) -> str:
@@ -6059,6 +6061,41 @@ def _init_engines():
         load_callback=lambda: read_json(SCHEDULES_FILE, []),
         save_callback=lambda schedules: write_json(SCHEDULES_FILE, schedules),
     )
+
+    def _drift_policy_callback(policy: dict) -> str:
+        result = _run_drift_check(
+            config_file=str(policy.get('configFile') or '').strip(),
+            workflow=str(policy.get('workflow') or '').strip(),
+            baseline=str(policy.get('baseline') or 'last_applied').strip() or 'last_applied',
+            current_state_content=policy.get('currentStateContent'),
+            user='scheduler',
+            trigger='scheduled',
+            policy_id=str(policy.get('id') or '').strip(),
+        )
+        status = str(result.get('status') or 'unknown')
+        notify_on = str(policy.get('notifyOn') or 'drift_or_unknown').strip()
+        should_notify = (
+            notify_on == 'every_run'
+            or (notify_on == 'drift_only' and status == 'drifted')
+            or (notify_on == 'drift_or_unknown' and status in {'drifted', 'unknown'})
+        )
+        if should_notify:
+            _fire_configured_webhook(
+                str(policy.get('workflow') or policy.get('configFile') or 'drift-check'),
+                status,
+                0 if status == 'matched' else 1,
+                'scheduler',
+                str(result.get('id') or policy.get('id') or ''),
+                'drift_check',
+            )
+        return status
+
+    _drift_policy_engine = ScheduleEngine(
+        DRIFT_POLICIES_FILE,
+        _drift_policy_callback,
+        load_callback=lambda: read_json(DRIFT_POLICIES_FILE, []),
+        save_callback=lambda policies: write_json(DRIFT_POLICIES_FILE, policies),
+    )
     _parallel_engine  = ParallelEngine(
         PARALLEL_FILE,
         EXEC_TIMEOUT,
@@ -6072,17 +6109,20 @@ def _init_engines():
         save_callback=lambda approvals: write_json(APPROVALS_FILE, approvals),
     )
     _schedule_engine.start()
+    _drift_policy_engine.start()
 
 import atexit as _atexit
 def _shutdown_engines():
     if _schedule_engine:
         _schedule_engine.shutdown()
+    if _drift_policy_engine:
+        _drift_policy_engine.shutdown()
 _atexit.register(_shutdown_engines)
 
 
 def _require_engines():
     """Initialise feature engines for test clients or WSGI imports."""
-    if not (_schedule_engine and _parallel_engine and _approval_manager):
+    if not (_schedule_engine and _drift_policy_engine and _parallel_engine and _approval_manager):
         _init_engines()
 
 
@@ -35722,6 +35762,149 @@ def _find_last_applied_config(config_file: str, workflow: str = '') -> dict | No
     return None
 
 
+def _utc_timestamp() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
+
+
+def _run_drift_check(
+    *,
+    config_file: str,
+    workflow: str = '',
+    baseline: str = 'last_applied',
+    current_state_content=None,
+    user: str = 'unknown',
+    trigger: str = 'manual',
+    policy_id: str = '',
+) -> dict:
+    if not config_file:
+        raise ValueError('configFile required')
+    if workflow and workflow not in ALLOWED_WORKFLOWS:
+        raise ValueError(f'Unknown workflow: {workflow}')
+    if baseline not in ('last_applied', 'current_state'):
+        raise ValueError('baseline must be last_applied or current_state')
+
+    configs_dir = get_configs_dir()
+    desired_path = safe_config_path(config_file, configs_dir)
+    if desired_path is None or not desired_path.exists():
+        raise FileNotFoundError('Config file not found')
+
+    desired_content = desired_path.read_text()
+    desired, desired_error = _parse_structured_config(desired_content, desired_path.name)
+    if desired_error:
+        raise ValueError(f'Desired config parse error: {desired_error}')
+
+    observed_source = baseline
+    observed_label = 'Last successful execution'
+    observed_content = ''
+    applied_execution = None
+
+    if baseline == 'current_state':
+        observed_label = 'Current state snapshot'
+        observed_content = str(current_state_content or '')
+        if not observed_content.strip():
+            raise ValueError('currentStateContent required for current_state baseline')
+    else:
+        applied_execution = _find_last_applied_config(config_file, workflow)
+        if not applied_execution:
+            result = {
+                'id': str(uuid.uuid4()),
+                'configFile': config_file,
+                'workflow': workflow,
+                'status': 'unknown',
+                'baseline': baseline,
+                'observedLabel': observed_label,
+                'summary': {'matched': 0, 'changed': 0, 'missing': 0, 'unexpected': 0, 'total': 0},
+                'findings': [],
+                'timestamp': _utc_timestamp(),
+                'user': user,
+                'trigger': trigger,
+                'policyId': policy_id or None,
+                'message': 'No successful execution with stored config content was found for this config file.',
+            }
+            runs = _load_drift_runs()
+            runs.insert(0, result)
+            _save_drift_runs(runs)
+            log.info('drift_check',
+                     extra={'user': user,
+                            'action': 'drift_check',
+                            'workflow': workflow or config_file,
+                            'status': 'unknown',
+                            'trigger': trigger})
+            return result
+        observed_content = applied_execution.get('configContent', '')
+
+    observed, observed_error = _parse_structured_config(observed_content, config_file)
+    if observed_error:
+        raise ValueError(f'Observed state parse error: {observed_error}')
+
+    findings, summary = _compare_drift(desired, observed)
+    drift_count = summary['changed'] + summary['missing'] + summary['unexpected']
+    status = 'matched' if drift_count == 0 else 'drifted'
+
+    result = {
+        'id': str(uuid.uuid4()),
+        'configFile': config_file,
+        'workflow': workflow,
+        'status': status,
+        'baseline': observed_source,
+        'observedLabel': observed_label,
+        'appliedExecutionId': applied_execution.get('id') if applied_execution else None,
+        'summary': summary,
+        'findings': findings,
+        'timestamp': _utc_timestamp(),
+        'user': user,
+        'trigger': trigger,
+        'policyId': policy_id or None,
+    }
+
+    runs = _load_drift_runs()
+    runs.insert(0, result)
+    _save_drift_runs(runs)
+
+    log.info('drift_check',
+             extra={'user': user,
+                    'action': 'drift_check',
+                    'workflow': workflow or config_file,
+                    'status': status,
+                    'trigger': trigger})
+    return result
+
+
+def _drift_policy_validation_error(data: dict, existing: dict | None = None) -> str:
+    candidate = {**(existing or {}), **data}
+    name = str(candidate.get('name', '')).strip()
+    if not name:
+        return 'name is required'
+    config_file = str(candidate.get('configFile', '')).strip()
+    if not config_file:
+        return 'configFile is required'
+    workflow = str(candidate.get('workflow', '')).strip()
+    if workflow and workflow not in ALLOWED_WORKFLOWS:
+        return f'Unknown workflow: {workflow}'
+    baseline = str(candidate.get('baseline', 'last_applied')).strip() or 'last_applied'
+    if baseline not in ('last_applied', 'current_state'):
+        return 'baseline must be last_applied or current_state'
+    if baseline == 'current_state' and not str(candidate.get('currentStateContent') or '').strip():
+        return 'currentStateContent is required when baseline is current_state'
+    cron = str(candidate.get('cronExpr', '')).strip()
+    if not cron or len(cron.split()) != 5:
+        return 'cronExpr must be a valid 5-field cron expression'
+    notify_on = str(candidate.get('notifyOn', 'drift_or_unknown')).strip() or 'drift_or_unknown'
+    if notify_on not in ('drift_or_unknown', 'drift_only', 'every_run', 'never'):
+        return 'notifyOn must be drift_or_unknown, drift_only, every_run, or never'
+    return ''
+
+
+def _update_drift_policy_run_status(policy_id: str, status: str) -> None:
+    policies = read_json(DRIFT_POLICIES_FILE, [])
+    for policy in policies:
+        if policy.get('id') == policy_id:
+            policy['lastRun'] = _utc_timestamp()
+            policy['lastStatus'] = status
+            break
+    write_json(DRIFT_POLICIES_FILE, policies)
+
+
 _NATIVE_FOUNDATION_PACKET_CACHE: contextvars.ContextVar[dict | None] = contextvars.ContextVar(
     'native_foundation_packet_cache',
     default=None,
@@ -41392,92 +41575,19 @@ def check_drift():
     workflow = str(data.get('workflow', '')).strip()
     baseline = str(data.get('baseline', 'last_applied')).strip() or 'last_applied'
     current_state_content = data.get('currentStateContent')
-
-    if not config_file:
-        return jsonify({'error': 'configFile required'}), 400
-    if workflow and workflow not in ALLOWED_WORKFLOWS:
-        return jsonify({'error': f'Unknown workflow: {workflow}'}), 400
-    if baseline not in ('last_applied', 'current_state'):
-        return jsonify({'error': 'baseline must be last_applied or current_state'}), 400
-
-    configs_dir = get_configs_dir()
-    desired_path = safe_config_path(config_file, configs_dir)
-    if desired_path is None or not desired_path.exists():
-        return jsonify({'error': 'Config file not found'}), 404
-
-    desired_content = desired_path.read_text()
-    desired, desired_error = _parse_structured_config(desired_content, desired_path.name)
-    if desired_error:
-        return jsonify({'error': f'Desired config parse error: {desired_error}'}), 400
-
-    observed_source = baseline
-    observed_label = 'Last successful execution'
-    observed_content = ''
-    applied_execution = None
-
-    if baseline == 'current_state':
-        observed_label = 'Current state snapshot'
-        observed_content = str(current_state_content or '')
-        if not observed_content.strip():
-            return jsonify({'error': 'currentStateContent required for current_state baseline'}), 400
-    else:
-        applied_execution = _find_last_applied_config(config_file, workflow)
-        if not applied_execution:
-            result = {
-                'id': str(uuid.uuid4()),
-                'configFile': config_file,
-                'workflow': workflow,
-                'status': 'unknown',
-                'baseline': baseline,
-                'observedLabel': observed_label,
-                'summary': {'matched': 0, 'changed': 0, 'missing': 0, 'unexpected': 0, 'total': 0},
-                'findings': [],
-                'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
-                'user': request.current_user['username'],
-                'message': 'No successful execution with stored config content was found for this config file.',
-            }
-            runs = _load_drift_runs()
-            runs.insert(0, result)
-            _save_drift_runs(runs)
-            log.info('drift_check',
-                     extra={'user': request.current_user['username'],
-                            'action': 'drift_check',
-                            'workflow': workflow or config_file,
-                            'status': 'unknown'})
-            return jsonify(result), 200
-        observed_content = applied_execution.get('configContent', '')
-
-    observed, observed_error = _parse_structured_config(observed_content, config_file)
-    if observed_error:
-        return jsonify({'error': f'Observed state parse error: {observed_error}'}), 400
-
-    findings, summary = _compare_drift(desired, observed)
-    drift_count = summary['changed'] + summary['missing'] + summary['unexpected']
-    status = 'matched' if drift_count == 0 else 'drifted'
-
-    result = {
-        'id': str(uuid.uuid4()),
-        'configFile': config_file,
-        'workflow': workflow,
-        'status': status,
-        'baseline': observed_source,
-        'observedLabel': observed_label,
-        'appliedExecutionId': applied_execution.get('id') if applied_execution else None,
-        'summary': summary,
-        'findings': findings,
-        'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
-        'user': request.current_user['username'],
-    }
-
-    runs = _load_drift_runs()
-    runs.insert(0, result)
-    _save_drift_runs(runs)
-
-    log.info('drift_check',
-             extra={'user': request.current_user['username'],
-                    'action': 'drift_check',
-                    'workflow': workflow or config_file,
-                    'status': status})
+    try:
+        result = _run_drift_check(
+            config_file=config_file,
+            workflow=workflow,
+            baseline=baseline,
+            current_state_content=current_state_content,
+            user=request.current_user['username'],
+            trigger='manual',
+        )
+    except FileNotFoundError as exc:
+        return jsonify({'error': str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     return jsonify(result)
 
 
@@ -41486,6 +41596,105 @@ def check_drift():
 def clear_drift_runs():
     write_json(DRIFT_FILE, [])
     return jsonify({'success': True})
+
+
+@app.route('/api/drift/policies')
+@require_role('admin', 'operator', 'viewer')
+def list_drift_policies():
+    _require_engines()
+    return jsonify(_drift_policy_engine.list_schedules())
+
+
+@app.route('/api/drift/policies', methods=['POST'])
+@require_role('admin', 'operator')
+def create_drift_policy():
+    data = request.json or {}
+    _require_engines()
+    error = _drift_policy_validation_error(data)
+    if error:
+        return jsonify({'error': error}), 400
+    policy = _drift_policy_engine.create_schedule({
+        **data,
+        'script': '',
+        'configContent': '',
+        'baseline': str(data.get('baseline') or 'last_applied').strip() or 'last_applied',
+        'notifyOn': str(data.get('notifyOn') or 'drift_or_unknown').strip() or 'drift_or_unknown',
+        'type': 'drift_check',
+    })
+    return jsonify(policy), 201
+
+
+@app.route('/api/drift/policies/<policy_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_drift_policy(policy_id):
+    _require_engines()
+    policy = _drift_policy_engine.get_schedule(policy_id)
+    if not policy:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(policy)
+
+
+@app.route('/api/drift/policies/<policy_id>', methods=['PUT'])
+@require_role('admin', 'operator')
+def update_drift_policy(policy_id):
+    data = request.json or {}
+    _require_engines()
+    existing = _drift_policy_engine.get_schedule(policy_id)
+    if not existing:
+        return jsonify({'error': 'not found'}), 404
+    error = _drift_policy_validation_error(data, existing)
+    if error:
+        return jsonify({'error': error}), 400
+    update = {
+        **data,
+        'script': '',
+        'configContent': '',
+        'type': 'drift_check',
+    }
+    if 'baseline' in data:
+        update['baseline'] = str(data.get('baseline') or 'last_applied').strip() or 'last_applied'
+    if 'notifyOn' in data:
+        update['notifyOn'] = str(data.get('notifyOn') or 'drift_or_unknown').strip() or 'drift_or_unknown'
+    policy = _drift_policy_engine.update_schedule(policy_id, update)
+    if not policy:
+        return jsonify({'error': 'not found'}), 404
+    return jsonify(policy)
+
+
+@app.route('/api/drift/policies/<policy_id>', methods=['DELETE'])
+@require_role('admin')
+def delete_drift_policy(policy_id):
+    _require_engines()
+    if not _drift_policy_engine.delete_schedule(policy_id):
+        return jsonify({'error': 'not found'}), 404
+    return jsonify({'success': True})
+
+
+@app.route('/api/drift/policies/<policy_id>/run-now', methods=['POST'])
+@require_role('admin', 'operator')
+def run_drift_policy_now(policy_id):
+    _require_engines()
+    policy = _drift_policy_engine.get_schedule(policy_id)
+    if not policy:
+        return jsonify({'error': 'not found'}), 404
+    try:
+        result = _run_drift_check(
+            config_file=str(policy.get('configFile') or '').strip(),
+            workflow=str(policy.get('workflow') or '').strip(),
+            baseline=str(policy.get('baseline') or 'last_applied').strip() or 'last_applied',
+            current_state_content=policy.get('currentStateContent'),
+            user=request.current_user['username'],
+            trigger='manual_policy',
+            policy_id=policy_id,
+        )
+    except FileNotFoundError as exc:
+        _update_drift_policy_run_status(policy_id, 'error')
+        return jsonify({'error': str(exc)}), 404
+    except ValueError as exc:
+        _update_drift_policy_run_status(policy_id, 'error')
+        return jsonify({'error': str(exc)}), 400
+    _update_drift_policy_run_status(policy_id, str(result.get('status') or 'unknown'))
+    return jsonify({'success': True, 'run': result})
 
 
 # ─── Scheduled executions ─────────────────────────────────────────────────────

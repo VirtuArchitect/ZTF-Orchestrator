@@ -350,7 +350,30 @@ export interface DriftRun {
   findings: DriftFinding[]
   timestamp: string
   user: string
+  trigger?: 'manual' | 'manual_policy' | 'scheduled'
+  policyId?: string | null
   message?: string
+}
+
+export type DriftPolicyNotifyOn = 'drift_or_unknown' | 'drift_only' | 'every_run' | 'never'
+
+export interface DriftPolicy {
+  id: string
+  name: string
+  workflow: string
+  script: string
+  configFile: string
+  configContent: string
+  baseline: 'last_applied' | 'current_state'
+  currentStateContent?: string
+  notifyOn: DriftPolicyNotifyOn
+  cronExpr: string
+  enabled: boolean
+  createdAt: string
+  nextRun: string | null
+  lastRun: string | null
+  lastStatus: DriftStatus | 'error' | null
+  type?: 'drift_check'
 }
 
 export type UpgradeAdvisorStatus = 'blocked' | 'warning' | 'review' | 'unknown' | 'clear'

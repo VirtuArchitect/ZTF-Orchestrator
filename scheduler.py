@@ -31,7 +31,11 @@ except ImportError:
 # {
 #   id, name, workflow, script (opt), configFile (opt), configContent (opt),
 #   cronExpr, enabled, createdAt, nextRun, lastRun (opt), lastStatus (opt)
+#   Additional keys are preserved for read-only automation records such as
+#   drift detection policies.
 # }
+
+_PROTECTED_KEYS = {'id', 'createdAt', 'nextRun', 'lastRun', 'lastStatus'}
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -102,6 +106,9 @@ class ScheduleEngine:
             'lastRun':       None,
             'lastStatus':    None,
         }
+        for key, value in payload.items():
+            if key not in schedule and key not in _PROTECTED_KEYS:
+                schedule[key] = value
         with self._lock:
             schedules = self._load()
             schedules.append(schedule)
@@ -120,6 +127,12 @@ class ScheduleEngine:
                       'cronExpr', 'enabled'):
                 if k in payload:
                     schedules[idx][k] = payload[k]
+            for k, value in payload.items():
+                if k not in _PROTECTED_KEYS and k not in {
+                    'name', 'workflow', 'script', 'configFile', 'configContent',
+                    'cronExpr', 'enabled',
+                }:
+                    schedules[idx][k] = value
             self._save(schedules)
             schedule = schedules[idx]
         self._unregister_job(sid)
