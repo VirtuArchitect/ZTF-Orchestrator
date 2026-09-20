@@ -196,7 +196,30 @@ const driftRuns = [
     ],
     timestamp: iso(35),
     user: 'demo-admin',
+    trigger: 'scheduled',
+    policyId: 'demo-drift-policy-001',
     message: 'Simulated drift found in Prism Central baseline',
+  },
+]
+
+const driftPolicies = [
+  {
+    id: 'demo-drift-policy-001',
+    name: 'Nightly PC baseline drift',
+    workflow: 'config-pc',
+    script: '',
+    configFile: 'pc-baseline-demo.yml',
+    configContent: '',
+    baseline: 'last_applied',
+    currentStateContent: '',
+    notifyOn: 'drift_or_unknown',
+    cronExpr: '0 22 * * 1-5',
+    enabled: true,
+    createdAt: iso(1440),
+    nextRun: new Date(now.getTime() + 5 * 60 * 60_000).toISOString(),
+    lastRun: iso(35),
+    lastStatus: 'drifted',
+    type: 'drift_check',
   },
 ]
 
@@ -487,7 +510,13 @@ async function demoResponse(request: Request) {
   }
   if (path.startsWith('/api/jobs?') || path === '/api/jobs/') return json(jobs)
   if (path === '/api/drift') return method === 'DELETE' ? okAction('Drift history clear simulated.') : json(driftRuns)
-  if (path === '/api/drift/check') return okAction('Drift check simulated.', { run: driftRuns[0] })
+  if (path === '/api/drift/check') return json(driftRuns[0])
+  if (path === '/api/drift/policies') {
+    if (method === 'POST') return json({ ...driftPolicies[0], id: `demo-drift-policy-${Date.now()}` }, { status: 201 })
+    return json(driftPolicies)
+  }
+  if (/^\/api\/drift\/policies\/[^/]+\/run-now$/.test(path)) return json({ success: true, run: driftRuns[0] })
+  if (path.startsWith('/api/drift/policies/')) return okAction('Drift policy update simulated.')
   if (path === '/api/approvals') {
     if (method === 'POST') return json({ ...approvals[0], id: `demo-approval-${Date.now()}` }, { status: 201 })
     return json(approvals)
