@@ -1,6 +1,6 @@
 # Native Foundation Evidence Packs
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Native Foundation evidence packs are read-only, per-cluster records for UAT and
 approval review. They bind the current intent, plan, discovery preview,

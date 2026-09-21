@@ -1,6 +1,6 @@
 # Native Foundation Phase Catalog
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 `GET /api/native-foundation/phases` exposes the operator-facing rollout state
 for the native Foundation engine. It is a read-only contract used by the UI,

@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Runbook Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Controlled UAT runbook review binds a future hardware-UAT lane to the operator
 metadata and runbook steps that must be reviewed before any native Foundation

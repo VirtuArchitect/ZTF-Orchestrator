@@ -1,6 +1,6 @@
 # Native Foundation Execution Request Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Execution request review builds the read-only request object that a future native
 Foundation job submission path would use after admission, adapter contract,

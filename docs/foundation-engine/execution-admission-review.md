@@ -1,6 +1,6 @@
 # Native Foundation Execution Admission Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Execution admission review composes the native Foundation plan, execution
 readiness, adapter readiness, deployment policy, approval binding, and review

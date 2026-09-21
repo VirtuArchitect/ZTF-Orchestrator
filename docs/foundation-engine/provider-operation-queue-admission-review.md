@@ -1,6 +1,6 @@
 # Native Foundation Provider Operation Queue Admission Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 `POST /api/native-foundation/provider-operation-queue-admission-review`
 converts the provider operation queue plan into blocked queue-admission records

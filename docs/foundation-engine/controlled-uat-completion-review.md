@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Completion Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Controlled UAT completion review declares the read-only controls that would be
 needed before a native Foundation controlled-UAT run could be marked complete,

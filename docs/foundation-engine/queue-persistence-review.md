@@ -1,6 +1,6 @@
 # Native Foundation Queue Persistence Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Queue persistence review declares the durable queue records a future native
 Foundation worker would need before multi-site or multi-cluster deployment jobs

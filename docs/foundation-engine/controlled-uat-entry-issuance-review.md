@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Entry Issuance Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Controlled UAT entry issuance review assembles the future ticket that would
 allow a bounded native Foundation lane to enter hardware UAT. It composes
