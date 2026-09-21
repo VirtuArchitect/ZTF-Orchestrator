@@ -1,6 +1,6 @@
 # Native Foundation Intent Schema
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 `native-foundation-deploy` is a planning-only workflow for multi-site,
 multi-cluster Foundation deployment intent. It does not execute deployment work

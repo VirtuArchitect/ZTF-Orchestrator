@@ -1,6 +1,6 @@
 # Native Foundation Evidence Pack Approval Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Evidence pack approval review converts per-cluster evidence packs into
 read-only go/no-go records. It binds each pack to the supplied Approval Gate

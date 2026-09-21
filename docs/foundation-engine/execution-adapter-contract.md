@@ -1,6 +1,6 @@
 # Native Foundation Execution Adapter Contract
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 The execution adapter contract describes the request envelope a future native
 Foundation provider or topology adapter must satisfy before ZTF-Orchestrator can

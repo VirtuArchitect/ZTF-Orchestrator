@@ -1,6 +1,6 @@
 # RB-006 - Emergency Stop
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 ## Metadata
 

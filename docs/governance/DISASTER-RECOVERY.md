@@ -1,6 +1,6 @@
 # Disaster Recovery
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Disaster recovery is required for a production-assessable ZTF-Orchestrator
 deployment because the platform stores operational state: users, sessions,

@@ -1,6 +1,6 @@
 # Native Foundation Image Sources
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Image source manifest records AOS and hypervisor image references from a
 `native-foundation-deploy` intent. It is a read-only provenance and checksum

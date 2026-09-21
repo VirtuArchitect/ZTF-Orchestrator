@@ -1,4 +1,4 @@
-# ZTF-Orchestrator · v1.8.3
+# ZTF-Orchestrator · v1.8.4
 
 ![ZTF-Orchestrator visual tour](docs/assets/readme/ztf-orchestrator-visual-tour.gif)
 

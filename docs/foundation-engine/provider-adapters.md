@@ -1,6 +1,6 @@
 # Native Foundation Provider Adapters
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Provider adapter manifest exposes the read-only interface ZTF-Orchestrator will
 use for native Foundation hardware providers. It records controlled-UAT Dell

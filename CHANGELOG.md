@@ -9,8 +9,33 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes in this section are present on `main` after v1.8.3 and should be moved
+Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
+
+---
+
+## [1.8.4] - 2026-09-21
+
+### Summary
+Patch release adding automated Drift Detection policies and aligning appliance
+update metadata with the current release baseline.
+
+### Added
+- Added scheduled Drift Detection policies with create, edit, enable, pause,
+  delete, run-now, scheduler execution, last-run status, and notification
+  targeting metadata.
+- Added Drift Detection automation controls in the UI so operators can schedule
+  desired-state comparisons instead of running every check manually.
+- Added demo-mode support and API coverage for drift policy lifecycle and
+  scheduled drift runs.
+
+### Changed
+- Updated runtime, demo, appliance, and documentation release markers to the
+  `v1.8.4` baseline.
+
+### Fixed
+- Made appliance artifact archive tests date-safe so release validation does
+  not fail when a previously hard-coded expiry date becomes stale.
 
 ---
 
@@ -1386,6 +1411,7 @@ operator interface.
 
 ---
 
+[1.8.4]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.3...v1.8.4
 [1.8.3]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.2...v1.8.3
 [1.8.2]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/VirtuArchitect/ZTF-Orchestrator/compare/v1.8.0...v1.8.1

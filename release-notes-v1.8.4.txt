@@ -1,0 +1,19 @@
+ZTF-Orchestrator v1.8.4
+=======================
+
+Release date: 2026-09-21
+
+Summary
+-------
+- Adds automated Drift Detection policies so operators can schedule baseline
+  comparisons and still run policies on demand.
+- Aligns runtime, demo, appliance, and documentation metadata to the v1.8.4
+  appliance update baseline.
+
+Validation
+----------
+- python -m pytest tests/test_api.py -q -k "drift_policy or drift_check"
+- python -m pytest tests/test_release_integrity.py -q
+- python -m pytest tests/ -q -x
+- npm run build
+- git diff --check

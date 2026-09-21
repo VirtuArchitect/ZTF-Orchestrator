@@ -1,6 +1,6 @@
 # Native Foundation Deployment Wave Authorization Review
 
-Current release marker: `v1.8.3`.
+Current release marker: `v1.8.4`.
 
 Deployment wave authorization review composes deployment wave rehearsal,
 evidence pack approval, execution permit review, execution lock plan, and
