@@ -29,8 +29,8 @@ const STATUS_BADGE: Record<string, string> = {
 const CRON_PRESETS = [
   { label: 'Hourly', value: '0 * * * *' },
   { label: 'Daily 02:00', value: '0 2 * * *' },
-  { label: 'Weekdays 06:00', value: '0 6 * * 1-5' },
-  { label: 'Sunday 03:00', value: '0 3 * * 0' },
+  { label: 'Weekdays 06:00', value: '0 6 * * 0-4' },
+  { label: 'Sunday 03:00', value: '0 3 * * 6' },
 ]
 
 interface PolicyForm {
