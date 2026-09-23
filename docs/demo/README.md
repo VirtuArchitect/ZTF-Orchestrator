@@ -14,6 +14,9 @@ but it must not be represented as production validation.
 - They can prove API shape, UI behavior, validation, and evidence packaging.
 - They can show workflow config generation, import, preview, and guarded submit
   behavior in the browser.
+- They show Native Foundation adapter readiness states as simulated UI data only;
+  real Dell iDRAC Redfish deployment requires appliance/container runtime gates
+  and a configured local adapter command.
 - They do not prove live Prism Central, Prism Element, Foundation Central, or
   NKP deployment success.
 

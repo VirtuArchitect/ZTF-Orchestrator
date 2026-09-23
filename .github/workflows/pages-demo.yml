@@ -30,6 +30,8 @@ jobs:
         run: npm ci
 
       - name: Build demo
+        env:
+          VITE_ZTF_DEMO: 'true'
         run: npm run build:demo
 
       - name: Add SPA fallback

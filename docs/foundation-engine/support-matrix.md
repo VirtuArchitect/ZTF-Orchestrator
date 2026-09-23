@@ -2,8 +2,8 @@
 
 Current release marker: `v1.8.4`.
 
-This matrix separates implemented planning behavior from future deployment
-execution.
+This matrix separates implemented planning behavior, controlled-UAT Dell
+execution, and future provider/deployment expansion.
 
 | Capability | Status | Notes |
 |---|---|---|
@@ -106,9 +106,9 @@ execution.
 | Deployment window reservation review | Implemented foundation | Builds read-only reservation requests from deployment windows, wave authorization, and lock plans without persisting reservations, acquiring locks, or opening waves. |
 | Deployment scheduler review | Implemented foundation | Builds disabled schedule items from reservations, execution request metadata, dry-run ledger entries, permit, locks, recovery actions, and job-state plans without opening waves or enqueuing jobs. |
 | Review packet export | Implemented foundation | Downloads a redacted ZIP with plan, readiness, provider/topology matrix, provider operation catalog, provider operation admission, provider operation queue plan, provider operation queue admission, imaging, formation, post-create validation, graph, admission, contracts, packs, evidence pack approval, deployment wave rehearsal, deployment wave authorization, deployment window reservation, deployment scheduler, checkpoint, request persistence admission, submission persistence admission, queue persistence, queue persistence admission, dry-run ledger, permit, lock plan, audit plan, retention plan, runner readiness, controlled UAT entry, controlled UAT lane persistence admission, controlled UAT hardware reservation, controlled UAT reservation persistence admission, controlled UAT entry issuance, controlled UAT entry persistence admission, controlled UAT start readiness, controlled UAT start persistence admission, controlled UAT runner admission, controlled UAT runner persistence admission, controlled UAT execution authorization, execution authorization persistence admission, job persistence admission, controlled UAT scope, controlled UAT runbook, controlled UAT security, controlled UAT operations, controlled UAT signoff, secret lease execution, secret audit persistence, allow-list, load plan, package provenance, SBOM review, runtime isolation, runtime admission, execution preflight, target connectivity, credential handoff, command invocation, output evidence, retained export review, promotion, checklist, and hashes. |
-| Mutating execution | Controlled-UAT Dell only | Run Workflow becomes active for Dell iDRAC Redfish native Foundation intents only when both Dell UAT env gates are true; real deployment requires `ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true` and `ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND`. |
+| Mutating execution | Controlled-UAT Dell only | Run Workflow becomes active for Dell iDRAC Redfish native Foundation intents only when both Dell UAT env gates are true and the real deployment adapter command is installed, enabled, and resolvable; the bundled adapter command is `/opt/ztf-python/bin/python /app/scripts/native_foundation_ztf_site_deploy_adapter.py`. |
 | Manual/static inventory | Implemented foundation | Discovery preview normalizes operator-supplied facts without contacting hardware. |
-| Dell iDRAC Redfish | Controlled-UAT deploy gate and adapter | Provides gated all-node Redfish service-root probes and Dell-only controlled-UAT deployment job enablement with `ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true` and `ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true`; real Foundation execution requires the configured adapter command and production use/non-Dell providers remain blocked. |
+| Dell iDRAC Redfish | Controlled-UAT deploy gate and bundled adapter | Provides gated all-node Redfish service-root probes and Dell-only controlled-UAT deployment job enablement with `ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY=true` and `ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true`; real Foundation execution uses the configured adapter command and production use/non-Dell providers remain blocked. |
 | HPE iLO Redfish | Planned | Read-only discovery should precede power or boot actions. |
 | NX provider | Planned | Must be validated against supported Nutanix behavior. |
 | Cisco Intersight provider | Planned | May complement Prism Central Foundation Central where available. |

@@ -50,7 +50,9 @@ production validation.
 ZTF-Orchestrator adds that operations layer. It helps teams make Nutanix
 automation easier to run, easier to govern, and easier to trust without hiding
 the generated YAML or bypassing the underlying ZeroTouch Framework execution
-model.
+model. Native Foundation Dell iDRAC work now has a guarded controlled-UAT
+adapter path for lab validation; broad production support still requires
+environment-specific evidence and signoff.
 
 ## At A Glance
 
@@ -58,7 +60,7 @@ model.
 |---|---|
 | What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
 | Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
-| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and planning-only native Foundation intents through governed jobs. |
+| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and Native Foundation intents through governed jobs. Dell iDRAC Redfish deployment remains controlled-UAT only and requires explicit runtime adapter enablement. |
 | Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
 | Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
 | What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |

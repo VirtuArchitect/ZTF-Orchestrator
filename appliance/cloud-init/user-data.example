@@ -24,6 +24,9 @@ write_files:
       ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=false
       ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND=
       ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS=
+      # Controlled-UAT Dell adapter example when explicitly enabling real deployment:
+      # ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND=/opt/ztf-python/bin/python
+      # ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS=/app/scripts/native_foundation_ztf_site_deploy_adapter.py
       ZTF_NATIVE_FOUNDATION_ADAPTER_TIMEOUT=14400
 
 runcmd:

@@ -14,9 +14,10 @@ the underlying automation engines:
 
 - ZeroTouch Framework 1.x remains the ZTF workflow/script execution engine.
 - NKP ZeroTouch Framework remains the optional NKP automation engine.
-- Native Foundation Engine is a planning-only deployment-intent lane until
-  execution adapters are validated in controlled UAT; it now includes read-only
-  execution graph planning for multi-site and multi-cluster ordering.
+- Native Foundation Engine is a guarded deployment-intent lane. Dell iDRAC
+  Redfish has a controlled-UAT adapter path when the runtime gates and local
+  adapter command are enabled; other providers and production certification
+  still require provider-specific evidence.
 - ZTF-Orchestrator owns UI workflow, RBAC, approvals, durable jobs, schedules,
   audit events, validation evidence, config management, and storage posture.
 - Nutanix infrastructure remains the target system; production validation is
@@ -29,8 +30,8 @@ the underlying automation engines:
 | [SECURITY-BOUNDARY.md](SECURITY-BOUNDARY.md) | Trust boundary, sensitive inputs, and non-goals |
 | [DATA-FLOW.md](DATA-FLOW.md) | Operator, API, storage, job, and target-system data flow |
 | [DEPLOYMENT-BOUNDARIES.md](DEPLOYMENT-BOUNDARIES.md) | Deployment modes and operational limits |
-| [native-foundation-engine.md](native-foundation-engine.md) | Planning-only native Foundation architecture and phase boundary |
-| [../foundation-engine/dell-xc770-hci-deployment-requirements.md](../foundation-engine/dell-xc770-hci-deployment-requirements.md) | Missing requirements for real Dell XC770 AHV HCI deployment |
+| [native-foundation-engine.md](native-foundation-engine.md) | Native Foundation architecture, controlled-UAT adapter path, and phase boundary |
+| [../foundation-engine/dell-xc770-hci-deployment-requirements.md](../foundation-engine/dell-xc770-hci-deployment-requirements.md) | Requirements and evidence boundary for Dell XC770 AHV HCI deployment |
 
 ## Related Existing Docs
 

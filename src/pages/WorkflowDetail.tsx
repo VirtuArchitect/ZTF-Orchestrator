@@ -105,6 +105,15 @@ interface NativeFoundationProviderAdapter {
   status: string
   readOnly: boolean
   mutatingActionsEnabled: boolean
+  fullDeploymentReady?: boolean
+  deploymentBlockedReasons?: string[]
+  realDeploymentAdapter?: {
+    enabled: boolean
+    commandConfigured: boolean
+    ready: boolean
+    commandName?: string
+    blockedReason?: string
+  }
   readOnlyDiscovery: boolean
   adapterFamily?: string
   vendor?: string
@@ -119,6 +128,15 @@ interface NativeFoundationProviderAdapterManifest {
   readOnly: boolean
   status: string
   mutatingActionsEnabled: boolean
+  fullDeploymentReady?: boolean
+  canRunFullDeployment?: boolean
+  realDeploymentAdapter?: {
+    enabled: boolean
+    commandConfigured: boolean
+    ready: boolean
+    commandName?: string
+    blockedReason?: string
+  }
 }
 
 function formatDate(value?: string | null): string {
@@ -245,7 +263,7 @@ export default function WorkflowDetail() {
   const Icon = ICON_MAP[workflow.icon] || Server
   const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
   const nativeFoundationDellAdapter = nativeFoundationProviderAdapters?.providerAdapters?.find(adapter => adapter.providerId === 'dell_idrac_redfish')
-  const nativeFoundationDeploymentEnabled = Boolean(isNativeFoundationWorkflow && nativeFoundationDellAdapter?.mutatingActionsEnabled)
+  const nativeFoundationDeploymentEnabled = Boolean(isNativeFoundationWorkflow && nativeFoundationDellAdapter?.fullDeploymentReady)
   const handleYamlGenerated = useCallback((yaml: string) => {
     setYamlContent(yaml)
     setNativeFoundationEvidenceId('')
@@ -1361,9 +1379,10 @@ export default function WorkflowDetail() {
         return
       }
       const adapters = Array.isArray(body.providerAdapters) ? body.providerAdapters.length : 0
+      const deployState = body.canRunFullDeployment ? 'full deployment adapter ready' : 'full deployment adapter required'
       setImportMessage({
-        type: 'error',
-        text: `Provider adapter manifest ${body.adapterInterfaceVersion}: ${adapters} provider adapter(s), mutating operations disabled.`,
+        type: body.canRunFullDeployment ? 'success' : 'error',
+        text: `Provider adapter manifest ${body.adapterInterfaceVersion}: ${adapters} provider adapter(s), ${deployState}.`,
       })
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Unable to review native Foundation provider adapters.'
@@ -4533,8 +4552,18 @@ export default function WorkflowDetail() {
                       <span className="text-sm font-semibold text-gray-100">Dell iDRAC Redfish</span>
                       <span className="badge badge-blue text-[11px]">{formatNativeFoundationStatus(nativeFoundationDellAdapter.status)}</span>
                       <span className="badge badge-gray text-[11px]">{nativeFoundationDellAdapter.readOnlyDiscovery ? 'discovery gated' : 'discovery planned'}</span>
-                      <span className={clsx('badge text-[11px]', nativeFoundationDellAdapter.mutatingActionsEnabled ? 'badge-red' : 'badge-gray')}>
+                      <span className={clsx('badge text-[11px]', nativeFoundationDellAdapter.mutatingActionsEnabled ? 'badge-yellow' : 'badge-gray')}>
                         {nativeFoundationDellAdapter.mutatingActionsEnabled ? 'mutation enabled' : 'mutation locked'}
+                      </span>
+                      <span
+                        className={clsx('badge text-[11px]', nativeFoundationDellAdapter.fullDeploymentReady ? 'badge-green' : 'badge-gray')}
+                        title={
+                          nativeFoundationDellAdapter.fullDeploymentReady
+                            ? `Real adapter ready${nativeFoundationDellAdapter.realDeploymentAdapter?.commandName ? `: ${nativeFoundationDellAdapter.realDeploymentAdapter.commandName}` : ''}`
+                            : nativeFoundationDellAdapter.deploymentBlockedReasons?.[0] || nativeFoundationDellAdapter.realDeploymentAdapter?.blockedReason || 'Install and enable a real Native Foundation deployment adapter command'
+                        }
+                      >
+                        {nativeFoundationDellAdapter.fullDeploymentReady ? 'adapter ready' : 'adapter required'}
                       </span>
                     </div>
                   ) : (
@@ -4558,7 +4587,9 @@ export default function WorkflowDetail() {
                         <div className="text-[10px] uppercase leading-tight text-gray-500">Probe</div>
                       </div>
                       <div className="min-w-16">
-                        <div className="text-base font-semibold text-red-300">{nativeFoundationDellAdapter.mutatingActionsEnabled ? 'Yes' : 'No'}</div>
+                        <div className={clsx('text-base font-semibold', nativeFoundationDellAdapter.fullDeploymentReady ? 'text-green-700' : 'text-red-300')}>
+                          {nativeFoundationDellAdapter.fullDeploymentReady ? 'Yes' : 'No'}
+                        </div>
                         <div className="text-[10px] uppercase leading-tight text-gray-500">Deploy</div>
                       </div>
                       <div className="min-w-16">
