@@ -59,6 +59,8 @@ def test_release_version_metadata_is_consistent():
     assert 'Installed Build' in settings_tsx
     assert 'Copy Build Info' in settings_tsx
     assert 'installedIdentity' in settings_tsx
+    dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert f'ARG ZTF_ORCHESTRATOR_VERSION=v{expected}' in dockerfile
     assert readme.startswith(f'# ZTF-Orchestrator · v{expected}')
     assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
     assert f'## [{expected}]' in changelog

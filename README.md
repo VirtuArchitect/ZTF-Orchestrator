@@ -50,7 +50,9 @@ production validation.
 ZTF-Orchestrator adds that operations layer. It helps teams make Nutanix
 automation easier to run, easier to govern, and easier to trust without hiding
 the generated YAML or bypassing the underlying ZeroTouch Framework execution
-model.
+model. Native Foundation Dell iDRAC work now has a guarded controlled-UAT
+adapter path for lab validation; broad production support still requires
+environment-specific evidence and signoff.
 
 ## At A Glance
 
@@ -58,7 +60,7 @@ model.
 |---|---|
 | What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
 | Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
-| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and planning-only native Foundation intents through governed jobs. |
+| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and Native Foundation intents through governed jobs. Dell iDRAC Redfish deployment remains controlled-UAT only and requires explicit runtime adapter enablement. |
 | Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
 | Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
 | What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
@@ -548,18 +550,19 @@ Visual editor for `global.yml` — vault type (Local/CyberArk), IPAM method
 (Static/Infoblox), live YAML preview with download.
 
 ### YAML Studio
-Operator workbench for generating, validating, saving, and exporting
-ZTF-compatible Nutanix YAML. YAML Studio includes conservative Cluster Baseline
-generation for Prism Element DNS, NTP, storage containers, subnets, HA
-reservation, Pulse, and EULA settings; Workflow YAML generation from the guarded
-script configuration schema catalogue; Global Config starter templates; and
-Upgrade Advisor rule-pack templates.
+Guided workbench for authoring, validating, saving, and exporting
+ZTF-compatible Nutanix YAML before execution. YAML Studio now starts from
+operator templates, shows YAML syntax status, credential-reference resolution,
+workflow runnability, and adapter readiness, and keeps field guidance plus the
+runtime command preview beside the editor.
 
-Generated YAML can be validated server-side, saved into Config Files with the
-existing backup behavior, or exported as a ZIP bundle with validation metadata.
-YAML Studio does not execute workflows or mutate Nutanix infrastructure.
-Execution remains behind the existing workflow, approval, and confirmation
-paths.
+Templates cover Native Foundation Deploy, Cluster Create, Global Config, ZTF
+2.x IaC preview, and blank YAML. Workflow YAML can also be generated from the
+guarded script configuration schema catalogue. Generated YAML can be validated
+server-side, saved into Config Files with the existing backup behavior, or
+exported as a ZIP bundle with validation metadata. YAML Studio does not execute
+workflows or mutate Nutanix infrastructure. Execution remains behind the
+existing workflow, approval, and confirmation paths.
 
 ### Workflows 1.x
 

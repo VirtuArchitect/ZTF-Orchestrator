@@ -24,6 +24,19 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
       })
       return
     }
+    if (url.endsWith('/api/yaml-studio/validate')) {
+      const body = route.request().postDataJSON?.() as { kind?: string } | undefined
+      await route.fulfill({
+        json: {
+          kind: body?.kind || 'workflow-config',
+          valid: true,
+          errors: [],
+          warnings: [],
+          rootType: 'dict',
+        },
+      })
+      return
+    }
     if (url.endsWith('/api/system/check')) {
       await route.fulfill({ json: { checks: [], ztfInstalled: true } })
       return
@@ -141,12 +154,32 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
         status: mutationEnabled ? 'ready' : 'blocked',
         readOnly: !mutationEnabled,
         mutatingActionsEnabled: mutationEnabled,
+        fullDeploymentReady: mutationEnabled,
+        canRunFullDeployment: mutationEnabled,
+        realDeploymentAdapter: {
+          enabled: mutationEnabled,
+          commandConfigured: mutationEnabled,
+          ready: mutationEnabled,
+          commandName: mutationEnabled ? 'python' : '',
+          blockedReason: mutationEnabled ? '' : 'Install and enable a real Native Foundation deployment adapter command',
+        },
+        deploymentBlockedReasons: mutationEnabled ? [] : ['Install a reviewed Native Foundation deployment adapter executable before full deployment.'],
         providerAdapters: [
           {
             providerId: 'dell_idrac_redfish',
             status: mutationEnabled ? 'enabled_controlled_uat_mutating' : 'implemented_controlled_uat_read_only',
             readOnly: !mutationEnabled,
             mutatingActionsEnabled: mutationEnabled,
+            fullDeploymentReady: mutationEnabled,
+            canRunFullDeployment: mutationEnabled,
+            realDeploymentAdapter: {
+              enabled: mutationEnabled,
+              commandConfigured: mutationEnabled,
+              ready: mutationEnabled,
+              commandName: mutationEnabled ? 'python' : '',
+              blockedReason: mutationEnabled ? '' : 'Install and enable a real Native Foundation deployment adapter command',
+            },
+            deploymentBlockedReasons: mutationEnabled ? [] : ['Install a reviewed Native Foundation deployment adapter executable before full deployment.'],
             readOnlyDiscovery: true,
             adapterFamily: 'redfish',
             vendor: 'Dell',
@@ -416,10 +449,11 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   })
 
   await expect(page.getByText('Imported create_cluster.yml for Cluster Create.')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'YAML Preview' })).toHaveClass(/bg-nutanix-blue/)
-  await expect(page.getByText('imported-cluster')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Configure' })).toHaveClass(/bg-nutanix-blue/)
   await expect(page.getByRole('button', { name: /Dry Run/i })).toBeEnabled()
 
+  await page.getByRole('button', { name: 'YAML Preview' }).click()
+  await expect(page.getByText('imported-cluster')).toBeVisible()
   await page.getByRole('button', { name: 'Configure' }).click()
   await expect(page.locator('input[placeholder="10.0.0.100"]')).toHaveValue('192.0.2.122')
   await expect(page.locator('input[placeholder="my-cluster-01"]')).toHaveValue('imported-cluster')
@@ -429,24 +463,50 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   await expect(page.locator('input[placeholder="10.0.0.12"]')).toHaveValue('192.0.2.212')
 })
 
+test('YAML Studio presents guided authoring workspace', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/yaml-studio')
+
+  await expect(page.getByRole('heading', { name: 'YAML Studio', level: 1 })).toBeVisible()
+  await expect(page.getByText('Start from template')).toBeVisible()
+  await expect(page.getByText('YAML valid')).toBeVisible()
+  await expect(page.getByText(/Credentials (resolved|unresolved)/)).toBeVisible()
+  await expect(page.getByText('Field Guidance')).toBeVisible()
+  await expect(page.getByText('Runtime Command Preview')).toBeVisible()
+
+  await page.getByRole('button', { name: /Native Foundation Deploy/ }).click()
+  await expect(page.getByRole('heading', { name: 'native-foundation-deploy.yml' })).toBeVisible()
+  await expect(page.getByText('native-foundation-uat-deploy --provider dell_idrac_redfish --phase full_deployment')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: /^bmc_credential_ref$/ })).toBeVisible()
+
+  await page.getByRole('button', { name: /Blank YAML/ }).click()
+  await page.getByRole('button', { name: 'Load Example' }).click()
+  await page.getByRole('button', { name: 'Generate YAML' }).click()
+  await page.getByRole('button', { name: 'Revalidate' }).click()
+  await expect(page.getByText('Validation passed.')).toBeVisible()
+  await expect(page.getByText('Workflow runnable')).toBeVisible()
+  await expect(page.getByText('Ready after save/review')).toBeVisible()
+  await expect(page.getByText('python main.py --script AddNtpServersPe -f config.yml')).toBeVisible()
+})
+
 test('native Foundation detail separates phase status from Dell adapter status', async ({ page }) => {
   await seedUiSession(page)
   await page.goto('/workflows/native-foundation-deploy')
 
   await expect(page.getByRole('heading', { name: 'Native Foundation Deploy', level: 2 })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Native Foundation Phase Status' })).toBeVisible()
-  await expect(page.getByText('Done')).toBeVisible()
-  await expect(page.getByText('Total')).toBeVisible()
-  await expect(page.getByText('Live')).toBeVisible()
+  await expect(page.getByText('Done', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText('Total', { exact: true })).toBeVisible()
+  await expect(page.getByText('Live', { exact: true })).toBeVisible()
 
   await expect(page.getByText('Provider Adapter Status')).toBeVisible()
-  await expect(page.getByText('Dell iDRAC Redfish')).toBeVisible()
+  await expect(page.getByText('Dell iDRAC Redfish').first()).toBeVisible()
   await expect(page.getByText('implemented controlled uat read only')).toBeVisible()
   await expect(page.getByText('discovery gated')).toBeVisible()
   await expect(page.getByText('mutation locked')).toBeVisible()
   await expect(page.getByText('Probe', { exact: true })).toBeVisible()
   await expect(page.getByText('Deploy', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Run UAT Deploy' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Run Workflow' })).toBeDisabled()
 })
 
 test('native Foundation detail enables Dell UAT deploy when adapter mutation is enabled', async ({ page }) => {
@@ -465,16 +525,17 @@ test('native Foundation detail enables Dell UAT deploy when adapter mutation is 
     '    clusters: []',
     '',
   ].join('\n')
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.getByRole('banner').locator('input[type="file"]').setInputFiles({
     name: 'native-foundation-deploy.yml',
     mimeType: 'text/yaml',
     buffer: Buffer.from(config),
   })
 
-  await expect(page.getByText('Dell iDRAC Redfish')).toBeVisible()
+  await expect(page.getByText('Dell iDRAC Redfish').first()).toBeVisible()
   await expect(page.getByText('enabled controlled uat mutating')).toBeVisible()
   await expect(page.getByText('mutation enabled')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Run UAT Deploy' })).toBeEnabled()
+  await expect(page.getByText('adapter ready')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Run Workflow' })).toBeEnabled()
 })
 
 test('standalone FCA cluster workflow emits standalone config keys', async ({ page }) => {
@@ -623,6 +684,7 @@ test('main pages keep readable text contrast in light theme', async ({ page }) =
     '/',
     '/setup',
     '/global-config',
+    '/yaml-studio',
     '/workflows',
     '/workflows/cluster-create',
     '/workflows/cluster-create-standalone-fca',

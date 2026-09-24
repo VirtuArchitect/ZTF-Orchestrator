@@ -2793,11 +2793,16 @@ def test_native_foundation_provider_adapters_enable_dell_uat_mutation_when_env_g
     assert body['readOnly'] is False
     assert body['mutatingActionsEnabled'] is True
     assert body['canLoadAdapters'] is True
+    assert body['fullDeploymentReady'] is False
+    assert body['canRunFullDeployment'] is False
+    assert body['realDeploymentAdapter']['ready'] is False
     adapter = body['providerAdapters'][0]
     assert adapter['providerId'] == 'dell_idrac_redfish'
     assert adapter['status'] == 'enabled_controlled_uat_mutating'
     assert adapter['readOnly'] is False
     assert adapter['mutatingActionsEnabled'] is True
+    assert adapter['fullDeploymentReady'] is False
+    assert adapter['deploymentBlockedReasons']
     operations = {operation['operationId']: operation for operation in adapter['operations']}
     assert operations['power_control']['status'] == 'enabled_controlled_uat'
     assert operations['power_control']['mutatingActionsEnabled'] is True
@@ -2806,6 +2811,36 @@ def test_native_foundation_provider_adapters_enable_dell_uat_mutation_when_env_g
     assert operations['image_nodes']['status'] == 'blocked_mutating'
     checks = {check['id']: check for check in body['checks']}
     assert checks['mutating-provider-operations-disabled']['status'] == 'pass'
+    assert checks['real-deployment-adapter-ready']['status'] == 'blocked'
+
+
+def test_native_foundation_provider_adapters_report_full_deployment_ready_when_real_adapter_configured(client, auth_headers, monkeypatch):
+    import server
+
+    content = _native_foundation_intent().replace(
+        'hardware_provider: manual_static',
+        'hardware_provider: dell_idrac_redfish',
+    )
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_DISCOVERY', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER', 'true')
+    monkeypatch.setenv('ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND', server.sys.executable)
+
+    resp = client.post('/api/native-foundation/provider-adapters',
+                       json={'content': content},
+                       headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['fullDeploymentReady'] is True
+    assert body['canRunFullDeployment'] is True
+    assert body['realDeploymentAdapter']['ready'] is True
+    assert body['realDeploymentAdapter']['commandName']
+    adapter = body['providerAdapters'][0]
+    assert adapter['fullDeploymentReady'] is True
+    assert adapter['deploymentBlockedReasons'] == []
+    checks = {check['id']: check for check in body['checks']}
+    assert checks['real-deployment-adapter-ready']['status'] == 'pass'
 
 
 def test_native_foundation_dell_idrac_redfish_probe_blocks_by_default(client, auth_headers):

@@ -188,26 +188,38 @@ Use Config Files as the shared config library for repeatable, reviewable work.
 
 ### YAML Studio
 
-Use YAML Studio to generate and validate ZTF-compatible Nutanix YAML without
-executing anything.
+Use YAML Studio to create, edit, validate, and save ZTF-compatible Nutanix YAML
+without executing anything. The page is organized as a guided authoring
+workspace: choose a template, edit YAML, review field guidance, confirm
+readiness, and inspect the runtime command preview before saving.
 
 Modes:
 
 | Mode | Function |
 |---|---|
-| Cluster Baseline | Generates conservative Prism Element baseline YAML for DNS, NTP, storage containers, subnets, HA reservation, Pulse, and EULA-style settings. |
-| Workflow YAML | Generates workflow or script YAML from guarded schema-driven forms. |
-| Global Config | Produces starter global configuration content. |
-| Upgrade Rules | Produces Upgrade Advisor source-pack or rule-pack content. |
+| Native Foundation Deploy | Starts a Dell iDRAC controlled-UAT deployment intent template and highlights credential refs, adapter readiness, and runtime handoff. |
+| Cluster Create | Starts a ZTF 1.x Foundation Central cluster creation config. |
+| Global Config | Produces starter credential, vault, and IPAM target configuration content. |
+| ZTF 2.x IaC | Produces preview `input.yml` content for the domains model. |
+| Blank YAML | Starts from an empty file while still using validation, field guidance, and command preview. |
 
 Actions:
 
 | Action | Function |
 |---|---|
-| Generate | Builds YAML from the selected mode and form fields. |
-| Validate | Sends YAML to the backend for parser and shape validation. |
-| Save Config | Saves generated YAML into Config Files using existing backup behavior. |
-| Export | Downloads a bundle containing YAML and validation metadata. |
+| Generate YAML | Builds YAML from the selected workflow/script wizard fields. |
+| Revalidate | Sends YAML to the backend for parser and shape validation. |
+| Save to ZTF | Saves generated YAML into Config Files using existing backup behavior. |
+| Download | Downloads a bundle containing YAML and validation metadata. |
+
+Readiness indicators:
+
+| Indicator | Meaning |
+|---|---|
+| YAML valid | The current editor content parses as YAML. |
+| Credentials resolved | Referenced credential keys were found in Global Config when available. |
+| Workflow runnable | The YAML maps to a known workflow or script command after validation. |
+| Adapter ready | Native Foundation adapter handoff is detected when relevant. |
 
 YAML Studio is intentionally non-mutating. It does not run ZTF, NKP, Prism, or
 Foundation Central operations. Execution remains behind Workflows, Scripts, NKP

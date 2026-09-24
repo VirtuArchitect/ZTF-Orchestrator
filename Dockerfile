@@ -21,7 +21,7 @@ ARG ZTF_REF=v1.5.2
 ARG ZTF2_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
 ARG ZTF2_REF=v2.0.0
 ARG ZTF2_BAKE=true
-ARG ZTF_ORCHESTRATOR_VERSION=v1.8.3
+ARG ZTF_ORCHESTRATOR_VERSION=v1.8.4
 ARG ZTF_BUILD_COMMIT=
 ARG ZTF_BUILD_DATE=
 ARG ZTF_ORCHESTRATOR_IMAGE=
@@ -129,6 +129,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 COPY --from=ui-build /ui/dist /app/dist
+RUN chmod +x /app/scripts/native_foundation_ztf_site_deploy_adapter.py
 
 # ============================================================================
 # Permissions

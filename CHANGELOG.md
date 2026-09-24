@@ -12,6 +12,26 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
 
+### Added
+- Added a bundled Native Foundation site-deploy adapter wrapper that converts
+  `native-foundation-deploy` intent into the embedded ZTF 1.x Foundation
+  Central `site-deploy` workflow when the real-adapter runtime gate is enabled.
+
+### Changed
+- Redesigned YAML Studio into a guided operational workspace with templates,
+  readiness indicators, field guidance, grouped validation results, runtime
+  command preview, and script-generated workflow runnability detection.
+- Updated Native Foundation UI readiness badges so mutating capability is
+  shown as an amber operator-caution state while actual adapter readiness stays
+  green.
+- Refreshed Native Foundation and YAML Studio documentation and screenshots to
+  distinguish the controlled-UAT Dell iDRAC adapter path from public demo and
+  production-support boundaries.
+
+### Fixed
+- Aligned the Dockerfile default `ZTF_ORCHESTRATOR_VERSION` with the v1.8.4
+  runtime so local container builds report the correct Installed Build.
+
 ---
 
 ## [1.8.4] - 2026-09-21

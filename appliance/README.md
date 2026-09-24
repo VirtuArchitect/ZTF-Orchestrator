@@ -585,7 +585,13 @@ artifact contains an AHV-importable QCOW2 and a checksum file.
    Element post-create validation require
    `ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true` and
    `ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND` pointing to the reviewed local
-   Foundation deployment adapter executable. The orchestrator passes only the
+   Foundation deployment adapter executable. The appliance image includes the
+   controlled-UAT Dell wrapper at
+   `/app/scripts/native_foundation_ztf_site_deploy_adapter.py`; when explicitly
+   enabling real deployment, bind it with
+   `ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND=/opt/ztf-python/bin/python` and
+   `ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS=/app/scripts/native_foundation_ztf_site_deploy_adapter.py`.
+   The orchestrator passes only the
    intent file, adapter request file, job id, and evidence directory; credential
    values remain in the appliance credential store.
 

@@ -3983,6 +3983,25 @@ def _native_foundation_adapter_command() -> tuple[list[str], str]:
     return [str(command_path), *args], ''
 
 
+def _native_foundation_real_deployment_adapter_status() -> dict:
+    enabled = _native_foundation_real_deployment_adapter_enabled()
+    command, command_error = _native_foundation_adapter_command()
+    ready = enabled and not command_error
+    if not enabled:
+        reason = 'Set ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true before full Native Foundation deployment.'
+    elif command_error:
+        reason = command_error
+    else:
+        reason = ''
+    return {
+        'enabled': enabled,
+        'commandConfigured': not command_error,
+        'ready': ready,
+        'commandName': Path(command[0]).name if command else '',
+        'blockedReason': reason,
+    }
+
+
 def _native_foundation_dell_idrac_uat_execution_gate(config: dict | None) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     config = config if isinstance(config, dict) else {}
@@ -9670,6 +9689,7 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
     requirements = _native_foundation_intent_contract_requirements(config)
     selected_providers = requirements['providersInIntent'] or sorted(NATIVE_FOUNDATION_PROVIDER_CONTRACTS)
     provider_manifests = []
+    real_adapter_status = _native_foundation_real_deployment_adapter_status()
     for provider_id in selected_providers:
         contract = NATIVE_FOUNDATION_PROVIDER_CONTRACTS.get(provider_id)
         provider_mutation_enabled = (
@@ -9677,14 +9697,18 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
             and _native_foundation_dell_idrac_live_discovery_enabled()
             and _native_foundation_dell_idrac_mutation_enabled()
         )
+        full_deployment_ready = provider_mutation_enabled and real_adapter_status['ready']
         if not contract:
             provider_manifests.append({
                 'providerId': provider_id,
                 'status': 'unsupported',
                 'readOnly': True,
                 'mutatingActionsEnabled': False,
+                'fullDeploymentReady': False,
+                'realDeploymentAdapter': {**real_adapter_status, 'ready': False},
                 'operations': [],
                 'blockedReasons': ['Provider is not in the native Foundation adapter registry.'],
+                'deploymentBlockedReasons': ['Provider is not in the native Foundation adapter registry.'],
             })
             continue
         operations = []
@@ -9718,6 +9742,8 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
             'status': 'enabled_controlled_uat_mutating' if provider_mutation_enabled else contract['status'],
             'readOnly': not provider_mutation_enabled,
             'mutatingActionsEnabled': provider_mutation_enabled,
+            'fullDeploymentReady': full_deployment_ready,
+            'realDeploymentAdapter': real_adapter_status,
             'readOnlyDiscovery': contract.get('readOnlyDiscovery') is True,
             'adapterFamily': contract.get('adapterFamily'),
             'vendor': contract.get('vendor'),
@@ -9732,9 +9758,17 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
                 'Mutating provider adapter operations are disabled in this release.',
                 'Controlled provider UAT and security review are required before enabling power, boot, virtual media, or imaging operations.',
             ],
+            'deploymentBlockedReasons': [] if full_deployment_ready else [
+                reason for reason in [
+                    None if provider_mutation_enabled else 'Enable Dell iDRAC discovery and mutation UAT gates before full deployment.',
+                    None if real_adapter_status['ready'] else real_adapter_status['blockedReason'],
+                ]
+                if reason
+            ],
         })
     unsupported = [item for item in provider_manifests if item['status'] == 'unsupported']
     mutation_enabled_count = sum(1 for item in provider_manifests if item.get('mutatingActionsEnabled'))
+    full_deployment_ready_count = sum(1 for item in provider_manifests if item.get('fullDeploymentReady'))
     return {
         'workflow': NATIVE_FOUNDATION_WORKFLOW,
         'contractVersion': NATIVE_FOUNDATION_ADAPTER_CONTRACT_VERSION,
@@ -9743,6 +9777,9 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
         'mutatingActionsEnabled': mutation_enabled_count > 0,
         'status': 'invalid' if unsupported or requirements['status'] == 'invalid' else 'ready' if mutation_enabled_count else 'blocked',
         'canLoadAdapters': mutation_enabled_count > 0,
+        'realDeploymentAdapter': real_adapter_status,
+        'fullDeploymentReady': full_deployment_ready_count > 0,
+        'canRunFullDeployment': full_deployment_ready_count > 0,
         'providersInIntent': requirements['providersInIntent'],
         'providerAdapters': provider_manifests,
         'checks': [
@@ -9758,15 +9795,22 @@ def _native_foundation_provider_adapter_manifest(config: dict | None = None) -> 
                 'status': 'pass' if mutation_enabled_count else 'blocked',
                 'evidence': f'{mutation_enabled_count} provider adapter(s) have controlled-UAT mutating operations enabled.' if mutation_enabled_count else 'No native Foundation provider adapter can power cycle, change boot order, mount images, or image nodes in this release.',
             },
+            {
+                'id': 'real-deployment-adapter-ready',
+                'label': 'Real deployment adapter is configured',
+                'status': 'pass' if full_deployment_ready_count else 'blocked',
+                'evidence': f'{full_deployment_ready_count} provider adapter(s) can run the configured real deployment adapter.' if full_deployment_ready_count else real_adapter_status['blockedReason'],
+            },
         ],
-        'requiredActions': [] if mutation_enabled_count else [
+        'requiredActions': [] if full_deployment_ready_count else [
             'Implement and UAT one provider adapter at a time before enabling mutating operations.',
             'Bind provider adapters to approval, evidence, deployment policy, and adapter readiness gates.',
+            'Install a reviewed Native Foundation deployment adapter executable and set ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true plus ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND.',
             'Update support matrix, runbooks, and security review before enabling any provider mutation.',
         ],
         'warnings': [
             'Dell iDRAC provider adapter mutation is enabled for controlled UAT only.' if mutation_enabled_count else 'Provider adapter manifest is a read-only scaffold for future native Foundation adapters.',
-            'This gate does not import Nutanix Foundation binaries; Dell adapter operations must remain scoped to the selected UAT hardware.' if mutation_enabled_count else 'It does not import Nutanix Foundation binaries or execute hardware operations.',
+            'Full AHV/AOS/HCI deployment will invoke the configured real deployment adapter command.' if full_deployment_ready_count else 'Full AHV/AOS/HCI deployment requires a configured real deployment adapter command.',
         ],
     }
 

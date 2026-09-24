@@ -2,12 +2,12 @@
 
 Current release marker: `v1.8.4`.
 
-Provider adapter manifest exposes the read-only interface ZTF-Orchestrator will
-use for native Foundation hardware providers. It records controlled-UAT Dell
-iDRAC Redfish discovery readiness plus planned operations for HPE iLO Redfish,
-Lenovo XCC Redfish, NX, Cisco Intersight, and manual/static inventory. It does
-not load adapter plugins, mount images, change boot order, power cycle hosts,
-image nodes, or create clusters.
+Provider adapter manifest exposes the interface ZTF-Orchestrator uses for
+native Foundation hardware providers. It records controlled-UAT Dell iDRAC
+Redfish discovery readiness, the real-adapter command readiness gate, and
+planned operations for HPE iLO Redfish, Lenovo XCC Redfish, NX, Cisco
+Intersight, and manual/static inventory. Non-Dell providers remain non-mutating
+planning targets.
 
 ## API
 
@@ -55,7 +55,22 @@ AOS deployment, HCI cluster formation, Foundation log capture, and Prism
 Element post-create validation also require
 `ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true` and
 `ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND` pointing to a reviewed local Foundation
-deployment adapter executable.
+deployment adapter executable. The Docker/appliance image includes
+`/app/scripts/native_foundation_ztf_site_deploy_adapter.py`, which translates
+Native Foundation Dell HCI intent into the embedded ZTF 1.x Foundation Central
+`site-deploy` workflow. A typical appliance command binding is:
+
+```text
+ZTF_NATIVE_FOUNDATION_ENABLE_REAL_DEPLOYMENT_ADAPTER=true
+ZTF_NATIVE_FOUNDATION_ADAPTER_COMMAND=/opt/ztf-python/bin/python
+ZTF_NATIVE_FOUNDATION_ADAPTER_ARGS=/app/scripts/native_foundation_ztf_site_deploy_adapter.py
+```
+
+The provider manifest exposes `fullDeploymentReady` and
+`canRunFullDeployment` separately from `mutatingActionsEnabled`. The UI should
+only show the Native Foundation Deploy path as runnable when the Dell UAT gates
+are enabled and the real deployment adapter command resolves to an installed
+executable.
 
 ## Dell iDRAC Redfish Probe
 
