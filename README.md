@@ -550,18 +550,19 @@ Visual editor for `global.yml` — vault type (Local/CyberArk), IPAM method
 (Static/Infoblox), live YAML preview with download.
 
 ### YAML Studio
-Operator workbench for generating, validating, saving, and exporting
-ZTF-compatible Nutanix YAML. YAML Studio includes conservative Cluster Baseline
-generation for Prism Element DNS, NTP, storage containers, subnets, HA
-reservation, Pulse, and EULA settings; Workflow YAML generation from the guarded
-script configuration schema catalogue; Global Config starter templates; and
-Upgrade Advisor rule-pack templates.
+Guided workbench for authoring, validating, saving, and exporting
+ZTF-compatible Nutanix YAML before execution. YAML Studio now starts from
+operator templates, shows YAML syntax status, credential-reference resolution,
+workflow runnability, and adapter readiness, and keeps field guidance plus the
+runtime command preview beside the editor.
 
-Generated YAML can be validated server-side, saved into Config Files with the
-existing backup behavior, or exported as a ZIP bundle with validation metadata.
-YAML Studio does not execute workflows or mutate Nutanix infrastructure.
-Execution remains behind the existing workflow, approval, and confirmation
-paths.
+Templates cover Native Foundation Deploy, Cluster Create, Global Config, ZTF
+2.x IaC preview, and blank YAML. Workflow YAML can also be generated from the
+guarded script configuration schema catalogue. Generated YAML can be validated
+server-side, saved into Config Files with the existing backup behavior, or
+exported as a ZIP bundle with validation metadata. YAML Studio does not execute
+workflows or mutate Nutanix infrastructure. Execution remains behind the
+existing workflow, approval, and confirmation paths.
 
 ### Workflows 1.x
 

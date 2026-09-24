@@ -39,8 +39,9 @@ but it must not be represented as production validation.
   and Create Recovery Plan.
 - **ZTF 2.x IaC** queues simulated `ztf2:plan`, `ztf2:refresh`, `ztf2:apply`,
   and `ztf2:destroy` jobs.
-- **YAML Studio** includes a ZTF 2.x `input.yml` template based on the
-  `domains` model.
+- **YAML Studio** shows the guided authoring workspace, including templates,
+  readiness indicators, field guidance, runtime command preview, and a ZTF 2.x
+  `input.yml` template based on the `domains` model.
 - **Jobs** and **Approvals** include simulated records showing a generated plan
   and an apply request bound to plan/input/global/state hashes.
 

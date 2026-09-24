@@ -24,6 +24,19 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
       })
       return
     }
+    if (url.endsWith('/api/yaml-studio/validate')) {
+      const body = route.request().postDataJSON?.() as { kind?: string } | undefined
+      await route.fulfill({
+        json: {
+          kind: body?.kind || 'workflow-config',
+          valid: true,
+          errors: [],
+          warnings: [],
+          rootType: 'dict',
+        },
+      })
+      return
+    }
     if (url.endsWith('/api/system/check')) {
       await route.fulfill({ json: { checks: [], ztfInstalled: true } })
       return
@@ -450,6 +463,32 @@ test('workflow detail imports config into YAML preview', async ({ page }) => {
   await expect(page.locator('input[placeholder="10.0.0.12"]')).toHaveValue('192.0.2.212')
 })
 
+test('YAML Studio presents guided authoring workspace', async ({ page }) => {
+  await seedUiSession(page)
+  await page.goto('/yaml-studio')
+
+  await expect(page.getByRole('heading', { name: 'YAML Studio', level: 1 })).toBeVisible()
+  await expect(page.getByText('Start from template')).toBeVisible()
+  await expect(page.getByText('YAML valid')).toBeVisible()
+  await expect(page.getByText(/Credentials (resolved|unresolved)/)).toBeVisible()
+  await expect(page.getByText('Field Guidance')).toBeVisible()
+  await expect(page.getByText('Runtime Command Preview')).toBeVisible()
+
+  await page.getByRole('button', { name: /Native Foundation Deploy/ }).click()
+  await expect(page.getByRole('heading', { name: 'native-foundation-deploy.yml' })).toBeVisible()
+  await expect(page.getByText('native-foundation-uat-deploy --provider dell_idrac_redfish --phase full_deployment')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: /^bmc_credential_ref$/ })).toBeVisible()
+
+  await page.getByRole('button', { name: /Blank YAML/ }).click()
+  await page.getByRole('button', { name: 'Load Example' }).click()
+  await page.getByRole('button', { name: 'Generate YAML' }).click()
+  await page.getByRole('button', { name: 'Revalidate' }).click()
+  await expect(page.getByText('Validation passed.')).toBeVisible()
+  await expect(page.getByText('Workflow runnable')).toBeVisible()
+  await expect(page.getByText('Ready after save/review')).toBeVisible()
+  await expect(page.getByText('python main.py --script AddNtpServersPe -f config.yml')).toBeVisible()
+})
+
 test('native Foundation detail separates phase status from Dell adapter status', async ({ page }) => {
   await seedUiSession(page)
   await page.goto('/workflows/native-foundation-deploy')
@@ -645,6 +684,7 @@ test('main pages keep readable text contrast in light theme', async ({ page }) =
     '/',
     '/setup',
     '/global-config',
+    '/yaml-studio',
     '/workflows',
     '/workflows/cluster-create',
     '/workflows/cluster-create-standalone-fca',
