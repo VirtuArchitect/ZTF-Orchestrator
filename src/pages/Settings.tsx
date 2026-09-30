@@ -18,6 +18,7 @@ const ENVIRONMENTS: ConnectionProfile['environment'][] = ['lab', 'preprod', 'pro
 const DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = [
   'cluster-create',
   'cluster-create-standalone-fca',
+  'cluster-create-foundation-vm',
   'imaging-only',
   'imaging-only-standalone-fca',
   'imaging',

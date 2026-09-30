@@ -246,7 +246,7 @@ Workflow detail functions:
 | Download Config | Downloads the active YAML. |
 | Dry Run | Validates the config and performs non-destructive readiness or connectivity checks where supported. Approval is not required for dry run. |
 | Approved Request selector | Lets operators bind a matching approved request when the workflow is approval-mandatory. |
-| Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. |
+| Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. Classic Foundation VM cluster-create runs validation only and blocks live `image_nodes` submission until the Foundation VM payload contract is verified. |
 | Run Plan | Submits a Workflows 2.x item through the ZTF 2.x IaC plan path. Apply and destroy remain approval-bound from the ZTF 2.x IaC page. |
 
 For Native Foundation Deploy, the workflow detail page adds read-only review
@@ -413,6 +413,7 @@ Workflows 1.x catalog:
 |---|---|---|
 | Cluster Create | Infrastructure | Creates clusters using Foundation Central with node imaging and cluster formation through the legacy ZTF workflow lane. |
 | Cluster Create (Standalone FCA) | Infrastructure | Builds and submits standalone Foundation Central Appliance Lifecycle cluster-create requests after read-only inventory validation and explicit acknowledgement. |
+| Cluster Create (Foundation VM) | Infrastructure | Builds a classic Foundation VM cluster creation intent and validates the Foundation VM 5.x endpoint on port 8000. Live `image_nodes` submission is not enabled yet. |
 | Imaging Only | Infrastructure | Images nodes without forming a cluster. Useful for bare-metal preparation or re-imaging. |
 | Imaging Only (Standalone FCA) | Infrastructure | Images nodes through standalone Foundation Central Appliance Lifecycle APIs after guarded validation. |
 | Pod Imaging | Pod Operations | Runs a pod-oriented imaging and cluster creation flow. |
@@ -871,6 +872,15 @@ Standalone Foundation Central Appliance workflows submit Lifecycle requests to
 FCA after validation and acknowledgement. An accepted handoff means the request
 was accepted by the FCA lane; operators must still monitor Foundation Central
 and collect evidence for actual imaging or cluster-completion status.
+
+Cluster Create (Foundation VM) targets the classic Foundation VM web service on
+port 8000, not Prism Central Foundation Central and not standalone FCA Lifecycle
+v4 APIs. Dry Run validates the saved intent, credential references, cluster and
+node shape, TCP reachability, `/foundation/version`, and
+`/foundation/get_factory_config`. Run Workflow is intentionally fail-closed
+after the same read-only validation because the live `/foundation/image_nodes`
+payload contract still needs controlled lab verification before Orchestrator can
+submit real imaging or cluster creation jobs through that path.
 
 Native Foundation Deploy is different from the FCA handoff workflows. It is the
 planning-only foundation for Orchestrator-owned deployment tasks across multiple

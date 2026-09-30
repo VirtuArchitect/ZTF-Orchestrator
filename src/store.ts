@@ -131,6 +131,7 @@ export const useStore = create<AppState>()(
         approvalRequiredWorkflows: [
           'cluster-create',
           'cluster-create-standalone-fca',
+          'cluster-create-foundation-vm',
           'imaging-only',
           'imaging-only-standalone-fca',
           'imaging',
