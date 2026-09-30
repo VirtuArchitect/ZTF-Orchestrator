@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, Ban, CheckCircle, ChevronDown, ChevronUp, Clock,
-  ListChecks, Loader, RefreshCw, Terminal, Trash2, XCircle
+  ListChecks, Loader, RefreshCw, RotateCcw, Terminal, Trash2, XCircle
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -24,6 +24,7 @@ const FILTERS: Array<{ id: JobFilter; label: string }> = [
 ]
 
 const ACTIVE_STATUSES: ExecutionJobStatus[] = ['queued', 'running', 'cancelling']
+const RECOVERABLE_FOUNDATION_STATUSES: ExecutionJobStatus[] = ['failed', 'cancelled', 'interrupted']
 
 export default function Jobs() {
   const user = useStore(s => s.user)
@@ -34,6 +35,7 @@ export default function Jobs() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [restarting, setRestarting] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   const canCancel = user?.role === 'admin' || user?.role === 'operator'
@@ -108,6 +110,31 @@ export default function Jobs() {
       await load()
     } finally {
       setDeleting(null)
+    }
+  }
+
+  const restartJob = async (job: ExecutionJob) => {
+    if (!canDelete || job.workflow !== 'cluster-create-foundation-vm' || !RECOVERABLE_FOUNDATION_STATUSES.includes(job.status)) return
+    const expected = 'RESTART FOUNDATION VM'
+    const entered = prompt(`Restarting can repeat Foundation operations after the backend revalidates the saved intent.\n\nType exactly: ${expected}`)
+    if (entered !== expected) return
+    setError('')
+    setRestarting(job.id)
+    try {
+      const resp = await apiFetch(`/api/jobs/${encodeURIComponent(job.id)}/restart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: expected }),
+      })
+      const data = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        setError(data.error || `Server returned ${resp.status}`)
+        return
+      }
+      await load()
+      setExpanded(data.id || null)
+    } finally {
+      setRestarting(null)
     }
   }
 
@@ -226,6 +253,24 @@ export default function Jobs() {
                     <Detail label="Return Code" value={job.returnCode === null || job.returnCode === undefined ? 'pending' : String(job.returnCode)} />
                     <Detail label="Log Events" value={String(logs.length)} />
                   </div>
+                  {canDelete && job.workflow === 'cluster-create-foundation-vm' && RECOVERABLE_FOUNDATION_STATUSES.includes(job.status) && (
+                    <div className="rounded-lg border border-yellow-700/40 bg-yellow-950/10 px-3 py-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-yellow-100">Controlled recovery</p>
+                          <p className="mt-1 text-xs text-yellow-100/70">Revalidates the stored intent and approval before creating a new job. Foundation decides whether individual operations are safe to repeat.</p>
+                        </div>
+                        <button
+                          onClick={() => restartJob(job)}
+                          disabled={restarting === job.id}
+                          className="btn-secondary text-xs gap-1.5"
+                        >
+                          {restarting === job.id ? <Loader size={12} className="animate-spin" /> : <RotateCcw size={12} />}
+                          Restart Job
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {canDelete && !isActive && (
                     <div className="rounded-lg border border-red-900/40 bg-red-950/10 px-3 py-3">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

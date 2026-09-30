@@ -246,7 +246,7 @@ Workflow detail functions:
 | Download Config | Downloads the active YAML. |
 | Dry Run | Validates the config and performs non-destructive readiness or connectivity checks where supported. Approval is not required for dry run. |
 | Approved Request selector | Lets operators bind a matching approved request when the workflow is approval-mandatory. |
-| Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. Classic Foundation VM cluster-create runs validation only and blocks live `image_nodes` submission until the Foundation VM payload contract is verified. |
+| Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. Classic Foundation VM cluster-create requires an administrator, an exact `DEPLOY FOUNDATION VM` confirmation, normal approval policy, and the separately enabled appliance mutation gate. |
 | Run Plan | Submits a Workflows 2.x item through the ZTF 2.x IaC plan path. Apply and destroy remain approval-bound from the ZTF 2.x IaC page. |
 
 For Native Foundation Deploy, the workflow detail page adds read-only review
@@ -413,7 +413,7 @@ Workflows 1.x catalog:
 |---|---|---|
 | Cluster Create | Infrastructure | Creates clusters using Foundation Central with node imaging and cluster formation through the legacy ZTF workflow lane. |
 | Cluster Create (Standalone FCA) | Infrastructure | Builds and submits standalone Foundation Central Appliance Lifecycle cluster-create requests after read-only inventory validation and explicit acknowledgement. |
-| Cluster Create (Foundation VM) | Infrastructure | Builds a classic Foundation VM cluster creation intent and validates the Foundation VM 5.x endpoint on port 8000. Live `image_nodes` submission is not enabled yet. |
+| Cluster Create (Foundation VM) | Infrastructure | Builds the classic Foundation VM native payload, inventories/stages images, validates node and network input, tests IPMI credentials read-only, and can submit controlled `ipmi_config` and `image_nodes` operations when explicitly enabled. |
 | Imaging Only | Infrastructure | Images nodes without forming a cluster. Useful for bare-metal preparation or re-imaging. |
 | Imaging Only (Standalone FCA) | Infrastructure | Images nodes through standalone Foundation Central Appliance Lifecycle APIs after guarded validation. |
 | Pod Imaging | Pod Operations | Runs a pod-oriented imaging and cluster creation flow. |
@@ -876,11 +876,55 @@ and collect evidence for actual imaging or cluster-completion status.
 Cluster Create (Foundation VM) targets the classic Foundation VM web service on
 port 8000, not Prism Central Foundation Central and not standalone FCA Lifecycle
 v4 APIs. Dry Run validates the saved intent, credential references, cluster and
-node shape, TCP reachability, `/foundation/version`, and
-`/foundation/get_factory_config`. Run Workflow is intentionally fail-closed
-after the same read-only validation because the live `/foundation/image_nodes`
-payload contract still needs controlled lab verification before Orchestrator can
-submit real imaging or cluster creation jobs through that path.
+node shape, node positions and roles, the 20 GB CVM-memory minimum, image
+selection, TCP reachability, `/foundation/version`, and the available Foundation
+image inventory. The form can also test each node's IPMI credential using a
+read-only Redfish request. These checks do not image, reboot, or reconfigure a
+node.
+
+The backend translates the reviewed intent into Foundation's native `blocks`
+and `clusters` payload. It resolves hypervisor, cluster, and per-node IPMI
+credential references only at execution time, redacts those secrets from logs,
+and records a payload SHA-256 for traceability. Foundation image upload uses a
+bounded temporary staging file, a checksum, restricted filename and image-type
+validation, and removes the staging file after the upload attempt.
+
+Live Foundation mutation remains fail-closed by default. Enable it only for a
+controlled lab or approved deployment window:
+
+```text
+ZTF_FOUNDATION_VM_ENABLE_MUTATION=true
+ZTF_FOUNDATION_VM_ENABLE_IMAGE_UPLOAD=true
+```
+
+The first flag allows an administrator to submit `image_nodes` after entering
+the exact `DEPLOY FOUNDATION VM` confirmation. `ipmi_config` is called first
+only for nodes whose **Configure IPMI network** option is selected. The second
+flag independently allows administrator-only image upload; discovery and use of
+images already present on Foundation do not require it. Set
+`ZTF_FOUNDATION_VM_IMAGE_MAX_UPLOAD` to the maximum accepted upload size in
+bytes; the default is 20 GiB.
+
+Jobs poll `/foundation/progress`, persist progress and sanitized response logs,
+and expose normal queue cancellation. Cancelling a running Foundation VM job
+requests `/foundation/abort_session`. A failed, cancelled, or interrupted
+Foundation VM job can be restarted by an administrator with the exact `RESTART FOUNDATION VM`
+confirmation; the new job records its source job ID. Jobs found active after an
+Orchestrator restart are marked interrupted and may be reviewed and restarted
+instead of being silently resumed.
+
+The Foundation VM form captures the classic Foundation wizard decisions as
+structured intent: hardware platform, RDMA passthrough, host/CVM LAG mode,
+installer IP review values, AOS package reference, hypervisor type and ISO,
+DNS/NTP, host/CVM/IPMI gateway and netmask values, optional VLAN IDs, node
+block and node serials, node positions and roles, host/CVM/IPMI addresses, IPMI
+credential references, optional IPMI reconfiguration, hostnames, CVM RAM,
+cluster VIP, redundancy factor, timezone, cluster security controls, and image
+choices. These values are persisted in
+`create_foundation_vm_cluster.yml` under `foundation_vm_options`,
+`aos_hypervisor_images`, `common_network_settings`, and `create_clusters` so the
+intent and generated native payload can be reviewed before a controlled live
+Foundation handoff.
 
 Native Foundation Deploy is different from the FCA handoff workflows. It is the
 planning-only foundation for Orchestrator-owned deployment tasks across multiple

@@ -45,6 +45,18 @@ from upgrade_advisor import (
     merge_upgrade_rule_packs,
     render_upgrade_assessment_markdown,
 )
+from foundation_vm_backend import (
+    FOUNDATION_TERMINAL_STATES,
+    build_native_payload as _build_foundation_vm_native_payload,
+    endpoint as _foundation_vm_backend_endpoint,
+    image_inventory as _foundation_vm_image_inventory,
+    redact_payload as _redact_foundation_vm_payload,
+    request_json as _foundation_vm_request_json,
+    test_ipmi_credentials as _foundation_vm_test_ipmi_credentials,
+    upload_image as _foundation_vm_upload_image,
+    validate_image_selection as _validate_foundation_vm_image_selection,
+    validate_intent as _validate_foundation_vm_intent,
+)
 
 # ─── Environment configuration ───────────────────────────────────────────────
 
@@ -74,6 +86,9 @@ AUDIT_RETENTION_DAYS = int(os.environ.get('ZTF_AUDIT_RETENTION_DAYS', '90'))
 EXECUTION_RETENTION_DAYS = int(os.environ.get('ZTF_EXECUTION_RETENTION_DAYS', '180'))
 NKP_BINARY_MAX_UPLOAD = int(os.environ.get('ZTF_NKP_BINARY_MAX_UPLOAD', str(512 * 1024 * 1024)))
 UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', str(2 * 1024 * 1024 * 1024)))
+FOUNDATION_VM_IMAGE_MAX_UPLOAD = int(os.environ.get('ZTF_FOUNDATION_VM_IMAGE_MAX_UPLOAD', str(20 * 1024 * 1024 * 1024)))
+FOUNDATION_VM_MUTATION_ENABLED = os.environ.get('ZTF_FOUNDATION_VM_ENABLE_MUTATION', '').lower() in {'1', 'true', 'yes'}
+FOUNDATION_VM_IMAGE_UPLOAD_ENABLED = os.environ.get('ZTF_FOUNDATION_VM_ENABLE_IMAGE_UPLOAD', '').lower() in {'1', 'true', 'yes'}
 APP_VERSION = '1.8.4'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 ZTF2_REF = os.environ.get('ZTF2_REF', 'v2.0.0')
@@ -3415,14 +3430,18 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'fca_lifecycle': True,
     },
     'cluster-create-foundation-vm': {
-        'required':    ['foundation_vm_ip', 'foundation_vm_credential', 'cvm_credential', 'common_network_settings', 'create_clusters'],
-        'credential_fields': {'foundation_vm_credential': 'Foundation VM', 'cvm_credential': 'CVM'},
+        'required':    ['foundation_vm_ip', 'hypervisor_credential', 'cluster_credential', 'foundation_vm_options', 'aos_hypervisor_images', 'common_network_settings', 'create_clusters'],
+        'credential_fields': {'hypervisor_credential': 'hypervisor', 'cluster_credential': 'cluster'},
         'ip_fields':   [],
         'connect':     [('foundation_vm_ip', 8000, 'Foundation VM')],
-        'mapping_required_keys': {'common_network_settings': ['dns_servers', 'ntp_servers']},
+        'mapping_required_keys': {
+            'foundation_vm_options': ['hardware_platform', 'lag_type', 'rdma_passthrough'],
+            'aos_hypervisor_images': ['hypervisor_type'],
+            'common_network_settings': ['dns_servers', 'ntp_servers'],
+        },
         'cluster_list_field': 'create_clusters',
-        'cluster_list_required_keys': ['cluster_name', 'cluster_vip', 'nodes_list'],
-        'cluster_node_required_keys': ['node_serial', 'cvm_ip', 'host_ip'],
+        'cluster_list_required_keys': ['cluster_name', 'nodes_list'],
+        'cluster_node_required_keys': ['node_position', 'host_ip', 'ipmi_ip', 'ipmi_credential_ref'],
         'foundation_vm': True,
     },
     'imaging-only': {
@@ -3591,10 +3610,10 @@ FOUNDATION_TARGET_FOUNDATION_VM = 'foundation_vm'
 FOUNDATION_VM_DEFAULT_PORT = 8000
 FOUNDATION_VM_DEFAULT_SCHEME = 'http'
 FOUNDATION_VM_VALIDATION_ONLY_MESSAGE = (
-    'Classic Foundation VM workflow is validation-only. Dry Run validates the '
-    'Foundation VM 5.x endpoint on port 8000; live image_nodes submission is '
-    'disabled until the Foundation VM API payload contract is verified.'
+    'Classic Foundation VM mutation is disabled unless the appliance mutation '
+    'gate, approval, and exact confirmation are present.'
 )
+FOUNDATION_VM_CONFIRMATION = 'DEPLOY FOUNDATION VM'
 STANDALONE_FCA_UNSUPPORTED_MESSAGE = (
     'Standalone Foundation Central Appliance scheduled execution requires a '
     'direct Run Workflow submission with explicit operator acknowledgement.'
@@ -4719,15 +4738,7 @@ def _cluster_create_foundation_target(config: dict) -> str:
 
 
 def _foundation_vm_endpoint(config: dict) -> tuple[str, str, int]:
-    host = str(config.get('foundation_vm_ip') or config.get('foundation_vm_host') or '').strip()
-    scheme = str(config.get('foundation_vm_scheme') or FOUNDATION_VM_DEFAULT_SCHEME).strip().lower()
-    if scheme not in {'http', 'https'}:
-        scheme = FOUNDATION_VM_DEFAULT_SCHEME
-    try:
-        port = int(config.get('foundation_vm_port') or FOUNDATION_VM_DEFAULT_PORT)
-    except (TypeError, ValueError):
-        port = FOUNDATION_VM_DEFAULT_PORT
-    return host, scheme, port
+    return _foundation_vm_backend_endpoint(config)
 
 
 def _foundation_vm_url(config: dict, resource_path: str) -> str:
@@ -4786,8 +4797,80 @@ def _run_foundation_vm_preflight(config: dict) -> tuple[list[str], int, int]:
         lines.append(f'[FAIL] Foundation VM factory config endpoint failed : {host}:{port} ({err})')
         failed += 1
 
-    lines.append(f'[INFO] {FOUNDATION_VM_VALIDATION_ONLY_MESSAGE}')
+    intent_errors = _validate_foundation_vm_intent(config, _lookup_credential_ref)
+    if intent_errors:
+        for error in intent_errors:
+            lines.append(f'[FAIL] Foundation VM intent: {error}')
+            failed += 1
+    else:
+        lines.append('[PASS] Foundation VM intent matches the native imaging schema')
+        passed += 1
+
+    inventory, inventory_errors = _foundation_vm_image_inventory(config)
+    if inventory_errors:
+        for error in inventory_errors:
+            lines.append(f'[FAIL] Foundation VM image inventory: {error}')
+            failed += 1
+    else:
+        aos_count = len(inventory.get('aos') or []) if isinstance(inventory.get('aos'), list) else 0
+        hypervisors = inventory.get('hypervisors') or {}
+        hypervisor_count = sum(len(value) for value in hypervisors.values() if isinstance(value, list)) if isinstance(hypervisors, dict) else 0
+        lines.append(f'[PASS] Foundation VM image inventory: {aos_count} AOS packages, {hypervisor_count} hypervisor images')
+        passed += 1
+        selection_errors = _validate_foundation_vm_image_selection(config, inventory)
+        if selection_errors:
+            for error in selection_errors:
+                lines.append(f'[FAIL] Foundation VM image selection: {error}')
+                failed += 1
+        else:
+            lines.append('[PASS] Foundation VM selected images are present in inventory')
+            passed += 1
+
+    mode = 'enabled' if FOUNDATION_VM_MUTATION_ENABLED else 'disabled'
+    lines.append(f'[INFO] Foundation VM controlled mutation gate is {mode}.')
     return lines, passed, failed
+
+
+def _foundation_vm_submission_error(data: dict, config: dict, *, role: str) -> str | None:
+    if role != 'admin':
+        return 'Foundation VM deployment is restricted to administrators'
+    if not FOUNDATION_VM_MUTATION_ENABLED:
+        return 'Foundation VM deployment is disabled; set ZTF_FOUNDATION_VM_ENABLE_MUTATION=true on the appliance'
+    if str(data.get('destructiveConfirmation') or '').strip() != FOUNDATION_VM_CONFIRMATION:
+        return f'Foundation VM deployment confirmation must exactly match: {FOUNDATION_VM_CONFIRMATION}'
+    intent_errors = _validate_foundation_vm_intent(config, _lookup_credential_ref)
+    if intent_errors:
+        return f'Foundation VM intent is invalid: {"; ".join(intent_errors)}'
+    return None
+
+
+def _foundation_progress_summary(progress: object) -> tuple[str, int, str, bool]:
+    if not isinstance(progress, dict):
+        return 'Foundation imaging', 65, str(progress or 'Waiting for Foundation progress'), False
+    status = str(progress.get('aggregate_status') or progress.get('status') or '').strip().lower()
+    try:
+        percent = int(float(progress.get('aggregate_percent_complete') or progress.get('percent_complete') or 0))
+    except (TypeError, ValueError):
+        percent = 0
+    percent = max(0, min(100, percent))
+    detail = str(progress.get('message') or progress.get('aggregate_status') or progress.get('status') or 'Foundation operation in progress')
+    has_session_evidence = bool(
+        progress.get('action')
+        or progress.get('session_id')
+        or progress.get('nodes')
+        or progress.get('clusters')
+        or progress.get('results') is not None
+        or percent > 0
+    )
+    stopped = progress.get('imaging_stopped') is True and has_session_evidence
+    return status or 'Foundation imaging', percent, detail, status in FOUNDATION_TERMINAL_STATES or stopped
+
+
+def _foundation_progress_failed(progress: object) -> bool:
+    if not isinstance(progress, dict):
+        return False
+    status_text = json.dumps(progress, sort_keys=True).lower()
+    return any(token in status_text for token in ('"failed"', '"failure"', '"error"', '"aborted"', '"cancelled"', '"canceled"'))
 
 
 def _standalone_fca_execution_error(workflow: str, config_content: str) -> str:
@@ -6424,6 +6507,8 @@ def require_role(*roles):
 def check_body_size():
     if request.path == '/api/nkp/binaries/upload':
         max_body = NKP_BINARY_MAX_UPLOAD
+    elif request.path == '/api/foundation-vm/images/upload':
+        max_body = FOUNDATION_VM_IMAGE_MAX_UPLOAD
     elif request.path == '/api/appliance/updates/import-package':
         max_body = UPDATE_PACKAGE_MAX_UPLOAD
     else:
@@ -34276,6 +34361,8 @@ class ExecutionJobManager:
         }
         if isinstance(payload.get('trace'), dict):
             job['trace'] = payload['trace']
+        if payload.get('restartedFromJobId'):
+            job['restartedFromJobId'] = str(payload['restartedFromJobId'])
         with self._condition:
             jobs = self._load_jobs()
             jobs.insert(0, job)
@@ -34291,6 +34378,12 @@ class ExecutionJobManager:
         for job in self._load_jobs():
             if job.get('id') == job_id:
                 return self._public_job(job, include_logs)
+        return None
+
+    def get_payload(self, job_id: str) -> dict | None:
+        for job in self._load_jobs():
+            if job.get('id') == job_id:
+                return dict(job.get('payload') or {})
         return None
 
     def cancel(self, job_id: str, user: str) -> dict | None:
@@ -34387,6 +34480,9 @@ class ExecutionJobManager:
         if payload.get('framework') == 'ztf2':
             self._run_ztf2_job(job_id, payload, user)
             return
+        if payload.get('workflow') == FOUNDATION_VM_WORKFLOW:
+            self._run_foundation_vm_job(job_id, payload, user)
+            return
 
         proc = None
         kill_timer = None
@@ -34410,62 +34506,6 @@ class ExecutionJobManager:
             target_error = _standalone_fca_execution_error(workflow or '', effective_config_content)
             if target_error:
                 self._emit(job_id, 'error', target_error)
-                return
-            if workflow == FOUNDATION_VM_WORKFLOW:
-                configs_dir = get_configs_dir()
-                self._update_progress(job_id, 'Preparing Foundation VM validation', 15, 'Validating and saving workflow YAML')
-                if effective_config_content and config_file:
-                    path = safe_config_path(config_file, configs_dir)
-                    if path is None or path.suffix not in ('.yml', '.yaml'):
-                        self._emit(job_id, 'error', 'Invalid config filename')
-                        return
-                    ok, err = validate_yaml(effective_config_content)
-                    if not ok:
-                        self._emit(job_id, 'error', f'Invalid YAML: {err}')
-                        return
-                    backup_config(path)
-                    _secure_write(path, effective_config_content)
-                    cfg_path = str(path)
-                elif config_file:
-                    path = safe_config_path(config_file, configs_dir)
-                    if path is None or not path.exists() or path.suffix not in ('.yml', '.yaml'):
-                        self._emit(job_id, 'error', 'Config file was not found')
-                        return
-                    cfg_path = str(path)
-                    effective_config_content = path.read_text(encoding='utf-8')
-                else:
-                    self._emit(job_id, 'error', 'Foundation VM config content or config file is required')
-                    return
-                try:
-                    config = yaml.safe_load(effective_config_content) or {}
-                except yaml.YAMLError as exc:
-                    self._emit(job_id, 'error', f'Invalid YAML: {exc}')
-                    return
-                if not isinstance(config, dict):
-                    self._emit(job_id, 'error', 'Foundation VM config must be a YAML mapping')
-                    return
-                cmd_args = ['foundation-vm', '--workflow', workflow, '-f', cfg_path or config_file]
-                self._emit(job_id, 'start', {
-                    'command': _display_command(cmd_args),
-                    'commandArgs': cmd_args,
-                    'workingDir': '',
-                    'configFile': config_file or '',
-                    'configPath': cfg_path or '',
-                })
-                self._update_progress(job_id, 'Validating Foundation VM endpoint', 55, 'Calling read-only Foundation VM APIs')
-                foundation_lines, foundation_passed, foundation_failed = _run_foundation_vm_preflight(config)
-                for line in foundation_lines:
-                    stdout_lines.append(line)
-                    self._emit(job_id, 'stdout', line)
-                if foundation_failed:
-                    status = 'failed'
-                    return_code = -1
-                    return
-                stdout_lines.append(f'[INFO] Foundation VM preflight passed: {foundation_passed} checks')
-                self._emit(job_id, 'stdout', f'[INFO] Foundation VM preflight passed: {foundation_passed} checks')
-                self._emit(job_id, 'error', FOUNDATION_VM_VALIDATION_ONLY_MESSAGE)
-                status = 'failed'
-                return_code = -1
                 return
             if workflow in STANDALONE_FCA_WORKFLOWS:
                 acknowledgement_error = _validate_standalone_fca_ack(workflow, payload)
@@ -34821,6 +34861,177 @@ class ExecutionJobManager:
                 execution_id=job_id,
                 execution_type='workflow' if workflow else 'script',
             )
+
+    def _run_foundation_vm_job(self, job_id: str, payload: dict, user: str) -> None:
+        config_content = str(payload.get('configContent') or '')
+        config_file = str(payload.get('configFile') or 'create_foundation_vm_cluster.yml')
+        status = 'failed'
+        return_code = -1
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
+        command_args = ['foundation-vm', 'ipmi_config', 'image_nodes']
+        config_path = ''
+
+        def emit(kind: str, message: str) -> None:
+            (stderr_lines if kind in {'stderr', 'error'} else stdout_lines).append(message)
+            self._emit(job_id, kind, message)
+
+        def safe_foundation_json(value: object) -> str:
+            redacted = _redact_foundation_vm_payload(value) if isinstance(value, dict) else value
+            return _redact_text(json.dumps(redacted, sort_keys=True))
+
+        try:
+            path = safe_config_path(config_file, get_configs_dir())
+            if path is None or path.suffix not in {'.yml', '.yaml'}:
+                emit('error', 'Invalid Foundation VM config filename')
+                return
+            ok, validation_error = validate_yaml(config_content)
+            if not ok:
+                emit('error', f'Invalid YAML: {validation_error}')
+                return
+            config = yaml.safe_load(config_content) or {}
+            if not isinstance(config, dict):
+                emit('error', 'Foundation VM config must be a YAML mapping')
+                return
+            intent_errors = _validate_foundation_vm_intent(config, _lookup_credential_ref)
+            if intent_errors:
+                for error in intent_errors:
+                    emit('error', f'Foundation VM intent: {error}')
+                return
+            backup_config(path)
+            _secure_write(path, config_content)
+            config_path = str(path)
+            self._emit(job_id, 'start', {
+                'command': _display_command(command_args),
+                'commandArgs': command_args,
+                'workingDir': '',
+                'configFile': config_file,
+                'configPath': config_path,
+            })
+
+            self._update_progress(job_id, 'Foundation preflight', 10, 'Checking endpoint, features, images, and credentials')
+            preflight_lines, _passed, failed = _run_foundation_vm_preflight(config)
+            for line in preflight_lines:
+                emit('stdout', line)
+            if failed:
+                emit('error', 'Foundation VM preflight failed; no mutating request was sent')
+                return
+
+            native_payload = _build_foundation_vm_native_payload(config, _lookup_credential_ref)
+            payload_digest = _sha256_text(json.dumps(native_payload, sort_keys=True, separators=(',', ':')))
+            emit('stdout', f'[INFO] Native Foundation payload SHA-256: {payload_digest}')
+            emit('stdout', f'[INFO] Native Foundation payload: {json.dumps(_redact_foundation_vm_payload(native_payload), sort_keys=True)}')
+
+            configure_ipmi = any(
+                bool(node.get('ipmi_configure_now'))
+                for block in native_payload.get('blocks', [])
+                for node in block.get('nodes', [])
+            )
+            if configure_ipmi:
+                self._update_progress(job_id, 'Configuring IPMI', 25, 'Submitting the approved native ipmi_config request')
+                ok, error, response, _latency = _foundation_vm_request_json(
+                    config, 'ipmi_config', method='POST', payload=native_payload, timeout=120,
+                )
+                if not ok:
+                    emit('error', f'Foundation ipmi_config failed: {error}')
+                    return
+                emit('stdout', f'[PASS] Foundation ipmi_config accepted: {safe_foundation_json(response)}')
+            else:
+                emit('stdout', '[SKIP] Foundation ipmi_config: no node requested IPMI network configuration')
+
+            current = self.get_job(job_id, include_logs=False) or {}
+            if current.get('status') == 'cancelling':
+                _foundation_vm_request_json(config, 'abort_session', method='POST', payload={}, timeout=30)
+                emit('stderr', 'Foundation session aborted before image_nodes submission')
+                status = 'cancelled'
+                return
+
+            self._update_progress(job_id, 'Starting node imaging', 35, 'Submitting the approved native image_nodes request')
+            ok, error, response, _latency = _foundation_vm_request_json(
+                config, 'image_nodes', method='POST', payload=native_payload, timeout=120,
+            )
+            if not ok:
+                emit('error', f'Foundation image_nodes failed: {error}')
+                return
+            emit('stdout', f'[PASS] Foundation image_nodes accepted: {safe_foundation_json(response)}')
+
+            deadline = time.monotonic() + EXEC_TIMEOUT
+            consecutive_errors = 0
+            while time.monotonic() < deadline:
+                current = self.get_job(job_id, include_logs=False) or {}
+                if current.get('status') == 'cancelling':
+                    abort_ok, abort_error, _abort_body, _abort_latency = _foundation_vm_request_json(
+                        config, 'abort_session', method='POST', payload={}, timeout=30,
+                    )
+                    emit('stderr', 'Foundation abort_session accepted' if abort_ok else f'Foundation abort_session failed: {abort_error}')
+                    status = 'cancelled'
+                    return_code = -1
+                    return
+
+                ok, error, progress, _latency = _foundation_vm_request_json(config, 'progress', timeout=30)
+                if not ok:
+                    consecutive_errors += 1
+                    emit('stderr', f'Foundation progress poll {consecutive_errors}/3 failed: {error}')
+                    if consecutive_errors >= 3:
+                        emit('error', 'Foundation progress could not be recovered after three attempts')
+                        return
+                    time.sleep(3)
+                    continue
+                consecutive_errors = 0
+                phase, percent, detail, terminal = _foundation_progress_summary(progress)
+                mapped_percent = 40 + round(percent * 0.55)
+                self._update_progress(job_id, phase, mapped_percent, detail)
+                emit('stdout', f'[PROGRESS] {percent}% {_redact_text(detail)}')
+                if terminal:
+                    if _foundation_progress_failed(progress):
+                        emit('error', f'Foundation reported terminal failure: {safe_foundation_json(progress)}')
+                        return
+                    if percent < 100:
+                        emit('error', f'Foundation stopped before completion: {safe_foundation_json(progress)}')
+                        return
+                    status = 'success'
+                    return_code = 0
+                    self._update_progress(job_id, 'Completed', 100, 'Foundation imaging and cluster creation completed')
+                    return
+                time.sleep(5)
+            emit('error', f'Foundation operation exceeded the {EXEC_TIMEOUT}-second execution timeout')
+        except Exception:
+            log.exception('foundation_vm_execution_error', extra={'user': user, 'jobId': job_id})
+            emit('error', 'Foundation VM execution failed. Check server logs for details.')
+        finally:
+            stdout_text = _redact_text('\n'.join(stdout_lines))
+            stderr_text = _redact_text('\n'.join(stderr_lines))
+            diagnostics = _classify_execution_failure(stderr_text, stdout_text, return_code) if status != 'success' else {}
+            self._set_diagnostics(job_id, {
+                'command': _display_command(command_args),
+                'commandArgs': command_args,
+                'workingDir': '',
+                'configFile': config_file,
+                'configPath': config_path,
+                'stdoutTail': stdout_text[-4000:],
+                'stderrTail': stderr_text[-4000:],
+                **diagnostics,
+            })
+            _record_execution_history(
+                execution_id=job_id,
+                workflow_or_script=FOUNDATION_VM_WORKFLOW,
+                execution_type='workflow',
+                status=status,
+                user=user,
+                config_file=config_file,
+                config_content=config_content,
+                command=_display_command(command_args),
+                config_path=config_path,
+                return_code=return_code,
+                stdout=stdout_text,
+                stderr=stderr_text,
+                diagnostics=diagnostics,
+            )
+            self._complete(job_id, status, return_code)
+            log.info('foundation_vm_execution_complete', extra={
+                'user': user, 'workflow': FOUNDATION_VM_WORKFLOW,
+                'status': status, 'jobId': job_id,
+            })
 
     def _run_ztf2_job(self, job_id: str, payload: dict, user: str) -> None:
         proc = None
@@ -40683,6 +40894,170 @@ def run_pipeline(pipeline_id: str):
 
 # ─── Execute workflow ─────────────────────────────────────────────────────────
 
+def _foundation_vm_config_from_request() -> tuple[dict | None, str | None]:
+    data = request.get_json(silent=True) or {}
+    content = str(data.get('configContent') or data.get('content') or '')
+    try:
+        config = yaml.safe_load(content) or {}
+    except yaml.YAMLError as exc:
+        return None, f'Foundation VM YAML parse error: {exc}'
+    if not isinstance(config, dict):
+        return None, 'Foundation VM intent must be a YAML mapping'
+    return config, None
+
+
+@app.route('/api/foundation-vm/validate', methods=['POST'])
+@require_role('admin', 'operator')
+@limiter.limit('20 per minute')
+def validate_foundation_vm_config():
+    config, error = _foundation_vm_config_from_request()
+    if error:
+        return jsonify({'error': error}), 400
+    errors = _validate_foundation_vm_intent(config or {}, _lookup_credential_ref)
+    if errors:
+        return jsonify({'valid': False, 'errors': errors}), 400
+    inventory, inventory_errors = _foundation_vm_image_inventory(config or {})
+    if inventory_errors:
+        return jsonify({'valid': False, 'errors': inventory_errors}), 502
+    image_errors = _validate_foundation_vm_image_selection(config or {}, inventory)
+    if image_errors:
+        return jsonify({'valid': False, 'errors': image_errors}), 400
+    payload = _build_foundation_vm_native_payload(config or {}, _lookup_credential_ref)
+    return jsonify({
+        'valid': True,
+        'payloadSha256': _sha256_text(json.dumps(payload, sort_keys=True, separators=(',', ':'))),
+        'payload': _redact_foundation_vm_payload(payload),
+        'mutationEnabled': FOUNDATION_VM_MUTATION_ENABLED,
+    })
+
+
+@app.route('/api/foundation-vm/images', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+@limiter.limit('20 per minute')
+def foundation_vm_images():
+    config, error = _foundation_vm_config_from_request()
+    if error:
+        return jsonify({'error': error}), 400
+    inventory, errors = _foundation_vm_image_inventory(config or {})
+    status_code = 502 if errors else 200
+    return jsonify({'inventory': inventory, 'errors': errors}), status_code
+
+
+@app.route('/api/foundation-vm/ipmi-test', methods=['POST'])
+@require_role('admin', 'operator')
+@limiter.limit('5 per minute')
+def foundation_vm_ipmi_test():
+    config, error = _foundation_vm_config_from_request()
+    if error:
+        return jsonify({'error': error}), 400
+    intent_errors = _validate_foundation_vm_intent(config or {})
+    structural_errors = [item for item in intent_errors if 'credential' not in item]
+    if structural_errors:
+        return jsonify({'error': 'Foundation VM intent is invalid', 'errors': structural_errors}), 400
+    results = _foundation_vm_test_ipmi_credentials(config or {}, _lookup_credential_ref)
+    passed = sum(1 for item in results if item.get('ok'))
+    return jsonify({
+        'passed': passed,
+        'failed': len(results) - passed,
+        'results': results,
+    }), 200 if passed == len(results) else 502
+
+
+@app.route('/api/foundation-vm/progress', methods=['POST'])
+@require_role('admin', 'operator', 'viewer')
+@limiter.limit('60 per minute')
+def foundation_vm_progress():
+    config, error = _foundation_vm_config_from_request()
+    if error:
+        return jsonify({'error': error}), 400
+    ok, request_error, progress, latency = _foundation_vm_request_json(config or {}, 'progress')
+    if not ok:
+        return jsonify({'error': request_error}), 502
+    phase, percent, detail, terminal = _foundation_progress_summary(progress)
+    return jsonify({
+        'progress': progress,
+        'phase': phase,
+        'percent': percent,
+        'detail': detail,
+        'terminal': terminal,
+        'latencyMs': round(latency),
+    })
+
+
+@app.route('/api/foundation-vm/abort', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def abort_foundation_vm_session():
+    data = request.get_json(silent=True) or {}
+    if not FOUNDATION_VM_MUTATION_ENABLED:
+        return jsonify({'error': 'Foundation VM mutation is disabled'}), 403
+    if str(data.get('confirmation') or '').strip() != 'ABORT FOUNDATION VM':
+        return jsonify({'error': 'Confirmation must exactly match: ABORT FOUNDATION VM'}), 403
+    config, error = _foundation_vm_config_from_request()
+    if error:
+        return jsonify({'error': error}), 400
+    ok, request_error, body, _latency = _foundation_vm_request_json(config or {}, 'abort_session', method='POST', payload={})
+    if not ok:
+        return jsonify({'error': request_error}), 502
+    log.info('foundation_vm_session_aborted', extra={
+        'user': getattr(request, 'current_user', {}).get('username', 'unknown'),
+        'event': 'foundation_vm_session_aborted',
+    })
+    return jsonify({'status': 'abort_requested', 'response': body})
+
+
+@app.route('/api/foundation-vm/images/upload', methods=['POST'])
+@require_role('admin')
+@limiter.limit('2 per hour')
+def upload_foundation_vm_image():
+    if not FOUNDATION_VM_IMAGE_UPLOAD_ENABLED:
+        return jsonify({'error': 'Foundation VM image upload is disabled; set ZTF_FOUNDATION_VM_ENABLE_IMAGE_UPLOAD=true'}), 403
+    uploaded = request.files.get('file')
+    if uploaded is None or not uploaded.filename:
+        return jsonify({'error': 'Image file is required'}), 400
+    filename = Path(uploaded.filename).name
+    if filename != uploaded.filename or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,254}', filename):
+        return jsonify({'error': 'Invalid image filename'}), 400
+    image_type = str(request.form.get('installerType') or '').strip().lower()
+    allowed_suffixes = {
+        'nos': ('.tar', '.tar.gz', '.tgz'),
+        'hypervisor': ('.iso', '.zip'),
+        'phoenix': ('.iso',),
+    }
+    if image_type not in allowed_suffixes or not filename.lower().endswith(allowed_suffixes.get(image_type, ())):
+        return jsonify({'error': 'File extension does not match installerType'}), 400
+    content = str(request.form.get('configContent') or '')
+    try:
+        config = yaml.safe_load(content) or {}
+    except yaml.YAMLError as exc:
+        return jsonify({'error': f'Foundation VM YAML parse error: {exc}'}), 400
+    if not isinstance(config, dict):
+        return jsonify({'error': 'Foundation VM intent must be a YAML mapping'}), 400
+    staging_dir = CONFIG_DIR / 'foundation-vm-staging'
+    _secure_mkdir(staging_dir)
+    staged = staging_dir / f'{uuid.uuid4().hex}-{filename}'
+    try:
+        uploaded.save(staged)
+        if staged.stat().st_size <= 0:
+            return jsonify({'error': 'Uploaded image is empty'}), 400
+        digest = _sha256_file(staged)
+        ok, upload_error, body, latency = _foundation_vm_upload_image(config, staged, image_type, filename)
+        if not ok:
+            return jsonify({'error': upload_error, 'sha256': digest}), 502
+        log.info('foundation_vm_image_uploaded', extra={
+            'user': getattr(request, 'current_user', {}).get('username', 'unknown'),
+            'event': 'foundation_vm_image_uploaded',
+            'uploadFilename': filename,
+            'installerType': image_type,
+            'sha256': digest,
+        })
+        return jsonify({'status': 'uploaded', 'filename': filename, 'installerType': image_type, 'sha256': digest, 'latencyMs': round(latency), 'response': body})
+    finally:
+        try:
+            staged.unlink(missing_ok=True)
+        except OSError:
+            log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
+
 @app.route('/api/execute', methods=['POST'])
 @require_role('admin', 'operator')
 @limiter.limit('10 per minute')
@@ -40725,6 +41100,37 @@ def execute_workflow():
         )
 
     settings = get_settings()
+    if workflow == FOUNDATION_VM_WORKFLOW:
+        try:
+            foundation_config = yaml.safe_load(config_content or '') or {}
+        except yaml.YAMLError as exc:
+            return jsonify({'error': f'Foundation VM YAML parse error: {exc}'}), 400
+        if not isinstance(foundation_config, dict):
+            return jsonify({'error': 'Foundation VM intent must be a YAML mapping'}), 400
+        session = getattr(request, 'current_user', {})
+        submission_error = _foundation_vm_submission_error(data, foundation_config, role=str(session.get('role') or ''))
+        if submission_error:
+            return jsonify({'error': submission_error, 'destructiveAction': True}), 403
+        approval_error, approval = _validate_workflow_approval(data, settings)
+        if approval_error:
+            return jsonify({'error': approval_error, 'approvalRequired': True}), 403
+        current_user = session.get('username', 'unknown')
+        job = _job_manager.submit({
+            'framework': 'foundation-vm',
+            'type': 'foundation-vm-deployment',
+            'workflow': FOUNDATION_VM_WORKFLOW,
+            'configContent': config_content or '',
+            'configFile': config_file or 'create_foundation_vm_cluster.yml',
+            'destructiveConfirmation': FOUNDATION_VM_CONFIRMATION,
+            'approvalId': str(data.get('approvalId') or '').strip() or None,
+        }, current_user)
+        if approval:
+            _approval_manager.link_job(approval['id'], job['id'])
+        return Response(
+            _job_manager.stream_events(job['id']),
+            mimetype='text/event-stream',
+            headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
+        )
     if workflow == NATIVE_FOUNDATION_WORKFLOW:
         try:
             native_config = yaml.safe_load(config_content or '') or {}
@@ -41058,6 +41464,33 @@ def submit_job():
         return jsonify({'error': 'Unknown workflow'}), 400
     if not workflow and not script:
         return jsonify({'error': 'workflow or script required'}), 400
+    if workflow == FOUNDATION_VM_WORKFLOW:
+        content = str(data.get('configContent') or data.get('content') or '')
+        try:
+            foundation_config = yaml.safe_load(content) or {}
+        except yaml.YAMLError as exc:
+            return jsonify({'error': f'Foundation VM YAML parse error: {exc}'}), 400
+        if not isinstance(foundation_config, dict):
+            return jsonify({'error': 'Foundation VM intent must be a YAML mapping'}), 400
+        session = getattr(request, 'current_user', {})
+        submission_error = _foundation_vm_submission_error(data, foundation_config, role=str(session.get('role') or ''))
+        if submission_error:
+            return jsonify({'error': submission_error, 'destructiveAction': True}), 403
+        approval_error, approval = _validate_workflow_approval(data, settings)
+        if approval_error:
+            return jsonify({'error': approval_error, 'approvalRequired': True}), 403
+        job = _job_manager.submit({
+            'framework': 'foundation-vm',
+            'type': 'foundation-vm-deployment',
+            'workflow': FOUNDATION_VM_WORKFLOW,
+            'configContent': content,
+            'configFile': data.get('configFile') or 'create_foundation_vm_cluster.yml',
+            'destructiveConfirmation': FOUNDATION_VM_CONFIRMATION,
+            'approvalId': str(data.get('approvalId') or '').strip() or None,
+        }, session.get('username', 'unknown'))
+        if approval:
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify(job), 202
     if workflow == NATIVE_FOUNDATION_WORKFLOW:
         content = str(data.get('configContent') or data.get('content') or '')
         try:
@@ -41174,6 +41607,57 @@ def cancel_job(job_id):
     if not job:
         return jsonify({'error': 'not found'}), 404
     return jsonify(job)
+
+
+@app.route('/api/jobs/<job_id>/restart', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def restart_job(job_id):
+    original = _job_manager.get_job(job_id, include_logs=False)
+    if not original:
+        return jsonify({'error': 'Job not found'}), 404
+    if original.get('workflow') != FOUNDATION_VM_WORKFLOW:
+        return jsonify({'error': 'Only Foundation VM jobs support controlled restart'}), 400
+    if original.get('status') not in {'failed', 'cancelled', 'interrupted'}:
+        return jsonify({'error': 'Only failed, cancelled, or interrupted Foundation VM jobs can be restarted'}), 409
+    data = request.get_json(silent=True) or {}
+    if str(data.get('confirmation') or '').strip() != 'RESTART FOUNDATION VM':
+        return jsonify({'error': 'Confirmation must exactly match: RESTART FOUNDATION VM'}), 403
+    if not FOUNDATION_VM_MUTATION_ENABLED:
+        return jsonify({'error': 'Foundation VM mutation is disabled'}), 403
+    payload = _job_manager.get_payload(job_id) or {}
+    content = str(payload.get('configContent') or '')
+    try:
+        config = yaml.safe_load(content) or {}
+    except yaml.YAMLError as exc:
+        return jsonify({'error': f'Foundation VM YAML parse error: {exc}'}), 400
+    submission_error = _foundation_vm_submission_error(
+        {'destructiveConfirmation': FOUNDATION_VM_CONFIRMATION},
+        config if isinstance(config, dict) else {},
+        role='admin',
+    )
+    if submission_error:
+        return jsonify({'error': submission_error}), 403
+    approval_id = str(payload.get('approvalId') or '').strip()
+    approval = _approval_manager.get_approval(approval_id) if approval_id else None
+    approval_error = _workflow_approval_error(
+        approval,
+        FOUNDATION_VM_WORKFLOW,
+        str(payload.get('configFile') or ''),
+        content,
+    )
+    if approval_error:
+        return jsonify({'error': approval_error, 'approvalRequired': True}), 403
+    payload['restartedFromJobId'] = job_id
+    restarted = _job_manager.submit(payload, getattr(request, 'current_user', {}).get('username', 'unknown'))
+    if approval:
+        _approval_manager.link_job(approval['id'], restarted['id'])
+    log.info('foundation_vm_job_restarted', extra={
+        'user': getattr(request, 'current_user', {}).get('username', 'unknown'),
+        'jobId': restarted['id'],
+        'sourceJobId': job_id,
+    })
+    return jsonify(restarted), 202
 
 
 @app.route('/api/jobs/<job_id>', methods=['DELETE'])
