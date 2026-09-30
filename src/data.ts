@@ -20,6 +20,15 @@ export const WORKFLOWS: WorkflowDef[] = [
     details: 'Builds a standalone Foundation Central Appliance cluster creation intent, validates Lifecycle v4.2.a2 inventory, and submits guarded Lifecycle execution requests after explicit operator acknowledgement.',
   },
   {
+    id: 'cluster-create-foundation-vm',
+    name: 'Cluster Create (Foundation VM)',
+    description: 'Validates classic Foundation VM cluster creation inputs through the Foundation 5.x API',
+    category: 'Infrastructure',
+    icon: 'Server',
+    configFile: 'create_foundation_vm_cluster.yml',
+    details: 'Builds a classic Foundation VM cluster creation intent and validates the Foundation VM endpoint on port 8000. Live image_nodes submission remains disabled until the Foundation VM payload contract is verified.',
+  },
+  {
     id: 'imaging-only',
     name: 'Imaging Only',
     description: 'Images nodes without creating a cluster (bare metal prep)',

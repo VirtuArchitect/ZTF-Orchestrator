@@ -91,7 +91,7 @@ export function buildGlobalYaml(config: {
 }
 
 export function buildClusterCreateYaml(cfg: {
-  foundationCentralTarget: 'integrated_pc_fc' | 'standalone_fca'
+  foundationCentralTarget: 'integrated_pc_fc' | 'standalone_fca' | 'foundation_vm'
   pcCredential: string
   cvmCredential: string
   pcIp: string
@@ -167,6 +167,32 @@ export function buildClusterCreateYaml(cfg: {
       fca_execution: {
         submit_path: 'config/workflows',
         status_path_template: 'config/workflows/{extId}',
+      },
+      common_network_settings: {
+        dns_servers: cfg.dnsServers,
+        ntp_servers: cfg.ntpServers,
+      },
+      create_clusters: createClusters,
+    })
+  }
+
+  if (cfg.foundationCentralTarget === 'foundation_vm') {
+    return toYaml({
+      ztf_orchestrator: {
+        foundation_target: 'foundation_vm',
+        executor: 'orchestrator_foundation_vm_v1',
+        execution_status: 'validation_only',
+      },
+      foundation_vm_ip: cfg.pcIp,
+      foundation_vm_port: 8000,
+      foundation_vm_scheme: 'http',
+      foundation_vm_credential: cfg.pcCredential,
+      cvm_credential: cfg.cvmCredential,
+      foundation_vm_execution: {
+        version_path: 'version',
+        factory_config_path: 'get_factory_config',
+        submit_path: 'image_nodes',
+        live_submit_enabled: false,
       },
       common_network_settings: {
         dns_servers: cfg.dnsServers,

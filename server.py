@@ -3095,7 +3095,7 @@ POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
 }
 
 ALLOWED_WORKFLOWS = {
-    'cluster-create', 'cluster-create-standalone-fca',
+    'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
     'imaging-only', 'imaging-only-standalone-fca',
     'imaging', 'imaging-standalone-fca',
     'site-deploy', 'site-deploy-standalone-fca',
@@ -3107,7 +3107,7 @@ ALLOWED_WORKFLOWS = {
 } | POST_FOUNDATION_WORKFLOWS
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
-    'cluster-create', 'cluster-create-standalone-fca',
+    'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
     'imaging-only', 'imaging-only-standalone-fca',
     'imaging', 'imaging-standalone-fca',
     'site-deploy', 'site-deploy-standalone-fca',
@@ -3414,6 +3414,17 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'cluster_node_required_keys': ['node_serial', 'cvm_ip', 'host_ip'],
         'fca_lifecycle': True,
     },
+    'cluster-create-foundation-vm': {
+        'required':    ['foundation_vm_ip', 'foundation_vm_credential', 'cvm_credential', 'common_network_settings', 'create_clusters'],
+        'credential_fields': {'foundation_vm_credential': 'Foundation VM', 'cvm_credential': 'CVM'},
+        'ip_fields':   [],
+        'connect':     [('foundation_vm_ip', 8000, 'Foundation VM')],
+        'mapping_required_keys': {'common_network_settings': ['dns_servers', 'ntp_servers']},
+        'cluster_list_field': 'create_clusters',
+        'cluster_list_required_keys': ['cluster_name', 'cluster_vip', 'nodes_list'],
+        'cluster_node_required_keys': ['node_serial', 'cvm_ip', 'host_ip'],
+        'foundation_vm': True,
+    },
     'imaging-only': {
         'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'aos_url'],
         'credential_fields': {'pc_credential': 'Foundation Central', 'cvm_credential': 'CVM'},
@@ -3567,6 +3578,7 @@ def _preflight_for_execution(workflow_or_script: str) -> dict:
 
 PC_IP_WORKFLOWS = {'cluster-create', 'imaging-only', 'imaging'}
 STANDALONE_FCA_WORKFLOW = 'cluster-create-standalone-fca'
+FOUNDATION_VM_WORKFLOW = 'cluster-create-foundation-vm'
 STANDALONE_FCA_WORKFLOWS = {
     'cluster-create-standalone-fca',
     'imaging-only-standalone-fca',
@@ -3575,6 +3587,14 @@ STANDALONE_FCA_WORKFLOWS = {
 }
 FOUNDATION_TARGET_INTEGRATED_PC_FC = 'integrated_pc_fc'
 FOUNDATION_TARGET_STANDALONE_FCA = 'standalone_fca'
+FOUNDATION_TARGET_FOUNDATION_VM = 'foundation_vm'
+FOUNDATION_VM_DEFAULT_PORT = 8000
+FOUNDATION_VM_DEFAULT_SCHEME = 'http'
+FOUNDATION_VM_VALIDATION_ONLY_MESSAGE = (
+    'Classic Foundation VM workflow is validation-only. Dry Run validates the '
+    'Foundation VM 5.x endpoint on port 8000; live image_nodes submission is '
+    'disabled until the Foundation VM API payload contract is verified.'
+)
 STANDALONE_FCA_UNSUPPORTED_MESSAGE = (
     'Standalone Foundation Central Appliance scheduled execution requires a '
     'direct Run Workflow submission with explicit operator acknowledgement.'
@@ -4684,16 +4704,90 @@ def _native_foundation_phase_advancement_review(config: dict, content: str, requ
 
 
 def _cluster_create_foundation_target(config: dict) -> str:
-    """Return the Orchestrator-only Cluster Create Foundation Central target."""
+    """Return the Orchestrator-only Cluster Create Foundation target."""
     metadata = config.get('ztf_orchestrator')
     value = ''
     if isinstance(metadata, dict):
-        value = str(metadata.get('foundation_central_target') or '').strip()
+        value = str(metadata.get('foundation_target') or metadata.get('foundation_central_target') or '').strip()
     if not value:
-        value = str(config.get('foundation_central_target') or '').strip()
+        value = str(config.get('foundation_target') or config.get('foundation_central_target') or '').strip()
     if value in {FOUNDATION_TARGET_STANDALONE_FCA, 'foundation_central_appliance'}:
         return FOUNDATION_TARGET_STANDALONE_FCA
+    if value in {FOUNDATION_TARGET_FOUNDATION_VM, 'classic_foundation_vm', 'foundation'}:
+        return FOUNDATION_TARGET_FOUNDATION_VM
     return FOUNDATION_TARGET_INTEGRATED_PC_FC
+
+
+def _foundation_vm_endpoint(config: dict) -> tuple[str, str, int]:
+    host = str(config.get('foundation_vm_ip') or config.get('foundation_vm_host') or '').strip()
+    scheme = str(config.get('foundation_vm_scheme') or FOUNDATION_VM_DEFAULT_SCHEME).strip().lower()
+    if scheme not in {'http', 'https'}:
+        scheme = FOUNDATION_VM_DEFAULT_SCHEME
+    try:
+        port = int(config.get('foundation_vm_port') or FOUNDATION_VM_DEFAULT_PORT)
+    except (TypeError, ValueError):
+        port = FOUNDATION_VM_DEFAULT_PORT
+    return host, scheme, port
+
+
+def _foundation_vm_url(config: dict, resource_path: str) -> str:
+    host, scheme, port = _foundation_vm_endpoint(config)
+    path = str(resource_path or '').strip().lstrip('/')
+    if not path.startswith('foundation/'):
+        path = f'foundation/{path}'
+    return f'{scheme}://{host}:{port}/{path}'
+
+
+def _foundation_vm_get(config: dict, resource_path: str) -> tuple[bool, str, str, float]:
+    url = _foundation_vm_url(config, resource_path)
+    started = time.perf_counter()
+    try:
+        req = urllib.request.Request(url, method='GET')
+        context = ssl._create_unverified_context() if url.startswith('https://') else None
+        with urllib.request.urlopen(req, timeout=10, context=context) as resp:  # nosec B310 - operator-configured Foundation VM endpoint.
+            body = resp.read(8192).decode('utf-8', 'replace').strip()
+        return True, '', body, (time.perf_counter() - started) * 1000
+    except urllib.error.HTTPError as exc:
+        return False, f'HTTP {exc.code}: {exc.reason}', '', (time.perf_counter() - started) * 1000
+    except Exception as exc:
+        return False, str(exc), '', (time.perf_counter() - started) * 1000
+
+
+def _run_foundation_vm_preflight(config: dict) -> tuple[list[str], int, int]:
+    lines: list[str] = []
+    passed = 0
+    failed = 0
+    host, _scheme, port = _foundation_vm_endpoint(config)
+    if not host:
+        return lines, passed, failed
+
+    version_path = 'version'
+    execution = config.get('foundation_vm_execution')
+    if isinstance(execution, dict):
+        version_path = str(execution.get('version_path') or version_path).strip() or version_path
+    ok, err, body, ms = _foundation_vm_get(config, version_path)
+    if ok:
+        version = body.strip().strip('"') or 'unknown'
+        lines.append(f'[PASS] Foundation VM version ({ms:>5.0f}ms) : {version}')
+        passed += 1
+    else:
+        lines.append(f'[FAIL] Foundation VM version endpoint failed : {host}:{port} ({err})')
+        failed += 1
+
+    factory_path = 'get_factory_config'
+    if isinstance(execution, dict):
+        factory_path = str(execution.get('factory_config_path') or factory_path).strip() or factory_path
+    ok, err, body, ms = _foundation_vm_get(config, factory_path)
+    if ok:
+        summary = body if len(body) <= 120 else f'{body[:117]}...'
+        lines.append(f'[PASS] Foundation VM factory config ({ms:>5.0f}ms) : {summary or "{}"}')
+        passed += 1
+    else:
+        lines.append(f'[FAIL] Foundation VM factory config endpoint failed : {host}:{port} ({err})')
+        failed += 1
+
+    lines.append(f'[INFO] {FOUNDATION_VM_VALIDATION_ONLY_MESSAGE}')
+    return lines, passed, failed
 
 
 def _standalone_fca_execution_error(workflow: str, config_content: str) -> str:
@@ -33511,6 +33605,13 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('stdout', f'Result: {passed} passed, {failed} failed')
         yield from send('done', {'status': 'failed', 'dryRun': True, 'passed': passed, 'failed': failed})
         return
+    if fc_target == FOUNDATION_TARGET_FOUNDATION_VM:
+        yield from send('stdout', '[FAIL] Classic Foundation VM configs must use workflow "cluster-create-foundation-vm" and config file "create_foundation_vm_cluster.yml".')
+        failed += 1
+        yield from send('stdout', '')
+        yield from send('stdout', f'Result: {passed} passed, {failed} failed')
+        yield from send('done', {'status': 'failed', 'dryRun': True, 'passed': passed, 'failed': failed})
+        return
 
     if workflow in POST_FOUNDATION_WORKFLOWS:
         plan_lines, plan_passed, plan_failed = _validate_post_foundation_plan(workflow, config)
@@ -33843,6 +33944,13 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
             yield from send('stdout', line)
         passed += fca_passed
         failed += fca_failed
+
+    if preflight.get('foundation_vm'):
+        foundation_lines, foundation_passed, foundation_failed = _run_foundation_vm_preflight(config)
+        for line in foundation_lines:
+            yield from send('stdout', line)
+        passed += foundation_passed
+        failed += foundation_failed
 
     # ── Summary ──────────────────────────────────────────────────────────────
     yield from send('stdout', '-' * 52)
@@ -34302,6 +34410,62 @@ class ExecutionJobManager:
             target_error = _standalone_fca_execution_error(workflow or '', effective_config_content)
             if target_error:
                 self._emit(job_id, 'error', target_error)
+                return
+            if workflow == FOUNDATION_VM_WORKFLOW:
+                configs_dir = get_configs_dir()
+                self._update_progress(job_id, 'Preparing Foundation VM validation', 15, 'Validating and saving workflow YAML')
+                if effective_config_content and config_file:
+                    path = safe_config_path(config_file, configs_dir)
+                    if path is None or path.suffix not in ('.yml', '.yaml'):
+                        self._emit(job_id, 'error', 'Invalid config filename')
+                        return
+                    ok, err = validate_yaml(effective_config_content)
+                    if not ok:
+                        self._emit(job_id, 'error', f'Invalid YAML: {err}')
+                        return
+                    backup_config(path)
+                    _secure_write(path, effective_config_content)
+                    cfg_path = str(path)
+                elif config_file:
+                    path = safe_config_path(config_file, configs_dir)
+                    if path is None or not path.exists() or path.suffix not in ('.yml', '.yaml'):
+                        self._emit(job_id, 'error', 'Config file was not found')
+                        return
+                    cfg_path = str(path)
+                    effective_config_content = path.read_text(encoding='utf-8')
+                else:
+                    self._emit(job_id, 'error', 'Foundation VM config content or config file is required')
+                    return
+                try:
+                    config = yaml.safe_load(effective_config_content) or {}
+                except yaml.YAMLError as exc:
+                    self._emit(job_id, 'error', f'Invalid YAML: {exc}')
+                    return
+                if not isinstance(config, dict):
+                    self._emit(job_id, 'error', 'Foundation VM config must be a YAML mapping')
+                    return
+                cmd_args = ['foundation-vm', '--workflow', workflow, '-f', cfg_path or config_file]
+                self._emit(job_id, 'start', {
+                    'command': _display_command(cmd_args),
+                    'commandArgs': cmd_args,
+                    'workingDir': '',
+                    'configFile': config_file or '',
+                    'configPath': cfg_path or '',
+                })
+                self._update_progress(job_id, 'Validating Foundation VM endpoint', 55, 'Calling read-only Foundation VM APIs')
+                foundation_lines, foundation_passed, foundation_failed = _run_foundation_vm_preflight(config)
+                for line in foundation_lines:
+                    stdout_lines.append(line)
+                    self._emit(job_id, 'stdout', line)
+                if foundation_failed:
+                    status = 'failed'
+                    return_code = -1
+                    return
+                stdout_lines.append(f'[INFO] Foundation VM preflight passed: {foundation_passed} checks')
+                self._emit(job_id, 'stdout', f'[INFO] Foundation VM preflight passed: {foundation_passed} checks')
+                self._emit(job_id, 'error', FOUNDATION_VM_VALIDATION_ONLY_MESSAGE)
+                status = 'failed'
+                return_code = -1
                 return
             if workflow in STANDALONE_FCA_WORKFLOWS:
                 acknowledgement_error = _validate_standalone_fca_ack(workflow, payload)
@@ -40613,7 +40777,7 @@ def execute_workflow():
             headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
         )
 
-    if workflow not in STANDALONE_FCA_WORKFLOWS:
+    if workflow not in STANDALONE_FCA_WORKFLOWS and workflow != FOUNDATION_VM_WORKFLOW:
         incompatible = _ztf_incompatible_error(settings['ztfPath'])
         if incompatible:
             body, status_code = incompatible
@@ -40945,7 +41109,7 @@ def submit_job():
     if standalone_fca_error:
         return jsonify({'error': standalone_fca_error, 'destructiveAction': True}), 403
 
-    if workflow not in STANDALONE_FCA_WORKFLOWS:
+    if workflow not in STANDALONE_FCA_WORKFLOWS and workflow != FOUNDATION_VM_WORKFLOW:
         incompatible = _ztf_incompatible_error(settings['ztfPath'])
         if incompatible:
             body, status_code = incompatible

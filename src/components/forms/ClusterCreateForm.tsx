@@ -33,10 +33,11 @@ interface Props {
   onYamlChange: (yaml: string) => void
   profile?: ConnectionProfile
   importedConfig?: unknown
-  forcedFoundationCentralTarget?: 'integrated_pc_fc' | 'standalone_fca'
+  forcedFoundationCentralTarget?: FoundationTarget
 }
 
 const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
+type FoundationTarget = 'integrated_pc_fc' | 'standalone_fca' | 'foundation_vm'
 
 const defaultNode = (): Node => ({ nodeSerial: '', cvmIp: '', hostIp: '', ipmiIp: '', hostname: '', cvmRamGb: 12 })
 const defaultCluster = (): Cluster => ({
@@ -86,12 +87,12 @@ function asRedundancyFactor(value: unknown): 2 | 3 {
 function initialState(
   profile?: ConnectionProfile,
   importedConfig?: unknown,
-  forcedFoundationCentralTarget?: 'integrated_pc_fc' | 'standalone_fca',
+  forcedFoundationCentralTarget?: FoundationTarget,
 ) {
   const profileDns = csv(profile?.defaults.dnsServers)
   const profileNtp = csv(profile?.defaults.ntpServers)
   const defaults = {
-    fcTarget: (forcedFoundationCentralTarget || 'integrated_pc_fc') as 'integrated_pc_fc' | 'standalone_fca',
+    fcTarget: (forcedFoundationCentralTarget || 'integrated_pc_fc') as FoundationTarget,
     pcCred: profile?.foundationCentral.credentialRef || profile?.prismCentral.credentialRef || 'foundation_central',
     cvmCred: profile?.prismElement.cvmCredentialRef || 'cvm_credential',
     pcIp: profile?.foundationCentral.endpoint || profile?.prismCentral.endpoint || '',
@@ -145,11 +146,17 @@ function initialState(
       })
     : defaults.clusters
 
+  const importedTarget = metadata.foundation_target === 'foundation_vm'
+    ? 'foundation_vm'
+    : metadata.foundation_central_target === 'standalone_fca'
+      ? 'standalone_fca'
+      : defaults.fcTarget
+
   return {
-    fcTarget: forcedFoundationCentralTarget || (metadata.foundation_central_target === 'standalone_fca' ? 'standalone_fca' as const : defaults.fcTarget),
-    pcCred: asString(root.fca_credential, asString(root.pc_credential, defaults.pcCred)),
+    fcTarget: forcedFoundationCentralTarget || importedTarget,
+    pcCred: asString(root.foundation_vm_credential, asString(root.fca_credential, asString(root.pc_credential, defaults.pcCred))),
     cvmCred: asString(root.cvm_credential, defaults.cvmCred),
-    pcIp: asString(root.fca_ip, asString(root.pc_ip, defaults.pcIp)),
+    pcIp: asString(root.foundation_vm_ip, asString(root.fca_ip, asString(root.pc_ip, defaults.pcIp))),
     fcaApiVersion: asString(root.fca_api_version, defaults.fcaApiVersion),
     hardwareProviderExtId: asString(root.hardware_provider_ext_id, defaults.hardwareProviderExtId),
     hardwareProviderName: asString(root.hardware_provider_name, defaults.hardwareProviderName),
@@ -169,7 +176,7 @@ export default function ClusterCreateForm({
   forcedFoundationCentralTarget,
 }: Props) {
   const initial = () => initialState(profile, importedConfig, forcedFoundationCentralTarget)
-  const [fcTarget, setFcTarget] = useState<'integrated_pc_fc' | 'standalone_fca'>(() => initial().fcTarget)
+  const [fcTarget, setFcTarget] = useState<FoundationTarget>(() => initial().fcTarget)
   const [pcCred, setPcCred] = useState(() => initial().pcCred)
   const [cvmCred, setCvmCred] = useState(() => initial().cvmCred)
   const [pcIp, setPcIp] = useState(() => initial().pcIp)
@@ -262,6 +269,11 @@ export default function ClusterCreateForm({
       ? { ...c, nodes: c.nodes.map((n, j) => j === ni ? { ...n, ...updates } : n) }
       : c
     ))
+  const targetLabel = fcTarget === 'foundation_vm'
+    ? 'Foundation VM'
+    : fcTarget === 'standalone_fca'
+      ? 'Standalone Foundation Central Appliance'
+      : 'Foundation Central'
 
   return (
     <div className="space-y-5">
@@ -270,19 +282,20 @@ export default function ClusterCreateForm({
         <p className="form-section-title"><Server size={14} /> Global Settings</p>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="label">Foundation Central Target</label>
+            <label className="label">Foundation Target</label>
             <select
               className="input"
               value={fcTarget}
-              onChange={e => setFcTarget(e.target.value as 'integrated_pc_fc' | 'standalone_fca')}
+              onChange={e => setFcTarget(e.target.value as FoundationTarget)}
               disabled={Boolean(forcedFoundationCentralTarget)}
             >
               <option value="integrated_pc_fc">Integrated Prism Central Foundation Central</option>
               <option value="standalone_fca">Standalone Foundation Central Appliance</option>
+              <option value="foundation_vm">Classic Foundation VM</option>
             </select>
           </div>
           <div>
-            <label className="label">Foundation Central Credential Reference</label>
+            <label className="label">{targetLabel} Credential Reference</label>
             <select className="input" value={pcCred} onChange={e => setPcCred(e.target.value)}>
               {credentialOptions.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
@@ -294,7 +307,7 @@ export default function ClusterCreateForm({
             </select>
           </div>
           <div className="col-span-2">
-            <label className="label">Foundation Central IP <span className="text-red-400">*</span></label>
+            <label className="label">{targetLabel} IP / FQDN <span className="text-red-400">*</span></label>
             <input className="input" value={pcIp} onChange={e => setPcIp(e.target.value)} placeholder="10.0.0.100" />
           </div>
           {fcTarget === 'standalone_fca' && (

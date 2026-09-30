@@ -55,6 +55,7 @@ const POST_FOUNDATION_WORKFLOWS = new Set([
 const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'cluster-create': ['common_network_settings', 'create_clusters'],
   'cluster-create-standalone-fca': ['fca_ip', 'fca_credential', 'common_network_settings', 'create_clusters'],
+  'cluster-create-foundation-vm': ['foundation_vm_ip', 'common_network_settings', 'create_clusters'],
   'imaging-only': ['imaging_batches'],
   'imaging-only-standalone-fca': ['fca_ip', 'fca_credential', 'imaging_batches'],
   'imaging-standalone-fca': ['fca_ip', 'fca_credential', 'imaging_batches'],
@@ -3227,6 +3228,7 @@ export default function WorkflowDetail() {
     switch (workflow.id) {
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'cluster-create-standalone-fca': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="standalone_fca" />
+      case 'cluster-create-foundation-vm': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="foundation_vm" />
       case 'imaging-only': return <ImagingOnlyForm {...props} />
       case 'imaging-only-standalone-fca': return <ImagingOnlyForm {...props} standaloneFca />
       case 'imaging-standalone-fca': return <ImagingOnlyForm {...props} standaloneFca />

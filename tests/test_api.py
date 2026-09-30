@@ -15844,6 +15844,93 @@ def test_preflight_generator_pass(monkeypatch):
     assert '[FAIL]' not in output
 
 
+def test_preflight_validates_classic_foundation_vm(monkeypatch):
+    """Foundation VM cluster-create dry-run validates the classic port-8000 API."""
+    import server
+
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 5.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+
+    def fake_foundation_get(config, resource_path):
+        if resource_path == 'version':
+            return True, '', '5.11', 4.0
+        if resource_path == 'get_factory_config':
+            return True, '', '{}', 4.0
+        return False, 'unexpected path', '', 0.0
+
+    monkeypatch.setattr(server, '_foundation_vm_get', fake_foundation_get)
+    yaml_ok = (
+        'ztf_orchestrator:\n'
+        '  foundation_target: foundation_vm\n'
+        '  executor: orchestrator_foundation_vm_v1\n'
+        'foundation_vm_ip: 10.20.30.49\n'
+        'foundation_vm_credential: foundation_vm\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
+    )
+
+    output = ''.join(server._run_preflight('cluster-create-foundation-vm', yaml_ok, 'test-id'))
+
+    assert 'Foundation VM version' in output
+    assert '5.11' in output
+    assert 'Foundation VM factory config' in output
+    assert 'validation-only' in output
+    assert '[FAIL]' not in output
+
+
+def test_foundation_vm_job_blocks_live_submit(client, auth_headers, monkeypatch):
+    """Foundation VM Run Workflow saves and validates YAML, then blocks live image_nodes submit."""
+    import server
+
+    client.post('/api/settings',
+                json={'approvalRequiredWorkflows': []},
+                headers=auth_headers)
+    monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 5.0))
+    monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
+    monkeypatch.setattr(
+        server,
+        '_run_foundation_vm_preflight',
+        lambda config: (['[PASS] Foundation VM version (    4ms) : 5.11'], 1, 0),
+    )
+
+    yaml_ok = (
+        'foundation_vm_ip: 10.20.30.49\n'
+        'foundation_vm_credential: foundation_vm\n'
+        'cvm_credential: cvm_cred\n'
+        'common_network_settings:\n'
+        '  dns_servers: [8.8.8.8]\n'
+        '  ntp_servers: [0.us.pool.ntp.org]\n'
+        'create_clusters:\n'
+        '  - cluster_name: c1\n'
+        '    cluster_vip: 10.0.0.10\n'
+        '    nodes_list:\n'
+        '      - node_serial: NODE-A\n'
+        '        cvm_ip: 10.0.0.11\n'
+        '        host_ip: 10.0.0.12\n'
+    )
+
+    resp = client.post('/api/jobs',
+                       json={'workflow': 'cluster-create-foundation-vm',
+                             'configContent': yaml_ok,
+                             'configFile': 'create_foundation_vm_cluster.yml'},
+                       headers=auth_headers)
+
+    assert resp.status_code == 202
+    job = _wait_for_job(client, auth_headers, resp.get_json()['id'])
+    assert job['status'] == 'failed'
+    log_text = '\n'.join(str(entry.get('data', entry)) if isinstance(entry, dict) else str(entry) for entry in job.get('logs', []))
+    assert 'image_nodes submission is disabled' in log_text
+
+
 def test_preflight_accepts_legacy_cluster_create_keys(monkeypatch):
     """Legacy Orchestrator cluster-create configs still preflight after normalization."""
     import server
