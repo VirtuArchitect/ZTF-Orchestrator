@@ -101,6 +101,20 @@ export function buildClusterCreateYaml(cfg: {
   connectionExtId?: string
   aosImageExtId?: string
   hypervisorImageExtId?: string
+  hardwarePlatform?: string
+  rdmaPassthrough?: boolean
+  lagType?: string
+  installerIp?: string
+  installerNetmask?: string
+  installerGateway?: string
+  skipNetworkCheck?: boolean
+  lacpRate?: string
+  aosPackage?: string
+  hypervisorType?: string
+  hypervisorIso?: string
+  phoenixIso?: string
+  hypervisorCredential?: string
+  clusterCredential?: string
   dnsServers: string[]
   ntpServers: string[]
   clusters: Array<{
@@ -116,11 +130,24 @@ export function buildClusterCreateYaml(cfg: {
     cvmVlanId?: number
     ipmiGateway?: string
     ipmiNetmask?: string
+    ipmiVlanId?: number
+    noIpmiSubnet?: boolean
+    skipClusterCreation?: boolean
+    lockdownMode?: boolean
+    restrictedShellMode?: boolean
+    sshUsingPassword?: boolean
+    externalAccessKeys?: string[]
     nodes: Array<{
+      blockSerial?: string
       nodeSerial?: string
+      nodePosition?: string
+      nodeRole?: string
+      ipmiCredentialRef?: string
       cvmIp: string
       hostIp: string
       ipmiIp?: string
+      ipmiMac?: string
+      ipmiConfigureNow?: boolean
       hostname?: string
       cvmRamGb?: number
     }>
@@ -139,11 +166,26 @@ export function buildClusterCreateYaml(cfg: {
     ...(c.cvmVlanId ? { cvm_vlan_id: c.cvmVlanId } : {}),
     ...(c.ipmiGateway ? { ipmi_gateway: c.ipmiGateway } : {}),
     ...(c.ipmiNetmask ? { ipmi_netmask: c.ipmiNetmask } : {}),
+    ...(c.ipmiVlanId ? { ipmi_vlan_id: c.ipmiVlanId } : {}),
+    ...(c.noIpmiSubnet ? { no_ipmi_subnet: true } : {}),
+    ...(c.skipClusterCreation ? { skip_cluster_creation: true } : {}),
+    ...(c.lockdownMode ? { lockdown_mode: true } : {}),
+    ...(c.restrictedShellMode ? { restricted_shell_mode: true } : {}),
+    ssh_using_password: c.sshUsingPassword !== false,
+    ...(c.externalAccessKeys?.length ? { external_access_keys: c.externalAccessKeys } : {}),
     nodes_list: c.nodes.map(n => ({
+      block_serial: n.blockSerial,
       node_serial: n.nodeSerial,
+      node_position: n.nodePosition,
+      node_role: n.nodeRole || 'hyperconverged',
+      ipmi_credential_ref: n.ipmiCredentialRef,
       cvm_ip: n.cvmIp,
       host_ip: n.hostIp,
       ...(n.ipmiIp ? { ipmi_ip: n.ipmiIp } : {}),
+      ...(n.ipmiMac ? { ipmi_mac: n.ipmiMac } : {}),
+      ...(cfg.foundationCentralTarget === 'foundation_vm'
+        ? { ipmi_configure_now: Boolean(n.ipmiConfigureNow) }
+        : {}),
       ...(n.hostname ? { hypervisor_hostname: n.hostname } : {}),
       ...(n.cvmRamGb ? { cvm_ram_gb: n.cvmRamGb } : {}),
     })),
@@ -181,18 +223,37 @@ export function buildClusterCreateYaml(cfg: {
       ztf_orchestrator: {
         foundation_target: 'foundation_vm',
         executor: 'orchestrator_foundation_vm_v1',
-        execution_status: 'validation_only',
+        execution_status: 'controlled_mutation',
       },
       foundation_vm_ip: cfg.pcIp,
       foundation_vm_port: 8000,
       foundation_vm_scheme: 'http',
-      foundation_vm_credential: cfg.pcCredential,
-      cvm_credential: cfg.cvmCredential,
+      hypervisor_credential: cfg.hypervisorCredential || cfg.cvmCredential,
+      cluster_credential: cfg.clusterCredential || cfg.cvmCredential,
+      foundation_vm_options: {
+        hardware_platform: cfg.hardwarePlatform || 'autodetect',
+        rdma_passthrough: Boolean(cfg.rdmaPassthrough),
+        lag_type: cfg.lagType || 'none',
+        lacp_rate: cfg.lacpRate || 'fast',
+        skip_network_check: Boolean(cfg.skipNetworkCheck),
+        ...(cfg.installerIp ? { installer_ip: cfg.installerIp } : {}),
+        ...(cfg.installerNetmask ? { installer_netmask: cfg.installerNetmask } : {}),
+        ...(cfg.installerGateway ? { installer_gateway: cfg.installerGateway } : {}),
+      },
+      aos_hypervisor_images: {
+        hypervisor_type: cfg.hypervisorType || 'AHV',
+        ...(cfg.aosPackage ? { aos_package: cfg.aosPackage } : {}),
+        ...(cfg.hypervisorIso ? { hypervisor_iso: cfg.hypervisorIso } : {}),
+        ...(cfg.phoenixIso ? { phoenix_iso: cfg.phoenixIso } : {}),
+      },
       foundation_vm_execution: {
         version_path: 'version',
         factory_config_path: 'get_factory_config',
         submit_path: 'image_nodes',
-        live_submit_enabled: false,
+        ipmi_config_path: 'ipmi_config',
+        live_submit_enabled: true,
+        progress_path: 'progress',
+        abort_path: 'abort_session',
       },
       common_network_settings: {
         dns_servers: cfg.dnsServers,

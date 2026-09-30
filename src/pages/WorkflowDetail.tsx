@@ -55,7 +55,7 @@ const POST_FOUNDATION_WORKFLOWS = new Set([
 const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'cluster-create': ['common_network_settings', 'create_clusters'],
   'cluster-create-standalone-fca': ['fca_ip', 'fca_credential', 'common_network_settings', 'create_clusters'],
-  'cluster-create-foundation-vm': ['foundation_vm_ip', 'common_network_settings', 'create_clusters'],
+  'cluster-create-foundation-vm': ['foundation_vm_ip', 'foundation_vm_options', 'aos_hypervisor_images', 'common_network_settings', 'create_clusters'],
   'imaging-only': ['imaging_batches'],
   'imaging-only-standalone-fca': ['fca_ip', 'fca_credential', 'imaging_batches'],
   'imaging-standalone-fca': ['fca_ip', 'fca_credential', 'imaging_batches'],
@@ -171,6 +171,7 @@ export default function WorkflowDetail() {
   const workflowId = workflow?.id || ''
   const isZtf2Workflow = workflow?.runtimeMode === 'ztf2'
   const isNativeFoundationWorkflow = workflowId === 'native-foundation-deploy'
+  const isFoundationVmWorkflow = workflowId === 'cluster-create-foundation-vm'
   const location = useLocation()
   const workflowsBasePath = location.pathname.startsWith('/workflows-2x') || isZtf2Workflow ? '/workflows-2x' : '/workflows'
   const settings = useStore(s => s.settings)
@@ -294,6 +295,15 @@ export default function WorkflowDetail() {
       const expected = `${STANDALONE_FCA_CONFIRMATION_PREFIX} ${workflow.id}`
       const entered = window.prompt(
         `Standalone FCA execution will submit a Lifecycle API request.\n\nType exactly: ${expected}`
+      )
+      if (entered !== expected) return
+      extraParams.riskAcknowledged = 'true'
+      extraParams.destructiveConfirmation = expected
+    }
+    if (!dryRun && isFoundationVmWorkflow) {
+      const expected = 'DEPLOY FOUNDATION VM'
+      const entered = window.prompt(
+        `Foundation VM execution will configure IPMI, image nodes, and may form the cluster.\n\nType exactly: ${expected}`
       )
       if (entered !== expected) return
       extraParams.riskAcknowledged = 'true'

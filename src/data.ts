@@ -22,11 +22,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'cluster-create-foundation-vm',
     name: 'Cluster Create (Foundation VM)',
-    description: 'Validates classic Foundation VM cluster creation inputs through the Foundation 5.x API',
+    description: 'Creates clusters through the classic Foundation VM 5.x API',
     category: 'Infrastructure',
     icon: 'Server',
     configFile: 'create_foundation_vm_cluster.yml',
-    details: 'Builds a classic Foundation VM cluster creation intent and validates the Foundation VM endpoint on port 8000. Live image_nodes submission remains disabled until the Foundation VM payload contract is verified.',
+    details: 'Builds the native Foundation payload, validates image and IPMI readiness, and submits guarded ipmi_config and image_nodes requests with durable progress and recovery controls.',
   },
   {
     id: 'imaging-only',
