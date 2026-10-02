@@ -1106,6 +1106,7 @@ ZTF-Orchestrator is developed and maintained by **ZTF-Orchestrator maintainers**
 | Guide | Description |
 |---|---|
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
+| [docs/admin-guide.md](docs/admin-guide.md) | Administrator guide covering features, use cases, operating boundaries, governance, DR rebuild scenarios, and support procedures |
 | [docs/architecture/README.md](docs/architecture/README.md) | Architecture index, security boundary, data flow, and deployment boundaries |
 | [docs/demo/README.md](docs/demo/README.md) | Demo and simulator boundary for local proof versus target evidence |
 | [docs/governance/README.md](docs/governance/README.md) | Production-readiness boundary, DR, supportability, limitations, and evidence mapping |
