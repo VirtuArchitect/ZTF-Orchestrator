@@ -249,7 +249,7 @@ class ScheduleEngine:
         log.info('schedule_fire', extra={
             'action': 'schedule_fire',
             'schedule_id': schedule['id'],
-            'name': schedule['name'],
+            'schedule_name': schedule['name'],
         })
         try:
             status = self._run_cb(schedule)

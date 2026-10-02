@@ -15432,9 +15432,14 @@ def test_scheduled_drift_policy_records_scheduled_run(client, auth_headers):
                          },
                          headers=auth_headers).get_json()
 
-    status = server._drift_policy_engine._run_cb(policy)
+    server._drift_policy_engine._fire(policy)
 
-    assert status == 'drifted'
+    updated_policy = client.get(
+        f"/api/drift/policies/{policy['id']}",
+        headers=auth_headers,
+    ).get_json()
+    assert updated_policy['lastStatus'] == 'drifted'
+    assert updated_policy['lastRun']
     runs = client.get('/api/drift', headers=auth_headers).get_json()
     assert runs[0]['status'] == 'drifted'
     assert runs[0]['trigger'] == 'scheduled'
