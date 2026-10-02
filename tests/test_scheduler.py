@@ -1,7 +1,37 @@
+import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
 import scheduler
+
+
+def test_schedule_fire_runs_callback_and_persists_status(tmp_path, caplog):
+    schedules_file = tmp_path / 'schedules.json'
+    schedule = {
+        'id': 'hourly-drift',
+        'name': 'Hourly drift check',
+        'cronExpr': '0 * * * *',
+        'enabled': True,
+        'lastRun': None,
+        'lastStatus': None,
+    }
+    schedules_file.write_text(json.dumps([schedule]), encoding='utf-8')
+    fired = []
+    engine = scheduler.ScheduleEngine(
+        schedules_file,
+        lambda item: fired.append(item['id']) or 'matched',
+    )
+
+    with caplog.at_level(logging.INFO, logger='ztf'):
+        engine._fire(schedule)
+
+    stored = json.loads(schedules_file.read_text(encoding='utf-8'))[0]
+    record = next(record for record in caplog.records if record.msg == 'schedule_fire')
+    assert fired == ['hourly-drift']
+    assert stored['lastStatus'] == 'matched'
+    assert stored['lastRun']
+    assert record.schedule_name == 'Hourly drift check'
 
 
 def test_drift_detection_presets_use_scheduler_weekday_numbering():
