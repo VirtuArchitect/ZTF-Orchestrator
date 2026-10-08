@@ -15915,13 +15915,14 @@ def test_preflight_validates_classic_foundation_vm(monkeypatch):
     assert '[FAIL]' not in output
 
 
-def test_foundation_vm_job_blocks_live_submit_when_gate_is_disabled(client, auth_headers, monkeypatch):
-    """Foundation VM execution remains fail-closed until the explicit gate is enabled."""
+def test_foundation_vm_job_blocks_live_submit_when_gate_is_explicitly_disabled(client, auth_headers, monkeypatch):
+    """Foundation VM execution can still be disabled by environment configuration."""
     import server
 
     client.post('/api/settings',
                 json={'approvalRequiredWorkflows': []},
                 headers=auth_headers)
+    monkeypatch.setattr(server, 'FOUNDATION_VM_MUTATION_ENABLED', False)
     monkeypatch.setattr(server, '_tcp_check', lambda h, p, timeout=5.0: (True, 5.0))
     monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: ('admin', 'secret', ''))
     yaml_ok = (

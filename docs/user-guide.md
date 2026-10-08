@@ -246,7 +246,7 @@ Workflow detail functions:
 | Download Config | Downloads the active YAML. |
 | Dry Run | Validates the config and performs non-destructive readiness or connectivity checks where supported. Approval is not required for dry run. |
 | Approved Request selector | Lets operators bind a matching approved request when the workflow is approval-mandatory. |
-| Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. Classic Foundation VM cluster-create requires an administrator, an exact `DEPLOY FOUNDATION VM` confirmation, normal approval policy, and the separately enabled appliance mutation gate. |
+| Run Workflow | Submits a Workflows 1.x item through the governed legacy execution path. Standalone FCA workflows require an exact destructive acknowledgement phrase before submission. Classic Foundation VM cluster-create requires an administrator, an exact `DEPLOY FOUNDATION VM` confirmation, normal approval policy, and a valid Foundation VM intent. |
 | Run Plan | Submits a Workflows 2.x item through the ZTF 2.x IaC plan path. Apply and destroy remain approval-bound from the ZTF 2.x IaC page. |
 
 For Native Foundation Deploy, the workflow detail page adds read-only review
@@ -889,19 +889,21 @@ and records a payload SHA-256 for traceability. Foundation image upload uses a
 bounded temporary staging file, a checksum, restricted filename and image-type
 validation, and removes the staging file after the upload attempt.
 
-Live Foundation mutation remains fail-closed by default. Enable it only for a
-controlled lab or approved deployment window:
+Live Foundation mutation is enabled by default and remains guarded by
+administrator access, normal approval policy, intent validation, and the exact
+`DEPLOY FOUNDATION VM` confirmation. Set the flag to `false` to keep live
+Foundation VM submission disabled:
 
 ```text
-ZTF_FOUNDATION_VM_ENABLE_MUTATION=true
+ZTF_FOUNDATION_VM_ENABLE_MUTATION=false
 ZTF_FOUNDATION_VM_ENABLE_IMAGE_UPLOAD=true
 ```
 
-The first flag allows an administrator to submit `image_nodes` after entering
-the exact `DEPLOY FOUNDATION VM` confirmation. `ipmi_config` is called first
-only for nodes whose **Configure IPMI network** option is selected. The second
-flag independently allows administrator-only image upload; discovery and use of
-images already present on Foundation do not require it. Set
+The first flag controls whether an administrator can submit `image_nodes` after
+entering the exact `DEPLOY FOUNDATION VM` confirmation. `ipmi_config` is called
+first only for nodes whose **Configure IPMI network** option is selected. The
+second flag independently allows administrator-only image upload; discovery and
+use of images already present on Foundation do not require it. Set
 `ZTF_FOUNDATION_VM_IMAGE_MAX_UPLOAD` to the maximum accepted upload size in
 bytes; the default is 20 GiB.
 
