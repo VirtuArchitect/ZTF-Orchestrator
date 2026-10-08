@@ -264,7 +264,7 @@ Import process:
    sudo /opt/ztf-orchestrator/appliance/scripts/apply-update-request.sh
    ```
 
-The package upload limit defaults to 2 GiB and can be changed with
+The package upload limit defaults to 8 GiB and can be changed with
 `ZTF_UPDATE_PACKAGE_MAX_UPLOAD`.
 
 ### Historical AHV Appliance v1.5.0 to v1.5.2/v1.5.3 Flow
