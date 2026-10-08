@@ -554,8 +554,8 @@ test('standalone FCA cluster workflow emits standalone config keys', async ({ pa
   await page.locator('input[placeholder="optional connection extId"]').fill('connection-1')
   await page.locator('input[placeholder="optional image extId"]').nth(0).fill('aos-image')
   await page.locator('input[placeholder="optional image extId"]').nth(1).fill('ahv-image')
-  await page.locator('input[placeholder="10.0.0.1"]').fill('192.0.2.1')
-  await page.locator('input[placeholder="255.255.255.0"]').fill('255.255.255.0')
+  await page.locator('input[placeholder="10.0.0.1"]').first().fill('192.0.2.1')
+  await page.locator('input[placeholder="255.255.255.0"]').first().fill('255.255.255.0')
   await page.getByRole('button', { name: 'YAML Preview' }).click()
 
   await expect(page.getByText('create_fca_cluster.yml', { exact: true })).toBeVisible()
@@ -646,6 +646,17 @@ test('script wizard emits schema-valid PE role mapping YAML', async ({ page }) =
 })
 
 test('script execution opens a large modal terminal', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          const target = window as unknown as { __copiedTerminalOutput?: string }
+          target.__copiedTerminalOutput = text
+        },
+      },
+    })
+  })
   await seedUiSession(page, {
     executeEvents: [
       { type: 'start', data: 'python main.py --script AddLocalUsers' },
@@ -668,6 +679,11 @@ test('script execution opens a large modal terminal', async ({ page }) => {
   const terminalBody = dialog.locator('.font-mono.text-xs').last()
   const box = await terminalBody.boundingBox()
   expect(box?.height ?? 0).toBeGreaterThan(380)
+
+  await dialog.getByLabel('Copy output').click()
+  await expect.poll(() => page.evaluate(() => (
+    window as unknown as { __copiedTerminalOutput?: string }
+  ).__copiedTerminalOutput || '')).toContain('visible script output line')
 })
 
 test('main pages keep readable text contrast in light theme', async ({ page }) => {

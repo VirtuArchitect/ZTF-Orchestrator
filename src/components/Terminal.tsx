@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { X, Copy, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { X, Copy, Check, CheckCircle, XCircle, Loader } from 'lucide-react'
 import clsx from 'clsx'
 
 interface LogLine {
@@ -19,14 +19,22 @@ interface TerminalProps {
 
 export default function Terminal({ logs, status, title, statusLabel, onClose, bodyClassName }: TerminalProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [logs.length])
 
-  const copyLogs = () => {
-    const text = logs.map(l => l.data).join('')
-    navigator.clipboard.writeText(text)
+  const copyLogs = async () => {
+    const text = logs.map(formatLogLineForCopy).join('\n')
+    if (!text) return
+    try {
+      await copyText(text)
+      setCopyState('copied')
+    } catch {
+      setCopyState('failed')
+    }
+    window.setTimeout(() => setCopyState('idle'), 1800)
   }
 
   const logTextClass = (line: LogLine) => {
@@ -76,8 +84,18 @@ export default function Terminal({ logs, status, title, statusLabel, onClose, bo
               <span>{statusLabel || 'Failed'}</span>
             </div>
           )}
-          <button onClick={copyLogs} className="btn-ghost p-1" title="Copy logs">
-            <Copy size={13} />
+          <button
+            onClick={copyLogs}
+            className={clsx(
+              'btn-ghost p-1',
+              copyState === 'copied' && 'text-nutanix-teal',
+              copyState === 'failed' && 'text-red-400'
+            )}
+            title={copyState === 'copied' ? 'Copied output' : copyState === 'failed' ? 'Copy failed' : 'Copy output'}
+            aria-label={copyState === 'copied' ? 'Copied output' : copyState === 'failed' ? 'Copy failed' : 'Copy output'}
+            disabled={logs.length === 0}
+          >
+            {copyState === 'copied' ? <Check size={13} /> : <Copy size={13} />}
           </button>
           {onClose && (
             <button onClick={onClose} className="btn-ghost p-1">
@@ -110,4 +128,40 @@ export default function Terminal({ logs, status, title, statusLabel, onClose, bo
       </div>
     </div>
   )
+}
+
+function formatLogLineForCopy(line: LogLine): string {
+  const data = typeof line.data === 'string' ? line.data : JSON.stringify(line.data)
+  if (line.type === 'step') return `> ${data}`
+  if (line.type === 'done') return `✓ ${data}`
+  if (line.type === 'error') return `✗ ${data}`
+  if (line.type === 'start') return `$ ${data}`
+  return data
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return
+    } catch {
+      // Fall back for appliance HTTP origins or browsers that deny clipboard writes.
+    }
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  textarea.style.top = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  try {
+    if (!document.execCommand('copy')) {
+      throw new Error('copy command was rejected')
+    }
+  } finally {
+    document.body.removeChild(textarea)
+  }
 }

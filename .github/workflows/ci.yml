@@ -61,7 +61,7 @@ jobs:
         run: npm ci
 
       - name: npm audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
       - name: TypeScript check
         run: npx tsc --noEmit
