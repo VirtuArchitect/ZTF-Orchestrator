@@ -432,6 +432,20 @@ def test_appliance_update_package_import_verify_and_stage(client, auth_headers):
     assert server.APPLIANCE_UPDATE_REQUEST_FILE.exists()
 
 
+def test_appliance_update_package_default_limit_allows_large_container_package():
+    import server
+
+    large_package_size = 5 * 1024 * 1024 * 1024
+
+    assert server.UPDATE_PACKAGE_MAX_UPLOAD >= large_package_size
+    with server.app.test_request_context(
+        '/api/appliance/updates/import-package',
+        method='POST',
+        headers={'Content-Length': str(large_package_size)},
+    ):
+        assert server.check_body_size() is None
+
+
 def test_appliance_update_package_rejects_bad_checksum(client, auth_headers):
     manifest = {
         'target': 'ztf-orchestrator',
