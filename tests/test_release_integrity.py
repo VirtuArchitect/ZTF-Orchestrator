@@ -701,6 +701,16 @@ def test_docker_build_patches_ztf_pc_entity_filter_bug():
     assert 'payload["spec"]["name"] = kwargs["name"]' in patch_script
 
 
+def test_dockerignore_excludes_local_release_artifact_directories():
+    ignored = {
+        line.strip().rstrip('/')
+        for line in (ROOT / '.dockerignore').read_text(encoding='utf-8').splitlines()
+        if line.strip() and not line.lstrip().startswith('#')
+    }
+
+    assert {'release-artifacts', 'output', 'outputs', 'update-artifacts'} <= ignored
+
+
 def test_docker_build_bakes_ztf2_runtime_by_default():
     dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
     compose = (ROOT / 'docker-compose.yml').read_text(encoding='utf-8')
