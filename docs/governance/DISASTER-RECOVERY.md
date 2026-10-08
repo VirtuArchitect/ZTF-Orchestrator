@@ -1,6 +1,18 @@
-# Disaster Recovery
+# Disaster Recovery of ZTF-Orchestrator
 
 Current release marker: `v1.8.4`.
+
+This procedure covers recovering the Orchestrator application and its operational
+state. Using the Orchestrator to rebuild affected Nutanix infrastructure is a
+separate use case: see the [Infrastructure Recovery Guide](../infrastructure-recovery.md)
+and [Recovery Rehearsal Checklist](../recovery-rehearsal-checklist.md).
+
+For suspected compromise, establish a trusted recovery host, runtime artifacts,
+and credentials before resuming execution. Review restored users, sessions,
+approvals, configs, queued jobs, and schedules before enabling workers or
+triggers; a restored database is not evidence that its contents are trustworthy.
+Follow [RB-011 Security Incident](../runbooks/RB-011-security-incident.md) and
+the organization's incident response process.
 
 Disaster recovery is required for a production-assessable ZTF-Orchestrator
 deployment because the platform stores operational state: users, sessions,

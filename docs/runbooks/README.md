@@ -31,6 +31,8 @@ See:
 - [Operator Controlled UAT Readiness](../operator-controlled-uat-readiness.md)
 - [UAT Evidence Checklist](../uat-evidence-checklist.md)
 - [Production Readiness Boundary](../production-readiness-boundary.md)
+- [Infrastructure Recovery Guide](../infrastructure-recovery.md)
+- [Recovery Rehearsal Checklist](../recovery-rehearsal-checklist.md)
 
 ## Runbook Control Matrix
 
