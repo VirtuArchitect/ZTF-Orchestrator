@@ -727,6 +727,12 @@ Related runbooks:
 
 ## Disaster Recovery Cluster Rebuild Use Case
 
+For preparation, capability limits, acceptance gates, and rehearsal evidence,
+see the [Infrastructure Recovery Guide](infrastructure-recovery.md) and
+[Recovery Rehearsal Checklist](recovery-rehearsal-checklist.md). Recovery of the
+Orchestrator itself is covered separately in
+[Disaster Recovery of ZTF-Orchestrator](governance/DISASTER-RECOVERY.md).
+
 ZTF-Orchestrator can be part of a broader disaster recovery process for
 rebuilding affected Nutanix infrastructure from known-good baselines.
 
@@ -746,9 +752,10 @@ Example scenario:
    reviewed ZTF-Orchestrator workflow or pipeline.
 4. ZTF-Orchestrator uses approved configuration to coordinate imaging,
    reinstallation, baseline configuration, and validation where supported.
-5. The workflow reapplies known-good settings such as DNS, NTP, VLANs, storage
-   containers, Prism registration, monitoring, security hardening evidence, and
-   post-foundation checks.
+5. Supported workflow mappings reapply reviewed settings such as DNS, NTP,
+   VM networks, storage containers, and Prism registration. Operators complete
+   manual monitoring, certificate, and hardening controls where executable
+   mappings are unavailable; evidence-only steps do not apply those controls.
 6. Validation gates confirm cluster health, API reachability, time sync,
    expected services, and configuration posture.
 7. Backup, DR, or application teams restore workloads only after the rebuilt

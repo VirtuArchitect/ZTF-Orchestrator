@@ -54,6 +54,26 @@ model. Native Foundation Dell iDRAC work now has a guarded controlled-UAT
 adapter path for lab validation; broad production support still requires
 environment-specific evidence and signoff.
 
+## Disaster Recovery Preparation and Rehearsal
+
+> Backups preserve what you need to recover. Our focus is preparing and
+> rehearsing how to rebuild the infrastructure you recover onto.
+
+ZTF-Orchestrator can help teams prepare, rehearse, and coordinate rebuilding
+Nutanix infrastructure from reviewed baselines after incident containment and
+recovery authorization. Supported imaging, cluster creation, configuration,
+and validation paths provide building blocks for an infrastructure rebuild;
+backup and application teams retain ownership of workload restoration.
+
+This is a recovery use case assembled from existing workflows, not a dedicated
+end-to-end DR workflow. It does not establish that compromised systems are
+clean, perform forensic investigation, or restore backup data. Several security
+and baseline controls require manual work, and recovery time improvements need
+measured, environment-specific rehearsal evidence.
+
+See the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) and
+[Recovery Rehearsal Checklist](docs/recovery-rehearsal-checklist.md).
+
 ## At A Glance
 
 | Question | Answer |
@@ -1107,6 +1127,8 @@ ZTF-Orchestrator is developed and maintained by **ZTF-Orchestrator maintainers**
 |---|---|
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
 | [docs/admin-guide.md](docs/admin-guide.md) | Administrator guide covering features, use cases, operating boundaries, governance, DR rebuild scenarios, and support procedures |
+| [docs/infrastructure-recovery.md](docs/infrastructure-recovery.md) | Infrastructure rebuild preparation, capability boundaries, and recovery acceptance gates |
+| [docs/recovery-rehearsal-checklist.md](docs/recovery-rehearsal-checklist.md) | Recovery drill prerequisites, failure exercises, evidence, and RTO/RPO measurements |
 | [docs/architecture/README.md](docs/architecture/README.md) | Architecture index, security boundary, data flow, and deployment boundaries |
 | [docs/demo/README.md](docs/demo/README.md) | Demo and simulator boundary for local proof versus target evidence |
 | [docs/governance/README.md](docs/governance/README.md) | Production-readiness boundary, DR, supportability, limitations, and evidence mapping |
