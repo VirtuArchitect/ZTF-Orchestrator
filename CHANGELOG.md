@@ -31,6 +31,9 @@ into the next numbered release section when the next version is cut.
 ### Fixed
 - Aligned the Dockerfile default `ZTF_ORCHESTRATOR_VERSION` with the v1.8.4
   runtime so local container builds report the correct Installed Build.
+- Serialized classic Foundation VM DNS and NTP server values using the native
+  comma-separated string format expected by Foundation 5.11, preventing
+  `image_nodes` submissions from failing schema validation with HTTP 422.
 
 ---
 

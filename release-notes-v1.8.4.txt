@@ -9,10 +9,14 @@ Summary
   comparisons and still run policies on demand.
 - Aligns runtime, demo, appliance, and documentation metadata to the v1.8.4
   appliance update baseline.
+- Corrects classic Foundation VM network-service serialization so controlled
+  image_nodes submissions match the Foundation 5.11 native payload schema.
 
 Validation
 ----------
 - python -m pytest tests/test_api.py -q -k "drift_policy or drift_check"
+- python -m pytest tests/test_foundation_vm_backend.py -q
+- python -m pytest tests/test_api.py -q -k "foundation_vm or classic_foundation"
 - python -m pytest tests/test_release_integrity.py -q
 - python -m pytest tests/ -q -x
 - npm run build

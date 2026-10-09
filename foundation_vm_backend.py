@@ -345,12 +345,26 @@ def build_native_payload(config: dict, resolver: CredentialResolver) -> dict:
     _hypervisor_user, hypervisor_password, _ = resolver(str(config['hypervisor_credential']))
     _cluster_user, cluster_password, _ = resolver(str(config['cluster_credential']))
     hypervisor_type = str(images.get('hypervisor_type') or 'kvm').strip().lower().replace('ahv', 'kvm').replace('esxi', 'esx').replace('hyper-v', 'hyperv')
+    hypervisor_image = {
+        'filename': Path(str(images.get('hypervisor_iso') or '').strip()).name,
+    }
+    hypervisor_checksum = str(images.get('hypervisor_checksum') or '').strip()
+    if hypervisor_checksum:
+        hypervisor_image['checksum'] = hypervisor_checksum
     has_storage_nodes = any(
         str(node.get('node_role') or '').lower() == 'storage-only'
         for cluster in clusters for node in cluster['nodes_list']
     )
 
     first_cluster = clusters[0]
+    dns_servers = ', '.join(
+        str(server).strip() for server in network.get('dns_servers') or []
+        if str(server).strip()
+    )
+    ntp_servers = ', '.join(
+        str(server).strip() for server in network.get('ntp_servers') or []
+        if str(server).strip()
+    )
     blocks_by_serial: dict[str, list[dict]] = {}
     for cluster in clusters:
         for node in cluster['nodes_list']:
@@ -392,8 +406,8 @@ def build_native_payload(config: dict, resolver: CredentialResolver) -> dict:
             'redundancy_factor': int(cluster.get('redundancy_factor') or 2),
             'cluster_init_now': not bool(cluster.get('skip_cluster_creation')),
             'timezone': str(cluster.get('timezone') or 'UTC'),
-            'cvm_dns_servers': list(network.get('dns_servers') or []),
-            'cvm_ntp_servers': list(network.get('ntp_servers') or []),
+            'cvm_dns_servers': dns_servers,
+            'cvm_ntp_servers': ntp_servers,
             'cluster_password': cluster_password,
             'lockdown_mode': bool(cluster.get('lockdown_mode')),
             'restricted_shell_mode': bool(cluster.get('restricted_shell_mode')),
@@ -423,10 +437,10 @@ def build_native_payload(config: dict, resolver: CredentialResolver) -> dict:
         'cvm_gateway': str(first_cluster.get('cvm_gateway') or ''),
         'current_cvm_vlan_tag': first_cluster.get('cvm_vlan_id') or None,
         'nos_package': str(images.get('aos_package') or '').strip(),
-        'hypervisor_iso': str(images.get('hypervisor_iso') or '').strip(),
+        'hypervisor_iso': {hypervisor_type: hypervisor_image},
         'phoenix_iso': str(images.get('phoenix_iso') or '').strip() or None,
-        'hypervisor_nameserver': list(network.get('dns_servers') or []),
-        'hypervisor_ntp_servers': list(network.get('ntp_servers') or []),
+        'hypervisor_nameserver': dns_servers,
+        'hypervisor_ntp_servers': ntp_servers,
         'blocks': [
             {'block_id': serial if serial != 'Manual' else None, 'ui_block_id': serial, 'nodes': nodes}
             for serial, nodes in blocks_by_serial.items()
