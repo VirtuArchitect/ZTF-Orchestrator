@@ -29,6 +29,10 @@ into the next numbered release section when the next version is cut.
   production-support boundaries.
 
 ### Fixed
+- Added a Foundation VM ISO checksum field and preserved it through YAML import,
+  export, native validation, and submission, with hexadecimal digest validation.
+- Always include the checksum field in classic Foundation VM hypervisor image
+  payloads, including an empty value when no checksum is configured.
 - Aligned the Dockerfile default `ZTF_ORCHESTRATOR_VERSION` with the v1.8.4
   runtime so local container builds report the correct Installed Build.
 - Serialized classic Foundation VM DNS and NTP server values using the native

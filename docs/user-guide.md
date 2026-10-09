@@ -915,6 +915,13 @@ confirmation; the new job records its source job ID. Jobs found active after an
 Orchestrator restart are marked interrupted and may be reviewed and restarted
 instead of being silently resumed.
 
+The Foundation VM form includes an **AHV ISO Checksum** field beside the
+hypervisor ISO. It exports as `aos_hypervisor_images.hypervisor_checksum` and
+is preserved when importing YAML, validating the native payload, and submitting
+to Foundation. Supplied values must be hexadecimal MD5 (32 characters), SHA-1
+(40 characters), or SHA-256 (64 characters); use the digest expected by the
+target Foundation appliance. An empty field leaves the digest unspecified.
+
 The Foundation VM form captures the classic Foundation wizard decisions as
 structured intent: hardware platform, RDMA passthrough, host/CVM LAG mode,
 installer IP review values, AOS package reference, hypervisor type and ISO,

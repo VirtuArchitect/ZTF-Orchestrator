@@ -112,6 +112,7 @@ export function buildClusterCreateYaml(cfg: {
   aosPackage?: string
   hypervisorType?: string
   hypervisorIso?: string
+  hypervisorChecksum?: string
   phoenixIso?: string
   hypervisorCredential?: string
   clusterCredential?: string
@@ -244,6 +245,7 @@ export function buildClusterCreateYaml(cfg: {
         hypervisor_type: cfg.hypervisorType || 'AHV',
         ...(cfg.aosPackage ? { aos_package: cfg.aosPackage } : {}),
         ...(cfg.hypervisorIso ? { hypervisor_iso: cfg.hypervisorIso } : {}),
+        ...(cfg.hypervisorChecksum?.trim() ? { hypervisor_checksum: cfg.hypervisorChecksum.trim() } : {}),
         ...(cfg.phoenixIso ? { phoenix_iso: cfg.phoenixIso } : {}),
       },
       foundation_vm_execution: {
