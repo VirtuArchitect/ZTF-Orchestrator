@@ -43,8 +43,8 @@ def _config(*, configure_ipmi=False):
         'hypervisor_credential': 'hypervisor-admin',
         'cluster_credential': 'cluster-admin',
         'common_network_settings': {
-            'dns_servers': ['10.0.0.2'],
-            'ntp_servers': ['10.0.0.3'],
+            'dns_servers': ['10.0.0.2', '10.0.0.4'],
+            'ntp_servers': ['10.0.0.3', '10.0.0.5'],
         },
         'create_clusters': [{
             'cluster_name': 'LAB-CLUSTER',
@@ -83,6 +83,10 @@ def test_native_payload_matches_foundation_shape_and_redacts_secrets():
     assert payload['blocks'][0]['nodes'][0]['ipmi_configure_now'] is True
     assert payload['blocks'][0]['nodes'][0]['hypervisor'] == 'kvm'
     assert payload['clusters'][0]['cluster_members'] == ['10.0.0.11', '10.0.0.12', '10.0.0.13']
+    assert payload['clusters'][0]['cvm_dns_servers'] == '10.0.0.2, 10.0.0.4'
+    assert payload['clusters'][0]['cvm_ntp_servers'] == '10.0.0.3, 10.0.0.5'
+    assert payload['hypervisor_nameserver'] == '10.0.0.2, 10.0.0.4'
+    assert payload['hypervisor_ntp_servers'] == '10.0.0.3, 10.0.0.5'
 
     redacted = backend.redact_payload(payload)
     rendered = json.dumps(redacted)
