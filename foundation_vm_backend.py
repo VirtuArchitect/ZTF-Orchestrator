@@ -345,6 +345,12 @@ def build_native_payload(config: dict, resolver: CredentialResolver) -> dict:
     _hypervisor_user, hypervisor_password, _ = resolver(str(config['hypervisor_credential']))
     _cluster_user, cluster_password, _ = resolver(str(config['cluster_credential']))
     hypervisor_type = str(images.get('hypervisor_type') or 'kvm').strip().lower().replace('ahv', 'kvm').replace('esxi', 'esx').replace('hyper-v', 'hyperv')
+    hypervisor_image = {
+        'filename': Path(str(images.get('hypervisor_iso') or '').strip()).name,
+    }
+    hypervisor_checksum = str(images.get('hypervisor_checksum') or '').strip()
+    if hypervisor_checksum:
+        hypervisor_image['checksum'] = hypervisor_checksum
     has_storage_nodes = any(
         str(node.get('node_role') or '').lower() == 'storage-only'
         for cluster in clusters for node in cluster['nodes_list']
@@ -431,7 +437,7 @@ def build_native_payload(config: dict, resolver: CredentialResolver) -> dict:
         'cvm_gateway': str(first_cluster.get('cvm_gateway') or ''),
         'current_cvm_vlan_tag': first_cluster.get('cvm_vlan_id') or None,
         'nos_package': str(images.get('aos_package') or '').strip(),
-        'hypervisor_iso': str(images.get('hypervisor_iso') or '').strip(),
+        'hypervisor_iso': {hypervisor_type: hypervisor_image},
         'phoenix_iso': str(images.get('phoenix_iso') or '').strip() or None,
         'hypervisor_nameserver': dns_servers,
         'hypervisor_ntp_servers': ntp_servers,

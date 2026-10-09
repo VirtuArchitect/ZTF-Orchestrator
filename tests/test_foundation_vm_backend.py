@@ -82,6 +82,7 @@ def test_native_payload_matches_foundation_shape_and_redacts_secrets():
     assert payload['blocks'][0]['nodes'][0]['node_position'] == 'A'
     assert payload['blocks'][0]['nodes'][0]['ipmi_configure_now'] is True
     assert payload['blocks'][0]['nodes'][0]['hypervisor'] == 'kvm'
+    assert payload['hypervisor_iso'] == {'kvm': {'filename': 'ahv.iso'}}
     assert payload['clusters'][0]['cluster_members'] == ['10.0.0.11', '10.0.0.12', '10.0.0.13']
     assert payload['clusters'][0]['cvm_dns_servers'] == '10.0.0.2, 10.0.0.4'
     assert payload['clusters'][0]['cvm_ntp_servers'] == '10.0.0.3, 10.0.0.5'
@@ -96,6 +97,17 @@ def test_native_payload_matches_foundation_shape_and_redacts_secrets():
     assert redacted['hypervisor_password'] == '***'
     assert redacted['blocks'][0]['nodes'][0]['ipmi_password'] == '***'
     assert redacted['clusters'][0]['cluster_password'] == '***'
+
+
+def test_native_payload_includes_optional_hypervisor_checksum():
+    config = _config()
+    config['aos_hypervisor_images']['hypervisor_checksum'] = 'sha256-value'
+
+    payload = backend.build_native_payload(config, _resolver)
+
+    assert payload['hypervisor_iso'] == {
+        'kvm': {'filename': 'ahv.iso', 'checksum': 'sha256-value'},
+    }
 
 
 def test_intent_validation_enforces_memory_positions_roles_and_networks():
