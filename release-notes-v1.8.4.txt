@@ -5,6 +5,10 @@ Release date: 2026-09-21
 
 Summary
 -------
+- Adds an AHV ISO Checksum field to the Foundation VM workflow, preserving
+  supplied digests through import, export, validation, and submission.
+- Includes the native hypervisor image checksum field even when its value is
+  not configured, preventing a missing-key error during Foundation submission.
 - Adds automated Drift Detection policies so operators can schedule baseline
   comparisons and still run policies on demand.
 - Aligns runtime, demo, appliance, and documentation metadata to the v1.8.4

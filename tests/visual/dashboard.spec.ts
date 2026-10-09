@@ -1,4 +1,53 @@
 import { expect, test, type Page } from '@playwright/test'
+import { load } from 'js-yaml'
+
+test('Foundation VM ISO checksum survives import edit validation and export', async ({ page }) => {
+  await seedUiSession(page)
+  let validationYaml = ''
+  await page.route('**/api/foundation-vm/validate', async route => {
+    validationYaml = route.request().postDataJSON().configContent
+    await route.fulfill({ json: { valid: true, errors: [] } })
+  })
+  await page.goto('/workflows/cluster-create-foundation-vm')
+  const importedChecksum = 'a'.repeat(64)
+  await page.getByRole('banner').locator('input[type="file"]').setInputFiles({
+    name: 'create_foundation_vm_cluster.yml',
+    mimeType: 'text/yaml',
+    buffer: Buffer.from(`foundation_vm_ip: 192.0.2.10\nfoundation_vm_options: {}\ncommon_network_settings: {}\ncreate_clusters: []\naos_hypervisor_images:\n  hypervisor_type: AHV\n  hypervisor_iso: ahv.iso\n  hypervisor_checksum: ${importedChecksum}\n`),
+  })
+  await page.getByRole('button', { name: 'Configure', exact: true }).click()
+  const checksum = page.getByLabel('AHV ISO Checksum', { exact: true })
+  await expect(checksum).toHaveValue(importedChecksum)
+  const updatedChecksum = 'b'.repeat(64)
+  await checksum.fill(updatedChecksum)
+  await page.getByRole('button', { name: 'Validate native payload' }).click()
+  await expect.poll(() => validationYaml).toContain(updatedChecksum)
+  const config = load(validationYaml) as { aos_hypervisor_images: { hypervisor_checksum: string } }
+  expect(config.aos_hypervisor_images.hypervisor_checksum).toBe(updatedChecksum)
+  await page.evaluate(() => {
+    const original = URL.createObjectURL.bind(URL)
+    URL.createObjectURL = value => {
+      if (value instanceof Blob) {
+        ;(window as unknown as { checksumExport: Promise<string> }).checksumExport = value.text()
+      }
+      return original(value)
+    }
+  })
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download Config' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('create_foundation_vm_cluster.yml')
+  const downloadedYaml = await page.evaluate(() => (window as unknown as { checksumExport: Promise<string> }).checksumExport)
+  expect((load(downloadedYaml) as typeof config).aos_hypervisor_images.hypervisor_checksum).toBe(updatedChecksum)
+  await page.screenshot({ path: 'test-results/foundation-vm-checksum-desktop.png', fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Close navigation', exact: true }).click({ position: { x: 350, y: 100 } })
+  await page.screenshot({ path: 'test-results/foundation-vm-checksum-mobile.png', fullPage: true })
+  await expect(checksum).toBeVisible()
+  const bounds = await checksum.boundingBox()
+  expect(bounds!.width).toBeGreaterThan(100)
+  await page.screenshot({ path: 'test-results/foundation-vm-checksum-mobile.png', fullPage: true })
+})
 
 const username = process.env.ZTF_VISUAL_USERNAME || ''
 const password = process.env.ZTF_VISUAL_PASSWORD || ''

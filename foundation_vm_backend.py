@@ -11,6 +11,7 @@ import base64
 import http.client
 import ipaddress
 import json
+import re
 import ssl
 import time
 import urllib.error
@@ -171,6 +172,12 @@ def validate_intent(config: dict, resolver: CredentialResolver | None = None) ->
         errors.append('aos_hypervisor_images.aos_package is required')
     if not str(images.get('hypervisor_iso') or '').strip():
         errors.append('aos_hypervisor_images.hypervisor_iso is required')
+    checksum = images.get('hypervisor_checksum')
+    if checksum is not None and (
+        not isinstance(checksum, str)
+        or (checksum.strip() and not re.fullmatch(r'(?:[0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})', checksum.strip()))
+    ):
+        errors.append('aos_hypervisor_images.hypervisor_checksum must be a hexadecimal MD5, SHA-1, or SHA-256 digest')
 
     network = config.get('common_network_settings')
     if not isinstance(network, dict):
@@ -347,10 +354,8 @@ def build_native_payload(config: dict, resolver: CredentialResolver) -> dict:
     hypervisor_type = str(images.get('hypervisor_type') or 'kvm').strip().lower().replace('ahv', 'kvm').replace('esxi', 'esx').replace('hyper-v', 'hyperv')
     hypervisor_image = {
         'filename': Path(str(images.get('hypervisor_iso') or '').strip()).name,
+        'checksum': str(images.get('hypervisor_checksum') or '').strip(),
     }
-    hypervisor_checksum = str(images.get('hypervisor_checksum') or '').strip()
-    if hypervisor_checksum:
-        hypervisor_image['checksum'] = hypervisor_checksum
     has_storage_nodes = any(
         str(node.get('node_role') or '').lower() == 'storage-only'
         for cluster in clusters for node in cluster['nodes_list']
