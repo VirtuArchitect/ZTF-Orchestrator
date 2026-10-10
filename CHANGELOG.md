@@ -13,6 +13,10 @@ Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
 
 ### Added
+- Foundation VM deployment telemetry panels in live execution and saved jobs,
+  including per-node progress, explicit unknown states, stale/connection-loss
+  indicators, and sanitized log downloads. Phase completion is not inferred
+  from aggregate progress. Live Foundation response compatibility requires UAT.
 - Added a bundled Native Foundation site-deploy adapter wrapper that converts
   `native-foundation-deploy` intent into the embedded ZTF 1.x Foundation
   Central `site-deploy` workflow when the real-adapter runtime gate is enabled.

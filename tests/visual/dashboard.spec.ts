@@ -50,6 +50,76 @@ test('Foundation VM ISO checksum survives import edit validation and export', as
 })
 
 const username = process.env.ZTF_VISUAL_USERNAME || ''
+test('Foundation VM saved job shows honest phase node and connection status', async ({ page }) => {
+  await seedUiSession(page)
+  const node = { serial: 'NODE-A', hostIp: '192.0.2.11', cvmIp: '192.0.2.12', activity: 'AOS installation', status: 'failed', percent: 94 }
+  const names = ['Workflow validation', 'Image preparation', 'Hardware configuration', 'AHV installation', 'AOS installation', 'Cluster formation']
+  let jobStatus = 'failed'
+  const snapshot = {
+    status: 'failed', percent: 94, connection: 'lost',
+    startedAt: '2026-10-10T10:00:00Z', updatedAt: '2026-10-10T10:01:00Z', lastSuccessfulAt: '2026-10-10T10:00:55Z',
+    foundationUrl: 'http://192.0.2.10:8000/gui/index.html', nodes: [node],
+    phases: names.map((label, index) => ({ id: String(index), label,
+      status: index === 0 ? 'completed' : index === 4 ? 'failed' : 'unknown',
+      percent: index === 0 ? 100 : index === 4 ? 94 : null, nodes: index === 4 ? [node] : [],
+    })),
+  }
+  await page.route('**/api/jobs?*', route => route.fulfill({ json: [{
+    id: 'foundation-test', workflow: 'cluster-create-foundation-vm', type: 'workflow', status: jobStatus,
+    createdAt: snapshot.startedAt, updatedAt: snapshot.updatedAt, user: 'visual-smoke',
+    foundationStatus: snapshot, logs: [{ type: 'stderr', data: 'Foundation reported installation failure' }],
+  }] }))
+  await page.goto('/jobs')
+  await page.getByRole('button', { name: 'Expand job details' }).click()
+  const panel = page.getByRole('region', { name: 'Foundation VM deployment status' })
+  await expect(panel.getByRole('heading', { name: 'Foundation VM Deployment Status' })).toBeVisible()
+  await expect(panel.getByRole('status')).toContainText('Connection lost')
+  await expect(panel.getByText('NODE-A').first()).toBeVisible()
+  await expect(panel.getByText('Failed · 94%').first()).toBeVisible()
+  await expect(panel.locator('details').filter({ has: page.locator('summary', { hasText: 'Cluster formation' }) }).locator('summary')).toContainText('Not reported')
+  const downloadPromise = page.waitForEvent('download')
+  await panel.getByRole('button', { name: 'Download sanitized execution logs' }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('foundation-vm-execution.log')
+  await panel.screenshot({ path: 'test-results/foundation-vm-status-desktop.png', animations: 'disabled' })
+  await page.reload()
+  await page.getByRole('button', { name: 'Expand job details' }).click()
+  await expect(panel.getByRole('status')).toContainText('Connection lost')
+  await page.setViewportSize({ width: 390, height: 844 })
+  const navigation = page.getByRole('button', { name: 'Close navigation', exact: true })
+  if (await navigation.isVisible()) await navigation.click({ position: { x: 350, y: 100 } })
+  await expect(panel).toBeVisible()
+  await expect.poll(async () => (await panel.boundingBox())?.width || 0).toBeGreaterThan(300)
+  await panel.screenshot({ path: 'test-results/foundation-vm-status-mobile.png', animations: 'disabled' })
+  jobStatus = 'running'
+  snapshot.connection = 'connected'
+  snapshot.status = 'running'
+  await page.reload()
+  await page.getByRole('button', { name: 'Expand job details' }).click()
+  await expect(panel.getByRole('status')).toContainText('Telemetry stale')
+})
+
+test('Foundation VM execution dialog consumes reported telemetry without promoting phases', async ({ page }) => {
+  const snapshot = {
+    status: 'failed', percent: 94, connection: 'connected', nodes: [],
+    phases: [{ id: 'aos_installation', label: 'AOS installation', status: 'failed', percent: 94, nodes: [] },
+      { id: 'cluster_formation', label: 'Cluster formation', status: 'unknown', percent: null, nodes: [] }],
+  }
+  await seedUiSession(page, { executeEvents: [
+    { type: 'job', data: { progress: { phase: 'Imaging', percent: 91, estimated: true }, foundationStatus: snapshot } },
+    { type: 'done', data: { status: 'failed' } },
+  ] })
+  await page.goto('/workflows/cluster-create-foundation-vm')
+  await page.getByRole('banner').locator('input[type="file"]').setInputFiles({
+    name: 'create_foundation_vm_cluster.yml', mimeType: 'text/yaml',
+    buffer: Buffer.from('foundation_vm_ip: 192.0.2.10\nfoundation_vm_options: {}\ncommon_network_settings: {}\ncreate_clusters: []\naos_hypervisor_images: {}\n'),
+  })
+  page.once('dialog', dialog => dialog.accept('DEPLOY FOUNDATION VM'))
+  await page.getByRole('button', { name: 'Run Workflow', exact: true }).click()
+  const panel = page.getByRole('region', { name: 'Foundation VM deployment status' })
+  await expect(panel.getByText('Failed · Foundation 94%')).toBeVisible()
+  await expect(panel.locator('summary', { hasText: 'Cluster formation' })).toContainText('Not reported')
+})
+
 const password = process.env.ZTF_VISUAL_PASSWORD || ''
 
 type VisualDriftRun = {
