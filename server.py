@@ -45,6 +45,7 @@ from upgrade_advisor import (
     merge_upgrade_rule_packs,
     render_upgrade_assessment_markdown,
 )
+from foundation_vm_progress import normalize_progress as _normalize_foundation_progress
 from foundation_vm_backend import (
     FOUNDATION_TERMINAL_STATES,
     build_native_payload as _build_foundation_vm_native_payload,
@@ -34910,12 +34911,16 @@ class ExecutionJobManager:
             })
 
             self._update_progress(job_id, 'Foundation preflight', 10, 'Checking endpoint, features, images, and credentials')
+            self._record_foundation_progress(job_id, config, validation='running')
             preflight_lines, _passed, failed = _run_foundation_vm_preflight(config)
             for line in preflight_lines:
                 emit('stdout', line)
             if failed:
+                self._record_foundation_progress(job_id, config, validation='failed')
                 emit('error', 'Foundation VM preflight failed; no mutating request was sent')
                 return
+
+            self._record_foundation_progress(job_id, config, validation='completed')
 
             native_payload = _build_foundation_vm_native_payload(config, _lookup_credential_ref)
             payload_digest = _sha256_text(json.dumps(native_payload, sort_keys=True, separators=(',', ':')))
@@ -34971,6 +34976,7 @@ class ExecutionJobManager:
                 ok, error, progress, _latency = _foundation_vm_request_json(config, 'progress', timeout=30)
                 if not ok:
                     consecutive_errors += 1
+                    self._record_foundation_progress(job_id, config, connection='lost')
                     emit('stderr', f'Foundation progress poll {consecutive_errors}/3 failed: {error}')
                     if consecutive_errors >= 3:
                         emit('error', 'Foundation progress could not be recovered after three attempts')
@@ -34978,6 +34984,7 @@ class ExecutionJobManager:
                     time.sleep(3)
                     continue
                 consecutive_errors = 0
+                self._record_foundation_progress(job_id, config, response=progress)
                 phase, percent, detail, terminal = _foundation_progress_summary(progress)
                 mapped_percent = 40 + round(percent * 0.55)
                 self._update_progress(job_id, phase, mapped_percent, detail)
@@ -35730,6 +35737,34 @@ class ExecutionJobManager:
         else:
             phase, percent, detail = self.TERMINAL_PROGRESS.get(status, ('Finished', 100, 'Execution finished'))
         self._set_progress(job, phase, percent, detail)
+
+    def _record_foundation_progress(self, job_id: str, config: dict, *, response=None,
+                                    connection='waiting', validation=None) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return
+            previous = job.get('foundationStatus') or {}
+            snapshot = _normalize_foundation_progress(response, config) if response is not None else (
+                dict(previous) if previous else _normalize_foundation_progress({}, config))
+            if response is not None:
+                snapshot['lastSuccessfulAt'] = self._now()
+                connection = 'connected'
+            else:
+                snapshot.setdefault('lastSuccessfulAt', None)
+            snapshot['connection'] = connection
+            snapshot['startedAt'] = job.get('startedAt') or job.get('createdAt')
+            snapshot['updatedAt'] = self._now()
+            host, scheme, port = _foundation_vm_backend_endpoint(config)
+            snapshot['foundationUrl'] = f'{scheme}://{"[" + host + "]" if ":" in host else host}:{port}/gui/index.html'
+            previous_validation = (previous.get('phases') or [{}])[0].get('status', 'unknown')
+            snapshot['phases'][0]['status'] = validation or previous_validation
+            snapshot['phases'][0]['percent'] = 100 if snapshot['phases'][0]['status'] == 'completed' else None
+            job['foundationStatus'] = snapshot
+            job['updatedAt'] = snapshot['updatedAt']
+            self._save_jobs(jobs)
+            self._condition.notify_all()
 
     def _update_progress(self, job_id: str, phase: str, percent: int, detail: str) -> None:
         with self._condition:

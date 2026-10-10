@@ -26,6 +26,10 @@ integration.
 > automation workflows. It is not affiliated with or supported by Nutanix, and
 > production use requires environment-specific validation.
 
+Foundation VM deployments include a persistent phase/node telemetry view in
+execution and saved jobs. Missing telemetry is shown as "Not reported", not
+assumed complete; verify the actual Foundation VM response mapping during UAT.
+
 ## Appliance Downloads
 
 Download versioned ZTF-Orchestrator appliance artifacts from the

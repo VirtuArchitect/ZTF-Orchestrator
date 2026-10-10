@@ -264,6 +264,18 @@ def test_api_validation_and_controlled_job_lifecycle(client, auth_headers, monke
     assert 'idrac-1-password' not in log_text
     assert 'hypervisor-admin-password' not in log_text
     assert job['progress']['percent'] == 100
+    assert job['foundationStatus']['percent'] == 100
+    assert job['foundationStatus']['connection'] == 'connected'
+    assert job['foundationStatus']['lastSuccessfulAt']
+    assert job['foundationStatus']['phases'][0]['status'] == 'completed'
+    assert job['foundationStatus']['phases'][5]['status'] == 'unknown'
+    restored = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+    assert restored['foundationStatus'] == job['foundationStatus']
+    server._job_manager._record_foundation_progress(job_id, config, connection='lost')
+    lost = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()['foundationStatus']
+    assert lost['connection'] == 'lost'
+    assert lost['lastSuccessfulAt'] == restored['foundationStatus']['lastSuccessfulAt']
+    assert lost['nodes'] == restored['foundationStatus']['nodes']
 
     restart = client.post(f'/api/jobs/{job_id}/restart', json={
         'confirmation': 'RESTART FOUNDATION VM',

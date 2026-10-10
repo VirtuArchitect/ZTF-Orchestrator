@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { X, Play } from 'lucide-react'
 import Terminal from './Terminal'
 import NativeFoundationProgress from './NativeFoundationProgress'
+import FoundationVmProgress from './FoundationVmProgress'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
 import { terminalStatusLabel, terminalSuccessProgress } from '../utils/executionStatus'
-import type { ExecutionProgress } from '../types'
+import type { ExecutionProgress, FoundationDeploymentStatus } from '../types'
 
 interface ExecutionModalProps {
   onClose: () => void
@@ -20,6 +21,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
   const { runningExecution, startExecution, appendLog, finishExecution, addExecution } = useStore()
   const evtSourceRef = useRef<EventSource | null>(null)
   const showNativeFoundationProgress = workflow === 'native-foundation-deploy' && !dryRun
+  const [foundationStatus, setFoundationStatus] = useState<FoundationDeploymentStatus>()
   const [progress, setProgress] = useState<ExecutionProgress>({
     phase: dryRun ? 'Running pre-flight checks' : 'Queued',
     percent: dryRun ? 20 : 0,
@@ -80,6 +82,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
 
             if (event.type === 'job' && event.data?.progress) {
               setProgress(event.data.progress)
+              if (event.data.foundationStatus) setFoundationStatus(event.data.foundationStatus)
             } else if (event.type === 'done') {
               appendLog(event.type, typeof event.data === 'string' ? event.data : JSON.stringify(event.data))
               const status = event.data?.status === 'success' ? 'done' : 'error'
@@ -152,6 +155,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
         </div>
         <div className="p-4 overflow-auto max-h-[calc(100vh-10rem)]">
           <ProgressPanel progress={progress} />
+          {workflow === 'cluster-create-foundation-vm' && !dryRun && <FoundationVmProgress snapshot={foundationStatus} active={runningExecution?.status === 'running'} logs={runningExecution?.logs} />}
           {showNativeFoundationProgress && runningExecution && (
             <NativeFoundationProgress
               logs={runningExecution.logs}
