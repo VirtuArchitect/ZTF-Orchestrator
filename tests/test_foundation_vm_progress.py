@@ -105,3 +105,24 @@ def test_unrelated_cluster_cannot_complete_configured_cluster():
         'clusters': [{'cluster_name': 'OTHER', 'status': 'Done', 'percent_complete': 100}]}, config)
     assert snapshot['phases'][2]['status'] == 'unknown'
     assert snapshot['status'] == 'unknown'
+
+
+@pytest.mark.parametrize('stopped,aborted,aggregate,expected', [
+    (True, False, 100, 'completed'), (False, False, 100, 'unknown'),
+    (True, True, 100, 'unknown'), (True, False, 99, 'unknown'),
+])
+def test_foundation_console_terminal_contract(stopped, aborted, aggregate, expected):
+    response = {'action': 'imaging', 'imaging_stopped': stopped, 'abort_session': aborted,
+        'aggregate_percent_complete': aggregate,
+        'nodes': [{'node_serial': name, 'status': 'Unrecognized display text', 'percent_complete': 100}
+                  for name in ('NODE-A', 'NODE-B')],
+        'clusters': [{'status': 'Unrecognized display text', 'percent_complete': 100}]}
+    snapshot = normalize_progress(response, CONFIG)
+    assert snapshot['phases'][1]['status'] == expected
+    assert snapshot['phases'][2]['status'] == expected
+    if aborted:
+        assert snapshot['status'] == 'cancelled'
+    response['nodes'][0]['status'] = 'fatal: Running validations'
+    assert normalize_progress(response, CONFIG)['nodes'][0]['status'] == 'failed'
+    response['clusters'][0]['status'] = 'Not Run'
+    assert normalize_progress(response, CONFIG)['phases'][2]['status'] == 'pending'

@@ -923,6 +923,9 @@ does not fabricate historical phases. Classic Foundation imaging responses show
 a grouped **Node imaging / configuration** phase and matched cluster status,
 instead of separate AHV/AOS milestones that the response does not expose.
 The overall result follows the execution outcome, including for saved jobs.
+For classic responses, grouped completion also follows Foundation's console
+contract: imaging stopped, no session abort, aggregate progress at 100%, and
+the individual row at 100%, without overriding explicit failed or pending states.
 Aggregate completion
 does not prove that every phase or cluster health check completed. Connection
 loss and stale updates retain the last reported state. Saved jobs refresh every

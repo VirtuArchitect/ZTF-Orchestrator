@@ -28,7 +28,7 @@ def status(value):
     value = str(value or '').lower().strip()
     if value.startswith(('fatal:', 'failed:', 'error:')):
         return 'failed'
-    if value.startswith('running '):
+    if value.startswith(('running ', 'running:')):
         return 'running'
     for normalized, aliases in (
         ('completed', {'complete', 'completed', 'success', 'succeeded', 'finished', 'done',
@@ -73,6 +73,13 @@ def phase_key(value):
 
 def normalize_progress(response, config):
     response = response if isinstance(response, dict) else {}
+    # Foundation 5.11's own console uses stopped + finished aggregate progress
+    # as its session-success contract. A percentage by itself is insufficient.
+    stopped_success = (response.get('imaging_stopped') is True
+                       and response.get('abort_session') is not True
+                       and response.get('aggregate_percent_complete') == 100
+                       and status(response.get('aggregate_status') or response.get('status'))
+                       not in {'failed', 'cancelled'})
     phases = {key: {'id': key, 'label': label, 'status': 'unknown', 'percent': None, 'nodes': []}
               for key, label in PHASES}
     nodes = []
@@ -98,6 +105,8 @@ def normalize_progress(response, config):
         if node is None:
             continue
         node.update(metric(item))
+        if stopped_success and node['status'] == 'unknown' and item.get('percent_complete') == 100:
+            node['status'] = 'completed'
         if node['status'] != 'unknown':
             node['activity'] = {
                 'completed': 'Node imaging/configuration completed',
@@ -130,6 +139,8 @@ def normalize_progress(response, config):
         elif len({row['serial'] for row in reported}) == len(nodes) and states == {'completed'}:
             phase['status'] = 'completed'
     overall = status(response.get('aggregate_status') or response.get('status'))
+    if response.get('abort_session') is True and overall != 'failed':
+        overall = 'cancelled'
     # Classic Foundation reports grouped node imaging and cluster records, not
     # independent AHV/AOS milestones. Do not fabricate those missing milestones.
     classic = response.get('action') == 'imaging' and not (response.get('stages') or response.get('phases'))
@@ -152,14 +163,20 @@ def normalize_progress(response, config):
                    'status': rollup(nodes), 'percent': None, 'nodes': nodes}
         expected = config.get('create_clusters', [])
         reported_clusters = records(response.get('clusters'))
+        def cluster_metric(item):
+            row = metric(item)
+            if stopped_success and row['status'] == 'unknown' and item.get('percent_complete') == 100:
+                row['status'] = 'completed'
+            return row
+
         expected_names = {str(item.get('cluster_name')) for item in expected if item.get('cluster_name')}
         if len(expected_names) == len(expected) and expected_names:
-            by_name = {str(item.get('cluster_name') or name): metric(item)
+            by_name = {str(item.get('cluster_name') or name): cluster_metric(item)
                        for name, item in reported_clusters}
             cluster_rows = [by_name.get(name, {'status': 'unknown', 'percent': None})
                             for name in sorted(expected_names)]
         else:
-            cluster_rows = [metric(item) for _, item in reported_clusters]
+            cluster_rows = [cluster_metric(item) for _, item in reported_clusters]
         cluster = phases['cluster_formation']
         cluster['status'] = rollup(cluster_rows)
         if len(cluster_rows) != len(expected) and cluster['status'] == 'completed':
