@@ -9,6 +9,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Foundation VM status normalization recognizes classic node statuses and cluster
+  records. Classic imaging uses an honest grouped imaging/configuration phase;
+  completed execution outcomes no longer display an unknown overall status.
+
 Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
 

@@ -5,6 +5,7 @@ Release date: 2026-09-21
 
 Summary
 -------
+- Corrects classic Foundation status labels and grouped imaging/cluster reporting.
 - Adds persistent Foundation VM phase/node telemetry views, stale update
   indicators and log export without changing deployment authorization gates.
 - Adds an AHV ISO Checksum field to the Foundation VM workflow, preserving

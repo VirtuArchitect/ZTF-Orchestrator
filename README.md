@@ -26,6 +26,11 @@ integration.
 > automation workflows. It is not affiliated with or supported by Nutanix, and
 > production use requires environment-specific validation.
 
+Classic Foundation responses use a grouped node
+imaging/configuration phase and explicit cluster status; separate AHV/AOS
+milestones are only shown when reported. Terminal job outcomes supply the
+overall execution result without fabricating missing phase history.
+
 Foundation VM deployments include a persistent phase/node telemetry view in
 execution and saved jobs. Missing telemetry is shown as "Not reported", not
 assumed complete; verify the actual Foundation VM response mapping during UAT.

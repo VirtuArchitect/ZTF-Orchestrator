@@ -155,7 +155,7 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
         </div>
         <div className="p-4 overflow-auto max-h-[calc(100vh-10rem)]">
           <ProgressPanel progress={progress} />
-          {workflow === 'cluster-create-foundation-vm' && !dryRun && <FoundationVmProgress snapshot={foundationStatus} active={runningExecution?.status === 'running'} logs={runningExecution?.logs} />}
+          {workflow === 'cluster-create-foundation-vm' && !dryRun && <FoundationVmProgress snapshot={foundationStatus} active={runningExecution?.status === 'running'} outcome={runningExecution?.status} logs={runningExecution?.logs} />}
           {showNativeFoundationProgress && runningExecution && (
             <NativeFoundationProgress
               logs={runningExecution.logs}

@@ -96,6 +96,13 @@ test('Foundation VM saved job shows honest phase node and connection status', as
   await page.reload()
   await page.getByRole('button', { name: 'Expand job details' }).click()
   await expect(panel.getByRole('status')).toContainText('Telemetry stale')
+  jobStatus = 'success'
+  snapshot.status = 'unknown'
+  snapshot.percent = 100
+  await page.reload()
+  await page.getByRole('button', { name: 'Expand job details' }).click()
+  await expect(panel.getByText('Completed · Foundation 100%', { exact: false })).toBeVisible()
+  await expect(panel.locator('summary', { hasText: 'Cluster formation' })).toContainText('Not reported')
 })
 
 test('Foundation VM execution dialog consumes reported telemetry without promoting phases', async ({ page }) => {
