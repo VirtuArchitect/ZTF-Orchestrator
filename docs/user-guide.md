@@ -919,6 +919,11 @@ The Foundation VM form includes an **AHV ISO Checksum** field beside the
 ISO selector. Deployment status is available in the execution dialog and saved
 Jobs / Queue records. Expand each phase or Node Overview to inspect reported
 node progress. Missing telemetry stays **Not reported**; aggregate completion
+does not fabricate historical phases. Classic Foundation imaging responses show
+a grouped **Node imaging / configuration** phase and matched cluster status,
+instead of separate AHV/AOS milestones that the response does not expose.
+The overall result follows the execution outcome, including for saved jobs.
+Aggregate completion
 does not prove that every phase or cluster health check completed. Connection
 loss and stale updates retain the last reported state. Saved jobs refresh every
 five seconds; their existing Cancel and guarded Restart controls are unchanged.

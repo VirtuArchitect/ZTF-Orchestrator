@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from foundation_vm_progress import normalize_progress, percent
+from foundation_vm_progress import normalize_progress, percent, status
 
 
 CONFIG = {'create_clusters': [{'nodes_list': [
@@ -61,3 +61,47 @@ def test_nested_block_nodes_and_human_readable_stage_names():
     assert snapshot['nodes'][0]['percent'] == 27
     assert snapshot['phases'][3]['status'] == 'running'
     assert snapshot['phases'][3]['nodes'][0]['serial'] == 'NODE-A'
+
+
+@pytest.mark.parametrize('value,expected', [
+    ('Not Run', 'pending'), ('fatal: Running validations', 'failed'),
+    ('Running validations', 'running'), ('Finished', 'completed'),
+    ('All operations completed successfully', 'completed'), ('Done', 'completed'),
+])
+def test_foundation_status_labels(value, expected):
+    assert status(value) == expected
+
+
+def test_classic_foundation_explicit_success_and_grouped_phases():
+    response = {'action': 'imaging', 'imaging_stopped': True,
+                'aggregate_percent_complete': 100,
+                'nodes': [{'node_serial': name, 'status': 'Done', 'percent_complete': 100}
+                          for name in ('NODE-A', 'NODE-B')],
+                'clusters': [{'status': 'Finished', 'percent_complete': 100}]}
+    snapshot = normalize_progress(response, CONFIG)
+    assert snapshot['status'] == 'completed'
+    assert [phase['id'] for phase in snapshot['phases']] == ['validation', 'node_imaging', 'cluster_formation']
+    assert snapshot['phases'][1]['status'] == 'completed'
+    assert snapshot['phases'][2]['status'] == 'completed'
+    assert all(node['activity'] == 'Node imaging/configuration completed' for node in snapshot['nodes'])
+
+
+def test_classic_failure_not_run_and_unknown_never_promoted_by_percent():
+    response = {'action': 'imaging', 'imaging_stopped': True, 'aggregate_percent_complete': 100,
+                'nodes': [{'node_serial': 'NODE-A', 'status': 'fatal: Running validations',
+                           'messages': ['SECRET'], 'percent_complete': 0.97}],
+                'clusters': [{'status': 'Not Run', 'percent_complete': 0}]}
+    snapshot = normalize_progress(response, CONFIG)
+    assert snapshot['status'] == 'failed'
+    assert snapshot['phases'][2]['status'] == 'pending'
+    assert 'SECRET' not in json.dumps(snapshot)
+    response['nodes'][0]['status'] = 'Done'
+    assert normalize_progress(response, CONFIG)['phases'][1]['status'] == 'unknown'
+
+
+def test_unrelated_cluster_cannot_complete_configured_cluster():
+    config = {'create_clusters': [{**CONFIG['create_clusters'][0], 'cluster_name': 'EXPECTED'}]}
+    snapshot = normalize_progress({'action': 'imaging', 'imaging_stopped': True,
+        'clusters': [{'cluster_name': 'OTHER', 'status': 'Done', 'percent_complete': 100}]}, config)
+    assert snapshot['phases'][2]['status'] == 'unknown'
+    assert snapshot['status'] == 'unknown'

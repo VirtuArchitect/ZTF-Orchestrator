@@ -24,9 +24,10 @@ function Nodes({ nodes }: { nodes: FoundationNodeProgress[] }) {
   </table></div>
 }
 
-export default function FoundationVmProgress({ snapshot, active, logs = [] }: {
+export default function FoundationVmProgress({ snapshot, active, outcome, logs = [] }: {
   snapshot?: FoundationDeploymentStatus
   active: boolean
+  outcome?: string
   logs?: Array<{ type: string; data: unknown }>
 }) {
   const [now, setNow] = useState(Date.now())
@@ -50,10 +51,11 @@ export default function FoundationVmProgress({ snapshot, active, logs = [] }: {
     window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
   const foundationUrl = snapshot?.foundationUrl && /^https?:\/\//i.test(snapshot.foundationUrl) ? snapshot.foundationUrl : null
+  const overallLabel = outcome === 'success' ? 'Completed' : outcome === 'failed' || outcome === 'error' ? 'Failed' : outcome === 'cancelled' ? 'Cancelled' : snapshot ? labels[snapshot.status] : 'Waiting for telemetry'
   return <section aria-label="Foundation VM deployment status" className="mb-4 overflow-hidden rounded-lg border border-border bg-gray-900/40">
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4">
       <div><h4 className="font-semibold">Foundation VM Deployment Status</h4>
-        <p className="mt-1 text-xs text-gray-500">{snapshot ? labels[snapshot.status] : 'Waiting for telemetry'}{snapshot?.percent != null && ` · Foundation ${snapshot.percent}%`}{elapsed !== null && ` · Elapsed ${elapsed}s`}</p>
+        <p className="mt-1 text-xs text-gray-500">{overallLabel}{snapshot?.percent != null && ` · Foundation ${snapshot.percent}%`}{elapsed !== null && ` · Elapsed ${elapsed}s`}</p>
         <p className="mt-1 text-xs text-gray-500">Last successful update: {Number.isFinite(last) ? new Date(last).toLocaleString() : 'Not reported'}</p>
       </div>
       <div className="flex gap-2">

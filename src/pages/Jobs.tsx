@@ -291,7 +291,7 @@ export default function Jobs() {
                     </div>
                   )}
                   {job.progress && <ProgressBar progress={job.progress} />}
-                  {job.workflow === 'cluster-create-foundation-vm' && job.foundationStatus && <FoundationVmProgress snapshot={job.foundationStatus} active={ACTIVE_STATUSES.includes(job.status)} logs={job.logs} />}
+                  {job.workflow === 'cluster-create-foundation-vm' && job.foundationStatus && <FoundationVmProgress snapshot={job.foundationStatus} active={ACTIVE_STATUSES.includes(job.status)} outcome={job.status} logs={job.logs} />}
                   {job.diagnostics && (
                     <div className="diagnostics-callout rounded-lg border px-3 py-3">
                       <p className="diagnostics-callout-title text-xs font-medium">Diagnostics</p>
