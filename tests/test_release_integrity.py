@@ -808,7 +808,10 @@ def test_optional_pe_directory_runtime_patch_is_idempotent(tmp_path):
     module.RUNTIME_ROOT = tmp_path
     target = tmp_path / 'framework/scripts/python/pe/create/create_rolemapping_pe.py'
     target.parent.mkdir(parents=True)
-    target.write_text('def get_directory(cluster_details):\n        authn_payload = cluster_details.get("directory_services")\n        return authn_payload.get("ad_name")\n')
+    target.write_text('def get_directory(cluster_details):\n        authn_payload = cluster_details.get("directory_services")\n        return authn_payload.get("ad_name")\n'
+                      + '''\ndef warning(cluster_ip, cluster_details, cluster_info):
+    return (f"'{cluster_ip}/ {cluster_details['cluster_info']['name']}'")
+''')
     module.patch_pe_role_mapping_optional_directory()
     once = target.read_text()
     module.patch_pe_role_mapping_optional_directory()
@@ -817,6 +820,7 @@ def test_optional_pe_directory_runtime_patch_is_idempotent(tmp_path):
     exec(compile(once, str(target), 'exec'), namespace)
     assert namespace['get_directory']({}) is None
     assert namespace['get_directory']({'directory_services': {'ad_name': 'TEST'}}) == 'TEST'
+    assert namespace['warning']('192.0.2.100', {'cluster_info': {}}, '192.0.2.100') == "'192.0.2.100'"
 
 
 def test_runtime_patch_log_cleanup_skips_locked_active_log(tmp_path, monkeypatch):

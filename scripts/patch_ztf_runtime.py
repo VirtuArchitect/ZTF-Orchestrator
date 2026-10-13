@@ -180,6 +180,12 @@ def patch_pe_role_mapping_optional_directory() -> None:
         '        authn_payload = cluster_details.get("directory_services") or {}\n',
         "optional PE directory services",
     )
+    _replace_once(
+        path,
+        """f"'{cluster_ip}/ {cluster_details['cluster_info']['name']}'")""",
+        """f"'{cluster_info}'")""",
+        "optional PE cluster name in directory warning",
+    )
 
 
 def main() -> None:
