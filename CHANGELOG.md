@@ -13,6 +13,10 @@ Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
 
 ### Added
+- Added controlled-UAT CVM `nutanix` and Dell iDRAC password rotation scoped to
+  AOS 7.5.1.8, with existing-runtime SSH, pinned host keys, verified TLS,
+  administrator execution, exact-intent single-use approval, read-only preflight,
+  replacement-login checks, and explicit manual IPMI metadata follow-up.
 - Added a bundled Native Foundation site-deploy adapter wrapper that converts
   `native-foundation-deploy` intent into the embedded ZTF 1.x Foundation
   Central `site-deploy` workflow when the real-adapter runtime gate is enabled.

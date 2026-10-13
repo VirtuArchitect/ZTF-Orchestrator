@@ -8,6 +8,11 @@ but it must not be represented as production validation.
 
 ## Demo Boundary
 
+The CVM & iDRAC Password Rotation screen is a configuration demonstration here.
+Static demo output does not verify passwords or mutate CVMs, iDRACs, or Nutanix
+host IPMI metadata. Live controlled-UAT requirements are in the
+[credential rotation guide](../credential-rotation.md).
+
 - Hosted static UI demo:
   <https://virtuarchitect.github.io/ZTF-Orchestrator/>
 - Demo and simulator paths are local or lab evidence.
