@@ -61,6 +61,7 @@ test('new form generates native password, EULA, Pulse, storage and network keys 
   const first = page.getByRole('region', { name: 'Cluster 1', exact: true })
   await first.getByLabel('Prism Element IP').fill('192.0.2.100')
   await first.getByLabel('New PE Admin Credential Ref').fill('pe_new')
+  await first.getByLabel('DNS Servers').pressSequentially('192.0.2.53, 192.0.2.54')
   await first.getByLabel('Accept EULA').check()
   await expect(page.getByRole('button', { name: 'Dry Run', exact: true })).toBeDisabled()
   await first.getByLabel('EULA Name').fill('Test Operator')
@@ -74,6 +75,7 @@ test('new form generates native password, EULA, Pulse, storage and network keys 
   await first.getByLabel('IP Pools').fill('198.51.100.10-198.51.100.20')
   const output = await exported(page)
   const c = output.clusters['192.0.2.100']
+  expect(c.name_servers_list).toEqual(['192.0.2.53', '192.0.2.54'])
   expect(c).toMatchObject({ pe_credential: 'pe_new', new_pe_admin_credential: 'pe_new', enable_pulse: true, eula: { username: 'Test Operator', company_name: 'Example' } })
   expect(c.containers[0]).toMatchObject({ compression_enabled: true, on_disk_dedup: 'OFF' })
   expect(c.networks[0]).toMatchObject({ subnet_type: 'VLAN', vlan_id: 110, ip_config: { pool_list: [{ range: '198.51.100.10 198.51.100.20' }] } })
