@@ -3246,7 +3246,7 @@ export default function WorkflowDetail() {
       return <Ztf2WorkflowForm workflow={workflow} {...props} onArtifactsChange={setZtf2Artifacts} />
     }
     switch (workflow.id) {
-      case 'cvm-idrac-password-rotation': return <CredentialRotationForm onYamlChange={handleYamlGenerated} />
+      case 'cvm-idrac-password-rotation': return <CredentialRotationForm {...props} />
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'cluster-create-standalone-fca': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="standalone_fca" />
       case 'cluster-create-foundation-vm': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="foundation_vm" />

@@ -1,11 +1,42 @@
 import { useEffect, useState } from 'react'
 import { toYaml } from '../../utils/yaml'
 
-export default function CredentialRotationForm({ onYamlChange }: { onYamlChange: (yaml: string) => void }) {
+export default function CredentialRotationForm({ onYamlChange, importedConfig }: { onYamlChange: (yaml: string) => void; importedConfig?: unknown }) {
   const [cvms, setCvms] = useState('')
   const [idracs, setIdracs] = useState('')
   const [acknowledged, setAcknowledged] = useState(false)
+  const [loadedImport, setLoadedImport] = useState<unknown>()
+  const [importError, setImportError] = useState('')
   useEffect(() => {
+    if (importedConfig === undefined) return
+    try {
+      const config = importedConfig as Record<string, unknown>
+      const allowed = ['aos_version', 'cvms', 'idracs', 'idrac_followup_acknowledged']
+      if (!config || Object.keys(config).some(key => !allowed.includes(key)) || config.aos_version !== '7.5.1.8'
+        || typeof config.idrac_followup_acknowledged !== 'boolean') throw new Error()
+      const lines = (value: unknown, ssh: boolean) => {
+        if (!Array.isArray(value)) throw new Error()
+        const fields = ['address', 'current_credential_ref', 'replacement_credential_ref', ...(ssh ? ['ssh_host_key_sha256'] : [])]
+        return value.map(node => {
+          if (!node || typeof node !== 'object' || Object.keys(node).some(key => !fields.includes(key))
+            || fields.some(key => typeof node[key] !== 'string' || /[,\r\n]/.test(node[key]))) throw new Error()
+          return fields.map(key => node[key]).join(', ')
+        }).join('\n')
+      }
+      const nextCvms = lines(config.cvms, true)
+      const nextIdracs = lines(config.idracs, false)
+      setCvms(nextCvms)
+      setIdracs(nextIdracs)
+      setAcknowledged(config.idrac_followup_acknowledged)
+      setImportError('')
+    } catch {
+      setImportError('Import must use the documented reference-only AOS 7.5.1.8 schema. Correct the file and import again.')
+      onYamlChange('')
+    }
+    setLoadedImport(importedConfig)
+  }, [importedConfig, onYamlChange])
+  useEffect(() => {
+    if (importError || (importedConfig !== undefined && loadedImport !== importedConfig)) return
     const nodes = (value: string, ssh: boolean) => value.split(/\r?\n/).filter(line => line.trim()).map(line => {
       const [address, current, replacement, fingerprint] = line.split(',').map(part => part.trim())
       return { address, current_credential_ref: current || '', replacement_credential_ref: replacement || '',
@@ -13,8 +44,9 @@ export default function CredentialRotationForm({ onYamlChange }: { onYamlChange:
     })
     onYamlChange(toYaml({ aos_version: '7.5.1.8', cvms: nodes(cvms, true), idracs: nodes(idracs, false),
       idrac_followup_acknowledged: acknowledged }))
-  }, [cvms, idracs, acknowledged, onYamlChange])
+  }, [cvms, idracs, acknowledged, onYamlChange, importedConfig, loadedImport, importError])
   return <div className="space-y-4">
+    {importError && <p role="alert" className="card text-red-400">{importError}</p>}
     <div className="card space-y-3">
       <h3 className="font-semibold">CVM &amp; Dell iDRAC Password Rotation</h3>
       <p className="text-sm text-gray-400">Controlled UAT for AOS 7.5.1.8 and Dell iDRAC. Create separate current and replacement credential references in Global Config. Enter references here; keep passwords out of this configuration.</p>

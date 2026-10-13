@@ -27,6 +27,11 @@ test('password rotation generates reference-only intent and gates execution', as
   await page.goto('/workflows/cvm-idrac-password-rotation')
   await expect(page.getByRole('heading', { name: 'CVM & Dell iDRAC Password Rotation' })).toBeVisible()
   const fingerprint = 'SHA256:' + 'a'.repeat(43)
+  await page.locator('input[type="file"]').setInputFiles({ name: 'rotation.yml', mimeType: 'text/yaml',
+    buffer: Buffer.from(yaml.dump({ aos_version: '7.5.1.8',
+      cvms: [{ address: '192.0.2.11', current_credential_ref: 'cvm_old', replacement_credential_ref: 'cvm_new', ssh_host_key_sha256: fingerprint }],
+      idracs: [], idrac_followup_acknowledged: false })) })
+  await expect(page.getByLabel('CVMs — all CVMs in one cluster')).toHaveValue(`192.0.2.11, cvm_old, cvm_new, ${fingerprint}`)
   await page.getByLabel('CVMs — all CVMs in one cluster').fill(`192.0.2.10, cvm_old, cvm_new, ${fingerprint}`)
   await page.getByLabel('Dell iDRAC controllers', { exact: true }).fill('192.0.2.20, bmc_old, bmc_new')
   await page.getByRole('checkbox').check()
