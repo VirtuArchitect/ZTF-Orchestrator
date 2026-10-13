@@ -29,7 +29,24 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
     }
 
     const run = async () => {
-      const resp = await apiFetch(`/api/pipelines/${pipeline.id}/run`, { method: 'POST' })
+      const needsConfirmation = pipeline.steps.some(step => step.workflow === 'ChangeDefaultAdminPasswordPe')
+      const phrase = 'RUN ChangeDefaultAdminPasswordPe'
+      if (needsConfirmation && window.prompt(`This pipeline changes Prism Element admin credentials. Type exactly: ${phrase}`) !== phrase) {
+        setStatus('failed')
+        appendLog('stderr', 'Password change cancelled before execution.')
+        return
+      }
+      const resp = await apiFetch(`/api/pipelines/${pipeline.id}/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(needsConfirmation ? { riskAcknowledged: true, destructiveConfirmation: phrase } : {}),
+      })
+      if (!resp.ok) {
+        const error = await resp.json().catch(() => ({}))
+        appendLog('stderr', error.error || 'Pipeline execution request failed')
+        setStatus('failed')
+        return
+      }
       if (!resp.body) return
 
       const reader  = resp.body.getReader()

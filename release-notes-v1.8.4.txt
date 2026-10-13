@@ -5,6 +5,8 @@ Release date: 2026-09-21
 
 Summary
 -------
+- Exposes Change Default Admin Password (PE) in Scripts and ordered pipelines,
+  with a new-credential reference and explicit execution confirmation.
 - Corrects classic Foundation status labels and grouped imaging/cluster reporting.
 - Adds persistent Foundation VM phase/node telemetry views, stale update
   indicators and log export without changing deployment authorization gates.

@@ -1236,6 +1236,26 @@ const FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
     build: values => toYaml({ ...pcBase(values), fc_alias_key_name: text(values, 'fc_alias_key_name') }),
   },
   EnableMarketplace: pcToggleSchema('EnableMarketplace', 'Enable Marketplace (PC)', 'enable_marketplace'),
+  ChangeDefaultAdminPasswordPe: {
+    scriptId: 'ChangeDefaultAdminPasswordPe',
+    title: 'Change Default Admin Password (PE)',
+    description: 'Changes only the Prism Element admin account. Update its saved credential reference after success. An existing-password override is included in generated YAML; protect that file.',
+    fields: [
+      ...commonPeClusterFields,
+      { key: 'new_pe_admin_credential', label: 'New PE Admin Credential Ref', type: 'text', required: true, defaultValue: 'pe_admin_new' },
+      { key: 'default_pe_password', label: 'Existing PE Admin Password Override', type: 'password', help: 'Leave blank to use the ZTF shipped default. This value is stored in generated YAML when supplied.' },
+    ],
+    build: values => toYaml({
+      ...(String(values.default_pe_password ?? '') ? { default_pe_password: String(values.default_pe_password) } : {}),
+      clusters: {
+        [text(values, 'cluster_ip')]: {
+          name: text(values, 'cluster_name'),
+          pe_credential: text(values, 'pe_credential'),
+          new_pe_admin_credential: text(values, 'new_pe_admin_credential'),
+        },
+      },
+    }),
+  },
   AcceptEulaPe: initialPcSchema('AcceptEulaPe', 'Accept EULA (PE)', 'pe'),
   AcceptEulaPc: initialPcSchema('AcceptEulaPc', 'Accept EULA (PC)', 'pc'),
   UpdatePulsePe: haSchema('UpdatePulsePe', 'Update Pulse (PE)', 'enable_pulse'),
@@ -1252,6 +1272,7 @@ const ALL_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
 }
 
 function exampleForField(field: ScriptConfigField): string | number | boolean {
+  if (field.type === 'password') return ''
   if (field.defaultValue !== undefined) return field.defaultValue
   if (field.type === 'boolean') return false
   if (field.type === 'number') return 1
