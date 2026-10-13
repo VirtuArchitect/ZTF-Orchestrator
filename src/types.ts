@@ -40,7 +40,7 @@ export interface Ztf2ScriptDef {
   ztf2Template: Ztf2TemplateId
 }
 
-export type ScriptConfigFieldType = 'text' | 'number' | 'select' | 'list' | 'boolean'
+export type ScriptConfigFieldType = 'text' | 'password' | 'number' | 'select' | 'list' | 'boolean'
 
 export interface ScriptConfigField {
   key: string
@@ -154,6 +154,28 @@ export interface ExecutionJobLogEvent {
   ts: string
 }
 
+export interface FoundationMetric {
+  status: 'unknown' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  percent: number | null
+}
+
+export interface FoundationNodeProgress extends FoundationMetric {
+  serial: string
+  hostIp: string
+  cvmIp: string
+  activity: string
+}
+
+export interface FoundationDeploymentStatus extends FoundationMetric {
+  connection: 'waiting' | 'connected' | 'lost'
+  startedAt?: string
+  updatedAt?: string
+  lastSuccessfulAt?: string | null
+  foundationUrl?: string
+  phases: Array<FoundationMetric & { id: string; label: string; nodes: FoundationNodeProgress[] }>
+  nodes: FoundationNodeProgress[]
+}
+
 export interface ExecutionProgress {
   phase: string
   percent: number
@@ -175,6 +197,7 @@ export interface ExecutionJob {
   finishedAt?: string
   returnCode?: number | null
   progress?: ExecutionProgress
+  foundationStatus?: FoundationDeploymentStatus
   logs?: ExecutionJobLogEvent[]
   taskIds?: string[]
   trace?: {

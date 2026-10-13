@@ -8,10 +8,18 @@ but it must not be represented as production validation.
 
 ## Demo Boundary
 
+
 The CVM & iDRAC Password Rotation screen is a configuration demonstration here.
 Static demo output does not verify passwords or mutate CVMs, iDRACs, or Nutanix
 host IPMI metadata. Live controlled-UAT requirements are in the
 [credential rotation guide](../credential-rotation.md).
+
+- Configure Cluster supports native per-cluster configuration editing and import.
+  Demo password changes, EULA/Pulse actions and cluster changes remain simulated.
+
+- Change Default Admin Password (PE) is discoverable in Scripts and pipeline
+  selection. Static demo actions are simulated and never change credentials.
+
 
 - Hosted static UI demo:
   <https://virtuarchitect.github.io/ZTF-Orchestrator/>

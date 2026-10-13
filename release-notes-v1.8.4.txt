@@ -5,14 +5,30 @@ Release date: 2026-09-21
 
 Summary
 -------
+- Corrects Configure Cluster native YAML, password references, EULA/Pulse,
+  directory services, storage, HA and VLAN fields, with per-cluster import retention.
+- Prevents an optional-AD role-mapping error in the bundled ZTF runtime.
+- Exposes Change Default Admin Password (PE) in Scripts and ordered pipelines,
+  with a new-credential reference and explicit execution confirmation.
+- Corrects classic Foundation status labels and grouped imaging/cluster reporting.
+- Adds persistent Foundation VM phase/node telemetry views, stale update
+  indicators and log export without changing deployment authorization gates.
+- Adds an AHV ISO Checksum field to the Foundation VM workflow, preserving
+  supplied digests through import, export, validation, and submission.
+- Includes the native hypervisor image checksum field even when its value is
+  not configured, preventing a missing-key error during Foundation submission.
 - Adds automated Drift Detection policies so operators can schedule baseline
   comparisons and still run policies on demand.
 - Aligns runtime, demo, appliance, and documentation metadata to the v1.8.4
   appliance update baseline.
+- Corrects classic Foundation VM network-service serialization so controlled
+  image_nodes submissions match the Foundation 5.11 native payload schema.
 
 Validation
 ----------
 - python -m pytest tests/test_api.py -q -k "drift_policy or drift_check"
+- python -m pytest tests/test_foundation_vm_backend.py -q
+- python -m pytest tests/test_api.py -q -k "foundation_vm or classic_foundation"
 - python -m pytest tests/test_release_integrity.py -q
 - python -m pytest tests/ -q -x
 - npm run build

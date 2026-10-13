@@ -103,11 +103,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'config-cluster',
     name: 'Configure Cluster',
-    description: 'Configure cluster: AD, storage, networks, NTP/DNS, HA',
+    description: 'Initial cluster configuration: admin password, EULA/Pulse, networking and storage',
     category: 'Configuration',
     icon: 'Settings',
     configFile: 'cluster-config.yml',
-    details: 'Day-1 and Day-2 cluster configuration including Active Directory integration, storage containers, VLANs, NTP/DNS servers, and high-availability settings.',
+    details: 'Initial PE admin password change followed by EULA/Pulse and selected directory, storage, VLAN, DNS/NTP and HA settings. This workflow includes a password-change attempt and is not a general-purpose Day-2 rerun.',
   },
   {
     id: 'post-foundation-baseline',
@@ -427,6 +427,7 @@ export const SCRIPTS: ScriptDef[] = [
   { id: 'GenerateFcApiKey', name: 'Generate FC API Key', category: 'Prism Central', description: 'Generates a Foundation Central API key' },
   { id: 'EnableMarketplace', name: 'Enable Marketplace (PC)', category: 'Prism Central', description: 'Enables Marketplace in Prism Central' },
   // Prism Element
+  { id: 'ChangeDefaultAdminPasswordPe', name: 'Change Default Admin Password (PE)', category: 'Prism Element', description: 'Changes the Prism Element admin password using a new credential reference; does not rotate AHV, CVM, or iDRAC accounts' },
   { id: 'AcceptEulaPe', name: 'Accept EULA (PE)', category: 'Prism Element', description: 'Accepts the EULA in Prism Element' },
   { id: 'AcceptEulaPc', name: 'Accept EULA (PC)', category: 'Prism Element', description: 'Accepts the EULA in Prism Central' },
   { id: 'UpdatePulsePe', name: 'Update Pulse (PE)', category: 'Prism Element', description: 'Updates Pulse settings in Prism Element' },

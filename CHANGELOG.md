@@ -9,14 +9,35 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Configure Cluster now edits native per-cluster ZTF settings, including new
+  admin credential references, EULA, enable_pulse, directory services, containers,
+  HA objects and nested VLAN IP configuration. Native imports retain per-cluster
+  and advanced values; unsupported legacy form keys are rejected explicitly.
+- Guarded the bundled PE role-mapping script when optional AD settings are absent.
+- Foundation VM status normalization recognizes classic node statuses and cluster
+  records. Classic imaging uses an honest grouped imaging/configuration phase;
+  completed execution outcomes no longer display an unknown overall status.
+
 Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
 
 ### Added
+
 - Added controlled-UAT CVM `nutanix` and Dell iDRAC password rotation scoped to
   AOS 7.5.1.8, with existing-runtime SSH, pinned host keys, verified TLS,
   administrator execution, exact-intent single-use approval, read-only preflight,
   replacement-login checks, and explicit manual IPMI metadata follow-up.
+
+- Exposed Change Default Admin Password (PE) in Scripts with a credential-reference
+  wizard and as an explicitly confirmed pipeline script step. Existing pipeline
+  workflow steps retain their execution path; password changes do not rotate AHV,
+  CVM, or iDRAC accounts or automatically update saved credentials.
+- Foundation VM deployment telemetry panels in live execution and saved jobs,
+  including per-node progress, explicit unknown states, stale/connection-loss
+  indicators, and sanitized log downloads. Phase completion is not inferred
+  from aggregate progress. Live Foundation response compatibility requires UAT.
+
 - Added a bundled Native Foundation site-deploy adapter wrapper that converts
   `native-foundation-deploy` intent into the embedded ZTF 1.x Foundation
   Central `site-deploy` workflow when the real-adapter runtime gate is enabled.
@@ -33,8 +54,15 @@ into the next numbered release section when the next version is cut.
   production-support boundaries.
 
 ### Fixed
+- Added a Foundation VM ISO checksum field and preserved it through YAML import,
+  export, native validation, and submission, with hexadecimal digest validation.
+- Always include the checksum field in classic Foundation VM hypervisor image
+  payloads, including an empty value when no checksum is configured.
 - Aligned the Dockerfile default `ZTF_ORCHESTRATOR_VERSION` with the v1.8.4
   runtime so local container builds report the correct Installed Build.
+- Serialized classic Foundation VM DNS and NTP server values using the native
+  comma-separated string format expected by Foundation 5.11, preventing
+  `image_nodes` submissions from failing schema validation with HTTP 422.
 
 ---
 

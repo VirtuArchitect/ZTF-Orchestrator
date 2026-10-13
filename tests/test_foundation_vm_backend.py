@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import yaml
+import pytest
 
 import foundation_vm_backend as backend
 
@@ -43,8 +44,8 @@ def _config(*, configure_ipmi=False):
         'hypervisor_credential': 'hypervisor-admin',
         'cluster_credential': 'cluster-admin',
         'common_network_settings': {
-            'dns_servers': ['10.0.0.2'],
-            'ntp_servers': ['10.0.0.3'],
+            'dns_servers': ['10.0.0.2', '10.0.0.4'],
+            'ntp_servers': ['10.0.0.3', '10.0.0.5'],
         },
         'create_clusters': [{
             'cluster_name': 'LAB-CLUSTER',
@@ -82,7 +83,12 @@ def test_native_payload_matches_foundation_shape_and_redacts_secrets():
     assert payload['blocks'][0]['nodes'][0]['node_position'] == 'A'
     assert payload['blocks'][0]['nodes'][0]['ipmi_configure_now'] is True
     assert payload['blocks'][0]['nodes'][0]['hypervisor'] == 'kvm'
+    assert payload['hypervisor_iso'] == {'kvm': {'filename': 'ahv.iso', 'checksum': ''}}
     assert payload['clusters'][0]['cluster_members'] == ['10.0.0.11', '10.0.0.12', '10.0.0.13']
+    assert payload['clusters'][0]['cvm_dns_servers'] == '10.0.0.2, 10.0.0.4'
+    assert payload['clusters'][0]['cvm_ntp_servers'] == '10.0.0.3, 10.0.0.5'
+    assert payload['hypervisor_nameserver'] == '10.0.0.2, 10.0.0.4'
+    assert payload['hypervisor_ntp_servers'] == '10.0.0.3, 10.0.0.5'
 
     redacted = backend.redact_payload(payload)
     rendered = json.dumps(redacted)
@@ -92,6 +98,32 @@ def test_native_payload_matches_foundation_shape_and_redacts_secrets():
     assert redacted['hypervisor_password'] == '***'
     assert redacted['blocks'][0]['nodes'][0]['ipmi_password'] == '***'
     assert redacted['clusters'][0]['cluster_password'] == '***'
+
+
+def test_native_payload_includes_optional_hypervisor_checksum():
+    config = _config()
+    config['aos_hypervisor_images']['hypervisor_checksum'] = 'a' * 64
+
+    payload = backend.build_native_payload(config, _resolver)
+
+    assert payload['hypervisor_iso'] == {
+        'kvm': {'filename': 'ahv.iso', 'checksum': 'a' * 64},
+    }
+
+
+@pytest.mark.parametrize('checksum', ['', 'a' * 32, 'B' * 40, ' c' + 'c' * 63 + ' '])
+def test_checksum_validation_preserves_supported_digests(checksum):
+    config = _config()
+    config['aos_hypervisor_images']['hypervisor_checksum'] = checksum
+    assert backend.validate_intent(config, _resolver) == []
+    assert backend.build_native_payload(config, _resolver)['hypervisor_iso']['kvm']['checksum'] == checksum.strip()
+
+
+@pytest.mark.parametrize('checksum', ['not-a-checksum', 'g' * 64, 'a' * 63, 123, {'sha256': 'a' * 64}])
+def test_checksum_validation_rejects_invalid_values(checksum):
+    config = _config()
+    config['aos_hypervisor_images']['hypervisor_checksum'] = checksum
+    assert any('hypervisor_checksum' in error for error in backend.validate_intent(config, _resolver))
 
 
 def test_intent_validation_enforces_memory_positions_roles_and_networks():
@@ -193,19 +225,24 @@ def test_api_validation_and_controlled_job_lifecycle(client, auth_headers, monke
         if resource == 'progress':
             return True, '', {'aggregate_status': 'completed', 'aggregate_percent_complete': 100}, 1.0
         if resource == 'image_nodes':
+            assert kwargs['payload']['hypervisor_iso']['kvm']['checksum'] == 'a' * 64
             return True, '', {'accepted': True, 'ipmi_password': 'idrac-1-password'}, 1.0
         return True, '', {'accepted': True}, 1.0
 
     monkeypatch.setattr(server, '_foundation_vm_request_json', request_json)
 
-    validation = client.post('/api/foundation-vm/validate', json={'configContent': _yaml()}, headers=auth_headers)
+    config = _config(configure_ipmi=True)
+    config['aos_hypervisor_images']['hypervisor_checksum'] = 'a' * 64
+    content = yaml.safe_dump(config)
+    validation = client.post('/api/foundation-vm/validate', json={'configContent': content}, headers=auth_headers)
     assert validation.status_code == 200
     assert validation.get_json()['valid'] is True
     assert validation.get_json()['payload']['hypervisor_password'] == '***'
+    assert validation.get_json()['payload']['hypervisor_iso']['kvm']['checksum'] == 'a' * 64
 
     response = client.post('/api/jobs', json={
         'workflow': 'cluster-create-foundation-vm',
-        'configContent': _yaml(configure_ipmi=True),
+        'configContent': content,
         'configFile': 'create_foundation_vm_cluster.yml',
         'destructiveConfirmation': 'DEPLOY FOUNDATION VM',
     }, headers=auth_headers)
@@ -227,6 +264,18 @@ def test_api_validation_and_controlled_job_lifecycle(client, auth_headers, monke
     assert 'idrac-1-password' not in log_text
     assert 'hypervisor-admin-password' not in log_text
     assert job['progress']['percent'] == 100
+    assert job['foundationStatus']['percent'] == 100
+    assert job['foundationStatus']['connection'] == 'connected'
+    assert job['foundationStatus']['lastSuccessfulAt']
+    assert job['foundationStatus']['phases'][0]['status'] == 'completed'
+    assert job['foundationStatus']['phases'][5]['status'] == 'unknown'
+    restored = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()
+    assert restored['foundationStatus'] == job['foundationStatus']
+    server._job_manager._record_foundation_progress(job_id, config, connection='lost')
+    lost = client.get(f'/api/jobs/{job_id}', headers=auth_headers).get_json()['foundationStatus']
+    assert lost['connection'] == 'lost'
+    assert lost['lastSuccessfulAt'] == restored['foundationStatus']['lastSuccessfulAt']
+    assert lost['nodes'] == restored['foundationStatus']['nodes']
 
     restart = client.post(f'/api/jobs/{job_id}/restart', json={
         'confirmation': 'RESTART FOUNDATION VM',

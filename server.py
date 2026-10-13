@@ -46,6 +46,7 @@ from upgrade_advisor import (
     merge_upgrade_rule_packs,
     render_upgrade_assessment_markdown,
 )
+from foundation_vm_progress import normalize_progress as _normalize_foundation_progress
 from foundation_vm_backend import (
     FOUNDATION_TERMINAL_STATES,
     build_native_payload as _build_foundation_vm_native_payload,
@@ -34962,12 +34963,16 @@ class ExecutionJobManager:
             })
 
             self._update_progress(job_id, 'Foundation preflight', 10, 'Checking endpoint, features, images, and credentials')
+            self._record_foundation_progress(job_id, config, validation='running')
             preflight_lines, _passed, failed = _run_foundation_vm_preflight(config)
             for line in preflight_lines:
                 emit('stdout', line)
             if failed:
+                self._record_foundation_progress(job_id, config, validation='failed')
                 emit('error', 'Foundation VM preflight failed; no mutating request was sent')
                 return
+
+            self._record_foundation_progress(job_id, config, validation='completed')
 
             native_payload = _build_foundation_vm_native_payload(config, _lookup_credential_ref)
             payload_digest = _sha256_text(json.dumps(native_payload, sort_keys=True, separators=(',', ':')))
@@ -35023,6 +35028,7 @@ class ExecutionJobManager:
                 ok, error, progress, _latency = _foundation_vm_request_json(config, 'progress', timeout=30)
                 if not ok:
                     consecutive_errors += 1
+                    self._record_foundation_progress(job_id, config, connection='lost')
                     emit('stderr', f'Foundation progress poll {consecutive_errors}/3 failed: {error}')
                     if consecutive_errors >= 3:
                         emit('error', 'Foundation progress could not be recovered after three attempts')
@@ -35030,6 +35036,7 @@ class ExecutionJobManager:
                     time.sleep(3)
                     continue
                 consecutive_errors = 0
+                self._record_foundation_progress(job_id, config, response=progress)
                 phase, percent, detail, terminal = _foundation_progress_summary(progress)
                 mapped_percent = 40 + round(percent * 0.55)
                 self._update_progress(job_id, phase, mapped_percent, detail)
@@ -35782,6 +35789,34 @@ class ExecutionJobManager:
         else:
             phase, percent, detail = self.TERMINAL_PROGRESS.get(status, ('Finished', 100, 'Execution finished'))
         self._set_progress(job, phase, percent, detail)
+
+    def _record_foundation_progress(self, job_id: str, config: dict, *, response=None,
+                                    connection='waiting', validation=None) -> None:
+        with self._condition:
+            jobs = self._load_jobs()
+            job = self._find_job(jobs, job_id)
+            if not job:
+                return
+            previous = job.get('foundationStatus') or {}
+            snapshot = _normalize_foundation_progress(response, config) if response is not None else (
+                dict(previous) if previous else _normalize_foundation_progress({}, config))
+            if response is not None:
+                snapshot['lastSuccessfulAt'] = self._now()
+                connection = 'connected'
+            else:
+                snapshot.setdefault('lastSuccessfulAt', None)
+            snapshot['connection'] = connection
+            snapshot['startedAt'] = job.get('startedAt') or job.get('createdAt')
+            snapshot['updatedAt'] = self._now()
+            host, scheme, port = _foundation_vm_backend_endpoint(config)
+            snapshot['foundationUrl'] = f'{scheme}://{"[" + host + "]" if ":" in host else host}:{port}/gui/index.html'
+            previous_validation = (previous.get('phases') or [{}])[0].get('status', 'unknown')
+            snapshot['phases'][0]['status'] = validation or previous_validation
+            snapshot['phases'][0]['percent'] = 100 if snapshot['phases'][0]['status'] == 'completed' else None
+            job['foundationStatus'] = snapshot
+            job['updatedAt'] = snapshot['updatedAt']
+            self._save_jobs(jobs)
+            self._condition.notify_all()
 
     def _update_progress(self, job_id: str, phase: str, percent: int, detail: str) -> None:
         with self._condition:
@@ -40671,6 +40706,21 @@ def save_global_config():
 
 # ─── Pipelines ───────────────────────────────────────────────────────────────
 
+# Keep the legacy step shape; only explicitly integrated scripts use --script.
+PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe'}
+
+
+def _pipeline_step_error(step) -> str | None:
+    if not isinstance(step, dict):
+        return 'Pipeline step must be an object'
+    action = step.get('workflow')
+    if not isinstance(action, str) or action not in ALLOWED_WORKFLOWS | PIPELINE_SCRIPT_IDS:
+        return 'Unknown workflow or pipeline script'
+    if action in PIPELINE_SCRIPT_IDS and (not isinstance(step.get('configFile'), str) or not step['configFile'].strip()):
+        return 'Password change requires a saved configuration file'
+    return _approval_automation_error(action)
+
+
 @app.route('/api/pipelines')
 @require_role('admin', 'operator', 'viewer')
 def list_pipelines():
@@ -40685,10 +40735,10 @@ def create_pipeline():
     steps = data.get('steps', [])
     if not name:
         return jsonify({'error': 'name required'}), 400
+    if not isinstance(steps, list):
+        return jsonify({'error': 'steps must be a list'}), 400
     for s in steps:
-        if s.get('workflow') not in ALLOWED_WORKFLOWS:
-            return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
-        approval_error = _approval_automation_error(s.get('workflow'))
+        approval_error = _pipeline_step_error(s)
         if approval_error:
             return jsonify({'error': approval_error}), 400
     pipeline = {
@@ -40724,10 +40774,10 @@ def update_pipeline(pipeline_id: str):
     if 'name' in data:
         pipeline['name'] = str(data['name']).strip()
     if 'steps' in data:
+        if not isinstance(data['steps'], list):
+            return jsonify({'error': 'steps must be a list'}), 400
         for s in data['steps']:
-            if s.get('workflow') not in ALLOWED_WORKFLOWS:
-                return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
-            approval_error = _approval_automation_error(s.get('workflow'))
+            approval_error = _pipeline_step_error(s)
             if approval_error:
                 return jsonify({'error': approval_error}), 400
         pipeline['steps'] = data['steps']
@@ -40756,11 +40806,31 @@ def run_pipeline(pipeline_id: str):
     if not steps:
         return jsonify({'error': 'Pipeline has no steps'}), 400
     for s in steps:
-        if s.get('workflow') not in ALLOWED_WORKFLOWS:
-            return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
-        approval_error = _approval_automation_error(s.get('workflow'))
+        approval_error = _pipeline_step_error(s)
         if approval_error:
             return jsonify({'error': approval_error}), 403
+
+    script_ids = list(dict.fromkeys(s['workflow'] for s in steps if s['workflow'] in PIPELINE_SCRIPT_IDS))
+    ack_error = _validate_destructive_script_ack(script_ids, request.get_json(silent=True) or {})
+    if ack_error:
+        return jsonify({'error': ack_error}), 400
+    for s in steps:
+        if s['workflow'] in PIPELINE_SCRIPT_IDS:
+            path = safe_config_path(s['configFile'], get_configs_dir())
+            if not path or not path.is_file():
+                return jsonify({'error': 'Password change configuration file is missing or invalid'}), 400
+            try:
+                config = yaml.safe_load(path.read_text(encoding='utf-8'))
+            except (OSError, UnicodeError, yaml.YAMLError):
+                return jsonify({'error': 'Password change configuration must be readable YAML'}), 400
+            clusters = config.get('clusters') if isinstance(config, dict) else None
+            if not isinstance(clusters, dict) or not clusters or any(
+                not isinstance(ip, str) or not ip.strip() or not isinstance(cluster, dict)
+                or any(not isinstance(cluster.get(key), str) or not cluster[key].strip()
+                       for key in ('name', 'pe_credential', 'new_pe_admin_credential'))
+                for ip, cluster in clusters.items()
+            ):
+                return jsonify({'error': 'Password change requires clusters keyed by PE IP with name, pe_credential and new_pe_admin_credential'}), 400
 
     settings     = get_settings()
     ztf_path     = settings['ztfPath']
@@ -40805,13 +40875,15 @@ def run_pipeline(pipeline_id: str):
                 if path and path.exists():
                     cfg_path = str(path)
 
-            cmd_args = [python_path, _ztf_main_arg(ztf_path), '--workflow', workflow]
+            is_script = workflow in PIPELINE_SCRIPT_IDS
+            cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow]
             if cfg_path:
                 cmd_args += ['-f', cfg_path]
 
             proc        = None
             kill_timer  = None
             step_status = 'success'
+            failure_evidence = False
 
             try:
                 proc = subprocess.Popen(
@@ -40844,10 +40916,11 @@ def run_pipeline(pipeline_id: str):
                         done += 1
                     else:
                         label, line = item
-                        yield from send(label, line)
+                        failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
+                        yield from send(label, _redact_text(line) if is_script else line)
 
                 proc.wait()
-                step_status = 'success' if proc.returncode == 0 else 'failed'
+                step_status = 'success' if proc.returncode == 0 and not (is_script and failure_evidence) else 'failed'
 
             except GeneratorExit:
                 if proc and proc.poll() is None:

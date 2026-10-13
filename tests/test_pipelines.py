@@ -136,3 +136,98 @@ def test_pipeline_run_empty_steps_rejected(client, auth_headers):
         pid = resp.get_json()['id']
         run_resp = client.post(f'/api/pipelines/{pid}/run', headers=auth_headers)
         assert run_resp.status_code == 400
+
+
+PASSWORD_SCRIPT = 'ChangeDefaultAdminPasswordPe'
+PASSWORD_ACK = {'riskAcknowledged': True, 'destructiveConfirmation': f'RUN {PASSWORD_SCRIPT}'}
+
+
+def _password_pipeline(client, auth_headers):
+    return _create(client, auth_headers, steps=[
+        {'workflow': PASSWORD_SCRIPT, 'configFile': 'password.yml'},
+        {'workflow': 'pod-config', 'configFile': 'baseline.yml'},
+    ])
+
+
+@pytest.mark.parametrize('ack', [{}, {'riskAcknowledged': True, 'destructiveConfirmation': 'wrong'}])
+def test_password_pipeline_requires_confirmation(client, auth_headers, ack):
+    pid = _password_pipeline(client, auth_headers).get_json()['id']
+    resp = client.post(f'/api/pipelines/{pid}/run', json=ack, headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'script' in resp.get_json()['error'].lower()
+
+
+def test_password_pipeline_requires_existing_config(client, auth_headers):
+    pid = _password_pipeline(client, auth_headers).get_json()['id']
+    resp = client.post(f'/api/pipelines/{pid}/run', json=PASSWORD_ACK, headers=auth_headers)
+    assert resp.status_code == 400
+    assert 'configuration' in resp.get_json()['error']
+
+
+@pytest.mark.parametrize('output, expected', [('', 'success'), ('[ERROR] password change failed', 'failed')])
+def test_password_pipeline_uses_script_and_failure_gate(client, auth_headers, monkeypatch, output, expected):
+    import server
+    commands = []
+    server.get_configs_dir().mkdir(parents=True, exist_ok=True)
+    (server.get_configs_dir() / 'password.yml').write_text(
+        'clusters:\n  192.0.2.10:\n    name: test\n    pe_credential: pe_old\n    new_pe_admin_credential: pe_new\n')
+
+    class FakeProc:
+        returncode = 0
+        stderr = iter([])
+
+        def __init__(self):
+            self.stdout = iter([output] if output else [])
+
+        def wait(self): pass
+        def kill(self): pass
+        def poll(self): return 0
+
+    def popen(command, **kwargs):
+        commands.append(command)
+        return FakeProc()
+
+    monkeypatch.setattr(server.subprocess, 'Popen', popen)
+    pid = _password_pipeline(client, auth_headers).get_json()['id']
+    resp = client.post(f'/api/pipelines/{pid}/run', json=PASSWORD_ACK, headers=auth_headers)
+    assert resp.status_code == 200
+    events = [json.loads(line[6:]) for line in resp.data.decode().splitlines() if line.startswith('data: ')]
+    assert '--script' in commands[0]
+    assert PASSWORD_SCRIPT in commands[0]
+    assert '-f' in commands[0]
+    assert events[-1]['data']['status'] == expected
+    assert len(commands) == (2 if expected == 'success' else 1)
+    if expected == 'success':
+        assert '--workflow' in commands[1]
+    else:
+        assert any(event['type'] == 'step_skipped' for event in events)
+
+
+@pytest.mark.parametrize('step', [None, {'workflow': []}, {'workflow': 'DeleteVmPe'},
+                                   {'workflow': PASSWORD_SCRIPT, 'configFile': ''},
+                                   {'workflow': PASSWORD_SCRIPT, 'configFile': 42}])
+def test_pipeline_rejects_invalid_or_unintegrated_scripts(client, auth_headers, step):
+    assert _create(client, auth_headers, steps=[step]).status_code == 400
+
+
+def test_password_script_direct_execution_still_requires_ack(client, auth_headers):
+    for endpoint in ('/api/execute', '/api/jobs'):
+        response = client.post(endpoint, json={'script': PASSWORD_SCRIPT}, headers=auth_headers)
+        assert response.status_code == 403
+        assert response.get_json()['destructiveAction'] is True
+
+
+@pytest.mark.parametrize('content', ['clusters: {}', 'clusters: [bad]', 'clusters: {192.0.2.10: {name: test}}', '[invalid'])
+def test_password_pipeline_rejects_malformed_config(client, auth_headers, content):
+    import server
+    server.get_configs_dir().mkdir(parents=True, exist_ok=True)
+    (server.get_configs_dir() / 'password.yml').write_text(content)
+    pid = _password_pipeline(client, auth_headers).get_json()['id']
+    assert client.post(f'/api/pipelines/{pid}/run', json=PASSWORD_ACK, headers=auth_headers).status_code == 400
+
+
+def test_password_pipeline_rejects_config_path_escape(client, auth_headers):
+    pid = _create(client, auth_headers, steps=[
+        {'workflow': PASSWORD_SCRIPT, 'configFile': '../password.yml'},
+    ]).get_json()['id']
+    assert client.post(f'/api/pipelines/{pid}/run', json=PASSWORD_ACK, headers=auth_headers).status_code == 400

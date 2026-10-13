@@ -919,6 +919,31 @@ confirmation; the new job records its source job ID. Jobs found active after an
 Orchestrator restart are marked interrupted and may be reviewed and restarted
 instead of being silently resumed.
 
+The Foundation VM form includes an **AHV ISO Checksum** field beside the
+ISO selector. Deployment status is available in the execution dialog and saved
+Jobs / Queue records. Expand each phase or Node Overview to inspect reported
+node progress. Missing telemetry stays **Not reported**; aggregate completion
+does not fabricate historical phases. Classic Foundation imaging responses show
+a grouped **Node imaging / configuration** phase and matched cluster status,
+instead of separate AHV/AOS milestones that the response does not expose.
+The overall result follows the execution outcome, including for saved jobs.
+For classic responses, grouped completion also follows Foundation's console
+contract: imaging stopped, no session abort, aggregate progress at 100%, and
+the individual row at 100%, without overriding explicit failed or pending states.
+Aggregate completion
+does not prove that every phase or cluster health check completed. Connection
+loss and stale updates retain the last reported state. Saved jobs refresh every
+five seconds; their existing Cancel and guarded Restart controls are unchanged.
+Use the download icon for sanitized execution logs or Open Foundation for the
+appliance console. Phase/node compatibility must be verified against the actual
+Foundation VM response during controlled UAT.
+
+The checksum field exports as `aos_hypervisor_images.hypervisor_checksum` and
+is preserved when importing YAML, validating the native payload, and submitting
+to Foundation. Supplied values must be hexadecimal MD5 (32 characters), SHA-1
+(40 characters), or SHA-256 (64 characters); use the digest expected by the
+target Foundation appliance. An empty field leaves the digest unspecified.
+
 The Foundation VM form captures the classic Foundation wizard decisions as
 structured intent: hardware platform, RDMA passthrough, host/CVM LAG mode,
 installer IP review values, AOS package reference, hypervisor type and ISO,

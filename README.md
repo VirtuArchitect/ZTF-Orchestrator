@@ -26,6 +26,24 @@ integration.
 > automation workflows. It is not affiliated with or supported by Nutanix, and
 > production use requires environment-specific validation.
 
+Classic Foundation responses use a grouped node
+imaging/configuration phase and explicit cluster status; separate AHV/AOS
+milestones are only shown when reported. Terminal job outcomes supply the
+overall execution result without fabricating missing phase history.
+
+Prism Element initial password changes are available in Scripts and ordered
+pipelines as **Change Default Admin Password (PE)**. See the
+[password-change procedure](docs/pe-admin-password-change.md) for credential
+references, confirmation, and post-change verification requirements.
+
+Configure Cluster uses the installed ZTF native per-cluster schema for initial
+password changes, EULA, Pulse and optional cluster settings. See the
+[initial configuration guide](docs/cluster-initial-configuration.md).
+
+Foundation VM deployments include a persistent phase/node telemetry view in
+execution and saved jobs. Missing telemetry is shown as "Not reported", not
+assumed complete; verify the actual Foundation VM response mapping during UAT.
+
 ## Appliance Downloads
 
 The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)

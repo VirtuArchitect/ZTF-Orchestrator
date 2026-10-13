@@ -165,6 +165,7 @@ function initialState(
     aosPackage: '',
     hypervisorType: 'AHV',
     hypervisorIso: '',
+    hypervisorChecksum: '',
     phoenixIso: '',
     hypervisorCred: profile?.prismElement.cvmCredentialRef || 'default_admin',
     clusterCred: profile?.prismElement.cvmCredentialRef || 'default_admin',
@@ -257,6 +258,7 @@ function initialState(
     aosPackage: asString(imageSettings.aos_package, defaults.aosPackage),
     hypervisorType: asString(imageSettings.hypervisor_type, defaults.hypervisorType),
     hypervisorIso: asString(imageSettings.hypervisor_iso, defaults.hypervisorIso),
+    hypervisorChecksum: asString(imageSettings.hypervisor_checksum, defaults.hypervisorChecksum),
     phoenixIso: asString(imageSettings.phoenix_iso, defaults.phoenixIso),
     hypervisorCred: asString(root.hypervisor_credential, defaults.hypervisorCred),
     clusterCred: asString(root.cluster_credential, defaults.clusterCred),
@@ -294,6 +296,7 @@ export default function ClusterCreateForm({
   const [aosPackage, setAosPackage] = useState(() => initial().aosPackage)
   const [hypervisorType, setHypervisorType] = useState(() => initial().hypervisorType)
   const [hypervisorIso, setHypervisorIso] = useState(() => initial().hypervisorIso)
+  const [hypervisorChecksum, setHypervisorChecksum] = useState(() => initial().hypervisorChecksum)
   const [phoenixIso, setPhoenixIso] = useState(() => initial().phoenixIso)
   const [hypervisorCred, setHypervisorCred] = useState(() => initial().hypervisorCred)
   const [clusterCred, setClusterCred] = useState(() => initial().clusterCred)
@@ -334,6 +337,7 @@ export default function ClusterCreateForm({
     setAosPackage(next.aosPackage)
     setHypervisorType(next.hypervisorType)
     setHypervisorIso(next.hypervisorIso)
+    setHypervisorChecksum(next.hypervisorChecksum)
     setPhoenixIso(next.phoenixIso)
     setHypervisorCred(next.hypervisorCred)
     setClusterCred(next.clusterCred)
@@ -366,6 +370,7 @@ export default function ClusterCreateForm({
       aosPackage,
       hypervisorType,
       hypervisorIso,
+      hypervisorChecksum,
       phoenixIso,
       hypervisorCredential: hypervisorCred,
       clusterCredential: clusterCred,
@@ -408,6 +413,7 @@ export default function ClusterCreateForm({
     hardwarePlatform,
     hypervisorImageExtId,
     hypervisorIso,
+    hypervisorChecksum,
     hypervisorCred,
     clusterCred,
     phoenixIso,
@@ -649,7 +655,7 @@ export default function ClusterCreateForm({
       {fcTarget === 'foundation_vm' && (
         <div className="form-section">
           <p className="form-section-title">AOS / Hypervisor</p>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="label">AOS Package</label>
               <input className="input" value={aosPackage} onChange={e => setAosPackage(e.target.value)} placeholder="AOS package name or path" />
@@ -665,6 +671,17 @@ export default function ClusterCreateForm({
             <div>
               <label className="label">Hypervisor ISO</label>
               <input className="input" value={hypervisorIso} onChange={e => setHypervisorIso(e.target.value)} placeholder="AHV ISO name or path" />
+            </div>
+            <div>
+              <label className="label" htmlFor="foundation-vm-iso-checksum">{hypervisorType === 'AHV' ? 'AHV ISO Checksum' : 'Hypervisor ISO Checksum'}</label>
+              <input
+                id="foundation-vm-iso-checksum"
+                className="input font-mono"
+                value={hypervisorChecksum}
+                onChange={e => setHypervisorChecksum(e.target.value)}
+                placeholder="MD5, SHA-1, or SHA-256 (optional)"
+                spellCheck={false}
+              />
             </div>
             <div>
               <label className="label">Phoenix ISO (optional)</label>
