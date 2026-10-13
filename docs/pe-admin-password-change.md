@@ -27,6 +27,10 @@ workflow steps continue to use `--workflow`. A failed step stops subsequent step
 ZTF ERROR/CRITICAL output also fails the password step even with exit code zero.
 Do not automatically retry a password change after an ambiguous network failure.
 
+Do not chain this standalone action before Configure Cluster: that workflow also
+attempts the initial password change. Use its corrected native form for a combined
+initial configuration; see [Initial Cluster Configuration](cluster-initial-configuration.md).
+
 Subsequent steps must already reference the new credential, or be run separately
 after verifying the password and updating the saved reference. Mandatory approval
 policy cannot be bypassed through a pipeline: approval-required actions must use

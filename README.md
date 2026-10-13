@@ -36,6 +36,10 @@ pipelines as **Change Default Admin Password (PE)**. See the
 [password-change procedure](docs/pe-admin-password-change.md) for credential
 references, confirmation, and post-change verification requirements.
 
+Configure Cluster uses the installed ZTF native per-cluster schema for initial
+password changes, EULA, Pulse and optional cluster settings. See the
+[initial configuration guide](docs/cluster-initial-configuration.md).
+
 Foundation VM deployments include a persistent phase/node telemetry view in
 execution and saved jobs. Missing telemetry is shown as "Not reported", not
 assumed complete; verify the actual Foundation VM response mapping during UAT.

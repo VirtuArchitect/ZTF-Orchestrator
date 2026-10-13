@@ -5,6 +5,9 @@ Release date: 2026-09-21
 
 Summary
 -------
+- Corrects Configure Cluster native YAML, password references, EULA/Pulse,
+  directory services, storage, HA and VLAN fields, with per-cluster import retention.
+- Prevents an optional-AD role-mapping error in the bundled ZTF runtime.
 - Exposes Change Default Admin Password (PE) in Scripts and ordered pipelines,
   with a new-credential reference and explicit execution confirmation.
 - Corrects classic Foundation status labels and grouped imaging/cluster reporting.

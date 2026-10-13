@@ -172,6 +172,22 @@ def _submit_batch_with_retry(batch_api, batch_spec, attempts: int = 3):
     print(f"Patched {path}")
 
 
+def patch_pe_role_mapping_optional_directory() -> None:
+    path = _runtime_path("framework/scripts/python/pe/create/create_rolemapping_pe.py")
+    _replace_once(
+        path,
+        '        authn_payload = cluster_details.get("directory_services")\n',
+        '        authn_payload = cluster_details.get("directory_services") or {}\n',
+        "optional PE directory services",
+    )
+    _replace_once(
+        path,
+        """f"'{cluster_ip}/ {cluster_details['cluster_info']['name']}'")""",
+        """f"'{cluster_info}'")""",
+        "optional PE cluster name in directory warning",
+    )
+
+
 def main() -> None:
     patch_pc_entity_list()
     patch_pc_vm_payload_name()
@@ -180,6 +196,7 @@ def main() -> None:
     patch_windows_log_cleanup()
     patch_pc_config_preserves_sessions()
     patch_pc_v4_batch_retry()
+    patch_pe_role_mapping_optional_directory()
 
 
 if __name__ == "__main__":

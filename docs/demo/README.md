@@ -8,6 +8,9 @@ but it must not be represented as production validation.
 
 ## Demo Boundary
 
+- Configure Cluster supports native per-cluster configuration editing and import.
+  Demo password changes, EULA/Pulse actions and cluster changes remain simulated.
+
 - Change Default Admin Password (PE) is discoverable in Scripts and pipeline
   selection. Static demo actions are simulated and never change credentials.
 

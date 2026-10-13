@@ -22,6 +22,7 @@ import ImagingOnlyForm from '../components/forms/ImagingOnlyForm'
 import SiteDeployForm from '../components/forms/SiteDeployForm'
 import PCDeployForm from '../components/forms/PCDeployForm'
 import ClusterConfigForm from '../components/forms/ClusterConfigForm'
+import { validateClusterConfig } from '../utils/clusterConfig'
 import CalmWorkloadsForm from '../components/forms/CalmWorkloadsForm'
 import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
@@ -156,6 +157,7 @@ function validateWorkflowImport(workflowId: string, parsed: unknown): string | n
 
   const obj = parsed as Record<string, unknown>
   const missing = expectedKeys.filter(key => !(key in obj))
+  if (workflowId === 'config-cluster' && !missing.length) return validateClusterConfig(obj)[0] || null
   return missing.length
     ? `Imported config does not look like ${workflowId}; missing ${missing.join(', ')}.`
     : null
