@@ -10,6 +10,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Configure Cluster now edits native per-cluster ZTF settings, including new
+  admin credential references, EULA, enable_pulse, directory services, containers,
+  HA objects and nested VLAN IP configuration. Native imports retain per-cluster
+  and advanced values; unsupported legacy form keys are rejected explicitly.
+- Guarded the bundled PE role-mapping script when optional AD settings are absent.
 - Foundation VM status normalization recognizes classic node statuses and cluster
   records. Classic imaging uses an honest grouped imaging/configuration phase;
   completed execution outcomes no longer display an unknown overall status.

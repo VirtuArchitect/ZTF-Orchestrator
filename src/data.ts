@@ -94,11 +94,11 @@ export const WORKFLOWS: WorkflowDef[] = [
   {
     id: 'config-cluster',
     name: 'Configure Cluster',
-    description: 'Configure cluster: AD, storage, networks, NTP/DNS, HA',
+    description: 'Initial cluster configuration: admin password, EULA/Pulse, networking and storage',
     category: 'Configuration',
     icon: 'Settings',
     configFile: 'cluster-config.yml',
-    details: 'Day-1 and Day-2 cluster configuration including Active Directory integration, storage containers, VLANs, NTP/DNS servers, and high-availability settings.',
+    details: 'Initial PE admin password change followed by EULA/Pulse and selected directory, storage, VLAN, DNS/NTP and HA settings. This workflow includes a password-change attempt and is not a general-purpose Day-2 rerun.',
   },
   {
     id: 'post-foundation-baseline',

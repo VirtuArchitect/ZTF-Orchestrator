@@ -745,65 +745,11 @@ export function buildPCDeployYaml(cfg: {
 }
 
 export function buildClusterConfigYaml(cfg: {
-  peCredential: string
-  eulaUsername?: string
-  eulaCompany?: string
-  eulaJobTitle?: string
-  enablePulse?: boolean
-  adServerIp?: string
-  adName?: string
-  adDomain?: string
-  adServiceUser?: string
-  adServicePassword?: string
-  adRoleMappings?: Array<{ role: string; entityType: string; values: string[] }>
-  containers?: Array<{ name: string; replicationFactor?: number; compression?: boolean; dedup?: boolean }>
-  networks?: Array<{ name: string; vlanId: number; networkIp?: string; prefix?: number; gateway?: string; ipPools?: string[] }>
-  dnsServers?: string[]
-  ntpServers?: string[]
-  haReservation?: boolean
-  clusters: string[]
+  clusters: Record<string, unknown>
+  default_pe_password?: string
+  [key: string]: unknown
 }): string {
-  const clusterMap: Record<string, unknown> = {}
-  cfg.clusters.forEach(ip => {
-    clusterMap[ip] = {
-      ...(cfg.peCredential ? { pe_credential: cfg.peCredential } : {}),
-      ...(cfg.eulaUsername ? { eula: { username: cfg.eulaUsername, company_name: cfg.eulaCompany || '', job_title: cfg.eulaJobTitle || '' } } : {}),
-      ...(cfg.enablePulse !== undefined ? { pulse: cfg.enablePulse } : {}),
-      ...(cfg.dnsServers?.length ? { name_servers_list: cfg.dnsServers } : {}),
-      ...(cfg.ntpServers?.length ? { ntp_servers_list: cfg.ntpServers } : {}),
-      ...(cfg.adServerIp ? {
-        active_directory: {
-          ad_server_ip: cfg.adServerIp,
-          ad_name: cfg.adName || '',
-          ad_domain: cfg.adDomain || '',
-          ...(cfg.adServiceUser ? { service_account_username: cfg.adServiceUser } : {}),
-          ...(cfg.adServicePassword ? { service_account_password: cfg.adServicePassword } : {}),
-          ...(cfg.adRoleMappings?.length ? { role_mappings: cfg.adRoleMappings.map(r => ({ role: r.role, entity_type: r.entityType, entity_values: r.values })) } : {}),
-        },
-      } : {}),
-      ...(cfg.containers?.length ? {
-        storage_containers: cfg.containers.map(c => ({
-          name: c.name,
-          ...(c.replicationFactor ? { replication_factor: c.replicationFactor } : {}),
-          ...(c.compression !== undefined ? { compression: c.compression } : {}),
-          ...(c.dedup !== undefined ? { dedup: c.dedup } : {}),
-        })),
-      } : {}),
-      ...(cfg.networks?.length ? {
-        networks: cfg.networks.map(n => ({
-          name: n.name,
-          vlan_id: n.vlanId,
-          ...(n.networkIp ? { network_ip: n.networkIp } : {}),
-          ...(n.prefix ? { prefix: n.prefix } : {}),
-          ...(n.gateway ? { default_gateway_ip: n.gateway } : {}),
-          ...(n.ipPools?.length ? { ip_pools: n.ipPools.map(r => ({ range: r })) } : {}),
-        })),
-      } : {}),
-      ...(cfg.haReservation !== undefined ? { ha_reservation: cfg.haReservation } : {}),
-    }
-  })
-
-  return toYaml({ clusters: clusterMap })
+  return toYaml(cfg)
 }
 
 export function buildCalmWorkloadsYaml(cfg: {

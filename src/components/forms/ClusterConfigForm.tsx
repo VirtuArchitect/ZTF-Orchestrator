@@ -1,200 +1,99 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { buildClusterConfigYaml } from '../../utils/yaml'
-import { CREDENTIAL_KEYS } from '../../data'
-import TagInput from './TagInput'
+import { validateClusterConfig } from '../../utils/clusterConfig'
 import type { ConnectionProfile } from '../../types'
 
-interface Container { name: string; replicationFactor: number; compression: boolean; dedup: boolean }
-interface Network { name: string; vlanId: number; networkIp: string; prefix: number; gateway: string; ipPools: string[] }
-interface RoleMapping { role: string; entityType: string; values: string }
+type Values = Record<string, any>
+interface Target { ip: string; settings: Values }
+interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile; importedConfig?: unknown }
+const object = (value: unknown): Values => value && typeof value === 'object' && !Array.isArray(value) ? value as Values : {}
+const list = (value: unknown): Values[] => Array.isArray(value) ? value.map(object) : []
+const csv = (value: string) => value.split(/[\n,]/).map(item => item.trim()).filter(Boolean)
 
-interface Props { onYamlChange: (yaml: string) => void; profile?: ConnectionProfile }
+function Field({ label, value, onChange, type = 'text' }: { label: string; value: string | number; onChange: (value: string) => void; type?: string }) {
+  return <label className="block min-w-0"><span className="label">{label}</span><input className="input w-full" type={type} value={value}
+    autoComplete={type === 'password' ? 'new-password' : undefined} onChange={e => onChange(e.target.value)} /></label>
+}
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
+  return <label className="flex items-center gap-2"><input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />{label}</label>
+}
+function Choice({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  const id = useId()
+  return <div><label className="label" htmlFor={id}>{label}</label><select id={id} className="input w-full" value={value} onChange={e => onChange(e.target.value)}>{options.map(option => <option key={option}>{option}</option>)}</select></div>
+}
 
-const csv = (value?: string) => value?.split(',').map(item => item.trim()).filter(Boolean) || []
-
-const AD_ROLES = ['ROLE_CLUSTER_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BACKUP_ADMIN', 'ROLE_READONLY', 'ROLE_CLUSTER_VIEWER']
-
-export default function ClusterConfigForm({ onYamlChange, profile }: Props) {
-  const [peCred, setPeCred] = useState(profile?.prismElement.peCredentialRef || 'pe_user')
-  const [clusterIps, setClusterIps] = useState([profile?.prismElement.defaultClusterVip || ''])
-  const [dnsServers, setDnsServers] = useState(csv(profile?.defaults.dnsServers).length ? csv(profile?.defaults.dnsServers) : ['8.8.8.8'])
-  const [ntpServers, setNtpServers] = useState(csv(profile?.defaults.ntpServers).length ? csv(profile?.defaults.ntpServers) : ['0.us.pool.ntp.org'])
-
-  // EULA
-  const [eulaUser, setEulaUser] = useState('admin')
-  const [eulaCompany, setEulaCompany] = useState('')
-  const [eulaJob, setEulaJob] = useState('')
-  const [enableEula, setEnableEula] = useState(true)
-  const [enablePulse, setEnablePulse] = useState(true)
-  const [haReservation, setHaReservation] = useState(true)
-
-  // AD
-  const [enableAD, setEnableAD] = useState(false)
-  const [adIp, setAdIp] = useState('')
-  const [adName, setAdName] = useState('')
-  const [adDomain, setAdDomain] = useState(profile?.directory.domain || '')
-  const [adSvcUser, setAdSvcUser] = useState('')
-  const [adSvcPass, setAdSvcPass] = useState('')
-  const [adRoles, setAdRoles] = useState<RoleMapping[]>([{ role: 'ROLE_CLUSTER_ADMIN', entityType: 'GROUP', values: '' }])
-
-  // Storage
-  const [containers, setContainers] = useState<Container[]>([{ name: profile?.prismElement.storageContainer || 'default-container', replicationFactor: 2, compression: true, dedup: false }])
-
-  // Networks
-  const [networks, setNetworks] = useState<Network[]>([{ name: profile?.prismElement.networkName || 'vlan0', vlanId: 0, networkIp: '', prefix: 24, gateway: '', ipPools: [] }])
-
+export default function ClusterConfigForm({ onYamlChange, profile, importedConfig }: Props) {
+  const defaultTarget = (): Target => ({ ip: profile?.prismElement.defaultClusterVip || '', settings: {
+    name: '', pe_credential: profile?.prismElement.peCredentialRef || '', new_pe_admin_credential: '',
+  } })
+  const [targets, setTargets] = useState<Target[]>([defaultTarget()])
+  const [topLevel, setTopLevel] = useState<Values>({})
+  const [loadedImport, setLoadedImport] = useState<unknown>()
   useEffect(() => {
-    const validClusters = clusterIps.filter(ip => ip.trim())
-    if (!validClusters.length) return
-    onYamlChange(buildClusterConfigYaml({
-      peCredential: peCred,
-      dnsServers, ntpServers,
-      ...(enableEula ? { eulaUsername: eulaUser, eulaCompany, eulaJobTitle: eulaJob } : {}),
-      ...(enablePulse !== undefined ? { enablePulse } : {}),
-      haReservation,
-      ...(enableAD && adIp ? {
-        adServerIp: adIp, adName, adDomain, adServiceUser: adSvcUser, adServicePassword: adSvcPass,
-        adRoleMappings: adRoles.filter(r => r.values).map(r => ({ role: r.role, entityType: r.entityType, values: r.values.split(',').map(v => v.trim()) })),
-      } : {}),
-      containers: containers.filter(c => c.name),
-      networks: networks.filter(n => n.name),
-      clusters: validClusters,
-    }))
-  }, [peCred, clusterIps, dnsServers, ntpServers, enableEula, eulaUser, eulaCompany, eulaJob, enablePulse, haReservation, enableAD, adIp, adName, adDomain, adSvcUser, adSvcPass, adRoles, containers, networks, onYamlChange])
+    if (importedConfig === undefined) return
+    const { clusters, ...rest } = object(importedConfig)
+    setTargets(Object.entries(object(clusters)).map(([ip, settings]) => ({ ip, settings: object(settings) })))
+    setTopLevel(rest)
+    setLoadedImport(importedConfig)
+  }, [importedConfig])
 
-  return (
-    <div className="space-y-5">
-      <div className="form-section">
-        <p className="form-section-title">Target Clusters</p>
-        <div className="space-y-2">
-          {clusterIps.map((ip, i) => (
-            <div key={i} className="flex gap-2">
-              <input className="input flex-1" value={ip} onChange={e => setClusterIps(p => p.map((v, j) => j === i ? e.target.value : v))} placeholder="10.0.0.100" />
-              {clusterIps.length > 1 && <button onClick={() => setClusterIps(p => p.filter((_, j) => j !== i))} className="btn-ghost p-2 text-red-400"><Trash2 size={13} /></button>}
-            </div>
-          ))}
-          <button onClick={() => setClusterIps(p => [...p, ''])} className="btn-secondary text-xs gap-1 py-1.5"><Plus size={12} />Add Cluster</button>
-        </div>
-      </div>
+  const errors = validateClusterConfig({ ...topLevel, clusters: Object.fromEntries(targets.map(t => [t.ip.trim(), t.settings])) })
+  if (new Set(targets.map(t => t.ip.trim())).size !== targets.length) errors.push('Prism Element IPs must be unique.')
+  const errorKey = errors.join('\n')
+  useEffect(() => {
+    if (loadedImport !== importedConfig) return
+    onYamlChange(errorKey ? '' : buildClusterConfigYaml({ ...topLevel, clusters: Object.fromEntries(targets.map(t => [t.ip.trim(), t.settings])) }))
+  }, [targets, topLevel, errorKey, loadedImport, importedConfig, onYamlChange])
 
-      <div className="form-section">
-        <p className="form-section-title">Credentials & Network</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div><label className="label">PE Credential</label>
-            <select className="input" value={peCred} onChange={e => setPeCred(e.target.value)}>{CREDENTIAL_KEYS.map(k => <option key={k}>{k}</option>)}</select></div>
-          <div />
-          <div><label className="label">DNS Servers</label><TagInput values={dnsServers} onChange={setDnsServers} /></div>
-          <div><label className="label">NTP Servers</label><TagInput values={ntpServers} onChange={setNtpServers} placeholder="0.us.pool.ntp.org" /></div>
-        </div>
-      </div>
+  const patch = (i: number, values: Values) => setTargets(prev => prev.map((t, j) => j === i ? { ...t, settings: { ...t.settings, ...values } } : t))
+  const optional = (i: number, key: string, enabled: boolean, value: unknown) => setTargets(prev => prev.map((t, j) => {
+    if (i !== j) return t
+    const settings = { ...t.settings }; if (enabled) settings[key] = value; else delete settings[key]
+    return { ...t, settings }
+  }))
+  const patchItem = (i: number, key: string, j: number, values: Values) => patch(i, { [key]: list(targets[i].settings[key]).map((v, k) => j === k ? { ...v, ...values } : v) })
+  const removeItem = (i: number, key: string, j: number) => patch(i, { [key]: list(targets[i].settings[key]).filter((_, k) => j !== k) })
 
-      <div className="form-section">
-        <p className="form-section-title">EULA & Pulse</p>
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={enableEula} onChange={e => setEnableEula(e.target.checked)} className="rounded" />
-            <span className="text-sm text-gray-300">Accept EULA</span>
-          </label>
-          {enableEula && (
-            <div className="grid grid-cols-3 gap-3">
-              <div><label className="label text-xs">Admin Username</label><input className="input text-xs py-1.5" value={eulaUser} onChange={e => setEulaUser(e.target.value)} /></div>
-              <div><label className="label text-xs">Company Name</label><input className="input text-xs py-1.5" value={eulaCompany} onChange={e => setEulaCompany(e.target.value)} /></div>
-              <div><label className="label text-xs">Job Title</label><input className="input text-xs py-1.5" value={eulaJob} onChange={e => setEulaJob(e.target.value)} /></div>
-            </div>
-          )}
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={enablePulse} onChange={e => setEnablePulse(e.target.checked)} className="rounded" />
-              <span className="text-sm text-gray-300">Enable Pulse</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={haReservation} onChange={e => setHaReservation(e.target.checked)} className="rounded" />
-              <span className="text-sm text-gray-300">HA Reservation</span>
-            </label>
-          </div>
-        </div>
+  return <div className="space-y-5">
+    <div className="form-section"><p className="form-section-title">Initial Admin Password</p>
+      <Field label="Existing PE Admin Password Override" type="password" value={topLevel.default_pe_password || ''} onChange={value => setTopLevel(prev => {
+        const next = { ...prev }; if (value) next.default_pe_password = value; else delete next.default_pe_password; return next
+      })} /></div>
+    {targets.map(({ ip, settings: c }, i) => <section key={i} className="form-section space-y-4" aria-label={`Cluster ${i + 1}`}>
+      <div className="flex justify-between items-center"><h3 className="font-semibold">Cluster {i + 1}</h3><button className="btn-ghost" title="Remove cluster" onClick={() => setTargets(prev => prev.filter((_, j) => j !== i))}><Trash2 size={15} /></button></div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Prism Element IP" value={ip} onChange={value => setTargets(prev => prev.map((t, j) => i === j ? { ...t, ip: value } : t))} />
+        <Field label="Cluster Name" value={c.name || ''} onChange={value => patch(i, { name: value })} />
+        <Field label="PE API Credential Ref" value={c.pe_credential || ''} onChange={value => patch(i, { pe_credential: value })} />
+        <Field label="New PE Admin Credential Ref" value={c.new_pe_admin_credential || ''} onChange={value => patch(i, { new_pe_admin_credential: value, pe_credential: value })} />
+        <Field label="DNS Servers" value={(Array.isArray(c.name_servers_list) ? c.name_servers_list : []).join(', ')} onChange={value => patch(i, { name_servers_list: csv(value) })} />
+        <Field label="NTP Servers" value={(Array.isArray(c.ntp_servers_list) ? c.ntp_servers_list : []).join(', ')} onChange={value => patch(i, { ntp_servers_list: csv(value) })} />
+        <Field label="Data Services IP" value={c.dsip || ''} onChange={value => optional(i, 'dsip', Boolean(value), value)} />
       </div>
-
-      <div className="form-section">
-        <p className="form-section-title">Active Directory</p>
-        <label className="flex items-center gap-2 cursor-pointer mb-3">
-          <input type="checkbox" checked={enableAD} onChange={e => setEnableAD(e.target.checked)} className="rounded" />
-          <span className="text-sm text-gray-300">Configure Active Directory</span>
-        </label>
-        {enableAD && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className="label text-xs">AD Server IP</label><input className="input text-xs py-1.5" value={adIp} onChange={e => setAdIp(e.target.value)} placeholder="10.0.0.200" /></div>
-              <div><label className="label text-xs">AD Name</label><input className="input text-xs py-1.5" value={adName} onChange={e => setAdName(e.target.value)} placeholder="CORP-AD" /></div>
-              <div><label className="label text-xs">AD Domain</label><input className="input text-xs py-1.5" value={adDomain} onChange={e => setAdDomain(e.target.value)} placeholder="corp.domain.com" /></div>
-              <div><label className="label text-xs">Service Account User</label><input className="input text-xs py-1.5" value={adSvcUser} onChange={e => setAdSvcUser(e.target.value)} placeholder="svc-nutanix" /></div>
-              <div><label className="label text-xs">Service Account Password</label><input className="input text-xs py-1.5" type="password" value={adSvcPass} onChange={e => setAdSvcPass(e.target.value)} /></div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="label mb-0 text-xs">Role Mappings</label>
-                <button onClick={() => setAdRoles(p => [...p, { role: 'ROLE_READONLY', entityType: 'GROUP', values: '' }])} className="btn-ghost text-xs gap-1 py-0.5"><Plus size={11} />Add</button>
-              </div>
-              {adRoles.map((r, i) => (
-                <div key={i} className="grid grid-cols-4 gap-2 mb-2 items-end">
-                  <select className="input text-xs py-1.5" value={r.role} onChange={e => setAdRoles(p => p.map((x, j) => j === i ? { ...x, role: e.target.value } : x))}>
-                    {AD_ROLES.map(role => <option key={role}>{role}</option>)}
-                  </select>
-                  <select className="input text-xs py-1.5" value={r.entityType} onChange={e => setAdRoles(p => p.map((x, j) => j === i ? { ...x, entityType: e.target.value } : x))}>
-                    <option>GROUP</option><option>USER</option>
-                  </select>
-                  <input className="input text-xs py-1.5 col-span-1" value={r.values} onChange={e => setAdRoles(p => p.map((x, j) => j === i ? { ...x, values: e.target.value } : x))} placeholder="Group Name (comma-sep)" />
-                  {adRoles.length > 1 && <button onClick={() => setAdRoles(p => p.filter((_, j) => j !== i))} className="btn-ghost p-1.5 text-red-400"><Trash2 size={12} /></button>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="form-section">
-        <p className="form-section-title">Storage Containers</p>
-        {containers.map((c, i) => (
-          <div key={i} className="grid grid-cols-4 gap-2 mb-2 items-end">
-            <div><label className="label text-xs">Container Name</label><input className="input text-xs py-1.5" value={c.name} onChange={e => setContainers(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder="default-container" /></div>
-            <div><label className="label text-xs">RF</label>
-              <select className="input text-xs py-1.5" value={c.replicationFactor} onChange={e => setContainers(p => p.map((x, j) => j === i ? { ...x, replicationFactor: Number(e.target.value) } : x))}>
-                <option value={2}>RF-2</option><option value={3}>RF-3</option>
-              </select></div>
-            <div className="flex gap-3 items-center pt-4">
-              <label className="flex items-center gap-1 text-xs text-gray-400 cursor-pointer">
-                <input type="checkbox" checked={c.compression} onChange={e => setContainers(p => p.map((x, j) => j === i ? { ...x, compression: e.target.checked } : x))} />Compress
-              </label>
-              <label className="flex items-center gap-1 text-xs text-gray-400 cursor-pointer">
-                <input type="checkbox" checked={c.dedup} onChange={e => setContainers(p => p.map((x, j) => j === i ? { ...x, dedup: e.target.checked } : x))} />Dedup
-              </label>
-            </div>
-            {containers.length > 1 && <button onClick={() => setContainers(p => p.filter((_, j) => j !== i))} className="btn-ghost p-1.5 text-red-400 self-end"><Trash2 size={12} /></button>}
-          </div>
-        ))}
-        <button onClick={() => setContainers(p => [...p, { name: '', replicationFactor: 2, compression: true, dedup: false }])} className="btn-secondary text-xs gap-1 py-1.5 mt-1"><Plus size={12} />Add Container</button>
-      </div>
-
-      <div className="form-section">
-        <p className="form-section-title">Networks / VLANs</p>
-        {networks.map((n, i) => (
-          <div key={i} className="p-3 rounded-lg bg-gray-900/50 border border-border/50 mb-2 space-y-2">
-            <div className="grid grid-cols-3 gap-2">
-              <div><label className="label text-xs">Network Name</label><input className="input text-xs py-1.5" value={n.name} onChange={e => setNetworks(p => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder="vlan-100" /></div>
-              <div><label className="label text-xs">VLAN ID</label><input className="input text-xs py-1.5" type="number" value={n.vlanId} onChange={e => setNetworks(p => p.map((x, j) => j === i ? { ...x, vlanId: Number(e.target.value) } : x))} /></div>
-              <div><label className="label text-xs">Network IP</label><input className="input text-xs py-1.5" value={n.networkIp} onChange={e => setNetworks(p => p.map((x, j) => j === i ? { ...x, networkIp: e.target.value } : x))} placeholder="10.0.1.0" /></div>
-              <div><label className="label text-xs">Prefix Length</label><input className="input text-xs py-1.5" type="number" value={n.prefix} onChange={e => setNetworks(p => p.map((x, j) => j === i ? { ...x, prefix: Number(e.target.value) } : x))} /></div>
-              <div><label className="label text-xs">Gateway</label><input className="input text-xs py-1.5" value={n.gateway} onChange={e => setNetworks(p => p.map((x, j) => j === i ? { ...x, gateway: e.target.value } : x))} placeholder="10.0.1.1" /></div>
-            </div>
-            <div><label className="label text-xs">IP Pools (format: 10.0.1.10-10.0.1.50)</label>
-              <TagInput values={n.ipPools} onChange={pools => setNetworks(p => p.map((x, j) => j === i ? { ...x, ipPools: pools } : x))} placeholder="10.0.1.10-10.0.1.50" />
-            </div>
-            {networks.length > 1 && <button onClick={() => setNetworks(p => p.filter((_, j) => j !== i))} className="btn-ghost p-1 text-red-400 text-xs gap-1 flex items-center"><Trash2 size={11} />Remove</button>}
-          </div>
-        ))}
-        <button onClick={() => setNetworks(p => [...p, { name: '', vlanId: 0, networkIp: '', prefix: 24, gateway: '', ipPools: [] }])} className="btn-secondary text-xs gap-1 py-1.5 mt-1"><Plus size={12} />Add Network</button>
-      </div>
-    </div>
-  )
+      <Toggle label="Accept EULA" checked={Boolean(c.eula)} onChange={enabled => optional(i, 'eula', enabled, { username: '', company_name: '', job_title: '' })} />
+      {c.eula && <div className="grid gap-3 md:grid-cols-3">{[['EULA Name', 'username'], ['Company Name', 'company_name'], ['Job Title', 'job_title']].map(([label, key]) => <Field key={key} label={label} value={c.eula[key] || ''} onChange={value => patch(i, { eula: { ...c.eula, [key]: value } })} />)}</div>}
+      <Choice label="Pulse" value={c.enable_pulse === undefined ? 'Unchanged' : c.enable_pulse ? 'Enabled' : 'Disabled'} options={['Unchanged', 'Enabled', 'Disabled']} onChange={value => optional(i, 'enable_pulse', value !== 'Unchanged', value === 'Enabled')} />
+      <Toggle label="Configure HA Reservation" checked={Boolean(c.ha_reservation)} onChange={enabled => optional(i, 'ha_reservation', enabled, { enable_failover: true, num_host_failure_to_tolerate: 1 })} />
+      {c.ha_reservation && <div className="grid gap-3 md:grid-cols-2"><Toggle label="Enable Failover" checked={Boolean(c.ha_reservation.enable_failover)} onChange={value => patch(i, { ha_reservation: { ...c.ha_reservation, enable_failover: value } })} /><Field label="Host Failures To Tolerate" type="number" value={c.ha_reservation.num_host_failure_to_tolerate ?? 1} onChange={value => patch(i, { ha_reservation: { ...c.ha_reservation, num_host_failure_to_tolerate: Number(value) } })} /></div>}
+      <Toggle label="Configure Active Directory" checked={Boolean(c.directory_services)} onChange={enabled => optional(i, 'directory_services', enabled, {
+        directory_type: 'ACTIVE_DIRECTORY', ad_name: '', ad_domain: profile?.directory.domain || '', ad_directory_url: profile?.directory.ldapUrl || '', service_account_credential: profile?.directory.serviceAccountCredentialRef || '', role_mappings: [],
+      })} />
+      {c.directory_services && <div className="space-y-3"><div className="grid gap-3 md:grid-cols-2">{[['AD Name', 'ad_name'], ['AD Domain', 'ad_domain'], ['AD Directory URL', 'ad_directory_url'], ['Service Account Credential Ref', 'service_account_credential']].map(([label, key]) => <Field key={key} label={label} value={c.directory_services[key] || ''} onChange={value => patch(i, { directory_services: { ...c.directory_services, [key]: value } })} />)}</div>
+        {list(c.directory_services.role_mappings).map((r, j) => {
+          const update = (values: Values) => patch(i, { directory_services: { ...c.directory_services, role_mappings: list(c.directory_services.role_mappings).map((v, k) => j === k ? { ...v, ...values } : v) } })
+          return <div key={j} className="grid gap-3 md:grid-cols-4"><Choice label="Role" value={r.role_type} options={['ROLE_CLUSTER_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BACKUP_ADMIN', 'ROLE_CLUSTER_VIEWER']} onChange={value => update({ role_type: value })} /><Choice label="Entity Type" value={r.entity_type} options={['GROUP', 'OU', 'USER']} onChange={value => update({ entity_type: value })} /><Field label="Entity Values" value={(Array.isArray(r.values) ? r.values : []).join(', ')} onChange={value => update({ values: csv(value) })} /><button className="btn-ghost" title="Remove role mapping" onClick={() => patch(i, { directory_services: { ...c.directory_services, role_mappings: list(c.directory_services.role_mappings).filter((_, k) => j !== k) } })}><Trash2 size={15} /></button></div>
+        })}<button className="btn-secondary gap-1" onClick={() => patch(i, { directory_services: { ...c.directory_services, role_mappings: [...list(c.directory_services.role_mappings), { role_type: 'ROLE_CLUSTER_VIEWER', entity_type: 'GROUP', values: [] }] } })}><Plus size={14} />Add Role Mapping</button></div>}
+      <h4 className="font-medium">Storage Containers</h4>
+      {list(c.containers).map((v, j) => <div key={j} className="grid gap-3 md:grid-cols-3"><Field label="Container Name" value={v.name || ''} onChange={value => patchItem(i, 'containers', j, { name: value })} /><Choice label="Replication Factor" value={String(v.replication_factor ?? 2)} options={['1', '2', '3']} onChange={value => patchItem(i, 'containers', j, { replication_factor: Number(value) })} /><Toggle label="Compression" checked={Boolean(v.compression_enabled)} onChange={value => patchItem(i, 'containers', j, { compression_enabled: value })} /><Toggle label="On-disk Deduplication" checked={v.on_disk_dedup === 'ON'} onChange={value => patchItem(i, 'containers', j, { on_disk_dedup: value ? 'ON' : 'OFF' })} /><button className="btn-ghost" title="Remove container" onClick={() => removeItem(i, 'containers', j)}><Trash2 size={15} /></button></div>)}
+      <button className="btn-secondary gap-1" onClick={() => patch(i, { containers: [...list(c.containers), { name: '', replication_factor: 2, compression_enabled: true, on_disk_dedup: 'OFF' }] })}><Plus size={14} />Add Container</button>
+      <h4 className="font-medium">Networks / VLANs</h4>
+      {list(c.networks).map((v, j) => {
+        const updateIp = (values: Values) => patchItem(i, 'networks', j, { ip_config: { ...object(v.ip_config), ...values } })
+        return <div key={j} className="grid gap-3 md:grid-cols-3"><Field label="Network Name" value={v.name || ''} onChange={value => patchItem(i, 'networks', j, { name: value })} /><Field label="VLAN ID" type="number" value={v.vlan_id ?? 0} onChange={value => patchItem(i, 'networks', j, { vlan_id: Number(value) })} /><Field label="Network IP" value={v.ip_config?.network_ip || ''} onChange={value => updateIp({ network_ip: value })} /><Field label="Prefix Length" type="number" value={v.ip_config?.network_prefix ?? 24} onChange={value => updateIp({ network_prefix: Number(value) })} /><Field label="Gateway" value={v.ip_config?.default_gateway_ip || ''} onChange={value => updateIp({ default_gateway_ip: value })} /><Field label="IP Pools" value={list(v.ip_config?.pool_list).map(pool => pool.range).join(', ')} onChange={value => updateIp({ pool_list: csv(value).map(range => ({ range: range.replace(/\s*-\s*/, ' ') })) })} /><button className="btn-ghost" title="Remove network" onClick={() => removeItem(i, 'networks', j)}><Trash2 size={15} /></button></div>
+      })}<button className="btn-secondary gap-1" onClick={() => patch(i, { networks: [...list(c.networks), { name: '', subnet_type: 'VLAN', vlan_id: 0, ip_config: {} }] })}><Plus size={14} />Add Network</button>
+    </section>)}
+    <button className="btn-secondary gap-1" onClick={() => setTargets(prev => [...prev, defaultTarget()])}><Plus size={14} />Add Cluster</button>
+    {errors.length > 0 && <div role="alert" className="text-sm text-red-400">{errors.map(error => <p key={error}>{error}</p>)}</div>}
+  </div>
 }

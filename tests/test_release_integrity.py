@@ -803,6 +803,22 @@ def test_runtime_patch_covers_dev_lab_findings():
     assert '_submit_batch_with_retry(self.batch_api, batch_spec)' in patch_script
 
 
+def test_optional_pe_directory_runtime_patch_is_idempotent(tmp_path):
+    module = _load_runtime_patch_module()
+    module.RUNTIME_ROOT = tmp_path
+    target = tmp_path / 'framework/scripts/python/pe/create/create_rolemapping_pe.py'
+    target.parent.mkdir(parents=True)
+    target.write_text('def get_directory(cluster_details):\n        authn_payload = cluster_details.get("directory_services")\n        return authn_payload.get("ad_name")\n')
+    module.patch_pe_role_mapping_optional_directory()
+    once = target.read_text()
+    module.patch_pe_role_mapping_optional_directory()
+    assert target.read_text() == once
+    namespace = {}
+    exec(compile(once, str(target), 'exec'), namespace)
+    assert namespace['get_directory']({}) is None
+    assert namespace['get_directory']({'directory_services': {'ad_name': 'TEST'}}) == 'TEST'
+
+
 def test_runtime_patch_log_cleanup_skips_locked_active_log(tmp_path, monkeypatch):
     module = _load_runtime_patch_module()
     module.RUNTIME_ROOT = tmp_path
