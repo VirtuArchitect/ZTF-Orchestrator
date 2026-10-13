@@ -22,6 +22,11 @@ It is reasonable to say:
 
 ## Claims That Require More Evidence
 
+The CVM & Dell iDRAC password rotation workflow has local mocked transport and
+browser coverage. Live password mutation, CVM synchronization, and iDRAC firmware
+compatibility require environment-specific validation. Nutanix host IPMI metadata
+synchronization remains manual; see the [rotation guide](credential-rotation.md).
+
 Do not claim broadly production-validated status until evidence exists for the
 specific deployment, target environment, and workflows. The following require
 environment-specific proof:

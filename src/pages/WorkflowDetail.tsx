@@ -26,6 +26,7 @@ import { validateClusterConfig } from '../utils/clusterConfig'
 import CalmWorkloadsForm from '../components/forms/CalmWorkloadsForm'
 import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
+import CredentialRotationForm from '../components/forms/CredentialRotationForm'
 import NativeFoundationDeployForm from '../components/forms/NativeFoundationDeployForm'
 import PostFoundationWorkflowForm from '../components/forms/PostFoundationWorkflowForm'
 import Ztf2WorkflowForm from '../components/forms/Ztf2WorkflowForm'
@@ -54,6 +55,7 @@ const POST_FOUNDATION_WORKFLOWS = new Set([
 ])
 
 const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
+  'cvm-idrac-password-rotation': ['aos_version', 'cvms', 'idracs', 'idrac_followup_acknowledged'],
   'cluster-create': ['common_network_settings', 'create_clusters'],
   'cluster-create-standalone-fca': ['fca_ip', 'fca_credential', 'common_network_settings', 'create_clusters'],
   'cluster-create-foundation-vm': ['foundation_vm_ip', 'foundation_vm_options', 'aos_hypervisor_images', 'common_network_settings', 'create_clusters'],
@@ -265,7 +267,7 @@ export default function WorkflowDetail() {
   }
 
   const Icon = ICON_MAP[workflow.icon] || Server
-  const approvalRequired = Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
+  const approvalRequired = workflow.id === 'cvm-idrac-password-rotation' || Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
   const nativeFoundationDellAdapter = nativeFoundationProviderAdapters?.providerAdapters?.find(adapter => adapter.providerId === 'dell_idrac_redfish')
   const nativeFoundationDeploymentEnabled = Boolean(isNativeFoundationWorkflow && nativeFoundationDellAdapter?.fullDeploymentReady)
   const handleYamlGenerated = useCallback((yaml: string) => {
@@ -292,6 +294,12 @@ export default function WorkflowDetail() {
     const extraParams: Record<string, string> = {}
     if (!dryRun && approvalId.trim()) {
       extraParams.approvalId = approvalId.trim()
+    }
+    if (!dryRun && workflow.id === 'cvm-idrac-password-rotation') {
+      const expected = 'ROTATE CVM AND IDRAC PASSWORDS'
+      const entered = window.prompt(`This changes infrastructure passwords and may leave partially rotated targets on failure.\n\nType exactly: ${expected}`)
+      if (entered !== expected) return
+      extraParams.destructiveConfirmation = expected
     }
     if (!dryRun && workflow.id.endsWith('-standalone-fca')) {
       const expected = `${STANDALONE_FCA_CONFIRMATION_PREFIX} ${workflow.id}`
@@ -3238,6 +3246,7 @@ export default function WorkflowDetail() {
       return <Ztf2WorkflowForm workflow={workflow} {...props} onArtifactsChange={setZtf2Artifacts} />
     }
     switch (workflow.id) {
+      case 'cvm-idrac-password-rotation': return <CredentialRotationForm {...props} />
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'cluster-create-standalone-fca': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="standalone_fca" />
       case 'cluster-create-foundation-vm': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="foundation_vm" />

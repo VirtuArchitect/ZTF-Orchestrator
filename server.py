@@ -34,6 +34,7 @@ from typing import Generator
 
 import bcrypt
 import yaml
+import credential_rotation as rotation
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -3111,6 +3112,7 @@ POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
 }
 
 ALLOWED_WORKFLOWS = {
+    rotation.WORKFLOW,
     'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
     'imaging-only', 'imaging-only-standalone-fca',
     'imaging', 'imaging-standalone-fca',
@@ -3123,6 +3125,7 @@ ALLOWED_WORKFLOWS = {
 } | POST_FOUNDATION_WORKFLOWS
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
+    rotation.WORKFLOW,
     'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
     'imaging-only', 'imaging-only-standalone-fca',
     'imaging', 'imaging-standalone-fca',
@@ -3291,6 +3294,8 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 
 
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
+    if workflow == rotation.WORKFLOW:
+        return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
 
@@ -34471,7 +34476,54 @@ class ExecutionJobManager:
                 payload = dict(job.get('payload') or {})
             self._run_job(job_id, payload, job.get('user', 'unknown'))
 
+    def _run_rotation_job(self, job_id: str, payload: dict, user: str) -> None:
+        status, code = 'failed', -1
+        results = []
+        acquired = rotation.ROTATION_LOCK.acquire(blocking=False)
+        try:
+            if not acquired:
+                self._emit(job_id, 'error', 'Another password rotation is active; no changes attempted')
+                return
+            error, config, _approval = _rotation_submission(payload, role='admin', worker_job_id=job_id)
+            if error:
+                self._emit(job_id, 'error', error)
+                return
+            credentials = rotation.resolve_credentials(config, _lookup_credential_ref)
+            deadline = time.monotonic() + EXEC_TIMEOUT
+            self._update_progress(job_id, 'Checking credential rotation targets', 20, 'Read-only authentication and identity checks')
+            def emit(line):
+                self._emit(job_id, 'stdout', line)
+            def cancelled():
+                job = self.get_job(job_id) or {}
+                return self._stop or job.get('status') == 'cancelling' or time.monotonic() >= deadline
+            ok, results = rotation.execute(config, credentials, get_settings()['pythonPath'], emit,
+                                           cancelled=cancelled, dry_run=payload.get('dryRun') is True)
+            status, code = ('success', 0) if ok else ('failed', -1)
+            if time.monotonic() >= deadline:
+                status, code = 'failed', -1
+                emit('[FAIL] Execution deadline exceeded; inspect attempted targets before retrying')
+            elif cancelled():
+                status, code = 'cancelled', -1
+        except Exception:
+            self._emit(job_id, 'error', 'Password rotation could not complete; inspect target state before retrying')
+        finally:
+            if acquired:
+                rotation.ROTATION_LOCK.release()
+            diagnostics = {'targets': results, 'controlledUat': True,
+                           'followupRequired': bool(payload.get('dryRun') is not True and results),
+                           'nutanixIpmiMetadataUpdated': False}
+            self._set_diagnostics(job_id, diagnostics)
+            _record_execution_history(execution_id=job_id, workflow_or_script=rotation.WORKFLOW,
+                                      execution_type='workflow', status=status, user=user,
+                                      config_file=payload.get('configFile') or '',
+                                      config_content=payload.get('configContent') or '',
+                                      return_code=code, diagnostics=diagnostics)
+            self._complete(job_id, status, code)
+
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('workflow') == rotation.WORKFLOW:
+            self._run_rotation_job(job_id, payload, user)
+            return
         if payload.get('framework') == 'native-foundation':
             self._run_native_foundation_review_job(job_id, payload, user)
             return
@@ -41131,6 +41183,62 @@ def upload_foundation_vm_image():
         except OSError:
             log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
 
+_ROTATION_SUBMIT_LOCK = threading.Lock()
+
+
+def _rotation_submission(data: dict, role: str, worker_job_id: str = ''):
+    if role != 'admin':
+        return 'Password rotation requires an administrator', {}, None
+    if data.get('script') or data.get('framework') not in (None, 'credential-rotation'):
+        return 'Password rotation cannot be combined with scripts or another framework', {}, None
+    content = data.get('configContent')
+    if not isinstance(content, str) or not content or len(content) > 65536:
+        return 'Password rotation requires inline intent of at most 64 KiB', {}, None
+    try:
+        config = yaml.safe_load(content)
+    except yaml.YAMLError:
+        return 'Invalid rotation YAML', {}, None
+    errors = rotation.validate_intent(config)
+    if errors:
+        return '; '.join(errors), {}, None
+    if data.get('dryRun') is True:
+        return None, config, None
+    if data.get('destructiveConfirmation') != rotation.CONFIRMATION:
+        return f'Confirmation must exactly match: {rotation.CONFIRMATION}', {}, None
+    _require_engines()
+    approval = _approval_manager.get_approval(str(data.get('approvalId') or ''))
+    error = _workflow_approval_error(approval, rotation.WORKFLOW, str(data.get('configFile') or ''), content)
+    if error:
+        return error, {}, None
+    if approval.get('configContent') != content:
+        return 'Password rotation approval must bind the exact nonempty intent', {}, None
+    if approval.get('jobId') and approval['jobId'] != worker_job_id:
+        return 'Password rotation approval has already been used; request a fresh approval', {}, None
+    return None, config, approval
+
+
+def _submit_rotation_request(data, stream=False):
+    session = getattr(request, 'current_user', {})
+    with _ROTATION_SUBMIT_LOCK:
+        error, config, approval = _rotation_submission(data, str(session.get('role') or ''))
+        if error:
+            return jsonify({'error': error}), 403
+        # Persist only the validated reference-only intent and trusted gate fields.
+        payload = {'workflow': rotation.WORKFLOW, 'framework': 'credential-rotation',
+                   'configContent': data['configContent'],
+                   'configFile': str(data.get('configFile') or 'cvm-idrac-password-rotation.yml'),
+                   'dryRun': data.get('dryRun') is True,
+                   'destructiveConfirmation': rotation.CONFIRMATION,
+                   'approvalId': str(data.get('approvalId') or '')}
+        job = _job_manager.submit(payload, session.get('username', 'unknown'))
+        if approval:
+            _approval_manager.link_job(approval['id'], job['id'])
+    if stream:
+        return Response(_job_manager.stream_events(job['id']), mimetype='text/event-stream',
+                        headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
+    return jsonify(job), 202
+
+
 @app.route('/api/execute', methods=['POST'])
 @require_role('admin', 'operator')
 @limiter.limit('10 per minute')
@@ -41139,6 +41247,8 @@ def execute_workflow():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    if data.get('workflow') == rotation.WORKFLOW:
+        return _submit_rotation_request(data, stream=True)
     workflow       = data.get('workflow')
     config_content = data.get('configContent')
     config_file    = data.get('configFile')
@@ -41473,6 +41583,8 @@ def submit_job():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    if data.get('workflow') == rotation.WORKFLOW:
+        return _submit_rotation_request(data)
     settings = get_settings()
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     if data.get('framework') == 'ztf2':

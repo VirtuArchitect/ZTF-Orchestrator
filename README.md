@@ -46,6 +46,10 @@ assumed complete; verify the actual Foundation VM response mapping during UAT.
 
 ## Appliance Downloads
 
+The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)
+adds guarded CVM SSH and iDRAC password changes with replacement-login checks.
+Nutanix host IPMI credential synchronization remains a required manual follow-up.
+
 Download versioned ZTF-Orchestrator appliance artifacts from the
 [Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C).
 

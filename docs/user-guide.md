@@ -1,5 +1,9 @@
 # ZTF-Orchestrator User Guide
 
+For controlled-UAT CVM SSH and Dell iDRAC password changes, see the
+[credential rotation guide](credential-rotation.md). The workflow is scoped to
+AOS 7.5.1.8 and requires manual Nutanix host IPMI credential synchronization.
+
 This guide explains the ZTF-Orchestrator user interface, sidebar menu items,
 major features, and the operational purpose of each screen.
 

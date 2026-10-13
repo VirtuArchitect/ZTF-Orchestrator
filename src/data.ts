@@ -2,6 +2,15 @@ import type { WorkflowDef, ScriptDef, Ztf2ScriptDef } from './types'
 
 export const WORKFLOWS: WorkflowDef[] = [
   {
+    id: 'cvm-idrac-password-rotation',
+    name: 'CVM & iDRAC Password Rotation',
+    description: 'Rotate CVM SSH and Dell iDRAC passwords with verified logins',
+    category: 'Configuration',
+    icon: 'KeyRound',
+    configFile: 'cvm-idrac-password-rotation.yml',
+    details: 'Controlled-UAT password rotation for the CVM nutanix SSH account on AOS 7.5.1.8 and Dell iDRAC accounts. Requires administrator execution, exact-intent approval, pinned SSH host keys, trusted HTTPS, and explicit confirmation. Nutanix host IPMI metadata synchronization and external consumer updates require manual follow-up.',
+  },
+  {
     id: 'cluster-create',
     name: 'Cluster Create',
     description: 'Creates clusters using Foundation Central with full node imaging',
