@@ -3,6 +3,18 @@ import yaml from 'js-yaml'
 import { SCRIPTS } from '../../src/data'
 import { SCRIPT_CONFIG_SCHEMAS } from '../../src/scriptConfigSchemas'
 
+test('PE password wizard emits credential references and preserves an optional override', () => {
+  const schema = SCRIPT_CONFIG_SCHEMAS.ChangeDefaultAdminPasswordPe
+  expect(SCRIPTS.some(script => script.id === schema.scriptId)).toBe(true)
+  expect(schema.riskLevel).toBe('destructive')
+  expect(schema.fields.find(field => field.key === 'default_pe_password')?.type).toBe('password')
+  const values = { ...schema.exampleValues, default_pe_password: '', new_pe_admin_credential: 'new_admin_ref' }
+  const generated = yaml.load(schema.build(values)) as any
+  expect(generated).not.toHaveProperty('default_pe_password')
+  expect(Object.values(generated.clusters)[0]).toMatchObject({ new_pe_admin_credential: 'new_admin_ref' })
+  expect((yaml.load(schema.build({ ...values, default_pe_password: '  test-only  ' })) as any).default_pe_password).toBe('  test-only  ')
+})
+
 test('all script wizard examples generate parseable YAML with required guidance', () => {
   expect(Object.keys(SCRIPT_CONFIG_SCHEMAS)).toHaveLength(SCRIPTS.length)
 

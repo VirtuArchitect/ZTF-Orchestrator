@@ -31,6 +31,11 @@ imaging/configuration phase and explicit cluster status; separate AHV/AOS
 milestones are only shown when reported. Terminal job outcomes supply the
 overall execution result without fabricating missing phase history.
 
+Prism Element initial password changes are available in Scripts and ordered
+pipelines as **Change Default Admin Password (PE)**. See the
+[password-change procedure](docs/pe-admin-password-change.md) for credential
+references, confirmation, and post-change verification requirements.
+
 Foundation VM deployments include a persistent phase/node telemetry view in
 execution and saved jobs. Missing telemetry is shown as "Not reported", not
 assumed complete; verify the actual Foundation VM response mapping during UAT.

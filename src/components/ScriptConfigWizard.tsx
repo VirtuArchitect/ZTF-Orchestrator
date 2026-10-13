@@ -69,7 +69,9 @@ function FieldInput({
   return (
     <input
       className="input text-xs"
-      type={field.type === 'number' ? 'number' : 'text'}
+      id={`script-field-${field.key}`}
+      type={field.type === 'number' ? 'number' : field.type === 'password' ? 'password' : 'text'}
+      autoComplete={field.type === 'password' ? 'new-password' : undefined}
       value={String(value ?? '')}
       onChange={event => onChange(field.type === 'number' ? Number(event.target.value) : event.target.value)}
       placeholder={field.placeholder}
@@ -180,7 +182,7 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
         {schema.fields.map(field => (
           <div key={field.key} className={clsx(field.type === 'list' && 'md:col-span-2 xl:col-span-1')}>
             {field.type !== 'boolean' && (
-              <label className="label mb-1">
+              <label className="label mb-1" htmlFor={`script-field-${field.key}`}>
                 {field.label}
                 {field.required && <span className="ml-1 text-red-400">*</span>}
               </label>

@@ -18,6 +18,10 @@ Changes in this section are present on `main` after v1.8.4 and should be moved
 into the next numbered release section when the next version is cut.
 
 ### Added
+- Exposed Change Default Admin Password (PE) in Scripts with a credential-reference
+  wizard and as an explicitly confirmed pipeline script step. Existing pipeline
+  workflow steps retain their execution path; password changes do not rotate AHV,
+  CVM, or iDRAC accounts or automatically update saved credentials.
 - Foundation VM deployment telemetry panels in live execution and saved jobs,
   including per-node progress, explicit unknown states, stale/connection-loss
   indicators, and sanitized log downloads. Phase completion is not inferred

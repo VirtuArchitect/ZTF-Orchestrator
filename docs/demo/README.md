@@ -8,6 +8,9 @@ but it must not be represented as production validation.
 
 ## Demo Boundary
 
+- Change Default Admin Password (PE) is discoverable in Scripts and pipeline
+  selection. Static demo actions are simulated and never change credentials.
+
 - Hosted static UI demo:
   <https://virtuarchitect.github.io/ZTF-Orchestrator/>
 - Demo and simulator paths are local or lab evidence.

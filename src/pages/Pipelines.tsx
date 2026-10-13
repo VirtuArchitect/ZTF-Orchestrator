@@ -6,7 +6,7 @@ import {
 import Layout from '../components/Layout'
 import PipelineModal from '../components/PipelineModal'
 import { apiFetch } from '../utils/api'
-import { WORKFLOWS } from '../data'
+import { WORKFLOWS, SCRIPTS } from '../data'
 import type { Pipeline, PipelineStep } from '../types'
 import clsx from 'clsx'
 
@@ -183,6 +183,9 @@ export default function Pipelines() {
                     >
                       {WORKFLOWS.map(w => (
                         <option key={w.id} value={w.id}>{w.name}</option>
+                      ))}
+                      {SCRIPTS.filter(s => s.id === 'ChangeDefaultAdminPasswordPe').map(s => (
+                        <option key={s.id} value={s.id}>{s.name} (Script)</option>
                       ))}
                     </select>
 

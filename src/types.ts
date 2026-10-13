@@ -40,7 +40,7 @@ export interface Ztf2ScriptDef {
   ztf2Template: Ztf2TemplateId
 }
 
-export type ScriptConfigFieldType = 'text' | 'number' | 'select' | 'list' | 'boolean'
+export type ScriptConfigFieldType = 'text' | 'password' | 'number' | 'select' | 'list' | 'boolean'
 
 export interface ScriptConfigField {
   key: string

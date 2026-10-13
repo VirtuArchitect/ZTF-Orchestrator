@@ -40654,6 +40654,21 @@ def save_global_config():
 
 # ─── Pipelines ───────────────────────────────────────────────────────────────
 
+# Keep the legacy step shape; only explicitly integrated scripts use --script.
+PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe'}
+
+
+def _pipeline_step_error(step) -> str | None:
+    if not isinstance(step, dict):
+        return 'Pipeline step must be an object'
+    action = step.get('workflow')
+    if not isinstance(action, str) or action not in ALLOWED_WORKFLOWS | PIPELINE_SCRIPT_IDS:
+        return 'Unknown workflow or pipeline script'
+    if action in PIPELINE_SCRIPT_IDS and (not isinstance(step.get('configFile'), str) or not step['configFile'].strip()):
+        return 'Password change requires a saved configuration file'
+    return _approval_automation_error(action)
+
+
 @app.route('/api/pipelines')
 @require_role('admin', 'operator', 'viewer')
 def list_pipelines():
@@ -40668,10 +40683,10 @@ def create_pipeline():
     steps = data.get('steps', [])
     if not name:
         return jsonify({'error': 'name required'}), 400
+    if not isinstance(steps, list):
+        return jsonify({'error': 'steps must be a list'}), 400
     for s in steps:
-        if s.get('workflow') not in ALLOWED_WORKFLOWS:
-            return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
-        approval_error = _approval_automation_error(s.get('workflow'))
+        approval_error = _pipeline_step_error(s)
         if approval_error:
             return jsonify({'error': approval_error}), 400
     pipeline = {
@@ -40707,10 +40722,10 @@ def update_pipeline(pipeline_id: str):
     if 'name' in data:
         pipeline['name'] = str(data['name']).strip()
     if 'steps' in data:
+        if not isinstance(data['steps'], list):
+            return jsonify({'error': 'steps must be a list'}), 400
         for s in data['steps']:
-            if s.get('workflow') not in ALLOWED_WORKFLOWS:
-                return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
-            approval_error = _approval_automation_error(s.get('workflow'))
+            approval_error = _pipeline_step_error(s)
             if approval_error:
                 return jsonify({'error': approval_error}), 400
         pipeline['steps'] = data['steps']
@@ -40739,11 +40754,31 @@ def run_pipeline(pipeline_id: str):
     if not steps:
         return jsonify({'error': 'Pipeline has no steps'}), 400
     for s in steps:
-        if s.get('workflow') not in ALLOWED_WORKFLOWS:
-            return jsonify({'error': f'Unknown workflow: {s.get("workflow")}'}), 400
-        approval_error = _approval_automation_error(s.get('workflow'))
+        approval_error = _pipeline_step_error(s)
         if approval_error:
             return jsonify({'error': approval_error}), 403
+
+    script_ids = list(dict.fromkeys(s['workflow'] for s in steps if s['workflow'] in PIPELINE_SCRIPT_IDS))
+    ack_error = _validate_destructive_script_ack(script_ids, request.get_json(silent=True) or {})
+    if ack_error:
+        return jsonify({'error': ack_error}), 400
+    for s in steps:
+        if s['workflow'] in PIPELINE_SCRIPT_IDS:
+            path = safe_config_path(s['configFile'], get_configs_dir())
+            if not path or not path.is_file():
+                return jsonify({'error': 'Password change configuration file is missing or invalid'}), 400
+            try:
+                config = yaml.safe_load(path.read_text(encoding='utf-8'))
+            except (OSError, UnicodeError, yaml.YAMLError):
+                return jsonify({'error': 'Password change configuration must be readable YAML'}), 400
+            clusters = config.get('clusters') if isinstance(config, dict) else None
+            if not isinstance(clusters, dict) or not clusters or any(
+                not isinstance(ip, str) or not ip.strip() or not isinstance(cluster, dict)
+                or any(not isinstance(cluster.get(key), str) or not cluster[key].strip()
+                       for key in ('name', 'pe_credential', 'new_pe_admin_credential'))
+                for ip, cluster in clusters.items()
+            ):
+                return jsonify({'error': 'Password change requires clusters keyed by PE IP with name, pe_credential and new_pe_admin_credential'}), 400
 
     settings     = get_settings()
     ztf_path     = settings['ztfPath']
@@ -40788,13 +40823,15 @@ def run_pipeline(pipeline_id: str):
                 if path and path.exists():
                     cfg_path = str(path)
 
-            cmd_args = [python_path, _ztf_main_arg(ztf_path), '--workflow', workflow]
+            is_script = workflow in PIPELINE_SCRIPT_IDS
+            cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow]
             if cfg_path:
                 cmd_args += ['-f', cfg_path]
 
             proc        = None
             kill_timer  = None
             step_status = 'success'
+            failure_evidence = False
 
             try:
                 proc = subprocess.Popen(
@@ -40827,10 +40864,11 @@ def run_pipeline(pipeline_id: str):
                         done += 1
                     else:
                         label, line = item
-                        yield from send(label, line)
+                        failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
+                        yield from send(label, _redact_text(line) if is_script else line)
 
                 proc.wait()
-                step_status = 'success' if proc.returncode == 0 else 'failed'
+                step_status = 'success' if proc.returncode == 0 and not (is_script and failure_evidence) else 'failed'
 
             except GeneratorExit:
                 if proc and proc.poll() is None:

@@ -418,6 +418,7 @@ export const SCRIPTS: ScriptDef[] = [
   { id: 'GenerateFcApiKey', name: 'Generate FC API Key', category: 'Prism Central', description: 'Generates a Foundation Central API key' },
   { id: 'EnableMarketplace', name: 'Enable Marketplace (PC)', category: 'Prism Central', description: 'Enables Marketplace in Prism Central' },
   // Prism Element
+  { id: 'ChangeDefaultAdminPasswordPe', name: 'Change Default Admin Password (PE)', category: 'Prism Element', description: 'Changes the Prism Element admin password using a new credential reference; does not rotate AHV, CVM, or iDRAC accounts' },
   { id: 'AcceptEulaPe', name: 'Accept EULA (PE)', category: 'Prism Element', description: 'Accepts the EULA in Prism Element' },
   { id: 'AcceptEulaPc', name: 'Accept EULA (PC)', category: 'Prism Element', description: 'Accepts the EULA in Prism Central' },
   { id: 'UpdatePulsePe', name: 'Update Pulse (PE)', category: 'Prism Element', description: 'Updates Pulse settings in Prism Element' },
