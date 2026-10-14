@@ -346,7 +346,8 @@ export interface ConnectionProfile {
 }
 
 export type DriftStatus = 'matched' | 'drifted' | 'unknown'
-export type DriftFindingStatus = 'matched' | 'changed' | 'missing' | 'unexpected'
+export type DriftFindingStatus = 'matched' | 'changed' | 'missing' | 'unexpected' | 'unknown'
+export type DriftBaseline = 'last_applied' | 'current_state' | 'live_pe'
 
 export interface DriftFinding {
   path: string
@@ -360,7 +361,9 @@ export interface DriftRun {
   configFile: string
   workflow?: string
   status: DriftStatus
-  baseline: 'last_applied' | 'current_state'
+  baseline: DriftBaseline
+  collectedAt?: string
+  collections?: Array<{ endpoint: string; errors: Record<string, string> }>
   observedLabel: string
   appliedExecutionId?: string | null
   summary: {
@@ -369,6 +372,7 @@ export interface DriftRun {
     missing: number
     unexpected: number
     total: number
+    unknown?: number
   }
   findings: DriftFinding[]
   timestamp: string
@@ -387,7 +391,7 @@ export interface DriftPolicy {
   script: string
   configFile: string
   configContent: string
-  baseline: 'last_applied' | 'current_state'
+  baseline: DriftBaseline
   currentStateContent?: string
   notifyOn: DriftPolicyNotifyOn
   cronExpr: string

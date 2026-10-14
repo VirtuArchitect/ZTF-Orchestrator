@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle, CalendarClock, CheckCircle, ChevronDown, ChevronUp, FileSearch,
-  HelpCircle, MinusCircle, Play, PlusCircle, RefreshCw, Save, Shuffle, Trash2,
+  HelpCircle, MinusCircle, Pencil, Play, PlusCircle, RefreshCw, Save, Shuffle, Trash2,
   X
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch } from '../utils/api'
-import type { DriftFinding, DriftPolicy, DriftPolicyNotifyOn, DriftRun, WorkflowDef } from '../types'
+import type { DriftBaseline, DriftFinding, DriftPolicy, DriftPolicyNotifyOn, DriftRun, WorkflowDef } from '../types'
 import { WORKFLOWS } from '../data'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -37,7 +37,7 @@ interface PolicyForm {
   name: string
   configFile: string
   workflow: string
-  baseline: 'last_applied' | 'current_state'
+  baseline: DriftBaseline
   currentStateContent: string
   cronExpr: string
   notifyOn: DriftPolicyNotifyOn
@@ -62,7 +62,7 @@ export default function DriftDetection() {
   const [policies, setPolicies] = useState<DriftPolicy[]>([])
   const [configFile, setConfigFile] = useState('')
   const [workflow, setWorkflow] = useState('')
-  const [baseline, setBaseline] = useState<'last_applied' | 'current_state'>('last_applied')
+  const [baseline, setBaseline] = useState<DriftBaseline>('last_applied')
   const [currentStateContent, setCurrentStateContent] = useState('')
   const [policyForm, setPolicyForm] = useState<PolicyForm>(EMPTY_POLICY)
   const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null)
@@ -148,7 +148,7 @@ export default function DriftDetection() {
 
   const openPolicyCreate = () => {
     setEditingPolicyId(null)
-    setPolicyForm({ ...EMPTY_POLICY, configFile: configFile || configs[0]?.name || '' })
+    setPolicyForm({ ...EMPTY_POLICY, baseline, configFile: configFile || configs[0]?.name || '' })
     setPolicyError('')
     setShowPolicyForm(true)
   }
@@ -329,6 +329,11 @@ export default function DriftDetection() {
                   >
                     Snapshot
                   </button>
+                  <button onClick={() => setBaseline('live_pe')} aria-pressed={baseline === 'live_pe'}
+                    className={clsx('px-3 py-2 rounded-lg text-sm border col-span-2', baseline === 'live_pe'
+                      ? 'bg-nutanix-blue text-white border-nutanix-blue' : 'bg-gray-900 border-border text-gray-400')}>
+                    Live Prism Element
+                  </button>
                 </div>
               </div>
 
@@ -421,6 +426,7 @@ export default function DriftDetection() {
                   <select className="input" value={policyForm.baseline} onChange={e => setPolicyForm(form => ({ ...form, baseline: e.target.value as PolicyForm['baseline'] }))}>
                     <option value="last_applied">Last Applied</option>
                     <option value="current_state">Stored Snapshot</option>
+                    <option value="live_pe">Live Prism Element</option>
                   </select>
                 </div>
                 {policyForm.baseline === 'current_state' && (
@@ -430,7 +436,7 @@ export default function DriftDetection() {
                   </div>
                 )}
                 <div>
-                  <label className="label">Schedule</label>
+                  <label className="label">Schedule (UTC)</label>
                   <div className="flex gap-2">
                     <input className="input font-mono" value={policyForm.cronExpr} onChange={e => setPolicyForm(form => ({ ...form, cronExpr: e.target.value }))} />
                     <select className="input max-w-36" defaultValue="" onChange={e => e.target.value && setPolicyForm(form => ({ ...form, cronExpr: e.target.value }))}>
@@ -468,10 +474,11 @@ export default function DriftDetection() {
                 {policies.map(policy => (
                   <div key={policy.id} className="rounded-lg border border-border/70 bg-gray-950/30 p-3">
                     <div className="flex items-start justify-between gap-3">
-                      <button onClick={() => openPolicyEdit(policy)} className="min-w-0 text-left">
+                      <div className="min-w-0 text-left">
                         <p className="font-medium text-sm text-gray-200 truncate">{policy.name}</p>
                         <p className="text-xs text-gray-500 truncate">{policy.configFile} - {policy.cronExpr}</p>
-                      </button>
+                        <p className="text-xs text-gray-500">{policy.baseline === 'live_pe' ? 'Live Prism Element' : policy.baseline === 'current_state' ? 'Stored Snapshot' : 'Last Applied'} · UTC</p>
+                      </div>
                       <span className={clsx('badge text-xs', policy.enabled ? 'badge-green' : 'badge-gray')}>
                         {policy.enabled ? 'enabled' : 'paused'}
                       </span>
@@ -484,6 +491,9 @@ export default function DriftDetection() {
                     </div>
                     {canManagePolicies && (
                       <div className="mt-3 flex items-center gap-2">
+                        <button onClick={() => openPolicyEdit(policy)} title="Edit schedule" aria-label={`Edit schedule ${policy.name}`} className="btn-secondary p-2">
+                          <Pencil size={13} />
+                        </button>
                         <button onClick={() => runPolicyNow(policy)} disabled={runningPolicyId === policy.id} className="btn-secondary gap-1.5 px-3 py-1.5 text-xs">
                           {runningPolicyId === policy.id ? <RefreshCw size={12} className="animate-spin" /> : <Play size={12} />}
                           Run
@@ -525,7 +535,7 @@ export default function DriftDetection() {
                 <StatusIcon status={latest.status} />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-100">
-                    {latest.status === 'matched' ? 'No drift detected' : latest.status === 'drifted' ? 'Drift detected' : 'Baseline unavailable'}
+                    {latest.status === 'matched' ? 'No drift detected' : latest.status === 'drifted' ? 'Drift detected' : latest.baseline === 'live_pe' ? 'Collection incomplete' : 'Baseline unavailable'}
                   </h3>
                   <p className="text-sm text-gray-500 truncate">
                     {latest.configFile} compared with {latest.observedLabel.toLowerCase()}
@@ -575,6 +585,10 @@ export default function DriftDetection() {
                   {isExpanded && (
                     <div className="px-5 pb-5 border-t border-border">
                       <Summary run={run} compact />
+                      {run.collectedAt && <p className="text-xs text-gray-500 mt-3">Collection started {new Date(run.collectedAt).toLocaleString()}</p>}
+                      {run.collections?.map(collection => Object.entries(collection.errors).map(([key, message]) => (
+                        <p key={`${collection.endpoint}-${key}`} className="text-sm text-yellow-300 mt-2 break-words">{collection.endpoint} · {key}: {message}</p>
+                      )))}
                       {run.findings.length > 0 ? (
                         <FindingsTable findings={run.findings} />
                       ) : (
@@ -614,6 +628,7 @@ function Summary({ run, compact = false }: { run: DriftRun; compact?: boolean })
       <SummaryItem label="Changed" value={run.summary.changed} tone="text-red-400" />
       <SummaryItem label="Missing" value={run.summary.missing} tone="text-yellow-300" />
       <SummaryItem label="Unexpected" value={run.summary.unexpected} tone="text-purple-300" />
+      {run.baseline === 'live_pe' && <SummaryItem label="Unknown" value={run.summary.unknown || 0} tone="text-yellow-300" />}
     </div>
   )
 }
