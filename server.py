@@ -36396,6 +36396,9 @@ def _run_drift_check(
 
 
 def _drift_policy_validation_error(data: dict, existing: dict | None = None) -> str:
+    # Operators must be able to stop a policy even if its baseline file was removed.
+    if existing is not None and data == {'enabled': False}:
+        return ''
     candidate = {**(existing or {}), **data}
     name = str(candidate.get('name', '')).strip()
     if not name:

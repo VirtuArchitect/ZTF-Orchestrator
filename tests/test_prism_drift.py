@@ -159,6 +159,10 @@ def test_live_api_and_schedule_fetch_fresh_settings_and_edit(client, auth_header
                               load_callback=lambda: server.read_json(server.DRIFT_POLICIES_FILE, []))
     assert restored.get_schedule(sid)['baseline'] == 'live_pe'
     assert restored.get_schedule(sid)['cronExpr'] == '15 * * * *'
+    client.delete('/api/configs/live-pe.yml', headers=auth_headers)
+    paused = client.put('/api/drift/policies/' + sid, json={'enabled': False}, headers=auth_headers)
+    assert paused.status_code == 200
+    assert paused.json['enabled'] is False
 
 
 def test_live_policy_invalid_config_rejected(client, auth_headers):
@@ -173,3 +177,77 @@ def test_viewer_cannot_collect_or_edit_live_policy(client, auth_headers):
     headers = {'Authorization': 'Bearer ' + token}
     assert client.post('/api/drift/check', json={'baseline': 'live_pe'}, headers=headers).status_code == 403
     assert client.put('/api/drift/policies/fake', json={'baseline': 'live_pe'}, headers=headers).status_code == 403
+
+
+def test_verified_https_collection_reads_changes_and_rejects_untrusted_tls(client, auth_headers, tmp_path, monkeypatch):
+    import base64
+    import http.server
+    import shutil
+    import subprocess
+    import threading
+    import server
+    import yaml
+
+    openssl = shutil.which('openssl')
+    if not openssl:
+        pytest.skip('OpenSSL executable required for real TLS fixture')
+    cert, key = tmp_path / 'cert.pem', tmp_path / 'key.pem'
+    subprocess.run([openssl, 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(key),
+                    '-out', str(cert), '-days', '1', '-subj', '/CN=localhost',
+                    '-addext', 'subjectAltName=DNS:localhost'], check=True, capture_output=True)
+    state = {'pulse': False, 'deny': False, 'reads': 0}
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def do_GET(self):
+            assert self.headers['Authorization'] == 'Basic ' + base64.b64encode(b'reader:test-only').decode()
+            state['reads'] += 1
+            if self.path.endswith('/pulse') and state['deny']:
+                self.send_response(401)
+                self.end_headers()
+                return
+            data = {'enable': state['pulse']} if self.path.endswith('/pulse') else (
+                ['192.0.2.53'] if self.path.endswith('/name_servers') else ['ntp.example.com'])
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode())
+
+    httpd = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(cert, key)
+    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        monkeypatch.setenv('SSL_CERT_FILE', str(cert))
+        monkeypatch.setattr(server, '_load_global_config_data', lambda: {
+            'vaults': {'local': {'credentials': {'pe_monitor': {'username': 'reader', 'password': 'test-only'}}}}})
+        cfg = config()
+        cfg['clusters'] = {f'https://localhost:{httpd.server_port}': cfg['clusters']['192.0.2.10']}
+        client.post('/api/configs/tls-pe.yml', json={'content': yaml.safe_dump(cfg)}, headers=auth_headers)
+
+        def run():
+            response = client.post('/api/drift/check', json={'configFile': 'tls-pe.yml', 'baseline': 'live_pe'}, headers=auth_headers)
+            assert response.status_code == 200
+            assert 'test-only' not in response.get_data(as_text=True)
+            return response.json
+
+        assert run()['status'] == 'matched'
+        state['pulse'] = True
+        assert run()['status'] == 'drifted'
+        state['pulse'], state['deny'] = False, True
+        assert run()['status'] == 'unknown'
+        assert state['reads'] == 9
+        monkeypatch.delenv('SSL_CERT_FILE')
+        # An explicit empty CA location avoids platform-specific trust stores.
+        empty_ca = tmp_path / 'empty-ca'
+        empty_ca.mkdir()
+        monkeypatch.setenv('SSL_CERT_DIR', str(empty_ca))
+        assert run()['summary']['unknown'] == 3
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join(timeout=5)
