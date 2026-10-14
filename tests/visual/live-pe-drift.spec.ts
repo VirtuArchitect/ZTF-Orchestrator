@@ -52,7 +52,7 @@ test('manual live check shows unknown reads and collection errors', async ({ pag
   }
   await expect(page.getByRole('button', { name: 'Live Prism Element', exact: true })).toBeVisible()
   await page.locator('main').evaluate(el => { el.scrollTop = 0; el.scrollLeft = 0 })
-  expect(await page.locator('main').evaluate(el => el.scrollWidth <= el.clientWidth)).toBeTruthy()
+  await expect.poll(() => page.locator('main').evaluate(el => el.scrollWidth <= el.clientWidth)).toBeTruthy()
   await page.screenshot({ path: 'test-results/live-pe-drift-mobile.png', fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
 })
