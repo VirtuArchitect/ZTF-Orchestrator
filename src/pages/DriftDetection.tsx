@@ -267,8 +267,8 @@ export default function DriftDetection() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6">
-        <div className="space-y-6">
+      <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[380px_minmax(0,1fr)] gap-6">
+        <div className="min-w-0 space-y-6">
           <div className="card">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-8 h-8 rounded-lg bg-blue-900/30 border border-blue-700/30 flex items-center justify-center">
@@ -490,7 +490,7 @@ export default function DriftDetection() {
                       </span>
                     </div>
                     {canManagePolicies && (
-                      <div className="mt-3 flex items-center gap-2">
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         <button onClick={() => openPolicyEdit(policy)} title="Edit schedule" aria-label={`Edit schedule ${policy.name}`} className="btn-secondary p-2">
                           <Pencil size={13} />
                         </button>
@@ -523,7 +523,7 @@ export default function DriftDetection() {
           <Metric label="Automated Policies" value={enabledPolicies} tone="text-blue-300" />
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {latest && (
             <div className={clsx(
               'rounded-lg border p-5',
