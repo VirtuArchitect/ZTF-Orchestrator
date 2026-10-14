@@ -510,7 +510,16 @@ async function demoResponse(request: Request) {
   }
   if (path.startsWith('/api/jobs?') || path === '/api/jobs/') return json(jobs)
   if (path === '/api/drift') return method === 'DELETE' ? okAction('Drift history clear simulated.') : json(driftRuns)
-  if (path === '/api/drift/check') return json(driftRuns[0])
+  if (path === '/api/drift/check') {
+    const body = await requestJson(request)
+    if (body.baseline === 'live_pe') return json({
+      ...driftRuns[0], id: `demo-live-pe-${Date.now()}`, configFile: String(body.configFile || ''),
+      baseline: 'live_pe', status: 'unknown', observedLabel: 'Simulated live Prism Element',
+      findings: [], summary: { matched: 0, changed: 0, missing: 0, unexpected: 0, unknown: 0, total: 0 },
+      message: 'Static demo only. No Prism Element settings were collected.',
+    })
+    return json(driftRuns[0])
+  }
   if (path === '/api/drift/policies') {
     if (method === 'POST') return json({ ...driftPolicies[0], id: `demo-drift-policy-${Date.now()}` }, { status: 201 })
     return json(driftPolicies)

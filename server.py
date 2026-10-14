@@ -36286,8 +36286,8 @@ def _run_drift_check(
         raise ValueError('configFile required')
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         raise ValueError(f'Unknown workflow: {workflow}')
-    if baseline not in ('last_applied', 'current_state'):
-        raise ValueError('baseline must be last_applied or current_state')
+    if baseline not in ('last_applied', 'current_state', 'live_pe'):
+        raise ValueError('baseline must be last_applied, current_state or live_pe')
 
     configs_dir = get_configs_dir()
     desired_path = safe_config_path(config_file, configs_dir)
@@ -36298,6 +36298,25 @@ def _run_drift_check(
     desired, desired_error = _parse_structured_config(desired_content, desired_path.name)
     if desired_error:
         raise ValueError(f'Desired config parse error: {desired_error}')
+
+    if baseline == 'live_pe':
+        from prism_drift import collect
+        collected_at = _utc_timestamp()
+        result = {
+            **collect(desired, _lookup_credential_ref),
+            'id': str(uuid.uuid4()), 'configFile': config_file, 'workflow': workflow,
+            'baseline': baseline, 'observedLabel': 'Live Prism Element',
+            'timestamp': _utc_timestamp(), 'collectedAt': collected_at,
+            'user': user, 'trigger': trigger, 'policyId': policy_id or None,
+        }
+        if result['summary']['unknown']:
+            result['message'] = 'Some PE settings could not be collected. Review collection errors.'
+        runs = _load_drift_runs()
+        runs.insert(0, result)
+        _save_drift_runs(runs)
+        log.info('drift_check', extra={'user': user, 'action': 'drift_check',
+                 'status': result['status'], 'trigger': trigger})
+        return result
 
     observed_source = baseline
     observed_label = 'Last successful execution'
@@ -36377,6 +36396,9 @@ def _run_drift_check(
 
 
 def _drift_policy_validation_error(data: dict, existing: dict | None = None) -> str:
+    # Operators must be able to stop a policy even if its baseline file was removed.
+    if existing is not None and data == {'enabled': False}:
+        return ''
     candidate = {**(existing or {}), **data}
     name = str(candidate.get('name', '')).strip()
     if not name:
@@ -36388,8 +36410,20 @@ def _drift_policy_validation_error(data: dict, existing: dict | None = None) -> 
     if workflow and workflow not in ALLOWED_WORKFLOWS:
         return f'Unknown workflow: {workflow}'
     baseline = str(candidate.get('baseline', 'last_applied')).strip() or 'last_applied'
-    if baseline not in ('last_applied', 'current_state'):
-        return 'baseline must be last_applied or current_state'
+    if baseline not in ('last_applied', 'current_state', 'live_pe'):
+        return 'baseline must be last_applied, current_state or live_pe'
+    if baseline == 'live_pe':
+        from prism_drift import targets
+        path = safe_config_path(config_file, get_configs_dir())
+        if path is None or not path.exists():
+            return 'Config file not found'
+        desired, error = _parse_structured_config(path.read_text(), path.name)
+        if error:
+            return 'Desired config parse error'
+        try:
+            targets(desired)
+        except ValueError as exc:
+            return str(exc)
     if baseline == 'current_state' and not str(candidate.get('currentStateContent') or '').strip():
         return 'currentStateContent is required when baseline is current_state'
     cron = str(candidate.get('cronExpr', '')).strip()

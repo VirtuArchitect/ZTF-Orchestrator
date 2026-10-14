@@ -33,3 +33,8 @@ Validation
 - python -m pytest tests/ -q -x
 - npm run build
 - git diff --check
+Post-release update: live Prism Element drift monitoring
+- Collect fresh DNS, NTP and Pulse settings for manual and scheduled checks.
+- Add explicit schedule editing, UTC labels and per-setting unknown results.
+- Require trusted HTTPS and credential references; no automatic remediation.
+- Validate the legacy PE API contracts on the target AOS release before use.

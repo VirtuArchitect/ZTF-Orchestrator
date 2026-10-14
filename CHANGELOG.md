@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Read-only live Prism Element DNS, NTP and Pulse drift collection on every run,
+  with verified TLS, credential references, scoped findings and explicit unknown
+  collection states. Existing stored-baseline comparisons remain available.
+- Visible drift schedule edit controls and UTC schedule labels.
+
 ### Fixed
 - Configure Cluster now edits native per-cluster ZTF settings, including new
   admin credential references, EULA, enable_pulse, directory services, containers,
