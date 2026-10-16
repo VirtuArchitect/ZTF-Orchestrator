@@ -6,6 +6,9 @@ Nutanix upgrade has enough evidence to proceed.
 
 ## Current Scope
 
+- Optional verified-HTTPS PE cluster/host inventory reads and PC product-header
+  detection, with explicit collection errors and timestamps.
+- Immutable saved assessment snapshots and an actionable readiness table.
 - Manual entry of current and target component versions.
 - Bundled guardrail rules for LCM prechecks, release-note review,
   compatibility review, AOS major-version changes, Prism Central context,
@@ -59,9 +62,46 @@ automatic upgrade executor.
    release-note, KB, advisory, and support-case facts can be added as curated
    rules with source references.
 
-3. **Live Nutanix inventory enrichment**: planned.
-   Future Prism Element, Prism Central, and LCM collectors should populate the
-   same assessment contract before any execution behavior is considered.
+3. **Bounded Prism inventory enrichment**: implemented, pending target UAT.
+   PE v2 cluster and host GET responses supply AOS and homogeneous AHV versions.
+   PC version detection uses its HTTPS product header; it is not an authenticated
+   API permission check. LCM, NCC, firmware and compatibility enrichment remain
+   manual. Unsupported or incomplete responses remain Unknown.
+
+## Operational procedure
+
+1. Add read-capable PE/PC credential references in Global Config. Establish CA
+   trust and matching certificate SAN identities. No insecure TLS mode exists.
+2. Enter the PE and optional PC HTTPS endpoints and their credential references.
+   Select Collect inventory. Only fixed GET paths are called, with ten-second
+   timeouts, a 1 MiB response limit, no proxies and no redirect following.
+3. Inspect timestamp, unknown components and collection errors. Mixed AHV
+   versions and paginated host results require manual verification. Refresh
+   clears prior current-version entries so old values are not silently reused.
+4. Enter target versions and independently verified remaining current versions.
+   Evidence flags remain operator declarations, not live LCM/NCC test results.
+5. Run Assessment, review Readiness actions and their detailed sources, then Save
+   assessment snapshot. Changed inputs require another assessment before saving.
+6. Open a saved snapshot from the archive to resume review. Snapshots retain the
+   exact input, server-computed result, creator and timestamp. Save again creates
+   a new snapshot; it does not overwrite a previous review. Manual changes to
+   collected values are recorded separately from the original observations.
+7. Export retains the displayed assessment, rather than silently recomputing it
+   against newer rules. It is advisory evidence, not an authorization to upgrade.
+
+The API adds POST inventory, GET/POST assessments and GET assessments/{id}
+under /api/upgrade-advisor. Collection and saving require admin/operator roles;
+viewers can read shared saved assessments. Archives use the existing file or
+PostgreSQL document backend without a schema migration. Each archive is limited
+to 200 records; administrator retention review is required at that limit. There
+is no automatic deletion. The in-process archive lock follows the application's
+single-process worker model; multi-process writers are not supported by this
+increment. Do not load-balance writable instances against this archive.
+
+Inventory contains management endpoint identities and must be treated as
+internal operational data. Credentials, arbitrary API bodies and transport error
+details are not persisted. No environment was contacted during automated tests;
+verify these response contracts on the installed AOS/PC versions before use.
 
 ## API
 

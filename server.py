@@ -40,6 +40,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from storage_backend import StorageError, create_storage
+from upgrade_inventory import collect as collect_upgrade_inventory, assessment_input as normalize_upgrade_input
 from upgrade_advisor import (
     assess_upgrade_risk,
     load_upgrade_rules,
@@ -42782,6 +42783,84 @@ def assess_upgrade_advisor():
                     'status': result['status'],
                     'targets': ','.join(sorted(result['targets'].keys()))})
     return jsonify(result)
+
+
+_upgrade_history_lock = threading.RLock()
+
+
+@app.route('/api/upgrade-advisor/inventory', methods=['POST'])
+@limiter.limit('5 per minute')
+@require_role('admin', 'operator')
+def collect_upgrade_inventory_api():
+    try:
+        result = collect_upgrade_inventory(request.get_json(silent=True), _lookup_credential_ref)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    result['id'] = str(uuid.uuid4())
+    with _upgrade_history_lock:
+        index = CONFIG_DIR / 'upgrade_inventory_history.json'
+        snapshots = read_json(index, [])
+        if len(snapshots) >= 200:
+            return jsonify({'error': 'Inventory archive limit reached (200); administrator retention review required'}), 409
+        write_json(CONFIG_DIR / f'upgrade_inventory_{result["id"]}.json', result)
+        write_json(index, [result['id']] + snapshots)
+    log.info('upgrade_inventory_collected', extra={'user': request.current_user['username'],
+             'action': 'upgrade_inventory_collected', 'unknownCount': len(result['unknownComponents'])})
+    return jsonify(result)
+
+
+@app.route('/api/upgrade-advisor/assessments', methods=['GET', 'POST'])
+@require_role('admin', 'operator', 'viewer')
+def upgrade_assessment_history():
+    index = CONFIG_DIR / 'upgrade_assessment_history.json'
+    if request.method == 'GET':
+        return jsonify({'assessments': read_json(index, [])})
+    if request.current_user['role'] not in ('admin', 'operator'):
+        return jsonify({'error': 'Permission denied'}), 403
+    data = request.get_json(silent=True)
+    try:
+        normalized = normalize_upgrade_input(data)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
+    inventory = None
+    snapshot_id = data.get('inventorySnapshotId')
+    if snapshot_id:
+        if not isinstance(snapshot_id, str) or not re.fullmatch(r'[0-9a-f-]{36}', snapshot_id):
+            return jsonify({'error': 'Invalid inventory snapshot ID'}), 400
+        inventory = read_json(CONFIG_DIR / f'upgrade_inventory_{snapshot_id}.json', None)
+        if not inventory:
+            return jsonify({'error': 'Inventory snapshot not found; collect again'}), 400
+    result = assess_upgrade_risk(normalized, _active_upgrade_rules_pack())
+    result['id'] = str(uuid.uuid4())
+    record = dict(id=result['id'], assessment=result, assessmentInput=normalized,
+                  inventoryCollection=inventory, createdBy=request.current_user['username'],
+                  createdAt=result['generatedAt'], readOnly=True)
+    if inventory:
+        record['manualOverrides'] = [k for k, v in inventory['components'].items()
+                                     if normalized['inventory']['components'].get(k) != v]
+        result['inventoryCollection'] = inventory
+        result['manualOverrides'] = record['manualOverrides']
+    with _upgrade_history_lock:
+        summaries = read_json(index, [])
+        if len(summaries) >= 200:
+            return jsonify({'error': 'Assessment archive limit reached (200); retain/export records before further collection'}), 409
+        write_json(CONFIG_DIR / f'upgrade_assessment_{result["id"]}.json', record)
+        write_json(index, [dict(id=record['id'], clusterName=normalized['inventory']['clusterName'],
+                               status=result['status'], createdAt=record['createdAt'], createdBy=record['createdBy'])] + summaries)
+    log.info('upgrade_assessment_saved', extra={'action': 'upgrade_assessment_saved',
+             'user': request.current_user['username'], 'assessmentId': result['id']})
+    return jsonify(record), 201
+
+
+@app.route('/api/upgrade-advisor/assessments/<assessment_id>')
+@require_role('admin', 'operator', 'viewer')
+def get_saved_upgrade_assessment(assessment_id):
+    if not re.fullmatch(r'[0-9a-f-]{36}', assessment_id):
+        return jsonify({'error': 'Assessment not found'}), 404
+    record = read_json(CONFIG_DIR / f'upgrade_assessment_{assessment_id}.json', None)
+    if not record:
+        return jsonify({'error': 'Assessment not found'}), 404
+    return jsonify(record)
 
 
 @app.route('/api/upgrade-advisor/export', methods=['POST'])

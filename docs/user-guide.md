@@ -702,15 +702,38 @@ Key functions:
 
 | Function | Purpose |
 |---|---|
+| Collect inventory | Reads PE AOS/AHV versions over verified HTTPS and, where available, the PC HTTPS product version header. Partial failures remain Unknown. |
 | Current Versions | Captures the versions currently running in the environment. |
 | Target Versions | Captures proposed target versions. |
 | Evidence toggles | Records whether LCM prechecks, release notes, compatibility review, Prism Central context, dark-site bundle review, or other supporting evidence has been completed. |
 | Run Assessment | Produces findings classified as blocked, warning, review, unknown, or clear. |
+| Readiness actions | Lists unresolved findings and the next required action. |
+| Save assessment | Preserves the assessed inputs, collection provenance, manual overrides, findings, creator and timestamp. |
+| Saved assessments | Reopens a saved assessment without recomputing its historical findings. |
 | Source Packs | Lets operators enable, disable, import, or delete curated rule packs. |
 | Export | Downloads assessment output as an evidence bundle. |
 
 Upgrade Advisor does not run LCM or mutate clusters. It is a structured
 pre-change review tool.
+
+1. Enter a PE and/or PC HTTPS endpoint and an existing credential reference.
+   Ensure the appliance trusts its certificate and the endpoint matches its SAN.
+2. Select **Collect inventory**. Review partial errors and the collection time.
+   PC's product header is not proof of authenticated API permissions.
+3. Verify or manually enter NCC, LCM, firmware and Foundation versions. These
+   components are not collected automatically.
+4. Enter proposed target versions and record independently verified evidence.
+5. Select **Run Assessment**, then review every readiness action and source.
+6. Select **Save assessment** and **Export** for the change record. Changed
+   inputs mark the result outdated; reassess before saving another record.
+7. Use **Open** in Saved assessments to review historical evidence. Refresh
+   inventory and reassess separately before a new change window.
+
+Collection and saving require admin or operator access; viewers can review
+saved assessments. Each archive is limited to 200 records, with no automatic
+deletion. Collection metadata and assessed inputs may contain private endpoint
+and cluster details; protect exports accordingly. No upgrade is authorized or
+executed by these controls.
 
 ### Validation Evidence
 

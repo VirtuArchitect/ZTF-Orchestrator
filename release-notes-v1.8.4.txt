@@ -5,6 +5,9 @@ Release date: 2026-09-21
 
 Summary
 -------
+- Candidate operational Upgrade Advisor: saved assessment snapshots, bounded PE
+  inventory GETs and PC product-header detection, with strict TLS and manual
+  evidence provenance. Requires live target validation; does not execute upgrades.
 - Corrects Configure Cluster native YAML, password references, EULA/Pulse,
   directory services, storage, HA and VLAN fields, with per-cluster import retention.
 - Prevents an optional-AD role-mapping error in the bundled ZTF runtime.
