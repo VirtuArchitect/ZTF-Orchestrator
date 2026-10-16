@@ -10,6 +10,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Upgrade Advisor operational snapshots, bounded verified-HTTPS PE/PC inventory
+  collection, explicit unknown versions and actionable readiness findings.
+  No upgrade execution or automatic compatibility certification is introduced.
 - Read-only live Prism Element DNS, NTP and Pulse drift collection on every run,
   with verified TLS, credential references, scoped findings and explicit unknown
   collection states. Existing stored-baseline comparisons remain available.

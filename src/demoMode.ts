@@ -286,6 +286,22 @@ const configs: Record<string, string> = {
   'global.yml': 'vault_to_use: local\nip_allocation_method: static\nvaults:\n  local:\n    credentials:\n      pe_user:\n        username: admin\n        password: <demo-secret>\n',
 }
 
+const upgradeDemoAssessments: Record<string, unknown>[] = []
+
+function demoUpgradeAssessment(input: Record<string, unknown>) {
+  const inventory = input.inventory && typeof input.inventory === 'object'
+    ? input.inventory as Record<string, unknown> : {}
+  return {
+    id: `demo-upgrade-${Date.now()}`, status: 'review', readOnly: true,
+    summary: { review: 1, unknown: 0, clear: 0, blocked: 0, warning: 0, total: 1 },
+    inventory: { ...inventory, clusterName: typeof inventory.clusterName === 'string' ? inventory.clusterName : 'Example' }, targets: input.targets || {},
+    context: input.context || {}, generatedAt: new Date().toISOString(), rulesVersion: 'demo', phases: [],
+    findings: [{ id: 'demo-review', title: 'Simulated readiness review', status: 'review', severity: 'info',
+      component: 'upgrade-plan', message: 'Demonstration data only.', guidance: 'Review actual target evidence outside this static demo.',
+      evidence: [], source: { label: 'Simulated example', url: '' } }],
+  }
+}
+
 function demoStoreSeed() {
   const state = useStore.getState()
   state.setAuth(DEMO_TOKEN, { username: 'demo-admin', role: 'admin' })
@@ -739,6 +755,18 @@ async function demoResponse(request: Request) {
       mutatingUat: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true',
     },
   })
+  if (path === '/api/upgrade-advisor/inventory') return json({ id: 'demo-inventory', clusterName: 'Example', components: { aos: '7.3.0', ahv: 'Nutanix 10.3.0' }, collectedAt: new Date().toISOString(), unknownComponents: ['prismCentral', 'ncc', 'lcm', 'foundation', 'firmware'], errors: [], readOnly: true })
+  if (path === '/api/upgrade-advisor/assess') return json(demoUpgradeAssessment(await requestJson(request)))
+  if (path === '/api/upgrade-advisor/assessments') {
+    if (method === 'GET') return json({ assessments: upgradeDemoAssessments })
+    const input = await requestJson(request)
+    const assessment = demoUpgradeAssessment(input)
+    const record = { id: assessment.id, clusterName: assessment.inventory.clusterName, status: assessment.status, createdAt: assessment.generatedAt, createdBy: 'demo-admin', assessment, assessmentInput: input, inventoryCollection: null }
+    upgradeDemoAssessments.unshift(record)
+    return json(record, { status: 201 })
+  }
+  if (path.startsWith('/api/upgrade-advisor/assessments/')) return json(upgradeDemoAssessments.find(item => item.id === path.split('/').pop()) || { error: 'Not found' })
+  if (path === '/api/upgrade-advisor/export') return json({ error: 'Static demo assessments are not live evidence exports.' }, { status: 400 })
   if (path.startsWith('/api/upgrade-advisor/')) return json({ version: 'demo', name: 'Demo upgrade rules', description: 'Read-only simulated advisory data', phases: [], rules: [], sourcePacks: [], readOnly: true })
   if (path === '/api/maintenance/database-backups') return json({ backups: [{ filename: 'ztf-demo-backup-20260813.sql', size: 82491, createdAt: iso(90) }] })
   if (path.startsWith('/api/maintenance/database-backups')) return okAction('Database maintenance action simulated.')

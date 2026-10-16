@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle, CheckCircle, Download, ExternalLink, FileSearch, HelpCircle,
-  Loader, Plus, RefreshCw, ShieldAlert, ShieldCheck, ScrollText, Trash2
+  Loader, Plus, RefreshCw, ShieldAlert, ShieldCheck, ScrollText, Trash2, Save
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch } from '../utils/api'
@@ -42,6 +42,9 @@ const STATUS_COPY: Record<UpgradeAdvisorStatus, string> = {
 }
 
 type VersionMap = Record<string, string>
+const canonical = (input: unknown) => JSON.stringify(input, (_key, value) => value && typeof value === 'object' && !Array.isArray(value) ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))) : value)
+type Collection = { id: string; clusterName: string; components: VersionMap; collectedAt: string; unknownComponents: string[]; errors: Array<{ component: string; message: string }> }
+type SavedAssessment = { id: string; clusterName: string; status: UpgradeAdvisorStatus; createdAt: string; createdBy: string }
 
 export default function UpgradeAdvisor() {
   const user = useStore(s => s.user)
@@ -49,9 +52,15 @@ export default function UpgradeAdvisor() {
   const canDeletePacks = user?.role === 'admin'
   const [rules, setRules] = useState<UpgradeAdvisorRules | null>(null)
   const [sourcePacks, setSourcePacks] = useState<UpgradeAdvisorSourcePack[]>([])
-  const [clusterName, setClusterName] = useState('Lab Cluster')
-  const [current, setCurrent] = useState<VersionMap>({ aos: '6.8.1', ahv: '20230302.101026' })
-  const [targets, setTargets] = useState<VersionMap>({ aos: '7.3.1' })
+  const [clusterName, setClusterName] = useState('')
+  const [current, setCurrent] = useState<VersionMap>({})
+  const [targets, setTargets] = useState<VersionMap>({})
+  const [connections, setConnections] = useState({ peEndpoint: '', peCredential: '', pcEndpoint: '', pcCredential: '' })
+  const [collection, setCollection] = useState<Collection | null>(null)
+  const [history, setHistory] = useState<SavedAssessment[]>([])
+  const [collecting, setCollecting] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [savedId, setSavedId] = useState('')
   const [features, setFeatures] = useState('')
   const [edition, setEdition] = useState<'enterprise' | 'community'>('enterprise')
   const [darkSite, setDarkSite] = useState(false)
@@ -93,6 +102,49 @@ export default function UpgradeAdvisor() {
   }
 
   useEffect(() => { loadRules() }, [])
+  const loadHistory = async () => {
+    const resp = await apiFetch('/api/upgrade-advisor/assessments')
+    if (!resp.ok) throw new Error('Could not load saved assessments')
+    setHistory((await resp.json()).assessments || [])
+  }
+  useEffect(() => { loadHistory().catch(() => setError('Could not load saved assessments')) }, [])
+  const buildInput = () => ({ inventory: { clusterName, components: trimMap(current) }, targets: trimMap(targets), evidence, context: { edition, darkSite, features } })
+  const stale = assessmentInput !== null && canonical(buildInput()) !== canonical(assessmentInput)
+  const collectInventory = async () => {
+    setCollecting(true); setError('')
+    try {
+      const resp = await apiFetch('/api/upgrade-advisor/inventory', { method: 'POST', body: JSON.stringify(connections) })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Inventory collection failed')
+      setCollection(data); setCurrent(data.components); setClusterName(data.clusterName || clusterName)
+      setAssessment(null); setAssessmentInput(null); setSavedId('')
+    } catch (err) { setError(err instanceof Error ? err.message : 'Inventory collection failed') }
+    finally { setCollecting(false) }
+  }
+  const saveAssessment = async () => {
+    setSaving(true); setError('')
+    try {
+      const resp = await apiFetch('/api/upgrade-advisor/assessments', { method: 'POST', body: JSON.stringify({ ...buildInput(), inventorySnapshotId: collection?.id }) })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Save failed')
+      setAssessment(data.assessment); setAssessmentInput(buildInput()); setSavedId(data.id)
+      await loadHistory()
+    } catch (err) { setError(err instanceof Error ? err.message : 'Save failed') }
+    finally { setSaving(false) }
+  }
+  const openSaved = async (id: string) => {
+    setError('')
+    try {
+      const resp = await apiFetch(`/api/upgrade-advisor/assessments/${id}`)
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Could not open assessment')
+      const input = data.assessmentInput
+      setClusterName(input.inventory.clusterName); setCurrent(input.inventory.components); setTargets(input.targets)
+      setEvidence(input.evidence); setEdition(input.context.edition); setDarkSite(input.context.darkSite)
+      setFeatures(input.context.features); setCollection(data.inventoryCollection || null)
+      setAssessment(data.assessment); setAssessmentInput(input); setSavedId(id)
+    } catch (err) { setError(err instanceof Error ? err.message : 'Could not open assessment') }
+  }
 
   const targetCount = useMemo(
     () => Object.values(targets).filter(value => value.trim()).length,
@@ -115,7 +167,7 @@ export default function UpgradeAdvisor() {
         targets: trimMap(targets),
         evidence: {
           ...evidence,
-          lcmPrecheck: evidence.lcmPrecheck || undefined,
+          lcmPrecheck: evidence.lcmPrecheck,
         },
         context: {
           edition,
@@ -133,7 +185,9 @@ export default function UpgradeAdvisor() {
         return
       }
       setAssessment(data)
-      setAssessmentInput(input)
+      setAssessmentInput(input); setSavedId('')
+    } catch {
+      setError('Could not run assessment')
     } finally {
       setAssessing(false)
     }
@@ -192,7 +246,7 @@ export default function UpgradeAdvisor() {
     try {
       const resp = await apiFetch('/api/upgrade-advisor/export', {
         method: 'POST',
-        body: JSON.stringify(assessmentInput ? { assessmentInput } : { assessment }),
+        body: JSON.stringify({ assessment }),
       })
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}))
@@ -224,6 +278,25 @@ export default function UpgradeAdvisor() {
         </button>
       }
     >
+      <section className="mb-6 border-b border-border pb-5 space-y-3">
+        <h2 className="text-base font-semibold">Saved assessments</h2>
+        <div className="overflow-x-auto max-h-64">
+          <table className="w-full text-sm text-left"><thead><tr className="border-b border-border"><th className="p-2">Cluster</th><th className="p-2">Readiness</th><th className="p-2">Created</th><th className="p-2">Owner</th><th className="p-2">Action</th></tr></thead>
+            <tbody>{history.map(item => <tr key={item.id} className="border-b border-border"><td className="p-2">{item.clusterName || 'Unnamed cluster'}</td><td className="p-2">{STATUS_COPY[item.status]}</td><td className="p-2">{new Date(item.createdAt).toLocaleString()}</td><td className="p-2">{item.createdBy}</td><td className="p-2"><button className="btn-secondary" onClick={() => openSaved(item.id)}>Open</button></td></tr>)}</tbody>
+          </table>
+        </div>
+        {!history.length && <p className="text-sm text-gray-500">No saved assessments</p>}
+      </section>
+      <section className="mb-6 border-b border-border pb-5 space-y-3">
+        <h2 className="text-base font-semibold">Prism inventory</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          {(['peEndpoint', 'peCredential', 'pcEndpoint', 'pcCredential'] as const).map(key => <label key={key} className="block"><span className="label">{{ peEndpoint: 'PE HTTPS endpoint', peCredential: 'PE credential reference', pcEndpoint: 'PC HTTPS endpoint', pcCredential: 'PC credential reference' }[key]}</span><input className="input" value={connections[key]} onChange={e => setConnections({ ...connections, [key]: e.target.value })} /></label>)}
+        </div>
+        {canManagePacks && <button className="btn-secondary gap-2" onClick={collectInventory} disabled={collecting}><RefreshCw size={14} className={collecting ? 'animate-spin' : ''} /> Collect inventory</button>}
+        {collection && <div className="text-sm space-y-1"><p>Collected {new Date(collection.collectedAt).toLocaleString()} · {Object.keys(collection.components).length} versions · Unknown: {collection.unknownComponents.join(', ') || 'None'}</p>
+          {collection.errors.map((item, index) => <p key={index} className="text-red-500">{item.component}: {item.message}</p>)}
+          <p>Provenance: {Object.entries(collection.components).map(([key, value]) => `${key}: ${current[key] === value ? 'collected' : 'manually changed'}`).join(' · ')}</p></div>}
+      </section>
       <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
         <div className="space-y-6">
           <div className="card">
@@ -233,7 +306,7 @@ export default function UpgradeAdvisor() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-100">Assessment Inputs</h3>
-                <p className="text-xs text-gray-500">Manual MVP, no cluster mutation</p>
+                <p className="text-xs text-gray-500">Read-only assessment · no upgrade execution</p>
               </div>
             </div>
 
@@ -271,6 +344,7 @@ export default function UpgradeAdvisor() {
               </label>
 
               <EvidenceChecklist evidence={evidence} setEvidence={setEvidence} darkSite={darkSite} />
+              <p className="text-xs text-gray-500">Evidence flags are manual declarations. LCM, NCC, firmware and compatibility checks are not collected automatically.</p>
 
               {error && (
                 <div className="rounded-lg border border-red-700/40 bg-red-950/20 px-3 py-2 text-sm text-red-200">
@@ -282,6 +356,9 @@ export default function UpgradeAdvisor() {
                 {assessing ? <Loader size={14} className="animate-spin" /> : <FileSearch size={14} />}
                 {assessing ? 'Assessing...' : 'Run Assessment'}
               </button>
+              {canManagePacks && <button onClick={saveAssessment} disabled={saving || targetCount === 0 || !assessment || stale} className="btn-secondary w-full justify-center gap-2"><Save size={14} /> {saving ? 'Saving...' : 'Save assessment snapshot'}</button>}
+              {savedId && <p className="text-xs text-gray-500">Saved snapshot {savedId}</p>}
+              {stale && <p role="status" className="text-amber-600">Inputs changed. Run assessment again before saving.</p>}
             </div>
           </div>
 
@@ -308,9 +385,9 @@ export default function UpgradeAdvisor() {
               <h3 className="font-semibold text-gray-100">Data Sources</h3>
             </div>
             <div className="space-y-3 text-sm text-gray-400">
-              <SourceRow label="Current MVP" value="Manual inventory, operator evidence flags, and bundled ZTF rules." />
+              <SourceRow label="Inventory" value="PE cluster and host GET requests; PC HTTPS product header where available. Remaining fields are manual." />
               <SourceRow label="Curated source packs" value={`${sourcePacks.filter(pack => pack.enabled).length} active / ${sourcePacks.length} total`} />
-              <SourceRow label="Planned collectors" value="Prism Element, Prism Central, LCM inventory, LCM prechecks, NCC output, and compatibility metadata." />
+              <SourceRow label="Not collected" value="LCM prechecks, NCC, firmware, Foundation and compatibility metadata." />
             </div>
           </div>
 
@@ -395,7 +472,7 @@ export default function UpgradeAdvisor() {
                 <div className="flex flex-wrap items-center gap-3">
                   <StatusIcon status={assessment.status} />
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-semibold text-gray-100">{STATUS_COPY[assessment.status]} Assessment</h2>
+                    <h2 className="text-lg font-semibold text-gray-100">{stale ? 'Outdated inputs' : STATUS_COPY[assessment.status]} Assessment</h2>
                     <p className="text-sm text-gray-500">
                       Rules {assessment.rulesVersion} / generated {new Date(assessment.generatedAt).toLocaleString()}
                     </p>
@@ -417,6 +494,9 @@ export default function UpgradeAdvisor() {
               </div>
 
               <div className="space-y-3">
+                <h3 className="font-semibold">Readiness actions</h3>
+                <div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead><tr className="border-b border-border"><th className="p-2">State</th><th className="p-2">Check</th><th className="p-2">Required action</th></tr></thead><tbody>{assessment.findings.filter(f => f.status !== 'clear').map(f => <tr key={f.id} className="border-b border-border align-top"><td className="p-2">{STATUS_COPY[f.status]}</td><td className="p-2">{f.title}</td><td className="p-2">{f.guidance}</td></tr>)}</tbody></table></div>
+                {assessment.findings.every(f => f.status === 'clear') && <p className="text-sm">No active rule action. Compatibility and change authorization still require independent review.</p>}
                 {assessment.findings.map(finding => <FindingCard key={finding.id} finding={finding} />)}
               </div>
             </>

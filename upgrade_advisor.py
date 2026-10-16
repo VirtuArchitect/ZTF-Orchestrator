@@ -66,7 +66,14 @@ def assess_upgrade_risk(payload: dict[str, Any], rules_pack: dict[str, Any] | No
         if finding:
             findings.append(finding)
 
-    if targets and not any(f['status'] in {'blocked', 'warning', 'review'} for f in findings):
+    for component in targets:
+        if not current.get(component):
+            findings.append(dict(id=f'current-version-missing-{component}', title=f'Current {component} version is unknown',
+                                 status='unknown', severity='high', component=component,
+                                 message='The current version was not supplied or collected.',
+                                 guidance='Collect fresh inventory or enter an independently verified current version before reviewing the upgrade path.',
+                                 evidence=[], source={'label': 'Inventory completeness guard', 'url': ''}))
+    if targets and not any(f['status'] != 'clear' for f in findings):
         findings.append({
             'id': 'ztf-upgrade-advisor-clear-with-evidence',
             'title': 'No bundled rule matched the requested target',

@@ -738,7 +738,11 @@ pasted current-state JSON/YAML snapshot. Results are classified as **Matched**,
 history for later review.
 
 ### Upgrade Advisor
-Read-only Nutanix pre-upgrade risk assessment. Operators enter current and
+Read-only Nutanix pre-upgrade risk assessment with bounded PE inventory reads,
+PC HTTPS product-header detection, saved assessment snapshots and actionable
+readiness findings. Collection errors and missing versions remain explicit;
+LCM/NCC/firmware checks remain manual and live target validation is required.
+Operators enter current and
 target component versions, mark supporting evidence such as LCM prechecks,
 release-note review, compatibility review, Prism Central context, and dark-site
 bundle review, then receive evidence-backed findings classified as **Blocked**,

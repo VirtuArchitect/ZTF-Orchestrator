@@ -14,9 +14,9 @@ phases:
     status: implemented
     outcome: Rules support sources, affected components, evidence requirements, and operator guidance.
   - id: phase-3-live-inventory
-    name: Live Nutanix inventory enrichment
-    status: planned
-    outcome: Prism and LCM collectors will populate the same assessment contract without changing execution safety.
+    name: Bounded Prism inventory enrichment
+    status: implemented
+    outcome: Read-only PE cluster and host collection and PC HTTPS product-header detection. LCM, NCC, firmware and compatibility collection remain manual; live release-specific validation is required.
 rules:
   - id: ztf-lcm-precheck-required
     title: LCM precheck evidence is required
