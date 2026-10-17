@@ -1,6 +1,6 @@
 # Native Foundation Provider Operation Catalog
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 `POST /api/native-foundation/provider-operation-catalog` expands a valid
 `native-foundation-deploy` intent into a read-only operation catalog for every

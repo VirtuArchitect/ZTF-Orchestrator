@@ -1,6 +1,6 @@
 # Production Readiness Boundary
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This document prevents overclaiming. ZTF-Orchestrator can be operated in a
 controlled UAT posture when documented procedures and evidence exist, but broad

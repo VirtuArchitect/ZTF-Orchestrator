@@ -1,6 +1,6 @@
 # Native Foundation Discovery Reconciliation
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Discovery reconciliation compares the intended node plan with supplied
 adapter-style discovery facts. It is the review step between a live discovery

@@ -1,6 +1,6 @@
 # Native Foundation Approval Binding Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Approval binding review checks whether a native Foundation plan has a matching
 approved workflow request and a captured Validation Evidence record with

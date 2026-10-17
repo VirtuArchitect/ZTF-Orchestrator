@@ -1,6 +1,6 @@
 # Native Foundation Phase Advancement Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 `POST /api/native-foundation/phases/advancement-review` reviews whether a
 native Foundation rollout phase can be promoted toward execution. In this

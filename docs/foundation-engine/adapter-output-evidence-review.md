@@ -1,6 +1,6 @@
 # Native Foundation Adapter Output Evidence Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Adapter output evidence review records the owner, private output retention
 reference, artifact redaction reference, failure classification reference, and

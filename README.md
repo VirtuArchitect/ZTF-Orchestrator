@@ -1,4 +1,10 @@
-# ZTF-Orchestrator · v1.8.4
+# ZTF-Orchestrator · v1.8.5-rc1
+
+**Release candidate for controlled UAT, not a production-ready promotion.**
+See the [RC validation checklist](docs/releases/v1.8.5-rc1-readiness.md),
+[release notes](release-notes-v1.8.5-rc1.txt), and
+[installation checklist](install-checklist-v1.8.5-rc1.md).
+The latest stable release remains v1.8.4 until the final release gates pass.
 
 Read-only [live Prism Element drift monitoring](docs/live-pe-drift-monitoring.md)
 collects DNS, NTP and Pulse settings on every scheduled run. Drift schedules have

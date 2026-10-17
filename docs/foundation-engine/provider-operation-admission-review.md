@@ -1,6 +1,6 @@
 # Native Foundation Provider Operation Admission Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 `POST /api/native-foundation/provider-operation-admission-review` converts the
 provider operation catalog into per-operation admission records for a future

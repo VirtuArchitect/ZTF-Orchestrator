@@ -1,6 +1,6 @@
 # Native Foundation Secret Lease Execution Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 The secret lease execution review declares the lease records a future native
 Foundation adapter run would need before resolving provider or BMC credential

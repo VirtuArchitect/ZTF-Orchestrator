@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Governance
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This folder contains governance documents for production-assessable operation.
 It complements the runbooks and UAT evidence docs.

@@ -1,6 +1,6 @@
 # Native Foundation Mutating Enablement Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Mutating enablement review is the final read-only gate before any future native
 Foundation deployment path could be explicitly enabled. It composes runner

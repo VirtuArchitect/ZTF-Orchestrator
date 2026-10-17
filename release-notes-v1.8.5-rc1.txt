@@ -1,0 +1,45 @@
+ZTF-Orchestrator v1.8.5-rc1
+Release candidate - controlled UAT only
+
+Scope
+-----
+Stabilization of the changes merged since v1.8.4. No new deployment-engine
+architecture or automatic upgrade execution is included in this candidate.
+
+Included changes
+----------------
+- PostgreSQL 16 backup/restore clients match the bundled database; fresh builds
+  no longer use newer dump tools that emit unsupported transaction_timeout.
+- Operational Upgrade Advisor: verified-HTTPS PE/PC inventory, explicit unknown
+  versions, saved assessments, readiness actions, and assessment exports.
+- Viewer responses redact Prism endpoints in saved inventory observations/errors.
+- Live PE DNS, NTP and Pulse drift reads on every scheduled run, plus editable
+  schedules and UTC labels. Collection failures remain Unknown, not Matched.
+- Initial PE password change in Scripts and pipelines, and Configure Cluster
+  schema alignment for password references, EULA, Pulse and optional settings.
+- Foundation VM image checksum preservation and native payload corrections;
+  grouped classic Foundation progress with honest missing-telemetry states.
+- Controlled-UAT CVM and Dell iDRAC password rotation safeguards, YAML Studio
+  guidance, and Native Foundation readiness/adapter documentation.
+
+Boundaries
+----------
+Not affiliated with or supported by Nutanix. A release-candidate label is not
+production certification. PC product-header collection is not an authenticated
+PC API permission check. NCC, LCM, firmware and Foundation versions still need
+verified manual evidence where the bounded collector has no reader.
+Credential rotation remains limited to its documented controlled-UAT scope.
+Destructive Foundation/credential workflows need explicit target authorization.
+No real cluster deployment or password rotation is implied by mocked tests.
+
+Install and verify
+------------------
+Follow install-checklist-v1.8.5-rc1.md. Verify ZIP and embedded image checksums,
+take independent backups, explicitly select v1.8.5-rc1, and retain rollback
+images and the previous application/data backup pair. Do not replace latest.
+
+Promotion
+---------
+The release is a prerelease, not the latest stable version. See
+docs/releases/v1.8.5-rc1-readiness.md and the release validation receipt for
+completed checks and outstanding live-UAT, recovery and soak gates.

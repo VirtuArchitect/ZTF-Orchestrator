@@ -1,6 +1,6 @@
 # Native Foundation Network Manifest
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Network manifest reviews declared site, cluster, and node addressing for a
 `native-foundation-deploy` intent. It is a read-only IPAM and network metadata

@@ -1,6 +1,6 @@
 # Native Foundation Adapter Runtime Isolation Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Adapter runtime isolation review records the runtime owner, isolation profile,
 sandbox image or runtime reference, network policy reference, and filesystem

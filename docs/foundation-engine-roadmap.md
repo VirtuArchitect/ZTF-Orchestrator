@@ -1,6 +1,6 @@
 # Native Foundation Engine Roadmap
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This roadmap phases native Foundation capability into ZTF-Orchestrator while
 keeping documentation, validation evidence, and support boundaries current.

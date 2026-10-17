@@ -66,6 +66,45 @@ def test_release_version_metadata_is_consistent():
     assert f'## [{expected}]' in changelog
 
 
+def test_container_latest_channel_excludes_branches_and_prereleases():
+    workflow = (ROOT / '.github' / 'workflows' / 'container-publish.yml').read_text(encoding='utf-8')
+    assert '"$GITHUB_REF_TYPE" == "tag"' in workflow
+    assert '^v[0-9]+\\.[0-9]+\\.[0-9]+$' in workflow
+    assert 'type=raw,value=latest,enable=${{ steps.channel.outputs.stable }}' in workflow
+    assert 'enable={{is_default_branch}}' not in workflow
+    appliance_workflow = (ROOT / '.github' / 'workflows' / 'ahv-appliance-image.yml').read_text(encoding='utf-8')
+    assert "prerelease: ${{ contains(github.ref_name, '-') }}" in appliance_workflow
+    assert "make_latest: ${{ contains(github.ref_name, '-') && 'false' || 'true' }}" in appliance_workflow
+
+
+def test_appliance_backup_client_matches_postgresql_major():
+    dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    compose = (ROOT / 'appliance' / 'docker-compose.appliance.yml').read_text(encoding='utf-8')
+    assert 'image: postgres:16-alpine' in compose
+    assert 'FROM postgres:16-bookworm AS postgres-client' in dockerfile
+    for executable in ('pg_dump', 'pg_restore'):
+        assert f'COPY --from=postgres-client /usr/lib/postgresql/16/bin/{executable} /usr/local/bin/{executable}' in dockerfile
+        assert f'{executable} --version | grep' in dockerfile
+
+
+def test_candidate_release_metadata_preserves_acceptance_boundaries():
+    package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
+    if '-rc' not in package['version']:
+        return
+    tag = f"v{package['version']}"
+    notes = (ROOT / f'release-notes-{tag}.txt').read_text(encoding='utf-8')
+    checklist = (ROOT / f'install-checklist-{tag}.md').read_text(encoding='utf-8')
+    readiness = (ROOT / 'docs' / 'releases' / f'{tag}-readiness.md').read_text(encoding='utf-8')
+    assert 'Release candidate' in notes
+    assert '3-5 working' in readiness
+    assert 'Pending' in readiness
+    assert 'Not started' in readiness
+    assert 'v1.8.4 remain unchanged' in readiness
+    assert f'ghcr.io/virtuarchitect/ztf-orchestrator:{tag}' in checklist
+    module = _load_offline_package_module()
+    assert module.normalize_version(tag) == tag
+
+
 def _docx_text(path: Path) -> str:
     with zipfile.ZipFile(path) as archive:
         document_xml = archive.read('word/document.xml')
@@ -540,6 +579,15 @@ def test_airgap_release_script_runs_required_release_steps():
     assert 'docker save' in script
     assert 'build_offline_update_package.py' in script
     assert 'Get-FileHash' in script
+
+
+def test_airgap_release_script_accepts_release_candidates_only_as_explicit_versions():
+    script = (ROOT / 'scripts' / 'build_airgap_release.ps1').read_text(encoding='utf-8')
+    pattern = re.search(r"\$Version -notmatch '([^']+)'", script).group(1)
+    for version in ('v1.8.5', 'v1.8.5-rc1', 'v1.8.5-rc12'):
+        assert re.fullmatch(pattern, version)
+    for version in ('latest', 'main', 'v1.8.5-rc0', 'v1.8.5-rc1;echo unsafe', 'v1.8.5/rc1'):
+        assert not re.fullmatch(pattern, version)
 
 
 def test_create_vms_pc_wizard_matches_runtime_contract():

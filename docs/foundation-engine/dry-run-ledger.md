@@ -1,6 +1,6 @@
 # Native Foundation Dry-Run Ledger
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 The dry-run ledger turns the native Foundation execution graph into a
 step-level review artifact. It records the site, cluster, provider, deployment

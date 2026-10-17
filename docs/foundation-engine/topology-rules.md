@@ -1,6 +1,6 @@
 # Native Foundation Topology Rules
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Native Foundation topology validation is fail-closed. A deployment type must
 match the declared node roles before any future execution adapter can run.

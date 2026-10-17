@@ -1,0 +1,47 @@
+# Installation Checklist v1.8.5-rc1
+
+This candidate is for controlled UAT. Keep the stable appliance available;
+do not treat a staged request or loaded image as an applied update.
+
+## Before Installation
+
+- [ ] Approve the UAT change, owner, maintenance window and rollback point.
+- [ ] Review [readiness and outstanding gates](docs/releases/v1.8.5-rc1-readiness.md).
+- [ ] Verify the downloaded ZIP against its separately supplied SHA-256.
+- [ ] Verify `manifest.json`, `SHA256SUMS`, embedded image SHA-256 and exact
+  `ghcr.io/virtuarchitect/ztf-orchestrator:v1.8.5-rc1` image tag.
+- [ ] Capture the current build identity, mounts, networks and environment
+  securely. Never put captured secrets or lab endpoints in release artifacts.
+- [ ] Back up PostgreSQL and application data; validate both archives and
+  retain a known-good matching pair. Keep certificate mounts and credential refs.
+- [ ] Confirm disk space for backups, compressed image and unpacked layers.
+  Stop safely on insufficient space; do not bypass required backups.
+
+## Apply and Verify
+
+1. Import the candidate ZIP through Appliance Ops, or use the documented
+   host-side update helper with its candidate request file and image tar.
+2. Review the staged request, version, repository, checksum and source reference.
+   Explicitly approve this prerelease; the stable `latest` channel must not move.
+3. Apply through the approved host-side update procedure. Preserve all data
+   volumes, PostgreSQL settings and mounted certificate trust bundles.
+4. Inspect the running image and container health, then call `/health` and
+   inspect Settings > Installed Build. Require version `1.8.5-rc1`, matching
+   image and source identity. Reopen the UI to avoid stale browser assets.
+5. Confirm Foundation VM appears in Workflows and the AHV ISO Checksum field is
+   present. Do not start a physical deployment just to test the catalog.
+6. Test login, RBAC, Upgrade Advisor inventory/save/reopen/export, and scheduled
+   live PE DNS/NTP/Pulse collection with approved read-only targets and TLS trust.
+7. Restart the isolated UAT appliance and verify saved configuration, schedules,
+   assessments, credential references and certificate trust remain available.
+8. Exercise restore and rollback in a disposable copy; retain recovery evidence.
+
+## Promotion Signoff
+
+- [ ] Attach test/CI, image/bundle integrity and installed-build receipts.
+- [ ] Complete the RC-specific live-UAT and recovery matrix.
+- [ ] Complete a 3-5 working-day operational soak with no unresolved blockers.
+- [ ] Obtain maintainer and UAT-owner signoff before tagging final v1.8.5.
+
+An unchecked item is not completed by publishing the candidate. Historical
+install checklists remain historical evidence, not current installation advice.

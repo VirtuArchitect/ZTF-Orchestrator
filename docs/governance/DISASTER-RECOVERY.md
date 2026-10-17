@@ -1,6 +1,6 @@
 # Disaster Recovery of ZTF-Orchestrator
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This procedure covers recovering the Orchestrator application and its operational
 state. Using the Orchestrator to rebuild affected Nutanix infrastructure is a

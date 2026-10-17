@@ -1,6 +1,6 @@
 # Data Flow
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This document summarizes the high-level data flow for operator-controlled
 deployments.

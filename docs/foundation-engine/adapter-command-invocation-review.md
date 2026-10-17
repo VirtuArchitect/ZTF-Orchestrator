@@ -1,6 +1,6 @@
 # Native Foundation Adapter Command Invocation Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Adapter command invocation review records the owner, private command catalog
 reference, invocation policy reference, execution identity reference, and output
