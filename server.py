@@ -42788,6 +42788,27 @@ def assess_upgrade_advisor():
 _upgrade_history_lock = threading.RLock()
 
 
+def _viewer_safe_upgrade_assessment(record):
+    """Keep viewer assessment evidence useful without disclosing Prism targets."""
+    redacted = deepcopy(record)
+    collections = (
+        redacted.get('inventoryCollection'),
+        redacted.get('assessment', {}).get('inventoryCollection')
+        if isinstance(redacted.get('assessment'), dict) else None,
+    )
+    for collection in collections:
+        if not isinstance(collection, dict):
+            continue
+        for field in ('observations', 'errors'):
+            entries = collection.get(field)
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if isinstance(entry, dict):
+                    entry.pop('endpoint', None)
+    return redacted
+
+
 @app.route('/api/upgrade-advisor/inventory', methods=['POST'])
 @limiter.limit('5 per minute')
 @require_role('admin', 'operator')
@@ -42860,6 +42881,8 @@ def get_saved_upgrade_assessment(assessment_id):
     record = read_json(CONFIG_DIR / f'upgrade_assessment_{assessment_id}.json', None)
     if not record:
         return jsonify({'error': 'Assessment not found'}), 404
+    if request.current_user['role'] == 'viewer':
+        record = _viewer_safe_upgrade_assessment(record)
     return jsonify(record)
 
 
