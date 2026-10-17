@@ -1,6 +1,6 @@
 # Native Foundation Retained Evidence Export Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 The retained evidence export review declares the export package a future native
 Foundation runner would need after output evidence capture and retention

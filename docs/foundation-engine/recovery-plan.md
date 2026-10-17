@@ -1,6 +1,6 @@
 # Native Foundation Recovery Plan
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 The recovery plan describes how a future native Foundation execution request
 would be stopped, retried, or reviewed after failure across sites and clusters,

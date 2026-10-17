@@ -1,6 +1,6 @@
 # Native Foundation Backup/Restore Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Backup/restore review composes the native Foundation execution retention plan,
 audit plan, job-state plan, resume checkpoint, and restart/resume review into a

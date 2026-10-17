@@ -1,6 +1,6 @@
 # Recovery Rehearsal Checklist
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Use with the [Infrastructure Recovery Guide](infrastructure-recovery.md).
 This is a template for an authorized rehearsal, not evidence that recovery has

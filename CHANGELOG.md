@@ -9,6 +9,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+No changes queued after the release-candidate scope freeze.
+
+## [1.8.5-rc1] - 2026-10-17
+
+Release candidate for controlled UAT. Final release requires the RC-specific
+validation and operational soak recorded in `docs/releases/v1.8.5-rc1-readiness.md`.
+
 ### Added
 - Upgrade Advisor operational snapshots, bounded verified-HTTPS PE/PC inventory
   collection, explicit unknown versions and actionable readiness findings.
@@ -28,8 +35,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   records. Classic imaging uses an honest grouped imaging/configuration phase;
   completed execution outcomes no longer display an unknown overall status.
 
-Changes in this section are present on `main` after v1.8.4 and should be moved
-into the next numbered release section when the next version is cut.
+- Viewer assessment responses redact saved Prism target endpoints while retaining
+  inventory provenance and collection errors.
 
 ### Added
 

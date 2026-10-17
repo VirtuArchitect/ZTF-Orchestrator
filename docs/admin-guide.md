@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Admin Guide
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This guide is for administrators who install, configure, operate, govern, and
 support ZTF-Orchestrator in a trusted internal environment. It covers the major

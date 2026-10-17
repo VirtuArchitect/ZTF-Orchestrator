@@ -1,6 +1,6 @@
 # Native Foundation Execution Readiness
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Execution readiness is the Phase 4 gate for native Foundation imaging and
 cluster-create work. It reports whether a validated plan has the required UAT

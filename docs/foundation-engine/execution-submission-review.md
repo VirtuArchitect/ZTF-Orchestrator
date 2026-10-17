@@ -1,6 +1,6 @@
 # Native Foundation Execution Submission Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Execution submission review builds the future native Foundation job submission
 envelope without submitting or enqueueing deployment jobs. It composes mutating

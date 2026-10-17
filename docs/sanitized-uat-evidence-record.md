@@ -5,7 +5,7 @@ cluster configuration, Foundation Central imaging, NDB setup, Calm workload
 setup, drift checks, backup/restore drills, and native Foundation planning
 reviews.
 
-Current ZTF-Orchestrator release for new evidence records: `v1.8.4`.
+Current ZTF-Orchestrator release for new evidence records: `v1.8.5-rc1`.
 
 ## Evidence Rules
 
@@ -21,7 +21,7 @@ Current ZTF-Orchestrator release for new evidence records: `v1.8.4`.
 
 ```yaml
 evidence_id: ztf-uat-YYYYMMDD-001
-orchestrator_version: v1.8.4
+orchestrator_version: v1.8.5-rc1
 workflow: config-pc
 environment_class: uat
 operator_role: operator

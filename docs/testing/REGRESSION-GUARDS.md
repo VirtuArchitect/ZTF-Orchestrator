@@ -1,6 +1,6 @@
 # Regression Guards
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 ZTF-Orchestrator uses release-integrity tests to prevent critical operational
 documentation from drifting out of the repository.

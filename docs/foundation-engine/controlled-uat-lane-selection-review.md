@@ -1,6 +1,6 @@
 # Native Foundation Controlled UAT Lane Selection Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Controlled UAT lane selection review declares the bounded provider,
 deployment-type, site, and adapter-binding lane that a future first mutating

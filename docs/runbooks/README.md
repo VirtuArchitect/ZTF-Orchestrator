@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Runbooks
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 This directory contains operational runbooks for controlled ZTF-Orchestrator
 use. The runbooks are intended for internal operators who run allowlisted

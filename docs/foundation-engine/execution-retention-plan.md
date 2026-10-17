@@ -1,6 +1,6 @@
 # Native Foundation Execution Retention Plan
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Execution retention plan review declares the retention policies, backup targets,
 and restore rehearsal checks a future native Foundation run would need before

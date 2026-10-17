@@ -1,6 +1,6 @@
 # Native Foundation Adapter SBOM Review
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Adapter SBOM review records the SBOM owner, private SBOM reference, SBOM
 format, SBOM SHA256 digest, private vulnerability scan reference, retained

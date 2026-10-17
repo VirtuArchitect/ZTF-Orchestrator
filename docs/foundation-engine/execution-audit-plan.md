@@ -1,6 +1,6 @@
 # Native Foundation Execution Audit Plan
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Execution audit plan review declares the audit events and retained artifacts a
 future native Foundation run would need before adapter execution, recovery, and

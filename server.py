@@ -92,7 +92,7 @@ UPDATE_PACKAGE_MAX_UPLOAD = int(os.environ.get('ZTF_UPDATE_PACKAGE_MAX_UPLOAD', 
 FOUNDATION_VM_IMAGE_MAX_UPLOAD = int(os.environ.get('ZTF_FOUNDATION_VM_IMAGE_MAX_UPLOAD', str(20 * 1024 * 1024 * 1024)))
 FOUNDATION_VM_MUTATION_ENABLED = os.environ.get('ZTF_FOUNDATION_VM_ENABLE_MUTATION', 'true').lower() in {'1', 'true', 'yes'}
 FOUNDATION_VM_IMAGE_UPLOAD_ENABLED = os.environ.get('ZTF_FOUNDATION_VM_ENABLE_IMAGE_UPLOAD', '').lower() in {'1', 'true', 'yes'}
-APP_VERSION = '1.8.4'
+APP_VERSION = '1.8.5-rc1'
 ZTF_LEGACY_REF = os.environ.get('ZTF_REF', 'v1.5.2')
 ZTF2_REF = os.environ.get('ZTF2_REF', 'v2.0.0')
 

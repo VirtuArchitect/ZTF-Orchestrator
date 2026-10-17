@@ -1,6 +1,6 @@
 # Infrastructure Recovery Preparation and Rebuild
 
-Current release marker: `v1.8.4`.
+Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 > Backups preserve what you need to recover. Our focus is preparing and
 > rehearsing how to rebuild the infrastructure you recover onto.
