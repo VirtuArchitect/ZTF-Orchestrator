@@ -74,6 +74,16 @@ def test_container_latest_channel_excludes_branches_and_prereleases():
     assert 'enable={{is_default_branch}}' not in workflow
 
 
+def test_appliance_backup_client_matches_postgresql_major():
+    dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    compose = (ROOT / 'appliance' / 'docker-compose.appliance.yml').read_text(encoding='utf-8')
+    assert 'image: postgres:16-alpine' in compose
+    assert 'FROM postgres:16-bookworm AS postgres-client' in dockerfile
+    for executable in ('pg_dump', 'pg_restore'):
+        assert f'COPY --from=postgres-client /usr/lib/postgresql/16/bin/{executable} /usr/local/bin/{executable}' in dockerfile
+        assert f'{executable} --version | grep' in dockerfile
+
+
 def test_candidate_release_metadata_preserves_acceptance_boundaries():
     package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
     if '-rc' not in package['version']:

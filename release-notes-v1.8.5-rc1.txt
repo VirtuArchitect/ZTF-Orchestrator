@@ -8,6 +8,8 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- PostgreSQL 16 backup/restore clients match the bundled database; fresh builds
+  no longer use newer dump tools that emit unsupported transaction_timeout.
 - Operational Upgrade Advisor: verified-HTTPS PE/PC inventory, explicit unknown
   versions, saved assessments, readiness actions, and assessment exports.
 - Viewer responses redact Prism endpoints in saved inventory observations/errors.

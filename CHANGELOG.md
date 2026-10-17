@@ -26,6 +26,9 @@ validation and operational soak recorded in `docs/releases/v1.8.5-rc1-readiness.
 - Visible drift schedule edit controls and UTC schedule labels.
 
 ### Fixed
+- Pin the appliance backup/restore client tools to PostgreSQL 16, matching the
+  bundled database and preventing restore failures on `transaction_timeout`
+  emitted by newer client tools in fresh base images.
 - Configure Cluster now edits native per-cluster ZTF settings, including new
   admin credential references, EULA, enable_pulse, directory services, containers,
   HA objects and nested VLAN IP configuration. Native imports retain per-cluster

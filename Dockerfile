@@ -1,3 +1,5 @@
+FROM postgres:16-bookworm AS postgres-client
+
 FROM node:22-slim AS ui-build
 
 WORKDIR /ui
@@ -140,6 +142,13 @@ RUN chown -R ztf-svc:ztf-svc /app /opt/zerotouch-framework /opt/zerotouch-framew
 # ============================================================================
 # Runtime user
 # ============================================================================
+
+# Match the appliance database major. A newer pg_dump can emit settings that
+# PostgreSQL 16 cannot restore even when the backup itself succeeds.
+COPY --from=postgres-client /usr/lib/postgresql/16/bin/pg_dump /usr/local/bin/pg_dump
+COPY --from=postgres-client /usr/lib/postgresql/16/bin/pg_restore /usr/local/bin/pg_restore
+RUN pg_dump --version | grep -E 'PostgreSQL\) 16\.' && \
+    pg_restore --version | grep -E 'PostgreSQL\) 16\.'
 
 USER ztf-svc
 
