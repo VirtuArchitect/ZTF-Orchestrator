@@ -42,6 +42,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/virtuarchitect/ztf-orchestrator
+          flavor: latest=false
           tags: |
             type=ref,event=branch
             type=ref,event=tag
