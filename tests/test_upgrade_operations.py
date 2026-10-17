@@ -182,6 +182,31 @@ def test_viewer_cannot_collect_or_save(client, auth_headers):
     assert client.get('/api/upgrade-advisor/assessments').status_code == 401
 
 
+def test_viewer_assessment_responses_redact_inventory_endpoints(client, auth_headers, monkeypatch):
+    import server
+    pe_endpoint = 'https://pe.example.com:9440'
+    pc_endpoint = 'https://pc.example.com:9440'
+    monkeypatch.setattr(server, 'collect_upgrade_inventory', lambda *args: dict(
+        components={'aos': '7.3.0'}, unknownComponents=['ahv'], collectedAt='2026-10-16T00:00:00Z',
+        observations=[{'component': 'aos', 'value': '7.3.0', 'endpoint': pe_endpoint, 'source': 'cluster'}],
+        errors=[{'component': 'ahv', 'endpoint': pc_endpoint, 'message': 'Inventory returned HTTP 403'}]))
+    collected = client.post('/api/upgrade-advisor/inventory', json={}, headers=auth_headers).get_json()
+    data = sample(); data['inventorySnapshotId'] = collected['id']
+    saved = client.post('/api/upgrade-advisor/assessments', json=data, headers=auth_headers).get_json()
+    assert pe_endpoint in json.dumps(saved)
+    assert client.post('/api/users', json={'username': 'reviewer', 'password': 'Test12345!', 'role': 'viewer'}, headers=auth_headers).status_code == 201
+    token = client.post('/api/auth/login', json={'username': 'reviewer', 'password': 'Test12345!'}).get_json()['token']
+    headers = {'Authorization': 'Bearer ' + token}
+    history = client.get('/api/upgrade-advisor/assessments', headers=headers).get_json()
+    detail = client.get('/api/upgrade-advisor/assessments/' + saved['id'], headers=headers).get_json()
+    assert pe_endpoint not in json.dumps(history)
+    assert pe_endpoint not in json.dumps(detail)
+    assert pc_endpoint not in json.dumps(detail)
+    for collection in (detail['inventoryCollection'], detail['assessment']['inventoryCollection']):
+        assert collection['observations'][0] == {'component': 'aos', 'value': '7.3.0', 'source': 'cluster'}
+        assert collection['errors'][0] == {'component': 'ahv', 'message': 'Inventory returned HTTP 403'}
+
+
 def test_archive_limit_does_not_overwrite_saved_history(client, auth_headers):
     import server
     index = server.CONFIG_DIR / 'upgrade_assessment_history.json'
