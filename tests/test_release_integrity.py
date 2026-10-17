@@ -72,6 +72,9 @@ def test_container_latest_channel_excludes_branches_and_prereleases():
     assert '^v[0-9]+\\.[0-9]+\\.[0-9]+$' in workflow
     assert 'type=raw,value=latest,enable=${{ steps.channel.outputs.stable }}' in workflow
     assert 'enable={{is_default_branch}}' not in workflow
+    appliance_workflow = (ROOT / '.github' / 'workflows' / 'ahv-appliance-image.yml').read_text(encoding='utf-8')
+    assert "prerelease: ${{ contains(github.ref_name, '-') }}" in appliance_workflow
+    assert "make_latest: ${{ contains(github.ref_name, '-') && 'false' || 'true' }}" in appliance_workflow
 
 
 def test_appliance_backup_client_matches_postgresql_major():
