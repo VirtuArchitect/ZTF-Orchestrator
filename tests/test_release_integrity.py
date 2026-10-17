@@ -67,7 +67,12 @@ def test_release_version_metadata_is_consistent():
 
 
 def test_container_latest_channel_excludes_branches_and_prereleases():
+    import yaml
+
     workflow = (ROOT / '.github' / 'workflows' / 'container-publish.yml').read_text(encoding='utf-8')
+    steps = yaml.safe_load(workflow)['jobs']['publish']['steps']
+    metadata = next(step for step in steps if step.get('id') == 'meta')
+    assert metadata['with']['flavor'] == 'latest=false'
     assert '"$GITHUB_REF_TYPE" == "tag"' in workflow
     assert '^v[0-9]+\\.[0-9]+\\.[0-9]+$' in workflow
     assert 'type=raw,value=latest,enable=${{ steps.channel.outputs.stable }}' in workflow

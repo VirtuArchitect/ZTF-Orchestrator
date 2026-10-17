@@ -1,17 +1,22 @@
-name: Restore Stable Container Channel
+name: Publish Container
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  restore:
-    name: Verify tag isolation and restore stable digest
+  publish:
+    name: Build and publish GHCR image
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -22,27 +27,39 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify metadata action does not invent latest
+      - name: Select stable release channel
+        id: channel
+        shell: bash
+        run: |
+          stable=false
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            stable=true
+          fi
+          echo "stable=$stable" >> "$GITHUB_OUTPUT"
+
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/virtuarchitect/ztf-orchestrator
           flavor: latest=false
-          tags: type=ref,event=tag
-      - name: Require isolated tag metadata
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-        run: |
-          test "$GITHUB_REF_TYPE" = tag
-          test -n "$TAGS"
-          if [[ "$TAGS" == *":latest"* ]]; then
-            echo "Unexpected automatic latest tag" >&2
-            exit 1
-          fi
-      - name: Restore previously captured stable manifest
-        run: |
-          docker buildx imagetools create \
-            --tag ghcr.io/virtuarchitect/ztf-orchestrator:latest \
-            ghcr.io/virtuarchitect/ztf-orchestrator@sha256:31e7be3cd57ab2102630768da8ae0dceb504d400ae1ff5bf4afeaa666973e525
-          actual="$(docker buildx imagetools inspect ghcr.io/virtuarchitect/ztf-orchestrator:latest --format '{{.Manifest.Digest}}')"
-          test "$actual" = sha256:31e7be3cd57ab2102630768da8ae0dceb504d400ae1ff5bf4afeaa666973e525
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ steps.channel.outputs.stable }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
+            ZTF_REF=v1.5.2
+            ZTF_ORCHESTRATOR_VERSION=${{ github.ref_type == 'tag' && github.ref_name || format('sha-{0}', github.sha) }}
+            ZTF_BUILD_COMMIT=${{ github.sha }}
+            ZTF_BUILD_DATE=${{ github.event.head_commit.timestamp || github.run_id }}
+            ZTF_ORCHESTRATOR_IMAGE=ghcr.io/virtuarchitect/ztf-orchestrator:${{ github.ref_type == 'tag' && github.ref_name || github.sha }}

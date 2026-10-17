@@ -9,7 +9,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-No changes queued after the release-candidate scope freeze.
+### Fixed
+- Disable Docker metadata's automatic `latest` flavor, leaving stable-channel
+  promotion exclusively to the explicit stable-version tag rule. This is a
+  publication-policy correction; the v1.8.5-rc1 application image is unchanged.
 
 ## [1.8.5-rc1] - 2026-10-17
 
