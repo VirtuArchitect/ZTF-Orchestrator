@@ -57,6 +57,38 @@ test('manual live check shows unknown reads and collection errors', async ({ pag
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
 })
 
+test('distinct live PE trust SAN and network diagnostics remain readable', async ({ page }) => {
+  await seed(page)
+  const errors = {
+    enable_pulse: 'PE TLS certificate trust failed: the issuer or certificate chain is not trusted. Install the approved CA chain in the container trust bundle or SSL_CERT_FILE.',
+    name_servers_list: 'PE TLS hostname/IP mismatch: the target is not covered by the certificate SAN. Use a covered DNS name/IP or replace the PE certificate.',
+    ntp_servers_list: 'PE network timeout: check routing, firewall access and PE responsiveness on the configured port.',
+  }
+  await page.route('**/api/drift/check', route => route.fulfill({ json: {
+    id: 'live-diagnostics', configFile: 'pe.yml', baseline: 'live_pe', status: 'unknown', observedLabel: 'Live Prism Element',
+    timestamp: '2026-10-19T10:00:00Z', collectedAt: '2026-10-19T10:00:00Z', user: 'test-user',
+    summary: { matched: 0, changed: 0, missing: 0, unexpected: 0, unknown: 3, total: 3 },
+    collections: [{ endpoint: 'https://pe.example:9440', errors }],
+    findings: Object.keys(errors).map(key => ({ path: `pe.example.${key}`, status: 'unknown', desired: key === 'enable_pulse' ? true : [], observed: null })),
+  } }))
+  await page.getByRole('button', { name: 'Live Prism Element', exact: true }).click()
+  await page.getByRole('button', { name: 'Run Drift Check' }).click()
+  for (const [key, message] of Object.entries(errors)) {
+    await expect(page.getByText(`${key}: ${message}`, { exact: false })).toBeVisible()
+  }
+  await expect(page.getByText('Collection incomplete', { exact: true })).toBeVisible()
+  await page.screenshot({ path: 'test-results/live-pe-diagnostics-desktop.png', fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  if (await page.getByRole('button', { name: 'Close navigation' }).isVisible()) {
+    await page.getByRole('button', { name: 'Close navigation' }).click({ position: { x: 380, y: 100 } })
+  }
+  for (const [key, message] of Object.entries(errors)) {
+    await expect(page.getByText(`${key}: ${message}`, { exact: false })).toBeVisible()
+  }
+  expect(await page.locator('main').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+  await page.screenshot({ path: 'test-results/live-pe-diagnostics-mobile.png', fullPage: true })
+})
+
 test('viewer has no schedule edit action', async ({ page }) => {
   await seed(page, 'viewer')
   await expect(page.getByText('PE monitoring', { exact: true })).toBeVisible()

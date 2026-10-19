@@ -63,6 +63,28 @@ Admin and operator roles can collect and edit policies; viewers can read results
 Connection, TLS, authentication, unsupported response and parse failures produce
 **Unknown** findings, not Matched. Confirmed differences remain **Drifted** even
 when another setting is unknown; inspect the Unknown count and collection errors.
+
+### Connection Diagnostics
+
+Each failed setting retains Unknown with an actionable, sanitized message:
+
+| Message | Operator action |
+|---|---|
+| TLS certificate trust failed | Install the approved issuing CA chain in the container trust bundle or `SSL_CERT_FILE`. |
+| TLS hostname/IP mismatch | Use a target DNS name/IP covered by the certificate SAN, or replace the PE certificate. Adding a CA does not fix a SAN mismatch. |
+| TLS certificate validity failed | Check certificate dates and the appliance clock. |
+| TLS certificate verification failed | Review certificate validity and the approved CA chain; this is the fallback for other verification failures. |
+| TLS trust configuration could not be loaded | Check that the configured CA bundle is readable and valid PEM. |
+| TLS handshake failed | Check the HTTPS port and supported TLS configuration. |
+| DNS resolution failed | Check the target hostname and DNS resolution from inside the container. |
+| Network timeout, connection refused or network unreachable | Check container routing, firewall rules, PE service and the configured port. |
+| Network connection failed | Investigate other connection failures, such as a dropped connection. |
+
+The first TLS failure may mask another: after repairing trust, rerun to detect a
+possible SAN mismatch. No credentials, raw exception messages, certificate contents
+or local filesystem paths are included in these errors. HTTP status errors remain
+separate from transport errors. TLS and hostname verification are never bypassed.
+
 Each run records collection-start time, completion time and target endpoints.
 Schedules persist through application restarts; missed downtime runs are not a
 continuous-monitoring guarantee. No Prism Central collection or automatic

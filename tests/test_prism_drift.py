@@ -1,5 +1,7 @@
 import io
+import errno
 import json
+import socket
 import ssl
 import urllib.error
 
@@ -121,6 +123,70 @@ def test_transport_errors_do_not_expose_response_or_credentials(monkeypatch):
     with pytest.raises(ValueError, match='^PE returned HTTP 401$'):
         prism_drift.read_setting('https://pe.example:9440', 'ref', 'enable_pulse', lambda ref: ('reader', 'private', ''))
     assert prism_drift.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://evil.example') is None
+
+
+@pytest.mark.parametrize('wrapped', [False, True], ids=['direct', 'urllib-wrapped'])
+@pytest.mark.parametrize('kind,code,prefix', [
+    ('certificate', 18, 'PE TLS certificate trust failed'),
+    ('certificate', 20, 'PE TLS certificate trust failed'),
+    ('certificate', 21, 'PE TLS certificate trust failed'),
+    ('certificate', 62, 'PE TLS hostname/IP mismatch'),
+    ('certificate', 64, 'PE TLS hostname/IP mismatch'),
+    ('certificate', 9, 'PE TLS certificate validity failed'),
+    ('certificate', 10, 'PE TLS certificate validity failed'),
+    ('certificate', 23, 'PE TLS certificate verification failed'),
+    ('handshake', None, 'PE TLS handshake failed'),
+    ('dns', None, 'PE DNS resolution failed'),
+    ('timeout', None, 'PE network timeout'),
+    ('refused', None, 'PE connection refused'),
+    ('unreachable', None, 'PE network unreachable'),
+    ('reset', None, 'PE network connection failed'),
+])
+def test_transport_failure_categories_are_sanitized_and_unknown(monkeypatch, wrapped, kind, code, prefix):
+    private = 'private reader password /secret/ca.pem Authorization: Basic confidential'
+    if kind == 'certificate':
+        error = ssl.SSLCertVerificationError(1, private)
+        error.verify_code = code
+        error.verify_message = private
+    else:
+        error = {
+            'handshake': ssl.SSLError(1, private),
+            'dns': socket.gaierror(socket.EAI_NONAME, private),
+            'timeout': TimeoutError(private),
+            'refused': ConnectionRefusedError(errno.ECONNREFUSED, private),
+            'unreachable': OSError(errno.ENETUNREACH, private),
+            'reset': ConnectionResetError(errno.ECONNRESET, private),
+        }[kind]
+    if wrapped:
+        error = urllib.error.URLError(error)
+
+    class Opener:
+        def open(self, *args, **kwargs):
+            raise error
+
+    monkeypatch.setattr(prism_drift.urllib.request, 'build_opener', lambda *args: Opener())
+    result = prism_drift.collect(config(), lambda ref: ('reader', 'private', ''))
+    assert result['status'] == 'unknown'
+    assert result['summary']['unknown'] == 3
+    assert result['summary']['matched'] == 0
+    assert all(value.startswith(prefix) for value in result['collections'][0]['errors'].values())
+    serialized = json.dumps(result)
+    for secret in ('private', 'password', '/secret/ca.pem', 'Authorization', 'confidential'):
+        assert secret not in serialized
+
+
+def test_invalid_trust_bundle_is_not_reported_as_network_failure(monkeypatch):
+    def fail():
+        raise FileNotFoundError('/secret/private.pem')
+    monkeypatch.setattr(prism_drift.ssl, 'create_default_context', fail)
+    with pytest.raises(ValueError, match='^PE TLS trust configuration could not be loaded') as error:
+        prism_drift.read_setting('https://pe.example:9440', 'ref', 'enable_pulse', lambda ref: ('reader', 'private', ''))
+    assert '/secret/' not in str(error.value)
+
+
+def test_unstructured_transport_reason_is_not_echoed():
+    assert prism_drift.connection_error(urllib.error.URLError('secret details')) == (
+        'PE network connection failed: check target reachability, routing, firewall rules and the PE service.')
 
 
 def test_live_api_and_schedule_fetch_fresh_settings_and_edit(client, auth_headers, monkeypatch):
@@ -246,7 +312,17 @@ def test_verified_https_collection_reads_changes_and_rejects_untrusted_tls(clien
         empty_ca = tmp_path / 'empty-ca'
         empty_ca.mkdir()
         monkeypatch.setenv('SSL_CERT_DIR', str(empty_ca))
-        assert run()['summary']['unknown'] == 3
+        untrusted = run()
+        assert untrusted['summary']['unknown'] == 3
+        assert all(error.startswith('PE TLS certificate trust failed') for error in untrusted['collections'][0]['errors'].values())
+        # Trusting the issuer does not authorize a different IP absent from SAN.
+        monkeypatch.setenv('SSL_CERT_FILE', str(cert))
+        cfg['clusters'] = {f'https://127.0.0.1:{httpd.server_port}': cfg['clusters'][f'https://localhost:{httpd.server_port}']}
+        client.post('/api/configs/tls-pe.yml', json={'content': yaml.safe_dump(cfg)}, headers=auth_headers)
+        mismatch = run()
+        assert mismatch['summary']['unknown'] == 3
+        assert all(error.startswith('PE TLS hostname/IP mismatch') for error in mismatch['collections'][0]['errors'].values())
+        assert state['reads'] == 9  # Neither rejected TLS case sends HTTP credentials.
     finally:
         httpd.shutdown()
         httpd.server_close()

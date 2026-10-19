@@ -1,9 +1,11 @@
 """Read-only Prism Element drift collection. No raw API responses are retained."""
 
 import base64
+import errno
 import ipaddress
 import json
 import re
+import socket
 import ssl
 import urllib.error
 import urllib.parse
@@ -85,6 +87,34 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+def connection_error(exc):
+    # urllib wraps socket/TLS exceptions; classify types/codes, never raw messages.
+    reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+    if isinstance(reason, ssl.SSLCertVerificationError):
+        code = getattr(reason, 'verify_code', None)
+        if code in (62, 64):  # OpenSSL hostname and IP address mismatch.
+            return ('PE TLS hostname/IP mismatch: the target is not covered by the certificate SAN. '
+                    'Use a covered DNS name/IP or replace the PE certificate.')
+        if code in (2, 18, 19, 20, 21, 27):
+            return ('PE TLS certificate trust failed: the issuer or certificate chain is not trusted. '
+                    'Install the approved CA chain in the container trust bundle or SSL_CERT_FILE.')
+        if code in (9, 10):
+            return 'PE TLS certificate validity failed: check certificate dates and the appliance clock.'
+        return ('PE TLS certificate verification failed: check certificate validity and the approved CA chain. '
+                'TLS verification remains required.')
+    if isinstance(reason, ssl.SSLError):
+        return 'PE TLS handshake failed: check the HTTPS port and supported TLS configuration.'
+    if isinstance(reason, socket.gaierror):
+        return 'PE DNS resolution failed: check the target hostname and container DNS connectivity.'
+    if isinstance(reason, TimeoutError):
+        return 'PE network timeout: check routing, firewall access and PE responsiveness on the configured port.'
+    if isinstance(reason, ConnectionRefusedError) or getattr(reason, 'errno', None) == errno.ECONNREFUSED:
+        return 'PE connection refused: check the target port, PE service and firewall rules.'
+    if getattr(reason, 'errno', None) in (errno.ENETUNREACH, errno.EHOSTUNREACH):
+        return 'PE network unreachable: check container routing and firewall access to the target.'
+    return 'PE network connection failed: check target reachability, routing, firewall rules and the PE service.'
+
+
 def read_setting(url, ref, key, lookup):
     username, password, error = lookup(ref)
     if error or not username or not password:
@@ -94,9 +124,13 @@ def read_setting(url, ref, key, lookup):
                                  headers={'Authorization': 'Basic ' + token, 'Accept': 'application/json'},
                                  method='GET')
     try:
+        context = ssl.create_default_context()
+    except OSError:
+        raise ValueError('PE TLS trust configuration could not be loaded: check the container CA bundle and SSL_CERT_FILE.') from None
+    try:
         opener = urllib.request.build_opener(
             urllib.request.ProxyHandler({}), NoRedirect(),
-            urllib.request.HTTPSHandler(context=ssl.create_default_context()),
+            urllib.request.HTTPSHandler(context=context),
         )
         with opener.open(req, timeout=10) as response:  # nosec B310 - validated operator-selected HTTPS PE host; fixed read-only paths, no redirects.
             raw = response.read(1024 * 1024 + 1)
@@ -110,8 +144,8 @@ def read_setting(url, ref, key, lookup):
         return normalize_servers(value)
     except urllib.error.HTTPError as exc:
         raise ValueError(f'PE returned HTTP {exc.code}') from None
-    except (urllib.error.URLError, OSError):
-        raise ValueError('PE connection or TLS verification failed') from None
+    except (urllib.error.URLError, OSError) as exc:
+        raise ValueError(connection_error(exc)) from None
     except (UnicodeError, json.JSONDecodeError):
         raise ValueError('PE returned invalid JSON') from None
 
