@@ -8,6 +8,8 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Updated source builds fail RegisterToPc FAIL/CAN'T VERIFY results even with
+  exit code zero and expose redacted verification exception details.
 - PostgreSQL 16 backup/restore clients match the bundled database; fresh builds
   no longer use newer dump tools that emit unsupported transaction_timeout.
 - Operational Upgrade Advisor: verified-HTTPS PE/PC inventory, explicit unknown

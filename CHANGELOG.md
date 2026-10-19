@@ -20,6 +20,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   paths, and stop tracking generated TypeScript build caches.
 
 ### Fixed
+- Fail RegisterToPc jobs and pipeline steps when registration reports FAIL or
+  CAN'T VERIFY despite a zero exit code. Bundled runtime verification exceptions
+  now include their type and redacted details at the normal log level.
 - Distinguish live PE drift certificate trust, hostname/IP SAN mismatch,
   certificate validity, TLS configuration/handshake and network connection
   failures with sanitized operator guidance; failures remain Unknown and
