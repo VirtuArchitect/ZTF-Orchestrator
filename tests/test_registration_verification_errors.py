@@ -36,7 +36,7 @@ def test_optional_verification_skip_does_not_fail_job():
 def test_runtime_patch_surfaces_exception_and_is_idempotent(tmp_path, monkeypatch, caplog):
     patcher = load_script('patch_ztf_runtime')
     monkeypatch.setattr(patcher, 'RUNTIME_ROOT', tmp_path)
-    target = tmp_path / 'framework/scripts/python/pe/register_pe_to_pc.py'
+    target = tmp_path / 'framework/scripts/python/pe/other_ops/register_pe_to_pc.py'
     target.parent.mkdir(parents=True)
     (tmp_path / 'framework/helpers').mkdir(parents=True)
     target.write_text('''class RegisterToPc:

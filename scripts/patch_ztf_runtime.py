@@ -189,7 +189,7 @@ def patch_pe_role_mapping_optional_directory() -> None:
 
 
 def patch_register_to_pc_verification() -> None:
-    path = _runtime_path("framework/scripts/python/pe/register_pe_to_pc.py")
+    path = _runtime_path("framework/scripts/python/pe/other_ops/register_pe_to_pc.py")
     helper = Path(__file__).with_name("ztf_verification_errors.py")
     _runtime_path("framework/helpers/verification_errors.py").write_text(
         helper.read_text(encoding="utf-8"), encoding="utf-8",
