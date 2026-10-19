@@ -63,6 +63,10 @@ ZeroTouch Framework 2.x or Nutanix infrastructure validation.
 
 ## Documents
 
+The standalone [release-document index](https://virtuarchitect.github.io/ZTF-Orchestrator/releases/)
+is published alongside the demo. It contains current release guidance and
+commit-pinned historical documents; it does not connect to infrastructure.
+
 | Document | Purpose |
 |---|---|
 | [PRISM-CENTRAL-SIMULATOR.md](PRISM-CENTRAL-SIMULATOR.md) | Simulator usage and evidence boundary |

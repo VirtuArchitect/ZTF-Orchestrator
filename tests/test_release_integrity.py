@@ -123,6 +123,47 @@ def test_appliance_backup_client_matches_postgresql_major():
         assert f'{executable} --version | grep' in dockerfile
 
 
+def test_pages_release_index_preserves_pinned_historical_links():
+    from html.parser import HTMLParser
+
+    class PageLinks(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.links = []
+            self.tags = []
+
+        def handle_starttag(self, tag, attrs):
+            self.tags.append(tag)
+            attributes = dict(attrs)
+            assert not any(name.startswith('on') for name in attributes)
+            if tag == 'a':
+                self.links.append(attributes['href'])
+
+    page = (ROOT / 'public' / 'releases' / 'index.html').read_text(encoding='utf-8')
+    directory = (ROOT / 'docs' / 'releases' / 'README.md').read_text(encoding='utf-8')
+    parser = PageLinks()
+    parser.feed(page)
+    pattern = r'https://github\.com/VirtuArchitect/ZTF-Orchestrator/blob/([0-9a-f]{40})/(docs/releases/archive/[^\s)"<>]+)'
+    html_pins = re.findall(pattern, page)
+    markdown_pins = re.findall(pattern, directory)
+    assert len(html_pins) == len(markdown_pins) == 18
+    assert set(html_pins) == set(markdown_pins)
+    assert {sha for sha, _ in html_pins} == {'ba57890fae90a0bc5938140afc32753dfe871656'}
+    archived = {path.relative_to(ROOT).as_posix() for path in (ROOT / 'docs/releases/archive').iterdir() if path.is_file()}
+    assert {path for _, path in html_pins} == archived
+    assert not {'script', 'form', 'iframe'} & set(parser.tags)
+    for link in parser.links:
+        assert link in ('../',) or link.startswith('https://github.com/VirtuArchitect/ZTF-Orchestrator')
+    assert "default-src 'none'" in page
+    assert 'Latest stable' in page and '>v1.8.4<' in page
+    assert 'v1.8.5-rc1' in page and 'Controlled UAT only' in page
+    public_url = 'https://virtuarchitect.github.io/ZTF-Orchestrator/releases/'
+    for source in ('README.md', 'docs/releases/README.md', 'docs/demo/README.md'):
+        assert public_url in (ROOT / source).read_text(encoding='utf-8')
+    workflow = (ROOT / '.github/workflows/pages-demo.yml').read_text(encoding='utf-8')
+    assert 'npm run build:demo' in workflow and 'path: dist-demo' in workflow
+
+
 def test_candidate_release_metadata_preserves_acceptance_boundaries():
     package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
     if '-rc' not in package['version']:

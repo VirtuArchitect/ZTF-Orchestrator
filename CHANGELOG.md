@@ -10,6 +10,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Documentation
+- Add a standalone GitHub Pages release-document index and commit-pin archived
+  document links, preserving the clean repository root and release channels.
 - Link directly to the v1.8.5-rc1 prerelease while preserving v1.8.4 as the
   stable release; refresh the public screenshot gallery with versioned,
   simulated-demo captures and explicit provenance.

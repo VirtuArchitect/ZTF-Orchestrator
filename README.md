@@ -11,7 +11,8 @@ See the [RC validation checklist](docs/releases/v1.8.5-rc1-readiness.md),
 [installation checklist](install-checklist-v1.8.5-rc1.md).
 The latest stable release remains v1.8.4 until the final release gates pass.
 GitHub's **Latest** label and `/releases/latest` link refer to that stable release,
-not the current release candidate. See the [release directory](docs/releases/README.md)
+not the current release candidate. See the [release-document website](https://virtuarchitect.github.io/ZTF-Orchestrator/releases/)
+or [repository release directory](docs/releases/README.md)
 for current downloads and archived version-specific instructions.
 
 Read-only [live Prism Element drift monitoring](docs/live-pe-drift-monitoring.md)
