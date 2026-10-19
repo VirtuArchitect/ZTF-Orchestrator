@@ -1,19 +1,30 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
 **Release candidate for controlled UAT, not a production-ready promotion.**
+
+[![Current candidate: v1.8.5-rc1](https://img.shields.io/badge/current_candidate-v1.8.5--rc1-blue)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1)
+[![Stable: v1.8.4](https://img.shields.io/badge/stable-v1.8.4-green)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4)
+
+Download the [v1.8.5-rc1 prerelease and update bundle](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1).
 See the [RC validation checklist](docs/releases/v1.8.5-rc1-readiness.md),
 [release notes](release-notes-v1.8.5-rc1.txt), and
 [installation checklist](install-checklist-v1.8.5-rc1.md).
 The latest stable release remains v1.8.4 until the final release gates pass.
+GitHub's **Latest** label and `/releases/latest` link refer to that stable release,
+not the current release candidate. See the [release directory](docs/releases/README.md)
+for current downloads and archived version-specific instructions.
 
 Read-only [live Prism Element drift monitoring](docs/live-pe-drift-monitoring.md)
 collects DNS, NTP and Pulse settings on every scheduled run. Drift schedules have
 explicit edit controls; live API compatibility requires environment-specific UAT.
 
-![ZTF-Orchestrator visual tour](docs/assets/readme/ztf-orchestrator-visual-tour.gif)
+![ZTF-Orchestrator v1.8.5-rc1 dashboard, simulated demo data](docs/assets/readme/v1.8.5-rc1/dashboard.png)
+
+Current screenshots show the v1.8.5-rc1 frontend with simulated demo data, not
+live infrastructure or proof of completed UAT. [Screenshot provenance](docs/assets/readme/v1.8.5-rc1/README.md).
 
 <p>
-  <a href="https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4"><strong>Watch the 90-second demo</strong></a>
+  <a href="https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4"><strong>Earlier-version demo video (historical)</strong></a>
   &nbsp;|&nbsp;
   <a href="https://virtuarchitect.github.io/ZTF-Orchestrator/"><strong>Try the static demo</strong></a>
   &nbsp;|&nbsp;
@@ -22,7 +33,8 @@ explicit edit controls; live API compatibility requires environment-specific UAT
   <a href="docs/production-readiness-boundary.md">Validation boundary</a>
 </p>
 
-[![Watch the 90-second ZTF-Orchestrator product demo](docs/assets/video/ztf-orchestrator-product-demo-90s-pro-poster.png)](https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4)
+The earlier video and visual tour are historical illustrations; they have not
+been relabelled as RC captures. Current screens are shown below.
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -132,15 +144,19 @@ For scope and evidence boundaries, see the
 
 | Dashboard | YAML Studio |
 |---|---|
-| ![Dashboard readiness and operations queue](docs/assets/readme/dashboard.png) | ![YAML Studio configuration editor](docs/assets/readme/yaml-studio.png) |
+| ![v1.8.5-rc1 dashboard, simulated](docs/assets/readme/v1.8.5-rc1/dashboard.png) | ![v1.8.5-rc1 YAML Studio, simulated](docs/assets/readme/v1.8.5-rc1/yaml-studio.png) |
 
 | Approvals | Jobs and Queue |
 |---|---|
-| ![Approval queue and governance state](docs/assets/readme/approvals.png) | ![Durable job queue and execution history](docs/assets/readme/jobs-queue.png) |
+| ![v1.8.5-rc1 approvals, simulated](docs/assets/readme/v1.8.5-rc1/approvals.png) | ![v1.8.5-rc1 jobs, simulated](docs/assets/readme/v1.8.5-rc1/jobs-queue.png) |
 
 | Validation Evidence | Native Foundation Planning |
 |---|---|
-| ![Validation evidence and readiness capture](docs/assets/readme/validation-evidence.png) | ![Native Foundation Deploy planning and dry-run configuration](docs/assets/readme/native-foundation-planning.png) |
+| ![v1.8.5-rc1 validation evidence, simulated](docs/assets/readme/v1.8.5-rc1/validation-evidence.png) | ![v1.8.5-rc1 Native Foundation planning, simulated](docs/assets/readme/v1.8.5-rc1/native-foundation-planning.png) |
+
+| Upgrade Advisor | Workflow Catalog |
+|---|---|
+| ![v1.8.5-rc1 Upgrade Advisor, simulated](docs/assets/readme/v1.8.5-rc1/upgrade-advisor.png) | ![v1.8.5-rc1 workflow catalog, simulated](docs/assets/readme/v1.8.5-rc1/workflow-catalog.png) |
 
 ## How It Works
 

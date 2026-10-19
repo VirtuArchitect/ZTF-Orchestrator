@@ -82,6 +82,37 @@ def test_container_latest_channel_excludes_branches_and_prereleases():
     assert "make_latest: ${{ contains(github.ref_name, '-') && 'false' || 'true' }}" in appliance_workflow
 
 
+def test_public_release_directory_and_current_screenshots():
+    import struct
+
+    tag = 'v' + json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))['version']
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    directory = ROOT / 'docs' / 'releases' / 'README.md'
+    index = directory.read_text(encoding='utf-8')
+    assert f'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/{tag}' in readme
+    assert 'latest stable release remains v1.8.4' in readme
+    assert 'Historical Records' in index
+    # Archive navigation must remain usable without rewriting historical versions.
+    for target in re.findall(r'\]\(([^)]+)\)', index):
+        if not target.startswith(('https://', 'http://', '#')):
+            assert (directory.parent / target).is_file(), target
+    archive = ROOT / 'docs' / 'releases' / 'archive'
+    assert len(list(archive.glob('release-notes-*.txt'))) == 11
+    assert len(list(archive.glob('install-checklist-*.md'))) == 7
+    assert {path.name for path in ROOT.glob('release-notes-*.txt')} == {f'release-notes-{tag}.txt'}
+    assert {path.name for path in ROOT.glob('install-checklist-*.md')} == {f'install-checklist-{tag}.md'}
+    images = re.findall(r'!\[[^\]]*\]\((docs/assets/readme/[^)]+\.png)\)', readme)
+    assert len(set(images)) == 8
+    for target in images:
+        assert f'/{tag}/' in target
+        data = (ROOT / target).read_bytes()
+        assert data[:8] == b'\x89PNG\r\n\x1a\n'
+        assert struct.unpack('>II', data[16:24]) == (1600, 1050)
+    provenance = (ROOT / 'docs' / 'assets' / 'readme' / tag / 'README.md').read_text(encoding='utf-8')
+    assert '**simulated demo data**' in provenance
+    assert '*.tsbuildinfo' in (ROOT / '.gitignore').read_text(encoding='utf-8')
+
+
 def test_appliance_backup_client_matches_postgresql_major():
     dockerfile = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
     compose = (ROOT / 'appliance' / 'docker-compose.appliance.yml').read_text(encoding='utf-8')
