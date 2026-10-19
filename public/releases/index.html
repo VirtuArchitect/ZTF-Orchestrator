@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ZTF-Orchestrator release documents: current candidate, latest stable release and commit-pinned historical notes and installation checklists.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>Release Documents | ZTF-Orchestrator</title>
+  <link rel="icon" href="../favicon.png">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #17252e; background: #fff; font: 16px/1.55 system-ui, sans-serif; }
+    header { border-bottom: 1px solid #d7e0e4; background: #f6f8f9; }
+    .inner { max-width: 1040px; margin: auto; padding: 22px 24px; }
+    header .inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; }
+    .brand img { width: 32px; height: 32px; }
+    nav { display: flex; flex-wrap: wrap; gap: 20px; }
+    a { color: #005eaa; text-underline-offset: 3px; }
+    a:hover { color: #003d70; }
+    a:focus-visible { outline: 3px solid #0068bd; outline-offset: 3px; }
+    h1 { margin: 4px 0 8px; font-size: 30px; line-height: 1.25; }
+    h2 { font-size: 21px; margin: 0 0 8px; }
+    p { margin: 8px 0 16px; }
+    .intro { max-width: 740px; color: #4c5e69; }
+    .channels { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 24px 0; border-bottom: 1px solid #d7e0e4; }
+    .channel { border-left: 4px solid #16816d; padding-left: 18px; }
+    .candidate { border-color: #ad7100; }
+    .state { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #485b65; margin: 0 0 8px; }
+    ul { padding-left: 20px; margin: 12px 0 0; }
+    li { margin: 8px 0; }
+    .history { padding: 28px 0; }
+    .note { color: #4c5e69; font-size: 14px; }
+    code { overflow-wrap: anywhere; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 15px; }
+    caption { text-align: left; font-weight: 600; padding-bottom: 10px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #d7e0e4; }
+    thead { background: #f2f5f6; }
+    tbody th { font-weight: 600; }
+    td a { display: inline-block; padding: 5px 0; }
+    footer { border-top: 1px solid #d7e0e4; font-size: 14px; color: #4c5e69; }
+    @media (max-width: 620px) {
+      .inner { padding: 20px 16px; }
+      .channels { grid-template-columns: 1fr; gap: 24px; }
+      th, td { padding: 10px 6px; font-size: 14px; }
+      nav { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner">
+      <span class="brand"><img src="../favicon.png" alt="" width="32" height="32">ZTF-Orchestrator</span>
+      <nav aria-label="Related resources"><a href="../">Static demo</a><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator">Repository</a></nav>
+    </div>
+  </header>
+  <main class="inner">
+    <h1>Release Documents</h1>
+    <p class="intro">Current release guidance and permanent references to historical release notes and installation checklists.</p>
+    <div class="channels">
+      <section class="channel candidate" aria-labelledby="candidate-title">
+        <p class="state">Current release candidate</p>
+        <h2 id="candidate-title">v1.8.5-rc1</h2>
+        <p>Controlled UAT only. Not a stable or production-ready promotion.</p>
+        <ul>
+          <li><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1">Prerelease and update bundle</a></li>
+          <li><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/v1.8.5-rc1/release-notes-v1.8.5-rc1.txt">RC release notes</a></li>
+          <li><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/v1.8.5-rc1/install-checklist-v1.8.5-rc1.md">RC installation checklist</a></li>
+          <li><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/releases/v1.8.5-rc1-readiness.md">Readiness gates and pending UAT</a></li>
+        </ul>
+      </section>
+      <section class="channel" aria-labelledby="stable-title">
+        <p class="state">Latest stable</p>
+        <h2 id="stable-title">v1.8.4</h2>
+        <p>GitHub's Latest release label remains on v1.8.4. The RC does not replace the stable channel.</p>
+        <ul><li><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4">Stable release</a></li></ul>
+        <p class="note">Offline update ZIPs, Docker image tars and AHV appliance artifacts are separate deliverables. Verify the selected release's checksums and installation requirements.</p>
+      </section>
+    </div>
+    <section class="history" aria-labelledby="history-title">
+      <h2 id="history-title">Historical Documents</h2>
+      <p>Historical instructions are preserved for reference, not current installation guidance.</p>
+      <p class="note">Archived snapshot pinned to commit <code>ba57890fae90a0bc5938140afc32753dfe871656</code>. These are the contents at archive time, not necessarily the original release-tag contents.</p>
+      <table>
+        <caption>Archived release notes and installation checklists</caption>
+        <thead><tr><th scope="col">Version</th><th scope="col">Release Notes</th><th scope="col">Installation</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">v1.8.4</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.8.4.txt" aria-label="v1.8.4 release notes">Release notes</a></td><td>Not supplied</td></tr>
+          <tr><th scope="row">v1.8.3</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.8.3.txt" aria-label="v1.8.3 release notes">Release notes</a></td><td>Not supplied</td></tr>
+          <tr><th scope="row">v1.8.2</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.8.2.txt" aria-label="v1.8.2 release notes">Release notes</a></td><td>Not supplied</td></tr>
+          <tr><th scope="row">v1.8.1</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.8.1.txt" aria-label="v1.8.1 release notes">Release notes</a></td><td>Not supplied</td></tr>
+          <tr><th scope="row">v1.7.7</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.7.7.txt" aria-label="v1.7.7 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.7.7.md" aria-label="v1.7.7 installation checklist">Checklist</a></td></tr>
+          <tr><th scope="row">v1.7.4</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.7.4.txt" aria-label="v1.7.4 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.7.4.md" aria-label="v1.7.4 installation checklist">Checklist</a></td></tr>
+          <tr><th scope="row">v1.7.3</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.7.3.txt" aria-label="v1.7.3 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.7.3.md" aria-label="v1.7.3 installation checklist">Checklist</a></td></tr>
+          <tr><th scope="row">v1.7.1</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.7.1.txt" aria-label="v1.7.1 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.7.1.md" aria-label="v1.7.1 installation checklist">Checklist</a></td></tr>
+          <tr><th scope="row">v1.7.0</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.7.0.txt" aria-label="v1.7.0 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.7.0.md" aria-label="v1.7.0 installation checklist">Checklist</a></td></tr>
+          <tr><th scope="row">v1.6.0</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.6.0.txt" aria-label="v1.6.0 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.6.0.md" aria-label="v1.6.0 installation checklist">Checklist</a></td></tr>
+          <tr><th scope="row">v1.5.6</th><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/release-notes-v1.5.6.txt" aria-label="v1.5.6 release notes">Release notes</a></td><td><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/ba57890fae90a0bc5938140afc32753dfe871656/docs/releases/archive/install-checklist-v1.5.6.md" aria-label="v1.5.6 installation checklist">Checklist</a></td></tr>
+        </tbody>
+      </table>
+      <p class="note">Previously shared GitHub <code>/blob/main/</code> or raw-file URLs do not redirect here. Use this index or the commit-pinned document links for future references.</p>
+    </section>
+  </main>
+  <footer><div class="inner">Independent community software. Not affiliated with or supported by Nutanix. <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/releases/README.md">Repository release directory</a></div></footer>
+</body>
+</html>
