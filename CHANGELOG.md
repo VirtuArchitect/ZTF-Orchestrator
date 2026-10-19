@@ -20,6 +20,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   paths, and stop tracking generated TypeScript build caches.
 
 ### Fixed
+- Distinguish live PE drift certificate trust, hostname/IP SAN mismatch,
+  certificate validity, TLS configuration/handshake and network connection
+  failures with sanitized operator guidance; failures remain Unknown and
+  verified HTTPS remains mandatory.
 - Disable Docker metadata's automatic `latest` flavor, leaving stable-channel
   promotion exclusively to the explicit stable-version tag rule. This is a
   publication-policy correction; the v1.8.5-rc1 application image is unchanged.

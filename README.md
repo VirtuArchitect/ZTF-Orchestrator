@@ -18,6 +18,9 @@ for current downloads and archived version-specific instructions.
 Read-only [live Prism Element drift monitoring](docs/live-pe-drift-monitoring.md)
 collects DNS, NTP and Pulse settings on every scheduled run. Drift schedules have
 explicit edit controls; live API compatibility requires environment-specific UAT.
+New source builds distinguish certificate trust, hostname/IP SAN mismatch and
+network failures with sanitized guidance; failed reads remain **Unknown** and
+TLS verification remains mandatory. See [connection diagnostics](docs/live-pe-drift-monitoring.md#connection-diagnostics).
 
 ![ZTF-Orchestrator v1.8.5-rc1 dashboard, simulated demo data](docs/assets/readme/v1.8.5-rc1/dashboard.png)
 
