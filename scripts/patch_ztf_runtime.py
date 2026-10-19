@@ -188,6 +188,27 @@ def patch_pe_role_mapping_optional_directory() -> None:
     )
 
 
+def patch_register_to_pc_verification() -> None:
+    path = _runtime_path("framework/scripts/python/pe/register_pe_to_pc.py")
+    helper = Path(__file__).with_name("ztf_verification_errors.py")
+    _runtime_path("framework/helpers/verification_errors.py").write_text(
+        helper.read_text(encoding="utf-8"), encoding="utf-8",
+    )
+    old = '''        except Exception as e:
+            self.logger.debug(e)
+            self.logger.info(f"Exception occurred during the verification of {type(self).__name__!r} "
+                             f"for {cluster_ip}")
+'''
+    new = '''        except Exception as e:
+            from framework.helpers.verification_errors import verification_error_detail
+            detail = verification_error_detail(e, self.data, (self.pc_password,))
+            self.logger.error(
+                "RegisterToPc verification failed for %s: %s", cluster_ip, detail
+            )
+'''
+    _replace_once(path, old, new, "RegisterToPc verification error")
+
+
 def main() -> None:
     patch_pc_entity_list()
     patch_pc_vm_payload_name()
@@ -197,6 +218,7 @@ def main() -> None:
     patch_pc_config_preserves_sessions()
     patch_pc_v4_batch_retry()
     patch_pe_role_mapping_optional_directory()
+    patch_register_to_pc_verification()
 
 
 if __name__ == "__main__":

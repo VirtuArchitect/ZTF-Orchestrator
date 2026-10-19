@@ -34247,6 +34247,13 @@ def _display_command(args: list[str]) -> str:
 
 def _classify_execution_failure(stderr: str, stdout: str, return_code: int | None) -> dict:
     output = f'{stderr}\n{stdout}'.strip()
+    registration_evidence = _ztf_registration_failure_evidence(output)
+    if registration_evidence:
+        return {
+            'category': 'verification_error',
+            'likelyFix': 'Review the registration verification error and confirm PE registration in Prism Central before retrying.',
+            'evidence': registration_evidence,
+        }
     lower = output.lower()
     checks = [
         (('yaml', 'scannererror', 'parsererror'), 'yaml_parse_error', 'Review indentation, list syntax, and generated YAML before rerunning.'),
@@ -34271,8 +34278,23 @@ def _classify_execution_failure(stderr: str, stdout: str, return_code: int | Non
     return {'category': 'none', 'likelyFix': '', 'evidence': ''}
 
 
+def _ztf_registration_failure_evidence(output: str) -> str:
+    lines = output.splitlines()
+    # Prefer the caught exception to the summary, irrespective of stream order.
+    for line in lines:
+        if 'RegisterToPc verification failed for ' in line:
+            return _redact_text(line.strip())
+    for line in lines:
+        if re.search(r'''["']Register_to_PC["']\s*:\s*["'](?:CAN'T VERIFY|FAIL)["']''', line):
+            return _redact_text(line.strip())
+    return ''
+
+
 def _ztf_output_failure_evidence(output: str) -> str:
     """Return the first ZTF log line that should fail an otherwise-zero exit."""
+    registration_evidence = _ztf_registration_failure_evidence(output)
+    if registration_evidence:
+        return registration_evidence
     for line in output.splitlines():
         stripped = line.strip()
         if re.search(r'\[(?:ERROR|CRITICAL)\]', stripped, re.IGNORECASE):
@@ -40919,6 +40941,7 @@ def run_pipeline(pipeline_id: str):
             kill_timer  = None
             step_status = 'success'
             failure_evidence = False
+            registration_failure = False
 
             try:
                 proc = subprocess.Popen(
@@ -40952,10 +40975,11 @@ def run_pipeline(pipeline_id: str):
                     else:
                         label, line = item
                         failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
+                        registration_failure = registration_failure or bool(_ztf_registration_failure_evidence(line))
                         yield from send(label, _redact_text(line) if is_script else line)
 
                 proc.wait()
-                step_status = 'success' if proc.returncode == 0 and not (is_script and failure_evidence) else 'failed'
+                step_status = 'success' if proc.returncode == 0 and not registration_failure and not (is_script and failure_evidence) else 'failed'
 
             except GeneratorExit:
                 if proc and proc.poll() is None:

@@ -100,6 +100,7 @@ RUN if [ "${ZTF2_BAKE}" = "true" ]; then \
 # other Orchestrator runtime dependencies.
 COPY scripts/prepare_ztf_requirements.py /tmp/prepare_ztf_requirements.py
 COPY scripts/patch_ztf_runtime.py /tmp/patch_ztf_runtime.py
+COPY scripts/ztf_verification_errors.py /tmp/ztf_verification_errors.py
 
 RUN python /tmp/prepare_ztf_requirements.py
 

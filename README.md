@@ -2,6 +2,10 @@
 
 **Release candidate for controlled UAT, not a production-ready promotion.**
 
+Updated source builds fail registration jobs when `Register_to_PC` reports
+`CAN'T VERIFY` or `FAIL`, even with exit code zero, and show redacted verification
+exception details from the bundled runtime.
+
 [![Current candidate: v1.8.5-rc1](https://img.shields.io/badge/current_candidate-v1.8.5--rc1-blue)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1)
 [![Stable: v1.8.4](https://img.shields.io/badge/stable-v1.8.4-green)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4)
 
