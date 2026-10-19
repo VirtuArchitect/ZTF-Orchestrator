@@ -9,6 +9,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+- Link directly to the v1.8.5-rc1 prerelease while preserving v1.8.4 as the
+  stable release; refresh the public screenshot gallery with versioned,
+  simulated-demo captures and explicit provenance.
+- Archive historical release notes and installation checklists under
+  `docs/releases/archive/`, retain current RC instructions at their existing
+  paths, and stop tracking generated TypeScript build caches.
+
 ### Fixed
 - Disable Docker metadata's automatic `latest` flavor, leaving stable-channel
   promotion exclusively to the explicit stable-version tag rule. This is a
