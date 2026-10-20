@@ -229,6 +229,16 @@ def patch_pe_local_users() -> None:
         '                pre_run_actions += [create_pe_objects, create_pc_objects, create_ipam_object]\n',
         'PE local-user verified transport',
     )
+    _replace_once(
+        _runtime_path('main.py'),
+        '    except Exception as e:\n        logger.error(e)\n    finally:\n',
+        '    except Exception as e:\n'
+        '        if CreateLocalUsersPe in scripts:\n'
+        '            logger.error("CreateLocalUsersPe preparation failed; check saved configuration and vault access")\n'
+        '            sys.exit(1)\n'
+        '        logger.error(e)\n    finally:\n',
+        'PE local-user preparation failure exit',
+    )
 
 
 def main() -> None:

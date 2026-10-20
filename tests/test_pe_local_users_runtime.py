@@ -5,11 +5,17 @@ from pathlib import Path
 import sys
 import types
 
+import pytest
+
 
 def test_extension_resolves_credentials_by_keyword_and_sanitizes_failure(monkeypatch, caplog):
     class Script:
         def __init__(self, **kwargs):
             self.logger, self.results, self.exceptions = None, {}, []
+        def run(self, **kwargs):
+            self.execute()
+            self.verify()
+            return self.results
     calls = []
     def read_creds(*, data, credential):
         calls.append((data, credential))
@@ -37,6 +43,7 @@ def test_extension_resolves_credentials_by_keyword_and_sanitizes_failure(monkeyp
     assert calls == [({'fixture': True}, 'ops_ref')]
     assert not script.exceptions
     assert script.results['clusters']['192.0.2.10']['Create_Local_Users']['ops.one'] == 'PASS'
+    assert script.run()['clusters']['192.0.2.10']['Create_Local_Users']['ops.one'] == 'PASS'
     def fail(*args):
         raise RuntimeError('fixture-password')
     monkeypatch.setattr(module, 'provision', fail)
@@ -44,3 +51,6 @@ def test_extension_resolves_credentials_by_keyword_and_sanitizes_failure(monkeyp
         script.execute()
     assert script.exceptions and script.results['Create_Local_Users'] == 'FAIL'
     assert 'fixture-password' not in caplog.text
+    with pytest.raises(SystemExit) as exc:
+        script.run()
+    assert exc.value.code == 1

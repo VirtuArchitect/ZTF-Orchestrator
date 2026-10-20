@@ -163,7 +163,8 @@ def test_runtime_patch_registers_script_and_is_idempotent(tmp_path, monkeypatch)
     for folder in ['framework/helpers', 'framework/scripts/python/pe/create']:
         (tmp_path / folder).mkdir(parents=True)
     (tmp_path / 'framework/scripts/python/__init__.py').write_text('__all__ = []\n')
-    (tmp_path / 'main.py').write_text('            pre_run_actions += [create_pe_objects, create_pc_objects, create_ipam_object]\n')
+    (tmp_path / 'main.py').write_text('            pre_run_actions += [create_pe_objects, create_pc_objects, create_ipam_object]\n'
+                                       '    except Exception as e:\n        logger.error(e)\n    finally:\n')
     module.patch_pe_local_users()
     first = (tmp_path / 'framework/scripts/python/__init__.py').read_text()
     module.patch_pe_local_users()

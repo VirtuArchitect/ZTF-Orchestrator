@@ -7,6 +7,13 @@ from framework.helpers.log_utils import get_logger
 
 
 class CreateLocalUsersPe(Script):
+    def run(self, **kwargs):
+        result = super().run(**kwargs)
+        if self.exceptions or self.results.get('Create_Local_Users') == 'FAIL':
+            # Legacy ZTF swallows ordinary script exceptions and can exit zero.
+            raise SystemExit(1)
+        return result
+
     def __init__(self, data, **kwargs):
         super().__init__(**kwargs)
         self.data = data
