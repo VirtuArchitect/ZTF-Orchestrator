@@ -35,6 +35,8 @@ from typing import Generator
 import bcrypt
 import yaml
 import credential_rotation as rotation
+from pe_local_users import validate_intent as validate_pe_local_users_intent
+from pe_local_users import prepare_credentials as prepare_pe_local_users_credentials
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -3146,6 +3148,7 @@ def _is_allowed_approval_workflow(workflow: str) -> bool:
     return False
 
 ALLOWED_SCRIPTS = {
+    'CreateLocalUsersPe',
     'AcceptEulaPc', 'AcceptEulaPe',
     'AddAdServerPc', 'AddAdServerPe', 'AddAuthorizationPolicy', 'AddDirectoryServices',
     'AddLocalUsers', 'AddNameServersPc', 'AddNameServersPe', 'AddNtpServersPc',
@@ -3220,6 +3223,8 @@ def _script_ids_from_payload(raw_script) -> list[str]:
 
 
 def _normalize_script_ids(script_ids: list[str]) -> tuple[list[str], str | None]:
+    if 'CreateLocalUsersPe' in script_ids and len(script_ids) != 1:
+        return [], 'CreateLocalUsersPe must run as its own script or pipeline step'
     normalized: list[str] = []
     for sid in script_ids:
         if sid in ALLOWED_SCRIPTS:
@@ -3555,6 +3560,7 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
 }
 
 PE_CLUSTER_SCRIPT_PREFLIGHT_IDS = {
+    'CreateLocalUsersPe',
     'AcceptEulaPe',
     'AddAdServerPe',
     'AddNameServersPe',
@@ -6074,6 +6080,12 @@ _drift_policy_engine: ScheduleEngine | None = None
 _parallel_engine:  ParallelEngine  | None = None
 _approval_manager: ApprovalManager | None = None
 
+def _scheduled_pe_user_error(script) -> str:
+    if 'CreateLocalUsersPe' in _script_ids_from_payload(script):
+        return 'PE local-user creation cannot be scheduled; use an administrator-confirmed script or pipeline run'
+    return ''
+
+
 def _init_engines():
     global _schedule_engine, _drift_policy_engine, _parallel_engine, _approval_manager
     if _schedule_engine and _drift_policy_engine and _parallel_engine and _approval_manager:
@@ -6114,7 +6126,7 @@ def _init_engines():
             _fire_configured_webhook(workflow or script, status, rc, 'scheduler', entry['id'])
             return status
 
-        approval_error = _approval_automation_error(workflow)
+        approval_error = _approval_automation_error(workflow) or _scheduled_pe_user_error(script)
         if approval_error:
             rc = -1
             status = 'failed'
@@ -6331,6 +6343,9 @@ def _require_engines():
 
 def _schedule_validation_error(data: dict, existing: dict | None = None) -> str:
     candidate = {**(existing or {}), **data}
+    privileged_error = _scheduled_pe_user_error(candidate.get('script'))
+    if privileged_error:
+        return privileged_error
     cron = str(candidate.get('cronExpr', '')).strip()
     if not cron or len(cron.split()) != 5:
         return 'cronExpr must be a valid 5-field cron expression'
@@ -33729,6 +33744,22 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('done', {'status': status, 'dryRun': True, 'passed': passed, 'failed': failed})
         return
 
+    if workflow == 'CreateLocalUsersPe':
+        def resolve_pe_user(ref):
+            username, password, error = _lookup_credential_ref(ref)
+            if error:
+                raise ValueError('Credential unavailable')
+            return username, password
+        try:
+            prepare_pe_local_users_credentials(config, resolve_pe_user)
+            passed += 1
+            yield from send('stdout', '[PASS] PE local-user intent and all credential references are valid; no PE API or mutation was called')
+        except ValueError as exc:
+            failed += 1
+            yield from send('stdout', f'[FAIL] {exc}')
+        yield from send('done', {'status': 'failed' if failed else 'success', 'dryRun': True, 'passed': passed, 'failed': failed})
+        return
+
     preflight = _preflight_for_execution(workflow)
     if not preflight:
         yield from send('stdout', f'[INFO] No preflight schema defined for "{workflow}" — YAML check only')
@@ -34198,6 +34229,7 @@ def _record_execution_history(
 
 
 DESTRUCTIVE_SCRIPT_IDS = {
+    'CreateLocalUsersPe',
     'ChangeDefaultAdminPasswordPc', 'ChangeDefaultAdminPasswordPe',
     'DeleteAdServerPc', 'DeleteAdServerPe', 'DeleteSubnetsPe', 'DeleteSubnetsPc',
     'DeleteVPC', 'DisableNetworkController', 'DeleteContainerPe',
@@ -34311,7 +34343,11 @@ def _ztf_process_status(return_code: int | None, stdout: str, stderr: str, cance
     return 'failed' if _ztf_output_failure_evidence(output) else 'success'
 
 
-def _validate_destructive_script_ack(script_ids: list[str], payload: dict) -> str | None:
+def _validate_destructive_script_ack(script_ids: list[str], payload: dict, *, allow_dry_run: bool = False) -> str | None:
+    if 'CreateLocalUsersPe' in script_ids and getattr(request, 'current_user', {}).get('role') != 'admin':
+        return 'Only an Orchestrator administrator may create PE administrator accounts'
+    if allow_dry_run and script_ids == ['CreateLocalUsersPe'] and payload.get('dryRun') is True:
+        return None
     destructive = [sid for sid in script_ids if sid in DESTRUCTIVE_SCRIPT_IDS]
     if not destructive:
         return None
@@ -40764,7 +40800,7 @@ def save_global_config():
 # ─── Pipelines ───────────────────────────────────────────────────────────────
 
 # Keep the legacy step shape; only explicitly integrated scripts use --script.
-PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe'}
+PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'}
 
 
 def _pipeline_step_error(step) -> str | None:
@@ -40774,7 +40810,7 @@ def _pipeline_step_error(step) -> str | None:
     if not isinstance(action, str) or action not in ALLOWED_WORKFLOWS | PIPELINE_SCRIPT_IDS:
         return 'Unknown workflow or pipeline script'
     if action in PIPELINE_SCRIPT_IDS and (not isinstance(step.get('configFile'), str) or not step['configFile'].strip()):
-        return 'Password change requires a saved configuration file'
+        return 'PE administration script requires a saved configuration file'
     return _approval_automation_error(action)
 
 
@@ -40871,15 +40907,24 @@ def run_pipeline(pipeline_id: str):
     ack_error = _validate_destructive_script_ack(script_ids, request.get_json(silent=True) or {})
     if ack_error:
         return jsonify({'error': ack_error}), 400
+    pe_users_configs = {}
     for s in steps:
         if s['workflow'] in PIPELINE_SCRIPT_IDS:
             path = safe_config_path(s['configFile'], get_configs_dir())
             if not path or not path.is_file():
-                return jsonify({'error': 'Password change configuration file is missing or invalid'}), 400
+                return jsonify({'error': 'PE administration configuration file is missing or invalid'}), 400
             try:
-                config = yaml.safe_load(path.read_text(encoding='utf-8'))
+                config_text = path.read_text(encoding='utf-8')
+                config = yaml.safe_load(config_text)
             except (OSError, UnicodeError, yaml.YAMLError):
-                return jsonify({'error': 'Password change configuration must be readable YAML'}), 400
+                return jsonify({'error': 'PE administration configuration must be readable YAML'}), 400
+            if s['workflow'] == 'CreateLocalUsersPe':
+                try:
+                    validate_pe_local_users_intent(config)
+                except ValueError as exc:
+                    return jsonify({'error': str(exc)}), 400
+                pe_users_configs[s['configFile']] = config_text
+                continue
             clusters = config.get('clusters') if isinstance(config, dict) else None
             if not isinstance(clusters, dict) or not clusters or any(
                 not isinstance(ip, str) or not ip.strip() or not isinstance(cluster, dict)
@@ -40942,8 +40987,17 @@ def run_pipeline(pipeline_id: str):
             step_status = 'success'
             failure_evidence = False
             registration_failure = False
+            private_config = None
 
             try:
+                if workflow == 'CreateLocalUsersPe':
+                    import tempfile
+                    # Execute the validated snapshot, not a config another user
+                    # could edit while an earlier pipeline step is running.
+                    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
+                        private_config = Path(snapshot.name)
+                        snapshot.write(pe_users_configs[config_file])
+                    cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script', workflow, '-f', str(private_config)]
                 proc = subprocess.Popen(
                     cmd_args, cwd=ztf_path,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -40994,6 +41048,8 @@ def run_pipeline(pipeline_id: str):
             finally:
                 if kill_timer:
                     kill_timer.cancel()
+                if private_config:
+                    private_config.unlink(missing_ok=True)
 
             step_results.append({
                 'step':       step_idx,
@@ -41318,7 +41374,7 @@ def execute_workflow():
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
         return jsonify({'error': script_error}), 400
-    destructive_error = _validate_destructive_script_ack(script_ids, data)
+    destructive_error = _validate_destructive_script_ack(script_ids, data, allow_dry_run=True)
     if destructive_error:
         return jsonify({'error': destructive_error, 'destructiveAction': True}), 403
     script = ','.join(script_ids) if script_ids else None

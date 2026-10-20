@@ -29,11 +29,13 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
     }
 
     const run = async () => {
-      const needsConfirmation = pipeline.steps.some(step => step.workflow === 'ChangeDefaultAdminPasswordPe')
-      const phrase = 'RUN ChangeDefaultAdminPasswordPe'
-      if (needsConfirmation && window.prompt(`This pipeline changes Prism Element admin credentials. Type exactly: ${phrase}`) !== phrase) {
+      const privilegedScripts = [...new Set(pipeline.steps.map(step => step.workflow)
+        .filter(id => ['ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'].includes(id)))]
+      const needsConfirmation = privilegedScripts.length > 0
+      const phrase = `RUN ${privilegedScripts.join(',')}`
+      if (needsConfirmation && window.prompt(`This pipeline changes Prism Element administrative access. Type exactly: ${phrase}`) !== phrase) {
         setStatus('failed')
-        appendLog('stderr', 'Password change cancelled before execution.')
+        appendLog('stderr', 'PE administration cancelled before execution.')
         return
       }
       const resp = await apiFetch(`/api/pipelines/${pipeline.id}/run`, {

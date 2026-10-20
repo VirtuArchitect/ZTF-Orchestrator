@@ -57,7 +57,8 @@ function FieldInput({
   if (field.type === 'list') {
     return (
       <textarea
-        className="input text-xs resize-none h-20"
+        id={`script-field-${field.key}`}
+        className={clsx('input text-xs resize-none', field.key === 'local_user_refs' ? 'h-44' : 'h-20')}
         value={String(value ?? '')}
         onChange={event => onChange(event.target.value)}
         placeholder={field.placeholder}
@@ -88,6 +89,7 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
   const schema = selectedScriptId ? SCRIPT_CONFIG_SCHEMAS[selectedScriptId] : undefined
   const [values, setValues] = useState<WizardValues>(() => schema ? defaultsFor(schema) : {})
   const [showGuidance, setShowGuidance] = useState(false)
+  const [generationError, setGenerationError] = useState('')
 
   useEffect(() => {
     if (!supportedScripts.length) {
@@ -180,7 +182,7 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
 
       <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {schema.fields.map(field => (
-          <div key={field.key} className={clsx(field.type === 'list' && 'md:col-span-2 xl:col-span-1')}>
+          <div key={field.key} className={clsx(field.key === 'local_user_refs' ? 'col-span-full' : field.type === 'list' && 'md:col-span-2 xl:col-span-1')}>
             {field.type !== 'boolean' && (
               <label className="label mb-1" htmlFor={`script-field-${field.key}`}>
                 {field.label}
@@ -202,7 +204,11 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
           {missingRequired.length ? `${missingRequired.length} required field${missingRequired.length === 1 ? '' : 's'} missing` : 'Review generated YAML before running.'}
         </p>
         <button
-          onClick={() => onGenerate(schema.build(values))}
+          onClick={() => {
+            setGenerationError('')
+            try { onGenerate(schema.build(values)) }
+            catch { setGenerationError('Check field formatting before generating YAML.') }
+          }}
           disabled={missingRequired.length > 0}
           className="btn-primary gap-1.5 text-xs"
         >
@@ -210,6 +216,7 @@ export default function ScriptConfigWizard({ scriptIds, onGenerate }: Props) {
           Generate YAML
         </button>
       </div>
+      {generationError && <p role="alert" className="mt-2 text-xs text-red-400">{generationError}</p>}
     </div>
   )
 }

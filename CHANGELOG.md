@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Create Local Users (PE) in Scripts and pipelines, with eight named-admin
+  credential references by default, administrator-only execution, exact
+  confirmation, verified HTTPS, non-mutating dry run, fresh role verification
+  and explicit partial-provisioning recovery boundaries.
+
 ### Documentation
 - Add a standalone GitHub Pages release-document index and commit-pin archived
   document links, preserving the clean repository root and release channels.

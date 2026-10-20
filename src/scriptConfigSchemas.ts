@@ -5,6 +5,7 @@ import { toYaml } from './utils/yaml'
 type Values = Record<string, string | number | boolean>
 
 export const DESTRUCTIVE_SCRIPT_IDS = new Set([
+  'CreateLocalUsersPe',
   'ChangeDefaultAdminPasswordPc',
   'ChangeDefaultAdminPasswordPe',
   'DeleteAdServerPc',
@@ -1255,6 +1256,25 @@ const FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
         },
       },
     }),
+  },
+  CreateLocalUsersPe: {
+    scriptId: 'CreateLocalUsersPe',
+    title: 'Create Local Users (PE)',
+    description: 'Creates PE cluster and user administrators. Existing accounts must already have both roles; their passwords remain unchanged. Requires an Orchestrator administrator and trusted PE certificate.',
+    fields: [
+      ...commonPeClusterFields,
+      { key: 'local_user_refs', label: 'Local Users (username=credential reference)', type: 'list', required: true,
+        defaultValue: Array.from({ length: 8 }, (_, i) => `ops.admin${String(i + 1).padStart(2, '0')}=pe_ops_admin${String(i + 1).padStart(2, '0')}`).join('\n'),
+        help: 'One username=credential reference per line. Credential usernames must match, with a unique password for every user. No plaintext passwords.' },
+    ],
+    build: values => {
+      const entries = list(values, 'local_user_refs').map(entry => {
+        const match = entry.match(/^([A-Za-z][A-Za-z0-9_.-]{0,63})=([^=\s]+)$/)
+        if (!match) throw new Error('Each local user must be username=credential_reference')
+        return { username: match[1], credential_ref: match[2] }
+      })
+      return toYaml(peCluster(values, { pe_credential: text(values, 'pe_credential'), local_users: entries }))
+    },
   },
   AcceptEulaPe: initialPcSchema('AcceptEulaPe', 'Accept EULA (PE)', 'pe'),
   AcceptEulaPc: initialPcSchema('AcceptEulaPc', 'Accept EULA (PC)', 'pc'),
