@@ -7432,7 +7432,19 @@ def test_native_foundation_adapter_target_connectivity_review_rejects_invalid_in
     assert body['targetConnectivityEntries'] == []
 
 
-def test_native_foundation_adapter_credential_handoff_review_requires_handoff_metadata(client, auth_headers):
+def test_native_foundation_adapter_credential_handoff_review_requires_handoff_metadata(client, auth_headers, monkeypatch):
+    import inspect
+    import server
+
+    plan_calls = []
+    original_plan = inspect.unwrap(server._native_foundation_plan)
+
+    def counted_plan(*args, **kwargs):
+        plan_calls.append(1)
+        return original_plan(*args, **kwargs)
+
+    monkeypatch.setattr(server, '_native_foundation_plan',
+                        server._native_foundation_memoized_packet_helper('plan', counted_plan))
     resp = client.post('/api/native-foundation/adapters/credential-handoff-review',
                        json={'content': _native_foundation_multi_site_intent(),
                              'providerId': 'manual_static',
@@ -7441,6 +7453,8 @@ def test_native_foundation_adapter_credential_handoff_review_requires_handoff_me
                        headers=auth_headers)
 
     assert resp.status_code == 200
+    assert len(plan_calls) == 1
+    assert server._NATIVE_FOUNDATION_PACKET_CACHE.get() is None
     body = resp.get_json()
     assert body['status'] == 'blocked'
     assert body['readOnly'] is True
