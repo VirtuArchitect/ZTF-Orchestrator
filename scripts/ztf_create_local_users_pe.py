@@ -15,7 +15,7 @@ class CreateLocalUsersPe(Script):
     def execute(self, **kwargs):
         try:
             results = provision(
-                self.data, lambda ref: read_creds(self.data, ref), self.logger.info,
+                self.data, lambda ref: read_creds(data=self.data, credential=ref), self.logger.info,
             )
             self.results['clusters'] = {host: {'Create_Local_Users': users} for host, users in results.items()}
         except Exception:
