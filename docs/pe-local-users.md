@@ -65,6 +65,10 @@ No Prism Central privileges are granted.
    using each intended user's credential. The script verifies existence and
    roles, not each user's interactive login or password expiry state.
 
+Scheduled execution is deliberately unsupported: both schedule submission and
+execution of previously saved entries reject this privileged script. Use a
+direct administrator-confirmed Scripts or pipeline run instead.
+
 The underlying operation uses the bundled PE v1 helper's native profile and
 role payload shapes: GET/POST `/api/nutanix/v1/users` and GET/POST
 `/api/nutanix/v1/users/{username}/roles`. No PC APIs or SSH commands are used.

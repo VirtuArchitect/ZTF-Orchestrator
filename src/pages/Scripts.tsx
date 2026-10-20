@@ -70,16 +70,16 @@ export default function Scripts() {
     })
 
   // ── Run ───────────────────────────────────────────────────────────────────
-  const runScripts = async () => {
+  const runScripts = async (dryRun = false) => {
     if (!queue.length) return
     const selectedQueue = [...queue]
     const destructive = selectedQueue.filter(id => SCRIPT_CONFIG_SCHEMAS[id]?.riskLevel === 'destructive')
     const confirmationPhrase = destructive.length ? `RUN ${destructive.join(',')}` : ''
-    if (destructive.length) {
+    if (destructive.length && !dryRun) {
       const entered = window.prompt(`Destructive action confirmation required.\n\nScripts: ${destructive.join(', ')}\nType exactly: ${confirmationPhrase}`)
       if (entered !== confirmationPhrase) return
     }
-    const nextCommand = `python main.py --script ${selectedQueue.join(',')}`
+    const nextCommand = dryRun ? `Validate ${selectedQueue.join(',')} configuration and credential references` : `python main.py --script ${selectedQueue.join(',')}`
     setRunTitle(selectedQueue.length === 1
       ? SCRIPTS.find(s => s.id === selectedQueue[0])?.name ?? selectedQueue[0]
       : `${selectedQueue.length} scripts`)
@@ -99,8 +99,9 @@ export default function Scripts() {
       body: JSON.stringify({
         script:        selectedQueue,          // pass as array; server joins to A,B,C
         configContent,
+        dryRun,
         configFile:    `multi-script-${Date.now()}.yml`,
-        ...(destructive.length ? {
+        ...(destructive.length && !dryRun ? {
           riskAcknowledged: true,
           destructiveConfirmation: confirmationPhrase,
         } : {}),
@@ -160,7 +161,7 @@ export default function Scripts() {
               phase: evt.data?.status === 'success' ? 'Completed' : 'Failed',
               percent: 100,
               detail: evt.data?.status === 'success'
-                ? 'Script queue finished'
+                ? (dryRun ? 'Configuration and credential references validated; no PE changes made' : 'Script queue finished')
                 : 'Script queue ended with an error; review the output',
               estimated: true,
             })
@@ -273,8 +274,13 @@ export default function Scripts() {
                     >
                       <X size={12} /> Clear
                     </button>
+                    {queue.length === 1 && queue[0] === 'CreateLocalUsersPe' && (
+                      <button onClick={() => runScripts(true)} disabled={runStatus === 'running' || !configContent.trim()} className="btn-secondary gap-1.5">
+                        <ListChecks size={14} /> Dry Run
+                      </button>
+                    )}
                     <button
-                      onClick={runScripts}
+                      onClick={() => runScripts()}
                       disabled={runStatus === 'running'}
                       className="btn-success gap-1.5"
                     >

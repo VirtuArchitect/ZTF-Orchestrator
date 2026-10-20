@@ -6080,6 +6080,12 @@ _drift_policy_engine: ScheduleEngine | None = None
 _parallel_engine:  ParallelEngine  | None = None
 _approval_manager: ApprovalManager | None = None
 
+def _scheduled_pe_user_error(script) -> str:
+    if 'CreateLocalUsersPe' in _script_ids_from_payload(script):
+        return 'PE local-user creation cannot be scheduled; use an administrator-confirmed script or pipeline run'
+    return ''
+
+
 def _init_engines():
     global _schedule_engine, _drift_policy_engine, _parallel_engine, _approval_manager
     if _schedule_engine and _drift_policy_engine and _parallel_engine and _approval_manager:
@@ -6120,7 +6126,7 @@ def _init_engines():
             _fire_configured_webhook(workflow or script, status, rc, 'scheduler', entry['id'])
             return status
 
-        approval_error = _approval_automation_error(workflow)
+        approval_error = _approval_automation_error(workflow) or _scheduled_pe_user_error(script)
         if approval_error:
             rc = -1
             status = 'failed'
@@ -6337,6 +6343,9 @@ def _require_engines():
 
 def _schedule_validation_error(data: dict, existing: dict | None = None) -> str:
     candidate = {**(existing or {}), **data}
+    privileged_error = _scheduled_pe_user_error(candidate.get('script'))
+    if privileged_error:
+        return privileged_error
     cron = str(candidate.get('cronExpr', '')).strip()
     if not cron or len(cron.split()) != 5:
         return 'cronExpr must be a valid 5-field cron expression'
@@ -34334,9 +34343,11 @@ def _ztf_process_status(return_code: int | None, stdout: str, stderr: str, cance
     return 'failed' if _ztf_output_failure_evidence(output) else 'success'
 
 
-def _validate_destructive_script_ack(script_ids: list[str], payload: dict) -> str | None:
+def _validate_destructive_script_ack(script_ids: list[str], payload: dict, *, allow_dry_run: bool = False) -> str | None:
     if 'CreateLocalUsersPe' in script_ids and getattr(request, 'current_user', {}).get('role') != 'admin':
         return 'Only an Orchestrator administrator may create PE administrator accounts'
+    if allow_dry_run and script_ids == ['CreateLocalUsersPe'] and payload.get('dryRun') is True:
+        return None
     destructive = [sid for sid in script_ids if sid in DESTRUCTIVE_SCRIPT_IDS]
     if not destructive:
         return None
@@ -41363,7 +41374,7 @@ def execute_workflow():
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
         return jsonify({'error': script_error}), 400
-    destructive_error = _validate_destructive_script_ack(script_ids, data)
+    destructive_error = _validate_destructive_script_ack(script_ids, data, allow_dry_run=True)
     if destructive_error:
         return jsonify({'error': destructive_error, 'destructiveAction': True}), 403
     script = ','.join(script_ids) if script_ids else None

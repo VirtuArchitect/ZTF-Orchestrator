@@ -251,8 +251,7 @@ def test_dry_run_checks_references_without_contacting_pe(client, auth_headers, m
     monkeypatch.setattr(server, '_lookup_credential_ref', lambda ref: (*resolve(ref), '') if valid else (None, None, 'missing'))
     monkeypatch.setattr(pe.PeUsersClient, '__init__', lambda *args: pytest.fail('dry run contacted PE'))
     response = client.post('/api/execute', headers=auth_headers, json={
-        'script': pe.SCRIPT_ID, 'dryRun': True, 'configContent': yaml.safe_dump(intent()),
-        'riskAcknowledged': True, 'destructiveConfirmation': 'RUN ' + pe.SCRIPT_ID})
+        'script': pe.SCRIPT_ID, 'dryRun': True, 'configContent': yaml.safe_dump(intent())})
     events = [json.loads(line[6:]) for line in response.get_data(as_text=True).splitlines() if line.startswith('data: ')]
     assert events[-1]['data']['status'] == ('success' if valid else 'failed')
     assert 'test-password-' not in response.get_data(as_text=True)
@@ -267,8 +266,43 @@ def test_operator_cannot_create_pe_admins_directly_or_in_pipeline(client, auth_h
     body = {'script': pe.SCRIPT_ID, 'riskAcknowledged': True, 'destructiveConfirmation': 'RUN ' + pe.SCRIPT_ID}
     for endpoint in ['/api/jobs', '/api/execute']:
         assert client.post(endpoint, headers=headers, json=body).status_code == 403
+        assert client.post(endpoint, headers=headers, json={**body, 'dryRun': True}).status_code == 403
     pipeline = client.post('/api/pipelines', headers=headers, json={'name': 'users', 'steps': [
         {'workflow': pe.SCRIPT_ID, 'configFile': 'pe-users.yml'}]}).get_json()
     response = client.post(f'/api/pipelines/{pipeline["id"]}/run', headers=headers, json=body)
     assert response.status_code == 400
     assert 'Only an Orchestrator administrator' in response.get_json()['error']
+
+
+def test_dry_run_cannot_bypass_job_or_pipeline_confirmation(client, auth_headers):
+    body = {'script': pe.SCRIPT_ID, 'dryRun': True}
+    assert client.post('/api/jobs', headers=auth_headers, json=body).status_code == 403
+    pipeline = client.post('/api/pipelines', headers=auth_headers, json={'name': 'users', 'steps': [
+        {'workflow': pe.SCRIPT_ID, 'configFile': 'pe-users.yml'}]}).get_json()
+    response = client.post(f'/api/pipelines/{pipeline["id"]}/run', headers=auth_headers, json=body)
+    assert response.status_code == 400
+    assert 'acknowledgement required' in response.get_json()['error']
+
+
+@pytest.mark.parametrize('script', [pe.SCRIPT_ID, 'AcceptEulaPe,' + pe.SCRIPT_ID, [pe.SCRIPT_ID]])
+def test_new_and_edited_schedules_reject_pe_user_creation(client, auth_headers, script):
+    import server
+    payload = {'name': 'privileged', 'script': script, 'cronExpr': '0 * * * *'}
+    assert 'cannot be scheduled' in server._schedule_validation_error(payload)
+    assert 'cannot be scheduled' in server._schedule_validation_error({}, payload)
+    response = client.post('/api/schedules', headers=auth_headers, json=payload)
+    assert response.status_code == 400
+    assert 'cannot be scheduled' in response.get_json()['error']
+
+
+def test_persisted_schedule_cannot_bypass_confirmation(client, monkeypatch):
+    import server
+    monkeypatch.setattr(server.subprocess, 'run', lambda *args, **kwargs: pytest.fail('Scheduled account creation executed'))
+    server._require_engines()
+    try:
+        assert server._schedule_engine._run_cb({'script': pe.SCRIPT_ID}) == 'failed'
+        record = server.read_json(server.HISTORY_FILE, [])[0]
+        assert not record['command']
+        assert 'cannot be scheduled' in record['output']
+    finally:
+        server._shutdown_engines()
