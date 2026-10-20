@@ -213,6 +213,10 @@ def test_pipeline_uses_script_and_stops_on_failure(client, auth_headers, monkeyp
         def kill(self): pass
         def poll(self): return 0
     def popen(command, **kwargs):
+        if pe.SCRIPT_ID in command:
+            snapshot = Path(command[-1])
+            assert snapshot != server.get_configs_dir() / 'pe-users.yml'
+            assert json.loads(snapshot.read_text()) == intent()
         commands.append(command)
         return Process()
     monkeypatch.setattr(server.subprocess, 'Popen', popen)
@@ -226,6 +230,7 @@ def test_pipeline_uses_script_and_stops_on_failure(client, auth_headers, monkeyp
     assert commands[0][2:4] == ['--script', pe.SCRIPT_ID]
     assert next(event for event in events if event['type'] == 'pipeline_done')['data']['status'] == expected
     assert len(commands) == (1 if expected == 'failed' else 2)
+    assert not Path(commands[0][-1]).exists()
 
 
 @pytest.mark.parametrize('valid', [True, False])

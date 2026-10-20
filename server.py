@@ -40896,13 +40896,15 @@ def run_pipeline(pipeline_id: str):
     ack_error = _validate_destructive_script_ack(script_ids, request.get_json(silent=True) or {})
     if ack_error:
         return jsonify({'error': ack_error}), 400
+    pe_users_configs = {}
     for s in steps:
         if s['workflow'] in PIPELINE_SCRIPT_IDS:
             path = safe_config_path(s['configFile'], get_configs_dir())
             if not path or not path.is_file():
                 return jsonify({'error': 'PE administration configuration file is missing or invalid'}), 400
             try:
-                config = yaml.safe_load(path.read_text(encoding='utf-8'))
+                config_text = path.read_text(encoding='utf-8')
+                config = yaml.safe_load(config_text)
             except (OSError, UnicodeError, yaml.YAMLError):
                 return jsonify({'error': 'PE administration configuration must be readable YAML'}), 400
             if s['workflow'] == 'CreateLocalUsersPe':
@@ -40910,6 +40912,7 @@ def run_pipeline(pipeline_id: str):
                     validate_pe_local_users_intent(config)
                 except ValueError as exc:
                     return jsonify({'error': str(exc)}), 400
+                pe_users_configs[s['configFile']] = config_text
                 continue
             clusters = config.get('clusters') if isinstance(config, dict) else None
             if not isinstance(clusters, dict) or not clusters or any(
@@ -40973,8 +40976,17 @@ def run_pipeline(pipeline_id: str):
             step_status = 'success'
             failure_evidence = False
             registration_failure = False
+            private_config = None
 
             try:
+                if workflow == 'CreateLocalUsersPe':
+                    import tempfile
+                    # Execute the validated snapshot, not a config another user
+                    # could edit while an earlier pipeline step is running.
+                    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
+                        private_config = Path(snapshot.name)
+                        snapshot.write(pe_users_configs[config_file])
+                    cmd_args[-1] = str(private_config)
                 proc = subprocess.Popen(
                     cmd_args, cwd=ztf_path,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -41025,6 +41037,8 @@ def run_pipeline(pipeline_id: str):
             finally:
                 if kill_timer:
                     kill_timer.cancel()
+                if private_config:
+                    private_config.unlink(missing_ok=True)
 
             step_results.append({
                 'step':       step_idx,

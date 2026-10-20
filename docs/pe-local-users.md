@@ -59,6 +59,8 @@ No Prism Central privileges are granted.
    and select the saved configuration. Place it after initial PE password,
    EULA and baseline configuration steps. Use the exact combined confirmation
    requested by the UI when password-change and user-creation steps are present.
+   The user-creation step runs a private snapshot of the configuration validated
+   at submission, not edits saved while earlier steps are running.
 5. Verify the accounts and permissions in PE, then independently test sign-in
    using each intended user's credential. The script verifies existence and
    roles, not each user's interactive login or password expiry state.
