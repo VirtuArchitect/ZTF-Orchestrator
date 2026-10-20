@@ -36,6 +36,12 @@ do not treat a staged request or loaded image as an applied update.
    assessments, credential references and certificate trust remain available.
 8. Exercise restore and rollback in a disposable copy; retain recovery evidence.
 
+For source-derived bundles containing Create Local Users (PE), confirm its
+Scripts and pipeline entries, eight distinct credential references, admin-only
+confirmation and non-mutating dry run. Test actual PE user creation and role
+verification only in an explicitly approved UAT change; inspect partial results
+before retrying. See [PE local-user procedure](docs/pe-local-users.md).
+
 ## Promotion Signoff
 
 - [ ] Attach test/CI, image/bundle integrity and installed-build receipts.

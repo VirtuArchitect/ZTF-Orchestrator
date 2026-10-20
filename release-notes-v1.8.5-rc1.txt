@@ -8,6 +8,10 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Updated source builds add Create Local Users (PE) to Scripts and pipelines:
+  eight-user wizard, separate credential references, administrator-only exact
+  confirmation, verified HTTPS and account/role verification. Live PE user
+  creation remains an environment-specific UAT requirement.
 - Updated source builds fail RegisterToPc FAIL/CAN'T VERIFY results even with
   exit code zero and expose redacted verification exception details.
 - PostgreSQL 16 backup/restore clients match the bundled database; fresh builds

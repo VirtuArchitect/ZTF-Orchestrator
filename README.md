@@ -66,6 +66,11 @@ pipelines as **Change Default Admin Password (PE)**. See the
 [password-change procedure](docs/pe-admin-password-change.md) for credential
 references, confirmation, and post-change verification requirements.
 
+Updated source builds also expose **Create Local Users (PE)** in Scripts and
+pipelines, with an eight-user example, separate credential references, verified
+HTTPS and admin-role verification. Existing passwords are not reset. See the
+[PE local-user guide](docs/pe-local-users.md); PE API compatibility remains a UAT gate.
+
 Configure Cluster uses the installed ZTF native per-cluster schema for initial
 password changes, EULA, Pulse and optional cluster settings. See the
 [initial configuration guide](docs/cluster-initial-configuration.md).

@@ -209,6 +209,28 @@ def patch_register_to_pc_verification() -> None:
     _replace_once(path, old, new, "RegisterToPc verification error")
 
 
+def patch_pe_local_users() -> None:
+    source = Path(__file__).resolve().parent
+    core = source / 'pe_local_users.py'
+    if not core.exists():
+        core = source.parent / 'pe_local_users.py'
+    _runtime_path('framework/helpers/pe_local_users.py').write_text(core.read_text(encoding='utf-8'), encoding='utf-8')
+    _runtime_path('framework/scripts/python/pe/create/create_local_users_pe.py').write_text(
+        (source / 'ztf_create_local_users_pe.py').read_text(encoding='utf-8'), encoding='utf-8',
+    )
+    registry = _runtime_path('framework/scripts/python/__init__.py')
+    text = registry.read_text()
+    if 'from .pe.create.create_local_users_pe import CreateLocalUsersPe' not in text:
+        registry.write_text(text + '\nfrom .pe.create.create_local_users_pe import CreateLocalUsersPe\n__all__.append("CreateLocalUsersPe")\n')
+    _replace_once(
+        _runtime_path('main.py'),
+        '            pre_run_actions += [create_pe_objects, create_pc_objects, create_ipam_object]\n',
+        '            if input_scripts != [CreateLocalUsersPe]:\n'
+        '                pre_run_actions += [create_pe_objects, create_pc_objects, create_ipam_object]\n',
+        'PE local-user verified transport',
+    )
+
+
 def main() -> None:
     patch_pc_entity_list()
     patch_pc_vm_payload_name()
@@ -219,6 +241,7 @@ def main() -> None:
     patch_pc_v4_batch_retry()
     patch_pe_role_mapping_optional_directory()
     patch_register_to_pc_verification()
+    patch_pe_local_users()
 
 
 if __name__ == "__main__":

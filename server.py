@@ -35,6 +35,8 @@ from typing import Generator
 import bcrypt
 import yaml
 import credential_rotation as rotation
+from pe_local_users import validate_intent as validate_pe_local_users_intent
+from pe_local_users import prepare_credentials as prepare_pe_local_users_credentials
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -3146,6 +3148,7 @@ def _is_allowed_approval_workflow(workflow: str) -> bool:
     return False
 
 ALLOWED_SCRIPTS = {
+    'CreateLocalUsersPe',
     'AcceptEulaPc', 'AcceptEulaPe',
     'AddAdServerPc', 'AddAdServerPe', 'AddAuthorizationPolicy', 'AddDirectoryServices',
     'AddLocalUsers', 'AddNameServersPc', 'AddNameServersPe', 'AddNtpServersPc',
@@ -3220,6 +3223,8 @@ def _script_ids_from_payload(raw_script) -> list[str]:
 
 
 def _normalize_script_ids(script_ids: list[str]) -> tuple[list[str], str | None]:
+    if 'CreateLocalUsersPe' in script_ids and len(script_ids) != 1:
+        return [], 'CreateLocalUsersPe must run as its own script or pipeline step'
     normalized: list[str] = []
     for sid in script_ids:
         if sid in ALLOWED_SCRIPTS:
@@ -3555,6 +3560,7 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
 }
 
 PE_CLUSTER_SCRIPT_PREFLIGHT_IDS = {
+    'CreateLocalUsersPe',
     'AcceptEulaPe',
     'AddAdServerPe',
     'AddNameServersPe',
@@ -33729,6 +33735,22 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('done', {'status': status, 'dryRun': True, 'passed': passed, 'failed': failed})
         return
 
+    if workflow == 'CreateLocalUsersPe':
+        def resolve_pe_user(ref):
+            username, password, error = _lookup_credential_ref(ref)
+            if error:
+                raise ValueError('Credential unavailable')
+            return username, password
+        try:
+            prepare_pe_local_users_credentials(config, resolve_pe_user)
+            passed += 1
+            yield from send('stdout', '[PASS] PE local-user intent and all credential references are valid; no PE API or mutation was called')
+        except ValueError as exc:
+            failed += 1
+            yield from send('stdout', f'[FAIL] {exc}')
+        yield from send('done', {'status': 'failed' if failed else 'success', 'dryRun': True, 'passed': passed, 'failed': failed})
+        return
+
     preflight = _preflight_for_execution(workflow)
     if not preflight:
         yield from send('stdout', f'[INFO] No preflight schema defined for "{workflow}" — YAML check only')
@@ -34198,6 +34220,7 @@ def _record_execution_history(
 
 
 DESTRUCTIVE_SCRIPT_IDS = {
+    'CreateLocalUsersPe',
     'ChangeDefaultAdminPasswordPc', 'ChangeDefaultAdminPasswordPe',
     'DeleteAdServerPc', 'DeleteAdServerPe', 'DeleteSubnetsPe', 'DeleteSubnetsPc',
     'DeleteVPC', 'DisableNetworkController', 'DeleteContainerPe',
@@ -34312,6 +34335,8 @@ def _ztf_process_status(return_code: int | None, stdout: str, stderr: str, cance
 
 
 def _validate_destructive_script_ack(script_ids: list[str], payload: dict) -> str | None:
+    if 'CreateLocalUsersPe' in script_ids and getattr(request, 'current_user', {}).get('role') != 'admin':
+        return 'Only an Orchestrator administrator may create PE administrator accounts'
     destructive = [sid for sid in script_ids if sid in DESTRUCTIVE_SCRIPT_IDS]
     if not destructive:
         return None
@@ -40764,7 +40789,7 @@ def save_global_config():
 # ─── Pipelines ───────────────────────────────────────────────────────────────
 
 # Keep the legacy step shape; only explicitly integrated scripts use --script.
-PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe'}
+PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'}
 
 
 def _pipeline_step_error(step) -> str | None:
@@ -40774,7 +40799,7 @@ def _pipeline_step_error(step) -> str | None:
     if not isinstance(action, str) or action not in ALLOWED_WORKFLOWS | PIPELINE_SCRIPT_IDS:
         return 'Unknown workflow or pipeline script'
     if action in PIPELINE_SCRIPT_IDS and (not isinstance(step.get('configFile'), str) or not step['configFile'].strip()):
-        return 'Password change requires a saved configuration file'
+        return 'PE administration script requires a saved configuration file'
     return _approval_automation_error(action)
 
 
@@ -40875,11 +40900,17 @@ def run_pipeline(pipeline_id: str):
         if s['workflow'] in PIPELINE_SCRIPT_IDS:
             path = safe_config_path(s['configFile'], get_configs_dir())
             if not path or not path.is_file():
-                return jsonify({'error': 'Password change configuration file is missing or invalid'}), 400
+                return jsonify({'error': 'PE administration configuration file is missing or invalid'}), 400
             try:
                 config = yaml.safe_load(path.read_text(encoding='utf-8'))
             except (OSError, UnicodeError, yaml.YAMLError):
-                return jsonify({'error': 'Password change configuration must be readable YAML'}), 400
+                return jsonify({'error': 'PE administration configuration must be readable YAML'}), 400
+            if s['workflow'] == 'CreateLocalUsersPe':
+                try:
+                    validate_pe_local_users_intent(config)
+                except ValueError as exc:
+                    return jsonify({'error': str(exc)}), 400
+                continue
             clusters = config.get('clusters') if isinstance(config, dict) else None
             if not isinstance(clusters, dict) or not clusters or any(
                 not isinstance(ip, str) or not ip.strip() or not isinstance(cluster, dict)
