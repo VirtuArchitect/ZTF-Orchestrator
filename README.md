@@ -32,7 +32,7 @@ Current screenshots show the v1.8.5-rc1 frontend with simulated demo data, not
 live infrastructure or proof of completed UAT. [Screenshot provenance](docs/assets/readme/v1.8.5-rc1/README.md).
 
 <p>
-  <a href="https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4"><strong>Earlier-version demo video (historical)</strong></a>
+  <a href="https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough"><strong>Watch the v1.8.5-rc1 simulated controlled-UAT candidate demo (90 seconds)</strong></a>
   &nbsp;|&nbsp;
   <a href="https://virtuarchitect.github.io/ZTF-Orchestrator/"><strong>Try the static demo</strong></a>
   &nbsp;|&nbsp;
@@ -41,8 +41,18 @@ live infrastructure or proof of completed UAT. [Screenshot provenance](docs/asse
   <a href="docs/production-readiness-boundary.md">Validation boundary</a>
 </p>
 
-The earlier video and visual tour are historical illustrations; they have not
-been relabelled as RC captures. Current screens are shown below.
+[![v1.8.5-rc1 simulated controlled-UAT candidate demo, 90 seconds](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural-poster.jpg)](https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough)
+
+**Simulated controlled-UAT candidate demo:** this narrated v1.8.5-rc1 screen tour
+uses simulated data, with normal-rate neural narration and English captions.
+It does not connect to or operate live infrastructure and is not proof of
+completed UAT or production readiness. **v1.8.4 remains the latest stable release.**
+
+[Direct MP4](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural.mp4) | [English captions](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural.vtt)
+
+The [earlier-version video](https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4) and visual tour
+remain historical illustrations; they have not been relabelled as RC captures.
+Current candidate screens are shown below.
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
