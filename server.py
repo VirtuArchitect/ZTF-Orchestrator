@@ -40986,7 +40986,7 @@ def run_pipeline(pipeline_id: str):
                     with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
                         private_config = Path(snapshot.name)
                         snapshot.write(pe_users_configs[config_file])
-                    cmd_args[-1] = str(private_config)
+                    cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script', workflow, '-f', str(private_config)]
                 proc = subprocess.Popen(
                     cmd_args, cwd=ztf_path,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,

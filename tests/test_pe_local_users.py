@@ -200,11 +200,21 @@ def test_admin_only_gate_and_mixed_scripts(client):
 
 
 @pytest.mark.parametrize('output,expected', [('', 'success'), ('[ERROR] CreateLocalUsersPe failed', 'failed')])
-def test_pipeline_uses_script_and_stops_on_failure(client, auth_headers, monkeypatch, output, expected):
+@pytest.mark.parametrize('remove_source', [False, True])
+def test_pipeline_uses_script_and_stops_on_failure(client, auth_headers, monkeypatch, output, expected, remove_source):
     import server
     commands = []
     server.get_configs_dir().mkdir(parents=True, exist_ok=True)
     (server.get_configs_dir() / 'pe-users.yml').write_text(json.dumps(intent()))
+    original_path = server.safe_config_path
+    path_calls = []
+    def safe_path(*args):
+        path = original_path(*args)
+        path_calls.append(path)
+        if remove_source and len(path_calls) == 2:
+            path.unlink()
+        return path
+    monkeypatch.setattr(server, 'safe_config_path', safe_path)
     class Process:
         returncode = 0
         def __init__(self):
