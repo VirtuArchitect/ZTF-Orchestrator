@@ -37,7 +37,8 @@ def runtime(monkeypatch):
         def __init__(self, session):
             self.session = session
 
-        def read(self, endpoint):
+        def read(self, endpoint=None):
+            assert endpoint is None
             calls.append(('authenticate', self.session.pwd))
             if state['failure'] in ('401', 'timeout', 'TLS'):
                 raise RuntimeError('replacement-test-secret')

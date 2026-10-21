@@ -116,7 +116,7 @@ class VerifiedPasswordChange:
             if username != self.DEFAULT_USERNAME or not password:
                 raise ValueError('Invalid replacement administrator credential')
             session = RestAPIUtil(cluster_ip, user=username, pwd=password, port='9440', secured=True)
-            response = Cluster(session).read(endpoint='cluster')
+            response = Cluster(session).read()
             if not isinstance(response, dict) or not response.get('uuid'):
                 raise ValueError('PE did not return a cluster identity')
             cluster_details['pe_session'] = session

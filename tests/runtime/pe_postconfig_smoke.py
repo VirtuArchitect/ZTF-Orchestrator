@@ -62,6 +62,7 @@ def run():
         workflow = config.ClusterConfig(data)
         workflow.run()
         assert change.call_count == 1 and auth.call_count == 1
+        assert auth.call_args.kwargs == {}
         assert calls and all(ref == 'replacement-admin' and sess.pwd == SECRET for sess, ref in calls)
         assert sessions[-1].pwd == SECRET
 
@@ -97,9 +98,73 @@ def run():
         else:
             raise AssertionError('Mismatched existing container passed verification')
         assert not create.called
+    real_https_readback()
     print(json.dumps({'installedRuntimeSmoke': 'PASS', 'freshReplacementAuthentication': True,
                       'nestedWorkflowStopsOnFailure': True, 'missingPasswordRequestSkips': True,
                       'containerPropertiesVerified': True, 'livePrismCalls': 0}))
+
+
+def real_https_readback():
+    import base64
+    import http.server
+    import ssl
+    import subprocess
+    import tempfile
+    import threading
+    from pathlib import Path
+
+    requested = []
+    expected_auth = 'Basic ' + base64.b64encode(('admin:' + SECRET).encode()).decode()
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def do_GET(self):
+            requested.append(self.path)
+            valid = self.headers.get('Authorization') == expected_auth
+            payload = {'uuid': 'fixture-uuid'} if self.path == '/api/nutanix/v2.0/cluster' else {'entities': [row]}
+            status = 200 if valid and self.path in ('/api/nutanix/v2.0/cluster', '/api/nutanix/v1/containers') else 401
+            self.send_response(status)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload if status == 200 else {'error': 'fixture rejection'}).encode())
+
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        key, certificate = root / 'key.pem', root / 'certificate.pem'
+        subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
+                        '-subj', '/CN=fixture', '-keyout', str(key), '-out', str(certificate)],
+                       check=True, capture_output=True)
+        server = http.server.ThreadingHTTPServer(('127.0.0.1', 9440), Handler)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certificate, key)
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            details = {'new_pe_admin_credential': 'replacement-admin', 'pe_session': 'old-session'}
+            script = ChangeDefaultAdminPasswordPe({'clusters': {'127.0.0.1': details}})
+            with patch('framework.helpers.helper_functions.read_creds', credentials):
+                script.verify_single_cluster('127.0.0.1', details)
+            assert script.results['clusters']['127.0.0.1']['Change_Default_password'] == 'PASS'
+            assert requested == ['/api/nutanix/v2.0/cluster']
+            container = CreateContainerPe({'clusters': {'127.0.0.1': dict(details, containers=[
+                {'name': 'fixture-container', 'replication_factor': 2, 'compression_enabled': True},
+            ])}})
+            container.verify_single_cluster('127.0.0.1', container.pe_clusters['127.0.0.1'])
+            assert container.results['clusters']['127.0.0.1']['Create_container']['fixture-container'] == 'PASS'
+            assert requested[-1] == '/api/nutanix/v1/containers'
+            previous = details['pe_session']
+            with patch('framework.helpers.helper_functions.read_creds', return_value=('admin', 'wrong-fixture-secret')):
+                script.verify_single_cluster('127.0.0.1', details)
+            assert script.results['clusters']['127.0.0.1']['Change_Default_password'] == "CAN'T VERIFY"
+            assert details['pe_session'] is previous
+            assert requested[-1] == '/api/nutanix/v2.0/cluster'
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,8 @@ release promotion or evidence that a production cluster has been changed.
 3. Review the YAML and obtain the normal authorization/approval and exact
    confirmation required by the chosen workflow or standalone script.
 4. The action changes the password, then creates a fresh session using the
-   replacement credential and reads the PE cluster identity. A rejected login,
+   replacement credential and reads the PE cluster identity at
+   `/api/nutanix/v2.0/cluster`, without duplicating the resource path. A rejected login,
    network failure, empty identity or unresolved credential is not success.
    Verification failure exits nonzero before later configuration is started.
 5. Within a combined Configure Cluster run, the verified session and credential
