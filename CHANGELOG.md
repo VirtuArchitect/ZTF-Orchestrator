@@ -26,6 +26,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   paths, and stop tracking generated TypeScript build caches.
 
 ### Fixed
+- Require successful authentication with the replacement PE admin credential,
+  hand its session to subsequent configuration, and stop on unverified changes.
+  Omitted password-change requests now report SKIP without password API calls.
+  Verify explicitly requested container properties, not just existence; missing
+  readback fields and mismatches fail without modifying existing containers.
+  Pipeline gates also reject zero-exit FAIL and sensitive CAN'T VERIFY results.
 - Fail RegisterToPc jobs and pipeline steps when registration reports FAIL or
   CAN'T VERIFY despite a zero exit code. Bundled runtime verification exceptions
   now include their type and redacted details at the normal log level.

@@ -118,7 +118,14 @@ def test_job_api_and_history_reject_unverified_registration(client, auth_headers
     assert entry['diagnostics']['category'] == 'verification_error'
 
 
-def test_pipeline_stops_after_unverified_registration(client, auth_headers, monkeypatch):
+@pytest.mark.parametrize('summary', [
+    "{'Register_to_PC': \"CAN'T VERIFY\"}\n",
+    "{'Change_Default_password': \"CAN'T VERIFY\"}\n",
+    "{'Accept_Eula': \"CAN'T VERIFY\"}\n",
+    "{'Update_Pulse': \"CAN'T VERIFY\"}\n",
+    "{'Create_container': {'container-01': 'FAIL'}}\n",
+])
+def test_pipeline_stops_after_unverified_registration(client, auth_headers, monkeypatch, summary):
     import server
     calls = []
 
@@ -126,7 +133,7 @@ def test_pipeline_stops_after_unverified_registration(client, auth_headers, monk
         returncode = 0
 
         def __init__(self):
-            self.stdout = iter(["{'Register_to_PC': \"CAN'T VERIFY\"}\n"])
+            self.stdout = iter([summary])
             self.stderr = iter([])
 
         def wait(self):

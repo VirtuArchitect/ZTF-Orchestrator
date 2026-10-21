@@ -8,6 +8,10 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Updated source builds verify replacement PE admin authentication and stop
+  unverified changes; unused password steps explicitly skip. Container readback
+  verifies requested properties and rejects mismatches without auto-repair.
+  Zero-exit verification failures stop subsequent pipeline steps.
 - Updated source builds add Create Local Users (PE) to Scripts and pipelines:
   eight-user wizard, separate credential references, administrator-only exact
   confirmation, verified HTTPS and account/role verification. Live PE user
