@@ -34324,12 +34324,17 @@ def _ztf_registration_failure_evidence(output: str) -> str:
 
 def _ztf_output_failure_evidence(output: str) -> str:
     """Return the first ZTF log line that should fail an otherwise-zero exit."""
+    output = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', output)
     registration_evidence = _ztf_registration_failure_evidence(output)
     if registration_evidence:
         return registration_evidence
     for line in output.splitlines():
         stripped = line.strip()
         if re.search(r'\[(?:ERROR|CRITICAL)\]', stripped, re.IGNORECASE):
+            return _redact_text(stripped)
+        if re.search(r'''["']\s*:\s*["']FAIL["']''', stripped):
+            return _redact_text(stripped)
+        if any(key in stripped for key in ('Change_Default_password', 'Accept_Eula', 'Update_Pulse', 'Create_container')) and re.search(r'''["']\s*:\s*["']CAN'T VERIFY["']''', stripped):
             return _redact_text(stripped)
     return ''
 
@@ -40986,7 +40991,6 @@ def run_pipeline(pipeline_id: str):
             kill_timer  = None
             step_status = 'success'
             failure_evidence = False
-            registration_failure = False
             private_config = None
 
             try:
@@ -41029,11 +41033,10 @@ def run_pipeline(pipeline_id: str):
                     else:
                         label, line = item
                         failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
-                        registration_failure = registration_failure or bool(_ztf_registration_failure_evidence(line))
                         yield from send(label, _redact_text(line) if is_script else line)
 
                 proc.wait()
-                step_status = 'success' if proc.returncode == 0 and not registration_failure and not (is_script and failure_evidence) else 'failed'
+                step_status = 'success' if proc.returncode == 0 and not failure_evidence else 'failed'
 
             except GeneratorExit:
                 if proc and proc.poll() is None:

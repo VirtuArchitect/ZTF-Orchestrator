@@ -44,6 +44,12 @@ before retrying. See [PE local-user procedure](docs/pe-local-users.md).
 
 ## Promotion Signoff
 
+For source-derived bundles containing the PE post-configuration verification fix,
+exercise replacement-credential authentication, explicit SKIP without a password
+request, property-mismatch rejection and pipeline stop gates in isolated UAT.
+Existing containers are not reconciled automatically. See the
+[verification procedure](docs/pe-post-configuration-verification.md).
+
 - [ ] Attach test/CI, image/bundle integrity and installed-build receipts.
 - [ ] Complete the RC-specific live-UAT and recovery matrix.
 - [ ] Complete a 3-5 working-day operational soak with no unresolved blockers.

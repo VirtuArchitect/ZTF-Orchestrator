@@ -14,9 +14,11 @@ Scripts > Prism Element and in the pipeline step selector. It changes the PE
    protect the editor, downloads and saved file as sensitive material. The new
    password remains a reference rather than a literal in the generated config.
 4. Run the script with the exact confirmation `RUN ChangeDefaultAdminPasswordPe`.
-   Verify successful login using the new password in Prism. Upstream verification
-   alone is not proof: a failed request with the old password can be interpreted
-   as success by the upstream script.
+   Updated source builds authenticate a fresh session with the replacement
+   credential and require a PE cluster identity before PASS. Authentication,
+   connectivity or readback failures stop execution. Verify the new login in
+   Prism independently as well. Older unpatched builds could misinterpret a
+   failed request using the old password as success.
 5. Update the credential reference used by subsequent cluster workflows. The
    script does not automatically modify saved Orchestrator credentials.
 
@@ -27,9 +29,13 @@ workflow steps continue to use `--workflow`. A failed step stops subsequent step
 ZTF ERROR/CRITICAL output also fails the password step even with exit code zero.
 Do not automatically retry a password change after an ambiguous network failure.
 
-Do not chain this standalone action before Configure Cluster: that workflow also
-attempts the initial password change. Use its corrected native form for a combined
-initial configuration; see [Initial Cluster Configuration](cluster-initial-configuration.md).
+In updated source builds, subsequent Configure Cluster files must omit
+`new_pe_admin_credential` to skip password mutation and use the verified new
+`pe_credential`. A combined Configure Cluster request can change the password
+first and hand the verified replacement session to its remaining actions.
+Do not repeat the password-change request in later files. See
+[PE post-configuration verification](pe-post-configuration-verification.md) and
+[Initial Cluster Configuration](cluster-initial-configuration.md).
 
 Subsequent steps must already reference the new credential, or be run separately
 after verifying the password and updating the saved reference. Mandatory approval

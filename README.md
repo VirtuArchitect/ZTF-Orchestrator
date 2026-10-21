@@ -5,6 +5,9 @@
 Updated source builds fail registration jobs when `Register_to_PC` reports
 `CAN'T VERIFY` or `FAIL`, even with exit code zero, and show redacted verification
 exception details from the bundled runtime.
+Updated source builds also require fresh replacement-admin authentication, skip
+unrequested password changes, and verify requested storage-container properties.
+See [PE post-configuration verification](docs/pe-post-configuration-verification.md).
 
 [![Current candidate: v1.8.5-rc1](https://img.shields.io/badge/current_candidate-v1.8.5--rc1-blue)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1)
 [![Stable: v1.8.4](https://img.shields.io/badge/stable-v1.8.4-green)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4)

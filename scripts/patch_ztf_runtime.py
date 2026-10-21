@@ -1,3 +1,4 @@
+import ast
 import os
 from pathlib import Path
 
@@ -241,6 +242,35 @@ def patch_pe_local_users() -> None:
     )
 
 
+def patch_pe_postconfig_verification() -> None:
+    source = Path(__file__).with_name('ztf_pe_postconfig.py')
+    _runtime_path('framework/helpers/pe_postconfig.py').write_text(source.read_text(encoding='utf-8'), encoding='utf-8')
+    for relative, name, mixin in (
+        ('other_ops/change_system_password.py', 'ChangeDefaultAdminPasswordPe', 'VerifiedPasswordChange'),
+        ('create/create_container_pe.py', 'CreateContainerPe', 'VerifiedContainers'),
+    ):
+        path = _runtime_path('framework/scripts/python/pe/' + relative)
+        text = path.read_text()
+        marker = f'from framework.helpers.pe_postconfig import {mixin}\n'
+        if marker in text:
+            continue
+        tree = ast.parse(text)
+        cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == name)
+        if [ast.unparse(base) for base in cls.bases] != ['ClusterScript']:
+            raise SystemExit(f'Unexpected PE runtime base class in {path}')
+        methods = [node for node in cls.body if isinstance(node, ast.FunctionDef)
+                   and node.name in ('execute_single_cluster', 'verify_single_cluster')]
+        if len(methods) != 2:
+            raise SystemExit(f'Unexpected PE runtime methods in {path}')
+        lines = text.splitlines(keepends=True)
+        for method in reversed(methods):
+            del lines[method.lineno - 1:method.end_lineno]
+        text = ''.join(lines).replace(f'class {name}(ClusterScript):', f'class {name}({mixin}, ClusterScript):', 1)
+        patched = marker + text
+        ast.parse(patched)
+        path.write_text(patched)
+
+
 def main() -> None:
     patch_pc_entity_list()
     patch_pc_vm_payload_name()
@@ -252,6 +282,7 @@ def main() -> None:
     patch_pe_role_mapping_optional_directory()
     patch_register_to_pc_verification()
     patch_pe_local_users()
+    patch_pe_postconfig_verification()
 
 
 if __name__ == "__main__":
