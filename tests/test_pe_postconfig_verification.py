@@ -222,6 +222,8 @@ def test_patcher_is_idempotent_and_keeps_upstream_initialization(tmp_path, monke
 
 @pytest.mark.parametrize('summary,expected', [
     ("{'Change_Default_password': 'SKIP'}", 'success'),
+    ("{'Change_Default_password': 'SKIP', 'HA_state': \"CAN'T VERIFY\"}", 'success'),
+    ("{'Create_container': {'test': 'PASS'}, 'HA_state': \"CAN'T VERIFY\"}", 'success'),
     ("{'Change_Default_password': \"CAN'T VERIFY\"}", 'failed'),
     ("{'Accept_Eula': \"CAN'T VERIFY\"}", 'failed'),
     ("{'Update_Pulse': \"CAN'T VERIFY\"}", 'failed'),

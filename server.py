@@ -2,6 +2,7 @@
 """ZeroTouch Enterprise Orchestrator — Flask Backend (production-hardened)"""
 
 import datetime
+import ast
 import base64
 import contextvars
 import hashlib
@@ -34334,8 +34335,25 @@ def _ztf_output_failure_evidence(output: str) -> str:
             return _redact_text(stripped)
         if re.search(r'''["']\s*:\s*["']FAIL["']''', stripped):
             return _redact_text(stripped)
-        if any(key in stripped for key in ('Change_Default_password', 'Accept_Eula', 'Update_Pulse', 'Create_container')) and re.search(r'''["']\s*:\s*["']CAN'T VERIFY["']''', stripped):
+        if re.search(r'''["'](?:Change_Default_password|Accept_Eula|Update_Pulse)["']\s*:\s*["']CAN'T VERIFY["']''', stripped):
             return _redact_text(stripped)
+        if 'Create_container' in stripped and "CAN'T VERIFY" in stripped:
+            # Legacy summaries combine optional HA skips with requested actions.
+            # Inspect container results structurally, not an unrelated leaf.
+            try:
+                start = stripped.index('{')
+                summary = ast.literal_eval(stripped[start:]) if len(stripped) <= 262144 else {}
+            except (ValueError, SyntaxError, RecursionError):
+                summary = {}
+
+            def unverified_container(value, in_container=False):
+                if isinstance(value, dict):
+                    return any(unverified_container(item, in_container or key == 'Create_container')
+                               for key, item in value.items())
+                return in_container and value == "CAN'T VERIFY"
+
+            if unverified_container(summary):
+                return _redact_text(stripped)
     return ''
 
 
