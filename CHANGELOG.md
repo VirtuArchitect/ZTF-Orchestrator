@@ -26,6 +26,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   paths, and stop tracking generated TypeScript build caches.
 
 ### Fixed
+- Scope Foundation review caching to each standalone review as well as full
+  packets, avoiding repeated planning work without retaining results across calls.
 - Require successful authentication with the replacement PE admin credential,
   hand its session to subsequent configuration, and stop on unverified changes.
   Omitted password-change requests now report SKIP without password API calls.

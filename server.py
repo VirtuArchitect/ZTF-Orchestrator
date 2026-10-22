@@ -36563,7 +36563,9 @@ def _native_foundation_memoized_packet_helper(name: str, fn):
         return deepcopy(cache[key])
 
     wrapped._native_foundation_packet_cache_wrapped = True
-    return wrapped
+    # Standalone reviews need the same bounded cache as full review packets.
+    # Nested helpers share it; the outermost call always releases it.
+    return _native_foundation_packet_cache_context(wrapped)
 
 
 def _native_foundation_packet_cache_context(fn):
