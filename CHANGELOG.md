@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Create Local Users (PE) in Scripts and pipelines, with eight named-admin
+  credential references by default, administrator-only execution, exact
+  confirmation, verified HTTPS, non-mutating dry run, fresh role verification
+  and explicit partial-provisioning recovery boundaries.
+
 ### Documentation
 - Add a standalone GitHub Pages release-document index and commit-pin archived
   document links, preserving the clean repository root and release channels.
@@ -22,6 +28,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 - Scope Foundation review caching to each standalone review as well as full
   packets, avoiding repeated planning work without retaining results across calls.
+- Require successful authentication with the replacement PE admin credential,
+  hand its session to subsequent configuration, and stop on unverified changes.
+  Omitted password-change requests now report SKIP without password API calls.
+  Verify explicitly requested container properties, not just existence; missing
+  readback fields and mismatches fail without modifying existing containers.
+  Pipeline gates also reject zero-exit FAIL and sensitive CAN'T VERIFY results.
 - Fail RegisterToPc jobs and pipeline steps when registration reports FAIL or
   CAN'T VERIFY despite a zero exit code. Bundled runtime verification exceptions
   now include their type and redacted details at the normal log level.

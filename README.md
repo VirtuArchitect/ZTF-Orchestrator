@@ -5,6 +5,9 @@
 Updated source builds fail registration jobs when `Register_to_PC` reports
 `CAN'T VERIFY` or `FAIL`, even with exit code zero, and show redacted verification
 exception details from the bundled runtime.
+Updated source builds also require fresh replacement-admin authentication, skip
+unrequested password changes, and verify requested storage-container properties.
+See [PE post-configuration verification](docs/pe-post-configuration-verification.md).
 
 [![Current candidate: v1.8.5-rc1](https://img.shields.io/badge/current_candidate-v1.8.5--rc1-blue)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1)
 [![Stable: v1.8.4](https://img.shields.io/badge/stable-v1.8.4-green)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4)
@@ -32,7 +35,7 @@ Current screenshots show the v1.8.5-rc1 frontend with simulated demo data, not
 live infrastructure or proof of completed UAT. [Screenshot provenance](docs/assets/readme/v1.8.5-rc1/README.md).
 
 <p>
-  <a href="https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4"><strong>Earlier-version demo video (historical)</strong></a>
+  <a href="https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough"><strong>Watch the v1.8.5-rc1 simulated controlled-UAT candidate demo (90 seconds)</strong></a>
   &nbsp;|&nbsp;
   <a href="https://virtuarchitect.github.io/ZTF-Orchestrator/"><strong>Try the static demo</strong></a>
   &nbsp;|&nbsp;
@@ -41,8 +44,18 @@ live infrastructure or proof of completed UAT. [Screenshot provenance](docs/asse
   <a href="docs/production-readiness-boundary.md">Validation boundary</a>
 </p>
 
-The earlier video and visual tour are historical illustrations; they have not
-been relabelled as RC captures. Current screens are shown below.
+[![v1.8.5-rc1 simulated controlled-UAT candidate demo, 90 seconds](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural-poster.jpg)](https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough)
+
+**Simulated controlled-UAT candidate demo:** this narrated v1.8.5-rc1 screen tour
+uses simulated data, with normal-rate neural narration and English captions.
+It does not connect to or operate live infrastructure and is not proof of
+completed UAT or production readiness. **v1.8.4 remains the latest stable release.**
+
+[Direct MP4](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural.mp4) | [English captions](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural.vtt)
+
+The [earlier-version video](https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4) and visual tour
+remain historical illustrations; they have not been relabelled as RC captures.
+Current candidate screens are shown below.
 
 A web-based installer and configuration orchestrator for the
 [Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
@@ -65,6 +78,11 @@ Prism Element initial password changes are available in Scripts and ordered
 pipelines as **Change Default Admin Password (PE)**. See the
 [password-change procedure](docs/pe-admin-password-change.md) for credential
 references, confirmation, and post-change verification requirements.
+
+Updated source builds also expose **Create Local Users (PE)** in Scripts and
+pipelines, with an eight-user example, separate credential references, verified
+HTTPS and admin-role verification. Existing passwords are not reset. See the
+[PE local-user guide](docs/pe-local-users.md); PE API compatibility remains a UAT gate.
 
 Configure Cluster uses the installed ZTF native per-cluster schema for initial
 password changes, EULA, Pulse and optional cluster settings. See the

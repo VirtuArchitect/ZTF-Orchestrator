@@ -357,6 +357,7 @@ export const SCRIPTS: ScriptDef[] = [
   { id: 'CreateRoleMappingPc', name: 'Create Role Mapping (PC)', category: 'Authentication', description: 'Creates AD role mappings in Prism Central' },
   { id: 'CreateIdp', name: 'Create SAML IDP (PC)', category: 'Authentication', description: 'Configures a SAML identity provider in Prism Central' },
   { id: 'AddLocalUsers', name: 'Add Local Users (PC)', category: 'Authentication', description: 'Adds local IAM users in Prism Central' },
+  { id: 'CreateLocalUsersPe', name: 'Create Local Users (PE)', category: 'Authentication', description: 'Creates named PE administrators using separate credential references; verifies cluster and user administrator roles without changing existing passwords' },
   { id: 'ImportUsers', name: 'Import Users (PC)', category: 'Authentication', description: 'Imports users into Prism Central' },
   { id: 'AddUserGroups', name: 'Add User Groups (PC)', category: 'Authentication', description: 'Adds IAM user groups in Prism Central' },
   { id: 'AddRoles', name: 'Add Roles (PC)', category: 'Authentication', description: 'Adds IAM roles in Prism Central' },
