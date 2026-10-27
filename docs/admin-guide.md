@@ -3,13 +3,13 @@
 Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
 Documentation reviewed on 27 October 2026 against merged application revision
-`4a010727d5db3496d17a52e4ce681818dcc56200`. The [illustrated Word manual](manuals/README.md)
+`4a010727d5db3496d17a52e4ce681818dcc56200`. The [illustrated PDF manual](manuals/README.md)
 preserves the supplied administrator/user guide format and contains refreshed,
 simulated screenshots. See [current screenshot provenance](assets/guide/v1.8.5-rc1/README.md).
 The prerelease remains separate from v1.8.4 Latest stable.
 
 The [revision 3 cluster deployment process](cluster-deployment-process.md)
-provides the diagram, text equivalent and acceptance gates. The Word manual
+provides the diagram, text equivalent and acceptance gates. The PDF manual
 includes its overview and enlarged stage views in a landscape appendix.
 
 This guide is for administrators who install, configure, operate, govern, and

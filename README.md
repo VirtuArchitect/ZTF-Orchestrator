@@ -13,7 +13,7 @@ to existing workflows and post-configuration pipelines while preserving approval
 and verification gates. The dashboard remains available as **Overview**.
 See [Start Here and deployment guidance](docs/start-here.md).
 
-Download the refreshed [Administrator and User Guide in Word](docs/manuals/README.md)
+Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README.md)
 with current simulated screenshots and operational procedures for deployment,
 post-configuration, PE account verification, certificate trust and appliance
 updates. Documentation was reviewed against merged application revision
@@ -22,7 +22,7 @@ updates. Documentation was reviewed against merged application revision
 The [revision 3 cluster deployment process](docs/cluster-deployment-process.md)
 shows the ten stages from design to operational acceptance, with approval,
 password-authentication, post-configuration and verification gates. It is also
-included in the Word guide as a landscape appendix with enlarged stage views.
+included in the PDF guide as a landscape appendix with enlarged stage views.
 
 Local Compose rebuilds use a versioned image and pass the release/build identity
 into Docker. A build guard rejects stale version overrides that disagree with

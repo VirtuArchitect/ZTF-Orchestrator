@@ -1,6 +1,11 @@
 # Administrator and User Guide
 
-[Download the illustrated Word guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
+[Open or download the illustrated PDF guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf)
+
+The primary published guide is a searchable 114-page PDF with section bookmarks,
+a linked table of contents and the revision 3 landscape process-flow appendix.
+The [editable Word source](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
+is retained for maintenance.
 
 Reviewed **27 October 2026** against merged application revision
 `4a010727d5db3496d17a52e4ce681818dcc56200`. The manual covers the
@@ -19,7 +24,9 @@ space planning. It retains detailed installation, workflow/script, pipeline,
 Upgrade Advisor, live drift, backup, recovery and governance instructions.
 No unfinished deployment-engine work is included.
 
-Document SHA256: `d8b81e7a8bed8b902b25ce5a760ab6452b914d35a262ada9882d96d7ba97ef49`.
+PDF SHA256: `a111528c4caa2db17bdc069a450c116e2582098ed5f4d64aecf595cf8191b508`.
+
+Editable source SHA256: `d8b81e7a8bed8b902b25ce5a760ab6452b914d35a262ada9882d96d7ba97ef49`.
 
 [Revision 3 deployment process](../cluster-deployment-process.md) provides
 the full-resolution PNG, editable SVG and accessible text sequence. Its approval
