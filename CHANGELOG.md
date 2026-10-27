@@ -19,6 +19,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   vault/password keyword classification. Preserve fail-closed execution.
 
 ### Added
+- Start Here landing page with four operator outcomes, per-user browser landing
+  preference, seven-stage deployment guidance and a post-configuration handoff.
+  Guide bookmarks never execute or establish readiness. Retain Overview, group
+  specialist tools under Advanced Automation, explain workflow prerequisites and
+  show descriptive pipeline action names.
 - Create Local Users (PE) in Scripts and pipelines, with eight named-admin
   credential references by default, administrator-only execution, exact
   confirmation, verified HTTPS, non-mutating dry run, fresh role verification

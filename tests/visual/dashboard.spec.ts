@@ -466,10 +466,11 @@ test('dashboard supports theme toggle and appliance navigation', async ({ page }
     await page.getByRole('button', { name: /sign in/i }).click()
   } else {
     await seedUiSession(page)
-    await page.goto('/')
+    await page.goto('/overview')
   }
 
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await page.goto('/overview')
+  await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible()
 
   const themeButton = page.getByRole('button', { name: /Theme:/ })
   await expect(themeButton).toBeVisible()
@@ -484,15 +485,15 @@ test('dashboard supports theme toggle and appliance navigation', async ({ page }
   await expect(page.getByRole('button', { name: /Updates/i })).toBeVisible()
 })
 
-test('sidebar brand links back to dashboard overview', async ({ page }) => {
+test('sidebar brand links back to the preferred landing page', async ({ page }) => {
   await seedUiSession(page)
   await page.goto('/workflows')
 
-  await expect(page.getByRole('heading', { name: 'Workflows' })).toBeVisible()
-  await page.getByRole('link', { name: 'Dashboard Overview' }).click()
+  await expect(page.getByRole('heading', { name: 'Workflows 1.x' })).toBeVisible()
+  await page.getByRole('link', { name: 'My landing page' }).click()
 
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await expect(page).toHaveURL(/\/start$/)
+  await expect(page.getByRole('heading', { name: 'Start Here', exact: true })).toBeVisible()
 })
 
 test('dashboard drift attention message stays readable in light theme', async ({ page }) => {
@@ -512,7 +513,7 @@ test('dashboard drift attention message stays readable in light theme', async ({
     window.localStorage.setItem('ztf-theme-mode', 'light')
   })
 
-  await page.goto('/')
+  await page.goto('/overview')
 
   const driftBanner = page.getByLabel('Review latest drift detection result')
   await expect(driftBanner).toBeVisible()

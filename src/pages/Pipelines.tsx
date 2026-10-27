@@ -7,6 +7,7 @@ import Layout from '../components/Layout'
 import PipelineModal from '../components/PipelineModal'
 import { apiFetch } from '../utils/api'
 import { WORKFLOWS, SCRIPTS } from '../data'
+import { actionName } from '../startGuide'
 import type { Pipeline, PipelineStep } from '../types'
 import clsx from 'clsx'
 
@@ -267,7 +268,7 @@ export default function Pipelines() {
                     {pipeline.steps.map((step, i) => (
                       <div key={i} className="flex items-center gap-1">
                         <span className="px-2 py-0.5 rounded-md bg-surface border border-border text-xs text-gray-400 font-mono">
-                          {step.workflow}
+                          <span title={`Action ID: ${step.workflow}`}>{actionName(step.workflow)}</span>
                         </span>
                         {step.configFile && (
                           <span className="flex items-center gap-0.5 text-xs text-gray-600">

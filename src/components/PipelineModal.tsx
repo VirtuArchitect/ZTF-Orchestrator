@@ -4,6 +4,7 @@ import Terminal from './Terminal'
 import { apiFetch } from '../utils/api'
 import type { Pipeline, PipelineStepResult } from '../types'
 import clsx from 'clsx'
+import { actionName } from '../startGuide'
 
 interface LogLine { type: string; data: string; ts: number }
 
@@ -148,7 +149,7 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
                   {result?.status !== 'success' && result?.status !== 'failed' &&
                    result?.status !== 'skipped' && !isActive &&
                    <Clock size={12} />}
-                  <span className="max-w-28 truncate">{step.workflow}</span>
+                  <span title={`Action ID: ${step.workflow}`}>{actionName(step.workflow)}</span>
                 </div>
                 {i < pipeline.steps.length - 1 && (
                   <div className={clsx(

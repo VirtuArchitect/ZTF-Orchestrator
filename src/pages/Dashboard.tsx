@@ -267,10 +267,11 @@ export default function Dashboard() {
 
   return (
     <Layout
-      title="Dashboard"
+      title="Overview"
       subtitle="ZeroTouch Framework Control Center"
       actions={
         <div className="flex gap-2">
+          {user?.role !== 'viewer' && <Link to="/start/deploy" className="btn-primary gap-2"><Server size={14} />Deploy a Cluster</Link>}
           <button onClick={() => refresh(true)} disabled={refreshing} className="btn-secondary gap-1.5">
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             Refresh
