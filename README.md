@@ -8,6 +8,12 @@ to existing workflows and post-configuration pipelines while preserving approval
 and verification gates. The dashboard remains available as **Overview**.
 See [Start Here and deployment guidance](docs/start-here.md).
 
+Download the refreshed [Administrator and User Guide in Word](docs/manuals/README.md)
+with current simulated screenshots and operational procedures for deployment,
+post-configuration, PE account verification, certificate trust and appliance
+updates. Documentation was reviewed against merged application revision
+`4a01072` on 27 October 2026; historical release documents remain archived.
+
 Local Compose rebuilds use a versioned image and pass the release/build identity
 into Docker. A build guard rejects stale version overrides that disagree with
 the source release. See [Docker build identity](docs/docker-build-identity.md)

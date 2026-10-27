@@ -1,5 +1,20 @@
 # ZTF-Orchestrator Installation Guide
 
+For source-derived v1.8.5-rc1 rebuilds, follow [Docker build identity](docker-build-identity.md)
+and use the approved versioned image. v1.8.4 remains Latest stable. After cutover,
+verify the actual image and `/health` installed identity, then open
+[Start Here](start-here.md). See the [illustrated Word manual](manuals/README.md)
+for the complete administrator/operator reference.
+
+Before appliance updates, check free space for both the data/database backup and
+image extraction. Imported update packages inside the data volume are included
+in its snapshot and can materially increase space requirements. Keep a verified
+complete backup pair and rollback image; do not disable required backups to work
+around a full filesystem. See [update preparation](appliance-update-manager.md).
+
+Persistent PE trust must be configured in the Compose file actually used by the
+appliance update helper, as described in [certificate trust](pe-certificate-trust.md).
+
 This guide expands the installation options from the main README into
 step-by-step deployment procedures.
 

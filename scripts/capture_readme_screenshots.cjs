@@ -11,10 +11,12 @@ const root = path.resolve(__dirname, '..');
 const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const output = path.join(root, 'docs', 'assets', 'readme', `v${version}`);
 const screens = [
-  ['dashboard', ''], ['yaml-studio', 'yaml-studio'], ['approvals', 'approvals'],
+  ['dashboard', 'overview'], ['yaml-studio', 'yaml-studio'], ['approvals', 'approvals'],
   ['jobs-queue', 'jobs'], ['validation-evidence', 'validation-evidence'],
   ['native-foundation-planning', 'workflows/native-foundation-deploy'],
   ['upgrade-advisor', 'upgrade-advisor'], ['workflow-catalog', 'workflows'],
+  ['start-here', 'start'], ['deployment-guide', 'start/deploy'],
+  ['post-configuration', 'start/configure'],
 ];
 
 (async () => {
@@ -27,7 +29,7 @@ const screens = [
     // Demo API requests are intercepted in the app, not forwarded to any server.
     await context.route('**/*', route => {
       const url = new URL(route.request().url());
-      return url.origin === base.origin && !url.pathname.startsWith('/api/')
+      return url.origin === base.origin && !/\/api(?:\/|$)/.test(url.pathname)
         ? route.continue() : route.abort();
     });
     await context.addInitScript(() => localStorage.setItem('ztf-theme-mode', 'light'));

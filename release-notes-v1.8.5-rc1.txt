@@ -8,6 +8,11 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Refreshed administrator/user Word manual, current simulated screenshots and
+  aligned operator guides covering Start Here, PE diagnostics, persistent trust
+  and Docker identity. Documentation refresh only; release channels are unchanged.
+- Static demo build/appliance metadata now follows the frontend release version;
+  its simulated build identity remains explicitly distinct from a live appliance.
 - Start Here: four operator starting choices, seven-stage deployment guidance,
   post-configuration pipeline handoff, per-user browser landing preference and
   saved guide position. Existing role/approval/verification gates remain.

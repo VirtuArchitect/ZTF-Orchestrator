@@ -78,6 +78,34 @@ default unverified transport or log request/response bodies.
 
 ## Existing Accounts and Recovery
 
+Use the recovery boundaries below after a failed or partial run. Failure is not
+proof that no account was created; inspect PE before any retry.
+
+## Independent Read-Only Verification
+
+After a successful pipeline, inspect each requested account in PE. Confirm its
+enabled state and both **Cluster Admin** and **User Admin**. The underlying role
+identifiers are `ROLE_CLUSTER_ADMIN` and `ROLE_USER_ADMIN`; additional roles do
+not negate their presence. Match exact usernames rather than display names.
+
+An independent verifier can use GET `/api/nutanix/v1/users` to inspect
+`profile.username` and explicit boolean `profile.enabled`, then GET
+`/api/nutanix/v1/users/{username}/roles` for each account. Preserve verified TLS,
+endpoint SAN checking and hidden password entry. No POST, password reset or role
+assignment is needed for verification. Unknown response shapes or a missing
+enabled flag cannot prove the account is enabled.
+
+For a seven-account verification report, expect seven PASS rows only when every
+account exists, is enabled and has both roles. Use exit code **0** for all passed,
+**1** for an observed failure with no Unknown rows, and **2** for incomplete
+collection, invalid invocation or cancellation. These are the standalone
+verification-report conventions, not new pipeline exit-code semantics.
+Account-state/role reads do not prove each user's password, interactive sign-in
+or password-expiry state; verify those separately through the approved process.
+
+Use the [persistent certificate trust procedure](pe-certificate-trust.md) for
+the runtime executing these verified-HTTPS reads.
+
 ## Failure Diagnostics
 
 Updated builds emit `[PE-USERS] stage=... target=... category=...` on failure.
