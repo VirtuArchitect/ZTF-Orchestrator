@@ -42,6 +42,14 @@ ENV ZTF_NKP_PATH=/var/lib/ztf-orchestrator/nkp-zerotouch-framework
 ENV ZTF_PYTHON=/opt/ztf-python/bin/python
 ENV ZTF_PORT=5001
 
+# Fail before installing runtimes if an old .env/build argument labels new source
+# as another release. Commit-stamped builds remain available for registry CI.
+COPY package.json /tmp/ztf-orchestrator-package.json
+COPY scripts/validate_build_identity.py /tmp/validate_build_identity.py
+RUN python /tmp/validate_build_identity.py \
+    --package /tmp/ztf-orchestrator-package.json \
+    --version "${ZTF_ORCHESTRATOR_VERSION}" --commit "${ZTF_BUILD_COMMIT}"
+
 # ============================================================================
 # Install system packages
 # ============================================================================

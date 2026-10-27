@@ -27,6 +27,10 @@ release-artifacts
 output
 outputs
 update-artifacts
+docker-compose.override.yml
+docker-compose.override.yaml
+compose.override.yml
+compose.override.yaml
 appliance-update-*.md
 fca-coredns-ikat-workaround-guide.md
 

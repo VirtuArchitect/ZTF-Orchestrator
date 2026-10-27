@@ -8,6 +8,9 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Updated source builds use a versioned local Compose image, forward build
+  identity, and reject stale Docker version overrides before runtime installation.
+  Local Compose deployment pins remain private and excluded from image contexts.
 - Updated source builds report stage-specific PE local-user failures with safe
   credential, TLS, network, HTTP and verification categories. No secret values,
   response bodies or raw transport exceptions are included in these diagnostics.

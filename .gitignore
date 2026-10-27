@@ -26,3 +26,9 @@ appliance/packer/packer-build-key.pub
 .env.*
 !.env.example
 !.env.demo
+
+# Machine-local deployment pins must not enter source releases.
+docker-compose.override.yml
+docker-compose.override.yaml
+compose.override.yml
+compose.override.yaml

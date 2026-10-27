@@ -26,7 +26,11 @@ services:
         ZTF2_REPO_URL: ${ZTF2_REPO_URL:-https://github.com/nutanixdev/zerotouch-framework.git}
         ZTF2_REF:      ${ZTF2_REF:-v2.0.0}
         ZTF2_BAKE:     ${ZTF2_BAKE:-true}
-    image: ztf-orchestrator:latest
+        ZTF_ORCHESTRATOR_VERSION: ${ZTF_ORCHESTRATOR_VERSION:-v1.8.5-rc1}
+        ZTF_BUILD_COMMIT: ${ZTF_BUILD_COMMIT:-}
+        ZTF_BUILD_DATE: ${ZTF_BUILD_DATE:-}
+        ZTF_ORCHESTRATOR_IMAGE: ${ZTF_ORCHESTRATOR_IMAGE:-ztf-orchestrator:${ZTF_ORCHESTRATOR_VERSION:-v1.8.5-rc1}}
+    image: ${ZTF_ORCHESTRATOR_IMAGE:-ztf-orchestrator:${ZTF_ORCHESTRATOR_VERSION:-v1.8.5-rc1}}
     container_name: ztf-orchestrator
     restart: unless-stopped
     depends_on:
