@@ -1,5 +1,10 @@
 # ZTF-Orchestrator User Guide
 
+Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
+`4a01072` on 27 October 2026. v1.8.4 remains Latest stable. Download the
+[illustrated Word manual](manuals/README.md) or begin with [Start Here](start-here.md).
+All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
+
 For controlled-UAT CVM SSH and Dell iDRAC password changes, see the
 [credential rotation guide](credential-rotation.md). The workflow is scoped to
 AOS 7.5.1.8 and requires manual Nutanix host IPMI credential synchronization.
@@ -55,7 +60,23 @@ Most production-style work follows this path:
 
 ## Overview Menu
 
-### Dashboard
+### Start Here and Overview
+
+Start Here is the default for users without a saved landing preference. Choose
+Deploy a Cluster, Configure an Existing Cluster, Monitor & Assess, or Run Saved
+Automation. **My landing page** can select Overview for this user in this browser.
+Scripts, YAML Studio and other specialist tools remain in Advanced Automation.
+
+![Start Here](assets/guide/v1.8.5-rc1/start-here.png)
+
+The deployment journey guides method selection, connectivity, cluster inputs,
+validation, review/approval, execution monitoring and the post-configuration
+handoff. Use the linked workflow to perform those actions. **Save and continue
+later** only saves guidance position/method, not configuration or completion.
+**Continue to Post-Configuration** links to existing configuration and pipeline
+screens; it does not create or run a pipeline. See [the journey guide](start-here.md).
+
+### Overview Dashboard
 
 Use Dashboard as the daily operations cockpit.
 
@@ -760,6 +781,11 @@ summaries depending on the selected source.
 
 ### Drift Detection
 
+For current **Live Prism Element** DNS/NTP/Pulse collection, schedule editing
+and Unknown diagnostics, follow [live PE drift monitoring](live-pe-drift-monitoring.md).
+It fetches fresh data on every run; stored-baseline comparison does not. Configure
+[persistent certificate trust](pe-certificate-trust.md) before live collection.
+
 Use Drift Detection to compare intended configuration against a baseline.
 
 Key functions:
@@ -916,10 +942,11 @@ and records a payload SHA-256 for traceability. Foundation image upload uses a
 bounded temporary staging file, a checksum, restricted filename and image-type
 validation, and removes the staging file after the upload attempt.
 
-Live Foundation mutation is enabled by default and remains guarded by
-administrator access, normal approval policy, intent validation, and the exact
-`DEPLOY FOUNDATION VM` confirmation. Set the flag to `false` to keep live
-Foundation VM submission disabled:
+Check the effective Foundation mutation gate in the actual deployment profile:
+the server fallback and Docker Compose substitutions can differ. Live submission
+still requires administrator access, normal approval policy, intent validation
+and the exact `DEPLOY FOUNDATION VM` confirmation. Set the flag to `false` to
+keep live Foundation VM submission disabled:
 
 ```text
 ZTF_FOUNDATION_VM_ENABLE_MUTATION=false

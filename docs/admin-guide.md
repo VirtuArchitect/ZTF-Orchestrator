@@ -2,6 +2,12 @@
 
 Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
+Documentation reviewed on 27 October 2026 against merged application revision
+`4a010727d5db3496d17a52e4ce681818dcc56200`. The [illustrated Word manual](manuals/README.md)
+preserves the supplied administrator/user guide format and contains refreshed,
+simulated screenshots. See [current screenshot provenance](assets/guide/v1.8.5-rc1/README.md).
+The prerelease remains separate from v1.8.4 Latest stable.
+
 This guide is for administrators who install, configure, operate, govern, and
 support ZTF-Orchestrator in a trusted internal environment. It covers the major
 features, their administrative purpose, common use cases, operating boundaries,
@@ -95,13 +101,38 @@ The sidebar groups day-to-day work into operating areas.
 
 | Area | Screens | Admin purpose |
 |---|---|---|
-| Overview | Dashboard, Setup & Install | Confirm readiness, bootstrap runtimes, detect blockers. |
+| Overview | Start Here, Overview, Setup & Install | Choose an operator journey, confirm readiness, bootstrap runtimes. |
 | Configure | Global Config, Config Files, YAML Studio, Workflows 1.x, Workflows 2.x, ZTF 2.x IaC | Prepare and validate reusable configuration. |
 | Execute | Scripts 1.x, Scripts 2.x, Jobs / Queue, Execution History, Pipelines, Schedules, Parallel Exec | Launch approved work and monitor execution. |
 | Govern | Approvals, Drift Detection, Validation Evidence, Upgrade Advisor, NKP Framework | Manage review, compliance, evidence, and platform-specific readiness. |
 | Admin | Settings, Users, Audit Log, Appliance Ops | Administer runtime, accounts, storage, backups, audit, and appliance operations. |
 
-## Dashboard
+## Start Here and Deployment Guidance
+
+Users without a saved landing preference open **Start Here** after login.
+Choose Deploy a Cluster, Configure an Existing Cluster, Monitor & Assess, or
+Run Saved Automation. **My landing page** stores a per-user browser preference;
+experienced users can select **Overview**. Specialist tools remain accessible
+under **Advanced Automation**. This navigation does not replace execution gates.
+
+![Start Here with four operator choices](assets/guide/v1.8.5-rc1/start-here.png)
+
+Deploy a Cluster provides seven guidance stages: choose the method, connect,
+define the cluster, validate, review and approve, deploy and monitor, and
+continue to post-configuration. Choose the service actually available at the
+site: classic Foundation VM, integrated Foundation Central, or standalone FCA.
+The matching existing workflow owns validation, exact YAML approval and live
+submission. Selecting a guidance stage is not evidence that its work passed.
+
+**Save and continue later** saves only the selected method and guidance position
+in this user's browser. Use **Download Config** or Config Files to retain actual
+inputs. **Continue to Post-Configuration** opens guidance and links to Configure
+Cluster, Scripts and Pipelines; it does not create or execute a pipeline or
+select a target automatically. Follow [the complete journey](start-here.md).
+
+![Post-configuration handoff](assets/guide/v1.8.5-rc1/post-configuration.png)
+
+## Overview Dashboard
 
 The Dashboard is the operational cockpit. Admins should use it at the start of
 each maintenance window and during incident response.
@@ -441,6 +472,21 @@ Admin guidance:
 - Capture evidence after significant phases.
 - Use approvals for destructive, recovery, or customer-impacting steps.
 
+Use narrowly scoped configurations for password change, EULA/Pulse, DNS/NTP,
+networking, storage, optional HA/local administrators and PC registration.
+Require fresh replacement-password authentication before using the new reference.
+Omit `new_pe_admin_credential` after that first stage; its password substep then
+reports SKIP. Container verification reads requested supported properties and
+fails on missing or mismatched results without repairing existing containers.
+See [PE post-configuration verification](pe-post-configuration-verification.md).
+
+**Create Local Users (PE)** is a separate administrator-confirmed Script step.
+Use distinct matching credential references and inspect partial target state
+before retrying. [Stage-specific diagnostics](pe-local-users.md#failure-diagnostics)
+distinguish trust, SAN identity, network, HTTP access, creation and role failures.
+Verify enabled state and both required roles after the run; see the
+[read-only account verification procedure](pe-local-users.md#independent-read-only-verification).
+
 ## Schedules
 
 Schedules allow repeatable jobs to run at configured times.
@@ -497,6 +543,13 @@ Admin guidance:
 - Confirm source data and time window before taking corrective action.
 - Capture evidence before and after remediation.
 - Use schedules for recurring non-destructive drift checks.
+
+**Live Prism Element** collects DNS, NTP and Pulse afresh on manual and scheduled
+runs. Stored Snapshot and Last Applied do not poll PE. Use the pencil **Edit
+schedule** control to update an existing policy, then Run now and verify the next
+UTC trigger. Trust, IP/SAN, network and HTTP failures remain Unknown, not Matched.
+Follow [live collection and diagnostics](live-pe-drift-monitoring.md) and the
+[persistent Docker trust procedure](pe-certificate-trust.md).
 
 ## Validation Evidence
 
@@ -566,6 +619,14 @@ Admin guidance:
 - Preserve the assessment with Validation Evidence or change records when used
   for governed maintenance.
 
+Configure verified PE/PC HTTPS endpoints and existing credential references, then
+**Collect inventory**. Review collection time and partial Unknowns; manually
+verify NCC, LCM, firmware and Foundation versions. PC product-header collection
+does not prove authenticated API permission. Enter targets, run the assessment,
+review every readiness action, then **Save assessment snapshot** and export.
+Reopening a saved assessment preserves its historical inputs/findings; it does
+not collect fresh inventory. See [Upgrade Advisor operations](nutanix-upgrade-risk-advisor.md).
+
 ## Appliance Operations
 
 Appliance Ops supports AHV or VM-based appliance administration.
@@ -594,6 +655,15 @@ Admin guidance:
   Release assets, and internal artifact storage clearly separate.
 - Always record Installed Build metadata after an update.
 - Do not treat an offline update package as a full appliance image.
+
+For source rebuilds use the versioned Compose image and the source-aligned build
+arguments; stale release overrides are rejected. Compare the actual container
+image, `/health` installed identity and Settings > About after cutover. A footer
+or staged request alone cannot prove the requested image is running. Follow
+[Docker build identity](docker-build-identity.md). Before updating, budget disk
+space for both pre-update backups and image extraction; imported package caches
+inside the data volume can make each snapshot large. Preserve a verified backup
+pair and rollback image before any targeted retention cleanup.
 
 ## Settings
 
