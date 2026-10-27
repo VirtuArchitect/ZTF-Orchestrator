@@ -19,6 +19,11 @@ post-configuration, PE account verification, certificate trust and appliance
 updates. Documentation was reviewed against merged application revision
 `4a01072` on 27 October 2026; historical release documents remain archived.
 
+The [revision 3 cluster deployment process](docs/cluster-deployment-process.md)
+shows the ten stages from design to operational acceptance, with approval,
+password-authentication, post-configuration and verification gates. It is also
+included in the Word guide as a landscape appendix with enlarged stage views.
+
 Local Compose rebuilds use a versioned image and pass the release/build identity
 into Docker. A build guard rejects stale version overrides that disagree with
 the source release. See [Docker build identity](docs/docker-build-identity.md)

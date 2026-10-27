@@ -4,9 +4,11 @@
 
 Reviewed **27 October 2026** against merged application revision
 `4a010727d5db3496d17a52e4ce681818dcc56200`. The manual covers the
-**v1.8.5-rc1 controlled-UAT candidate**; **v1.8.4 remains Latest stable**.
-It preserves the supplied guide's page geometry, typography, tables, headers
-and footers. Its 45 application illustrations use the
+**v1.8.5-rc1 prerelease**; **v1.8.4 remains Latest stable**.
+It preserves the supplied guide's original portrait pages, typography, tables,
+headers and footers. A landscape appendix adds the revision 3 process overview
+and two enlarged stage views; the existing body remains unchanged apart from
+an opening pointer to that appendix. Its 45 application illustrations use the
 [current simulated screenshot gallery](../assets/guide/v1.8.5-rc1/README.md),
 including repeated dashboard/pipeline examples. They are not live target evidence.
 
@@ -17,7 +19,11 @@ space planning. It retains detailed installation, workflow/script, pipeline,
 Upgrade Advisor, live drift, backup, recovery and governance instructions.
 No unfinished deployment-engine work is included.
 
-Document SHA256: `16734b97160e5eaef819529a79124b97783d3777426e473c9bcc0758ca14cd40`.
+Document SHA256: `d8b81e7a8bed8b902b25ce5a760ab6452b914d35a262ada9882d96d7ba97ef49`.
+
+[Revision 3 deployment process](../cluster-deployment-process.md) provides
+the full-resolution PNG, editable SVG and accessible text sequence. Its approval
+and verification boundaries also apply to the illustrated appendix.
 
 ## Related procedures
 

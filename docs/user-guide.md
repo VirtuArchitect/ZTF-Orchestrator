@@ -5,6 +5,9 @@ Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
 [illustrated Word manual](manuals/README.md) or begin with [Start Here](start-here.md).
 All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
 
+Use the [revision 3 deployment process](cluster-deployment-process.md) to follow
+the design, deployment, post-configuration and operational acceptance sequence.
+
 For controlled-UAT CVM SSH and Dell iDRAC password changes, see the
 [credential rotation guide](credential-rotation.md). The workflow is scoped to
 AOS 7.5.1.8 and requires manual Nutanix host IPMI credential synchronization.
