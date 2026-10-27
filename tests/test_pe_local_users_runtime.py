@@ -6,6 +6,7 @@ import sys
 import types
 
 import pytest
+from pe_local_users import PeUserError
 
 
 def test_extension_resolves_credentials_by_keyword_and_sanitizes_failure(monkeypatch, caplog):
@@ -25,7 +26,7 @@ def test_extension_resolves_credentials_by_keyword_and_sanitizes_failure(monkeyp
         return {'192.0.2.10': {'ops.one': 'PASS'}}
     modules = {
         'framework.helpers.helper_functions': {'read_creds': read_creds},
-        'framework.helpers.pe_local_users': {'provision': provision},
+        'framework.helpers.pe_local_users': {'provision': provision, 'PeUserError': PeUserError},
         'framework.scripts.python.script': {'Script': Script},
         'framework.helpers.log_utils': {'get_logger': lambda name: logging.getLogger(name)},
     }

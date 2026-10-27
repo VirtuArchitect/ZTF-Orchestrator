@@ -8,6 +8,9 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Updated source builds report stage-specific PE local-user failures with safe
+  credential, TLS, network, HTTP and verification categories. No secret values,
+  response bodies or raw transport exceptions are included in these diagnostics.
 - Updated source builds verify replacement PE admin authentication and stop
   unverified changes; unused password steps explicitly skip. Container readback
   verifies requested properties and rejects mismatches without auto-repair.

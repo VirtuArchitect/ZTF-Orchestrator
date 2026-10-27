@@ -9,6 +9,134 @@ import pytest
 import pe_local_users as pe
 
 
+@pytest.mark.parametrize('method,stage', [('users', 'existing_account_read'), ('create', 'account_creation')])
+def test_stage_errors_suppress_arbitrary_upstream_secrets(method, stage):
+    client = Client()
+    def fail(*args):
+        raise RuntimeError('password=canary-secret Authorization: Basic canary-token')
+    setattr(client, method, fail)
+    with pytest.raises(pe.PeUserError) as caught:
+        pe.provision(intent(1), resolve, lambda _: None, lambda *args: client)
+    assert f'stage={stage}' in str(caught.value)
+    assert 'canary' not in str(caught.value)
+    assert caught.value.category == 'unexpected_error'
+
+
+@pytest.mark.parametrize('code,category', [(401, 'authentication_failed'), (403, 'authorization_failed'),
+                                        (404, 'api_incompatible'), (405, 'api_incompatible'), (500, 'http_error')])
+def test_http_failure_category_and_stage(code, category):
+    client = pe.PeUsersClient('192.0.2.10', 'admin', 'canary-password')
+    class Opener:
+        def open(self, *args, **kwargs):
+            raise urllib.error.HTTPError('https://canary-secret', code, 'canary-body', {}, None)
+    client.opener = Opener()
+    with pytest.raises(pe.PeUserError) as caught:
+        pe.provision(intent(1), resolve, lambda _: None, lambda *args: client)
+    assert caught.value.category == category
+    assert 'stage=existing_account_read' in str(caught.value)
+    assert 'canary' not in str(caught.value)
+
+
+@pytest.mark.parametrize('verify_code,category', [(18, 'certificate_trust_failed'),
+                                               (62, 'certificate_identity_mismatch'),
+                                               (64, 'certificate_identity_mismatch')])
+def test_tls_identity_and_trust_are_distinct(verify_code, category):
+    error = ssl.SSLCertVerificationError('canary-secret')
+    error.verify_code = verify_code
+    client = pe.PeUsersClient('192.0.2.10', 'admin', 'canary-password')
+    class Opener:
+        def open(self, *args, **kwargs):
+            raise urllib.error.URLError(error)
+    client.opener = Opener()
+    with pytest.raises(pe.PeUserError) as caught:
+        client.request('GET')
+    assert caught.value.category == category
+    assert 'canary' not in str(caught.value)
+
+
+def test_role_assignment_failure_reports_possible_partial_write():
+    client = pe.PeUsersClient('192.0.2.10', 'admin', 'canary-password')
+    calls = []
+    def request(method, suffix='', payload=None):
+        calls.append((method, suffix))
+        if suffix.endswith('/roles'):
+            raise pe.PeUserError('authorization_failed', 'PE user API returned HTTP 403')
+        return []
+    client.request = request
+    with pytest.raises(pe.PeUserError, match='stage=role_assignment'):
+        pe.provision(intent(2), resolve, lambda _: None, lambda *args: client)
+    assert calls == [('GET', ''), ('POST', ''), ('POST', '/ops.admin0/roles')]
+
+
+def test_explicit_stage_precedes_normal_vault_log_in_job_diagnostics():
+    import server
+    line = '[PE-USERS] stage=existing_account_read target=192.0.2.10 category=certificate_trust_failed: Check trusted CA bundle.'
+    result = server._classify_execution_failure('Calling get_creds_from_vault\n' + line, '', 1)
+    assert result['category'] == 'pe_users_certificate_trust_failed'
+    assert result['evidence'] == line
+
+
+@pytest.mark.parametrize('error,category', [(urllib.error.URLError('canary-secret'), 'network_failed'),
+                                        (TimeoutError('canary-secret'), 'network_failed'),
+                                        (ssl.SSLError('canary-secret'), 'tls_failed')])
+def test_safe_network_and_tls_categories(error, category):
+    client = pe.PeUsersClient('192.0.2.10', 'admin', 'fixture-only')
+    class Opener:
+        def open(self, *args, **kwargs):
+            raise error
+    client.opener = Opener()
+    with pytest.raises(pe.PeUserError) as caught:
+        client.request('GET')
+    assert caught.value.category == category
+    assert 'canary' not in str(caught.value)
+
+
+def test_credential_failure_identifies_user_without_raw_exception():
+    def lookup(ref):
+        if ref == 'ops1':
+            raise RuntimeError('canary-secret')
+        return resolve(ref)
+    with pytest.raises(pe.PeUserError) as caught:
+        pe.prepare_credentials(intent(2), lookup)
+    assert 'stage=credential_resolution' in str(caught.value)
+    assert 'ops.admin1' in str(caught.value)
+    assert 'No PE requests' in str(caught.value)
+    assert 'canary' not in str(caught.value)
+
+
+def test_installed_wrapper_logs_only_typed_safe_diagnostics(monkeypatch):
+    import sys
+    import types
+    logger = types.SimpleNamespace(info=lambda _: None, error=lambda message: messages.append(message))
+    messages = []
+    class Script:
+        def __init__(self, **kwargs):
+            self.logger, self.results, self.exceptions = logger, {}, []
+        def run(self, **kwargs):
+            self.execute()
+    helpers = {
+        'framework.helpers.helper_functions': types.SimpleNamespace(read_creds=lambda **kwargs: ('admin', 'canary-secret')),
+        'framework.helpers.pe_local_users': pe,
+        'framework.scripts.python.script': types.SimpleNamespace(Script=Script),
+        'framework.helpers.log_utils': types.SimpleNamespace(get_logger=lambda _: logger),
+    }
+    for name, module in helpers.items():
+        monkeypatch.setitem(sys.modules, name, module)
+    spec = importlib.util.spec_from_file_location('users_wrapper', Path(__file__).parents[1] / 'scripts/ztf_create_local_users_pe.py')
+    wrapper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(wrapper)
+    def fail(*args):
+        raise pe.PeUserError('network_failed', '[PE-USERS] stage=existing_account_read target=192.0.2.10 category=network_failed: Check routing.')
+    monkeypatch.setattr(wrapper, 'provision', fail)
+    script = wrapper.CreateLocalUsersPe(intent(1))
+    with pytest.raises(SystemExit) as caught:
+        script.run()
+    assert caught.value.code == 1
+    assert 'stage=existing_account_read' in messages[0]
+    assert script.results['Create_Local_Users'] == 'FAIL'
+    assert 'canary' not in str(messages) + str(script.exceptions)
+
+
 def intent(count=8):
     return {'clusters': {'192.0.2.10': {'name': 'test', 'pe_credential': 'pe_user',
             'local_users': [{'username': f'ops.admin{i}', 'credential_ref': f'ops{i}'} for i in range(count)]}}}
