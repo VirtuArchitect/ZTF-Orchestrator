@@ -2,6 +2,12 @@
 
 **Release candidate for controlled UAT, not a production-ready promotion.**
 
+Start with **Start Here** to deploy a cluster, configure an existing cluster,
+monitor and assess, or open saved automation. The guided deployment journey links
+to existing workflows and post-configuration pipelines while preserving approvals
+and verification gates. The dashboard remains available as **Overview**.
+See [Start Here and deployment guidance](docs/start-here.md).
+
 Local Compose rebuilds use a versioned image and pass the release/build identity
 into Docker. A build guard rejects stale version overrides that disagree with
 the source release. See [Docker build identity](docs/docker-build-identity.md)

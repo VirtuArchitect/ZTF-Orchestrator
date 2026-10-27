@@ -4,7 +4,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2, Blocks
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2, Blocks, Compass
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -24,7 +24,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Overview',
     items: [
-      { path: '/', icon: LayoutDashboard, label: 'Dashboard', roles: ALL_ROLES },
+      { path: '/start', icon: Compass, label: 'Start Here', roles: ALL_ROLES },
+      { path: '/overview', icon: LayoutDashboard, label: 'Overview', roles: ALL_ROLES },
       { path: '/setup', icon: Download, label: 'Setup & Install', roles: OPERATORS },
     ],
   },
@@ -33,12 +34,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
       { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
-      { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
       { path: '/workflows', icon: Workflow, label: 'Workflows 1.x', roles: OPERATORS },
       { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS, badge: 'Preview' },
-      { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS, badge: 'Preview' },
-      { path: '/scripts', icon: Terminal, label: 'Scripts 1.x', roles: OPERATORS },
-      { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
     ],
   },
   {
@@ -61,6 +58,15 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
       { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
       { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
+    ],
+  },
+  {
+    label: 'Advanced Automation',
+    items: [
+      { path: '/scripts', icon: Terminal, label: 'Scripts 1.x', roles: OPERATORS },
+      { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
+      { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
+      { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS, badge: 'Preview' },
     ],
   },
   {
@@ -116,8 +122,8 @@ export default function Sidebar() {
       <div className="h-16 flex items-center px-4 border-b border-border flex-shrink-0">
         <Link
           to="/"
-          aria-label="Dashboard Overview"
-          title="Dashboard Overview"
+          aria-label="My landing page"
+          title="My landing page"
           onClick={() => {
             window.sessionStorage.setItem(NAV_SCROLL_KEY, '0')
             if (navRef.current) navRef.current.scrollTop = 0

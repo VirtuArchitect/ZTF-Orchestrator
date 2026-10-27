@@ -4456,6 +4456,13 @@ export default function WorkflowDetail() {
       }
     >
       {/* Back + Info */}
+      {['cluster-create', 'cluster-create-foundation-vm', 'cluster-create-standalone-fca'].includes(workflow.id) && (
+        <div className="card mb-5 flex flex-wrap items-center gap-4 text-sm">
+          <Link to="/start/deploy" className="text-nutanix-cyan">Deployment guidance</Link>
+          <Link to="/start/configure" className="text-nutanix-cyan">Continue to Post-Configuration</Link>
+          <span className="text-gray-500">Confirm successful deployment and fresh PE health before configuring the cluster. Opening guidance does not execute anything.</span>
+        </div>
+      )}
       <div className="flex items-start gap-4 mb-6">
         <Link to={workflowsBasePath} className="btn-ghost p-2 -ml-2 mt-0.5">
           <ArrowLeft size={16} />

@@ -24,6 +24,11 @@ do not treat a staged request or loaded image as an applied update.
 
 ## Apply and Verify
 
+- [ ] Verify new-user landing at Start Here, all four starting choices, deployment
+  method routing, saved guidance/landing preference, and the post-configuration
+  pipeline handoff. Check viewer restrictions and confirm guidance navigation
+  makes no execution requests. See [Start Here](docs/start-here.md).
+
 For commit-specific updates containing PE user diagnostics, confirm the bundled
 runtime emits `[PE-USERS] stage=... category=...` for a controlled failure without
 logging credentials or raw responses. A credential-only Dry Run must remain

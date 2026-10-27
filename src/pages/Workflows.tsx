@@ -9,6 +9,7 @@ import Layout from '../components/Layout'
 import { WORKFLOWS } from '../data'
 import type { WorkflowDef } from '../types'
 import clsx from 'clsx'
+import { workflowPrerequisite } from '../startGuide'
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: string | number; className?: string }>> = {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
@@ -52,7 +53,8 @@ function WorkflowCard({ workflow, detailBasePath }: { workflow: WorkflowDef; det
         </div>
         <ChevronRight size={16} className="text-gray-600 group-hover:text-gray-400 transition-colors mt-1" />
       </div>
-      <p className="text-sm text-gray-400 leading-relaxed flex-1">{workflow.description}</p>
+      <p className="text-sm text-gray-400 leading-relaxed"><strong>Use this when: </strong>{workflow.description}</p>
+      <p className="text-xs text-gray-500 leading-relaxed mt-3 flex-1"><strong>Before you begin: </strong>{workflowPrerequisite(workflow.id, workflow.category)}</p>
       <div className="mt-3 pt-3 border-t border-border/50">
         <span className="text-xs font-mono text-gray-600">
           {workflow.runtimeMode === 'ztf2' ? 'ztf plan / input.yml' : workflow.configFile}

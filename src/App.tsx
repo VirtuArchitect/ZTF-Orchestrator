@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from './router'
 import { useStore } from './store'
 import Dashboard     from './pages/Dashboard'
+import StartHere, { LandingPage, OperatorJourney } from './pages/StartHere'
 import Setup         from './pages/Setup'
 import GlobalConfig  from './pages/GlobalConfig'
 import Workflows     from './pages/Workflows'
@@ -65,6 +66,15 @@ export default function App() {
 
         {/* Protected */}
         <Route path="/" element={
+          <RequireAuth><LandingPage /></RequireAuth>
+        } />
+        <Route path="/start" element={
+          <RequireAuth><StartHere /></RequireAuth>
+        } />
+        <Route path="/start/:journey" element={
+          <RequireAuth><OperatorJourney /></RequireAuth>
+        } />
+        <Route path="/overview" element={
           <RequireAuth><Dashboard /></RequireAuth>
         } />
         <Route path="/setup" element={

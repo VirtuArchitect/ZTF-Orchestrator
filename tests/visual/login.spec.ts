@@ -55,8 +55,8 @@ test('login handles network failure and a successful session redirect', async ({
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('Could not reach the server')
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/\/start$/)
+  await expect(page.getByRole('heading', { name: 'Start Here', exact: true })).toBeVisible()
 })
 
 for (const width of [320, 390, 1536]) {

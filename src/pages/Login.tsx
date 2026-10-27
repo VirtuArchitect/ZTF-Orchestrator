@@ -34,7 +34,7 @@ export default function Login() {
       }
       const data = await resp.json()
       setAuth(data.token, data.user)
-      navigate('/')           // ← redirect to dashboard after login
+      navigate('/') // Resolve the user's landing preference after login.
     } catch {
       setError('Could not reach the server. Is it running?')
     } finally {

@@ -8,6 +8,10 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Start Here: four operator starting choices, seven-stage deployment guidance,
+  post-configuration pipeline handoff, per-user browser landing preference and
+  saved guide position. Existing role/approval/verification gates remain.
+  Guide bookmarks never execute workflows. See docs/start-here.md.
 - Updated source builds use a versioned local Compose image, forward build
   identity, and reject stale Docker version overrides before runtime installation.
   Local Compose deployment pins remain private and excluded from image contexts.
