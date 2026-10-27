@@ -9,6 +9,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Report safe CreateLocalUsersPe stages and error categories without exposing
+  credentials or API bodies; prefer explicit PE user evidence over generic
+  vault/password keyword classification. Preserve fail-closed execution.
+
 ### Added
 - Create Local Users (PE) in Scripts and pipelines, with eight named-admin
   credential references by default, administrator-only execution, exact

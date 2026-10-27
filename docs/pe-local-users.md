@@ -78,6 +78,31 @@ default unverified transport or log request/response bodies.
 
 ## Existing Accounts and Recovery
 
+## Failure Diagnostics
+
+Updated builds emit `[PE-USERS] stage=... target=... category=...` on failure.
+Stages distinguish credential resolution, client initialization, existing account
+and role reads/checks, account creation, role assignment, and account/role
+verification. Credential failures identify the administrator or intended username
+without printing reference values, resolved credentials or upstream exceptions.
+Each new user still requires its own nonempty password; duplicate passwords fail
+before any PE request. Dry Run only checks intent and credential resolution.
+
+Categories distinguish certificate trust/validity from IP/SAN identity mismatch,
+TLS negotiation, network failures, HTTP authentication (401), authorization (403),
+API incompatibility (404/405), invalid responses, rejected operations, existing
+account conflicts and failed verification. Unknown errors suppress raw details.
+Job diagnostics prefer this explicit evidence over generic vault log messages.
+No request/response bodies, passwords, Authorization headers or raw exception
+messages are retained. Trust checks, admin/confirmation gates and stop-on-failure
+behavior remain enabled; no automatic mutation retries are added.
+
+Creation, role assignment and subsequent reads are separate operations. A failure
+after a write was attempted can leave an account or roles present, even if no
+success was printed. Inspect PE before retrying; diagnostics do not assert rollback.
+
+### Recovery boundaries
+
 All references and usernames are checked before networking. Existing accounts
 are inspected before any new accounts are created. Existing accounts with both
 requested admin roles are verified and skipped; their passwords are unchanged

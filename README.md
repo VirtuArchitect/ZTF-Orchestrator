@@ -2,6 +2,11 @@
 
 **Release candidate for controlled UAT, not a production-ready promotion.**
 
+Updated source builds report safe, stage-specific Create Local Users (PE)
+failures, distinguishing credential resolution, TLS trust/identity, network,
+HTTP access, account creation, role assignment and verification errors.
+See [PE local-user diagnostics](docs/pe-local-users.md#failure-diagnostics).
+
 Updated source builds fail registration jobs when `Register_to_PC` reports
 `CAN'T VERIFY` or `FAIL`, even with exit code zero, and show redacted verification
 exception details from the bundled runtime.

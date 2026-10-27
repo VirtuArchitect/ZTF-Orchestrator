@@ -19,6 +19,12 @@ do not treat a staged request or loaded image as an applied update.
 
 ## Apply and Verify
 
+For commit-specific updates containing PE user diagnostics, confirm the bundled
+runtime emits `[PE-USERS] stage=... category=...` for a controlled failure without
+logging credentials or raw responses. A credential-only Dry Run must remain
+non-mutating and make no PE requests. Inspect target accounts before retrying
+any failed creation/role-assignment run.
+
 1. Import the candidate ZIP through Appliance Ops, or use the documented
    host-side update helper with its candidate request file and image tar.
 2. Review the staged request, version, repository, checksum and source reference.

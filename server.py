@@ -34280,6 +34280,15 @@ def _display_command(args: list[str]) -> str:
 
 def _classify_execution_failure(stderr: str, stdout: str, return_code: int | None) -> dict:
     output = f'{stderr}\n{stdout}'.strip()
+    for line in output.splitlines():
+        if '[PE-USERS] stage=' in line:
+            match = re.search(r'category=([a-z_]+):', line)
+            if match:
+                return {
+                    'category': 'pe_users_' + match.group(1),
+                    'likelyFix': 'Review the reported PE user stage. Correct credentials, trust or connectivity as indicated; inspect accounts and roles before retrying a write.',
+                    'evidence': _redact_text(line.strip()),
+                }
     registration_evidence = _ztf_registration_failure_evidence(output)
     if registration_evidence:
         return {
