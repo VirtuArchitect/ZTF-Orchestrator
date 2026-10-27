@@ -3,7 +3,7 @@
 For source-derived v1.8.5-rc1 rebuilds, follow [Docker build identity](docker-build-identity.md)
 and use the approved versioned image. v1.8.4 remains Latest stable. After cutover,
 verify the actual image and `/health` installed identity, then open
-[Start Here](start-here.md). See the [illustrated Word manual](manuals/README.md)
+[Start Here](start-here.md). See the [illustrated PDF manual](manuals/README.md)
 for the complete administrator/operator reference.
 
 Before appliance updates, check free space for both the data/database backup and

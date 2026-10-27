@@ -2,7 +2,7 @@
 
 Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
 `4a01072` on 27 October 2026. v1.8.4 remains Latest stable. Download the
-[illustrated Word manual](manuals/README.md) or begin with [Start Here](start-here.md).
+[illustrated PDF manual](manuals/README.md) or begin with [Start Here](start-here.md).
 All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
 
 Use the [revision 3 deployment process](cluster-deployment-process.md) to follow

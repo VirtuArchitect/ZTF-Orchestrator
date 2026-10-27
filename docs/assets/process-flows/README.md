@@ -7,7 +7,7 @@ post-configuration, verification and operational acceptance.
 - [Full-resolution PNG](cluster-deployment-v3.png), 6400 x 3600 pixels.
 - [Editable SVG](cluster-deployment-v3.svg), with native text and shapes.
 - [Text equivalent and related procedures](../../cluster-deployment-process.md).
-- [Word guide](../../manuals/README.md), with an overview and enlarged stage views.
+- [PDF guide](../../manuals/README.md), with an overview and enlarged stage views.
 
 These are process illustrations rather than console screenshots or evidence of
 a new live deployment. They retain pipeline approval boundaries, verification
