@@ -2,6 +2,11 @@
 
 **Release candidate for controlled UAT, not a production-ready promotion.**
 
+Local Compose rebuilds use a versioned image and pass the release/build identity
+into Docker. A build guard rejects stale version overrides that disagree with
+the source release. See [Docker build identity](docs/docker-build-identity.md)
+before rebuilding or replacing a locally pinned image.
+
 Updated source builds report safe, stage-specific Create Local Users (PE)
 failures, distinguishing credential resolution, TLS trust/identity, network,
 HTTP access, account creation, role assignment and verification errors.

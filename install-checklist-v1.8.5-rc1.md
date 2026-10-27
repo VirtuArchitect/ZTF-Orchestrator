@@ -5,6 +5,11 @@ do not treat a staged request or loaded image as an applied update.
 
 ## Before Installation
 
+- [ ] For source rebuilds, review `.env` and local Compose overrides. Require the
+  resolved version/image to match the intended source; do not rebuild an old,
+  dirty checkout and expect an appliance image update to refresh those files.
+  See [Docker build identity](docs/docker-build-identity.md).
+
 - [ ] Approve the UAT change, owner, maintenance window and rollback point.
 - [ ] Review [readiness and outstanding gates](docs/releases/v1.8.5-rc1-readiness.md).
 - [ ] Verify the downloaded ZIP against its separately supplied SHA-256.

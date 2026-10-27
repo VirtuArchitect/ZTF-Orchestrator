@@ -10,6 +10,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Keep local Docker rebuild identity aligned with source: versioned Compose image,
+  forwarded metadata, early rejection of stale version overrides and regression
+  checks for Docker/Compose/example-environment consistency. Exclude local Compose
+  overrides from Git and Docker contexts.
 - Report safe CreateLocalUsersPe stages and error categories without exposing
   credentials or API bodies; prefer explicit PE user evidence over generic
   vault/password keyword classification. Preserve fail-closed execution.
