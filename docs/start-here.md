@@ -3,6 +3,9 @@
 Current candidate: **v1.8.5-rc1**. This is navigation around existing execution
 paths; it does not add a deployment backend or broaden hardware support.
 
+Follow the [revision 3 deployment process](cluster-deployment-process.md) for
+the full design-to-acceptance sequence, including post-configuration gates.
+
 ## Choose an outcome
 
 After signing in, users without a landing preference open **Start Here**.

@@ -8,6 +8,10 @@ preserves the supplied administrator/user guide format and contains refreshed,
 simulated screenshots. See [current screenshot provenance](assets/guide/v1.8.5-rc1/README.md).
 The prerelease remains separate from v1.8.4 Latest stable.
 
+The [revision 3 cluster deployment process](cluster-deployment-process.md)
+provides the diagram, text equivalent and acceptance gates. The Word manual
+includes its overview and enlarged stage views in a landscape appendix.
+
 This guide is for administrators who install, configure, operate, govern, and
 support ZTF-Orchestrator in a trusted internal environment. It covers the major
 features, their administrative purpose, common use cases, operating boundaries,

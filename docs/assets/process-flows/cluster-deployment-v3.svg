@@ -1,0 +1,381 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="6400" height="3600" viewBox="0 0 6400 3600"><rect width="6400" height="3600" fill="#f5f8fc"/>
+<text x="88" y="100" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="700" fill="#07849b">ZTF-ORCHESTRATOR</text>
+<text x="88" y="225" font-family="Segoe UI, Arial, sans-serif" font-size="108" font-weight="700" fill="#122d50">Nutanix AHV HCI Cluster Deployment Workflow</text>
+<text x="88" y="312" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="400" fill="#193451">Guide-aligned process | v1.8.5-rc1 | 27 October 2026 | Day 0 to early Day 1</text>
+<rect x="88" y="363" width="6224" height="170" rx="16" fill="#122d50" stroke="#122d50" stroke-width="3"/>
+<text x="130" y="433" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">START  Approved design   &gt;   Validate   &gt;   Approve   &gt;   Execute   &gt;   Verify   &gt;   Accept</text>
+<text x="130" y="495" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#cbdcec">Stop at failed gates. Keep deployment progress, configuration completion and verified readiness separate.</text>
+<rect x="88.0" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#12996b" stroke-width="3"/>
+<rect x="88.0" y="590" width="602.6" height="220" rx="16" fill="#12996b" stroke="#12996b" stroke-width="3"/>
+<text x="116.0" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">01</text>
+<text x="116.0" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Design &amp; intake</text>
+<rect x="110.0" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="130.0" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">DESIGN</text>
+<text x="130.0" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Define cluster purpose,</text>
+<text x="130.0" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">nodes, capacity, resilience</text>
+<text x="130.0" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and workload requirements.</text>
+<rect x="110.0" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="130.0" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">COMPATIBILITY</text>
+<text x="130.0" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Confirm supported</text>
+<text x="130.0" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">hardware, AOS/AHV images</text>
+<text x="130.0" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and the selected Foundation</text>
+<text x="130.0" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">path.</text>
+<rect x="110.0" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="130.0" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">NETWORK PLAN</text>
+<text x="130.0" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Approve BMC, AHV, CVM</text>
+<text x="130.0" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and cluster IPs; VLANs,</text>
+<text x="130.0" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">gateways, DNS and NTP.</text>
+<rect x="110.0" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="130.0" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">CHANGE CONTROL</text>
+<text x="130.0" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Record owners, maintenance</text>
+<text x="130.0" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">window, approvals, backup</text>
+<text x="130.0" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and recovery arrangements.</text>
+<rect x="110.0" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="130.0" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="130.0" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Design approved</text>
+<rect x="110.0" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="130.0" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="130.0" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Resolve unsupported design</text>
+<text x="130.0" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">or missing prerequisites.</text>
+<rect x="712.6" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#277ed0" stroke-width="3"/>
+<rect x="712.6" y="590" width="602.6" height="220" rx="16" fill="#277ed0" stroke="#277ed0" stroke-width="3"/>
+<text x="740.6" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">02</text>
+<text x="740.6" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Start Here &amp; prepare</text>
+<rect x="734.6" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="754.6" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">CHOOSE AN OUTCOME</text>
+<text x="754.6" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Start Here &gt; Deploy a</text>
+<text x="754.6" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Cluster. Use the guided</text>
+<text x="754.6" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">journey to open the correct</text>
+<text x="754.6" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">workflow.</text>
+<rect x="734.6" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="754.6" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">SELECT THE SERVICE</text>
+<text x="754.6" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Choose Foundation VM,</text>
+<text x="754.6" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Foundation Central or</text>
+<text x="754.6" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">standalone FCA; review</text>
+<text x="754.6" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">prerequisites.</text>
+<rect x="734.6" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="754.6" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">PREPARE RUNTIME</text>
+<text x="754.6" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Confirm installed build and</text>
+<text x="754.6" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">ZTF runtime. Configure</text>
+<text x="754.6" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Global Config and credential</text>
+<text x="754.6" y="1810.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">references.</text>
+<rect x="734.6" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="754.6" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">TRUST &amp; CONNECT</text>
+<text x="754.6" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Verify endpoint, trusted</text>
+<text x="754.6" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">certificates and SAN identity;</text>
+<text x="754.6" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">test authenticated access.</text>
+<rect x="734.6" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="754.6" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="754.6" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Connections ready</text>
+<rect x="734.6" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="754.6" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="754.6" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Fix runtime, trust, credentials</text>
+<text x="754.6" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">or network reachability.</text>
+<rect x="1337.2" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#8351c5" stroke-width="3"/>
+<rect x="1337.2" y="590" width="602.6" height="220" rx="16" fill="#8351c5" stroke="#8351c5" stroke-width="3"/>
+<text x="1365.2" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">03</text>
+<text x="1365.2" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Define &amp; validate</text>
+<rect x="1359.2" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="1379.2" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#8351c5">AUTHOR &amp; SAVE</text>
+<text x="1379.2" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Generate or import exact</text>
+<text x="1379.2" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">YAML. Save it in Config Files</text>
+<text x="1379.2" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">or download a retained copy.</text>
+<rect x="1359.2" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="1379.2" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#8351c5">NODES &amp; IMAGES</text>
+<text x="1379.2" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Check node roles/positions,</text>
+<text x="1379.2" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">per-node BMC credentials,</text>
+<text x="1379.2" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">image inventory and AHV</text>
+<text x="1379.2" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">ISO checksum.</text>
+<rect x="1359.2" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="1379.2" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#8351c5">PREFLIGHT</text>
+<text x="1379.2" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Run schema and</text>
+<text x="1379.2" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">non-mutating checks. Test</text>
+<text x="1379.2" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">IPMI credentials where</text>
+<text x="1379.2" y="1810.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">supported; resolve blockers.</text>
+<rect x="1359.2" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="1379.2" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#8351c5">REVIEW &amp; APPROVE</text>
+<text x="1379.2" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Review targets and exact</text>
+<text x="1379.2" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">YAML. Obtain applicable</text>
+<text x="1379.2" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">approval and required</text>
+<text x="1379.2" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">confirmation.</text>
+<rect x="1359.2" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="1379.2" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="1379.2" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Preflight accepted</text>
+<rect x="1359.2" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="1379.2" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="1379.2" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Correct inputs; changes to</text>
+<text x="1379.2" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">approved content require</text>
+<text x="1379.2" y="2627.28" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">renewed review.</text>
+<rect x="1961.8000000000002" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#d69100" stroke-width="3"/>
+<rect x="1961.8000000000002" y="590" width="602.6" height="220" rx="16" fill="#d69100" stroke="#d69100" stroke-width="3"/>
+<text x="1989.8000000000002" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">04</text>
+<text x="1989.8000000000002" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Deploy &amp; monitor</text>
+<rect x="1983.8000000000002" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2003.8000000000002" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#d69100">EXECUTE</text>
+<text x="2003.8000000000002" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Submit through the selected</text>
+<text x="2003.8000000000002" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">deployment workflow.</text>
+<text x="2003.8000000000002" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Imaging may overwrite node</text>
+<text x="2003.8000000000002" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">installations.</text>
+<rect x="1983.8000000000002" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2003.8000000000002" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#d69100">FOUNDATION VM</text>
+<text x="2003.8000000000002" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Use the specialized</text>
+<text x="2003.8000000000002" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">workflow. Serialize</text>
+<text x="2003.8000000000002" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">independent jobs on one</text>
+<text x="2003.8000000000002" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Foundation VM.</text>
+<rect x="1983.8000000000002" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2003.8000000000002" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#d69100">OBSERVE</text>
+<text x="2003.8000000000002" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Review job logs, Foundation</text>
+<text x="2003.8000000000002" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">session and available</text>
+<text x="2003.8000000000002" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">per-node / phase telemetry.</text>
+<rect x="1983.8000000000002" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2003.8000000000002" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#d69100">HANDLE INTERRUPTS</text>
+<text x="2003.8000000000002" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Inspect actual session and</text>
+<text x="2003.8000000000002" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">node state before abort,</text>
+<text x="2003.8000000000002" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">restart or retry; retain</text>
+<text x="2003.8000000000002" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">evidence.</text>
+<rect x="1983.8000000000002" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="2003.8000000000002" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="2003.8000000000002" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Creation complete</text>
+<rect x="1983.8000000000002" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="2003.8000000000002" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="2003.8000000000002" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Stop on failure; reconcile</text>
+<text x="2003.8000000000002" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">target state before retrying.</text>
+<rect x="2586.4" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#277ed0" stroke-width="3"/>
+<rect x="2586.4" y="590" width="602.6" height="220" rx="16" fill="#277ed0" stroke="#277ed0" stroke-width="3"/>
+<text x="2614.4" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">05</text>
+<text x="2614.4" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Verify formation</text>
+<rect x="2608.4" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2628.4" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">PRISM ELEMENT</text>
+<text x="2628.4" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Open the new PE cluster VIP</text>
+<text x="2628.4" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">/ FQDN using trusted HTTPS</text>
+<text x="2628.4" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and approved credentials.</text>
+<rect x="2608.4" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2628.4" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">MEMBERSHIP</text>
+<text x="2628.4" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Confirm expected nodes,</text>
+<text x="2628.4" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">AHV hosts, CVMs, cluster</text>
+<text x="2628.4" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">identity and installed</text>
+<text x="2628.4" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">versions.</text>
+<rect x="2608.4" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2628.4" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">HEALTH</text>
+<text x="2628.4" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Check cluster services,</text>
+<text x="2628.4" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">storage, resilience, alerts and</text>
+<text x="2628.4" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">basic connectivity.</text>
+<rect x="2608.4" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="2628.4" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#277ed0">HANDOFF</text>
+<text x="2628.4" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Continue to</text>
+<text x="2628.4" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Post-Configuration opens</text>
+<text x="2628.4" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">guidance. Select the target</text>
+<text x="2628.4" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and saved files explicitly.</text>
+<rect x="2608.4" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="2628.4" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="2628.4" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Cluster healthy</text>
+<rect x="2608.4" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="2628.4" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="2628.4" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Resolve formation or health</text>
+<text x="2628.4" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">failures before configuration.</text>
+<rect x="3211.0" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#ef762b" stroke-width="3"/>
+<rect x="3211.0" y="590" width="602.6" height="220" rx="16" fill="#ef762b" stroke="#ef762b" stroke-width="3"/>
+<text x="3239.0" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">06</text>
+<text x="3239.0" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Identity &amp; baseline</text>
+<rect x="3233.0" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3253.0" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ef762b">PASSWORD IF REQUIRED</text>
+<text x="3253.0" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Change PE admin password</text>
+<text x="3253.0" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">only when needed. Require</text>
+<text x="3253.0" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">fresh new-password login</text>
+<text x="3253.0" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and cluster identity.</text>
+<rect x="3233.0" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3253.0" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ef762b">CREDENTIAL HANDOFF</text>
+<text x="3253.0" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Use the verified replacement</text>
+<text x="3253.0" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">reference in later files. Omit</text>
+<text x="3253.0" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">new_pe_admin_credential;</text>
+<text x="3253.0" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">expect SKIP.</text>
+<rect x="3233.0" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3253.0" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ef762b">EULA &amp; PULSE</text>
+<text x="3253.0" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Accept EULA with</text>
+<text x="3253.0" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">authorization. Apply</text>
+<text x="3253.0" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">approved Pulse choice or</text>
+<text x="3253.0" y="1810.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">leave it unchanged explicitly.</text>
+<rect x="3233.0" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3253.0" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ef762b">CORE SERVICES</text>
+<text x="3253.0" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Apply required DNS, NTP</text>
+<text x="3253.0" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and data-services IP.</text>
+<text x="3253.0" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Independently read back the</text>
+<text x="3253.0" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">requested values.</text>
+<rect x="3233.0" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="3253.0" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="3253.0" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Baseline verified</text>
+<rect x="3233.0" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="3253.0" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="3253.0" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Stop if replacement</text>
+<text x="3253.0" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">authentication or required</text>
+<text x="3253.0" y="2627.28" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">verification fails.</text>
+<rect x="3835.6000000000004" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#ce448f" stroke-width="3"/>
+<rect x="3835.6000000000004" y="590" width="602.6" height="220" rx="16" fill="#ce448f" stroke="#ce448f" stroke-width="3"/>
+<text x="3863.6000000000004" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">07</text>
+<text x="3863.6000000000004" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Network &amp; storage</text>
+<rect x="3857.6000000000004" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3877.6000000000004" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ce448f">VM NETWORKS</text>
+<text x="3877.6000000000004" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Create only approved,</text>
+<text x="3877.6000000000004" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">supported AHV VM</text>
+<text x="3877.6000000000004" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">networks. Verify VLANs and</text>
+<text x="3877.6000000000004" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">target connectivity.</text>
+<rect x="3857.6000000000004" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3877.6000000000004" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ce448f">STORAGE CONTAINERS</text>
+<text x="3877.6000000000004" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Create reviewed containers.</text>
+<text x="3877.6000000000004" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Read back every requested</text>
+<text x="3877.6000000000004" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">property, not just the</text>
+<text x="3877.6000000000004" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">container name.</text>
+<rect x="3857.6000000000004" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3877.6000000000004" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ce448f">OPTIONAL HA</text>
+<text x="3877.6000000000004" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Apply approved HA</text>
+<text x="3877.6000000000004" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">reservations only where</text>
+<text x="3877.6000000000004" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">required and compatible;</text>
+<text x="3877.6000000000004" y="1810.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">verify the resulting settings.</text>
+<rect x="3857.6000000000004" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="3877.6000000000004" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ce448f">RESULTS</text>
+<text x="3877.6000000000004" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Review existing-object</text>
+<text x="3877.6000000000004" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">matches and field</text>
+<text x="3877.6000000000004" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">mismatches. Missing</text>
+<text x="3877.6000000000004" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">evidence does not prove</text>
+<text x="3877.6000000000004" y="2215.8" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">success.</text>
+<rect x="3857.6000000000004" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="3877.6000000000004" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="3877.6000000000004" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Resources verified</text>
+<rect x="3857.6000000000004" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="3877.6000000000004" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="3877.6000000000004" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Resolve mismatches; do not</text>
+<text x="3877.6000000000004" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">assume automatic repair or</text>
+<text x="3877.6000000000004" y="2627.28" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">rollback.</text>
+<rect x="4460.2" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#1299a8" stroke-width="3"/>
+<rect x="4460.2" y="590" width="602.6" height="220" rx="16" fill="#1299a8" stroke="#1299a8" stroke-width="3"/>
+<text x="4488.2" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">08</text>
+<text x="4488.2" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Access &amp; integration</text>
+<rect x="4482.2" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="4502.2" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#1299a8">LOCAL ADMINS</text>
+<text x="4502.2" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">If required, use Create Local</text>
+<text x="4502.2" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Users (PE) with distinct</text>
+<text x="4502.2" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">references and unique</text>
+<text x="4502.2" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">passwords.</text>
+<rect x="4482.2" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="4502.2" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#1299a8">VERIFY ACCOUNTS</text>
+<text x="4502.2" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Independently check</text>
+<text x="4502.2" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">enabled state, Cluster Admin</text>
+<text x="4502.2" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and User Admin roles for</text>
+<text x="4502.2" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">every intended account.</text>
+<rect x="4482.2" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="4502.2" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#1299a8">CENTRAL OPERATIONS</text>
+<text x="4502.2" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">When PC is ready, register PE</text>
+<text x="4502.2" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and verify exact cluster</text>
+<text x="4502.2" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">identity and inventory in PC.</text>
+<rect x="4482.2" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="4502.2" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#1299a8">OTHER CONTROLS</text>
+<text x="4502.2" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Complete approved security,</text>
+<text x="4502.2" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">certificates, OOB, licensing</text>
+<text x="4502.2" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and protection tasks; retain</text>
+<text x="4502.2" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">manual proof.</text>
+<rect x="4482.2" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="4502.2" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="4502.2" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Controls verified</text>
+<rect x="4482.2" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="4502.2" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="4502.2" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Inspect partial writes or</text>
+<text x="4502.2" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">integration failures before</text>
+<text x="4502.2" y="2627.28" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">retrying.</text>
+<rect x="5084.8" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#6b54c5" stroke-width="3"/>
+<rect x="5084.8" y="590" width="602.6" height="220" rx="16" fill="#6b54c5" stroke="#6b54c5" stroke-width="3"/>
+<text x="5112.8" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">09</text>
+<text x="5112.8" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Validate readiness</text>
+<rect x="5106.8" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5126.8" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#6b54c5">HEALTH &amp; INVENTORY</text>
+<text x="5126.8" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Run actual NCC checks;</text>
+<text x="5126.8" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">review LCM inventory and</text>
+<text x="5126.8" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">compatibility. Assessment is</text>
+<text x="5126.8" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">not upgrade execution.</text>
+<rect x="5106.8" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5126.8" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#6b54c5">END-TO-END</text>
+<text x="5126.8" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Verify access,</text>
+<text x="5126.8" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">DNS/NTP/Pulse, VM</text>
+<text x="5126.8" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">networks, container</text>
+<text x="5126.8" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">properties and resilience.</text>
+<rect x="5106.8" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5126.8" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#6b54c5">WORKLOAD &amp; RESTORE</text>
+<text x="5126.8" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Complete scoped VM</text>
+<text x="5126.8" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">provisioning and isolated</text>
+<text x="5126.8" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">restore tests with the</text>
+<text x="5126.8" y="1810.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">responsible backup team.</text>
+<rect x="5106.8" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5126.8" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#6b54c5">ACCEPTANCE</text>
+<text x="5126.8" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Resolve significant findings</text>
+<text x="5126.8" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">and Unknown results; record</text>
+<text x="5126.8" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">approved exclusions and</text>
+<text x="5126.8" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">owners.</text>
+<rect x="5106.8" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="5126.8" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="5126.8" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Acceptance passed</text>
+<rect x="5106.8" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="5126.8" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="5126.8" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Remediate findings and repeat</text>
+<text x="5126.8" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">the affected checks.</text>
+<rect x="5709.400000000001" y="590" width="602.6" height="2110" rx="16" fill="#ffffff" stroke="#12996b" stroke-width="3"/>
+<rect x="5709.400000000001" y="590" width="602.6" height="220" rx="16" fill="#12996b" stroke="#12996b" stroke-width="3"/>
+<text x="5737.400000000001" y="655" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">10</text>
+<text x="5737.400000000001" y="717.0" font-family="Segoe UI, Arial, sans-serif" font-size="51" font-weight="700" fill="#ffffff">Handoff &amp; operate</text>
+<rect x="5731.400000000001" y="837" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5751.400000000001" y="887.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">AS-BUILT</text>
+<text x="5751.400000000001" y="949.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Retain reviewed YAML,</text>
+<text x="5751.400000000001" y="1000.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">job/approval IDs, versions,</text>
+<text x="5751.400000000001" y="1051.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">sanitized logs and actual</text>
+<text x="5751.400000000001" y="1102.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">verification evidence.</text>
+<rect x="5731.400000000001" y="1191" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5751.400000000001" y="1241.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">OPERATIONS</text>
+<text x="5751.400000000001" y="1303.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Assign support ownership,</text>
+<text x="5751.400000000001" y="1354.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">access, maintenance</text>
+<text x="5751.400000000001" y="1405.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">procedures and recovery</text>
+<text x="5751.400000000001" y="1456.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">responsibilities.</text>
+<rect x="5731.400000000001" y="1545" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5751.400000000001" y="1595.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">LIVE DRIFT</text>
+<text x="5751.400000000001" y="1657.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Schedule fresh PE</text>
+<text x="5751.400000000001" y="1708.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">DNS/NTP/Pulse checks.</text>
+<text x="5751.400000000001" y="1759.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Trust, SAN or network</text>
+<text x="5751.400000000001" y="1810.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">failures remain Unknown.</text>
+<rect x="5731.400000000001" y="1899" width="558.6" height="335" rx="16" fill="#f1f5fa" stroke="#f1f5fa" stroke-width="3"/>
+<text x="5751.400000000001" y="1949.0" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#12996b">ONGOING ASSURANCE</text>
+<text x="5751.400000000001" y="2011.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Review drift and saved</text>
+<text x="5751.400000000001" y="2062.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Upgrade Advisor</text>
+<text x="5751.400000000001" y="2113.4" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">assessments; maintain</text>
+<text x="5751.400000000001" y="2164.6" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">backups and rehearse</text>
+<text x="5751.400000000001" y="2215.8" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">recovery.</text>
+<rect x="5731.400000000001" y="2272" width="558.6" height="138" rx="16" fill="#eaf7ef" stroke="#78bf94" stroke-width="3"/>
+<text x="5751.400000000001" y="2315" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="#1b7749">GATE / GO</text>
+<text x="5751.400000000001" y="2368.0" font-family="Segoe UI, Arial, sans-serif" font-size="39" font-weight="700" fill="#1b7749">Accepted for workloads</text>
+<rect x="5731.400000000001" y="2430" width="558.6" height="244" rx="16" fill="#fff0ec" stroke="#eaa092" stroke-width="3"/>
+<text x="5751.400000000001" y="2474" font-family="Segoe UI, Arial, sans-serif" font-size="31" font-weight="700" fill="#b64432">STOP / REMEDIATE</text>
+<text x="5751.400000000001" y="2530.0" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">Close outstanding acceptance</text>
+<text x="5751.400000000001" y="2578.64" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">items before workload</text>
+<text x="5751.400000000001" y="2627.28" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" fill="#9a473b">handoff.</text>
+<rect x="88" y="2750" width="6224" height="300" rx="16" fill="#fff6dc" stroke="#d69a18" stroke-width="3"/>
+<text x="128" y="2817" font-family="Segoe UI, Arial, sans-serif" font-size="49" font-weight="700" fill="#8d5c00">PIPELINE EXECUTION AND APPROVAL BOUNDARIES</text>
+<text x="128" y="2882.0" font-family="Segoe UI, Arial, sans-serif" font-size="43" font-weight="400" fill="#193451">Use one reviewed configuration set per cluster. Each eligible step binds an action and saved file; steps run sequentially. A required FAIL or CAN&#x27;T VERIFY stops later steps. Configure Cluster may run internal actions concurrently; earlier writes are not rolled back.</text>
+<text x="128" y="3005.0" font-family="Segoe UI, Arial, sans-serif" font-size="43" font-weight="700" fill="#8d5c00">Approval-required workflows use the direct approved-job path when pipelines cannot bind the approval. Do not weaken policy to enable chaining.</text>
+<rect x="88" y="3080" width="3065" height="225" rx="16" fill="#e9f2ff" stroke="#5b96d1" stroke-width="3"/>
+<text x="128" y="3142" font-family="Segoe UI, Arial, sans-serif" font-size="43" font-weight="700" fill="#2461a0">POST-CONFIGURATION ORDER</text>
+<text x="128" y="3202.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">Conditional password + fresh login &gt; EULA / Pulse &gt; DNS / NTP &gt; VM networks / storage &gt; optional HA / local admins &gt; PC registration &gt; independent verification</text>
+<rect x="3185" y="3080" width="3127" height="225" rx="16" fill="#edf8f4" stroke="#58ad8d" stroke-width="3"/>
+<text x="3225" y="3142" font-family="Segoe UI, Arial, sans-serif" font-size="43" font-weight="700" fill="#237555">GUIDED HANDOFF AND SAVING</text>
+<text x="3225" y="3202.0" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">The journey does not create or run a pipeline. Save and continue retains browser journey state only; save the actual YAML separately. A green job is not proof that every</text>
+<text x="3225" y="3253.2" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="400" fill="#193451">requested control was applied.</text>
+<rect x="88" y="3335" width="1535" height="120" rx="16" fill="#ffffff" stroke="#d2dfea" stroke-width="3"/>
+<text x="112" y="3380" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#1b7749">APPLY</text>
+<text x="112" y="3429" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#193451">Verified executable mapping.</text>
+<rect x="1651" y="3335" width="1535" height="120" rx="16" fill="#ffffff" stroke="#d2dfea" stroke-width="3"/>
+<text x="1675" y="3380" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#2461a0">EVIDENCE</text>
+<text x="1675" y="3429" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#193451">Capture actual readbacks and results.</text>
+<rect x="3214" y="3335" width="1535" height="120" rx="16" fill="#ffffff" stroke="#d2dfea" stroke-width="3"/>
+<text x="3238" y="3380" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#956400">MANUAL</text>
+<text x="3238" y="3429" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#193451">Complete separately; retain proof.</text>
+<rect x="4777" y="3335" width="1535" height="120" rx="16" fill="#ffffff" stroke="#d2dfea" stroke-width="3"/>
+<text x="4801" y="3380" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#b64432">BLOCKED</text>
+<text x="4801" y="3429" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#193451">No mutation; resolve the gate.</text>
+<text x="88" y="3510" font-family="Segoe UI, Arial, sans-serif" font-size="36" font-weight="400" fill="#193451">Revision 3 | Aligned to the attached 27 October 2026 guide. Process design; not a new live deployment validation.</text>
+<text x="88" y="3561" font-family="Segoe UI, Arial, sans-serif" font-size="36" font-weight="400" fill="#193451">Keep secure credential references and sanitized evidence. Native Foundation planning / controlled-adapter limits remain feature-specific.</text>
+</svg>
