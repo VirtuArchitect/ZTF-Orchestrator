@@ -1,6 +1,11 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
-**Release candidate for controlled UAT, not a production-ready promotion.**
+**Used successfully to deploy production AHV HCI clusters, with post-configuration
+through pipelines.**
+
+`v1.8.5-rc1` is the current prerelease. This release designation is separate from
+the project's successful production deployment use; `v1.8.4` remains the Latest
+stable release.
 
 Start with **Start Here** to deploy a cluster, configure an existing cluster,
 monitor and assess, or open saved automation. The guided deployment journey links
