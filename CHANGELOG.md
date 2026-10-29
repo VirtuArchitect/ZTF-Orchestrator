@@ -36,6 +36,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   and explicit partial-provisioning recovery boundaries.
 
 ### Documentation
+- Publish an illustrated Disaster Recovery setup procedure with generic simulated
+  screenshots, PDF and Word editions, provenance and checksums. Cover datacenter
+  creation, Foundation VM/pipeline links and baseline review without deployment;
+  link it from the administrator/user guides and manual index. No release promotion.
 - Derive the static demo's simulated installed-build and appliance release labels
   from the frontend version instead of showing stale v1.8.4 metadata. This does
   not change live installed-build reporting or promote any release channel.

@@ -16,6 +16,9 @@ See [Start Here and deployment guidance](docs/start-here.md).
 For infrastructure rebuild preparation, open **Recovery → Disaster Recovery**
 to group cluster baselines and post-configuration pipelines by datacenter.
 See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
+Use the [illustrated datacenter and recovery profile setup guide](docs/disaster-recovery-setup.md)
+to link Foundation VM configurations and post-deployment pipelines without
+deploying. It includes generic simulated screenshots and PDF/Word downloads.
 
 Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README.md)
 with current simulated screenshots and operational procedures for deployment,

@@ -10,3 +10,8 @@ as a real ZeroTouch Framework; its status is visible in the navigation.
 
 This image illustrates the implemented UI. It does not establish deployment,
 appliance activation, production recovery readiness or vendor support.
+
+The separate [setup screenshot gallery](setup-v1.8.5-rc1/README.md) was captured
+on 29 October 2026 with simulated in-memory API records and no prepared runs.
+It accompanies the [illustrated setup guide](../../disaster-recovery-setup.md).
+Its capture method is distinct from the file-backed API used for `overview.png`.

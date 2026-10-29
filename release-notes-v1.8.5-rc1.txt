@@ -8,6 +8,10 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Illustrated Disaster Recovery setup supplement: datacenter creation, Foundation
+  VM deployment YAML and post-configuration pipeline links, reviewed baseline and
+  verification without deployment. Generic simulated screenshots, PDF/Word copies,
+  provenance and checksums. Documentation only; release channels remain unchanged.
 - Source implementation of Disaster Recovery: datacenters, versioned Foundation
   VM cluster baselines, immutable run snapshots, governed rebuild submissions,
   sequential post-configuration jobs and explicit health/acceptance evidence.

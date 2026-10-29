@@ -34,6 +34,15 @@ and verification boundaries also apply to the illustrated appendix.
 
 ## Related procedures
 
+- [Illustrated Disaster Recovery setup](../disaster-recovery-setup.md): separate
+  nine-page supplement reviewed against `867fe83` on 29 October 2026, with
+  generic simulated screenshots of datacenter creation, Foundation VM/pipeline
+  links and a reviewed baseline. [PDF](ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf)
+  and [editable Word](ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.docx).
+  It verifies setup without deployment; it does not revise the 114-page manual
+  or establish physical recovery readiness. See
+  [screenshot provenance and checksums](../assets/disaster-recovery/setup-v1.8.5-rc1/README.md).
+
 - [Administrator guide](../admin-guide.md)
 - [User guide](../user-guide.md)
 - [Installation guide](../installation-guide.md)

@@ -1,0 +1,27 @@
+{
+  "capturedOn": "2026-10-29",
+  "sourceCommit": "867fe83f6c90dff1ee785e8caf0fe2b82b969174",
+  "release": "v1.8.5-rc1",
+  "mode": "Actual React UI with generic simulated in-memory API records",
+  "simulatedWriteRequests": [
+    {
+      "method": "POST",
+      "path": "/api/recovery/datacenters"
+    },
+    {
+      "method": "POST",
+      "path": "/api/recovery/profiles"
+    },
+    {
+      "method": "POST",
+      "path": "/api/recovery/profiles/profile01/approve"
+    }
+  ],
+  "liveBackendUsed": false,
+  "externalFontRequestsBlocked": true,
+  "deploymentRequests": 0,
+  "recoveryPreparationRequests": 0,
+  "pipelineExecutionRequests": 0,
+  "pageErrors": [],
+  "notes": "No deployment, preparation, rehearsal or pipeline execution endpoints requested. YAML snapshot excerpts are illustrative, not complete runnable templates."
+}
