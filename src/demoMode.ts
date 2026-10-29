@@ -668,6 +668,18 @@ async function demoResponse(request: Request) {
     { id: 'demo-evidence-001', source: 'nkp', profileId: 'demo-profile', status: 'ready', createdAt: iso(45), createdBy: 'demo-admin', notes: 'Simulated evidence package for public demo.' },
   ])
   if (path.startsWith('/api/validation-evidence/')) return okAction('Validation evidence action simulated.')
+  if (path === '/api/recovery') {
+    if (method !== 'GET') return json({ error: 'Recovery writes and execution are disabled in the static demo.' }, { status: 403 })
+    return json({
+      datacenters: [
+        { id: 'demo-dc-a', name: 'DC-A', foundationEndpoint: 'http://foundation-a.example.com:8000', notes: 'Illustrative recovery prerequisites only.', prerequisites: { network: 'reviewed', images: 'reviewed', credentials: 'needs_review', dnsNtp: 'reviewed', backupAccess: 'needs_review' } },
+        { id: 'demo-dc-b', name: 'DC-B', foundationEndpoint: 'http://foundation-b.example.com:8000', notes: 'Illustrative secondary datacenter.', prerequisites: { network: 'needs_review', images: 'needs_review', credentials: 'needs_review', dnsNtp: 'needs_review', backupAccess: 'needs_review' } },
+      ],
+      profiles: [{ id: 'demo-recovery-profile', name: 'HCI-CLUSTER-01', datacenterId: 'demo-dc-a', kind: 'existing', deploymentConfigFile: 'foundation-vm-demo.yml', pipelineId: 'demo-pipeline-001', revision: 1, reviewed: false, drifted: false }],
+      runs: [],
+    })
+  }
+  if (path.startsWith('/api/recovery/')) return json({ error: 'Recovery detail, changes and execution require a connected authorised backend. Demo records are illustrative only.' }, { status: 403 })
   if (path === '/api/pipelines') return json([{ id: 'demo-pipeline-001', name: 'Deploy and validate PC', steps: [{ workflow: 'deploy-pc', configFile: 'pc-deploy-demo.yml' }], createdAt: iso(800), updatedAt: iso(90) }])
   if (path.startsWith('/api/pipelines/')) return okAction('Pipeline action simulated.')
   if (path === '/api/parallel-runs') return json([])

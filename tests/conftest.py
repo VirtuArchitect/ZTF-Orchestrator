@@ -15,11 +15,14 @@ def isolated_data_dir(tmp_path, monkeypatch):
     # Re-import server with the new env var
     import importlib
     import server
+    if hasattr(server, '_recovery_service'):
+        server._recovery_service.shutdown()
     if hasattr(server, '_job_manager'):
         server._job_manager.stop()
     importlib.reload(server)
     server._ensure_default_admin()
     yield tmp_path
+    server._recovery_service.shutdown()
     server._job_manager.stop()
 
 

@@ -25,6 +25,12 @@ backup planning, and operational signoff.
 
 ## Scope And Operating Model
 
+The new [Disaster Recovery section](disaster-recovery.md) groups saved Foundation
+VM rebuild baselines and post-configuration pipelines by datacenter. It adds
+versioned profiles, governed execution, explicit health/acceptance evidence and
+rehearsal records. The illustrated PDF predates this addition; the linked guide
+documents the current source implementation and its validation boundaries.
+
 ZTF-Orchestrator provides a browser-based control plane for preparing,
 validating, executing, and auditing Nutanix automation work. It complements the
 underlying automation engines and infrastructure APIs rather than replacing

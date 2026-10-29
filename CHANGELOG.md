@@ -19,6 +19,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   vault/password keyword classification. Preserve fail-closed execution.
 
 ### Added
+- Disaster Recovery section with datacenters, immutable reviewed Foundation VM
+  recovery profiles, separate observed imports, exact-content execution approval,
+  endpoint/node ownership, sequential post-configuration jobs, explicit health
+  evidence, acceptance, reconciliation and rehearsal history. Existing execution
+  and approval policy remain authoritative; VM restore stays with the backup
+  platform. Additive JSON storage/API; single application process coordination.
 - Start Here landing page with four operator outcomes, per-user browser landing
   preference, seven-stage deployment guidance and a post-configuration handoff.
   Guide bookmarks never execute or establish readiness. Retain Overview, group

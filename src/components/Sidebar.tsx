@@ -4,7 +4,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2, Blocks, Compass
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2, Blocks, Compass, RotateCcw, Building2
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -47,6 +47,14 @@ const NAV_GROUPS: NavGroup[] = [
       { path: '/schedules', icon: Clock, label: 'Schedules', roles: ALL_ROLES },
       { path: '/parallel', icon: Layers, label: 'Parallel Exec', roles: ALL_ROLES },
       { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES, badge: 'Preview' },
+    ],
+  },
+  {
+    label: 'Recovery',
+    items: [
+      { path: '/recovery', icon: Building2, label: 'Disaster Recovery', roles: ALL_ROLES },
+      { path: '/recovery/runs', icon: History, label: 'Recovery Runs', roles: ALL_ROLES },
+      { path: '/recovery/rehearsals', icon: RotateCcw, label: 'Rehearsals', roles: ALL_ROLES },
     ],
   },
   {
@@ -175,7 +183,7 @@ export default function Sidebar() {
               <div className="space-y-0.5">
                 {group.items.map(item => {
                   const active = location.pathname === item.path ||
-                    (item.path !== '/' && location.pathname.startsWith(`${item.path}/`))
+                    (!['/', '/recovery'].includes(item.path) && location.pathname.startsWith(`${item.path}/`))
                   return (
                     <Link
                       key={item.path}
