@@ -19,6 +19,10 @@ It is not a production environment or evidence of a physical recovery run.
 
 ## Prepare the recovery baseline
 
+For field-by-field instructions, screenshot examples and PDF/Word downloads,
+follow the [illustrated datacenter and recovery profile setup guide](disaster-recovery-setup.md).
+It stops at reviewed-baseline verification without preparing or deploying a run.
+
 1. Contain the incident and obtain recovery authorization. Establish trusted
    provisioning networks, credentials, software images and an Orchestrator that
    is outside the compromised trust boundary. Retain forensic evidence separately.

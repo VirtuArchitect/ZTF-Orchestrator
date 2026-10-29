@@ -5,6 +5,12 @@ Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
 [illustrated PDF manual](manuals/README.md) or begin with [Start Here](start-here.md).
 All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
 
+For the newer Disaster Recovery section, use the
+[illustrated recovery setup guide](disaster-recovery-setup.md), reviewed against
+`867fe83` on 29 October 2026. It covers datacenters, Foundation VM configuration
+and pipeline links, and reviewed baselines without deployment. Its screenshots
+use generic simulated records; PDF and Word downloads are included.
+
 Use the [revision 3 deployment process](cluster-deployment-process.md) to follow
 the design, deployment, post-configuration and operational acceptance sequence.
 

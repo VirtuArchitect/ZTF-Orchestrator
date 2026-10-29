@@ -30,6 +30,10 @@ VM rebuild baselines and post-configuration pipelines by datacenter. It adds
 versioned profiles, governed execution, explicit health/acceptance evidence and
 rehearsal records. The illustrated PDF predates this addition; the linked guide
 documents the current source implementation and its validation boundaries.
+The separate [illustrated recovery setup guide](disaster-recovery-setup.md),
+reviewed against `867fe83` on 29 October 2026, adds datacenter creation,
+Foundation VM/pipeline linking and baseline review without deployment. Its
+generic simulated screenshots and PDF/Word editions supplement the older manual.
 
 ZTF-Orchestrator provides a browser-based control plane for preparing,
 validating, executing, and auditing Nutanix automation work. It complements the
