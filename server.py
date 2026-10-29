@@ -51,6 +51,7 @@ from upgrade_advisor import (
     render_upgrade_assessment_markdown,
 )
 from foundation_vm_progress import normalize_progress as _normalize_foundation_progress
+from disaster_recovery import RecoveryError, RecoveryService, register_routes as register_recovery_routes
 from foundation_vm_backend import (
     FOUNDATION_TERMINAL_STATES,
     build_native_payload as _build_foundation_vm_native_payload,
@@ -109,6 +110,8 @@ SCHEDULES_FILE = CONFIG_DIR / 'schedules.json'
 PARALLEL_FILE  = CONFIG_DIR / 'parallel_runs.json'
 APPROVALS_FILE = CONFIG_DIR / 'approvals.json'
 JOBS_FILE      = CONFIG_DIR / 'jobs.json'
+RECOVERY_FILE = CONFIG_DIR / 'recovery.json'
+_RECOVERY_RUN_CONTEXT = contextvars.ContextVar('recovery_run_id', default='')
 NKP_PROFILES_FILE = CONFIG_DIR / 'nkp_profiles.json'
 NKP_PROFILE_REVISIONS_FILE = CONFIG_DIR / 'nkp_profile_revisions.json'
 NKP_BINARIES_FILE = CONFIG_DIR / 'nkp_binaries.json'
@@ -34462,6 +34465,16 @@ class ExecutionJobManager:
             job['restartedFromJobId'] = str(payload['restartedFromJobId'])
         with self._condition:
             jobs = self._load_jobs()
+            if payload.get('workflow') == FOUNDATION_VM_WORKFLOW and globals().get('_recovery_service'):
+                owner = _RECOVERY_RUN_CONTEXT.get()
+                approval = _approval_manager.get_approval(payload.get('approvalId', '')) if _approval_manager else None
+                approval_owner = (approval or {}).get('metadata', {}).get('recoveryRunId')
+                if approval_owner and approval_owner != owner:
+                    raise RecoveryError('Recovery approval must be submitted through its reviewed recovery run', 403)
+                _recovery_service.foundation_guard(yaml.safe_load(payload.get('configContent') or '') or {}, owner)
+            # Sequential recovery jobs can be submitted in the same millisecond.
+            while any(item['id'] == job['id'] for item in jobs):
+                job['id'] = str(int(job['id']) + 1)
             jobs.insert(0, job)
             self._save_jobs(jobs)
             self._condition.notify()
@@ -43230,6 +43243,98 @@ def get_executions():
 def clear_executions():
     write_json(HISTORY_FILE, [])
     return jsonify({'success': True})
+
+def _recovery_config(filename):
+    path = safe_config_path(filename, get_configs_dir())
+    if not path or path.suffix not in {'.yml', '.yaml'} or not path.is_file():
+        raise RecoveryError('Select an existing saved YAML configuration file')
+    try:
+        if path.stat().st_size > 131072:
+            raise RecoveryError('Recovery configuration files must be smaller than 128 KiB')
+        return path.read_text(encoding='utf-8')
+    except (OSError, UnicodeError):
+        raise RecoveryError('Configuration file could not be read') from None
+
+
+def _recovery_endpoint_config(config):
+    host, scheme, port = _foundation_vm_backend_endpoint(config)
+    if not host or not 1 <= port <= 65535:
+        raise RecoveryError('Invalid Foundation endpoint')
+    host = host.lower().rstrip('.')
+    if ':' in host and not host.startswith('['):
+        host = f'[{host}]'
+    return f'{scheme}://{host}:{port}'
+
+
+def _recovery_endpoint_text(value):
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        port = parsed.port
+    except ValueError:
+        raise RecoveryError('Invalid Foundation endpoint or port') from None
+    if parsed.scheme not in {'http', 'https'} or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in {'', '/'}:
+        raise RecoveryError('Foundation endpoint must be an HTTP(S) origin without credentials or a path')
+    return _recovery_endpoint_config({'foundation_vm_ip': value, 'foundation_vm_port': port or 8000})
+
+
+def _recovery_dispatch(path, payload, authorization, run_id=''):
+    token = _RECOVERY_RUN_CONTEXT.set(run_id)
+    try:
+        with app.test_request_context(path, method='POST', json=payload, headers={'Authorization': authorization}):
+            response = app.full_dispatch_request()
+            body = response.get_json(silent=True) or {}
+            if response.status_code >= 400:
+                # Do not copy arbitrary upstream response bodies or YAML into recovery events.
+                raise RecoveryError('Existing execution path rejected the request; review approval, role, confirmation, runtime and validation requirements', response.status_code)
+            return body
+    finally:
+        _RECOVERY_RUN_CONTEXT.reset(token)
+
+
+def _recovery_verify_approval(identity, filename, content):
+    _require_engines()
+    approval = _approval_manager.get_approval(identity)
+    error = _workflow_approval_error(approval, FOUNDATION_VM_WORKFLOW, filename, content)
+    if error or not approval or approval.get('jobId') or approval.get('configContent') != content or approval.get('configFile') != filename:
+        raise RecoveryError('An unused, unexpired, approved request for this exact recovery YAML and filename is required', 403)
+
+
+@app.errorhandler(RecoveryError)
+def _recovery_error_response(error):
+    return jsonify({'error': str(error)}), error.status
+
+
+def _recovery_read():
+    # Generic file reads intentionally tolerate missing data elsewhere. Recovery
+    # ownership must fail closed if an existing document cannot be decoded.
+    if _storage.name == 'file' and RECOVERY_FILE.exists():
+        try:
+            return json.loads(RECOVERY_FILE.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, ValueError):
+            raise RecoveryError('Recovery records are unreadable; restore or repair storage before execution', 503) from None
+    return read_json(RECOVERY_FILE, {'datacenters': [], 'profiles': [], 'runs': []})
+
+
+_recovery_service = RecoveryService({
+    'read': _recovery_read,
+    'write': lambda state: write_json(RECOVERY_FILE, state),
+    'config': _recovery_config,
+    'pipeline': lambda identity: next((p for p in _load_pipelines() if p['id'] == identity), None),
+    'validate_foundation': _validate_foundation_vm_intent,
+    'endpoint_config': _recovery_endpoint_config,
+    'endpoint_text': _recovery_endpoint_text,
+    'job': lambda identity: _job_manager.get_job(identity, include_logs=False),
+    'jobs': lambda: _job_manager.list_jobs(limit=1000000),
+    'payload': lambda identity: _job_manager.get_payload(identity),
+    'submit': lambda data, auth, run_id: _recovery_dispatch('/api/jobs', data, auth, run_id),
+    'request_approval': lambda data, auth: _recovery_dispatch('/api/approvals', data, auth),
+    'verify_approval': _recovery_verify_approval,
+    'link_approval': lambda approval_id, job_id: _approval_manager.link_job(approval_id, job_id),
+    'step_error': _pipeline_step_error,
+    'cancel': lambda identity, actor: _job_manager.cancel(identity, actor),
+    'audit': lambda action, actor, identity: log.info('recovery_action', extra={'action': action, 'user': actor, 'recoveryRecordId': identity}),
+}, _job_manager._lock)
+register_recovery_routes(app, _recovery_service, require_role, limiter)
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 

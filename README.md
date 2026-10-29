@@ -13,6 +13,10 @@ to existing workflows and post-configuration pipelines while preserving approval
 and verification gates. The dashboard remains available as **Overview**.
 See [Start Here and deployment guidance](docs/start-here.md).
 
+For infrastructure rebuild preparation, open **Recovery → Disaster Recovery**
+to group cluster baselines and post-configuration pipelines by datacenter.
+See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
+
 Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README.md)
 with current simulated screenshots and operational procedures for deployment,
 post-configuration, PE account verification, certificate trust and appliance
@@ -167,13 +171,15 @@ recovery authorization. Supported imaging, cluster creation, configuration,
 and validation paths provide building blocks for an infrastructure rebuild;
 backup and application teams retain ownership of workload restoration.
 
-This is a recovery use case assembled from existing workflows, not a dedicated
-end-to-end DR workflow. It does not establish that compromised systems are
-clean, perform forensic investigation, or restore backup data. Several security
-and baseline controls require manual work, and recovery time improvements need
-measured, environment-specific rehearsal evidence.
+The **Recovery → Disaster Recovery** section now provides datacenters, versioned
+cluster recovery profiles, governed Foundation VM rebuild runs, sequential
+post-configuration jobs and rehearsal history. Independent health evidence and
+final acceptance remain explicit gates. It does not establish that compromised
+systems are clean, perform forensic investigation, or restore backup data.
+Physical recovery validation and measured recovery times remain environment-specific.
 
-See the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) and
+Start with [Disaster Recovery setup and operation](docs/disaster-recovery.md).
+See also the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) and
 [Recovery Rehearsal Checklist](docs/recovery-rehearsal-checklist.md).
 
 ## At A Glance

@@ -8,6 +8,12 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Source implementation of Disaster Recovery: datacenters, versioned Foundation
+  VM cluster baselines, immutable run snapshots, governed rebuild submissions,
+  sequential post-configuration jobs and explicit health/acceptance evidence.
+  Rehearsals execute real changes. Restarts require reconciliation, never replay.
+  Single application process coordination; representative physical recovery
+  rehearsal remains required. See docs/disaster-recovery.md. No release promotion.
 - Refreshed administrator/user Word manual, current simulated screenshots and
   aligned operator guides covering Start Here, PE diagnostics, persistent trust
   and Docker identity. Documentation refresh only; release channels are unchanged.

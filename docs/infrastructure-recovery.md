@@ -11,9 +11,11 @@ with reviewed configuration, rehearsed workflows, controlled execution, and
 evidence for workload-recovery handover. Reduced recovery time is a hypothesis
 until measured in the intended environment.
 
-This guide describes a process assembled from existing capabilities. It is not
-a dedicated DR executor, malware-remediation tool, forensic tool, or backup
-restore service. Cluster reimaging does not prove that compromise has been
+This guide describes the broader process. The [Disaster Recovery console](disaster-recovery.md)
+now coordinates versioned Foundation VM baselines and post-configuration jobs by
+datacenter, using the existing execution paths and approval gates. It is not a
+malware-remediation tool, forensic tool, or backup restore service.
+Cluster reimaging does not prove that compromise has been
 removed from identity services, management networks, BMCs, firmware, or workloads.
 
 ## Recovery Scope and Trust

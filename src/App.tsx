@@ -14,6 +14,7 @@ import Settings      from './pages/Settings'
 import ConfigFiles   from './pages/ConfigFiles'
 import UserRoles     from './pages/UserRoles'
 import Pipelines     from './pages/Pipelines'
+import DisasterRecovery from './pages/DisasterRecovery'
 import AuditLog      from './pages/AuditLog'
 import DriftDetection    from './pages/DriftDetection'
 import Schedules         from './pages/Schedules'
@@ -77,6 +78,9 @@ export default function App() {
         <Route path="/overview" element={
           <RequireAuth><Dashboard /></RequireAuth>
         } />
+        <Route path="/recovery" element={<RequireAuth><DisasterRecovery /></RequireAuth>} />
+        <Route path="/recovery/runs" element={<RequireAuth><DisasterRecovery /></RequireAuth>} />
+        <Route path="/recovery/rehearsals" element={<RequireAuth><DisasterRecovery /></RequireAuth>} />
         <Route path="/setup" element={
           <RequireRole roles={['admin', 'operator']}><Setup /></RequireRole>
         } />
