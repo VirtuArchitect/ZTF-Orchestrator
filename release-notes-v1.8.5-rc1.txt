@@ -8,6 +8,11 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Updated source recovery flow permits only approved password/EULA/Pulse bootstrap
+  before PE health verification, followed by strict read-only PE API evidence and
+  health-gated remaining configuration. Exact approvals/confirmations and no-replay
+  handling remain. Missing API evidence stays unknown; independent attestation is
+  available after bootstrap. No live recovery validation or release promotion implied.
 - Illustrated Disaster Recovery setup supplement: datacenter creation, Foundation
   VM deployment YAML and post-configuration pipeline links, reviewed baseline and
   verification without deployment. Generic simulated screenshots, PDF/Word copies,

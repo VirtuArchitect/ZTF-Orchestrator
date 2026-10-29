@@ -103,3 +103,42 @@ test('recovery is usable on mobile and in light theme', async ({ page }) => {
   await page.getByRole('button', { name: /^Theme:/ }).click()
   await page.screenshot({ path: 'test-results/disaster-recovery-light.png', fullPage: true })
 })
+
+test('bootstrap is available before health and cannot start remaining configuration', async ({ page }) => {
+  await seed(page)
+  const writes: {path: string; body: Record<string, unknown>}[] = []
+  const steps = ['password.yml', 'eula.yml', 'storage.yml'].map(configFile => ({workflow:'config-cluster', configFile, configContent:'clusters: {}\n', sha256:'b'.repeat(64)}))
+  const run = {id:'bootstrap-run', profileName:'HCI-01 Recovery', mode:'recovery', status:'awaiting_bootstrap', revision:1,
+    clusterName:'HCI-01', clusterVip:'192.0.2.20', foundationEndpoint:'http://foundation.example.com:8000',
+    baselineSha256:'a'.repeat(64), deploymentJobId:'foundation-job', bootstrapStepCount:2, steps:[],
+    snapshot:{targets:['NODE1','NODE2','NODE3'], deploymentContent:'create_clusters: []', steps}, events:[]}
+  await page.route('**/api/recovery**', async route => {
+    const req = route.request(), path = new URL(req.url()).pathname
+    if (req.method() !== 'GET') writes.push({path, body:req.postDataJSON()})
+    if (path.endsWith('/bootstrap')) run.status='bootstrapping'
+    await route.fulfill({json:path === '/api/recovery' ? {datacenters:[], profiles:[], runs:[run]} : run})
+  })
+  await page.goto('/recovery/runs')
+  await page.getByRole('button', {name:/HCI-01 Recovery/}).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', {name:'Initial access bootstrap before PE health verification'})).toBeVisible()
+  await expect(dialog.getByRole('button', {name:'Record Health Evidence'})).toHaveCount(0)
+  await expect(dialog.getByRole('button', {name:'Run Remaining Pipeline Steps'})).toHaveCount(0)
+  await expect(dialog.getByRole('button', {name:'Run Approved Bootstrap'})).toBeDisabled()
+  await dialog.getByLabel('Bootstrap confirmation: BOOTSTRAP HCI-01').fill('BOOTSTRAP HCI-01')
+  await dialog.getByRole('checkbox', {name:/I approve the reviewed initial-access/}).check()
+  await dialog.getByRole('button', {name:'Run Approved Bootstrap'}).click()
+  await expect(dialog.getByRole('button', {name:'Run Approved Bootstrap'})).toHaveCount(0)
+  expect(writes).toEqual([{path:'/api/recovery/runs/bootstrap-run/bootstrap',body:{approvalIds:{},confirmation:'BOOTSTRAP HCI-01',riskAcknowledged:true,destructiveConfirmation:''}}])
+  await page.screenshot({path:'test-results/recovery-bootstrap.png', fullPage:true})
+})
+
+test('HTML API errors explain the HTTP status without leaking the response', async ({ page }) => {
+  const writes = await seed(page)
+  await page.route('**/api/recovery', route => route.fulfill({status:429, contentType:'text/html', body:'<!doctype html><p>private raw response</p>'}))
+  await page.goto('/recovery')
+  await expect(page.getByRole('alert')).toContainText('HTTP 429')
+  await expect(page.getByRole('alert')).toContainText('do not resubmit a deployment')
+  await expect(page.getByRole('alert')).not.toContainText('private raw response')
+  expect(writes).toEqual([])
+})
