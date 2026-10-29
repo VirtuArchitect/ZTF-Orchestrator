@@ -19,6 +19,10 @@ See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
 Use the [illustrated datacenter and recovery profile setup guide](docs/disaster-recovery-setup.md)
 to link Foundation VM configurations and post-deployment pipelines without
 deploying. It includes generic simulated screenshots and PDF/Word downloads.
+Updated source builds run an approved password/EULA/Pulse bootstrap before the
+PE health gate, then collect strict read-only PE identity, membership and reported
+health evidence before remaining configuration. See the
+[recovery execution sequence](docs/disaster-recovery.md#rebuild-or-rehearse).
 
 Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README.md)
 with current simulated screenshots and operational procedures for deployment,

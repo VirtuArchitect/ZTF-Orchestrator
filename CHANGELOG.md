@@ -10,6 +10,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Allow strictly scoped, separately approved recovery password/EULA/Pulse
+  bootstrap before PE health verification. Retain exact confirmations, immutable
+  snapshots, sequential job verification and no-replay reconciliation. Collect
+  verified-HTTPS PE identity/membership/reported-health readbacks after bootstrap;
+  incomplete evidence blocks remaining configuration. Show HTTP status for
+  non-JSON recovery errors without exposing server response bodies.
 - Keep local Docker rebuild identity aligned with source: versioned Compose image,
   forwarded metadata, early rejection of stale version overrides and regression
   checks for Docker/Compose/example-environment consistency. Exclude local Compose

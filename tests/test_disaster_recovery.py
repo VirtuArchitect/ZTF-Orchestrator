@@ -8,7 +8,7 @@ import time
 import pytest
 import yaml
 
-from disaster_recovery import RecoveryError, RecoveryService, reference_only, now
+from disaster_recovery import RecoveryError, RecoveryService, reference_only, now, bootstrap_count
 
 
 def foundation_config():
@@ -62,12 +62,161 @@ def harness():
         'payload': lambda identity: deepcopy(payloads.get(identity)), 'submit': submit,
         'request_approval': lambda data, auth: {'id': 'approval'}, 'verify_approval': lambda *args: None,
         'link_approval': lambda *args: None,
+        'verify_step_approval': lambda *args: None,
+        'collect_health': lambda snapshot: {'status': 'unknown', 'checks': [], 'message': 'Independent health evidence required'},
         'step_error': lambda step: None, 'cancel': lambda *args: None, 'audit': lambda *args: None,
     }, threading.RLock())
     dc = service.datacenter({'name': 'DC-A', 'foundationEndpoint': 'http://foundation.example.com:8000',
         'notes': 'Approved recovery dependencies', 'prerequisites': {k: 'reviewed' for k in ['network', 'images', 'credentials', 'dnsNtp', 'backupAccess']}}, 'admin')
     yield service, state, configs, pipeline, jobs, calls, dc, payloads
     service.shutdown()
+
+
+@pytest.fixture
+def bootstrap_harness(harness):
+    _, _, configs, pipeline, _, _, _, _ = harness
+    for filename, settings in [('password.yml', {'pe_credential': 'new_admin', 'new_pe_admin_credential': 'new_admin'}),
+                               ('eula.yml', {'pe_credential': 'new_admin', 'eula': {'username': 'Operator', 'company_name': 'Example'}, 'enable_pulse': False})]:
+        configs[filename] = yaml.safe_dump({'clusters': {'192.0.2.20': {'name': 'HCI-01', **settings}}})
+    pipeline['steps'] = [{'workflow': 'config-cluster', 'configFile': 'password.yml'},
+                         {'workflow': 'config-cluster', 'configFile': 'eula.yml'}, *pipeline['steps']]
+    return harness
+
+
+def test_bootstrap_runs_only_initial_access_before_health(bootstrap_harness):
+    h = bootstrap_harness
+    s = h[0]
+    r = deploy(h)
+    assert s.detail_run(r['id'])['status'] == 'awaiting_bootstrap'
+    assert bootstrap_count(r['snapshot']) == 2
+    with pytest.raises(RecoveryError):
+        s.attest_health(r['id'], 'admin', {'clusterIdentity': 'HCI-01'})
+    with pytest.raises(RecoveryError):
+        s.start_configuration(r['id'], 'admin', {}, 'Bearer private-test-session')
+    r = s.start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    r = wait_status(s, r['id'], 'awaiting_health_verification')
+    assert len(h[5]) == 3 and len(r['steps']) == 2
+    assert [p['configContent'] for p in h[5][1:]] == [h[2]['password.yml'], h[2]['eula.yml']]
+    assert not r.get('healthEvidence')
+    with pytest.raises(RecoveryError):
+        s.start_configuration(r['id'], 'admin', {}, 'Bearer private-test-session')
+    assert 'private-test-session' not in json.dumps(h[1])
+
+
+def test_bootstrap_automatic_readback_unlocks_only_after_verified_health(bootstrap_harness):
+    h = bootstrap_harness
+    h[0].s['collect_health'] = lambda snapshot: {'status': 'passed', 'checks': [{'name': 'PE readback', 'status': 'passed'}]}
+    r = deploy(h)
+    h[0].start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    r = wait_status(h[0], r['id'], 'ready_for_configuration')
+    assert r['healthEvidence']['source'] == 'verified-https-pe-readback'
+    assert len(h[5]) == 3  # Remaining configuration has not auto-started.
+    h[0].start_configuration(r['id'], 'admin', {}, 'Bearer private-test-session')
+    r = wait_status(h[0], r['id'], 'awaiting_acceptance')
+    assert len(r['steps']) == 3 and len(h[5]) == 4
+
+
+@pytest.mark.parametrize('settings', [{'containers': []}, {'networks': []}, {'local_users': []}, {'name_servers_list': []}, {'unknown': True}])
+def test_broad_configuration_is_not_a_bootstrap_step(bootstrap_harness, settings):
+    h = bootstrap_harness
+    cfg = yaml.safe_load(h[2]['password.yml'])
+    cfg['clusters']['192.0.2.20'].update(settings)
+    h[2]['password.yml'] = yaml.safe_dump(cfg)
+    r = deploy(h)
+    assert bootstrap_count(r['snapshot']) == 0
+    with pytest.raises(RecoveryError, match='absent'):
+        h[0].start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    assert len(h[5]) == 1
+
+
+def test_bootstrap_exact_approval_and_confirmation_remain_required(bootstrap_harness):
+    h = bootstrap_harness
+    r = deploy(h)
+    with pytest.raises(RecoveryError, match='Confirm'):
+        h[0].start_bootstrap(r['id'], 'admin', {}, 'Bearer private-test-session')
+    h[0].s['step_error'] = lambda step: 'Approval required'
+    with pytest.raises(RecoveryError, match='Approval for bootstrap step'):
+        h[0].start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    checked = []
+    h[0].s['verify_step_approval'] = lambda approval, step, file: checked.append((approval, file))
+    approvals = {'0': 'approved-password', '1': 'approved-eula'}
+    h[0].start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01', 'approvalIds': approvals}, 'Bearer private-test-session')
+    r = wait_status(h[0], r['id'], 'awaiting_health_verification')
+    assert len(checked) == 4
+    assert h[5][1]['approvalId'] == 'approved-password' and h[5][2]['approvalId'] == 'approved-eula'
+    assert checked[0][1] == f'dr-{r["id"]}-step-1.yml'
+
+
+def test_bootstrap_failure_and_restart_never_replay_password_change(bootstrap_harness):
+    h = bootstrap_harness
+    r = deploy(h)
+    submit = h[0].s['submit']
+    def fail(*args):
+        job = submit(*args)
+        h[4][job['id']]['status'] = 'failed'
+        return job
+    h[0].s['submit'] = fail
+    h[0].start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    wait_status(h[0], r['id'], 'needs_reconciliation')
+    with pytest.raises(RecoveryError):
+        h[0].start_bootstrap(r['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    assert len(h[5]) == 2
+    h[1]['runs'][0]['status'] = 'bootstrapping'
+    restarted = RecoveryService(h[0].s, threading.RLock())
+    assert restarted.detail_run(r['id'])['status'] == 'needs_reconciliation'
+    assert len(h[5]) == 2
+    restarted.shutdown()
+
+
+def test_failed_health_collection_invalidates_previous_health(harness):
+    r = healthy(harness)
+    r = harness[0].collect_health(r['id'], 'admin')
+    assert r['status'] == 'awaiting_health_verification' and not r.get('healthEvidence')
+
+
+def test_bootstrap_api_roles_and_valid_start(client, auth_headers, bootstrap_harness, monkeypatch):
+    import server
+    h = bootstrap_harness
+    run = deploy(h)
+    submit = h[0].s['submit']
+    services = {**h[0].s, 'submit': lambda payload, auth, owner: submit(payload, 'Bearer private-test-session', owner)}
+    monkeypatch.setattr(server._recovery_service, 's', services)
+    path = f'/api/recovery/runs/{run["id"]}'
+    assert client.post(path + '/bootstrap', json={}).status_code == 401
+    client.post('/api/users', headers=auth_headers, json={'username': 'reader', 'password': 'TestReader123!', 'role': 'viewer'})
+    token = client.post('/api/auth/login', json={'username': 'reader', 'password': 'TestReader123!'}).get_json()['token']
+    for action in ('bootstrap', 'bootstrap/approval', 'health/collect'):
+        assert client.post(path + '/' + action, headers={'Authorization': 'Bearer ' + token}, json={}).status_code == 403
+    response = client.post(path + '/bootstrap', headers=auth_headers,
+                           json={'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'})
+    assert response.status_code == 200, response.get_json()
+    run = wait_status(server._recovery_service, run['id'], 'awaiting_health_verification')
+    assert len(h[5]) == 3 and len(run['steps']) == 2
+    response = client.post(path + '/health/collect', headers=auth_headers, json={})
+    assert response.status_code == 200 and response.get_json()['healthCollection']['status'] == 'unknown'
+
+
+def test_dedicated_bootstrap_script_requires_existing_exact_confirmation(bootstrap_harness):
+    h = bootstrap_harness
+    h[3]['steps'][0]['workflow'] = 'ChangeDefaultAdminPasswordPe'
+    run = deploy(h)
+    data = {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}
+    with pytest.raises(RecoveryError, match='RUN ChangeDefaultAdminPasswordPe'):
+        h[0].start_bootstrap(run['id'], 'admin', data, 'Bearer private-test-session')
+    h[0].start_bootstrap(run['id'], 'admin', {**data, 'destructiveConfirmation': 'RUN ChangeDefaultAdminPasswordPe'}, 'Bearer private-test-session')
+    wait_status(h[0], run['id'], 'awaiting_health_verification')
+    assert h[5][1]['script'] == 'ChangeDefaultAdminPasswordPe'
+    assert h[5][1]['destructiveConfirmation'] == 'RUN ChangeDefaultAdminPasswordPe'
+
+
+def test_missing_bootstrap_job_cannot_satisfy_health_gate(bootstrap_harness):
+    h = bootstrap_harness
+    run = deploy(h)
+    h[0].start_bootstrap(run['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    run = wait_status(h[0], run['id'], 'awaiting_health_verification')
+    del h[4][run['steps'][0]['jobId']]
+    with pytest.raises(RecoveryError, match='Retained successful bootstrap'):
+        h[0].collect_health(run['id'], 'admin')
 
 
 def profile(h):
@@ -323,13 +472,14 @@ def test_acceptance_requires_retained_successful_job_evidence(harness):
         harness[0].attest(r['id'], 'admin', {'configurationVerified': True, 'clusterHealthy': True, 'notes': 'Readback', 'evidenceRef': 'change/123'}, True)
 
 
-def test_recovery_approval_cannot_be_reused_via_ordinary_submission(monkeypatch):
+@pytest.mark.parametrize('workflow', ['cluster-create-foundation-vm', 'config-cluster'])
+def test_recovery_approval_cannot_be_reused_via_ordinary_submission(monkeypatch, workflow):
     import server
     server._job_manager.stop()
     monkeypatch.setattr(server, '_approval_manager', type('Approvals', (), {
         'get_approval': lambda self, identity: {'metadata': {'recoveryRunId': 'owned-run'}}})())
     with pytest.raises(RecoveryError, match='reviewed recovery run'):
-        server._job_manager.submit({'workflow': 'cluster-create-foundation-vm', 'approvalId': 'recovery-approval', 'configContent': yaml.safe_dump(foundation_config())}, 'admin')
+        server._job_manager.submit({'workflow': workflow, 'approvalId': 'recovery-approval', 'configContent': yaml.safe_dump(foundation_config())}, 'admin')
     assert not server._job_manager.list_jobs()
 
 
@@ -392,3 +542,83 @@ def test_api_exact_approval_and_existing_foundation_submission(client, auth_head
         assert client.post(f'/api/recovery/runs/{run["id"]}/deploy',headers=auth_headers,json={}).status_code==409
     finally:
         server.limiter.enabled = True
+
+
+def test_reconciled_eula_failure_resumes_without_repeating_successful_password(bootstrap_harness):
+    h = bootstrap_harness
+    service = h[0]
+    run = deploy(h)
+    submit = service.s['submit']
+    def fail_eula(payload, *args):
+        job = submit(payload, *args)
+        if payload.get('configContent') == h[2]['eula.yml']:
+            h[4][job['id']]['status'] = 'failed'
+        return job
+    service.s['submit'] = fail_eula
+    data = {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}
+    service.start_bootstrap(run['id'], 'admin', data, 'Bearer private-test-session')
+    run = wait_status(service, run['id'], 'needs_reconciliation')
+    assert len(run['steps']) == 1
+    run = service.attest(run['id'], 'admin', {
+        'foundationSessionEnded': True, 'targetReconciled': True, 'resumeConfiguration': True,
+        'notes': 'Password success verified; EULA failure reconciled', 'evidenceRef': 'change/example'})
+    assert run['status'] == 'awaiting_bootstrap'
+    service.s['submit'] = submit
+    service.start_bootstrap(run['id'], 'admin', data, 'Bearer private-test-session')
+    run = wait_status(service, run['id'], 'awaiting_health_verification')
+    assert len(run['steps']) == 2
+    assert sum(p.get('configContent') == h[2]['password.yml'] for p in h[5]) == 1
+    assert len(h[5]) == 4  # Deployment, password, failed EULA, resumed EULA only.
+
+
+def test_uncertain_password_cannot_be_resumed_after_reconciliation(bootstrap_harness):
+    h = bootstrap_harness
+    service = h[0]
+    run = deploy(h)
+    submit = service.s['submit']
+    def fail_password(*args):
+        job = submit(*args)
+        h[4][job['id']]['status'] = 'failed'
+        return job
+    service.s['submit'] = fail_password
+    service.start_bootstrap(run['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    wait_status(service, run['id'], 'needs_reconciliation')
+    with pytest.raises(RecoveryError, match='uncertain password-change'):
+        service.attest(run['id'], 'admin', {'foundationSessionEnded': True, 'targetReconciled': True,
+            'resumeConfiguration': True, 'notes': 'Target reviewed', 'evidenceRef': 'change/example'})
+    assert len(h[5]) == 2
+
+
+@pytest.mark.parametrize('patch', [
+    {'status': 'pending'}, {'workflow': 'other'}, {'jobId': 'already-used'},
+    {'configContent': 'different'}, {'configFile': 'different.yml'},
+    {'expiresAt': '2000-01-01T00:00:00+00:00'},
+])
+def test_bootstrap_approval_binding_rejects_invalid_requests(monkeypatch, patch):
+    import server
+    approval = {'status': 'approved', 'workflow': 'config-cluster', 'configContent': 'clusters: {}',
+                'configFile': 'dr-example-step-1.yml', 'expiresAt': '2099-01-01T00:00:00+00:00', **patch}
+    monkeypatch.setattr(server, '_require_engines', lambda: None)
+    monkeypatch.setattr(server, '_approval_manager', type('Approvals', (), {
+        'get_approval': lambda self, identity: approval})())
+    with pytest.raises(RecoveryError, match='exact bootstrap'):
+        server._recovery_verify_step_approval('approval', {'workflow': 'config-cluster', 'configContent': 'clusters: {}'}, 'dr-example-step-1.yml')
+
+
+def test_existing_health_waiting_run_bootstraps_without_repeating_imaging(bootstrap_harness):
+    h = bootstrap_harness
+    service = h[0]
+    run = deploy(h)
+    stored = h[1]['runs'][0]
+    stored['status'] = 'awaiting_health_verification'
+    stored.pop('bootstrapStepCount', None)
+    original_job = stored['deploymentJobId']
+    original_content = stored['snapshot']['deploymentContent']
+    detail = service.detail_run(run['id'])
+    assert detail['bootstrapStepCount'] == 2
+    service.start_bootstrap(run['id'], 'admin', {'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01'}, 'Bearer private-test-session')
+    result = wait_status(service, run['id'], 'awaiting_health_verification')
+    assert result['deploymentJobId'] == original_job
+    assert result['snapshot']['deploymentContent'] == original_content
+    assert len(result['steps']) == 2
+    assert sum(p.get('workflow') == 'cluster-create-foundation-vm' for p in h[5]) == 1

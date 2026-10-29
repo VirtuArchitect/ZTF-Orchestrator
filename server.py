@@ -34465,12 +34465,12 @@ class ExecutionJobManager:
             job['restartedFromJobId'] = str(payload['restartedFromJobId'])
         with self._condition:
             jobs = self._load_jobs()
+            owner = _RECOVERY_RUN_CONTEXT.get()
+            approval = _approval_manager.get_approval(payload.get('approvalId', '')) if _approval_manager else None
+            approval_owner = (approval or {}).get('metadata', {}).get('recoveryRunId')
+            if approval_owner and approval_owner != owner:
+                raise RecoveryError('Recovery approval must be submitted through its reviewed recovery run', 403)
             if payload.get('workflow') == FOUNDATION_VM_WORKFLOW and globals().get('_recovery_service'):
-                owner = _RECOVERY_RUN_CONTEXT.get()
-                approval = _approval_manager.get_approval(payload.get('approvalId', '')) if _approval_manager else None
-                approval_owner = (approval or {}).get('metadata', {}).get('recoveryRunId')
-                if approval_owner and approval_owner != owner:
-                    raise RecoveryError('Recovery approval must be submitted through its reviewed recovery run', 403)
                 _recovery_service.foundation_guard(yaml.safe_load(payload.get('configContent') or '') or {}, owner)
             # Sequential recovery jobs can be submitted in the same millisecond.
             while any(item['id'] == job['id'] for item in jobs):
@@ -43299,6 +43299,19 @@ def _recovery_verify_approval(identity, filename, content):
         raise RecoveryError('An unused, unexpired, approved request for this exact recovery YAML and filename is required', 403)
 
 
+def _recovery_verify_step_approval(identity, step, filename):
+    _require_engines()
+    approval = _approval_manager.get_approval(identity)
+    error = _workflow_approval_error(approval, step['workflow'], filename, step['configContent'])
+    if error or not approval or approval.get('jobId') or approval.get('configContent') != step['configContent'] or approval.get('configFile') != filename:
+        raise RecoveryError('An unused, unexpired approval for the exact bootstrap step YAML and filename is required', 403)
+
+
+def _recovery_collect_health(snapshot):
+    from recovery_health import collect
+    return collect(snapshot, _lookup_credential_ref)
+
+
 @app.errorhandler(RecoveryError)
 def _recovery_error_response(error):
     return jsonify({'error': str(error)}), error.status
@@ -43329,6 +43342,8 @@ _recovery_service = RecoveryService({
     'submit': lambda data, auth, run_id: _recovery_dispatch('/api/jobs', data, auth, run_id),
     'request_approval': lambda data, auth: _recovery_dispatch('/api/approvals', data, auth),
     'verify_approval': _recovery_verify_approval,
+    'verify_step_approval': _recovery_verify_step_approval,
+    'collect_health': _recovery_collect_health,
     'link_approval': lambda approval_id, job_id: _approval_manager.link_job(approval_id, job_id),
     'step_error': _pipeline_step_error,
     'cancel': lambda identity, actor: _job_manager.cancel(identity, actor),

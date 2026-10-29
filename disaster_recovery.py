@@ -22,7 +22,7 @@ from flask import jsonify, request
 WORKFLOW = 'cluster-create-foundation-vm'
 POST_ACTIONS = {'config-cluster', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'}
 ACTIVE = {'submitting', 'deploying', 'awaiting_health_verification', 'ready_for_configuration',
-          'configuring', 'awaiting_acceptance', 'needs_reconciliation', 'stopping'}
+          'awaiting_bootstrap', 'bootstrapping', 'configuring', 'awaiting_acceptance', 'needs_reconciliation', 'stopping'}
 TERMINAL_JOBS = {'success', 'failed', 'cancelled', 'interrupted'}
 PREREQUISITES = ('network', 'images', 'credentials', 'dnsNtp', 'backupAccess')
 
@@ -106,6 +106,51 @@ def pe_host(value):
     return parsed.hostname.lower().rstrip('.')
 
 
+def bootstrap_step(step):
+    """Only explicit, narrowly scoped initial-access settings can precede health."""
+    if step.get('workflow') not in {'config-cluster', 'ChangeDefaultAdminPasswordPe'}:
+        return False
+    config = reference_only(step['configContent'])
+    if set(config) != {'clusters'} or not isinstance(config['clusters'], dict) or len(config['clusters']) != 1:
+        return False
+    cluster = next(iter(config['clusters'].values()))
+    if not isinstance(cluster, dict) or set(cluster) - {'name', 'pe_credential', 'new_pe_admin_credential', 'eula', 'enable_pulse'}:
+        return False
+    if not all(isinstance(cluster.get(k), str) and cluster[k].strip() for k in ('name', 'pe_credential')):
+        return False
+    password = cluster.get('new_pe_admin_credential')
+    if password is not None and (not isinstance(password, str) or not password.strip()):
+        return False
+    if step['workflow'] == 'ChangeDefaultAdminPasswordPe':
+        return bool(password) and not {'eula', 'enable_pulse'}.intersection(cluster)
+    if 'enable_pulse' in cluster and not isinstance(cluster['enable_pulse'], bool):
+        return False
+    if 'eula' in cluster:
+        eula = cluster['eula']
+        if not isinstance(eula, dict) or set(eula) - {'username', 'company_name', 'job_title'}:
+            return False
+        if not all(isinstance(eula.get(k), str) and eula[k].strip() for k in ('username', 'company_name')):
+            return False
+        if 'job_title' in eula and not isinstance(eula['job_title'], str):
+            return False
+    return bool(password) or 'eula' in cluster or 'enable_pulse' in cluster
+
+
+def bootstrap_count(snapshot):
+    count = 0
+    password_seen = False
+    for step in snapshot['steps']:
+        if not bootstrap_step(step):
+            break
+        cluster = next(iter(reference_only(step['configContent'])['clusters'].values()))
+        if cluster.get('new_pe_admin_credential'):
+            if password_seen:
+                break
+            password_seen = True
+        count += 1
+    return count
+
+
 class RecoveryService:
     def __init__(self, services, lock):
         self.s = services
@@ -116,7 +161,7 @@ class RecoveryService:
             state = self.load()
             changed = False
             for run in state['runs']:
-                if run['status'] in {'submitting', 'configuring', 'stopping'}:
+                if run['status'] in {'submitting', 'bootstrapping', 'configuring', 'stopping'}:
                     run['status'] = 'needs_reconciliation'
                     self.event(run, 'Service restarted; inspect target state before continuing', 'system')
                     changed = True
@@ -162,11 +207,14 @@ class RecoveryService:
             run['status'] = 'needs_reconciliation'
             self.event(run, 'Deployment outcome requires target reconciliation', 'system')
         elif job.get('status') == 'success':
-            run['status'] = 'awaiting_health_verification'
-            self.event(run, 'Deployment job succeeded; independent PE health evidence is required', 'system')
+            run['status'] = 'awaiting_bootstrap' if len(run['steps']) < bootstrap_count(run['snapshot']) else 'awaiting_health_verification'
+            self.event(run, 'Deployment job succeeded; approved initial-access bootstrap precedes PE health verification'
+                       if run['status'] == 'awaiting_bootstrap' else
+                       'Deployment job succeeded; independent PE health evidence is required', 'system')
 
     def public(self, run, detail=False):
         result = deepcopy(run)
+        result['bootstrapStepCount'] = bootstrap_count(run['snapshot'])
         if not detail:
             result.pop('snapshot', None)
             result.pop('events', None)
@@ -437,6 +485,10 @@ class RecoveryService:
             self.refresh(run)
             if run['status'] not in {'awaiting_health_verification', 'ready_for_configuration'}:
                 raise RecoveryError('Successful deployment is required before health verification', 409)
+            self.require_bootstrap_complete(run)
+            deployment = self.s['job'](run.get('deploymentJobId', ''))
+            if not deployment or deployment.get('status') != 'success':
+                raise RecoveryError('Retained successful deployment evidence is required before health verification', 409)
             if data.get('clusterIdentity') != run['clusterName'] or data.get('membershipVerified') is not True or data.get('servicesHealthy') is not True:
                 raise RecoveryError('Confirm exact cluster identity, expected membership and healthy services')
             run['healthEvidence'] = {'source': 'independent-operator-attestation', 'by': actor, 'at': now(),
@@ -449,7 +501,129 @@ class RecoveryService:
             self.audit('health_attested', actor, identity)
             return self.public(run, True)
 
+    def require_bootstrap_complete(self, run, through=None):
+        count = bootstrap_count(run['snapshot']) if through is None else through
+        if len(run['steps']) < count:
+            raise RecoveryError('Complete the approved initial-access bootstrap before health verification', 409)
+        for index, completed in enumerate(run['steps'][:count]):
+            job = self.s['job'](completed.get('jobId', ''))
+            step = run['snapshot']['steps'][index]
+            if (completed.get('index') != index or completed.get('sha256') != step['sha256']
+                    or not job or job.get('status') != 'success' or job.get('workflow') != step['workflow']):
+                raise RecoveryError('Retained successful bootstrap evidence is required before health verification', 409)
+
+    @staticmethod
+    def step_file(run, index):
+        return f'dr-{run["id"]}-step-{index+1}.yml'
+
+    def bootstrap_approval(self, identity, actor, data, authorization):
+        with self.lock:
+            run = self.find(self.load(), 'runs', identity)
+            index = data.get('stepIndex')
+            if type(index) is not int or not len(run['steps']) <= index < bootstrap_count(run['snapshot']):
+                raise RecoveryError('Select a pending bootstrap step')
+            if run['status'] not in {'awaiting_bootstrap', 'awaiting_health_verification'}:
+                raise RecoveryError('Successful deployment is required before bootstrap approval', 409)
+            step = run['snapshot']['steps'][index]
+            if step['workflow'] != 'config-cluster':
+                raise RecoveryError('PE scripts use their existing exact execution confirmation')
+            return self.s['request_approval']({'workflow': step['workflow'], 'configFile': self.step_file(run, index),
+                'configContent': step['configContent'], 'notes': f'Initial-access bootstrap for recovery {identity}; step {index+1}',
+                'metadata': {'recoveryRunId': identity, 'recoveryPhase': 'bootstrap', 'recoveryStepIndex': index}}, authorization)
+
+    def start_bootstrap(self, identity, actor, data, authorization):
+        with self.lock:
+            state = self.load()
+            run = self.find(state, 'runs', identity)
+            self.refresh(run)
+            if run['status'] not in {'awaiting_bootstrap', 'awaiting_health_verification'}:
+                raise RecoveryError('Bootstrap requires a successful deployment and no active configuration', 409)
+            deployment = self.s['job'](run.get('deploymentJobId', ''))
+            if not deployment or deployment.get('status') != 'success':
+                raise RecoveryError('Retained successful deployment evidence is required before bootstrap', 409)
+            end = bootstrap_count(run['snapshot'])
+            start = len(run['steps'])
+            if not end or start >= end or start and not run.get('bootstrapResumeApproved'):
+                raise RecoveryError('Bootstrap is absent or has already started; reconcile uncertain changes before continuing', 409)
+            self.require_bootstrap_complete(run, through=start)
+            if data.get('riskAcknowledged') is not True or data.get('confirmation') != f'BOOTSTRAP {run["clusterName"]}':
+                raise RecoveryError('Confirm the exact cluster and approve password, EULA and Pulse bootstrap changes', 403)
+            scripts = list(dict.fromkeys(s['workflow'] for s in run['snapshot']['steps'][start:end] if s['workflow'] != 'config-cluster'))
+            if scripts and data.get('destructiveConfirmation') != f'RUN {",".join(scripts)}':
+                raise RecoveryError(f'PE administration confirmation must exactly match RUN {",".join(scripts)}', 403)
+            self.check_drift(run['snapshot'])
+            approvals = data.get('approvalIds', {})
+            if not isinstance(approvals, dict):
+                raise RecoveryError('Bootstrap approval IDs must be an object')
+            if set(approvals) - {str(i) for i in range(start, end)} or any(
+                    not isinstance(v, str) or not v.strip() or len(v) > 200 for v in approvals.values()):
+                raise RecoveryError('Provide bounded approval IDs for bootstrap steps only')
+            if len(set(approvals.values())) != len(approvals):
+                raise RecoveryError('Each bootstrap step requires a separate approval')
+            for index in range(start, end):
+                step = run['snapshot']['steps'][index]
+                if self.s['step_error'](step) or str(index) in approvals:
+                    approval = required(approvals.get(str(index)), f'Approval for bootstrap step {index+1}')
+                    self.s['verify_step_approval'](approval, step, self.step_file(run, index))
+            # Approval references are safe to retain; credentials and sessions are not.
+            run['bootstrapApprovalIds'] = {str(i): approvals[str(i)] for i in range(start, end) if str(i) in approvals}
+            run.pop('bootstrapResumeApproved', None)
+            run['status'] = 'bootstrapping'
+            run['bootstrapStartedAt'] = now()
+            self.event(run, 'Starting approved initial-access bootstrap; remaining configuration is health-gated', actor)
+            self.save(state)
+            thread = threading.Thread(target=self._configure, args=(identity, actor, authorization, True), daemon=True)
+            self.threads.append(thread)
+            thread.start()
+            return self.public(run, True)
+
+    def collect_health(self, identity, actor):
+        with self.lock:
+            state = self.load()
+            run = self.find(state, 'runs', identity)
+            self.refresh(run)
+            if run['status'] not in {'awaiting_health_verification', 'ready_for_configuration'}:
+                raise RecoveryError('Complete deployment and bootstrap before collecting PE health', 409)
+            self.require_bootstrap_complete(run)
+            deployment = self.s['job'](run.get('deploymentJobId', ''))
+            if not deployment or deployment.get('status') != 'success':
+                raise RecoveryError('Retained successful deployment evidence is required for PE collection', 409)
+            collection = str(uuid.uuid4())
+            run['healthCollectionId'] = collection
+            run.pop('healthEvidence', None)
+            run['status'] = 'awaiting_health_verification'
+            snapshot = deepcopy(run['snapshot'])
+            self.save(state)
+        # Bounded HTTPS reads must not hold the execution queue lock.
+        try:
+            result = self.s['collect_health'](snapshot)
+        except Exception:
+            result = {'status': 'unknown', 'checks': [], 'message': 'PE collection failed; review connectivity, trust and credentials.'}
+        with self.lock:
+            state = self.load()
+            run = self.find(state, 'runs', identity)
+            if run.get('healthCollectionId') != collection or run['status'] != 'awaiting_health_verification':
+                raise RecoveryError('Recovery state changed during collection; collect fresh health evidence', 409)
+            run['healthCollection'] = result
+            if result.get('status') == 'passed':
+                run['healthEvidence'] = {'source': 'verified-https-pe-readback', 'by': actor, 'at': now(),
+                    'clusterIdentity': run['clusterName'], 'deploymentJobId': run['deploymentJobId'],
+                    'reference': f'recovery/{identity}/health/{collection}', 'checks': result['checks']}
+                run['status'] = 'ready_for_configuration'
+            self.event(run, 'PE API health readback passed' if result.get('status') == 'passed' else
+                       'PE API health readback did not pass; remaining configuration stays blocked', actor)
+            self.save(state)
+            return self.public(run, True)
+
+    def _collect_after_bootstrap(self, identity, actor):
+        try:
+            self.collect_health(identity, actor)
+        except RecoveryError:
+            # An operator may have stopped or reconciled this run in the meantime.
+            return
+
     def check_health(self, run):
+        self.require_bootstrap_complete(run)
         evidence = run.get('healthEvidence') or {}
         if not evidence.get('at') or datetime.now(timezone.utc) - datetime.fromisoformat(evidence['at']) > timedelta(minutes=15):
             raise RecoveryError('PE health evidence is older than 15 minutes; refresh it before starting configuration', 409)
@@ -465,7 +639,7 @@ class RecoveryService:
                 error = self.s['step_error'](step)
                 if error:
                     raise RecoveryError(f'Use the existing approved direct-job path for this step: {error}', 403)
-            scripts = list(dict.fromkeys(x['workflow'] for x in run['snapshot']['steps'] if x['workflow'] != 'config-cluster'))
+            scripts = list(dict.fromkeys(x['workflow'] for x in run['snapshot']['steps'][len(run['steps']):] if x['workflow'] != 'config-cluster'))
             if scripts and (data.get('riskAcknowledged') is not True or data.get('destructiveConfirmation') != f'RUN {",".join(scripts)}'):
                 raise RecoveryError(f'PE administration confirmation must exactly match RUN {",".join(scripts)}', 403)
             run['status'] = 'configuring'
@@ -478,31 +652,45 @@ class RecoveryService:
             self.audit('configuration_started', actor, identity)
             return self.public(run, True)
 
-    def _configure(self, identity, actor, authorization):
+    def _configure(self, identity, actor, authorization, bootstrap=False):
         try:
             while not self.stop_event.is_set():
                 with self.lock:
                     state = self.load()
                     run = self.find(state, 'runs', identity)
-                    if run['status'] != 'configuring':
+                    active_status = 'bootstrapping' if bootstrap else 'configuring'
+                    if run['status'] != active_status:
                         return
                     index = len(run['steps'])
-                    if index == len(run['snapshot']['steps']):
-                        run['status'] = 'awaiting_acceptance'
-                        self.event(run, 'Configuration jobs succeeded; independent final acceptance is required', actor)
+                    end = bootstrap_count(run['snapshot']) if bootstrap else len(run['snapshot']['steps'])
+                    if index == end:
+                        run['status'] = 'awaiting_health_verification' if bootstrap else 'awaiting_acceptance'
+                        self.event(run, 'Bootstrap succeeded; fresh PE health verification is required' if bootstrap else
+                                   'Configuration jobs succeeded; independent final acceptance is required', actor)
                         self.save(state)
+                        if bootstrap:
+                            collector = threading.Thread(target=self._collect_after_bootstrap, args=(identity, actor), daemon=True)
+                            self.threads.append(collector)
+                            collector.start()
                         return
                     step = run['snapshot']['steps'][index]
                     error = self.s['step_error'](step)
-                    if error:
+                    approval = run.get('bootstrapApprovalIds', {}).get(str(index)) if bootstrap else None
+                    if error and not approval:
                         raise RecoveryError('Approval policy changed; use the approved direct-job path', 403)
+                    if bootstrap and not bootstrap_step(step):
+                        raise RecoveryError('Only password, EULA and Pulse settings are allowed before health verification')
+                    if approval:
+                        self.s['verify_step_approval'](approval, step, self.step_file(run, index))
                     action = step['workflow']
-                    payload = {'configContent': step['configContent'], 'configFile': f'dr-{identity}-step-{index+1}.yml'}
+                    payload = {'configContent': step['configContent'], 'configFile': self.step_file(run, index)}
+                    if approval:
+                        payload['approvalId'] = approval
                     payload.update({'workflow': action} if action == 'config-cluster' else
                                    {'script': action, 'riskAcknowledged': True, 'destructiveConfirmation': f'RUN {action}'})
                     job = self.s['submit'](payload, authorization, identity)
                     run['currentJobId'] = job['id']
-                    self.event(run, f'Configuration step {index+1} submitted as job {job["id"]}', actor)
+                    self.event(run, f'{"Bootstrap" if bootstrap else "Configuration"} step {index+1} submitted as job {job["id"]}', actor)
                     self.save(state)
                 while not self.stop_event.wait(1):
                     current = self.s['job'](job['id'])
@@ -513,7 +701,7 @@ class RecoveryService:
                 with self.lock:
                     state = self.load()
                     run = self.find(state, 'runs', identity)
-                    if run['status'] != 'configuring':
+                    if run['status'] != active_status:
                         return
                     if not current or current['status'] != 'success':
                         raise RecoveryError('Configuration failed or was interrupted; inspect target state')
@@ -525,6 +713,8 @@ class RecoveryService:
             with self.lock:
                 state = self.load()
                 run = self.find(state, 'runs', identity)
+                if run['status'] not in {'configuring', 'bootstrapping'}:
+                    return
                 run['status'] = 'needs_reconciliation'
                 self.event(run, 'Configuration stopped; inspect Jobs and actual settings before continuing', actor)
                 self.save(state)
@@ -600,11 +790,16 @@ class RecoveryService:
                        any(c.get('new_pe_admin_credential') for c in reference_only(x['configContent']).get('clusters', {}).values())
                        for x in pending):
                     raise RecoveryError('An uncertain password-change request cannot be replayed; reconcile credentials through the existing direct workflow', 409)
-                run['status'] = 'awaiting_health_verification'
+                if len(run['steps']) < bootstrap_count(run['snapshot']):
+                    run['status'] = 'awaiting_bootstrap'
+                    run['bootstrapResumeApproved'] = True
+                else:
+                    run['status'] = 'awaiting_health_verification'
+                run.pop('healthEvidence', None)
             else:
                 run['status'] = 'accepted' if accept else 'closed_reconciled'
             self.event(run, 'Accepted for backup-platform restore handoff' if accept else
-                       'Reconciled; fresh PE health and explicit configuration start are required' if resume else
+                       'Reconciled; explicit continuation and fresh PE health are required; password changes are not replayed' if resume else
                        'Closed after target reconciliation; no changes were replayed', actor)
             self.save(state)
             self.audit('run_accepted' if accept else 'run_reconciled', actor, identity)
@@ -655,6 +850,9 @@ def register_routes(app, service, require_role, limiter):
     add('/runs/<identity>/approval', ['POST'], lambda d, u, a, identity: service.request_approval(identity, u, a), admin)
     add('/runs/<identity>/deploy', ['POST'], lambda d, u, a, identity: service.deploy(identity, u, d, a), admin)
     add('/runs/<identity>/health', ['POST'], lambda d, u, a, identity: service.attest_health(identity, u, d), admin)
+    add('/runs/<identity>/health/collect', ['POST'], lambda d, u, a, identity: service.collect_health(identity, u), admin)
+    add('/runs/<identity>/bootstrap/approval', ['POST'], lambda d, u, a, identity: service.bootstrap_approval(identity, u, d, a), admin)
+    add('/runs/<identity>/bootstrap', ['POST'], lambda d, u, a, identity: service.start_bootstrap(identity, u, d, a), admin)
     add('/runs/<identity>/configure', ['POST'], lambda d, u, a, identity: service.start_configuration(identity, u, d, a), admin)
     add('/runs/<identity>/configuration-job', ['POST'], lambda d, u, a, identity: service.link_configuration_job(identity, u, d), admin)
     add('/runs/<identity>/accept', ['POST'], lambda d, u, a, identity: service.attest(identity, u, d, True), admin)

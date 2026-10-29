@@ -73,27 +73,60 @@ snapshots, not automatic exports of all current cluster settings.
 4. Follow the linked deployment job for Foundation's phase/node telemetry and
    logs. A failed, interrupted or uncertain deployment requires reconciliation.
    No automatic imaging retry or rollback is performed.
-5. After job success, independently open PE, verify the exact cluster identity,
-   expected membership and services. Record health notes and an evidence
-   reference in the run. This is explicitly an **operator attestation**, not
-   automatically collected live health. Start post-configuration within 15
-   minutes; renew the health evidence if necessary.
-6. Select **Run Remaining Pipeline Steps**. Eligible steps are submitted
+5. After job success, complete **Initial access bootstrap before PE health
+   verification** when the pipeline begins with narrowly scoped password,
+   EULA/Pulse steps. A bootstrap file must contain only a single `clusters`
+   mapping with `name`, `pe_credential`, optional `new_pe_admin_credential`,
+   `eula` and `enable_pulse`. Broader settings, global overrides and local-user
+   creation cannot run before health verification. Do not simply label arbitrary
+   first steps as bootstrap. The reviewed snapshot is not rewritten or split.
+   Request each required **Bootstrap Step Approval**, have its exact YAML and
+   generated filename approved in **Approvals**, then enter the returned IDs.
+   Enter `BOOTSTRAP <cluster-name>` and acknowledge the reviewed password/EULA/
+   Pulse changes. A dedicated password script also retains its exact `RUN`
+   confirmation. Select **Run Approved Bootstrap**. Approval policy remains
+   enforced; deployment approval does not approve configuration steps.
+6. Bootstrap runs sequentially and stops before other pipeline settings. Failure,
+   ambiguous submission or service restart requires reconciliation, never an
+   automatic password retry. After success, read-only PE collection uses the
+   reviewed post-bootstrap credential reference, verified HTTPS and fixed API
+   GET paths. It checks cluster UUID/name/VIP, complete expected host inventory,
+   node serials/AHV/CVM addresses and explicit PE-reported `Good` cluster/host
+   health. Missing fields, unsupported responses, TLS or authentication failures
+   remain unknown and block continuation. These API readbacks are not full NCC,
+   storage resilience or final recovery acceptance tests. Use **Collect PE Health
+   Readbacks** to retry only these reads. If automatic evidence is unavailable,
+   independently open PE after bootstrap and record the existing **Independent PE
+   health evidence** attestation. Start remaining configuration within 15 minutes
+   of fresh health evidence. Collection does not start the remaining pipeline.
+7. Select **Run Remaining Pipeline Steps**. Eligible steps are submitted
    sequentially as durable jobs from the immutable snapshots. PE scripts require
    their exact `RUN <script-id[,script-id]>` acknowledgement. The initiating
    administrator's session is rechecked on each submission; expiry or changed
    permissions stop further submissions. No session token is stored in recovery
    records. A failed or unverified step prevents later steps from starting.
-7. If policy requires a step's own approval, unattended chaining is rejected.
+8. If policy requires a remaining step's own approval, unattended chaining is rejected.
    Download its exact snapshot, submit it through the existing direct workflow
    or script with the required approval/confirmation, then link the successful
    job using **Link Next Approved Direct Job**. The action, YAML and health-check
    timing must match. One job cannot satisfy multiple steps. Do not disable
    approval policy to make a pipeline run.
-8. Independently read back the requested settings and current cluster health.
+9. Independently read back the requested settings and current cluster health.
    Record final evidence and accept the run for backup-platform restore handoff.
    Retain job evidence until acceptance. Acceptance does not restore VMs, prove
    application availability or declare the environment free of compromise.
+
+Existing deployed runs waiting at the old health gate can use the bootstrap
+control when their immutable pipeline starts with eligible settings and no
+configuration steps have started. Do not recreate or replay Foundation imaging.
+Partially completed or uncertain password changes require reconciliation through
+the existing direct workflow. New statuses and health evidence fields are additive
+JSON records; no SQL migration is required. Existing reviewed setup documents
+describe planning; this section describes the updated source execution sequence.
+
+Recovery UI transport errors now retain the HTTP status when a server/proxy
+returns HTML instead of JSON. This message does not imply an imaging failure and
+never resubmits the deployment. Inspect Jobs/Queue and server logs for the cause.
 
 ## Interruptions and reconciliation
 
@@ -107,7 +140,10 @@ snapshots, not automatic exports of all current cluster settings.
 - A successfully deployed cluster can resume remaining configuration only after
   explicit reconciliation and fresh health evidence. An uncertain pending password
   change cannot be automatically replayed; use the existing direct workflow to
-  reconcile credentials first. Completed steps remain recorded.
+  reconcile credentials first. Completed steps remain recorded. If password change
+  succeeded but EULA/Pulse failed, explicit reconciliation can return the run to
+  bootstrap for only the unfinished EULA/Pulse steps, with fresh approvals where
+  required; the successful password change is not repeated.
 - Endpoint/node ownership remains reserved through configuration and acceptance,
   including uncertainty. Complete or reconcile the run before another rebuild.
   Datacenter/profile edits are blocked while their recovery run is active.
