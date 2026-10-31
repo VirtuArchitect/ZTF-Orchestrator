@@ -1,5 +1,11 @@
 # Appliance Update Manager
 
+For updated source builds, see [Guided appliance updates](guided-appliance-updates.md).
+After a one-time optional host-service installation, the console can request a
+reviewed offline application update with readiness, selected cleanup, verified
+backup, progress and compatible-image rollback. The CLI procedure below remains
+available for legacy appliances, unsupported layouts and framework updates.
+
 The Appliance Update Manager provides a controlled update workflow for
 ZTF-Orchestrator appliances. It separates release discovery and operator
 approval in the web UI from host-level Docker, systemd, and framework checkout
@@ -8,7 +14,8 @@ changes.
 The web application does not unpack arbitrary source archives, mutate its own
 container, or overwrite framework trees directly. Instead, it records verified
 update metadata and stages a host-side update request. A privileged
-administrator then runs the appliance helper script on the VM.
+administrator then runs the appliance helper script on the VM, or uses the
+separately installed restricted host service through the guided console flow.
 
 For governed operations, use [RB-003 upgrade and rollback](runbooks/RB-003-upgrade-rollback.md)
 for connected upgrades and [RB-007 air-gapped update](runbooks/RB-007-airgapped-update.md)

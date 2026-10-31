@@ -4,6 +4,7 @@ import {
   Plus, RefreshCw, Server, ShieldCheck, Trash2, Upload, XCircle,
 } from 'lucide-react'
 import Layout from '../components/Layout'
+import GuidedApplianceUpdate from '../components/GuidedApplianceUpdate'
 import { apiFetch, authHeaders } from '../utils/api'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -57,6 +58,7 @@ interface UpdateRecord {
   frameworkArchivePath?: string
   manifestSha256?: string
   packageId?: string
+  packageAvailable?: boolean
   packagePath?: string
   publishedAt?: string
   notes?: string
@@ -567,6 +569,7 @@ export default function Appliance() {
 
         {tab === 'updates' && (
           <div className="space-y-6">
+            <GuidedApplianceUpdate updates={updateState?.updates || []} isAdmin={isAdmin} onImported={load} />
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <Metric label="Current App Version" value={updateState?.current.version || APP_VERSION} />
               <Metric label="Tracked Updates" value={updateState?.updates.length ?? 0} />
@@ -574,6 +577,8 @@ export default function Appliance() {
               <Metric label="Request Path" value={updateState?.current.requestPath || 'not configured'} mono />
             </div>
 
+            <details className="space-y-4">
+              <summary className="cursor-pointer text-sm font-medium">Advanced: release discovery, framework updates and legacy CLI staging</summary>
             <div className="card">
               <div className="mb-4">
                 <h2 className="font-semibold text-gray-100">Appliance Update Manager</h2>
@@ -738,6 +743,7 @@ export default function Appliance() {
                 </div>
               )}
             </div>
+            </details>
           </div>
         )}
 

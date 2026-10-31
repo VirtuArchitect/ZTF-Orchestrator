@@ -11,12 +11,15 @@ QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 | Item | Current guidance |
 | --- | --- |
 | Current release baseline | `v1.8.5-rc1` |
-| Existing appliance update method | Appliance update package plus `appliance/scripts/apply-update-request.sh` |
+| Existing appliance update method | Guided offline ZIP update with the optional host service, or `appliance/scripts/apply-update-request.sh` |
 | Full QCOW2 appliance image | GitHub Actions artifact or durable internal artifact storage, not a GitHub Release binary |
 | GitHub Release assets | Update packages, checksums, manifests, and metadata |
 | ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` for Workflows 1.x/Scripts 1.x, with a separate baked ZTF `v2.0.0` runtime for ZTF 2.x IaC |
 
 ## Recommended Distribution Model
+
+See [Guided appliance updates](../docs/guided-appliance-updates.md) for the one-time
+host service installation, console procedure, retained rollback and UAT boundaries.
 
 1. Build a QCOW2 appliance in a connected staging environment.
 2. Bake the ZTF-Orchestrator container image into that QCOW2.

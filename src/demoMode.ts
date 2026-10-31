@@ -612,6 +612,7 @@ async function demoResponse(request: Request) {
     })
   }
   if (path === '/api/appliance/artifacts') return json({ artifacts: [], summary: { total: 0, verified: 0, archived: 0, expiring: 0, expired: 0, pending: 0 } })
+  if (path === '/api/appliance/updates/control') return json({ available: false, maintenance: false, operation: null, message: 'Guided host updates are unavailable in this simulated demo. No appliance is modified.' })
   if (path === '/api/appliance/updates') {
     return json({
       current: { version: APP_VERSION, installed: DEMO_INSTALLED_BUILD, containerImage: DEMO_INSTALLED_BUILD.containerImage, requestPath: '/var/lib/ztf-orchestrator/appliance_update_request.json' },

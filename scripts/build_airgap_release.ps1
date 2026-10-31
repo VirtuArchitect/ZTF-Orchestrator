@@ -130,7 +130,7 @@ Verification:
 }
 
 Invoke-Step "Build offline update ZIP" {
-  python .\scripts\build_offline_update_package.py --version $Version --image-tar $imageTar --output $zipPath
+  python .\scripts\build_offline_update_package.py --version $Version --image-tar $imageTar --output $zipPath --include-host-service
 }
 
 Invoke-Step "Verify ZIP contents and checksums" {

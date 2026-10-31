@@ -81,6 +81,11 @@ EOF
 fi
 
 install -m 0644 "${APP_DIR}/appliance/systemd/ztf-orchestrator.service" /etc/systemd/system/ztf-orchestrator.service
+if [[ "${APP_DIR}" = /opt/ztf-orchestrator ]]; then
+  bash "${APP_DIR}/appliance/scripts/install-update-service.sh"
+else
+  echo 'Guided updates are disabled for this custom application path; existing CLI updates remain available.'
+fi
 systemctl daemon-reload
 systemctl enable ztf-orchestrator
 

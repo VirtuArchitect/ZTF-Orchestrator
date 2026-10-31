@@ -18,6 +18,11 @@ operations and recovery preparation. Existing tools remain available through
 collapsible navigation groups and dashboard details; no integration is removed.
 See the [streamlined console guide](docs/streamlined-console.md).
 
+Updated source builds provide [guided appliance updates](docs/guided-appliance-updates.md)
+under Appliance Ops → Updates: upload a ZIP, check space, review cleanup, approve
+the version, install and verify. A one-time host-service installation is required;
+the application does not receive Docker access. The existing CLI procedure remains.
+
 For infrastructure rebuild preparation, open **Recovery → Disaster Recovery**
 to group cluster baselines and post-configuration pipelines by datacenter.
 See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
