@@ -36,6 +36,7 @@ from typing import Generator
 import bcrypt
 import yaml
 import credential_rotation as rotation
+import appliance_updates as guided_updates
 from pe_local_users import validate_intent as validate_pe_local_users_intent
 from pe_local_users import prepare_credentials as prepare_pe_local_users_credentials
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
@@ -6372,6 +6373,31 @@ def _schedule_validation_error(data: dict, existing: dict | None = None) -> str:
 
 _RUNNING: set[str] = set()
 _RUNNING_LOCK = threading.Lock()
+_UPDATE_STREAMS: set[str] = set()
+_UPDATE_STREAMS_LOCK = threading.RLock()
+
+
+def _update_stream_count() -> int:
+    with _UPDATE_STREAMS_LOCK:
+        return len(_UPDATE_STREAMS)
+
+
+def _tracked_update_stream(stream, identity):
+    with _UPDATE_STREAMS_LOCK:
+        blocked = _maintenance_active()
+        if not blocked:
+            _UPDATE_STREAMS.add(identity)
+    if blocked:
+        yield 'data: ' + json.dumps({'type': 'error', 'data': 'Appliance maintenance is active; no automation was started.'}) + '\n\n'
+        return
+    try:
+        yield from stream
+    finally:
+        try:
+            stream.close()
+        finally:
+            with _UPDATE_STREAMS_LOCK:
+                _UPDATE_STREAMS.discard(identity)
 _MAINTENANCE_LOCK = threading.RLock()
 _MAINTENANCE = {
     'active': False,
@@ -6387,7 +6413,7 @@ def _maintenance_state() -> dict:
 
 
 def _maintenance_active() -> bool:
-    return bool(_maintenance_state().get('active'))
+    return bool(_maintenance_state().get('active')) or guided_updates.maintenance()
 
 
 def _enter_maintenance(reason: str, user: str) -> bool:
@@ -6556,6 +6582,14 @@ def log_request():
                     'query': request.query_string.decode('utf-8', errors='replace'),
                     'ip': request.remote_addr,
                     'user': session['username'] if session else 'anonymous'})
+
+
+@app.before_request
+def guided_update_maintenance_gate():
+    if (request.path.startswith('/api/') and request.method not in {'GET', 'HEAD', 'OPTIONS'}
+            and not request.path.startswith(('/api/auth/', '/api/appliance/updates/control'))
+            and guided_updates.maintenance()):
+        return jsonify({'error': 'Appliance update maintenance is active. Existing update progress is retained; do not resubmit automation.'}), 503
 
 @app.after_request
 def add_security_headers(resp):
@@ -34465,6 +34499,8 @@ class ExecutionJobManager:
             job['restartedFromJobId'] = str(payload['restartedFromJobId'])
         with self._condition:
             jobs = self._load_jobs()
+            if _maintenance_active():
+                raise RuntimeError('Execution queue is locked for maintenance')
             owner = _RECOVERY_RUN_CONTEXT.get()
             approval = _approval_manager.get_approval(payload.get('approvalId', '')) if _approval_manager else None
             approval_owner = (approval or {}).get('metadata', {}).get('recoveryRunId')
@@ -36757,6 +36793,9 @@ def health():
     return jsonify({
         'status':  status,
         'version': APP_VERSION,
+        'localMaintenance': bool(_maintenance_state().get('active')),
+        'storageBackend': _storage.name,
+        'activeStreams': _update_stream_count(),
         'installed': installed,
         'ztf': ztf_info,
     }), 200 if ztf_ok else 503
@@ -37284,7 +37323,7 @@ def install_ztf():
             log.exception('install_error')
             yield from send('error', 'Installation failed. Check server logs for details.')
 
-    return Response(generate(), mimetype='text/event-stream',
+    return Response(_tracked_update_stream(generate(), 'inline-' + uuid.uuid4().hex), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
 
 
@@ -37373,7 +37412,7 @@ def install_ztf2():
             log.exception('ztf2_install_error')
             yield from send('error', f'ZTF 2.x installation failed: {exc}')
 
-    return Response(generate(), mimetype='text/event-stream',
+    return Response(_tracked_update_stream(generate(), 'inline-' + uuid.uuid4().hex), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
 
 
@@ -37454,7 +37493,7 @@ def install_nkp():
             log.exception('nkp_install_error')
             yield from send('error', 'NKP installation failed. Check server logs for details.')
 
-    return Response(generate(), mimetype='text/event-stream',
+    return Response(_tracked_update_stream(generate(), 'inline-' + uuid.uuid4().hex), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
 
 
@@ -41171,7 +41210,7 @@ def run_pipeline(pipeline_id: str):
             ).start()
 
     return Response(
-        generate(),
+        _tracked_update_stream(generate(), 'pipeline-' + pipeline_run_id),
         mimetype='text/event-stream',
         headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
     )
@@ -41730,7 +41769,7 @@ def execute_workflow():
             with _RUNNING_LOCK:
                 _RUNNING.discard(lock_key)
 
-    return Response(generate(), mimetype='text/event-stream',
+    return Response(_tracked_update_stream(generate(), 'inline-' + uuid.uuid4().hex), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'})
 
 # ─── Audit log ───────────────────────────────────────────────────────────────
@@ -42188,10 +42227,55 @@ def delete_appliance_artifact(artifact_id):
     return jsonify({'success': True, 'deleted': target})
 
 
+@app.route('/api/appliance/updates/control')
+@require_role('admin')
+def guided_update_status():
+    return jsonify(guided_updates.status())
+
+
+@app.route('/api/appliance/updates/control', methods=['POST'])
+@require_role('admin')
+@limiter.limit('15 per minute')
+def guided_update_command():
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Update command must be a JSON object'}), 400
+    action = data.get('action')
+    if action not in {'storage', 'preflight', 'cleanup', 'install', 'rollback'}:
+        return jsonify({'error': 'Unknown appliance update action'}), 400
+    try:
+        request_id = str(data.get('requestId') or '')
+        request_id = str(uuid.UUID(request_id))
+        if _maintenance_state().get('active'):
+            return jsonify({'error': 'Another application maintenance operation is active'}), 409
+        if action in {'preflight', 'install', 'rollback'}:
+            if _RUNNING or _update_stream_count() or any(job.get('status') in {'queued', 'running', 'cancelling'} for job in _job_manager._load_jobs()):
+                return jsonify({'error': 'Wait for queued or running automation to finish before updating'}), 409
+        if action == 'preflight':
+            record = next((item for item in _load_appliance_updates() if item.get('id') == data.get('updateId')), None)
+            if not record or record.get('target') != 'ztf-orchestrator' or not record.get('packageId'):
+                return jsonify({'error': 'Select a complete imported appliance update ZIP'}), 400
+            image_path = Path(record.get('imageTarPath') or '')
+            package_root = APPLIANCE_UPDATE_PACKAGES_DIR / record['packageId']
+            artifact = image_path.relative_to(package_root).as_posix()
+            payload = {'packageId': record['packageId'], 'version': record['version'],
+                       'image': record['containerImage'], 'checksum': record.get('checksum'), 'artifact': artifact}
+        else:
+            payload = {key: data[key] for key in ('planId', 'selected', 'confirmation', 'databaseCompatible') if key in data}
+        result = guided_updates.submit(action, payload, request.current_user['username'], request_id)
+        log.warning('appliance_guided_update_requested', extra={'action': 'appliance_guided_update_requested', 'user': request.current_user['username'], 'operation': action, 'operationId': request_id})
+        return jsonify(result), 202
+    except (ValueError, OSError, TypeError) as exc:
+        message = str(exc) if isinstance(exc, ValueError) else 'Unable to submit update request. Refresh service status before retrying.'
+        return jsonify({'error': message}), 409
+
+
 @app.route('/api/appliance/updates')
 @require_role('admin', 'operator', 'viewer')
 def list_appliance_updates():
     updates = _load_appliance_updates()
+    updates = [{**item, 'packageAvailable': Path(item.get('imageTarPath') or item.get('frameworkArchivePath') or '').is_file()}
+               if item.get('packageId') else item for item in updates]
     installed = _installed_build_metadata()
     current = {
         'version': APP_VERSION,

@@ -4,6 +4,7 @@ import json
 import re
 import types
 import zipfile
+import pytest
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -645,6 +646,31 @@ def test_offline_update_package_generator_writes_verified_manifest(tmp_path):
     assert artifact['path'] == 'images/ztf-orchestrator-v1.5.4-image.tar'
     assert artifact['sha256'] == module.sha256_file(image_tar)
     assert sha_line == f"{artifact['sha256']}  {artifact['path']}\n"
+
+
+def test_offline_package_includes_verified_host_service_without_execution(tmp_path):
+    import hashlib
+    import zipfile
+    module = _load_offline_package_module()
+    image = tmp_path / 'ztf-orchestrator-v1.8.5-rc1-fixture-image.tar'
+    image.write_bytes(b'isolated package fixture')
+    output = tmp_path / 'fixture.zip'
+    module.create_package(image_tar=image, version='v1.8.5-rc1-fixture', output_zip=output,
+                          include_host_service=True, source_ref='a' * 40)
+    with zipfile.ZipFile(output) as archive:
+        manifest = json.loads(archive.read('manifest.json'))
+        assert manifest['sourceRef'] == 'a' * 40
+        assert manifest['hostService']['automaticallyExecuted'] is False
+        assert 'host-service/bootstrap-guided-updates.sh' in archive.namelist()
+        assert len(manifest['artifacts']) < 20
+        for item in manifest['artifacts']:
+            assert hashlib.sha256(archive.read(item['path'])).hexdigest() == item['sha256']
+        for line in archive.read('host-service/SHA256SUMS').decode().splitlines():
+            expected, relative = line.split('  ', 1)
+            assert hashlib.sha256(archive.read('host-service/' + relative)).hexdigest() == expected
+        assert b'\r\n' not in archive.read('host-service/bootstrap-guided-updates.sh')
+    with pytest.raises(FileExistsError):
+        module.create_package(image_tar=image, version='v1.8.5-rc1-fixture', output_zip=output)
 
 
 def test_airgap_release_script_runs_required_release_steps():

@@ -3,6 +3,8 @@ services:
     image: ghcr.io/virtuarchitect/ztf-orchestrator:${ZTF_ORCHESTRATOR_VERSION:-latest}
     container_name: ztf-orchestrator
     restart: unless-stopped
+    group_add:
+      - "${ZTF_UPDATE_SERVICE_GID:-65534}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -11,6 +13,8 @@ services:
     volumes:
       - ztf-data:/var/lib/ztf-orchestrator
       - ztf-logs:/var/log/ztf-orchestrator
+      - /var/lib/ztf-update-service/requests:/run/ztf-update-control/requests
+      - /var/lib/ztf-update-service/results:/run/ztf-update-control/results:ro
       - /opt/ztf-orchestrator-preload/nkp-zerotouch-framework:/var/lib/ztf-orchestrator/nkp-zerotouch-framework:ro
       - /opt/ztf-orchestrator-preload/bundles:/var/lib/ztf-orchestrator/bundles:ro
     environment:

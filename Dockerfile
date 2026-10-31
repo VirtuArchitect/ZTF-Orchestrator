@@ -17,6 +17,7 @@ FROM python:3.11-slim
 
 LABEL maintainer="ZTF-Orchestrator maintainers"
 LABEL application="ZTF-Orchestrator"
+LABEL io.ztf.appliance-update-protocol="1"
 
 ARG ZTF_REPO_URL=https://github.com/nutanixdev/zerotouch-framework.git
 ARG ZTF_REF=v1.5.2

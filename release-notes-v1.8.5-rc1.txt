@@ -4,10 +4,18 @@ Release candidate - controlled UAT only
 Scope
 -----
 Stabilization of the changes merged since v1.8.4. No new deployment-engine
-architecture or automatic upgrade execution is included in this candidate.
+architecture is included. Updated source builds add optional, administrator-approved
+appliance update execution through a separately installed host service; unattended
+release installation remains disabled.
 
 Included changes
 ----------------
+- Guided appliance ZIP updates: space and active-job checks, selected cleanup,
+  verified backups excluding reproducible caches, exact-version approval, durable
+  host progress and explicit compatible-image rollback. Requires one-time host
+  service installation; existing CLI staging remains available. No release promotion.
+- Versioned offline packages include the host-service bootstrap installer and
+  configuration-preserving Compose preparation, with independent artifact hashes.
 - Streamlined Overview with four operator tasks, recorded attention/activity and
   recovery preparation, plus a read-only saved-cluster-profile view. Advanced,
   optional-integration and administration groups retain existing routes and data.

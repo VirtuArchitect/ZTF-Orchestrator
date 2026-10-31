@@ -9,6 +9,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Guided appliance ZIP updates with administrator approval, conservative disk-space
+  readiness, reviewed cache/backup cleanup and restart-independent progress reports.
+  An optional root-installed host service executes fixed operations without giving
+  the application Docker access. Verified quiescent backups exclude imported update
+  caches and preload bundles. Explicit compatible-image rollback remains separate
+  from database restoration. Existing CLI staging is retained.
+- Offline bundles can include a separately checksummed host-service bootstrap kit.
+  Its Compose migration preserves existing ports, TLS mounts and named volumes;
+  host installation and application activation remain explicit separate steps.
+
 ### Fixed
 - Allow strictly scoped, separately approved recovery password/EULA/Pulse
   bootstrap before PE health verification. Retain exact confirmations, immutable

@@ -193,7 +193,7 @@ create_pre_update_state_backups() {
   app_container="$(compose_ps_id ztf-orchestrator)"
   if [[ -n "${app_container}" ]]; then
     data_backup="${backup_dir}/ztf-orchestrator-data-pre-${VERSION}-${timestamp}.tar.gz"
-    if docker exec "${app_container}" tar -C /var/lib/ztf-orchestrator -czf - . > "${data_backup}"; then
+    if docker exec "${app_container}" tar -C /var/lib/ztf-orchestrator --exclude=./appliance-update-packages --exclude=./bundles -czf - . > "${data_backup}"; then
       chmod 600 "${data_backup}" || true
       echo "Pre-update data directory snapshot: ${data_backup}"
     else
@@ -301,7 +301,9 @@ else
   printf '\nZTF_ORCHESTRATOR_VERSION=%s\n' "${VERSION}" >> .env
 fi
 
-docker compose --env-file "${APP_DIR}/.env" -f "${APP_DIR}/appliance/docker-compose.appliance.yml" pull ztf-orchestrator || true
+if [[ -z "${IMAGE_TAR}" ]]; then
+  docker compose --env-file "${APP_DIR}/.env" -f "${APP_DIR}/appliance/docker-compose.appliance.yml" pull ztf-orchestrator || true
+fi
 systemctl restart ztf-orchestrator
 
 echo "ZTF-Orchestrator appliance update staged to ${VERSION}."

@@ -60,6 +60,20 @@ before retrying. See [PE local-user procedure](docs/pe-local-users.md).
 
 ## Promotion Signoff
 
+For source builds containing [guided appliance updates](docs/guided-appliance-updates.md),
+complete the additional opt-in host-service checks before enabling production use:
+
+- [ ] Install the reviewed host service once and verify supplemental-group and
+  read-only results mounts; do not expose the Docker socket to the application.
+- [ ] Exercise storage-only review, ZIP upload, checksums, active-job/maintenance
+  blocking, conservative space checks and selected cleanup in isolated UAT.
+- [ ] Verify matching backup receipts, cache exclusions and restoration of actual
+  application/database data. A readable archive alone is insufficient.
+- [ ] Rehearse application restart, browser disconnect, host-service interruption,
+  exact running version/image verification and compatible-image rollback.
+- [ ] Rehearse host/VM recovery when the application cannot serve the console.
+  Preserve a CLI/VM-console recovery path and avoid concurrent manual updates.
+
 For source-derived bundles containing the PE post-configuration verification fix,
 exercise replacement-credential authentication, explicit SKIP without a password
 request, property-mismatch rejection and pipeline stop gates in isolated UAT.

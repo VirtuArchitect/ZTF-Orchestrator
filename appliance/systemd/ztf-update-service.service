@@ -1,0 +1,19 @@
+[Unit]
+Description=ZTF-Orchestrator guided appliance update service
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/ztf-update-service/update_service.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
