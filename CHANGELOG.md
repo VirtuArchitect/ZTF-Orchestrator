@@ -25,6 +25,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   vault/password keyword classification. Preserve fail-closed execution.
 
 ### Added
+- Streamlined operations Overview and a saved recovery cluster-profile view, with
+  existing tools retained in collapsible navigation and platform details. No
+  backend API, approval, execution or saved-data changes.
 - Disaster Recovery section with datacenters, immutable reviewed Foundation VM
   recovery profiles, separate observed imports, exact-content execution approval,
   endpoint/node ownership, sequential post-configuration jobs, explicit health
