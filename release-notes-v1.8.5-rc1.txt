@@ -8,6 +8,10 @@ architecture or automatic upgrade execution is included in this candidate.
 
 Included changes
 ----------------
+- Streamlined Overview with four operator tasks, recorded attention/activity and
+  recovery preparation, plus a read-only saved-cluster-profile view. Advanced,
+  optional-integration and administration groups retain existing routes and data.
+  Previous dashboard panels remain expandable. No approval or execution changes.
 - Updated source recovery flow permits only approved password/EULA/Pulse bootstrap
   before PE health verification, followed by strict read-only PE API evidence and
   health-gated remaining configuration. Exact approvals/confirmations and no-replay

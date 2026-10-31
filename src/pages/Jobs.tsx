@@ -4,6 +4,7 @@ import {
   ListChecks, Loader, RefreshCw, RotateCcw, Terminal, Trash2, XCircle
 } from 'lucide-react'
 import Layout from '../components/Layout'
+import { useLocation } from '../router'
 import FoundationVmProgress from '../components/FoundationVmProgress'
 import { useStore } from '../store'
 import type { ExecutionJob, ExecutionJobStatus, ExecutionProgress } from '../types'
@@ -29,11 +30,15 @@ const RECOVERABLE_FOUNDATION_STATUSES: ExecutionJobStatus[] = ['failed', 'cancel
 
 export default function Jobs() {
   const user = useStore(s => s.user)
+  const location = useLocation()
   const [jobs, setJobs] = useState<ExecutionJob[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<JobFilter>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
+  useEffect(() => {
+    setExpanded(new URLSearchParams(location.search).get('job'))
+  }, [location.search])
   const [cancelling, setCancelling] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [restarting, setRestarting] = useState<string | null>(null)

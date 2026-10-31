@@ -479,6 +479,7 @@ test('dashboard supports theme toggle and appliance navigation', async ({ page }
   await themeButton.click()
   await expect(page.locator('html')).toHaveClass(/theme-light/)
 
+  await page.getByRole('button', { name: 'Administration', exact: true }).click()
   await page.getByRole('link', { name: /Appliance Ops/i }).click()
   await expect(page.getByRole('heading', { name: 'Appliance Operations' })).toBeVisible()
   await expect(page.getByRole('button', { name: /Artifacts/i })).toBeVisible()
@@ -515,6 +516,7 @@ test('dashboard drift attention message stays readable in light theme', async ({
 
   await page.goto('/overview')
 
+  await page.locator('#platform-details > summary').click()
   const driftBanner = page.getByLabel('Review latest drift detection result')
   await expect(driftBanner).toBeVisible()
   await expect(driftBanner).toContainText('Drift baseline unavailable')
@@ -632,7 +634,7 @@ test('native Foundation detail separates phase status from Dell adapter status',
   await expect(page.getByText('discovery gated')).toBeVisible()
   await expect(page.getByText('mutation locked')).toBeVisible()
   await expect(page.getByText('Probe', { exact: true })).toBeVisible()
-  await expect(page.getByText('Deploy', { exact: true })).toBeVisible()
+  await expect(page.getByRole('main').getByText('Deploy', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Run Workflow' })).toBeDisabled()
 })
 

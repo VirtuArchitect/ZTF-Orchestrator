@@ -1,5 +1,5 @@
 import { Link, useLocation } from '../router'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
@@ -13,7 +13,7 @@ import clsx from 'clsx'
 
 type Role = 'admin' | 'operator' | 'viewer'
 type NavItem = { path: string; icon: ElementType; label: string; roles: Role[]; badge?: string }
-type NavGroup = { label: string; items: NavItem[] }
+type NavGroup = { label: string; items: NavItem[]; collapsible?: boolean }
 
 const ALL_ROLES: Role[] = ['admin', 'operator', 'viewer']
 const OPERATORS: Role[] = ['admin', 'operator']
@@ -21,69 +21,50 @@ const ADMINS: Role[] = ['admin']
 const NAV_SCROLL_KEY = 'ztf-sidebar-scroll-top'
 
 const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'Overview',
-    items: [
-      { path: '/start', icon: Compass, label: 'Start Here', roles: ALL_ROLES },
-      { path: '/overview', icon: LayoutDashboard, label: 'Overview', roles: ALL_ROLES },
-      { path: '/setup', icon: Download, label: 'Setup & Install', roles: OPERATORS },
-    ],
-  },
-  {
-    label: 'Configure',
-    items: [
-      { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
-      { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
-      { path: '/workflows', icon: Workflow, label: 'Workflows 1.x', roles: OPERATORS },
-      { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS, badge: 'Preview' },
-    ],
-  },
-  {
-    label: 'Execute',
-    items: [
-      { path: '/executions', icon: History, label: 'Executions', roles: ALL_ROLES },
-      { path: '/jobs', icon: ListChecks, label: 'Jobs / Queue', roles: ALL_ROLES },
-      { path: '/pipelines', icon: GitBranch, label: 'Pipelines', roles: ALL_ROLES },
-      { path: '/schedules', icon: Clock, label: 'Schedules', roles: ALL_ROLES },
-      { path: '/parallel', icon: Layers, label: 'Parallel Exec', roles: ALL_ROLES },
-      { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES, badge: 'Preview' },
-    ],
-  },
-  {
-    label: 'Recovery',
-    items: [
-      { path: '/recovery', icon: Building2, label: 'Disaster Recovery', roles: ALL_ROLES },
-      { path: '/recovery/runs', icon: History, label: 'Recovery Runs', roles: ALL_ROLES },
-      { path: '/recovery/rehearsals', icon: RotateCcw, label: 'Rehearsals', roles: ALL_ROLES },
-    ],
-  },
-  {
-    label: 'Govern',
-    items: [
-      { path: '/approvals', icon: ShieldCheck, label: 'Approvals', roles: ALL_ROLES },
-      { path: '/appliance', icon: Archive, label: 'Appliance Ops', roles: ALL_ROLES },
-      { path: '/upgrade-advisor', icon: ShieldAlert, label: 'Upgrade Advisor', roles: ALL_ROLES },
-      { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
-      { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
-      { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
-    ],
-  },
-  {
-    label: 'Advanced Automation',
-    items: [
-      { path: '/scripts', icon: Terminal, label: 'Scripts 1.x', roles: OPERATORS },
-      { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
-      { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
-      { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS, badge: 'Preview' },
-    ],
-  },
-  {
-    label: 'Admin',
-    items: [
-      { path: '/users', icon: Users, label: 'Users', roles: ADMINS },
-      { path: '/settings', icon: Wrench, label: 'Settings', roles: OPERATORS },
-    ],
-  },
+  { label: 'Workspace', items: [
+    { path: '/start', icon: Compass, label: 'Start Here', roles: ALL_ROLES },
+    { path: '/overview', icon: LayoutDashboard, label: 'Overview', roles: ALL_ROLES },
+    { path: '/clusters', icon: Building2, label: 'Clusters', roles: ALL_ROLES },
+  ] },
+  { label: 'Operations', items: [
+    { path: '/start/deploy', icon: Download, label: 'Deploy', roles: ALL_ROLES },
+    { path: '/start/configure', icon: Settings, label: 'Configure', roles: ALL_ROLES },
+    { path: '/recovery', icon: RotateCcw, label: 'Disaster Recovery', roles: ALL_ROLES },
+    { path: '/start/monitor', icon: FileSearch, label: 'Monitor & Verify', roles: ALL_ROLES },
+  ] },
+  { label: 'Automation', items: [
+    { path: '/pipelines', icon: GitBranch, label: 'Pipelines', roles: ALL_ROLES },
+    { path: '/jobs', icon: ListChecks, label: 'Jobs / Queue', roles: ALL_ROLES },
+    { path: '/approvals', icon: ShieldCheck, label: 'Approvals', roles: ALL_ROLES },
+  ] },
+  { label: 'Advanced Automation', collapsible: true, items: [
+    { path: '/workflows', icon: Workflow, label: 'Workflows', roles: OPERATORS },
+    { path: '/scripts', icon: Terminal, label: 'Scripts', roles: OPERATORS },
+    { path: '/yaml-studio', icon: Wand2, label: 'YAML Studio', roles: ALL_ROLES },
+    { path: '/configs', icon: FileCode, label: 'Config Files', roles: ALL_ROLES },
+    { path: '/executions', icon: History, label: 'Executions', roles: ALL_ROLES },
+    { path: '/schedules', icon: Clock, label: 'Schedules', roles: ALL_ROLES },
+    { path: '/parallel', icon: Layers, label: 'Parallel Exec', roles: ALL_ROLES },
+    { path: '/recovery/runs', icon: History, label: 'Recovery Runs', roles: ALL_ROLES },
+    { path: '/recovery/rehearsals', icon: RotateCcw, label: 'Rehearsals', roles: ALL_ROLES },
+    { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
+    { path: '/upgrade-advisor', icon: ShieldAlert, label: 'Upgrade Advisor', roles: ALL_ROLES },
+    { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
+  ] },
+  { label: 'Optional Integrations', collapsible: true, items: [
+    { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES, badge: 'Preview' },
+    { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS, badge: 'Preview' },
+    { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
+    { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS, badge: 'Preview' },
+  ] },
+  { label: 'Administration', collapsible: true, items: [
+    { path: '/setup', icon: Download, label: 'Setup & Install', roles: OPERATORS },
+    { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
+    { path: '/appliance', icon: Archive, label: 'Appliance Ops', roles: ALL_ROLES },
+    { path: '/users', icon: Users, label: 'Users', roles: ADMINS },
+    { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
+    { path: '/settings', icon: Wrench, label: 'Settings', roles: OPERATORS },
+  ] },
 ]
 
 export default function Sidebar() {
@@ -98,6 +79,11 @@ export default function Sidebar() {
     user,
   } = useStore()
   const location = useLocation()
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  useEffect(() => {
+    const group = NAV_GROUPS.find(g => g.collapsible && g.items.some(item => location.pathname === item.path || location.pathname.startsWith(item.path + '/')))
+    if (group) setExpanded(current => ({ ...current, [group.label]: true }))
+  }, [location.pathname])
   const role = user?.role
   const visibleGroups = NAV_GROUPS.map(group => ({
     ...group,
@@ -173,17 +159,17 @@ export default function Sidebar() {
         <div className="space-y-4 px-2">
           {visibleGroups.map(group => (
             <div key={group.label}>
-              {sidebarOpen ? (
+              {group.collapsible ? <button type="button" aria-expanded={Boolean(expanded[group.label])} aria-controls={`nav-${group.label.replace(/ /g, '-').toLowerCase()}`} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-gray-400 hover:bg-surface" title={!sidebarOpen ? group.label : undefined} onClick={() => { if (!sidebarOpen) setSidebarOpen(true); setExpanded(current => ({ ...current, [group.label]: !current[group.label] })) }}><span>{sidebarOpen ? group.label : group.label === 'Advanced Automation' ? <Terminal size={18} /> : group.label === 'Optional Integrations' ? <Boxes size={18} /> : <Settings size={18} />}</span>{sidebarOpen && <ChevronRight size={14} className={expanded[group.label] ? 'rotate-90' : ''} />}</button> : sidebarOpen ? (
                 <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-600">
                   {group.label}
                 </div>
               ) : (
                 <div className="mx-3 mb-1 border-t border-border/70" />
               )}
-              <div className="space-y-0.5">
+              <div id={`nav-${group.label.replace(/ /g, '-').toLowerCase()}`} className="space-y-0.5" hidden={group.collapsible && !expanded[group.label]}>
                 {group.items.map(item => {
                   const active = location.pathname === item.path ||
-                    (!['/', '/recovery'].includes(item.path) && location.pathname.startsWith(`${item.path}/`))
+                    (!['/', '/recovery', '/start'].includes(item.path) && location.pathname.startsWith(`${item.path}/`))
                   return (
                     <Link
                       key={item.path}

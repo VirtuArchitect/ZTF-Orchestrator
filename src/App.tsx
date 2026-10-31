@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from './router'
 import { useStore } from './store'
 import Dashboard     from './pages/Dashboard'
+import Clusters from './pages/Clusters'
 import StartHere, { LandingPage, OperatorJourney } from './pages/StartHere'
 import Setup         from './pages/Setup'
 import GlobalConfig  from './pages/GlobalConfig'
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/overview" element={
           <RequireAuth><Dashboard /></RequireAuth>
         } />
+        <Route path="/clusters" element={<RequireAuth><Clusters /></RequireAuth>} />
         <Route path="/recovery" element={<RequireAuth><DisasterRecovery /></RequireAuth>} />
         <Route path="/recovery/runs" element={<RequireAuth><DisasterRecovery /></RequireAuth>} />
         <Route path="/recovery/rehearsals" element={<RequireAuth><DisasterRecovery /></RequireAuth>} />

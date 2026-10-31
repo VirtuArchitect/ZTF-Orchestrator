@@ -13,6 +13,11 @@ to existing workflows and post-configuration pipelines while preserving approval
 and verification gates. The dashboard remains available as **Overview**.
 See [Start Here and deployment guidance](docs/start-here.md).
 
+Overview now focuses on Deploy, Configure, Recover and Monitor, with recorded
+operations and recovery preparation. Existing tools remain available through
+collapsible navigation groups and dashboard details; no integration is removed.
+See the [streamlined console guide](docs/streamlined-console.md).
+
 For infrastructure rebuild preparation, open **Recovery → Disaster Recovery**
 to group cluster baselines and post-configuration pipelines by datacenter.
 See [Disaster Recovery setup and operation](docs/disaster-recovery.md).

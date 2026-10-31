@@ -728,7 +728,8 @@ def test_ztf2_converted_script_actions_are_separate_from_legacy_launcher():
 
     assert 'Scripts2x' in app
     assert 'path="/scripts-2x"' in app
-    assert "label: 'Scripts 1.x'" in sidebar
+    assert "path: '/scripts', icon: Terminal, label: 'Scripts', roles: OPERATORS" in sidebar
+    assert "label: 'Optional Integrations'" in sidebar
     assert "label: 'Scripts 2.x'" in sidebar
 
     assert 'export const ZTF2_SCRIPTS' in data

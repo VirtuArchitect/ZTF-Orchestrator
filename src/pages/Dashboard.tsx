@@ -8,6 +8,7 @@ import {
   ListChecks, Shield, CalendarClock, HardDrive, Boxes, FileArchive
 } from 'lucide-react'
 import Layout from '../components/Layout'
+import OperationsOverview from '../components/OperationsOverview'
 import { useStore } from '../store'
 import type { ApprovalRequest, DriftRun, Execution, ExecutionJob, Schedule, SystemCheck } from '../types'
 import { apiFetch } from '../utils/api'
@@ -105,6 +106,7 @@ export default function Dashboard() {
   const [visibility, setVisibility] = useState<OperationalVisibility | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [collectionError, setCollectionError] = useState('')
   const isAdmin = user?.role === 'admin'
 
   const refresh = async (showSpinner = false) => {
@@ -121,6 +123,8 @@ export default function Dashboard() {
         isAdmin ? apiFetch('/api/maintenance/database-backups') : Promise.resolve(null),
         apiFetch('/api/visibility/summary'),
       ])
+      setCollectionError([sysResp, execResp, driftResp, jobsResp, approvalsResp].some(response => !response.ok)
+        ? 'Some overview records could not be refreshed. Displayed records may be stale; review the source pages.' : '')
       if (sysResp.ok) {
         const data: SystemStatus = await sysResp.json()
         setSystemChecks(data.checks, data.ztfInstalled)
@@ -148,8 +152,11 @@ export default function Dashboard() {
         setBackups(data.backups || [])
       }
       if (visibilityResp.ok) {
-        setVisibility(await visibilityResp.json())
+        const value = await visibilityResp.json()
+        if (value?.operations && value?.governance && value?.deployment && value?.storage && value?.schedules && value?.evidence) setVisibility(value)
       }
+    } catch {
+      setCollectionError('Overview collection failed. Displayed records may be stale; review Jobs, Approvals and Disaster Recovery directly.')
     } finally {
       setLoading(false)
       if (showSpinner) setRefreshing(false)
@@ -160,7 +167,7 @@ export default function Dashboard() {
     refresh()
     const interval = setInterval(() => refresh(), 30_000)
     return () => clearInterval(interval)
-  }, [setSystemChecks])
+  }, [setSystemChecks, isAdmin])
 
   const successCount = executions.filter(e => e.status === 'success').length
   const failCount = executions.filter(e => e.status === 'failed').length
@@ -268,7 +275,7 @@ export default function Dashboard() {
   return (
     <Layout
       title="Overview"
-      subtitle="ZeroTouch Framework Control Center"
+      subtitle="Deployment, configuration and infrastructure recovery"
       actions={
         <div className="flex gap-2">
           {user?.role !== 'viewer' && <Link to="/start/deploy" className="btn-primary gap-2"><Server size={14} />Deploy a Cluster</Link>}
@@ -285,6 +292,11 @@ export default function Dashboard() {
         </div>
       }
     >
+      {collectionError && <p role="status" className="mb-4 text-sm text-yellow-400">{collectionError}</p>}
+      <OperationsOverview jobs={jobs} driftRuns={driftRuns} pendingApprovals={pendingApprovals} runningJobs={runningJobs} loading={loading} unavailable={Boolean(collectionError)} healthIssues={healthIssueCount} />
+      <details id="platform-details" className="rounded-lg border border-border bg-surface p-4">
+        <summary className="cursor-pointer text-sm font-semibold text-gray-300">Platform details and advanced operational visibility</summary>
+        <p className="text-sm text-gray-500 my-4">All existing readiness, runtime, storage, schedule, deployment and execution panels remain available here. These records do not replace independent infrastructure verification.</p>
       <div className={clsx(
         'mb-6 rounded-lg border p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between',
         ztfInstalled
@@ -640,6 +652,7 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+      </details>
     </Layout>
   )
 }
