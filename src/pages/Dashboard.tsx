@@ -252,8 +252,8 @@ export default function Dashboard() {
   const readinessDetail = !ztfInstalled
     ? 'Run the setup wizard before automating Nutanix deployments.'
     : healthIssueCount > 0
-      ? 'Resolve health warnings before launching production workflows; NKP planning, evidence, and backup status are tracked separately below.'
-      : 'Runtime checks are healthy for ZTF workflows. Confirm NKP planning, validation evidence, and backup status before production deployment.'
+      ? 'Resolve health warnings before launching production workflows. Optional NKP preview planning and evidence are tracked separately below.'
+      : 'Runtime checks are healthy for ZTF workflows. Confirm target infrastructure checks and backup status before deployment; optional NKP preview evidence is separate.'
   const operatorChecklist = [
     { label: 'Configure runtime paths', done: ztfInstalled, path: '/setup' },
     { label: 'Confirm storage backend', done: !storageIssue && storageBackend !== 'unknown', path: '/settings' },
@@ -262,7 +262,7 @@ export default function Dashboard() {
     { label: 'Request approval where required', done: pendingApprovals === 0, path: '/approvals' },
     { label: 'Run dry run', done: executions.some(item => item.workflow?.toLowerCase().includes('dry')), path: '/workflows' },
     { label: 'Submit job', done: jobs.length > 0 || executions.length > 0, path: '/jobs' },
-    { label: 'Export evidence', done: evidenceReady, path: '/validation-evidence' },
+    { label: 'Export evidence (NKP Preview / ZTF UAT packs)', done: evidenceReady, path: '/validation-evidence' },
   ]
 
   const stats = [
@@ -401,7 +401,7 @@ export default function Dashboard() {
           ]}
         />
         <DashboardMiniSection
-          title="Validation Evidence"
+          title="NKP Validation Evidence · Preview"
           icon={FileArchive}
           path="/validation-evidence"
           items={[

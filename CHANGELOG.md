@@ -21,6 +21,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   host installation and application activation remain explicit separate steps.
 
 ### Fixed
+- Clarify Monitor & Verify navigation: use execution history/logs for cluster
+  journeys and label NKP Validation Evidence as Preview under Advanced Automation.
+  Preserve existing evidence URLs, records, both export sources and permissions.
 - Allow strictly scoped, separately approved recovery password/EULA/Pulse
   bootstrap before PE health verification. Retain exact confirmations, immutable
   snapshots, sequential job verification and no-replay reconciliation. Collect

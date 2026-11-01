@@ -11,7 +11,7 @@ test('new users land on four choices and can persist a scoped landing preference
   await seed(page)
   await page.goto('/')
   await expect(page).toHaveURL(/\/start$/)
-  for (const name of ['Deploy a Cluster', 'Configure an Existing Cluster', 'Monitor & Assess', 'Run Saved Automation'])
+  for (const name of ['Deploy a Cluster', 'Configure an Existing Cluster', 'Monitor & Verify', 'Run Saved Automation'])
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
   await page.getByRole('combobox', { name: 'My landing page' }).selectOption('/overview')
   await page.goto('/')
@@ -104,6 +104,48 @@ test('saved pipelines show descriptive actions with internal identifiers in deta
   await page.goto('/pipelines')
   await expect(page.getByText('Configure Cluster', { exact: true })).toBeVisible()
   await expect(page.getByTitle('Action ID: config-cluster')).toContainText('Configure Cluster')
+})
+
+test('cluster journeys use execution history while preview evidence retains its route and sources', async ({ page }) => {
+  await seed(page)
+  await page.setViewportSize({ width: 1440, height: 1050 })
+  await page.addInitScript(() => localStorage.setItem('ztf-theme-mode', 'light'))
+  const writes: string[] = []
+  page.on('request', r => { if (r.method() !== 'GET' && r.url().includes('/api/')) writes.push(r.url()) })
+  for (const journey of ['monitor', 'configure']) {
+    await page.goto(`/start/${journey}`)
+    await expect(page.getByRole('link', { name: 'Execution History & Logs', exact: true })).toHaveAttribute('href', '/executions')
+    await expect(page.locator('main a[href="/validation-evidence"]')).toHaveCount(0)
+  }
+  await page.goto('/start/deploy')
+  await page.getByRole('button', { name: '7. Continue with post-configuration', exact: true }).click()
+  await expect(page.getByRole('link', { name: 'Execution History & Logs', exact: true })).toHaveAttribute('href', '/executions')
+  await page.goto('/start/monitor')
+  await expect(page.getByRole('heading', { name: 'Monitor & Verify', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Use labeled navigation', exact: true }).click()
+  await expect.poll(async () => (await page.locator('aside').boundingBox())?.width).toBe(256)
+  await page.screenshot({ path: 'test-results/monitor-verify-preview-scope.png', fullPage: true })
+  await page.getByRole('button', { name: 'Advanced Automation', exact: true }).click()
+  const evidence = page.getByRole('link', { name: 'NKP Validation Evidence Preview', exact: true })
+  await expect(evidence).toHaveAttribute('href', '/validation-evidence')
+  await evidence.click()
+  await expect(page.getByRole('heading', { name: 'NKP Validation Evidence', exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Evidence scope' })).toContainText('preview feature')
+  await expect(page.getByRole('button', { name: 'NKP Readiness', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'ZTF UAT Pack', exact: true }).click()
+  await expect(page.getByText('Existing ZTF UAT pack creation', { exact: false })).toBeVisible()
+  await page.getByRole('link', { name: 'NKP Validation Evidence Preview', exact: true }).scrollIntoViewIfNeeded()
+  await page.screenshot({ path: 'test-results/nkp-validation-evidence-preview.png', fullPage: true })
+  expect(writes).toEqual([])
+})
+
+test('preview evidence bookmarks retain viewer permissions', async ({ page }) => {
+  await seed(page, 'viewer')
+  await page.goto('/validation-evidence')
+  await expect(page.getByRole('heading', { name: 'NKP Validation Evidence', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create Evidence', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'ZTF UAT Pack', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Create Evidence', exact: true })).toBeDisabled()
 })
 
 test('capture start page and deployment guidance in both themes', async ({ page }) => {

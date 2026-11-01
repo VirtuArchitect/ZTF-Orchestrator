@@ -182,7 +182,7 @@ export default function ValidationEvidence() {
 
   return (
     <Layout
-      title="Validation Evidence"
+      title="NKP Validation Evidence"
       subtitle="Capture and export defensible UAT records for NKP readiness, ZTF workflows, native Foundation reviews, approvals, jobs, and execution output"
       actions={
         <button onClick={load} disabled={loading} className="btn-secondary gap-1.5">
@@ -192,6 +192,10 @@ export default function ValidationEvidence() {
       }
     >
       <div className="space-y-6">
+        <section className="card space-y-2" aria-label="Evidence scope">
+          <span className="badge badge-blue">Preview</span>
+          <p className="text-sm text-gray-400">NKP readiness evidence is a preview feature. It does not verify AHV cluster deployment or PE/PC configuration. Existing ZTF UAT pack creation, saved records and downloads remain available below; exported records do not replace fresh infrastructure checks.</p>
+        </section>
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
             <div>

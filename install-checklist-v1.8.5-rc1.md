@@ -24,6 +24,14 @@ do not treat a staged request or loaded image as an applied update.
 
 ## Apply and Verify
 
+- [ ] Confirm Monitor & Verify links to Execution History & Logs; NKP Validation
+  Evidence appears under Advanced Automation with Preview. Existing bookmarks,
+  NKP/ZTF evidence sources, saved records and role restrictions remain usable.
+- [ ] Consolidated bundles containing this change also include the guided-update
+  host kit. An older appliance can apply the consolidated bundle directly;
+  installing the preceding guided-update image separately is not required.
+  Complete the bundled host-service bootstrap once before future GUI updates.
+
 - [ ] Verify new-user landing at Start Here, all four starting choices, deployment
   method routing, saved guidance/landing preference, and the post-configuration
   pipeline handoff. Check viewer restrictions and confirm guidance navigation

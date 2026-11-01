@@ -14,7 +14,7 @@ export function LandingPage() {
 const choices = [
   { id: 'deploy', title: 'Deploy a Cluster', text: 'Prepare and deploy a new AHV cluster.', icon: Server },
   { id: 'configure', title: 'Configure an Existing Cluster', text: 'Configure credentials, EULA, Pulse, DNS, NTP, networking and storage.', icon: Settings },
-  { id: 'monitor', title: 'Monitor & Assess', text: 'Check drift, collect inventory and assess upgrade readiness.', icon: Activity },
+  { id: 'monitor', title: 'Monitor & Verify', text: 'Check drift, collect inventory and assess upgrade readiness.', icon: Activity },
   { id: 'automation', title: 'Run Saved Automation', text: 'Open existing pipelines, workflows and schedules.', icon: GitBranch },
 ]
 
@@ -116,7 +116,7 @@ export function OperatorJourney() {
             </fieldset> : <p className="text-sm text-gray-400 mt-4">Selected method: <strong className="text-gray-100">{method.name}</strong></p>}
             {canOperate && draft.step > 0 && draft.step < 5 && <GuideLinks items={[[workflowPath, `Open ${method.name} configuration`], ...(draft.step === 4 ? [['/approvals', 'Review approvals'] as [string, string]] : [])]} />}
             {draft.step === 5 && <GuideLinks items={[...(canOperate ? [[workflowPath, 'Open deployment workflow'] as [string, string]] : []), ['/jobs', 'Monitor deployment and logs'], ['/executions', 'Execution history']]} />}
-            {draft.step === 6 && <GuideLinks items={[["/start/configure", 'Continue to Post-Configuration'], ['/validation-evidence', 'Review verification evidence']]} />}
+            {draft.step === 6 && <GuideLinks items={[["/start/configure", 'Continue to Post-Configuration'], ['/executions', 'Execution History & Logs']]} />}
             <div className="mt-6 pt-5 border-t border-border flex flex-wrap gap-3">
               <button className="btn-secondary gap-2" onClick={() => {
                 try { saveGuideDraft(username, draft); setNotice('Saved guidance position in this browser. No configuration was saved and nothing was executed. Use Download Config in the form to keep cluster inputs.') }
@@ -138,11 +138,11 @@ export function OperatorJourney() {
           <li>Run Dry Run where available, obtain exact-intent approvals, and verify authentication and requested properties between sensitive stages.</li>
           <li>Record final verification evidence. Configuration completion and deployed infrastructure do not by themselves establish operational readiness.</li>
         </ol>
-        <GuideLinks items={[...(canOperate ? [['/workflows/config-cluster', 'Configure Cluster'], ['/scripts', 'Password and local-user scripts']] as Array<[string, string]> : []), ['/configs', 'Saved configurations'], ['/pipelines', 'Open pipelines'], ['/validation-evidence', 'Verification evidence']]} />
+        <GuideLinks items={[...(canOperate ? [['/workflows/config-cluster', 'Configure Cluster'], ['/scripts', 'Password and local-user scripts']] as Array<[string, string]> : []), ['/configs', 'Saved configurations'], ['/pipelines', 'Open pipelines'], ['/executions', 'Execution History & Logs']]} />
       </section> : journey === 'monitor' ? <section className="card">
         <h2 className="text-xl font-semibold text-gray-100">Check observed state and readiness</h2>
         <p className="text-sm text-gray-400 mt-3">Set up trusted PE/PC connections and read-only credential references. Collect fresh inventory in Upgrade Advisor, review evidence and readiness actions, and save the assessment. Use live PE drift monitoring for DNS, NTP and Pulse; collection failures remain unknown rather than healthy.</p>
-        <GuideLinks items={[["/drift", 'Drift Detection'], ['/upgrade-advisor', 'Inventory and upgrade readiness'], ['/validation-evidence', 'Validation evidence']]} />
+        <GuideLinks items={[["/drift", 'Drift Detection'], ['/upgrade-advisor', 'Inventory and upgrade readiness'], ['/executions', 'Execution History & Logs']]} />
       </section> : <section className="card">
         <h2 className="text-xl font-semibold text-gray-100">Open saved automation</h2>
         <p className="text-sm text-gray-400 mt-3">Review the action, target configuration, credentials and approval before running. Pipelines execute sequentially with pass/fail gates; a saved pipeline has not run.</p>

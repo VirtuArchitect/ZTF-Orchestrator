@@ -49,7 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     { path: '/recovery/rehearsals', icon: RotateCcw, label: 'Rehearsals', roles: ALL_ROLES },
     { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
     { path: '/upgrade-advisor', icon: ShieldAlert, label: 'Upgrade Advisor', roles: ALL_ROLES },
-    { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
+    { path: '/validation-evidence', icon: FileArchive, label: 'NKP Validation Evidence', roles: ALL_ROLES, badge: 'Preview' },
   ] },
   { label: 'Optional Integrations', collapsible: true, items: [
     { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES, badge: 'Preview' },
@@ -188,7 +188,7 @@ export default function Sidebar() {
                       <item.icon size={18} className="flex-shrink-0" />
                       {sidebarOpen && (
                         <>
-                          <span className="flex-1 truncate font-medium">{item.label}</span>
+                          <span className={clsx('flex-1 font-medium', item.path === '/validation-evidence' ? 'min-w-0' : 'truncate')}>{item.label}</span>
                           {item.badge && (
                             <span className={clsx(
                               'rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
