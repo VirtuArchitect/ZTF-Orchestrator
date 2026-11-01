@@ -10,7 +10,7 @@ the full design-to-acceptance sequence, including post-configuration gates.
 
 After signing in, users without a landing preference open **Start Here**.
 The four choices are Deploy a Cluster, Configure an Existing Cluster,
-Monitor & Assess, and Run Saved Automation. The existing dashboard is available
+Monitor & Verify, and Run Saved Automation. The existing dashboard is available
 as **Overview** at `/overview`. Choose **My landing page** on Start Here to
 prefer Overview. The preference is scoped to the signed-in username and browser;
 it does not move to another browser or appliance automatically.
@@ -54,9 +54,16 @@ as successful saves.
 The post-configuration path explains credential preparation, conditional password
 change with fresh-login verification, EULA/Pulse, DNS/NTP, supported networking
 and storage, optional HA/local users, and explicit verification gates. It links
-to Configure Cluster, Scripts, Config Files, Pipelines and Validation Evidence.
+to Configure Cluster, Scripts, Config Files, Pipelines and Execution History & Logs.
 It does not invent a pipeline, select a target, populate an approval, or run any
 steps automatically.
+
+**Monitor & Verify** links to Drift Detection, inventory/upgrade readiness and
+Execution History & Logs. **Advanced Automation → NKP Validation Evidence** has
+a **Preview** badge and retains `/validation-evidence`, existing records,
+downloads, NKP readiness and ZTF UAT pack creation. NKP preview evidence does not
+verify AHV deployment or PE/PC configuration; retained exports do not replace
+fresh infrastructure checks. Existing roles and execution controls are unchanged.
 
 Keep these outcomes separate:
 

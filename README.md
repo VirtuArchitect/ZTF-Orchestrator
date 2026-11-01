@@ -8,7 +8,7 @@ the project's successful production deployment use; `v1.8.4` remains the Latest
 stable release.
 
 Start with **Start Here** to deploy a cluster, configure an existing cluster,
-monitor and assess, or open saved automation. The guided deployment journey links
+monitor and verify, or open saved automation. The guided deployment journey links
 to existing workflows and post-configuration pipelines while preserving approvals
 and verification gates. The dashboard remains available as **Overview**.
 See [Start Here and deployment guidance](docs/start-here.md).
@@ -17,6 +17,11 @@ Overview now focuses on Deploy, Configure, Recover and Monitor, with recorded
 operations and recovery preparation. Existing tools remain available through
 collapsible navigation groups and dashboard details; no integration is removed.
 See the [streamlined console guide](docs/streamlined-console.md).
+
+**Monitor & Verify** opens drift checks, inventory/upgrade readiness and execution
+history. **NKP Validation Evidence (Preview)** remains under Advanced Automation;
+its original route, saved evidence and ZTF UAT pack exports are retained. Preview
+evidence does not establish AHV cluster or PE/PC operational readiness.
 
 Updated source builds provide [guided appliance updates](docs/guided-appliance-updates.md)
 under Appliance Ops → Updates: upload a ZIP, check space, review cleanup, approve

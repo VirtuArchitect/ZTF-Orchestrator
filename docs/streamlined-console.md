@@ -23,7 +23,7 @@ unavailable/stale guidance rather than asserting that the environment is healthy
 - **Automation:** Pipelines, Jobs / Queue and Approvals.
 - **Advanced Automation:** Workflows, Scripts, YAML Studio, Config Files,
   Executions, Schedules, Parallel Exec, Recovery Runs, Rehearsals, Drift Detection,
-  Upgrade Advisor and Validation Evidence.
+  Upgrade Advisor and **NKP Validation Evidence (Preview)**.
 - **Optional Integrations:** NKP Framework, Workflows 2.x, Scripts 2.x and ZTF 2.x IaC.
 - **Administration:** Setup & Install, Global Config, Appliance Ops, Users,
   Audit Log and Settings, subject to the existing role restrictions.
@@ -32,6 +32,19 @@ The three specialist groups collapse by default and expand when an existing
 destination inside them is opened. Their routes, APIs, runtimes and saved data
 are retained. Collapsing navigation is a presentation choice, not a server-side
 feature-disable or authorization control. Existing bookmarks still work.
+
+Monitor & Verify uses the same name in Start Here, the page heading and navigation.
+Its third shortcut opens **Execution History & Logs**, not NKP preview evidence.
+The deployment handoff and configuration guidance also use execution records.
+The evidence page keeps both NKP and existing ZTF UAT pack sources, saved records
+and exports at the original URL, with an explicit preview/scope explanation.
+
+![Monitor and Verify with execution history shortcut](assets/monitor-preview/monitor-verify.png)
+
+![Preview evidence under Advanced Automation with existing ZTF UAT packs](assets/monitor-preview/evidence-preview.png)
+
+These captures show the implemented frontend with isolated simulated records.
+They are not live infrastructure validation or evidence of completed deployment.
 
 All former dashboard panels remain under **Platform details and advanced
 operational visibility**. Theme selection, compact/mobile navigation and the

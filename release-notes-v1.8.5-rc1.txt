@@ -10,6 +10,10 @@ release installation remains disabled.
 
 Included changes
 ----------------
+- Monitor & Verify consistently names the cluster monitoring journey and links
+  to execution history/logs. NKP Validation Evidence is marked Preview under
+  Advanced Automation. Existing evidence routes, ZTF UAT exports, records and
+  permissions remain available. No new deployment engine or release promotion.
 - Guided appliance ZIP updates: space and active-job checks, selected cleanup,
   verified backups excluding reproducible caches, exact-version approval, durable
   host progress and explicit compatible-image rollback. Requires one-time host
