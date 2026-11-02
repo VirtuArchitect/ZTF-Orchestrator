@@ -1,5 +1,8 @@
 import { useStore } from './store'
 import { APP_VERSION } from './version'
+import { emptyOrganization, type CredentialOrganization } from './utils/credentialOrganization'
+
+let demoCredentialOrganization: CredentialOrganization = emptyOrganization()
 
 const DEMO_TOKEN = 'ztf-orchestrator-demo-token'
 // Fixed documentation dataset date, not the time of a real infrastructure read.
@@ -590,6 +593,14 @@ async function demoResponse(request: Request) {
     if (method === 'DELETE') return okAction('Config delete simulated.')
     if (method === 'PUT' || method === 'POST') return okAction('Config save simulated.', { name })
     return json({ name, content: configs[name] || '# Demo config placeholder\n' })
+  }
+  if (path === '/api/credential-organization') {
+    if (method === 'PUT') {
+      const value = await requestJson(request) as CredentialOrganization
+      if (value.revision !== demoCredentialOrganization.revision) return json({ error: 'Grouping changed. Reload before saving.' }, { status: 409 })
+      demoCredentialOrganization = { ...value, revision: demoCredentialOrganization.revision + 1 }
+    }
+    return json(demoCredentialOrganization)
   }
   if (path === '/api/global-config') {
     if (method === 'PUT' || method === 'POST') return okAction('Global config save simulated.')

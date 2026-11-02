@@ -159,3 +159,14 @@ The disposable PostgreSQL smoke test performs a real dump, archive listing and
 restore/readback against its own temporary database container. The host-protocol
 smoke runs the real Linux daemon with non-root request/result permissions, but
 simulates Docker responses. Neither test modifies an existing appliance.
+
+
+### Installation stage indicators
+
+Completed stages display a green check and **Completed**. The active stage is
+blue with **In progress**; pending stages remain grey. A failed stage is red;
+an interrupted stage is amber. Stage-entry events alone do not prove completion:
+a recorded stage turns green after the host advances beyond it. A successful
+`complete` report marks all installation stages complete. The retained host
+report remains authoritative across browser reconnects; do not repeat an update
+because its application connection temporarily disconnects.

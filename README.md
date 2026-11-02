@@ -28,6 +28,12 @@ under Appliance Ops → Updates: upload a ZIP, check space, review cleanup, appr
 the version, install and verify. A one-time host-service installation is required;
 the application does not receive Docker access. The existing CLI procedure remains.
 
+Updated source builds organise local credential definitions by datacenter,
+cluster and shared service in **Global Config > Credentials**. Existing reference
+keys and runtime vault lookup remain unchanged; grouping metadata is stored
+separately. See [credential groups](docs/credential-groups.md). Guided appliance
+update stages distinguish completed (green), active, pending and failed work.
+
 For infrastructure rebuild preparation, open **Operations → Disaster Recovery**
 to group cluster baselines and post-configuration pipelines by datacenter.
 See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
