@@ -185,7 +185,7 @@ export default function Pipelines() {
                       {WORKFLOWS.map(w => (
                         <option key={w.id} value={w.id}>{w.name}</option>
                       ))}
-                      {SCRIPTS.filter(s => ['ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'].includes(s.id)).map(s => (
+                      {SCRIPTS.filter(s => ['ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', 'SetPrismLoginTitlePe'].includes(s.id)).map(s => (
                         <option key={s.id} value={s.id}>{s.name} (Script)</option>
                       ))}
                     </select>

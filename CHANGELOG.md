@@ -10,6 +10,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Set Prism Login Title (PE) script/pipeline action and title-only Configure
+  Cluster dispatch, with selected-vault credential checks, strict TLS by default,
+  idempotent single-setting updates and mandatory fresh read-back verification.
+  Legacy UI API compatibility requires validation against the target AOS version.
 - Administrator-only Users > Sessions panel for unexpired server-side sign-ins,
   distinct user/session counts, five-minute recent activity and confirmed audited
   UUID revocation. Trusted visible console interactions report at most once per

@@ -100,6 +100,43 @@ test('validator rejects legacy fields, malformed structures and mismatched crede
   }
 })
 
+test('title-only config accepts root defaults and cluster overrides without changing data', () => {
+  const title = '  Operations: "Blue" #1  '
+  const input = { pe_credential: 'root_pe_ref', prism_login_title_verify_tls: true, global_metadata: { example: true }, clusters: {
+    '192.0.2.100': { name: 'cluster-a', prism_login_title: title },
+    '192.0.2.101': { name: 'cluster-b', pe_credential: 'cluster_pe_ref', prism_login_title: 'Cluster B', prism_login_title_verify_tls: false },
+  } }
+  const before = JSON.stringify(input)
+  expect(validateClusterConfig(input)).toEqual([])
+  expect(JSON.stringify(input)).toBe(before)
+  expect(validateClusterConfig({ ...input, prism_login_title_verify_tls: 'false' })).not.toEqual([])
+  for (const patch of [{ name: '' }, { pe_credential: '' }, { prism_login_title: ' ' }, { prism_login_title: '<b>title</b>' }, { prism_login_title: 'x'.repeat(129) }, { prism_login_title: 'title\nnext' }, { prism_login_title_verify_tls: 'false' }, { new_pe_admin_credential: 'root_pe_ref' }, { enable_pulse: false }, { containers: [] }, { unexpected: true }]) {
+    expect(validateClusterConfig({ ...input, clusters: { '192.0.2.100': { ...input.clusters['192.0.2.100'], ...patch } } }), JSON.stringify(patch)).not.toEqual([])
+  }
+  expect(validateClusterConfig({ clusters: { '192.0.2.100': input.clusters['192.0.2.100'] } })).not.toEqual([])
+  expect(validateClusterConfig({ ...input, prism_login_title: 'Wrong location' })).not.toEqual([])
+  expect(validateClusterConfig({ ...input, clusters: { '192.0.2.100': cluster('pe_ref', false) } })).not.toEqual([])
+  expect(validateClusterConfig({ ...input, clusters: { ...input.clusters, '192.0.2.102': cluster('pe_ref', false) } })).not.toEqual([])
+  for (const title of ['title\u200b', 'title\u202e', 'title\ud800']) {
+    expect(validateClusterConfig({ ...input, clusters: { '192.0.2.100': { ...input.clusters['192.0.2.100'], prism_login_title: title } } })).not.toEqual([])
+  }
+})
+
+test('title-only config imports and exports intact without adding legacy actions', async ({ page }) => {
+  await seed(page)
+  const input = { pe_credential: 'root_pe_ref', prism_login_title_verify_tls: true, global_metadata: { example: true }, clusters: {
+    '192.0.2.100': { name: 'cluster-a', prism_login_title: '  Operations: "Blue" #1  ' },
+    '192.0.2.101': { name: 'cluster-b', pe_credential: 'cluster_pe_ref', prism_login_title: 'Cluster B', prism_login_title_verify_tls: false },
+  } }
+  await importConfig(page, input)
+  await expect(page.getByLabel('Prism Element IP').first()).toHaveValue('192.0.2.100')
+  expect(await exported(page)).toEqual(input)
+  await expect(page.getByRole('button', { name: 'Dry Run', exact: true })).toBeEnabled()
+  await importConfig(page, { ...input, clusters: { '192.0.2.100': { ...input.clusters['192.0.2.100'], enable_pulse: false } } })
+  await expect(page.getByText(/Login-title changes cannot be mixed/)).toBeVisible()
+  expect(await exported(page)).toEqual(input)
+})
+
 test('native cluster form fits a mobile viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seed(page)

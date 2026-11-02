@@ -35,6 +35,10 @@ captures. Video Part 11 predates the panel and remains unchanged. Foundation VM
 is labelled Implemented; mutation and approval gates remain in place.
 No unfinished deployment-engine work is included.
 
+The later **Set Prism Login Title (PE)** source addition is documented separately
+in the [PE login-title guide](../pe-login-title.md). Its script, pipeline and
+title-only Configure Cluster paths are not illustrated in this manual build.
+
 PDF SHA256: `3b4a1b32e06610b2d8723124b565e84918f73bec77bdc952e246a3cf62017556`.
 
 Editable source SHA256: `774efa3c3acbdfa297eb05160518452540038e0e1589e65c5a24ade32bda31d0`.

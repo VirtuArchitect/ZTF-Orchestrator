@@ -223,6 +223,10 @@ def patch_pe_local_users() -> None:
     text = registry.read_text()
     if 'from .pe.create.create_local_users_pe import CreateLocalUsersPe' not in text:
         registry.write_text(text + '\nfrom .pe.create.create_local_users_pe import CreateLocalUsersPe\n__all__.append("CreateLocalUsersPe")\n')
+    main_text = _runtime_path('main.py').read_text()
+    if ('if input_scripts not in ([CreateLocalUsersPe], [SetPrismLoginTitlePe]):' in main_text
+            and 'if CreateLocalUsersPe in scripts or SetPrismLoginTitlePe in scripts:' in main_text):
+        return
     _replace_once(
         _runtime_path('main.py'),
         '            pre_run_actions += [create_pe_objects, create_pc_objects, create_ipam_object]\n',
@@ -239,6 +243,74 @@ def patch_pe_local_users() -> None:
         '            sys.exit(1)\n'
         '        logger.error(e)\n    finally:\n',
         'PE local-user preparation failure exit',
+    )
+
+
+def patch_pe_login_title() -> None:
+    source = Path(__file__).resolve().parent
+    core = source / 'pe_login_title.py'
+    if not core.exists():
+        core = source.parent / 'pe_login_title.py'
+    _runtime_path('framework/helpers/pe_login_title.py').write_text(
+        core.read_text(encoding='utf-8'), encoding='utf-8',
+    )
+    _runtime_path('framework/scripts/python/pe/other_ops/set_prism_login_title_pe.py').write_text(
+        (source / 'ztf_set_prism_login_title_pe.py').read_text(encoding='utf-8'), encoding='utf-8',
+    )
+    registry = _runtime_path('framework/scripts/python/__init__.py')
+    text = registry.read_text()
+    marker = 'from .pe.other_ops.set_prism_login_title_pe import SetPrismLoginTitlePe'
+    if marker not in text:
+        registry.write_text(text + '\n' + marker + '\n__all__.append("SetPrismLoginTitlePe")\n')
+    _replace_once(
+        _runtime_path('main.py'),
+        '            if input_scripts != [CreateLocalUsersPe]:\n',
+        '            if input_scripts not in ([CreateLocalUsersPe], [SetPrismLoginTitlePe]):\n',
+        'dedicated PE login-title transport',
+    )
+    _replace_once(
+        _runtime_path('main.py'),
+        '        if CreateLocalUsersPe in scripts:\n',
+        '        if CreateLocalUsersPe in scripts or SetPrismLoginTitlePe in scripts:\n',
+        'PE login-title safe preparation error',
+    )
+    _replace_once(
+        _runtime_path('main.py'),
+        '            logger.error("CreateLocalUsersPe preparation failed; check saved configuration and vault access")\n',
+        '            logger.error("PE administration preparation failed; check saved configuration and vault access")\n',
+        'PE administration safe error message',
+    )
+    _replace_once(
+        _runtime_path('main.py'),
+        '        wf_handler.run_functions(pre_run_actions)\n',
+        '        if workflow_type == "config-cluster":\n'
+        '            from framework.helpers.pe_login_title import has_title_intent\n'
+        '            wf_handler.run_functions([get_input_data])\n'
+        '            remaining_actions = [action for action in pre_run_actions if action is not get_input_data]\n'
+        '            if has_title_intent(wf_handler.data):\n'
+        '                remaining_actions = [action for action in remaining_actions\n'
+        '                                     if action not in (create_pe_objects, create_pc_objects, create_ipam_object)]\n'
+        '            wf_handler.run_functions(remaining_actions)\n'
+        '        else:\n'
+        '            wf_handler.run_functions(pre_run_actions)\n',
+        'title-only workflow preparation before legacy object creation',
+    )
+    path = _runtime_path('framework/scripts/python/pe/configure_cluster.py')
+    _replace_once(
+        path,
+        '    def execute(self):\n        create_pe_objects(self.data, global_data=self.global_data)\n',
+        '    def execute(self):\n'
+        '        from framework.helpers.pe_login_title import has_title_intent\n'
+        '        if has_title_intent(self.data):\n'
+        '            from framework.scripts.python.pe.other_ops.set_prism_login_title_pe import SetPrismLoginTitlePe\n'
+        '            for key in ("vaults", "vault_to_use"):\n'
+        '                if key not in self.data and key in self.global_data:\n'
+        '                    self.data[key] = self.global_data[key]\n'
+        '            self.results.update(SetPrismLoginTitlePe(self.data).run())\n'
+        '            self.data["json_output"] = self.results\n'
+        '            return\n'
+        '        create_pe_objects(self.data, global_data=self.global_data)\n',
+        'title-only cluster configuration before legacy preparation',
     )
 
 
@@ -282,6 +354,7 @@ def main() -> None:
     patch_pe_role_mapping_optional_directory()
     patch_register_to_pc_verification()
     patch_pe_local_users()
+    patch_pe_login_title()
     patch_pe_postconfig_verification()
 
 

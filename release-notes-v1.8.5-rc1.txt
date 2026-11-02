@@ -10,6 +10,10 @@ release installation remains disabled.
 
 Included changes
 ----------------
+- Updated source adds Set Prism Login Title (PE) to Scripts and pipelines and
+  routes title-only config-cluster requests through the same verified operation.
+  It does not rename the cluster or change other baseline/UI settings. TLS is
+  verified by default; API compatibility and live AOS validation remain explicit.
 - Administrator-only Users > Sessions lists server-side unexpired sign-ins and
   distinct user/session counts. Recently active means sign-in or reported trusted
   visible console interaction within five minutes, never background polling.

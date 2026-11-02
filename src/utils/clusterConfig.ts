@@ -4,10 +4,21 @@ const filled = (value: unknown) => typeof value === 'string' && Boolean(value.tr
 export function validateClusterConfig(value: unknown): string[] {
   if (!mapping(value) || !mapping(value.clusters) || !Object.keys(value.clusters).length) return ['Add at least one cluster keyed by Prism Element IP.']
   const errors: string[] = []
+  const titleIntent = 'prism_login_title' in value || 'prism_login_title_verify_tls' in value || Object.values(value.clusters).some(c => mapping(c) && ('prism_login_title' in c || 'prism_login_title_verify_tls' in c))
+  if ('prism_login_title' in value) errors.push('prism_login_title belongs inside each cluster entry.')
   if (value.default_pe_password !== undefined && typeof value.default_pe_password !== 'string') errors.push('Existing password override must be a string.')
+  if (value.prism_login_title_verify_tls !== undefined && typeof value.prism_login_title_verify_tls !== 'boolean') errors.push('prism_login_title_verify_tls must be a boolean.')
   for (const [ip, c] of Object.entries(value.clusters)) {
     const fail = (message: string) => errors.push(`${ip || 'Cluster'}: ${message}`)
     if (!ip.trim() || !mapping(c)) { fail('Prism Element IP and cluster settings are required.'); continue }
+    if (titleIntent) {
+      if (!filled(c.name)) fail('Cluster name is required for a login-title change.')
+      if (!filled(c.pe_credential === undefined ? value.pe_credential : c.pe_credential)) fail('A PE credential reference is required for a login-title change.')
+      if (typeof c.prism_login_title !== 'string' || !c.prism_login_title.trim() || Array.from(c.prism_login_title).length > 128 || /[<>\p{C}]/u.test(c.prism_login_title)) fail('Prism Login Title must be 1–128 characters of nonblank plain text without HTML or control characters.')
+      if (c.prism_login_title_verify_tls !== undefined && typeof c.prism_login_title_verify_tls !== 'boolean') fail('prism_login_title_verify_tls must be a boolean.')
+      if (Object.keys(c).some(key => !['name', 'pe_credential', 'prism_login_title', 'prism_login_title_verify_tls'].includes(key))) fail('Login-title changes cannot be mixed with other cluster settings. Use a separate configuration step.')
+      continue
+    }
     if (!filled(c.pe_credential) || !filled(c.new_pe_admin_credential)) fail('Both PE credential references are required.')
     else if (c.pe_credential !== c.new_pe_admin_credential) fail('PE API and new admin credential references must match for initial configuration.')
     if (['pulse', 'storage_containers', 'active_directory'].some(key => key in c)) fail('Legacy fields pulse/storage_containers/active_directory are unsupported. Use enable_pulse, containers and directory_services.')

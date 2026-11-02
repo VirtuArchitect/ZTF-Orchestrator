@@ -274,7 +274,7 @@ export default function Scripts() {
                     >
                       <X size={12} /> Clear
                     </button>
-                    {queue.length === 1 && queue[0] === 'CreateLocalUsersPe' && (
+                    {queue.length === 1 && ['CreateLocalUsersPe', 'SetPrismLoginTitlePe'].includes(queue[0]) && (
                       <button onClick={() => runScripts(true)} disabled={runStatus === 'running' || !configContent.trim()} className="btn-secondary gap-1.5">
                         <ListChecks size={14} /> Dry Run
                       </button>
