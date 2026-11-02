@@ -1,0 +1,18 @@
+Part 14 - Native Foundation Baselines and Operating Boundaries
+
+Simulated console illustrations. Synthetic narration.
+
+Distinguish the Native Foundation lane
+Native Foundation is a separate planning and controlled-adapter lane. Do not confuse it with the classic Foundation V M deployment workflow used elsewhere in this series. Inspect its returned read-only state, adapter readiness and blockers. A long list of successful review artifacts does not mean that physical imaging or cluster formation has taken place.
+
+Read probes and review counts accurately
+A hardware probe can test selected connectivity and authentication conditions. Read each result and its scope. A passed count can represent checks rather than the number of configured nodes. Review manifests, provider operations, missing evidence and enabled execution flags separately. Evidence records, reservation plans and authorization reviews do not themselves prove that a deployment was admitted or executed.
+
+Review the post-foundation baseline mappings
+The post-foundation baseline workflows classify controls as apply, evidence, manual or blocked. Only verified apply mappings execute. Evidence-only records capture observations. Manual controls still require a supported target procedure and retained proof. Blocked controls need their gate resolved. A successful overall job does not mean that every requested security, monitoring, network or certificate setting was changed.
+
+Handle hardware and certificate controls explicitly
+For hardware out-of-band access, controller credentials and certificates, confirm the supported platform procedure and your recovery path. Inspect any manual follow-up rather than treating an acknowledgement as completion. Review independent target evidence for the controls that matter. Reconcile partial changes before retry. Keep both the configuration intent and the actual verified result with the change record.
+
+Operate within the demonstrated scope
+Before enabling a specialist integration, verify its exact supported scope, keep approvals and preserve the original recovery path. Use the established Foundation V M and post-configuration workflows for the core cluster tasks. Check actual target state before accepting a change. Open Overview when you are ready to choose your next task.

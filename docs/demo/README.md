@@ -1,6 +1,16 @@
 # ZTF-Orchestrator Demo And Simulator
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease); `v1.8.4` remains Latest stable.
+
+The public demo and current screenshot galleries were reviewed on **2 November 2026**,
+using application baseline `ea9dcf0` plus the demo fixture corrections in this documentation
+revision. Config Files includes proper filenames/sizes and Audit Log uses valid display
+fields. The fixed demonstration dataset date is not an infrastructure collection time.
+
+Start with the [15-part video guide](../user-guide-videos.md) or
+[watch Overview 00](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
+Guided host updates are intentionally unavailable in the public static demo;
+follow the [illustrated update procedures](../guided-appliance-updates.md) for an appliance.
 
 This folder separates demo and simulator evidence from live infrastructure
 evidence. Simulator output is useful for local development and smoke testing,

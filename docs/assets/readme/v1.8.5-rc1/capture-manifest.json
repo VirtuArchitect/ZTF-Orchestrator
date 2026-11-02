@@ -1,0 +1,121 @@
+{
+  "version": "1.8.5-rc1",
+  "sourceBaseline": "ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae",
+  "date": "2026-11-02",
+  "simulated": true,
+  "fixtureCorrections": "This documentation revision fixes demo file metadata and audit display fields.",
+  "screens": [
+    {
+      "file": "appliance-updates.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "46269e32a626397d9117af71892cca32d8e10204591290a0841ce15a79081bc0"
+    },
+    {
+      "file": "approvals.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "4a891024d0f47e42210952f5b855456990337b1203e2536bd335cac6902e8dd4"
+    },
+    {
+      "file": "dashboard.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "aed5a87ba45b127256b594f2bdb0edfcf834681caf015e09417760a548733ba8"
+    },
+    {
+      "file": "deployment-guide.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "9fc2b2121ab6d8eb288c5d01ca2f2aceda7eafd731b7e72f76a4de1bcaf89243"
+    },
+    {
+      "file": "disaster-recovery.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "3a3d36ca21c380ef43890e72210377cc9ff39a869349e226bc533a0a4b1a8531"
+    },
+    {
+      "file": "jobs-queue.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "53258fe2e4da7fa3a79e38e3878675f2db2a7e21a876697a389dcf4ca73caa51"
+    },
+    {
+      "file": "monitor-verify.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "fdd5ceb36e430838ccaf41e8c79088af81fe5aef6e9fcea8dced9155c73c615d"
+    },
+    {
+      "file": "native-foundation-planning.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "c903181382c02b9bfa58642de3adab6738cc40046a7f5c0db5e1bea9e0110bc3"
+    },
+    {
+      "file": "post-configuration.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "2d9bc6be8b60f25b5b7aec778fe1e9928027d0f164ef81a88eec0b69a80ba1c0"
+    },
+    {
+      "file": "start-here.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0"
+    },
+    {
+      "file": "upgrade-advisor.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "5f4f6cfc46e54fa98271efd162823d9ec6b900cb4ad701b22d33a11c94d349e5"
+    },
+    {
+      "file": "validation-evidence.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "23583f610928ce993be8040970fcbddd227a21d2b6a7eb81d2cfab596c110fce"
+    },
+    {
+      "file": "workflow-catalog.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "e06a38b43b9e0324e430707256c2e2fd8476b92a98c93df4d20a95b97591ec92"
+    },
+    {
+      "file": "yaml-studio.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "1adf311c39834509395edcecfaf08c18c9348d03fc738d751c3a117daa8bd208"
+    }
+  ]
+}

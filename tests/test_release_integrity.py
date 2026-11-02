@@ -157,7 +157,8 @@ def test_pages_release_index_preserves_pinned_historical_links():
         assert link in ('../',) or link.startswith('https://github.com/VirtuArchitect/ZTF-Orchestrator')
     assert "default-src 'none'" in page
     assert 'Latest stable' in page and '>v1.8.4<' in page
-    assert 'v1.8.5-rc1' in page and 'Controlled UAT only' in page
+    assert 'v1.8.5-rc1' in page and 'Current prerelease' in page
+    assert 'does not promote the candidate to Latest stable' in page
     public_url = 'https://virtuarchitect.github.io/ZTF-Orchestrator/releases/'
     for source in ('README.md', 'docs/releases/README.md', 'docs/demo/README.md'):
         assert public_url in (ROOT / source).read_text(encoding='utf-8')

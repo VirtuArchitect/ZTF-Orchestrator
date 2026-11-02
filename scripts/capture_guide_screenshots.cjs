@@ -31,6 +31,8 @@ const screens = [
   ['native-foundation', 'workflows/native-foundation-deploy'],
   ['start-here', 'start'], ['deployment-guide', 'start/deploy'],
   ['post-configuration', 'start/configure'],
+  ['monitor-verify', 'start/monitor'], ['clusters', 'clusters'],
+  ['disaster-recovery', 'recovery'],
 ];
 
 (async () => {

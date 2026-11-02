@@ -2,8 +2,8 @@
 
 Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
 
-Documentation reviewed on 27 October 2026 against merged application revision
-`4a010727d5db3496d17a52e4ce681818dcc56200`. The [illustrated PDF manual](manuals/README.md)
+Documentation reviewed on 2 November 2026 against merged application revision
+`ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae`. The [illustrated PDF manual](manuals/README.md)
 preserves the supplied administrator/user guide format and contains refreshed,
 simulated screenshots. See [current screenshot provenance](assets/guide/v1.8.5-rc1/README.md).
 The prerelease remains separate from v1.8.4 Latest stable.
@@ -28,12 +28,14 @@ backup planning, and operational signoff.
 The new [Disaster Recovery section](disaster-recovery.md) groups saved Foundation
 VM rebuild baselines and post-configuration pipelines by datacenter. It adds
 versioned profiles, governed execution, explicit health/acceptance evidence and
-rehearsal records. The illustrated PDF predates this addition; the linked guide
-documents the current source implementation and its validation boundaries.
+rehearsal records. The refreshed 139-page illustrated PDF includes Disaster Recovery,
+the approved bootstrap-before-health sequence, current navigation and guided
+appliance updates. The linked procedures describe their validation boundaries.
 The separate [illustrated recovery setup guide](disaster-recovery-setup.md),
 reviewed against `867fe83` on 29 October 2026, adds datacenter creation,
 Foundation VM/pipeline linking and baseline review without deployment. Its
-generic simulated screenshots and PDF/Word editions supplement the older manual.
+generic simulated screenshots and PDF/Word editions remain a focused setup supplement.
+The [15-part video series](user-guide-videos.md) includes an introductory overview.
 
 ZTF-Orchestrator provides a browser-based control plane for preparing,
 validating, executing, and auditing Nutanix automation work. It complements the

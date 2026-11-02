@@ -1,0 +1,377 @@
+{
+  "version": "1.8.5-rc1",
+  "sourceBaseline": "ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae",
+  "date": "2026-11-02",
+  "simulated": true,
+  "fixtureCorrections": "This documentation revision fixes demo file metadata and audit display fields.",
+  "screens": [
+    {
+      "file": "about.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "0a90debd11116c9cc0a8bdf664be14640bc5e3f586fd8b704e705cdd6328761e"
+    },
+    {
+      "file": "appliance.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "b9063a75cf28a61abeadb4642923e77adf0d4e5b1bcbc8525b0315e2f9ea1eda"
+    },
+    {
+      "file": "approvals.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "4a891024d0f47e42210952f5b855456990337b1203e2536bd335cac6902e8dd4"
+    },
+    {
+      "file": "audit-log.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "09749f2050db25f42829cad8b29016e5c47ca65135273ef0b2dc8f64e3e734ae"
+    },
+    {
+      "file": "clusters.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "7b4f67180734de62dd8f4733efcdab157f20b01425f54c8f2e893a9957118326"
+    },
+    {
+      "file": "configs.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "b94c658a51d642853271ebf7f8223421badb2b243244e0260a1b91c12f333808"
+    },
+    {
+      "file": "configure-cluster.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "806da1788afcb57e4d94128682efdce0e66c7b34694d54e9d67d2fdf98b7a6a5"
+    },
+    {
+      "file": "connections.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "7e0771a425e40ba7bf8f05dc2a2823162914e3c363ae457d5ffa1ac0238a3f21"
+    },
+    {
+      "file": "credential-rotation.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "484a608e4dea78be38d9586640f4701c68fa43375b310ec58778b33d4f5f2b16"
+    },
+    {
+      "file": "dashboard.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "aed5a87ba45b127256b594f2bdb0edfcf834681caf015e09417760a548733ba8"
+    },
+    {
+      "file": "deployment-guide.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "9fc2b2121ab6d8eb288c5d01ca2f2aceda7eafd731b7e72f76a4de1bcaf89243"
+    },
+    {
+      "file": "disaster-recovery.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "3a3d36ca21c380ef43890e72210377cc9ff39a869349e226bc533a0a4b1a8531"
+    },
+    {
+      "file": "drift-edit.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "21aa0d9b7778c0388dc2f348b70b9d742bd4ee8ea725c91794da33a6c59596e1"
+    },
+    {
+      "file": "drift.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "d19b364b348c462f0e0445e5b13ddf731f4b633d5a748bc4997a78ab51287daa"
+    },
+    {
+      "file": "executions.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "4f06f65ead04794fc458bd4724c9cffa68876cac7b73a2e8070550a4d3da8a37"
+    },
+    {
+      "file": "first-boot.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "8b189507fa7d00dff688a1a4ed5d2ace76a69fa51bd7033e23744f03873423e2"
+    },
+    {
+      "file": "foundation-images.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "052d864221ba36e9975b2ae4ecd6ae50177f2407ab26fa9a23a6561d0b58f512"
+    },
+    {
+      "file": "foundation-nodes.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "ded6494a135a1e855b8801d8d4b0cf7ec22839095f525945d4190a81d4e97435"
+    },
+    {
+      "file": "foundation-vm.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "474b0987bb385bff876f06e05fd12f3a4c4dc9f65584e4839d4fd7271e4464c9"
+    },
+    {
+      "file": "global-config.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "749c6cb1289eb799a5e00b901afad163ced648d613c0c11c81b8095e2ae7023e"
+    },
+    {
+      "file": "governance.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "c5c12fdf33162333feea54543aed50046cf3eb7b23d3e2eabb1b9a60992bf919"
+    },
+    {
+      "file": "jobs.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "53258fe2e4da7fa3a79e38e3878675f2db2a7e21a876697a389dcf4ca73caa51"
+    },
+    {
+      "file": "monitor-verify.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "fdd5ceb36e430838ccaf41e8c79088af81fe5aef6e9fcea8dced9155c73c615d"
+    },
+    {
+      "file": "native-foundation.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "c903181382c02b9bfa58642de3adab6738cc40046a7f5c0db5e1bea9e0110bc3"
+    },
+    {
+      "file": "nkp-readiness.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "59ae6746f4ca74c3349fc52024f0dcd4c5b3a9e38e2eb3b9e602f0434d0cd4e7"
+    },
+    {
+      "file": "nkp.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "399be8c3eed2d369cac45a2c636a90addd36da27d76715d069b4f41e4ba459e6"
+    },
+    {
+      "file": "notifications.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "f3bc8e45acfc511f68a5ea595943038cbe2206c5709e2c97d2d5fccbac199473"
+    },
+    {
+      "file": "parallel.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "19e82020c574e91be939219d3da3d4bf658a5ac2e00a00e890964648c39904fb"
+    },
+    {
+      "file": "pipelines.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "a6e132219006b3913ebf68c77634cec4b01b5fffefda37598e41286fa91c70eb"
+    },
+    {
+      "file": "post-configuration.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "2d9bc6be8b60f25b5b7aec778fe1e9928027d0f164ef81a88eec0b69a80ba1c0"
+    },
+    {
+      "file": "schedules.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "06b08b0d7dbdb67444589fe3e6bebf4f89d87b6a18385159dc143932481920ed"
+    },
+    {
+      "file": "scripts-2x.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "e7e012f82071814c92541a10ec06df2bcdad0404c3071f3e4c7016ad000033f2"
+    },
+    {
+      "file": "scripts.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "1d3bb0824ef1d2006c82c3451b03b2785388e75d05889ea5f34ab9f4bf666bd9"
+    },
+    {
+      "file": "settings.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "daa8ace5e3c8f91c95fe2086d504748d210535500ca30b0c2ac393a5bde70f42"
+    },
+    {
+      "file": "setup.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "e17b32be2af2d17254c702f2372f1cf20aafd9ee4d9bfd0975a65ff75c5071a9"
+    },
+    {
+      "file": "start-here.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0"
+    },
+    {
+      "file": "storage.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "cc744a5f1a3a257df160fbd4e5fe65d45c4a199dec3d027d1793360fc7f0838a"
+    },
+    {
+      "file": "updates.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "fdf4e86f1e9d749dfac56e1c92f2d539c06608dbd4d0caf2b5abe7f5e86bbbc7"
+    },
+    {
+      "file": "upgrade-advisor.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "b8b3d671f817532cc2ae8d38b2ae6723a7ae7d7e9eb7172201b108c31c83fe3c"
+    },
+    {
+      "file": "users.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "bed041c21c7a880491cdbff8a637977a195199da50310234bacca8f9585ae9e8"
+    },
+    {
+      "file": "validation-evidence.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "23583f610928ce993be8040970fcbddd227a21d2b6a7eb81d2cfab596c110fce"
+    },
+    {
+      "file": "workflows-2x.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "e1cf29c28a0c14454c7cf8bb765ca6b298e8433cd3666cda1e43d0af2cd01776"
+    },
+    {
+      "file": "workflows.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "e06a38b43b9e0324e430707256c2e2fd8476b92a98c93df4d20a95b97591ec92"
+    },
+    {
+      "file": "yaml-studio.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "1adf311c39834509395edcecfaf08c18c9348d03fc738d751c3a117daa8bd208"
+    },
+    {
+      "file": "ztf-modes.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "6e736b7af128b65a3f25b90d6e7410b8b256377b07693b47252d9a347b61ce13"
+    },
+    {
+      "file": "ztf2-iac.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "40c6272083e4c55875c1b56dc3775ff71cbbe8b37e50685682c1c941f2c3c8e2"
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+1
+00:00:00,100 --> 00:00:04,075
+Use Upgrade Advisor to decide which evidence is still needed before
+
+2
+00:00:04,075 --> 00:00:04,638
+an upgrade.
+
+3
+00:00:05,038 --> 00:00:09,475
+Enter the cluster context and reviewed P E and optional P C
+
+4
+00:00:09,475 --> 00:00:10,150
+connections.
+
+5
+00:00:10,562 --> 00:00:13,462
+Establish verified certificate trust first.
+
+6
+00:00:13,862 --> 00:00:18,112
+The advisor can collect bounded inventory and evaluate inputs, but
+
+7
+00:00:18,112 --> 00:00:22,650
+it does not execute an upgrade or automatically certify a supported
+
+8
+00:00:22,650 --> 00:00:23,612
+upgrade path.
+
+9
+00:00:24,783 --> 00:00:29,271
+Collect fresh inventory and inspect the timestamp, returned fields
+
+10
+00:00:29,383 --> 00:00:30,421
+and collection errors.
+
+11
+00:00:30,821 --> 00:00:34,921
+P E cluster and host reads can supply A O S and
+
+12
+00:00:34,921 --> 00:00:37,658
+homogeneous A H V versions.
+
+13
+00:00:38,071 --> 00:00:42,821
+P C product-header detection is limited context, not an authenticated
+
+14
+00:00:42,821 --> 00:00:43,696
+permission test.
+
+15
+00:00:44,083 --> 00:00:46,771
+Other components can remain manual or unknown.
+
+16
+00:00:47,183 --> 00:00:49,708
+Do not replace missing values with guessed versions.
+
+17
+00:00:50,867 --> 00:00:54,429
+Enter the intended target versions and environment signals.
+
+18
+00:00:54,829 --> 00:01:00,117
+Review release notes, compatibility, lifecycle prechecks and any dark-site
+
+19
+00:01:00,117 --> 00:01:02,804
+bundle requirements using the actual vendor material.
+
+20
+00:01:03,204 --> 00:01:06,154
+Mark evidence complete only when it was reviewed.
+
+21
+00:01:06,567 --> 00:01:11,217
+Curated rule packs contribute explicit guardrails and sources.
+
+22
+00:01:11,629 --> 00:01:15,679
+They are not an automatic scrape of every support article or private
+
+23
+00:01:15,679 --> 00:01:16,529
+defect record.
+
+24
+00:01:17,725 --> 00:01:22,862
+Run the assessment and review each blocker, warning, review item and
+
+25
+00:01:22,875 --> 00:01:23,350
+unknown.
+
+26
+00:01:23,750 --> 00:01:27,750
+Read the guidance, source and missing evidence rather than looking
+
+27
+00:01:27,825 --> 00:01:29,275
+only at an overall score.
+
+28
+00:01:29,675 --> 00:01:33,125
+Assign the necessary follow-up and collect its real evidence.
+
+29
+00:01:33,525 --> 00:01:37,638
+A clear result remains limited to the reviewed inputs and rules;
+
+30
+00:01:38,038 --> 00:01:42,362
+it does not replace actual lifecycle checks or authorize change execution.
+
+31
+00:01:43,546 --> 00:01:47,896
+Save the reviewed assessment with its owner and context, then export
+
+32
+00:01:47,896 --> 00:01:49,908
+the evidence bundle if required.
+
+33
+00:01:50,308 --> 00:01:53,758
+The snapshot preserves the assessed inputs and findings.
+
+34
+00:01:54,146 --> 00:01:58,633
+Collecting newer inventory later does not rewrite that saved assessment.
+
+35
+00:01:59,033 --> 00:02:03,158
+Compare a new snapshot when conditions change and retain the relevant
+
+36
+00:02:03,158 --> 00:02:06,858
+version with the change record and final vendor precheck results.

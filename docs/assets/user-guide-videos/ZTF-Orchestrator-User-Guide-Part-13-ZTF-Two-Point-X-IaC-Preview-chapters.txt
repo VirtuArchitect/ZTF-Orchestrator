@@ -1,0 +1,5 @@
+00:00:00 Use the separate preview runtime
+00:00:25 Generate intent from preview workflows
+00:00:52 Understand converted script actions
+00:01:18 Review the governed plan result
+00:01:44 Keep apply and destroy separately governed

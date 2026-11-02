@@ -1,11 +1,11 @@
 # ZTF-Orchestrator User Guide
 
 Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
-`4a01072` on 27 October 2026. v1.8.4 remains Latest stable. Download the
+`ea9dcf0` on 2 November 2026. v1.8.4 remains Latest stable. Download the
 [illustrated PDF manual](manuals/README.md) or begin with [Start Here](start-here.md).
 All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
 
-For the newer Disaster Recovery section, use the
+For Disaster Recovery, use the updated manual and the focused
 [illustrated recovery setup guide](disaster-recovery-setup.md), reviewed against
 `867fe83` on 29 October 2026. It covers datacenters, Foundation VM configuration
 and pipeline links, and reviewed baselines without deployment. Its screenshots

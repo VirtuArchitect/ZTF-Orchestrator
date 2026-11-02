@@ -1,0 +1,121 @@
+WEBVTT
+
+00:00:00.088 --> 00:00:03.988
+Setup and Install checks prerequisites and the configured framework
+
+00:00:03.988 --> 00:00:04.575
+paths.
+
+00:00:04.988 --> 00:00:09.588
+Use the compatible legacy runtime for Workflows and Scripts one point
+
+00:00:09.588 --> 00:00:10.038
+x.
+
+00:00:10.325 --> 00:00:14.025
+Keep the separate two point x runtime and command for its preview
+
+00:00:14.038 --> 00:00:15.838
+plan and apply surface.
+
+00:00:16.238 --> 00:00:19.588
+A detected path is not proof of provider compatibility.
+
+00:00:20.000 --> 00:00:24.462
+Verify the relevant non-mutating command before allowing operational
+
+00:00:24.462 --> 00:00:24.812
+work.
+
+00:00:26.017 --> 00:00:30.104
+Administrators create named console users and assign the appropriate
+
+00:00:30.104 --> 00:00:32.654
+administrator, operator or viewer role.
+
+00:00:33.067 --> 00:00:36.267
+These are Orchestrator accounts, not local P E accounts.
+
+00:00:36.679 --> 00:00:40.504
+Provision initial access through a secure channel, review who can
+
+00:00:40.517 --> 00:00:43.754
+execute changes and keep management access restricted.
+
+00:00:44.154 --> 00:00:48.392
+A visible navigation link never grants permission beyond the server
+
+00:00:48.392 --> 00:00:49.617
+authorization checks.
+
+00:00:50.808 --> 00:00:55.333
+Settings contains runtime paths, connection profiles, governance,
+
+00:00:55.546 --> 00:00:58.571
+storage, notifications and build identity.
+
+00:00:58.971 --> 00:01:01.508
+Review a profile before using its defaults.
+
+00:01:01.883 --> 00:01:05.408
+A connection test has a specific scope and does not create target
+
+00:01:05.408 --> 00:01:08.558
+accounts or prove every A P I permission.
+
+00:01:08.958 --> 00:01:13.233
+Preserve effective trust mounts and runtime settings during updates.
+
+00:01:13.621 --> 00:01:17.808
+Review exact approval policy before enabling a sensitive lane.
+
+00:01:19.017 --> 00:01:23.004
+Use the established backup procedure for the actual storage backend.
+
+00:01:23.429 --> 00:01:28.104
+Preserve credentials, configuration, recovery records, job evidence
+
+00:01:28.254 --> 00:01:29.567
+and required host settings.
+
+00:01:29.954 --> 00:01:34.879
+Retain the matching database and data recovery materials independently.
+
+00:01:35.279 --> 00:01:38.392
+Test readability and rehearse restoration safely.
+
+00:01:38.804 --> 00:01:42.942
+Application-image rollback is not database restoration, and restoring
+
+00:01:42.942 --> 00:01:46.579
+the Orchestrator does not reverse changes already made on Nutanix
+
+00:01:46.579 --> 00:01:47.192
+systems.
+
+00:01:48.338 --> 00:01:52.850
+Audit Log helps trace authentication, authorization, configuration,
+
+00:01:53.225 --> 00:01:54.925
+jobs and governance actions.
+
+00:01:55.338 --> 00:01:59.575
+Correlate the record with a timestamp, exact installed build and job
+
+00:01:59.575 --> 00:02:00.262
+identifier.
+
+00:02:00.675 --> 00:02:04.075
+Settings About and the running image distinguish patch builds;
+
+00:02:04.362 --> 00:02:06.338
+the footer release alone may not.
+
+00:02:06.738 --> 00:02:09.312
+Export only sanitized support evidence.
+
+00:02:09.725 --> 00:02:15.188
+Keep passwords, session tokens, private keys and secret-bearing configuration
+
+00:02:15.375 --> 00:02:16.450
+out of public reports.

@@ -1,0 +1,21 @@
+Part 4 - Disaster Recovery and Cluster Rebuilds
+
+Simulated console illustrations. Synthetic narration.
+
+Prepare the datacenter and recovery profile
+Open Disaster Recovery from Operations. Add or review the datacenter, its Foundation endpoint and dependency reviews. Link a complete Foundation V M configuration and the cluster post-configuration pipeline to a recovery profile. Use existing cluster to rebuild for re-foundation. Recovery reconstructs infrastructure. Restoring virtual machines and applications remains the responsibility of your backup and recovery platform.
+
+Freeze the baseline and approve imaging
+Review the exact cluster name, virtual address, node serials, image selections, network settings and every captured pipeline step. Record the baseline review and retain its hash. Prepare the recovery run, then obtain the matching independent deployment approval. Imaging and deployed rehearsals can overwrite physical nodes. Baseline review, execution approval and destructive confirmation are separate controls.
+
+Submit once and monitor the existing run
+Enter the required cluster and Foundation confirmation phrases, acknowledge the imaging scope, and deploy once. Follow the linked job and Foundation session. A non-JSON response or H T T P four twenty-nine can be a transport or rate-limit issue while imaging continues. Inspect the existing job and target state before retrying. Stop Orchestration does not prove that Foundation has stopped.
+
+Complete initial access bootstrap first
+After confirmed deployment success, use the initial access bootstrap when the captured pipeline begins with eligible password and EULA or Pulse settings. Obtain each required exact-content approval and acknowledge the cluster. Run only the permitted narrow bootstrap prefix. This removes the need to log in manually just to change the initial password before health collection. Broader cluster configuration still waits for verification.
+
+Collect fresh health evidence
+Collect P E Health Readbacks using the reviewed post-bootstrap credential and verified certificate trust. Check cluster identity, complete expected membership and explicitly reported health. Missing fields, authentication failures or network errors remain unknown. If automatic evidence is unavailable, independently verify P E and record the manual attestation with its evidence reference. Begin remaining configuration within fifteen minutes of fresh evidence.
+
+Resume pending work and hand off restoration
+Run the remaining eligible steps from the captured snapshots. If a step fails, reconcile actual state and continue only the unfinished work. Where approval policy requires a direct job, run the exact approved snapshot and link its successful job to the pending step. Do not repeat successful imaging or password changes. Finish with independent acceptance and an explicit handoff to the backup platform for workload restoration.

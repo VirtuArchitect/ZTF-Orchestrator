@@ -1,12 +1,15 @@
 # v1.8.5-rc1 Screenshot Provenance
 
-These eleven PNGs show the v1.8.5-rc1 frontend built from source using
+These 14 PNGs show the v1.8.5-rc1 frontend built from source using
 `npm run build:demo`. All displayed infrastructure, jobs, approvals and
 readiness records are **simulated demo data**, not live PE/PC or Foundation
 observations, and not proof of production readiness or completed release UAT.
 
-Capture date: 2026-10-27. Application revision:
-`4a010727d5db3496d17a52e4ce681818dcc56200`.
+Capture date: 2026-11-02. Application revision:
+`ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae`.
+Demo-only fixture corrections in this revision are included in the captures.
+No backend execution behavior changes.
+
 Viewport: 1600 x 1050, light theme. The visible UI
 footer identifies v1.8.5-rc1. No historical screenshots were retouched or
 relabeled. Earlier media remains separate from this gallery.
@@ -28,3 +31,5 @@ The capture helper only accepts a loopback demo URL and blocks external requests
 and backend API requests. It does not log in to a live appliance or contact
 infrastructure. `ZTF_CHROME_PATH` can select an installed Chromium browser;
 `ZTF_SCREENSHOT_URL` can select another local preview port.
+
+[Capture manifest and SHA256 hashes](capture-manifest.json).

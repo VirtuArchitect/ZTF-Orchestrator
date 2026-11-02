@@ -1,0 +1,21 @@
+Part 6 - Guided Appliance Updates and Rollback
+
+Simulated console illustrations. Synthetic narration.
+
+Install the Linux host service once
+Guided updates require the restricted Linux host update service and matching application mounts. Install the checksummed host kit once during an idle maintenance window, then activate the matching application image. An enabled and active host service alone does not prove that the container has been updated. Windows Docker Desktop retains its reviewed manual update procedure. The web application does not need the Docker socket.
+
+Review storage before uploading
+Open Appliance Operations, Updates, and Review Storage Before Upload. Check the capacity allowance and review eligible cleanup candidates. Remove only specifically reviewed obsolete artifacts. Keep the selected package, retained rollback material and protected backups. Nothing is automatically pruned. Storage review cannot approve an installation, and a fixed amount of free space is not a guarantee that backup and image expansion will fit.
+
+Import and check the exact package
+Obtain the complete trusted offline ZIP and verify its independently published checksum. Upload and verify the ZIP, then select its imported package and check readiness. The service checks image identity, protocol, Compose and database access, storage and active work. Resolve every blocker and obtain a fresh readiness plan. Importing a package does not run its host installer or replace the running application.
+
+Approve and monitor one installation
+Review the version and interruption notice, then type the exact I N S T A L L phrase shown. The plan expires after fifteen minutes and is bound to that operation. Select Back Up and Install once. The guided service stops the application, verifies the backup pair and recreates the application while PostgreSQL remains running. Reconnect after interruption and inspect the retained operation rather than submitting again.
+
+Verify the installed build and saved state
+Review the completed operation report and verify the exact running image, source commit, application health and database readiness. The general release label may still say version one point eight point five release candidate one; the build identity distinguishes patches. Check saved configurations, credentials, pipelines, schedules and recovery profiles before resuming automation. Keep the receipts and download the sanitized operation report.
+
+Use rollback within its actual boundaries
+If the console is reachable, the previous-image recovery control requires independent database compatibility confirmation and its exact rollback phrase. It restores the retained application image, not the database, data, host settings or changes made to Nutanix targets. Use authorized host recovery when the console is unavailable. Connected discovery is metadata-only: unattended downloads and automatic installation are not enabled.

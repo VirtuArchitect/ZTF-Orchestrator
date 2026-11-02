@@ -1,13 +1,16 @@
 # Current Administrator and User Guide Screenshots
 
 Application version: **v1.8.5-rc1**. Source revision:
-`4a010727d5db3496d17a52e4ce681818dcc56200` is the application baseline.
-This documentation revision also aligns simulated build metadata with APP_VERSION.
-Capture date: **27 October 2026**.
+`ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae` is the application baseline.
+The capture also includes this revision's demo-only file-metadata and audit-date corrections.
+Capture date: **2 November 2026**.
 
-All 43 images show the current frontend with **simulated demo data**. No live
+All 46 images show the current frontend with **simulated demo data**. No live
 PE, PC, Foundation or appliance was contacted. Demo identities, inventories,
 jobs and readiness results do not establish UAT completion or target health.
+
+Demo-only fixture corrections in this revision are included in the captures.
+No backend execution behavior changes.
 
 Viewport: 1600 x 1050; light theme; UTC; en-GB. Some form captures scroll the
 main content to expose lower inputs. The classic installer form is populated
@@ -74,3 +77,9 @@ before every capture, and fails on browser errors. It does not run deployments.
 | Yaml Studio | [PNG](yaml-studio.png) |
 | Ztf Modes | [PNG](ztf-modes.png) |
 | Ztf2 Iac | [PNG](ztf2-iac.png) |
+
+- [Monitor & Verify](monitor-verify.png)
+- [Clusters](clusters.png)
+- [Disaster Recovery](disaster-recovery.png)
+
+[Capture manifest and SHA256 hashes](capture-manifest.json).

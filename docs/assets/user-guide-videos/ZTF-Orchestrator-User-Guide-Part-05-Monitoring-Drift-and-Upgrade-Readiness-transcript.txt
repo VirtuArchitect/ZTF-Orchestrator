@@ -1,0 +1,21 @@
+Part 5 - Monitoring Drift and Upgrade Readiness
+
+Simulated console illustrations. Synthetic narration.
+
+Prepare trusted PE and PC connections
+Begin with the actual P E endpoint and a credential reference authorized for the necessary reads. Add P C context when the assessment needs it. Establish persistent certificate trust in the appliance and preserve the trust mount across container replacement. Verify that the certificate matches the endpoint name or address. Testing from your workstation alone does not prove connectivity from the Orchestrator.
+
+Collect inventory and save an assessment
+Open Upgrade Advisor and collect fresh inventory from the reviewed connections. Inspect discovered versions and fields that remain unknown. Enter the intended target versions and supporting evidence, then run the assessment. Review blockers, warnings, unknowns and readiness actions. Save an immutable assessment snapshot for the change record. This read-only advisor does not run an upgrade or replace vendor compatibility and lifecycle checks.
+
+Configure a live PE drift comparison
+Save a desired configuration for D N S, N T P and Pulse with the correct cluster and credential reference. In Drift Detection select that file and Live Prism Element as the source, then run a manual check. Every live scheduled run collects fresh settings. Stored-snapshot comparisons are a separate mode. An unknown collection result must not be counted as a healthy match.
+
+Save and test the drift schedule
+Add or edit the Automation entry, choose the correct file, source and baseline, and review the five-field U T C cron expression. Save it enabled only after the manual check works. Inspect the next actual scheduled result and its timestamp. Pause schedules for maintenance. Editing or enabling an entry is not proof that a scheduled read has completed successfully.
+
+Interpret collection failures accurately
+A certificate trust failure requires the approved issuing chain or appropriate trust configuration. An I P or subject-alternative-name mismatch requires a matching endpoint or certificate. A network failure requires routing, firewall, name-resolution or target-service investigation from the appliance. These failures remain unknown, not drifted or matched. Do not disable verification or change the desired baseline just to obtain a green result.
+
+Review execution records and specialist evidence
+Monitor and Verify links to Drift Detection, inventory and upgrade readiness, and Execution History and Logs. Correlate a job with the configuration, actual target reads and change record. N K P Validation Evidence remains under Advanced Automation with a Preview badge and its retained evidence sources. A specialist evidence pack or successful process is not an independent declaration that an A H V cluster is ready for workloads.

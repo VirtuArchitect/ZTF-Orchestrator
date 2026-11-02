@@ -1,0 +1,18 @@
+Part 11 - Administration Settings Audit and Backups
+
+Simulated console illustrations. Synthetic narration.
+
+Set up the correct execution runtime
+Setup and Install checks prerequisites and the configured framework paths. Use the compatible legacy runtime for Workflows and Scripts one point x. Keep the separate two point x runtime and command for its preview plan and apply surface. A detected path is not proof of provider compatibility. Verify the relevant non-mutating command before allowing operational work.
+
+Manage named console users and roles
+Administrators create named console users and assign the appropriate administrator, operator or viewer role. These are Orchestrator accounts, not local P E accounts. Provision initial access through a secure channel, review who can execute changes and keep management access restricted. A visible navigation link never grants permission beyond the server authorization checks.
+
+Review runtime connections and governance settings
+Settings contains runtime paths, connection profiles, governance, storage, notifications and build identity. Review a profile before using its defaults. A connection test has a specific scope and does not create target accounts or prove every A P I permission. Preserve effective trust mounts and runtime settings during updates. Review exact approval policy before enabling a sensitive lane.
+
+Back up operational state and rehearse restoration
+Use the established backup procedure for the actual storage backend. Preserve credentials, configuration, recovery records, job evidence and required host settings. Retain the matching database and data recovery materials independently. Test readability and rehearse restoration safely. Application-image rollback is not database restoration, and restoring the Orchestrator does not reverse changes already made on Nutanix systems.
+
+Use audit and build identity during support
+Audit Log helps trace authentication, authorization, configuration, jobs and governance actions. Correlate the record with a timestamp, exact installed build and job identifier. Settings About and the running image distinguish patch builds; the footer release alone may not. Export only sanitized support evidence. Keep passwords, session tokens, private keys and secret-bearing configuration out of public reports.

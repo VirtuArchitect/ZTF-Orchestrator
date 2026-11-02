@@ -1,0 +1,18 @@
+Part 12 - NKP Framework and Validation Evidence Preview
+
+Simulated console illustrations. Synthetic narration.
+
+Recognize the preview integration scope
+Open Optional Integrations, N K P Framework. This is a preview workspace for the configured N K P ZeroTouch framework, profiles, binaries, schema and guarded phases. A ready profile or generated document is not a completed Kubernetes deployment. Review the exact installed integration, available commands and environment requirements before planning any target mutation.
+
+Prepare profiles and verify the schema
+Use the profile and schema views to prepare the intended management or workload-cluster inputs. Review networking, registry, binaries and the selected framework revision. Keep saved profiles and credential references protected. A template is an operational starter, not a guarantee that its generated values satisfy every environment or current provider schema. Resolve unknown or blocked findings before proceeding.
+
+Inspect readiness and binaries
+Review the N K P readiness view and the binary or bundle inventory required by the chosen path. For an isolated site, verify actual artifacts, registry access and network dependencies. A checklist score can record preparation and evidence; it does not prove Kubernetes workloads are running. Confirm the real command versions and target-side results separately.
+
+Use only the permitted guarded phases
+Inspect the available phase, command preview and approval policy before submission. Schema, validation, parsing, generation, registry or plan-related actions have different scopes. A phase name alone does not establish that a full provisioning lifecycle is implemented and verified. Follow the returned blockers and supported installed behavior. Do not turn off safeguards to make an unavailable phase execute.
+
+Keep NKP evidence separate from AHV readiness
+Find N K P Validation Evidence under Advanced Automation with its Preview badge. Select the correct evidence source and profile, including the retained Z T F U A T packs where appropriate. Record the actual scope, review findings and export a sanitized pack. This workspace is not a general A H V cluster-health monitor and does not replace independent operational acceptance.

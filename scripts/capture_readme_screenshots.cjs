@@ -17,6 +17,8 @@ const screens = [
   ['upgrade-advisor', 'upgrade-advisor'], ['workflow-catalog', 'workflows'],
   ['start-here', 'start'], ['deployment-guide', 'start/deploy'],
   ['post-configuration', 'start/configure'],
+  ['disaster-recovery', 'recovery'], ['monitor-verify', 'start/monitor'],
+  ['appliance-updates', 'appliance', 'Updates'],
 ];
 
 (async () => {
@@ -36,10 +38,11 @@ const screens = [
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    for (const [name, route] of screens) {
+    for (const [name, route, tab] of screens) {
       await page.goto(new URL(route, base).href, { waitUntil: 'networkidle' });
       await page.getByText('Demo mode: simulated data only. No Nutanix environment is connected and no workflows are executed.', { exact: true }).waitFor();
       await page.getByText(`ZeroTouch Orchestrator v${version}`, { exact: true }).waitFor();
+      if (tab) await page.getByRole('button', { name: tab, exact: true }).click();
       await page.screenshot({ path: path.join(output, `${name}.png`) });
     }
     if (errors.length) throw new Error(errors.join('\n'));

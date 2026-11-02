@@ -2,31 +2,34 @@
 
 [Open or download the illustrated PDF guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf)
 
-The primary published guide is a searchable 114-page PDF with section bookmarks,
+The primary published guide is a searchable 139-page PDF with searchable text,
 a linked table of contents and the revision 3 landscape process-flow appendix.
 The [editable Word source](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
 is retained for maintenance.
 
-Reviewed **27 October 2026** against merged application revision
-`4a010727d5db3496d17a52e4ce681818dcc56200`. The manual covers the
+Reviewed **2 November 2026** against merged application revision
+`ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae`. The manual covers the
 **v1.8.5-rc1 prerelease**; **v1.8.4 remains Latest stable**.
 It preserves the supplied guide's original portrait pages, typography, tables,
 headers and footers. A landscape appendix adds the revision 3 process overview
-and two enlarged stage views; the existing body remains unchanged apart from
-an opening pointer to that appendix. Its 45 application illustrations use the
+and two enlarged stage views. The body includes current Disaster Recovery and
+guided-update procedures, bootstrap/health ordering and navigation. Its 73 inline
+illustrations include refreshed current console captures from the
 [current simulated screenshot gallery](../assets/guide/v1.8.5-rc1/README.md),
 including repeated dashboard/pipeline examples. They are not live target evidence.
 
-This revision adds Start Here and the deployment/post-configuration handoff,
+This revision includes the streamlined console, Disaster Recovery bootstrap and
+health gates, guided appliance updates, host-service installation, conservative
+backup/cleanup and rollback guidance. It retains Start Here and the deployment/post-configuration handoff,
 Docker build identity, safe PE local-user diagnostics, independent user/role
 verification, the effective appliance Compose trust configuration and update
 space planning. It retains detailed installation, workflow/script, pipeline,
 Upgrade Advisor, live drift, backup, recovery and governance instructions.
 No unfinished deployment-engine work is included.
 
-PDF SHA256: `a111528c4caa2db17bdc069a450c116e2582098ed5f4d64aecf595cf8191b508`.
+PDF SHA256: `c9b64818f53955d7d1a3f78ff550a3552a4157ee0362215aa0fd33762b5e6bf1`.
 
-Editable source SHA256: `d8b81e7a8bed8b902b25ce5a760ab6452b914d35a262ada9882d96d7ba97ef49`.
+Editable source SHA256: `d5e328a6a85740db9c0b90d6bc1c258101debe4b08ae236b2202d562de2bbc9b`.
 
 [Revision 3 deployment process](../cluster-deployment-process.md) provides
 the full-resolution PNG, editable SVG and accessible text sequence. Its approval
@@ -39,8 +42,8 @@ and verification boundaries also apply to the illustrated appendix.
   generic simulated screenshots of datacenter creation, Foundation VM/pipeline
   links and a reviewed baseline. [PDF](ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf)
   and [editable Word](ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.docx).
-  It verifies setup without deployment; it does not revise the 114-page manual
-  or establish physical recovery readiness. See
+  It verifies setup without deployment and remains a focused supplement; it does
+  not establish physical recovery readiness. See
   [screenshot provenance and checksums](../assets/disaster-recovery/setup-v1.8.5-rc1/README.md).
 
 - [Administrator guide](../admin-guide.md)
@@ -57,3 +60,5 @@ Historical releases retain their version-specific instructions in the
 [release-document index](../releases/README.md). A documentation update does not
 change an installed image, update a previously downloaded bundle or promote the
 candidate to stable. Verify exact installed build metadata independently.
+
+- [Full-console video series, beginning with Overview 00](../user-guide-videos.md)

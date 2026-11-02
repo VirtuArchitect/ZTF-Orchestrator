@@ -1,5 +1,5 @@
 ZTF-Orchestrator v1.8.5-rc1
-Release candidate - controlled UAT only
+Release candidate - prerelease channel; v1.8.4 remains Latest stable
 
 Scope
 -----
@@ -10,6 +10,11 @@ release installation remains disabled.
 
 Included changes
 ----------------
+- Refreshed 2 November documentation: 139-page manual, current screenshots and
+  a 15-part illustrated video series beginning with ZTF-Orchestrator Overview 00.
+  Static demo file sizes, pipeline file selection and audit dates now use the
+  expected display fields. Simulated examples remain separate from live evidence;
+  v1.8.5-rc1 remains a prerelease and v1.8.4 remains Latest stable.
 - Monitor & Verify consistently names the cluster monitoring journey and links
   to execution history/logs. NKP Validation Evidence is marked Preview under
   Advanced Automation. Existing evidence routes, ZTF UAT exports, records and

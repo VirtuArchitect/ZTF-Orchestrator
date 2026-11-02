@@ -1,0 +1,5 @@
+00:00:00 Follow durable jobs and their evidence
+00:00:25 Review the exact approval request
+00:00:54 Create a schedule only after a successful manual test
+00:01:20 Understand the parallel execution boundary
+00:01:50 Handle interruption without replaying writes

@@ -1,0 +1,6 @@
+00:00:00 Prepare trusted PE and PC connections
+00:00:27 Collect inventory and save an assessment
+00:00:57 Configure a live PE drift comparison
+00:01:23 Save and test the drift schedule
+00:01:48 Interpret collection failures accurately
+00:02:18 Review execution records and specialist evidence

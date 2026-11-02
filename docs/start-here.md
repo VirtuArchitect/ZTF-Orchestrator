@@ -77,8 +77,8 @@ execution checks remain authoritative.
 
 ## Screen examples
 
-These screenshots were refreshed from the 27 October 2026 isolated static demo
-at application revision `4a01072`. They show implemented screens,
+These screenshots were refreshed from the 2 November 2026 isolated static demo
+at application baseline `ea9dcf0`, with documentation-only demo fixture corrections. They show implemented screens,
 not a connected cluster, a completed deployment or production acceptance.
 
 ![Start Here with the four operator choices](images/start-here.png)

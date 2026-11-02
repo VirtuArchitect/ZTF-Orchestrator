@@ -1,0 +1,6 @@
+00:00:00 Install the Linux host service once
+00:00:28 Review storage before uploading
+00:00:57 Import and check the exact package
+00:01:26 Approve and monitor one installation
+00:01:56 Verify the installed build and saved state
+00:02:27 Use rollback within its actual boundaries

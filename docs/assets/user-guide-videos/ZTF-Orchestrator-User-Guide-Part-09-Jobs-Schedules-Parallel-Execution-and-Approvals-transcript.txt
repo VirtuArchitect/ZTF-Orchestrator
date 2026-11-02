@@ -1,0 +1,18 @@
+Part 9 - Jobs Schedules Parallel Execution and Approvals
+
+Simulated console illustrations. Synthetic narration.
+
+Follow durable jobs and their evidence
+Jobs and Queue is the primary view while durable work runs. Filter the status, expand the record and read timestamps, diagnostics, logs and the linked configuration. A verification failure can matter even when the subprocess returned zero. Preserve terminal evidence before retention cleanup. Removing a queue record does not undo a target operation.
+
+Review the exact approval request
+Open Approvals and inspect the request, exact input, target and requester notes. Follow the required reviewer separation and expiry rules. Approve only the intended change; a deployment approval does not automatically approve later configuration. If the configuration changes, obtain its matching approval. Historical approval records support audit, but do not establish that the requested operation ran successfully.
+
+Create a schedule only after a successful manual test
+Choose a repeatable action with a supported scheduled path, supply its reviewed input and enter the five-field U T C cron expression. Test manually, then enable and verify an actual scheduled run. Pause for maintenance. Mandatory-approval workflows may be rejected by automation surfaces without an appropriate approval binding. Do not assume missed runs are replayed after downtime.
+
+Understand the parallel execution boundary
+Parallel Exec submits the same supported legacy workflow for multiple labelled site inputs. Check isolation of targets, credentials, addresses, images and services first. This screen is not proof that classic Foundation V M can run overlapping sessions. Use separately supported deployment paths and coordinate resource ownership. Inspect every site result because an aggregate success indicator can hide partial outcomes.
+
+Handle interruption without replaying writes
+A cancellation request or process interruption does not guarantee that an external operation stopped. Inspect Foundation or Prism and reconcile actual state. Keep successful steps and uncertainty recorded. For recovery, use its reconciliation and next-step linking controls. Never repeat destructive imaging or an uncertain password change simply to produce a cleaner execution history.
