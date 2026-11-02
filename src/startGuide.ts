@@ -1,7 +1,7 @@
 import { WORKFLOWS, SCRIPTS } from './data'
 
 export const DEPLOYMENT_METHODS = [
-  { id: 'cluster-create-foundation-vm', name: 'Foundation VM', status: 'Implemented · controlled UAT',
+  { id: 'cluster-create-foundation-vm', name: 'Foundation VM', status: 'Implemented',
     description: 'Use a classic Foundation VM to image nodes and create an AHV cluster.',
     prerequisites: 'Reachable Foundation 5.x service, supported hardware, image inventory and checksums, IPMI credential references, and network access from Foundation to every node.' },
   { id: 'cluster-create', name: 'Foundation Central', status: 'Existing ZTF execution path',

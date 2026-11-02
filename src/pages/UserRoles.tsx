@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
 import { AlertTriangle, Check, Clock, KeyRound, Plus, RefreshCw, Shield, Trash2, X } from 'lucide-react'
+import UserSessions from '../components/UserSessions'
 
 type UserRecord = {
   username: string
@@ -106,9 +107,11 @@ export default function UserRoles() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <IdentityPostureCard icon={Shield} label="MFA / SSO" value="Not configured" detail="Local password authentication only in this release." tone="warning" />
-          <IdentityPostureCard icon={Clock} label="Active sessions" value="Not exposed" detail="Admins can expire sessions through token TTL or restart/restore workflows." tone="neutral" />
+          <IdentityPostureCard icon={Clock} label="Session visibility" value="Administrator only" detail="Review unexpired sign-ins and reported console activity in Sessions below." tone="neutral" />
           <IdentityPostureCard icon={KeyRound} label="Password history" value="Reset timestamp" detail="Password reset time is tracked; password history enforcement is not supported." tone="neutral" />
         </div>
+
+        {isAdmin && <UserSessions />}
 
         {/* User list */}
         <div className="card">

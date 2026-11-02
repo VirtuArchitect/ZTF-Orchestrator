@@ -14,7 +14,7 @@ async function seed(page: Page, role = 'admin') {
   let preparedRun: unknown = null
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname
-    if (request.method() !== 'GET') writes.push(path)
+    if (request.method() !== 'GET' && path !== '/api/auth/activity') writes.push(path)
     let value: unknown = []
     if (path === '/api/system/check') value = { checks: [], ztfInstalled: true }
     if (path === '/api/configs') value = [{ name: 'deploy.yml' }, { name: 'post.yml' }]
@@ -114,7 +114,7 @@ test('bootstrap is available before health and cannot start remaining configurat
     snapshot:{targets:['NODE1','NODE2','NODE3'], deploymentContent:'create_clusters: []', steps}, events:[]}
   await page.route('**/api/recovery**', async route => {
     const req = route.request(), path = new URL(req.url()).pathname
-    if (req.method() !== 'GET') writes.push({path, body:req.postDataJSON()})
+    if (req.method() !== 'GET' && path !== '/api/auth/activity') writes.push({path, body:req.postDataJSON()})
     if (path.endsWith('/bootstrap')) run.status='bootstrapping'
     await route.fulfill({json:path === '/api/recovery' ? {datacenters:[], profiles:[], runs:[run]} : run})
   })

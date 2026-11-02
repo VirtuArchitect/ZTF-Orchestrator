@@ -30,6 +30,13 @@ infrastructure recovery, monitoring and the boundaries of preview integrations.
 | 13 | ZTF Two Point X IaC Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt) |
 | 14 | Native Foundation Baselines and Operating Boundaries | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
 
+## Session panel update
+
+Part 11, Administration Settings Audit and Backups, predates the **Users > Sessions**
+panel. Its account-management illustration does not show session counts, recent
+activity or revocation. Follow the [current session procedure](session-management.md)
+and [manual](manuals/README.md) for those controls. The videos are retained unchanged.
+
 ## Evidence and maintenance boundaries
 
 The general console captures use source baseline `ea9dcf0`; the unchanged detailed

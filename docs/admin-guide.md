@@ -6,7 +6,9 @@ Documentation reviewed on 2 November 2026 against merged application revision
 `ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae`. The [illustrated PDF manual](manuals/README.md)
 preserves the supplied administrator/user guide format and contains refreshed,
 simulated screenshots. See [current screenshot provenance](assets/guide/v1.8.5-rc1/README.md).
-The prerelease remains separate from v1.8.4 Latest stable.
+Session management and Foundation VM status-label additions were reviewed
+against updated source on the same date; they are not asserted to be in the
+immutable earlier package. The prerelease remains separate from v1.8.4 Latest stable.
 
 The [revision 3 cluster deployment process](cluster-deployment-process.md)
 provides the diagram, text equivalent and acceptance gates. The PDF manual
@@ -28,7 +30,7 @@ backup planning, and operational signoff.
 The new [Disaster Recovery section](disaster-recovery.md) groups saved Foundation
 VM rebuild baselines and post-configuration pipelines by datacenter. It adds
 versioned profiles, governed execution, explicit health/acceptance evidence and
-rehearsal records. The refreshed 139-page illustrated PDF includes Disaster Recovery,
+rehearsal records. The refreshed 144-page illustrated PDF includes Disaster Recovery,
 the approved bootstrap-before-health sequence, current navigation and guided
 appliance updates. The linked procedures describe their validation boundaries.
 The separate [illustrated recovery setup guide](disaster-recovery-setup.md),
@@ -731,6 +733,20 @@ Admin guidance:
 - Remove or downgrade accounts after short-term projects.
 - Rotate passwords after first installation, personnel changes, or suspected
   exposure.
+
+
+Open **Administration > Users > Sessions** as an administrator to review
+server-side unexpired sign-ins, signed-in users, total sessions and recently
+active users. Recently active means sign-in or an explicit reported trusted
+interaction in a visible console tab within five minutes; background polling
+does not count. Reports are throttled to once per 30 seconds per mounted console
+activity reporter, and never extend expiry. Unexpired sessions do not prove a
+browser is open. Legacy activity can be **Not tracked**.
+
+Use **Revoke** to confirm removal of one sign-in using its safe session UUID;
+revoking **This session** signs you out. Revocation is audited. In-flight requests
+may finish and durable jobs continue. See [Session management](session-management.md)
+for the procedure, API, PostgreSQL migration and rollback boundaries.
 
 ## Audit Log
 

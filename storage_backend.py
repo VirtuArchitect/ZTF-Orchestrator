@@ -130,6 +130,16 @@ class PostgresStorage:
                     )
                     """
                 )
+                # Additive migration: keep existing tokens and their original expiry.
+                cur.execute('alter table ztf_sessions add column if not exists session_id text')
+                cur.execute('alter table ztf_sessions add column if not exists last_activity_at timestamptz')
+                cur.execute('select token from ztf_sessions where session_id is null')
+                for row in cur.fetchall():
+                    cur.execute(
+                        'update ztf_sessions set session_id = %s where token = %s and session_id is null',
+                        (str(uuid.uuid4()), row['token']),
+                    )
+                cur.execute('create unique index if not exists idx_ztf_sessions_id on ztf_sessions (session_id)')
                 cur.execute(
                     "create index if not exists idx_ztf_audit_ts on ztf_audit_events (ts desc)"
                 )
@@ -233,21 +243,21 @@ class PostgresStorage:
         with self._connect() as conn:
             conn.execute(
                 """
-                insert into ztf_sessions (token, username, role, expires_at)
-                values (%s, %s, %s, %s)
+                insert into ztf_sessions (token, username, role, expires_at, session_id, last_activity_at)
+                values (%s, %s, %s, %s, %s, now())
                 on conflict (token) do update
                 set username = excluded.username,
                     role = excluded.role,
                     expires_at = excluded.expires_at
                 """,
-                (token, username, role, expires_at),
+                (token, username, role, expires_at, str(uuid.uuid4())),
             )
 
     def get_session(self, token: str) -> dict | None:
         with self._connect() as conn:
             row = conn.execute(
                 """
-                select username, role, expires_at
+                select username, role, expires_at, session_id, created_at, last_activity_at
                 from ztf_sessions
                 where token = %s
                   and expires_at > now()
@@ -257,7 +267,40 @@ class PostgresStorage:
             if not row:
                 conn.execute('delete from ztf_sessions where token = %s', (token,))
                 return None
-        return {'username': row['username'], 'role': row['role'], 'expires': row['expires_at']}
+        return self._session_record(row)
+
+    @staticmethod
+    def _session_record(row: dict) -> dict:
+        return {
+            'username': row['username'], 'role': row['role'], 'expires': row['expires_at'],
+            'id': row['session_id'], 'createdAt': row['created_at'],
+            'lastActivityAt': row['last_activity_at'],
+        }
+
+    def list_sessions(self) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                'select username, role, expires_at, session_id, created_at, last_activity_at '
+                'from ztf_sessions where expires_at > now() order by created_at desc'
+            ).fetchall()
+        return [self._session_record(row) for row in rows]
+
+    def touch_session(self, token: str) -> bool:
+        with self._connect() as conn:
+            result = conn.execute(
+                'update ztf_sessions set last_activity_at = now() where token = %s and expires_at > now()',
+                (token,),
+            )
+            return result.rowcount == 1
+
+    def revoke_session(self, session_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                'delete from ztf_sessions where session_id = %s and expires_at > now() '
+                'returning username, role, expires_at, session_id, created_at, last_activity_at',
+                (session_id,),
+            ).fetchone()
+        return self._session_record(row) if row else None
 
     def invalidate_session(self, token: str) -> None:
         with self._connect() as conn:

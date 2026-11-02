@@ -116,10 +116,36 @@ ztf_sessions
   role        text
   expires_at  timestamptz
   created_at  timestamptz
+  session_id  text unique index
+  last_activity_at timestamptz nullable
 ```
 
 This keeps the first migration low-risk because the API can preserve the current
 data model while moving the backing store to PostgreSQL.
+
+## Session metadata migration and rollback
+
+Updated source builds add `session_id` and `last_activity_at` to `ztf_sessions`
+on startup with `ADD COLUMN IF NOT EXISTS`, assign missing random UUIDs, and
+create the unique `idx_ztf_sessions_id` index. Existing bearer tokens, usernames,
+roles, creation times and original expiry values are preserved. Existing rows
+retain null activity until an explicit activity report; no activity is invented
+from ordinary authenticated requests. The UI shows **Not tracked** for null data.
+New sign-ins record creation/activity at login. Activity never renews expiry.
+
+Back up the database before upgrade. Retain the additive columns and index when
+rolling back to a compatible prior application image; do not drop the session
+table, truncate rows or restore a database just to undo these metadata fields.
+The older image has no session panel/activity reporter. A later upgrade backfills
+any rows the older image created without a UUID. Verify health, administrator
+login, existing session access and durable job state after either cutover. A full
+database restore is a separate approved recovery action and can resurrect sessions
+revoked after the backup; review access again after restore. File-backed mode
+uses process-memory sessions and loses them on application restart.
+
+See [Session management](session-management.md) for the admin-only API and
+revocation/audit procedure. Schema compatibility is source-level guidance;
+verify the exact chosen rollback image and database before operational use.
 
 ## Import Existing JSON State
 

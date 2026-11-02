@@ -3,6 +3,8 @@
 Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
 `ea9dcf0` on 2 November 2026. v1.8.4 remains Latest stable. Download the
 [illustrated PDF manual](manuals/README.md) or begin with [Start Here](start-here.md).
+Session management and Foundation VM status-label additions were reviewed against
+updated source on the same date and are separate from the immutable earlier package.
 All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
 
 For Disaster Recovery, use the updated manual and the focused
@@ -43,6 +45,21 @@ The visible menu depends on the signed-in user's role.
 
 All protected pages require login. If a user opens a page their role cannot
 access, the app shows an access-denied page instead of the requested feature.
+
+## Sessions and activity
+
+Open **Administration > Users > Sessions** as an administrator to review
+server-side unexpired sign-ins, signed-in users, total sessions and recently
+active users. Recently active means sign-in or an explicit reported trusted
+interaction in a visible console tab within five minutes; background polling
+does not count. Reports are throttled to once per 30 seconds per mounted console
+activity reporter, and never extend expiry. Unexpired sessions do not prove a
+browser is open. Legacy activity can be **Not tracked**.
+
+Use **Revoke** to confirm removal of one sign-in using its safe session UUID;
+revoking **This session** signs you out. Revocation is audited. In-flight requests
+may finish and durable jobs continue. See [Session management](session-management.md)
+for the procedure, API, PostgreSQL migration and rollback boundaries.
 
 ## Navigation Shell
 

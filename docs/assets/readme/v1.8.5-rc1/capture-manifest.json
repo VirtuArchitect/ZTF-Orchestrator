@@ -35,7 +35,9 @@
         1600,
         1050
       ],
-      "sha256": "9fc2b2121ab6d8eb288c5d01ca2f2aceda7eafd731b7e72f76a4de1bcaf89243"
+      "sha256": "cbceeaf4b00d3377aa3d98645eb8bcd577b6a0ee06c9da43546820d5b94f36cb",
+      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
+      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
     },
     {
       "file": "disaster-recovery.png",

@@ -91,7 +91,9 @@
         1600,
         1050
       ],
-      "sha256": "9fc2b2121ab6d8eb288c5d01ca2f2aceda7eafd731b7e72f76a4de1bcaf89243"
+      "sha256": "cbceeaf4b00d3377aa3d98645eb8bcd577b6a0ee06c9da43546820d5b94f36cb",
+      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
+      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
     },
     {
       "file": "disaster-recovery.png",
@@ -270,6 +272,26 @@
       "sha256": "1d3bb0824ef1d2006c82c3451b03b2785388e75d05889ea5f34ab9f4bf666bd9"
     },
     {
+      "file": "session-revocation.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "c970f3b22d1690ea0270654b9696e72363d75f09802aee110f6003f4b22f9ec6",
+      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
+      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
+    },
+    {
+      "file": "sessions.png",
+      "size": [
+        1600,
+        1050
+      ],
+      "sha256": "cc41e6dcddb7d93b82b43e7903d0341e501092da7ce9e0ae81798bcccfe1f4fe",
+      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
+      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
+    },
+    {
       "file": "settings.png",
       "size": [
         1600,
@@ -323,7 +345,9 @@
         1600,
         1050
       ],
-      "sha256": "bed041c21c7a880491cdbff8a637977a195199da50310234bacca8f9585ae9e8"
+      "sha256": "cc41e6dcddb7d93b82b43e7903d0341e501092da7ce9e0ae81798bcccfe1f4fe",
+      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
+      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
     },
     {
       "file": "validation-evidence.png",
