@@ -41049,6 +41049,45 @@ from credential_organization import empty_organization, validate_organization
 _CREDENTIAL_ORGANIZATION_LOCK = threading.RLock()
 
 
+def _read_group_document(path, default):
+    return json.loads(path.read_text(encoding='utf-8')) if _storage.name == 'file' and path.exists() else read_json(path, default)
+
+
+@app.route('/api/config-organization', methods=['GET', 'PUT'])
+@require_role('admin', 'operator', 'viewer')
+def config_organization():
+    from config_organization import empty_config_organization, validate_config_organization
+    if request.method == 'PUT' and request.current_user['role'] not in ('admin', 'operator'):
+        return jsonify({'error': 'Insufficient permissions'}), 403
+    path = CONFIG_DIR / 'config_organization.json'
+    with _CREDENTIAL_ORGANIZATION_LOCK:
+        try:
+            catalogue = validate_organization(_read_group_document(CONFIG_DIR / 'credential_organization.json', empty_organization()))
+            current = validate_config_organization(_read_group_document(path, empty_config_organization()))
+        except (ValueError, TypeError, OSError):
+            return jsonify({'error': 'Grouping metadata cannot be read. Reconcile it before saving.'}), 500
+        if request.method == 'PUT':
+            try:
+                proposed = validate_config_organization(request.get_json(silent=True))
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid config grouping metadata; use filenames, group IDs and supported purposes only.'}), 400
+            if proposed['revision'] != current['revision']:
+                return jsonify({'error': 'Config grouping changed. Reload before saving.'}), 409
+            known = {group['id'] for group in catalogue['groups']}
+            for name, assignment in proposed['assignments'].items():
+                if assignment != current['assignments'].get(name):
+                    if assignment['groupId'] and assignment['groupId'] not in known:
+                        return jsonify({'error': 'The selected group no longer exists. Reload before saving.'}), 409
+                    target = safe_config_path(name, get_configs_dir())
+                    if target is None or not target.is_file():
+                        return jsonify({'error': 'Config file does not exist.'}), 400
+            current = {**proposed, 'revision': current['revision'] + 1}
+            write_json(path, current)
+            log.info('config_organization_saved', extra={'action': 'config_organization_save', 'user': request.current_user['username'], 'assignmentCount': len(current['assignments'])})
+        # Never disclose credential assignments or values to config readers.
+        return jsonify({**current, 'groups': catalogue['groups']})
+
+
 @app.route('/api/credential-organization', methods=['GET', 'PUT'])
 @require_role('admin')
 def credential_organization():

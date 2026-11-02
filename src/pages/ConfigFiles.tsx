@@ -5,6 +5,7 @@ import ScriptConfigWizard from '../components/ScriptConfigWizard'
 import { SCRIPTS } from '../data'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
+import ConfigScope, { CONFIG_PURPOSES, configMatches, useConfigOrganization } from '../components/ConfigScope'
 
 interface ConfigFile {
   name: string
@@ -19,6 +20,14 @@ interface Backup {
 }
 
 export default function ConfigFiles() {
+  const { organization, error: groupingError, ready, reload, assign } = useConfigOrganization()
+  const [scope, setScope] = useState('all')
+  const [search, setSearch] = useState('')
+  const [purposeFilter, setPurposeFilter] = useState('')
+  const [labelGroup, setLabelGroup] = useState('')
+  const [labelPurpose, setLabelPurpose] = useState('')
+  const [error, setError] = useState('')
+  const [labelMessage, setLabelMessage] = useState('')
   const [files, setFiles] = useState<ConfigFile[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [content, setContent] = useState('')
@@ -31,6 +40,24 @@ export default function ConfigFiles() {
   const [showWizard, setShowWizard] = useState(false)
   const [restoring, setRestoring] = useState<number | null>(null)
 
+  useEffect(() => {
+    const assignment = selected ? organization.assignments[selected] : undefined
+    setLabelGroup(organization.groups.some(group => group.id === assignment?.groupId) ? assignment!.groupId : '')
+    setLabelPurpose(assignment?.purpose || '')
+  }, [selected, organization])
+  useEffect(() => { setLabelMessage('') }, [selected])
+  const saveLabels = async () => {
+    if (!selected) return
+    setLabelMessage('')
+    try { await assign(selected, labelGroup, labelPurpose); setLabelMessage('Grouping saved. YAML and execution references are unchanged.'); setError('') }
+    catch (failure) { setError(failure instanceof Error ? failure.message : 'Unable to save labels.') }
+  }
+  const assignCreated = async (name: string) => {
+    const groupId = organization.groups.some(group => group.id === scope) ? scope : ''
+    if (!groupId && !purposeFilter) return
+    try { await assign(name, groupId, purposeFilter) }
+    catch (failure) { setError(`File saved, but grouping was not saved: ${failure instanceof Error ? failure.message : 'Reload and assign it manually.'}`) }
+  }
   const loadFiles = async () => {
     setLoading(true)
     try {
@@ -76,11 +103,13 @@ export default function ConfigFiles() {
     if (!selected) return
     setSaving(true)
     try {
-      await apiFetch(`/api/configs/${encodeURIComponent(selected)}`, {
+      const response = await apiFetch(`/api/configs/${encodeURIComponent(selected)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
       })
+      if (!response.ok) { setError('File was not saved. Check YAML, permissions and connectivity.'); return }
+      setError('')
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } finally {
@@ -99,11 +128,15 @@ export default function ConfigFiles() {
     const name = newFileName.trim()
     if (!name) return
     const fname = name.endsWith('.yml') || name.endsWith('.yaml') || name.endsWith('.json') ? name : `${name}.yml`
-    await apiFetch(`/api/configs/${encodeURIComponent(fname)}`, {
+    if (files.some(file => file.name === fname)) { setError('That file already exists. Select it to edit.'); return }
+    const response = await apiFetch(`/api/configs/${encodeURIComponent(fname)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: '# New configuration file\n' }),
     })
+    if (!response.ok) { setError('Unable to create file.'); return }
+    setError('')
+    await assignCreated(fname)
     setNewFileName('')
     await loadFiles()
     openFile(fname)
@@ -125,12 +158,16 @@ export default function ConfigFiles() {
     input.onchange = async () => {
       const file = input.files?.[0]
       if (!file) return
+      if (files.some(existing => existing.name === file.name) && !confirm(`Replace ${file.name}? Its current content will be backed up.`)) return
       const text = await file.text()
-      await apiFetch(`/api/configs/${encodeURIComponent(file.name)}`, {
+      const response = await apiFetch(`/api/configs/${encodeURIComponent(file.name)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text }),
       })
+      if (!response.ok) { setError('Upload was not saved. Check YAML and permissions.'); return }
+      setError('')
+      if (!files.some(existing => existing.name === file.name)) await assignCreated(file.name)
       await loadFiles()
       openFile(file.name)
     }
@@ -176,9 +213,14 @@ export default function ConfigFiles() {
         </div>
       }
     >
+      {(error || groupingError) && <p role="alert" className="text-amber-600 mb-3">{error || groupingError}<button className="btn-secondary ml-2" onClick={() => void reload()}>Reload grouping</button></p>}
       <div className="flex flex-col lg:flex-row gap-5 min-h-0 lg:h-full">
+        <aside className="card p-3 w-full lg:w-52 flex-shrink-0 overflow-y-auto" aria-label="Datacenter and cluster groups"><h2 className="font-semibold mb-2">Datacenters &amp; clusters</h2><ConfigScope organization={organization} scope={scope} onChange={setScope} /></aside>
         {/* File List */}
         <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-3">
+          <input aria-label="Search config files" className="input w-full" placeholder="Search filename, cluster or purpose" value={search} onChange={event => setSearch(event.target.value)} />
+          <select aria-label="Filter by purpose" className="input w-full" value={purposeFilter} onChange={event => setPurposeFilter(event.target.value)}>{CONFIG_PURPOSES.map(purpose => <option key={purpose} value={purpose}>{purpose || 'All purposes'}</option>)}</select>
+          <p className="text-xs text-gray-500">New files and uploads use the selected group and purpose. All files / datacenter selection leaves them Ungrouped.</p>
           {/* New file */}
           <div className="flex gap-2">
             <input
@@ -195,8 +237,8 @@ export default function ConfigFiles() {
 
           <div className="card p-2 flex-1 overflow-y-auto min-h-56 lg:min-h-0">
             <div className="flex items-center justify-between px-2 py-1 mb-1">
-              <span className="text-xs text-gray-500">{files.length} files</span>
-              <button onClick={loadFiles} className="btn-ghost p-1">
+              <span className="text-xs text-gray-500">{files.filter(file => configMatches(file.name, organization, scope, search, purposeFilter)).length} / {files.length} files</span>
+              <button aria-label="Refresh files and groups" onClick={() => { void loadFiles(); void reload() }} className="btn-ghost p-1">
                 <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
               </button>
             </div>
@@ -209,7 +251,8 @@ export default function ConfigFiles() {
               </div>
             )}
 
-            {files.map(file => (
+            {files.length > 0 && !files.some(file => configMatches(file.name, organization, scope, search, purposeFilter)) && <p className="text-sm px-2 py-4 text-gray-500">No files match these filters. Choose All files or clear search and purpose.</p>}
+            {files.filter(file => configMatches(file.name, organization, scope, search, purposeFilter)).map(file => (
               <div
                 key={file.name}
                 className={clsx(
@@ -223,7 +266,7 @@ export default function ConfigFiles() {
                 <FileCode size={14} className="text-gray-500 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-300 truncate font-medium">{file.name}</p>
-                  <p className="text-xs text-gray-600">{(file.size / 1024).toFixed(1)} KB</p>
+                  <p className="text-xs text-gray-600">{(file.size / 1024).toFixed(1)} KB · {organization.assignments[file.name]?.purpose || 'No purpose'}</p>
                 </div>
                 <button
                   onClick={e => { e.stopPropagation(); deleteFile(file.name) }}
@@ -240,6 +283,12 @@ export default function ConfigFiles() {
         <div className="flex-1 flex flex-col gap-3 min-w-0">
           {selected ? (
             <>
+              <div className="card p-3 space-y-2"><h2 className="font-semibold">File grouping</h2>
+                <label className="block text-sm">Datacenter / cluster<select aria-label="File group" className="input w-full" value={labelGroup} onChange={event => setLabelGroup(event.target.value)}><option value="">Ungrouped</option>{organization.groups.map(group => <option key={group.id} value={group.id}>{group.kind === 'shared' ? 'Shared' : group.datacenter} / {group.name}</option>)}</select></label>
+                <label className="block text-sm">Purpose<select aria-label="File purpose" className="input w-full" value={labelPurpose} onChange={event => setLabelPurpose(event.target.value)}>{CONFIG_PURPOSES.map(purpose => <option key={purpose} value={purpose}>{purpose || 'No purpose'}</option>)}</select></label>
+                <button type="button" className="btn-secondary" disabled={!ready} onClick={() => void saveLabels()}>Save grouping</button>
+                {labelMessage && <p role="status" className="text-green-600 text-sm">{labelMessage}</p>}
+              </div>
               {showWizard && (
                 <ScriptConfigWizard
                   scriptIds={SCRIPTS.map(script => script.id)}

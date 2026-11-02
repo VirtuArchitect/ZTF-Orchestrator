@@ -231,6 +231,11 @@ Admin best practices:
 
 ## Config Files
 
+Organize YAML/JSON by datacenter, cluster and purpose using the shared credential
+group catalogue. Grouping does not rename files or change execution references.
+See [Config file grouping](config-file-groups.md) for label saves, filtered
+workflow/pipeline selection, shared templates and Ungrouped behavior.
+
 Config Files is the shared library for YAML and JSON files used by workflows,
 scripts, schedules, pipelines, drift checks, NKP operations, and evidence
 records.

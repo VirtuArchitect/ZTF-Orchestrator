@@ -10,6 +10,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Config Files now reuse datacenter/cluster and shared credential groups, with purpose labels, search and filtered pipeline/workflow pickers. Labels never rename files or alter YAML execution references.
+
 - Datacenter/cluster and shared-service credential groups with masked local
   definitions, search, purposes and revision-checked administrator metadata saves.
   Reference lookup remains flat; removing a group never removes credentials.

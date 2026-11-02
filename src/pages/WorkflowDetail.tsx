@@ -32,6 +32,7 @@ import PostFoundationWorkflowForm from '../components/forms/PostFoundationWorkfl
 import Ztf2WorkflowForm from '../components/forms/Ztf2WorkflowForm'
 import type { Ztf2WorkflowArtifacts } from '../components/forms/Ztf2WorkflowForm'
 import clsx from 'clsx'
+import SavedConfigImport from '../components/SavedConfigImport'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
 import type { ApprovalRequest, ExecutionJob, ExecutionJobLogEvent } from '../types'
@@ -3197,40 +3198,32 @@ export default function WorkflowDetail() {
     }
   }
 
-  const handleImportConfig = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-
-    if (file.size > MAX_IMPORT_BYTES) {
-      setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' })
-      return
+  const importConfigText = async (name: string, text: string) => {
+    if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) {
+      setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' }); return
     }
-
     try {
-      const text = await file.text()
       const trimmed = text.trim()
-      if (!trimmed) {
-        setImportMessage({ type: 'error', text: 'Imported config is empty.' })
-        return
-      }
-
+      if (!trimmed) { setImportMessage({ type: 'error', text: 'Imported config is empty.' }); return }
       const parsed = fromYaml(trimmed)
       const validationError = validateWorkflowImport(workflow.id, parsed)
-      if (validationError) {
-        setImportMessage({ type: 'error', text: validationError })
-        return
-      }
-
+      if (validationError) { setImportMessage({ type: 'error', text: validationError }); return }
       setYamlContent(trimmed.endsWith('\n') ? trimmed : `${trimmed}\n`)
       setNativeFoundationEvidenceId('')
       setImportedConfig({ workflowId: workflow.id, parsed })
       setActiveTab('Configure')
-      setImportMessage({ type: 'success', text: `Imported ${file.name} for ${workflow.name}.` })
+      setImportMessage({ type: 'success', text: `Imported ${name} for ${workflow.name}.` })
     } catch (error) {
-      const detail = error instanceof Error ? error.message : 'Unable to parse config.'
-      setImportMessage({ type: 'error', text: `Import failed: ${detail}` })
+      setImportMessage({ type: 'error', text: `Import failed: ${error instanceof Error ? error.message : 'Unable to parse config.'}` })
     }
+  }
+  const handleImportConfig = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (file.size > MAX_IMPORT_BYTES) { setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' }); return }
+    try { await importConfigText(file.name, await file.text()) }
+    catch { setImportMessage({ type: 'error', text: 'Unable to read the config file.' }) }
   }
 
   const renderForm = () => {
@@ -4789,6 +4782,7 @@ export default function WorkflowDetail() {
         </div>
       )}
 
+      <SavedConfigImport onImport={importConfigText} />
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-surface rounded-lg p-1 border border-border w-fit">
         {TABS.map(tab => (

@@ -10,6 +10,8 @@ release installation remains disabled.
 
 Included changes
 ----------------
+- Updated source adds datacenter/cluster configuration-file grouping, purpose labels and scoped saved-config selection in workflows and pipelines; existing execution references remain unchanged.
+
 - Updated source adds administrator-managed datacenter/cluster and shared-service
   credential groups. Labels are separate from flat runtime vault references;
   stale metadata saves are rejected and group removal preserves credentials.
