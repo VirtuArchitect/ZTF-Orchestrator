@@ -1,6 +1,7 @@
 """Ensure the published guide, source provenance and Pages media stay in sync."""
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,3 +34,30 @@ def test_published_manual_checksums_match_current_reference():
         path = folder / f'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.{suffix}'
         assert hashlib.sha256(path.read_bytes()).hexdigest() in index
     assert '144-page' in index and '2 November 2026' in index
+
+
+
+def test_current_operator_documentation_local_link_targets_exist():
+    """Check local file/image targets; external URLs and fragments are out of scope."""
+    documents = (
+        'README.md', 'CHANGELOG.md', 'release-notes-v1.8.5-rc1.txt',
+        'docs/session-management.md', 'docs/admin-guide.md', 'docs/user-guide.md',
+        'docs/postgresql-backend.md', 'docs/start-here.md',
+        'docs/user-guide-videos.md', 'docs/manuals/README.md',
+    )
+    missing = []
+    checked = 0
+    for name in documents:
+        document = ROOT / name
+        content = document.read_text(encoding='utf-8')
+        for target in re.findall(r'!?\[[^\]]*\]\(([^)]+)\)', content):
+            if re.match(r'[a-zA-Z]+:|#', target):
+                continue
+            target = target.split('#')[0].split('?')[0]
+            if not target:
+                continue
+            checked += 1
+            if not (document.parent / target).exists():
+                missing.append(f'{name}: {target}')
+    assert checked > 0, 'No local documentation links were checked'
+    assert not missing, 'Missing documentation targets:\n' + '\n'.join(missing)
