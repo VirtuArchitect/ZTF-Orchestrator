@@ -96,6 +96,22 @@ test('idle clocks and session-list polling do not send activity reports', async 
   expect(fixture.activity).toHaveLength(1)
 })
 
+test('reopening a hidden tab does not replay stale queued activity', async ({ page }) => {
+  await page.clock.install()
+  const fixture = await setup(page)
+  await page.goto('/users')
+  await page.getByRole('button', { name: 'Refresh sessions', exact: true }).click()
+  await expect.poll(() => fixture.activity.length).toBe(1)
+  await page.getByRole('button', { name: 'Refresh sessions', exact: true }).click()
+  await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }))
+  await page.clock.fastForward(600_000)
+  await page.evaluate(() => Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' }))
+  await page.clock.fastForward(30_000)
+  expect(fixture.activity).toHaveLength(1)
+  await page.getByRole('button', { name: 'Refresh sessions', exact: true }).click()
+  await expect.poll(() => fixture.activity.length).toBe(2)
+})
+
 test('sessions and confirmation fit a narrow viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await setup(page)

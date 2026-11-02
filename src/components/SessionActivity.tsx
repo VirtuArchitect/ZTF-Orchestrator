@@ -10,9 +10,12 @@ export default function SessionActivity() {
     if (!token || isDemoMode()) return
     let pending = false
     let lastSent = 0
+    let lastInteractionAt = 0
     let sending = false
     const controller = new AbortController()
     const flush = async () => {
+      // Do not replay an old queued interaction when a hidden tab is reopened.
+      if (pending && Date.now() - lastInteractionAt > 60_000) pending = false
       if (!pending || sending || document.visibilityState !== 'visible' || Date.now() - lastSent < 30_000) return
       pending = false
       lastSent = Date.now()
@@ -25,6 +28,7 @@ export default function SessionActivity() {
     const interaction = (event: Event) => {
       if (!event.isTrusted || document.visibilityState !== 'visible') return
       pending = true
+      lastInteractionAt = Date.now()
       void flush()
     }
     window.addEventListener('pointerdown', interaction, { passive: true })
