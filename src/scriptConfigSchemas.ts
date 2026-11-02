@@ -153,6 +153,34 @@ function peCluster(values: Values, body: Record<string, unknown>) {
 }
 
 const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
+  SetPrismLoginTitlePe: {
+    scriptId: 'SetPrismLoginTitlePe',
+    title: 'Set Prism Login Title (PE)',
+    description: 'Changes the Prism Element login title. Requires an Orchestrator administrator. Review the target and title before running.',
+    riskLevel: 'medium',
+    fields: [
+      ...commonPeClusterFields,
+      { key: 'prism_login_title', label: 'Prism Login Title', type: 'text', required: true, placeholder: 'Example Cluster',
+        help: '1–128 characters of plain text, including at least one non-whitespace character. No HTML or control characters. Spaces are preserved.' },
+      { key: 'prism_login_title_verify_tls', label: 'Verify TLS', type: 'boolean', defaultValue: true,
+        help: 'Verify the PE certificate. Disable only for an explicitly accepted untrusted certificate; this override applies only to the login-title client.' },
+    ],
+    build: values => {
+      const title = values.prism_login_title
+      if (typeof title !== 'string' || !title.trim() || Array.from(title).length > 128 || /[<>\p{C}]/u.test(title)) {
+        throw new Error('Prism Login Title must be 1–128 characters of nonblank plain text without HTML or control characters.')
+      }
+      const verifyTls = values.prism_login_title_verify_tls === undefined ? true : values.prism_login_title_verify_tls
+      if (typeof verifyTls !== 'boolean') throw new Error('Verify TLS must be a boolean.')
+      if (!text(values, 'cluster_ip') || !text(values, 'cluster_name') || !text(values, 'pe_credential')) {
+        throw new Error('Prism Element IP, Cluster Name and PE Credential Ref are required.')
+      }
+      return toYaml({
+        prism_login_title_verify_tls: verifyTls,
+        ...peCluster(values, { prism_login_title: title }),
+      })
+    },
+  },
   AddAdServerPe: {
     scriptId: 'AddAdServerPe',
     title: 'Add AD Server (PE)',

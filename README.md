@@ -63,6 +63,12 @@ failures, distinguishing credential resolution, TLS trust/identity, network,
 HTTP access, account creation, role assignment and verification errors.
 See [PE local-user diagnostics](docs/pe-local-users.md#failure-diagnostics).
 
+Updated source builds also provide **Set Prism Login Title (PE)** as a standalone
+script and pipeline step, with title-only Configure Cluster compatibility,
+credential checks and fresh read-back verification. See the
+[PE login-title guide](docs/pe-login-title.md) for usage and the legacy API
+compatibility boundary. Importing YAML into an older appliance is insufficient.
+
 Updated source builds fail registration jobs when `Register_to_PC` reports
 `CAN'T VERIFY` or `FAIL`, even with exit code zero, and show redacted verification
 exception details from the bundled runtime.

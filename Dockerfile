@@ -110,6 +110,8 @@ RUN if [ "${ZTF2_BAKE}" = "true" ]; then \
 COPY scripts/prepare_ztf_requirements.py /tmp/prepare_ztf_requirements.py
 COPY scripts/patch_ztf_runtime.py /tmp/patch_ztf_runtime.py
 COPY scripts/ztf_verification_errors.py /tmp/ztf_verification_errors.py
+COPY pe_login_title.py /tmp/pe_login_title.py
+COPY scripts/ztf_set_prism_login_title_pe.py /tmp/ztf_set_prism_login_title_pe.py
 COPY pe_local_users.py /tmp/pe_local_users.py
 COPY scripts/ztf_create_local_users_pe.py /tmp/ztf_create_local_users_pe.py
 COPY scripts/ztf_pe_postconfig.py /tmp/ztf_pe_postconfig.py

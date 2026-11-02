@@ -37,6 +37,8 @@ import bcrypt
 import yaml
 import credential_rotation as rotation
 import appliance_updates as guided_updates
+from pe_login_title import has_title_intent, validate_intent as validate_pe_login_title_intent
+from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
 from pe_local_users import validate_intent as validate_pe_local_users_intent
 from pe_local_users import prepare_credentials as prepare_pe_local_users_credentials
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory
@@ -3153,7 +3155,7 @@ def _is_allowed_approval_workflow(workflow: str) -> bool:
     return False
 
 ALLOWED_SCRIPTS = {
-    'CreateLocalUsersPe',
+    'CreateLocalUsersPe', 'SetPrismLoginTitlePe',
     'AcceptEulaPc', 'AcceptEulaPe',
     'AddAdServerPc', 'AddAdServerPe', 'AddAuthorizationPolicy', 'AddDirectoryServices',
     'AddLocalUsers', 'AddNameServersPc', 'AddNameServersPe', 'AddNtpServersPc',
@@ -3228,6 +3230,8 @@ def _script_ids_from_payload(raw_script) -> list[str]:
 
 
 def _normalize_script_ids(script_ids: list[str]) -> tuple[list[str], str | None]:
+    if 'SetPrismLoginTitlePe' in script_ids and len(script_ids) != 1:
+        return [], 'SetPrismLoginTitlePe must run as its own script or pipeline step'
     if 'CreateLocalUsersPe' in script_ids and len(script_ids) != 1:
         return [], 'CreateLocalUsersPe must run as its own script or pipeline step'
     normalized: list[str] = []
@@ -3565,7 +3569,7 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
 }
 
 PE_CLUSTER_SCRIPT_PREFLIGHT_IDS = {
-    'CreateLocalUsersPe',
+    'CreateLocalUsersPe', 'SetPrismLoginTitlePe',
     'AcceptEulaPe',
     'AddAdServerPe',
     'AddNameServersPe',
@@ -6086,6 +6090,8 @@ _parallel_engine:  ParallelEngine  | None = None
 _approval_manager: ApprovalManager | None = None
 
 def _scheduled_pe_user_error(script) -> str:
+    if 'SetPrismLoginTitlePe' in _script_ids_from_payload(script):
+        return 'PE login-title changes cannot be scheduled; use an administrator-confirmed script or pipeline run'
     if 'CreateLocalUsersPe' in _script_ids_from_payload(script):
         return 'PE local-user creation cannot be scheduled; use an administrator-confirmed script or pipeline run'
     return ''
@@ -6958,6 +6964,54 @@ def _lookup_credential_ref(ref: str) -> tuple[str | None, str | None, str]:
             return username, password, ''
 
     return None, None, f'credential reference {ref} was not found in global.yml'
+
+
+def _pe_login_title_resolver(config):
+    merged = dict(_load_global_config_data())
+    for key in ('vaults', 'vault_to_use'):
+        if isinstance(config, dict) and key in config:
+            merged[key] = config[key]
+
+    def resolve(ref):
+        vaults = merged.get('vaults')
+        selected = merged.get('vault_to_use')
+        if selected not in ('local', 'cyberark') or not isinstance(vaults, dict):
+            raise ValueError('Selected vault is unavailable')
+        vault = vaults.get(selected)
+        credentials = vault.get('credentials') if isinstance(vault, dict) else None
+        entry = credentials.get(ref) if isinstance(credentials, dict) else None
+        if not isinstance(entry, dict) or not entry.get('username') or not entry.get('password'):
+            raise ValueError('Credential unavailable in selected vault')
+        # The standard helper may search other vaults. Use it only when it
+        # returned the same entry as the runtime's active-vault-only lookup.
+        username, password, error = _lookup_credential_ref(ref)
+        if not error and (username, password) == (entry['username'], entry['password']):
+            return username, password
+        return entry['username'], entry['password']
+
+    return resolve
+
+
+def _pe_login_title_request_error(workflow, payload):
+    if workflow not in {'config-cluster', 'SetPrismLoginTitlePe'}:
+        return ''
+    content = payload.get('configContent') or payload.get('content') or ''
+    try:
+        if not content and payload.get('configFile'):
+            path = safe_config_path(payload['configFile'], get_configs_dir())
+            if not path or not path.is_file():
+                return 'Cluster configuration is missing or invalid'
+            content = path.read_text(encoding='utf-8')
+        config = yaml.safe_load(content) or {}
+        if workflow == 'config-cluster' and not has_title_intent(config):
+            return ''
+        payload['configContent'] = content
+        if getattr(request, 'current_user', {}).get('role') != 'admin':
+            return 'Only an Orchestrator administrator may change the PE login title'
+        validate_pe_login_title_intent(config)
+    except Exception:
+        return 'PE login-title configuration is invalid'
+    return ''
 
 
 def _prism_central_login_check(host: str, port: int, credential_ref: str, scheme: str = 'https') -> tuple[bool, str, float]:
@@ -33836,6 +33890,19 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         yield from send('done', {'status': status, 'dryRun': True, 'passed': passed, 'failed': failed})
         return
 
+    if workflow == 'SetPrismLoginTitlePe' or (workflow == 'config-cluster' and has_title_intent(config)):
+        try:
+            planned = prepare_pe_login_title_credentials(config, _pe_login_title_resolver(config))
+            passed += 1
+            yield from send('stdout', '[PASS] PE login-title intent and credential references are valid; no PE requests were made')
+            if any(item[-1] is False for item in planned):
+                yield from send('stdout', '[WARN] PE login-title TLS certificate verification is explicitly disabled')
+        except Exception:
+            failed += 1
+            yield from send('stdout', '[FAIL] PE login-title intent or selected-vault credentials are invalid; no PE requests were made')
+        yield from send('done', {'status': 'failed' if failed else 'success', 'dryRun': True, 'passed': passed, 'failed': failed})
+        return
+
     if workflow == 'CreateLocalUsersPe':
         def resolve_pe_user(ref):
             username, password, error = _lookup_credential_ref(ref)
@@ -34467,6 +34534,8 @@ def _ztf_process_status(return_code: int | None, stdout: str, stderr: str, cance
 
 
 def _validate_destructive_script_ack(script_ids: list[str], payload: dict, *, allow_dry_run: bool = False) -> str | None:
+    if 'SetPrismLoginTitlePe' in script_ids and getattr(request, 'current_user', {}).get('role') != 'admin':
+        return 'Only an Orchestrator administrator may change the PE login title'
     if 'CreateLocalUsersPe' in script_ids and getattr(request, 'current_user', {}).get('role') != 'admin':
         return 'Only an Orchestrator administrator may create PE administrator accounts'
     if allow_dry_run and script_ids == ['CreateLocalUsersPe'] and payload.get('dryRun') is True:
@@ -34946,6 +35015,26 @@ class ExecutionJobManager:
             if incompatible:
                 self._emit(job_id, 'error', incompatible[0]['error'])
                 return
+            if workflow == 'config-cluster':
+                try:
+                    title_content = effective_config_content
+                    if not title_content and config_file:
+                        title_path = safe_config_path(config_file, get_configs_dir())
+                        if not title_path or not title_path.is_file():
+                            self._emit(job_id, 'error', 'Cluster configuration is missing or invalid')
+                            return
+                        title_content = title_path.read_text(encoding='utf-8')
+                    title_config = yaml.safe_load(title_content) or {}
+                    if has_title_intent(title_config):
+                        actor = _find_user(user) or {}
+                        if actor.get('role') != 'admin':
+                            self._emit(job_id, 'error', 'PE login-title changes require an administrator')
+                            return
+                        validate_pe_login_title_intent(title_config)
+                        effective_config_content = title_content
+                except Exception:
+                    self._emit(job_id, 'error', 'PE login-title configuration is invalid')
+                    return
             try:
                 _sync_global_config_to_legacy()
             except OSError as exc:
@@ -41009,7 +41098,7 @@ def save_global_config():
 # ─── Pipelines ───────────────────────────────────────────────────────────────
 
 # Keep the legacy step shape; only explicitly integrated scripts use --script.
-PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'}
+PIPELINE_SCRIPT_IDS = {'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', 'SetPrismLoginTitlePe'}
 
 
 def _pipeline_step_error(step) -> str | None:
@@ -41118,7 +41207,7 @@ def run_pipeline(pipeline_id: str):
         return jsonify({'error': ack_error}), 400
     pe_users_configs = {}
     for s in steps:
-        if s['workflow'] in PIPELINE_SCRIPT_IDS:
+        if s['workflow'] in PIPELINE_SCRIPT_IDS or (s['workflow'] == 'config-cluster' and s.get('configFile')):
             path = safe_config_path(s['configFile'], get_configs_dir())
             if not path or not path.is_file():
                 return jsonify({'error': 'PE administration configuration file is missing or invalid'}), 400
@@ -41127,9 +41216,18 @@ def run_pipeline(pipeline_id: str):
                 config = yaml.safe_load(config_text)
             except (OSError, UnicodeError, yaml.YAMLError):
                 return jsonify({'error': 'PE administration configuration must be readable YAML'}), 400
-            if s['workflow'] == 'CreateLocalUsersPe':
+            if s['workflow'] == 'config-cluster':
+                if has_title_intent(config):
+                    title_payload = dict(request.get_json(silent=True) or {}, configContent=config_text)
+                    title_error = _pe_login_title_request_error('config-cluster', title_payload)
+                    if title_error:
+                        return jsonify({'error': title_error}), 400
+                    pe_users_configs[s['configFile']] = config_text
+                continue
+            if s['workflow'] in {'CreateLocalUsersPe', 'SetPrismLoginTitlePe'}:
                 try:
-                    validate_pe_local_users_intent(config)
+                    validator = validate_pe_login_title_intent if s['workflow'] == 'SetPrismLoginTitlePe' else validate_pe_local_users_intent
+                    validator(config)
                 except ValueError as exc:
                     return jsonify({'error': str(exc)}), 400
                 pe_users_configs[s['configFile']] = config_text
@@ -41198,14 +41296,14 @@ def run_pipeline(pipeline_id: str):
             private_config = None
 
             try:
-                if workflow == 'CreateLocalUsersPe':
+                if config_file in pe_users_configs:
                     import tempfile
                     # Execute the validated snapshot, not a config another user
                     # could edit while an earlier pipeline step is running.
                     with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
                         private_config = Path(snapshot.name)
                         snapshot.write(pe_users_configs[config_file])
-                    cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script', workflow, '-f', str(private_config)]
+                    cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow, '-f', str(private_config)]
                 proc = subprocess.Popen(
                     cmd_args, cwd=ztf_path,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -41581,6 +41679,10 @@ def execute_workflow():
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
         return jsonify({'error': script_error}), 400
+    title_error = _pe_login_title_request_error(workflow or ('SetPrismLoginTitlePe' if 'SetPrismLoginTitlePe' in script_ids else ''), data)
+    config_content = data.get('configContent')
+    if title_error:
+        return jsonify({'error': title_error}), 403 if title_error.startswith('Only an Orchestrator administrator') else 400
     destructive_error = _validate_destructive_script_ack(script_ids, data, allow_dry_run=True)
     if destructive_error:
         return jsonify({'error': destructive_error, 'destructiveAction': True}), 403
@@ -41962,6 +42064,9 @@ def submit_job():
     script_ids, script_error = _normalize_script_ids(_script_ids_from_payload(data.get('script')))
     if script_error:
         return jsonify({'error': script_error}), 400
+    title_error = _pe_login_title_request_error(workflow or ('SetPrismLoginTitlePe' if 'SetPrismLoginTitlePe' in script_ids else ''), data)
+    if title_error:
+        return jsonify({'error': title_error}), 403 if title_error.startswith('Only an Orchestrator administrator') else 400
     destructive_error = _validate_destructive_script_ack(script_ids, data)
     if destructive_error:
         return jsonify({'error': destructive_error, 'destructiveAction': True}), 403
