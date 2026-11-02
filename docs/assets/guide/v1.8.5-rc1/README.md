@@ -2,7 +2,7 @@
 
 Application version: **v1.8.5-rc1**. Source revision:
 `a3c9c79832efe4552cab5b208d5fbe49936dcbf8` is the application baseline.
-The capture also includes this revision's demo-only file-metadata and audit-date corrections.
+Capture helpers add isolated generic grouping and read-only recovery/update fixtures.
 Capture date: **2 November 2026**.
 
 All 52 images show the frontend with **simulated demo data**. No live
@@ -11,8 +11,8 @@ jobs and readiness results do not establish UAT completion or target health.
 
 Users, Sessions, revocation confirmation and deployment guidance were refreshed
 for administrator session management and the Foundation VM implementation label.
-Their per-image provenance and checksums are recorded in `capture-manifest.json`;
-other captures retain their earlier baseline. Session revocation in the demo
+Per-image provenance and checksums are recorded in `capture-manifest.json`;
+all gallery images were recaptured for this baseline. Session revocation in the demo
 changes only synthetic browser-memory records and cannot revoke a live sign-in.
 
 Viewport: 1600 x 1050; light theme; UTC; en-GB. Some form captures scroll the

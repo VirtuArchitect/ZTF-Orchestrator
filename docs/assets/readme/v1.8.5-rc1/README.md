@@ -7,8 +7,7 @@ observations, and not proof of production readiness or completed release UAT.
 
 Capture date: 2026-11-02. Application revision:
 `a3c9c79832efe4552cab5b208d5fbe49936dcbf8`.
-Demo-only fixture corrections in this revision are included in the captures.
-No backend execution behavior changes.
+Screens use the existing static-demo fixtures; no backend execution behavior changed.
 
 Viewport: 1600 x 1050, light theme. The visible UI
 footer identifies v1.8.5-rc1. No historical screenshots were retouched or
