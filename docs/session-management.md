@@ -1,5 +1,8 @@
 # Session management
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Administrators use **Administration > Users > Sessions** to review sign-ins and
 remove one session's future access. This guide describes updated v1.8.5-rc1 source
 behavior reviewed on 2 November 2026. It does not establish that an installed

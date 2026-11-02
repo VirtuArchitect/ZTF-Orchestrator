@@ -1,6 +1,6 @@
 # RB-003 - Upgrade and Rollback
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
 ## Metadata
 

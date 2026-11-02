@@ -1,5 +1,7 @@
 # Start Here and cluster deployment guidance
 
+See [current documented build and update details](current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+
 Current candidate: **v1.8.5-rc1**. This is navigation around existing execution
 paths; it does not add a deployment backend or broaden hardware support.
 
@@ -89,7 +91,7 @@ execution checks remain authoritative.
 ## Screen examples
 
 These screenshots were refreshed from the 2 November 2026 isolated static demo
-at application baseline `ea9dcf0`, with documentation-only demo fixture corrections. They show implemented screens,
+at application baseline `a3c9c79`, with documentation-only demo fixture corrections. They show implemented screens,
 not a connected cluster, a completed deployment or production acceptance.
 
 ![Start Here with the four operator choices](images/start-here.png)

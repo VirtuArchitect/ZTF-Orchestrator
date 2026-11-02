@@ -57,3 +57,13 @@ Media lives under docs/assets and is copied into the GitHub Pages tutorial direc
 by the Pages workflow. It is excluded from Docker by the existing docs exclusion.
 See the [current manual](manuals/README.md), [static demo guide](demo/README.md),
 [Disaster Recovery procedure](disaster-recovery.md) and [guided updates](guided-appliance-updates.md).
+
+## Changes after the recorded videos
+
+The existing MP4s retain their original recording and narration. For the current
+`v1.8.5-rc1-636f191` behavior, use [current build status](current-status.md) and the
+updated manual. Parts 07 and 09 predate datacenter/cluster config selection and
+credential labels; Part 08 predates Set Prism Login Title (PE); Part 06 predates
+the completed-stage color changes; Part 11 predates Sessions. Current screenshots
+and written procedures supersede those screen details. No old video is relabelled
+as a newly recorded demonstration.

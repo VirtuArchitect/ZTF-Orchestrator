@@ -127,3 +127,11 @@ Promotion
 The release is a prerelease, not the latest stable version. See
 docs/releases/v1.8.5-rc1-readiness.md and the release validation receipt for
 completed checks and outstanding live-UAT, recovery and soak gates.
+
+Current documentation refresh - 2 November 2026
+---------------------------------------------
+Active guides, formatted Word/PDF manuals and generic simulated console captures
+now document consolidated build v1.8.5-rc1-636f191. Includes credential/config
+groups, scoped file selection, PE login-title customization, Sessions and colored
+update progress. See docs/current-status.md and docs/manuals/README.md. Historical
+evidence, original candidate media and immutable update ZIPs remain unchanged.

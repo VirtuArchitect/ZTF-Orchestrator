@@ -1,5 +1,8 @@
 # PE Post-Configuration Verification
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 This applies to updated source-derived v1.8.5-rc1 builds. It is not a stable
 release promotion or evidence that a production cluster has been changed.
 

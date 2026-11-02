@@ -6,9 +6,8 @@ readiness records are **simulated demo data**, not live PE/PC or Foundation
 observations, and not proof of production readiness or completed release UAT.
 
 Capture date: 2026-11-02. Application revision:
-`ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae`.
-Demo-only fixture corrections in this revision are included in the captures.
-No backend execution behavior changes.
+`a3c9c79832efe4552cab5b208d5fbe49936dcbf8`.
+Screens use the existing static-demo fixtures; no backend execution behavior changed.
 
 Viewport: 1600 x 1050, light theme. The visible UI
 footer identifies v1.8.5-rc1. No historical screenshots were retouched or
@@ -33,3 +32,9 @@ infrastructure. `ZTF_CHROME_PATH` can select an installed Chromium browser;
 `ZTF_SCREENSHOT_URL` can select another local preview port.
 
 [Capture manifest and SHA256 hashes](capture-manifest.json).
+
+Current grouping, scoped selection, PE title and progress illustrations use the
+latest implemented UI with generic simulated fixtures. Supplement captures can
+be reproduced with `node scripts/capture_current_operational_supplements.cjs`
+after serving the local static demo on port 15221. See `capture-manifest.json`
+and `SHA256SUMS` for per-image provenance.

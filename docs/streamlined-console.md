@@ -1,5 +1,8 @@
 # Streamlined operations console
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Overview centres on four tasks: **Deploy a Cluster**, **Configure a Cluster**,
 **Recover Infrastructure**, and **Monitor & Verify**. These links open the
 existing guidance, workflows and recovery screens. They do not submit work,

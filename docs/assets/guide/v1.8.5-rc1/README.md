@@ -1,18 +1,18 @@
 # Current Administrator and User Guide Screenshots
 
 Application version: **v1.8.5-rc1**. Source revision:
-`ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae` is the application baseline.
-The capture also includes this revision's demo-only file-metadata and audit-date corrections.
+`a3c9c79832efe4552cab5b208d5fbe49936dcbf8` is the application baseline.
+Capture helpers add isolated generic grouping and read-only recovery/update fixtures.
 Capture date: **2 November 2026**.
 
-All 48 images show the frontend with **simulated demo data**. No live
+All 52 images show the frontend with **simulated demo data**. No live
 PE, PC, Foundation or appliance was contacted. Demo identities, inventories,
 jobs and readiness results do not establish UAT completion or target health.
 
 Users, Sessions, revocation confirmation and deployment guidance were refreshed
 for administrator session management and the Foundation VM implementation label.
-Their per-image provenance and checksums are recorded in `capture-manifest.json`;
-other captures retain their earlier baseline. Session revocation in the demo
+Per-image provenance and checksums are recorded in `capture-manifest.json`;
+all gallery images were recaptured for this baseline. Session revocation in the demo
 changes only synthetic browser-memory records and cannot revoke a live sign-in.
 
 Viewport: 1600 x 1050; light theme; UTC; en-GB. Some form captures scroll the
@@ -72,6 +72,10 @@ before every capture, and fails on browser errors. It does not run deployments.
 | Settings | [PNG](settings.png) |
 | Setup | [PNG](setup.png) |
 | Start Here | [PNG](start-here.png) |
+| Config groups | [PNG](config-groups.png) |
+| Pipeline config groups | [PNG](pipeline-config-groups.png) |
+| PE login title | [PNG](pe-login-title.png) |
+| Update progress | [PNG](update-progress.png) |
 | Storage | [PNG](storage.png) |
 | Updates | [PNG](updates.png) |
 | Upgrade Advisor | [PNG](upgrade-advisor.png) |
@@ -88,3 +92,9 @@ before every capture, and fails on browser errors. It does not run deployments.
 - [Disaster Recovery](disaster-recovery.png)
 
 [Capture manifest and SHA256 hashes](capture-manifest.json).
+
+Current grouping, scoped selection, PE title and progress illustrations use the
+latest implemented UI with generic simulated fixtures. Supplement captures can
+be reproduced with `node scripts/capture_current_operational_supplements.cjs`
+after serving the local static demo on port 15221. See `capture-manifest.json`
+and `SHA256SUMS` for per-image provenance.

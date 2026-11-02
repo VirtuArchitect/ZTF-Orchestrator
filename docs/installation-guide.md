@@ -1,5 +1,8 @@
 # ZTF-Orchestrator Installation Guide
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 For source-derived v1.8.5-rc1 rebuilds, follow [Docker build identity](docker-build-identity.md)
 and use the approved versioned image. v1.8.4 remains Latest stable. After cutover,
 verify the actual image and `/health` installed identity, then open
@@ -7,8 +10,9 @@ verify the actual image and `/health` installed identity, then open
 for the complete administrator/operator reference.
 
 Before appliance updates, check free space for both the data/database backup and
-image extraction. Imported update packages inside the data volume are included
-in its snapshot and can materially increase space requirements. Keep a verified
+image extraction. Legacy backup helpers may include imported update caches in data snapshots.
+The matching current host-service kit excludes reproducible imported packages
+and preload bundles; retain those sources separately. Keep a verified
 complete backup pair and rollback image; do not disable required backups to work
 around a full filesystem. See [update preparation](appliance-update-manager.md).
 

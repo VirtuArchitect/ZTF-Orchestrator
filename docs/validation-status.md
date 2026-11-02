@@ -1,5 +1,8 @@
 # Validation Status
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 This document describes what has been validated for ZTF-Orchestrator and what
 still requires an environment-specific UAT exercise. It is intended to be
 transparent rather than promotional: local validation proves the application
@@ -11,10 +14,11 @@ For the current repository-level security review, see
 
 ## Current Validation Position
 
-ZTF-Orchestrator is locally validated and ready for controlled infrastructure
-UAT. It should not be represented as fully production-validated until the
-environment-dependent tests below have been executed in the target deployment
-model.
+Operators report more than 20 successful AHV cluster deployments, including
+more than 10 production clusters with pipeline post-configuration. Current
+repository tests and local container checks are recorded in the linked build
+status. These results do not validate every hardware, API or preview integration;
+execute the applicable environment-dependent checks in each deployment model.
 
 ## Sanitized UAT Progress
 

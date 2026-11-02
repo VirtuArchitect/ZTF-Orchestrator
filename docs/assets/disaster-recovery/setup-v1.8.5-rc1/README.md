@@ -1,19 +1,19 @@
 # Disaster Recovery setup screenshot provenance
 
-Captured 29 October 2026 from the actual React interface at source commit
-`867fe83f6c90dff1ee785e8caf0fe2b82b969174` for **v1.8.5-rc1**.
+Captured 2 November 2026 from the actual React interface at source commit
+`a3c9c79832efe4552cab5b208d5fbe49936dcbf8` for **v1.8.5-rc1**.
 The light-theme screenshots use generic simulated API records in a separate,
 in-memory browser session. They are not screenshots of a production installation.
 
 - `01-add-datacenter.png`: Add Datacenter form, generic endpoint and prerequisite
   reviews left outstanding.
 - `02-linked-profile.png`: profile linked to saved Foundation VM YAML and a saved
-  two-step post-configuration pipeline.
+  post-configuration pipeline.
 - `03-reviewed-baseline.png`: simulated reviewed revision with cluster identity,
   physical targets, deployment excerpt, pipeline snapshots and planning notes.
 
-The capture intercepted all API calls. Only datacenter save, draft profile save
-and baseline review were simulated. No live backend was used. No preparation,
+The capture intercepted all API calls. Datacenter/profile forms and a reviewed baseline used read-only fixtures. No
+form was submitted. No live backend was used. No preparation,
 deployment, rehearsal or pipeline execution endpoint was requested. External
 font requests were blocked. No Foundation VM or Prism system was contacted.
 

@@ -1,5 +1,8 @@
 # Config files by datacenter and cluster
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Updated v1.8.5-rc1 source adds configuration-file labels using the existing
 credential group catalogue. This organizes files without moving, renaming or
 rewriting them. Grouping is not an access boundary, credential binding or a

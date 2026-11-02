@@ -9,6 +9,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+- Refresh active guides and formatted Word/PDF manuals for consolidated build
+  v1.8.5-rc1-636f191, including generic current screenshots, credential/config
+  grouping, scoped config selection, PE login title and colored update progress.
+  Preserve dated evidence and historical release provenance.
+
+
 ### Added
 - Config Files now reuse datacenter/cluster and shared credential groups, with purpose labels, search and filtered pipeline/workflow pickers. Labels never rename files or alter YAML execution references.
 
