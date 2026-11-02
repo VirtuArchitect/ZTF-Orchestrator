@@ -17,6 +17,8 @@ const screens = [
   ['approvals', 'approvals'], ['appliance', 'appliance'], ['upgrade-advisor', 'upgrade-advisor'],
   ['validation-evidence', 'validation-evidence'], ['drift', 'drift'], ['audit-log', 'audit-log'],
   ['users', 'users'], ['settings', 'settings'], ['ztf2-iac', 'ztf2-iac'],
+  ['sessions', 'users', null, '@sessions'],
+  ['session-revocation', 'users', '@revoke-session'],
   ['foundation-vm', 'workflows/cluster-create-foundation-vm'],
   ['foundation-images', 'workflows/cluster-create-foundation-vm', null, 'AHV ISO Checksum'],
   ['foundation-nodes', 'workflows/cluster-create-foundation-vm', null, 'Node Serial'],
@@ -51,7 +53,9 @@ const screens = [
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    for (const [name, route, tab, scroll] of screens) {
+    const selected = process.env.ZTF_SCREENSHOT_NAMES?.split(',');
+    const captures = screens.filter(([name]) => !selected || selected.includes(name));
+    for (const [name, route, tab, scroll] of captures) {
       await page.goto(new URL(route, base).href, { waitUntil: 'networkidle' });
       await page.getByText('Demo mode: simulated data only. No Nutanix environment is connected and no workflows are executed.', { exact: true }).waitFor();
       await page.getByText(`ZeroTouch Orchestrator v${version}`, { exact: true }).waitFor();
@@ -59,14 +63,19 @@ const screens = [
         // Enter a documentation-only classic installer endpoint through the form.
         await page.locator('input[value="https://foundation-demo.local:9440"]').fill('http://foundation.example.com:8000');
       }
-      if (tab === '@edit-drift') await page.getByRole('button', { name: /^Edit schedule / }).first().click();
+      if (tab === '@revoke-session') {
+        await page.getByTestId('sessions-panel').scrollIntoViewIfNeeded();
+        await page.getByRole('button', { name: /^Revoke session / }).first().click();
+      }
+      else if (tab === '@edit-drift') await page.getByRole('button', { name: /^Edit schedule / }).first().click();
       else if (tab) await page.getByRole('button', { name: tab, exact: true }).click();
       if (name === 'about') await page.getByText(`v${version} / demo-build`, { exact: true }).waitFor();
-      if (scroll) await page.getByText(scroll, { exact: true }).first().scrollIntoViewIfNeeded();
+      if (scroll === '@sessions') await page.getByTestId('sessions-panel').scrollIntoViewIfNeeded();
+      else if (scroll) await page.getByText(scroll, { exact: true }).first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: path.join(output, `${name}.png`) });
       console.log(`Captured ${name}`);
     }
     if (errors.length) throw new Error(errors.join('\n'));
-    console.log(`Captured ${screens.length} guide screens without browser errors.`);
+    console.log(`Captured ${captures.length} guide screens without browser errors.`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

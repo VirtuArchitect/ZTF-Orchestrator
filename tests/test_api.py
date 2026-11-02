@@ -1042,7 +1042,7 @@ def test_user_list_exposes_identity_posture_metadata(client, auth_headers):
     assert user['disabled'] is False
     assert user['mfa_supported'] is False
     assert user['sso_supported'] is False
-    assert user['active_sessions_supported'] is False
+    assert user['active_sessions_supported'] is True
 
 
 def test_cannot_delete_own_account(client, auth_headers):

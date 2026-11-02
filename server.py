@@ -6482,15 +6482,20 @@ def _ensure_default_admin():
 # Session store: { token -> { username, role, expires: datetime } }
 _SESSIONS: dict[str, dict] = {}
 _SESSIONS_LOCK = threading.Lock()
+SESSION_RECENT_SECONDS = 300
 
 def _create_session(username: str, role: str) -> str:
     token = secrets.token_hex(32)
-    expires = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=TOKEN_TTL)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    expires = now + datetime.timedelta(seconds=TOKEN_TTL)
     if hasattr(_storage, 'create_session'):
         _storage.create_session(token, username, role, expires)
         return token
     with _SESSIONS_LOCK:
-        _SESSIONS[token] = {'username': username, 'role': role, 'expires': expires}
+        _SESSIONS[token] = {
+            'username': username, 'role': role, 'expires': expires,
+            'id': str(uuid.uuid4()), 'createdAt': now, 'lastActivityAt': now,
+        }
     return token
 
 def _get_session(token: str) -> dict | None:
@@ -6510,6 +6515,55 @@ def _invalidate_session(token: str):
         return
     with _SESSIONS_LOCK:
         _SESSIONS.pop(token, None)
+
+
+def _list_sessions() -> list[dict]:
+    if hasattr(_storage, 'list_sessions'):
+        return _storage.list_sessions()
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with _SESSIONS_LOCK:
+        result = []
+        for record in _SESSIONS.values():
+            if record['expires'] > now:
+                record.setdefault('id', str(uuid.uuid4()))
+                result.append(dict(record))
+        return result
+
+
+def _touch_session(token: str) -> bool:
+    if hasattr(_storage, 'touch_session'):
+        return _storage.touch_session(token)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with _SESSIONS_LOCK:
+        record = _SESSIONS.get(token)
+        if not record or record['expires'] <= now:
+            return False
+        record['lastActivityAt'] = now
+        return True
+
+
+def _revoke_session(session_id: str) -> dict | None:
+    if hasattr(_storage, 'revoke_session'):
+        return _storage.revoke_session(session_id)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with _SESSIONS_LOCK:
+        for token, record in list(_SESSIONS.items()):
+            if record.get('id') == session_id and record['expires'] > now:
+                _SESSIONS.pop(token)
+                return dict(record)
+    return None
+
+
+def _session_timestamp(value) -> str | None:
+    if not isinstance(value, datetime.datetime):
+        return None
+    return value.astimezone(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+
+
+def _session_admin_allowed() -> bool:
+    # Recheck the account too: a session's sign-in role may predate a role change.
+    user = _find_user(request.current_user['username'])
+    return bool(user and user.get('role') == 'admin' and not user.get('disabled'))
 
 def _purge_expired():
     if hasattr(_storage, 'purge_expired_sessions'):
@@ -36994,6 +37048,75 @@ def auth_logout():
 def auth_me():
     return jsonify(request.current_user)
 
+
+@app.route('/api/auth/activity', methods=['POST'])
+@limiter.limit('60 per minute')
+@require_auth
+def auth_activity():
+    # Explicit console interaction reports only. Polling never touches activity,
+    # and reporting activity never renews a session's expiry.
+    token = request.headers.get('Authorization', '')[7:]
+    if not _touch_session(token):
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'success': True})
+
+
+@app.route('/api/auth/sessions')
+@limiter.limit('60 per minute')
+@require_role('admin')
+def auth_sessions():
+    if not _session_admin_allowed():
+        return jsonify({'error': 'Administrator access required'}), 403
+    now = datetime.datetime.now(datetime.timezone.utc)
+    cutoff = now - datetime.timedelta(seconds=SESSION_RECENT_SECONDS)
+    records = _list_sessions()
+    sessions = []
+    for record in records:
+        activity = record.get('lastActivityAt')
+        sessions.append({
+            'id': record['id'], 'username': record['username'], 'role': record['role'],
+            'signedInAt': _session_timestamp(record.get('createdAt')),
+            'lastActivityAt': _session_timestamp(activity),
+            'expiresAt': _session_timestamp(record['expires']),
+            'isCurrent': record['id'] == request.current_user.get('id'),
+            'recentlyActive': isinstance(activity, datetime.datetime) and cutoff <= activity <= now,
+        })
+    sessions.sort(key=lambda item: item['signedInAt'] or '', reverse=True)
+    return jsonify({
+        'sessions': sessions,
+        'summary': {
+            'uniqueUsers': len({item['username'] for item in sessions}),
+            'totalSessions': len(sessions),
+            'recentlyActiveUsers': len({item['username'] for item in sessions if item['recentlyActive']}),
+            'recentlyActiveSessions': sum(item['recentlyActive'] for item in sessions),
+        },
+        'recentActivityWindowSeconds': SESSION_RECENT_SECONDS,
+        'observedAt': _session_timestamp(now),
+    })
+
+
+@app.route('/api/auth/sessions/<session_id>', methods=['DELETE'])
+@limiter.limit('30 per minute')
+@require_role('admin')
+def auth_revoke_session(session_id: str):
+    if not _session_admin_allowed():
+        return jsonify({'error': 'Administrator access required'}), 403
+    try:
+        if str(uuid.UUID(session_id)) != session_id:
+            raise ValueError('Invalid session identifier')
+    except ValueError:
+        return jsonify({'error': 'Session not found'}), 404
+    record = _revoke_session(session_id)
+    if not record:
+        return jsonify({'error': 'Session not found'}), 404
+    current = record['id'] == request.current_user.get('id')
+    log.info('session_revoked', extra={
+        'user': request.current_user['username'], 'action': 'session.revoke',
+        'targetUser': record['username'], 'targetSessionId': record['id'],
+        'currentSession': current,
+    })
+    return jsonify({'success': True, 'currentSession': current})
+
 # ─── User management (admin only) ────────────────────────────────────────────
 
 @app.route('/api/users')
@@ -37009,7 +37132,7 @@ def list_users():
             'disabled': bool(u.get('disabled', False)),
             'mfa_supported': False,
             'sso_supported': False,
-            'active_sessions_supported': False,
+            'active_sessions_supported': True,
         }
         for u in _load_users()
     ])

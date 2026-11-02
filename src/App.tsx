@@ -29,6 +29,7 @@ import YamlStudio         from './pages/YamlStudio'
 import Ztf2Iac            from './pages/Ztf2Iac'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
+import SessionActivity from './components/SessionActivity'
 
 type Role = 'admin' | 'operator' | 'viewer'
 
@@ -62,6 +63,7 @@ function RequireRole({ roles, children }: { roles: Role[]; children: React.React
 export default function App() {
   return (
     <BrowserRouter>
+      <SessionActivity />
       <Routes>
         {/* Public */}
         <Route path="/login" element={<Login />} />

@@ -26,8 +26,9 @@ test('new users land on four choices and can persist a scoped landing preference
 
 test('guide resumes without submissions and hands off to existing workflow and pipeline', async ({ page }) => {
   await seed(page)
+  // Explicit session activity reports are not infrastructure submissions.
   const writes: string[] = []
-  page.on('request', r => { if (r.method() !== 'GET' && r.url().includes('/api/')) writes.push(r.url()) })
+  page.on('request', r => { if (r.method() !== 'GET' && r.url().includes('/api/') && !r.url().endsWith('/api/auth/activity')) writes.push(r.url()) })
   await page.goto('/start/deploy')
   await page.getByRole('radio', { name: 'Foundation VM', exact: true }).check()
   await page.getByRole('button', { name: '3. Define the cluster', exact: true }).click()
@@ -110,8 +111,9 @@ test('cluster journeys use execution history while preview evidence retains its 
   await seed(page)
   await page.setViewportSize({ width: 1440, height: 1050 })
   await page.addInitScript(() => localStorage.setItem('ztf-theme-mode', 'light'))
+  // Explicit session activity reports are not infrastructure submissions.
   const writes: string[] = []
-  page.on('request', r => { if (r.method() !== 'GET' && r.url().includes('/api/')) writes.push(r.url()) })
+  page.on('request', r => { if (r.method() !== 'GET' && r.url().includes('/api/') && !r.url().endsWith('/api/auth/activity')) writes.push(r.url()) })
   for (const journey of ['monitor', 'configure']) {
     await page.goto(`/start/${journey}`)
     await expect(page.getByRole('link', { name: 'Execution History & Logs', exact: true })).toHaveAttribute('href', '/executions')

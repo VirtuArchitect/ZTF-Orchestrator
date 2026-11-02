@@ -4,6 +4,16 @@ import { APP_VERSION } from './version'
 const DEMO_TOKEN = 'ztf-orchestrator-demo-token'
 // Fixed documentation dataset date, not the time of a real infrastructure read.
 const now = new Date('2026-11-02T09:30:00Z')
+let demoSessions = [
+  ['demo-admin', 'admin', true], ['demo-admin', 'admin', false],
+  ['demo-operator', 'operator', true], ['demo-operator', 'operator', false],
+  ['demo-viewer', 'viewer', false],
+].map(([username, role, recentlyActive], index) => ({
+  id: `${String(index + 1).repeat(8)}-1111-4111-8111-${String(index + 1).padStart(12, '0')}`,
+  username: String(username), role: String(role), signedInAt: iso(100 + index * 10),
+  lastActivityAt: iso(recentlyActive ? 1 : 60), expiresAt: iso(-400),
+  isCurrent: false, recentlyActive: Boolean(recentlyActive),
+}))
 
 export function isDemoMode() {
   return import.meta.env.VITE_ZTF_DEMO === 'true'
@@ -419,6 +429,19 @@ async function demoResponse(request: Request) {
     return json({ token: DEMO_TOKEN, user: { username: 'demo-admin', role: 'admin' } })
   }
   if (path === '/api/auth/logout') return okAction('Demo session reset.')
+  if (path === '/api/auth/activity') return okAction('Console activity report simulated.')
+  if (path === '/api/auth/sessions') return json({
+    sessions: demoSessions, observedAt: iso(0), recentActivityWindowSeconds: 300,
+    summary: {
+      uniqueUsers: new Set(demoSessions.map(s => s.username)).size, totalSessions: demoSessions.length,
+      recentlyActiveUsers: new Set(demoSessions.filter(s => s.recentlyActive).map(s => s.username)).size,
+      recentlyActiveSessions: demoSessions.filter(s => s.recentlyActive).length,
+    },
+  })
+  if (path.startsWith('/api/auth/sessions/') && method === 'DELETE') {
+    demoSessions = demoSessions.filter(s => s.id !== path.split('/').pop())
+    return okAction('Session revocation simulated. Examples reset on reload.', { currentSession: false })
+  }
   if (path === '/api/system/check') return json({
     checks: systemChecks,
     ztfInstalled: true,
