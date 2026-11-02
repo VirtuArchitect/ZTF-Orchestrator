@@ -14,7 +14,7 @@ Consolidated application bundle: `v1.8.5-rc1-636f191` (unchanged).
 - Updated table of contents, manually reviewed rendered page/contact sheets and
   focused screenshots. Native Word export was used because LibreOffice was unavailable;
   PDF pages were rasterized for visual review.
-- Added checksum/manifest regression checks; 36 focused documentation/release
+- Added checksum/manifest regression checks; 39 focused documentation/release
   tests passed. Demo build and browser capture smoke checks passed.
 - Active relative documentation links checked; historical archive/evidence records
   retain their original provenance. Historical videos were not re-recorded;
