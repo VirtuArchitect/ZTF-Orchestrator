@@ -10,6 +10,12 @@ release installation remains disabled.
 
 Included changes
 ----------------
+- Updated source adds administrator-managed datacenter/cluster and shared-service
+  credential groups. Labels are separate from flat runtime vault references;
+  stale metadata saves are rejected and group removal preserves credentials.
+- Guided update stages turn green only after completion is established by stage
+  advancement or successful host completion; active, pending, failed and
+  interrupted states remain distinct.
 - Updated source adds Set Prism Login Title (PE) to Scripts and pipelines and
   routes title-only config-cluster requests through the same verified operation.
   It does not rename the cluster or change other baseline/UI settings. TLS is

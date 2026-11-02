@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, Eye, EyeOff, Download, KeyRound, Network, ShieldCheck } from 'lucide-react'
+import { Save, Download, KeyRound, Network, ShieldCheck } from 'lucide-react'
 import Layout from '../components/Layout'
 import YamlPreview from '../components/YamlPreview'
 import { buildGlobalYaml, fromYaml } from '../utils/yaml'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
+import CredentialGroups from '../components/CredentialGroups'
+import { emptyOrganization, renameAssignment, isCredentialOrganization, type CredentialOrganization } from '../utils/credentialOrganization'
+import { useStore } from '../store'
 
 interface Credential {
   ref: string
@@ -289,10 +292,18 @@ function ProviderCard<T extends string>({
 }
 
 export default function GlobalConfig() {
+  const isAdmin = useStore(state => state.user?.role === 'admin')
+  const [baseConfig, setBaseConfig] = useState<Record<string, unknown>>({})
+  const [globalLoaded, setGlobalLoaded] = useState(false)
+  const [organization, setOrganization] = useState<CredentialOrganization>(emptyOrganization)
+  const [organizationLoaded, setOrganizationLoaded] = useState(false)
+  const [organizationDirty, setOrganizationDirty] = useState(false)
+  const [organizationSaving, setOrganizationSaving] = useState(false)
+  const [organizationError, setOrganizationError] = useState('')
   const [vaultType, setVaultType] = useState<VaultType>('local')
   const [ipMethod, setIpMethod] = useState<IpamMethod>('static')
   const [credentials, setCredentials] = useState<Credential[]>(DEFAULT_CREDS)
-  const [showPasswords, setShowPasswords] = useState(false)
+  const credentialError = credentials.some(credential => !credential.ref.trim()) ? 'Every credential needs a nonempty reference.' : new Set(credentials.map(credential => credential.ref)).size !== credentials.length ? 'Credential references must be unique; saving would overwrite a matching reference.' : ''
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -310,11 +321,13 @@ export default function GlobalConfig() {
     : null
 
   useEffect(() => {
-    apiFetch('/api/global-config').then(r => r.json()).then(data => {
-      if (!data.content) return
+    apiFetch('/api/global-config').then(async r => { if (!r.ok) throw new Error('Unable to load global configuration. Reload before saving.'); return r.json() }).then(data => {
+      if (data.content === null || data.content === '') { setGlobalLoaded(true); return }
+      if (typeof data.content !== 'string') throw new Error('Global configuration response is incomplete. Reload before saving.')
       try {
         const parsed = fromYaml(data.content) as Record<string, unknown>
-        if (!parsed || typeof parsed !== 'object') return
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Global configuration must be a YAML object.')
+        setBaseConfig(parsed)
 
         if (isVaultType(parsed.vault_to_use)) {
           setVaultType(parsed.vault_to_use)
@@ -325,12 +338,14 @@ export default function GlobalConfig() {
 
         const vaults = parsed.vaults as Record<string, unknown> | undefined
         const localCreds = (vaults?.local as Record<string, unknown> | undefined)?.credentials
-        if (localCreds && typeof localCreds === 'object') {
-          const creds = Object.entries(localCreds as Record<string, Record<string, string>>).map(
-            ([ref, val]) => ({ ref, username: val?.username ?? '', password: val?.password ?? '' })
-          )
-          if (creds.length > 0) setCredentials(creds)
-        }
+        if (localCreds != null && (typeof localCreds !== 'object' || Array.isArray(localCreds))) throw new Error('Unsupported credential definitions.')
+        const creds = Object.entries((localCreds || {}) as Record<string, unknown>).map(([ref, value]) => {
+          if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Unsupported credential definition.')
+          const val = value as Record<string, unknown>
+          if ((val.username !== undefined && typeof val.username !== 'string') || (val.password !== undefined && typeof val.password !== 'string')) throw new Error('Unsupported credential value.')
+          return { ref, username: (val.username as string) || '', password: (val.password as string) || '' }
+        })
+        setCredentials(creds)
 
         const ca = (vaults?.cyberark as Record<string, string> | undefined)
         if (ca) {
@@ -366,23 +381,65 @@ export default function GlobalConfig() {
             dnsView: parsedIpam.dns_view ?? '',
           })
         }
-      } catch { /* ignore malformed YAML */ }
-    }).catch(() => {})
+        setGlobalLoaded(true)
+      } catch { setSaveError('Unable to parse global configuration. Existing content is preserved; reconcile it before saving.') }
+    }).catch(error => setSaveError(error instanceof Error ? error.message : 'Unable to load global configuration.'))
   }, [])
 
-  const addCredential = () => {
-    setCredentials(prev => [...prev, { ref: `cred_${Date.now()}`, username: '', password: '' }])
-  }
+  useEffect(() => {
+    if (!isAdmin) return
+    let stopped = false
+    apiFetch('/api/credential-organization').then(async response => {
+      if (!response.ok) throw new Error('Unable to load credential groups. Reload before editing grouping.')
+      const value = await response.json() as CredentialOrganization
+      if (!isCredentialOrganization(value)) throw new Error('Invalid credential grouping response.')
+      if (!stopped) { setOrganization(value); setOrganizationLoaded(true) }
+    }).catch(error => { if (!stopped) setOrganizationError(error.message) })
+    return () => { stopped = true }
+  }, [isAdmin])
 
+  const changeOrganization = (value: CredentialOrganization) => { setOrganization(value); setOrganizationDirty(true) }
+  const saveOrganization = async () => {
+    if (!isAdmin || !organizationLoaded || credentialError) return false
+    setOrganizationSaving(true)
+    setOrganizationError('')
+    try {
+      const response = await apiFetch('/api/credential-organization', { method: 'PUT', body: JSON.stringify(organization) })
+      const value = await response.json()
+      if (!response.ok) throw new Error(value.error || 'Unable to save grouping.')
+      if (!isCredentialOrganization(value)) throw new Error('Grouping save could not be confirmed. Reload before saving again.')
+      setOrganization(value)
+      setOrganizationDirty(false)
+      return true
+    } catch (error) {
+      setOrganizationError(error instanceof Error ? error.message : 'Unable to save grouping.')
+      return false
+    } finally { setOrganizationSaving(false) }
+  }
+  const addCredential = (groupId = '') => {
+    const ref = `cred_${Date.now()}`
+    setCredentials(prev => [...prev, { ref, username: '', password: '' }])
+    if (groupId) changeOrganization({ ...organization, assignments: { ...organization.assignments, [ref]: { groupId, purpose: '' } } })
+  }
   const removeCredential = (idx: number) => {
+    const ref = credentials[idx].ref
+    if (!confirm(`Remove credential reference "${ref}" from this draft? Workflows using it may fail after Save to ZTF.`)) return
     setCredentials(prev => prev.filter((_, i) => i !== idx))
+    const assignments = { ...organization.assignments }
+    delete assignments[ref]
+    changeOrganization({ ...organization, assignments })
   }
-
   const updateCredential = (idx: number, field: keyof Credential, value: string) => {
+    if (field === 'ref') {
+      if (credentials.some((credential, index) => index !== idx && credential.ref === value) || (credentials[idx].ref !== value && Object.prototype.hasOwnProperty.call(organization.assignments, value))) { setSaveError('That credential reference already exists. Choose a unique reference.'); return }
+      const next = renameAssignment(organization, credentials[idx].ref, value)
+      if (next !== organization) changeOrganization(next)
+    }
     setCredentials(prev => prev.map((c, i) => i === idx ? { ...c, [field]: value } : c))
   }
 
-  const getYaml = () => buildGlobalYaml({
+  const getYaml = () => credentialError ? `# ${credentialError}\n` : buildGlobalYaml({
+    baseConfig,
     vaultToUse: vaultType,
     ipAllocationMethod: ipMethod,
     credentials,
@@ -405,6 +462,7 @@ export default function GlobalConfig() {
         const data = await resp.json().catch(() => ({}))
         throw new Error(data.error || `Save failed with status ${resp.status}`)
       }
+      if (organizationDirty && !(await saveOrganization())) throw new Error('Credential settings were saved, but grouping was not. Review the grouping error; do not assume the labels were saved.')
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
@@ -433,14 +491,14 @@ export default function GlobalConfig() {
   return (
     <Layout
       title="Global Configuration"
-      subtitle="Configure credentials, vault, and IPAM settings (global.yml)"
+      subtitle="Organize credentials by datacenter and cluster; retain existing vault references"
       actions={
         <div className="flex gap-2">
-          <button onClick={download} className="btn-secondary gap-1.5">
+          <button onClick={download} disabled={!globalLoaded || !!credentialError} className="btn-secondary gap-1.5">
             <Download size={14} />
             Download
           </button>
-          <button onClick={save} disabled={saving} className="btn-primary gap-1.5">
+          <button onClick={save} disabled={saving || organizationSaving || !globalLoaded || !isAdmin || !!credentialError} className="btn-primary gap-1.5">
             <Save size={14} />
             {saved ? 'Saved!' : saving ? 'Saving...' : 'Save to ZTF'}
           </button>
@@ -471,86 +529,13 @@ export default function GlobalConfig() {
         ))}
       </div>
 
-      {/* Credentials Tab */}
-      {activeTab === 'credentials' && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-gray-100">Credential Definitions</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Define named credentials referenced in workflow configs</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowPasswords(!showPasswords)}
-                className="btn-ghost text-xs gap-1.5"
-              >
-                {showPasswords ? <EyeOff size={13} /> : <Eye size={13} />}
-                {showPasswords ? 'Hide' : 'Show'} Passwords
-              </button>
-              <button onClick={addCredential} className="btn-secondary text-xs gap-1.5">
-                <Plus size={13} />
-                Add Credential
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left text-xs text-gray-500 pb-3 pr-4 font-medium">Reference Key</th>
-                  <th className="text-left text-xs text-gray-500 pb-3 pr-4 font-medium">Username</th>
-                  <th className="text-left text-xs text-gray-500 pb-3 pr-4 font-medium">Password</th>
-                  <th className="w-10 pb-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {credentials.map((cred, idx) => (
-                  <tr key={idx}>
-                    <td className="py-2.5 pr-4">
-                      <input
-                        className="input font-mono text-xs"
-                        value={cred.ref}
-                        onChange={e => updateCredential(idx, 'ref', e.target.value)}
-                        placeholder="credential_ref"
-                      />
-                    </td>
-                    <td className="py-2.5 pr-4">
-                      <input
-                        className="input"
-                        value={cred.username}
-                        onChange={e => updateCredential(idx, 'username', e.target.value)}
-                        placeholder="username"
-                      />
-                    </td>
-                    <td className="py-2.5 pr-4">
-                      <input
-                        className="input font-mono"
-                        type={showPasswords ? 'text' : 'password'}
-                        value={cred.password}
-                        onChange={e => updateCredential(idx, 'password', e.target.value)}
-                        placeholder="••••••••"
-                      />
-                    </td>
-                    <td className="py-2.5">
-                      <button onClick={() => removeCredential(idx)} className="btn-ghost p-1.5 text-red-400 hover:text-red-300">
-                        <Trash2 size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 p-3 rounded-lg bg-blue-900/10 border border-blue-700/20">
-            <p className="text-xs text-blue-300">
-              These reference keys (e.g., <code className="font-mono bg-blue-900/30 px-1 rounded">pc_user</code>) are used in workflow config files.
-              The actual credentials are stored in <code className="font-mono bg-blue-900/30 px-1 rounded">global.yml</code>.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Credentials stay flat for runtime compatibility; only labels are grouped. */}
+      {activeTab === 'credentials' && <CredentialGroups
+        credentials={credentials} organization={organization} onOrganization={changeOrganization}
+        onCredential={updateCredential} onAddCredential={addCredential} onRemoveCredential={removeCredential}
+        onSave={() => void saveOrganization()} canEdit={isAdmin && globalLoaded && organizationLoaded && !saving && !organizationSaving}
+        dirty={organizationDirty} saving={organizationSaving} error={credentialError || organizationError}
+      />}
 
       {/* Vault Settings Tab */}
       {activeTab === 'vault' && (

@@ -10,6 +10,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Datacenter/cluster and shared-service credential groups with masked local
+  definitions, search, purposes and revision-checked administrator metadata saves.
+  Reference lookup remains flat; removing a group never removes credentials.
+- Guided appliance update stages now display green completed checks, blue active
+  work, grey pending work, red failures and amber interruptions from host history.
 - Set Prism Login Title (PE) script/pipeline action and title-only Configure
   Cluster dispatch, with selected-vault credential checks, strict TLS by default,
   idempotent single-setting updates and mandatory fresh read-back verification.

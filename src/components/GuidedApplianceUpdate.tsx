@@ -1,3 +1,5 @@
+import { CheckCircle2, Circle, Loader2, XCircle, AlertCircle } from 'lucide-react'
+import { installationStages } from '../utils/applianceStages'
 import { useEffect, useState } from 'react'
 import { apiFetch, authHeaders } from '../utils/api'
 
@@ -150,7 +152,11 @@ export default function GuidedApplianceUpdate({ updates, isAdmin, onImported }: 
     </div>}
     {op && <div className="border-t border-border pt-4 space-y-2" role="status">
       <h3 className="font-medium">Operation: {op.action} · {op.status}</h3>
-      {op.action === 'install' && <ol className="flex flex-wrap gap-2 text-xs" aria-label="Installation stages">{['readiness', 'backup', 'load', 'restart', 'verify', 'complete'].map(stage => <li className="badge badge-gray" key={stage}>{stage}{op.stage === stage ? ' · current' : op.events?.some(event => event.stage === stage) ? ' · recorded' : ' · pending'}</li>)}</ol>}
+      {op.action === 'install' && <ol className="flex flex-wrap gap-2 text-xs" aria-label="Installation stages">{installationStages(op).map(({ stage, state, label }) => {
+        const Icon = state === 'completed' ? CheckCircle2 : state === 'current' ? Loader2 : state === 'failed' ? XCircle : state === 'interrupted' ? AlertCircle : Circle
+        const tone = state === 'completed' ? 'badge-green' : state === 'current' ? 'badge-blue' : state === 'failed' ? 'badge-red' : state === 'interrupted' ? 'badge-yellow' : 'badge-gray'
+        return <li className={`badge ${tone} gap-1.5`} key={stage} data-stage={stage} data-state={state}><Icon size={13} className={state === 'current' ? 'animate-spin' : ''} aria-hidden="true" />{stage} · {label}</li>
+      })}</ol>}
       <p className="text-xs font-mono break-all">{op.id}</p><p className="text-sm">{op.message}</p>
       <ol className="text-sm space-y-1">{op.events?.map((event, index) => <li key={index}>{event.stage}: {event.message}</li>)}</ol>
       {op.verification && <div className="text-sm break-all"><p>Verified image: {op.verification.image}</p><p className="font-mono">{op.verification.imageId}</p><p>Database: {op.verification.database}</p></div>}

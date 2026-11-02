@@ -41043,6 +41043,41 @@ def restore_config_backup(name, version):
 
 # ─── Global config ────────────────────────────────────────────────────────────
 
+# Organisation metadata stays outside global.yml and cannot alter credential resolution.
+from credential_organization import empty_organization, validate_organization
+
+_CREDENTIAL_ORGANIZATION_LOCK = threading.RLock()
+
+
+@app.route('/api/credential-organization', methods=['GET', 'PUT'])
+@require_role('admin')
+def credential_organization():
+    path = CONFIG_DIR / 'credential_organization.json'
+    with _CREDENTIAL_ORGANIZATION_LOCK:
+        try:
+            # FileStorage's general helper treats parse errors as missing data.
+            # Group revisions must fail closed instead of resetting on corruption.
+            raw = json.loads(path.read_text(encoding='utf-8')) if _storage.name == 'file' and path.exists() else read_json(path, empty_organization())
+            current = validate_organization(raw)
+        except (ValueError, TypeError, OSError):
+            return jsonify({'error': 'Credential grouping metadata cannot be read. Restore or reconcile it before saving.'}), 500
+        if request.method == 'GET':
+            return jsonify(current)
+        try:
+            proposed = validate_organization(request.get_json(silent=True))
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid credential grouping metadata. Use names, datacenters, reference assignments and purposes only; no secrets.'}), 400
+        if proposed['revision'] != current['revision']:
+            return jsonify({'error': 'Credential grouping changed in another session. Reload before saving; existing credentials are unchanged.'}), 409
+        saved = {**proposed, 'revision': current['revision'] + 1}
+        write_json(path, saved)
+        log.info('credential_organization_saved', extra={
+            'action': 'credential_organization_save', 'user': request.current_user['username'],
+            'groupCount': len(saved['groups']), 'assignmentCount': len(saved['assignments']),
+        })
+        return jsonify(saved)
+
+
 @app.route('/api/global-config')
 @require_role('admin', 'operator', 'viewer')
 def get_global_config():

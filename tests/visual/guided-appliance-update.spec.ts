@@ -16,7 +16,7 @@ async function setup(page: Page, role = 'admin', available = true) {
     if (path === '/api/appliance/updates/control') {
       if (route.request().method() === 'GET') {
         fixture.hostReads++
-        return route.fulfill({ json: { available, maintenance: fixture.operation?.action === 'install', operation: fixture.operation, message: available ? '' : 'Guided updates require the one-time host update service installation.' } })
+        return route.fulfill({ json: { available, maintenance: fixture.operation?.action === 'install' && fixture.operation?.status !== 'succeeded', operation: fixture.operation, message: available ? '' : 'Guided updates require the one-time host update service installation.' } })
       }
       const data = route.request().postDataJSON()
       fixture.actions.push(data)
@@ -113,4 +113,31 @@ test('guided update is usable at a narrow viewport', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
   await page.locator('main').evaluate(element => { element.scrollTop = 0 })
   await page.screenshot({ path: 'test-results/guided-appliance-update-mobile.png', fullPage: true })
+})
+
+
+test('installation stages turn green after completion and retain distinct current, failure and pending states', async ({ page }) => {
+  const fixture = await setup(page)
+  const entered = ['readiness', 'backup', 'load'].map(stage => ({ stage, message: stage, at: 1 }))
+  fixture.operation = { id: 'stage-fixture', action: 'install', status: 'running', stage: 'load', events: entered }
+  await page.reload()
+  await page.getByRole('button', { name: 'Updates', exact: true }).click()
+  const stages = page.getByRole('list', { name: 'Installation stages' })
+  await expect(stages.locator('[data-stage="readiness"]')).toHaveClass(/badge-green/)
+  await expect(stages.locator('[data-stage="backup"]')).toContainText('Completed')
+  await expect(stages.locator('[data-stage="load"]')).toHaveClass(/badge-blue/)
+  await expect(stages.locator('[data-stage="restart"]')).toHaveClass(/badge-gray/)
+  fixture.operation = { ...fixture.operation, stage: 'failed', status: 'failed', events: [...entered, { stage: 'failed', message: 'fixture failure', at: 2 }] }
+  await page.reload()
+  await page.getByRole('button', { name: 'Updates', exact: true }).click()
+  await expect(stages.locator('[data-stage="load"]')).toHaveClass(/badge-red/)
+  await expect(stages.locator('[data-stage="backup"]')).toHaveClass(/badge-green/)
+  fixture.operation = { id: 'completed-example', action: 'install', stage: 'complete', status: 'succeeded', message: 'Update completed and verified (simulated).', events: ['readiness', 'backup', 'load', 'restart', 'verify', 'complete'].map(stage => ({ stage, message: 'Completed', at: 3 })) }
+  await page.reload()
+  await page.getByRole('button', { name: 'Updates', exact: true }).click()
+  await expect(stages.locator('[data-state="completed"]')).toHaveCount(6)
+  await expect(stages.locator('.badge-green')).toHaveCount(6)
+  await page.setViewportSize({ width: 1600, height: 1100 })
+  await page.screenshot({ path: 'test-results/guided-update-completed-green.png', fullPage: true })
+  expect(fixture.actions).toHaveLength(0)
 })

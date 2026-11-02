@@ -14,6 +14,7 @@ export function fromYaml(str: string): unknown {
 }
 
 export function buildGlobalYaml(config: {
+  baseConfig?: Record<string, unknown>
   vaultToUse: string
   ipAllocationMethod: string
   credentials: Array<{ ref: string; username: string; password: string }>
@@ -22,37 +23,43 @@ export function buildGlobalYaml(config: {
   infoblox?: { host: string; username: string; password: string; dnsView: string; networkView: string }
   ipamProvider?: { endpoint: string; credentialRef: string; networkView: string; dnsView: string }
 }): string {
-  const credMap: Record<string, { username: string; password: string }> = {}
-  config.credentials.forEach(c => {
-    credMap[c.ref] = { username: c.username, password: c.password }
-  })
-
+  const asRecord = (value: unknown): Record<string, unknown> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+  const base = config.baseConfig || {}
+  const vaults = asRecord(base.vaults)
+  const local = asRecord(vaults.local)
+  const previousCredentials = asRecord(local.credentials)
+  if (config.credentials.some(credential => !credential.ref.trim()) || new Set(config.credentials.map(credential => credential.ref)).size !== config.credentials.length) throw new Error('Credential references must be unique and nonempty.')
+  const credMap = Object.fromEntries(config.credentials.map(credential => [credential.ref, {
+    ...asRecord(previousCredentials[credential.ref]), username: credential.username, password: credential.password,
+  }]))
   const obj: Record<string, unknown> = {
+    ...base,
     vault_to_use: config.vaultToUse,
     ip_allocation_method: config.ipAllocationMethod,
-    ipam: { method: config.ipAllocationMethod },
-    vaults: {
-      local: { credentials: credMap },
-    },
+    ipam: { ...asRecord(base.ipam), method: config.ipAllocationMethod },
+    vaults: { ...vaults, local: { ...local, credentials: credMap } },
   }
 
   if (config.vaultToUse === 'cyberark' && config.cyberark) {
     ;(obj.vaults as Record<string, unknown>).cyberark = {
+      ...asRecord(vaults.cyberark),
       host: config.cyberark.host,
       cert_file: config.cyberark.certFile,
       key_file: config.cyberark.keyFile,
-      credentials: credMap,
+      credentials: asRecord(vaults.cyberark).credentials ?? credMap,
     }
   }
 
   if (config.vaultToUse === 'environment') {
     ;(obj.vaults as Record<string, unknown>).environment = {
-      variable_prefix: 'ZTF_CREDENTIAL_',
+      ...asRecord(vaults.environment),
+      variable_prefix: asRecord(vaults.environment).variable_prefix || 'ZTF_CREDENTIAL_',
     }
   }
 
   if (config.vaultToUse !== 'local' && config.vaultToUse !== 'cyberark' && config.vaultToUse !== 'environment') {
     ;(obj.vaults as Record<string, unknown>)[config.vaultToUse] = {
+      ...asRecord(vaults[config.vaultToUse]),
       endpoint: config.vaultProvider?.endpoint || '',
       credential_ref: config.vaultProvider?.credentialRef || '',
       namespace: config.vaultProvider?.namespace || '',
@@ -61,6 +68,7 @@ export function buildGlobalYaml(config: {
 
   if (config.ipAllocationMethod === 'infoblox' && config.infoblox) {
     obj.ipam = {
+      ...asRecord(base.ipam),
       method: 'infoblox',
       host: config.infoblox.host,
       username: config.infoblox.username,
@@ -69,6 +77,7 @@ export function buildGlobalYaml(config: {
       network_view: config.infoblox.networkView,
     }
     obj.infoblox = {
+      ...asRecord(base.infoblox),
       host: config.infoblox.host,
       username: config.infoblox.username,
       password: config.infoblox.password,
@@ -79,6 +88,7 @@ export function buildGlobalYaml(config: {
 
   if (config.ipAllocationMethod !== 'static' && config.ipAllocationMethod !== 'infoblox') {
     obj.ipam = {
+      ...asRecord(base.ipam),
       method: config.ipAllocationMethod,
       endpoint: config.ipamProvider?.endpoint || '',
       credential_ref: config.ipamProvider?.credentialRef || '',
