@@ -25,7 +25,7 @@ ZTF-Orchestrator is an internal operations console for preparing, validating,
 executing, and auditing Nutanix ZeroTouch Framework 1.x workflows/scripts,
 separate governed ZTF 2.x IaC plan/apply jobs, and guarded NKP preparation
 phases. It is the control plane and evidence layer. ZeroTouch Framework, NKP
-ZeroTouch Framework, Prism Central, Prism Element, and Foundation Central remain
+ZeroTouch Framework, Prism Central, Prism Element, Foundation VM, Foundation Central and standalone FCA remain
 the systems that perform the underlying infrastructure work.
 
 The static demo uses simulated data. Treat it as a product tour, not as proof
@@ -46,10 +46,12 @@ access, the app shows an access-denied page instead of the requested feature.
 
 ## Navigation Shell
 
-The left sidebar is the primary menu. It is grouped into Overview, Configure,
-Execute, Govern, and Admin.
+The left sidebar groups the current console into **Workspace**, **Operations**,
+**Automation**, **Advanced Automation**, **Optional Integrations**, and
+**Administration**. The last three groups expand to reveal specialist tools.
+See [the current navigation map](streamlined-console.md).
 
-The logo at the top returns to the Dashboard. The status indicator below the
+The logo returns to your selected landing page: Start Here or Overview. The status indicator below the
 logo shows whether the ZeroTouch Framework path is currently detected. The
 sidebar can be expanded with labels or collapsed to compact icon navigation.
 When collapsed, hover over an icon to see the menu label.
@@ -65,14 +67,14 @@ Most production-style work follows this path:
 5. Request approval for governed workflows or NKP phases.
 6. Submit the work as a durable job through Workflows, Scripts, Pipelines, Schedules, Parallel Exec, or NKP Framework.
 7. Monitor Jobs / Queue and Execution History.
-8. Capture Validation Evidence, review Drift Detection, and consult Audit Log for governed records.
+8. Verify actual target settings and health; retain job logs and readbacks. Review Drift Detection and Audit Log. NKP Validation Evidence is a separate Preview tool for its supported specialist evidence sources.
 
 ## Overview Menu
 
 ### Start Here and Overview
 
 Start Here is the default for users without a saved landing preference. Choose
-Deploy a Cluster, Configure an Existing Cluster, Monitor & Assess, or Run Saved
+Deploy a Cluster, Configure an Existing Cluster, Monitor & Verify, or Run Saved
 Automation. **My landing page** can select Overview for this user in this browser.
 Scripts, YAML Studio and other specialist tools remain in Advanced Automation.
 
@@ -89,11 +91,11 @@ screens; it does not create or run a pipeline. See [the journey guide](start-her
 
 Use Dashboard as the daily operations cockpit.
 
-The Dashboard summarizes framework readiness, deployment inventory, queue
-pressure, governance state, validation evidence posture, schedules, storage,
-database backup state, and recent activity. It also provides quick links into
-common actions such as creating configuration, opening workflow launchers,
-checking jobs, and exporting evidence.
+Overview leads with Deploy, Configure, Recover and Monitor, followed by recorded
+attention/activity and recovery preparation. Counts describe saved records, not
+a live discovery or independent health assessment. Open the underlying job, drift
+result or profile before acting. Expand **Platform details and integrations** for
+the retained framework, evidence, schedule and storage panels described below.
 
 Key functions:
 
@@ -131,7 +133,8 @@ Key functions:
 ZTF 2.x installs into its own checkout and CLI runtime. After installation, an
 admin still controls whether the runtime is available for jobs from **Settings >
 Runtime**. This screen is for bootstrap and remediation. Once the framework is
-detected, most day-to-day work happens in Configure, Execute, and Govern pages.
+detected, most day-to-day work starts in Operations and Automation. Advanced and optional
+tools remain available in their expandable groups.
 
 ### Workflows 1.x
 
@@ -765,7 +768,12 @@ deletion. Collection metadata and assessed inputs may contain private endpoint
 and cluster details; protect exports accordingly. No upgrade is authorized or
 executed by these controls.
 
-### Validation Evidence
+### NKP Validation Evidence (Preview)
+
+Open **Advanced Automation > NKP Validation Evidence (Preview)**. It retains
+NKP and ZTF UAT evidence sources, saved records and exports. These records do not
+establish AHV cluster, PE/PC or recovery health. For ordinary cluster monitoring,
+use **Monitor & Verify**, Jobs / Queue, Execution History and actual target readbacks.
 
 Use Validation Evidence to create and download defensible evidence records for
 UAT, handover, review, and change records.

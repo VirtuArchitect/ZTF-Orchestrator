@@ -28,7 +28,7 @@ under Appliance Ops → Updates: upload a ZIP, check space, review cleanup, appr
 the version, install and verify. A one-time host-service installation is required;
 the application does not receive Docker access. The existing CLI procedure remains.
 
-For infrastructure rebuild preparation, open **Recovery → Disaster Recovery**
+For infrastructure rebuild preparation, open **Operations → Disaster Recovery**
 to group cluster baselines and post-configuration pipelines by datacenter.
 See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
 Use the [illustrated datacenter and recovery profile setup guide](docs/disaster-recovery-setup.md)
@@ -195,7 +195,7 @@ recovery authorization. Supported imaging, cluster creation, configuration,
 and validation paths provide building blocks for an infrastructure rebuild;
 backup and application teams retain ownership of workload restoration.
 
-The **Recovery → Disaster Recovery** section now provides datacenters, versioned
+The **Operations → Disaster Recovery** section now provides datacenters, versioned
 cluster recovery profiles, governed Foundation VM rebuild runs, sequential
 post-configuration jobs and rehearsal history. Independent health evidence and
 final acceptance remain explicit gates. It does not establish that compromised

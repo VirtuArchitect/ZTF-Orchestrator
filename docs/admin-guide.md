@@ -92,7 +92,7 @@ Guide for what to configure and operate after installation.
 9. Create or import baseline YAML through YAML Studio or Config Files.
 10. Define approval rules for governed or destructive work.
 11. Run non-mutating validation or dry-run paths before approving live changes.
-12. Capture Validation Evidence for controlled UAT or handover records.
+12. Retain job and target-verification evidence for handover. Use the Preview evidence tool only for its supported specialist sources.
 13. Configure backup, restore, and disaster recovery procedures.
 14. Document local boundaries, unsupported features, and residual risks.
 
@@ -117,16 +117,17 @@ The sidebar groups day-to-day work into operating areas.
 
 | Area | Screens | Admin purpose |
 |---|---|---|
-| Overview | Start Here, Overview, Setup & Install | Choose an operator journey, confirm readiness, bootstrap runtimes. |
-| Configure | Global Config, Config Files, YAML Studio, Workflows 1.x, Workflows 2.x, ZTF 2.x IaC | Prepare and validate reusable configuration. |
-| Execute | Scripts 1.x, Scripts 2.x, Jobs / Queue, Execution History, Pipelines, Schedules, Parallel Exec | Launch approved work and monitor execution. |
-| Govern | Approvals, Drift Detection, Validation Evidence, Upgrade Advisor, NKP Framework | Manage review, compliance, evidence, and platform-specific readiness. |
-| Admin | Settings, Users, Audit Log, Appliance Ops | Administer runtime, accounts, storage, backups, audit, and appliance operations. |
+| Workspace | Start Here, Overview, Clusters | Choose a journey and inspect saved cluster profiles. |
+| Operations | Deploy, Configure, Disaster Recovery, Monitor & Verify | Follow the relevant deployment, post-configuration, rebuild or monitoring path. |
+| Automation | Pipelines, Jobs / Queue, Approvals | Review approved sequences, running work and exact approvals. |
+| Advanced Automation | Workflows, Scripts, YAML Studio, Config Files, Executions, Schedules, Parallel Exec, Recovery Runs, Rehearsals, Drift Detection, Upgrade Advisor, NKP Validation Evidence (Preview) | Open specialist tools and retained records directly. |
+| Optional Integrations | NKP Framework, Workflows 2.x, Scripts 2.x, ZTF 2.x IaC (Preview) | Evaluate explicitly labelled integration paths within their implementation limits. |
+| Administration | Setup & Install, Global Config, Appliance Ops, Users, Audit Log, Settings | Maintain runtimes, credentials, trust, accounts, backups and the appliance. |
 
 ## Start Here and Deployment Guidance
 
 Users without a saved landing preference open **Start Here** after login.
-Choose Deploy a Cluster, Configure an Existing Cluster, Monitor & Assess, or
+Choose Deploy a Cluster, Configure an Existing Cluster, Monitor & Verify, or
 Run Saved Automation. **My landing page** stores a per-user browser preference;
 experienced users can select **Overview**. Specialist tools remain accessible
 under **Advanced Automation**. This navigation does not replace execution gates.
@@ -151,7 +152,10 @@ select a target automatically. Follow [the complete journey](start-here.md).
 ## Overview Dashboard
 
 The Dashboard is the operational cockpit. Admins should use it at the start of
-each maintenance window and during incident response.
+each maintenance window and during incident response. Its leading cards are
+Deploy, Configure, Recover and Monitor. Recorded attention/activity and recovery
+preparation are shown first; expand **Platform details and integrations** for the
+retained panels below. Profile counts do not imply discovery or target health.
 
 Key functions:
 
@@ -567,7 +571,13 @@ UTC trigger. Trust, IP/SAN, network and HTTP failures remain Unknown, not Matche
 Follow [live collection and diagnostics](live-pe-drift-monitoring.md) and the
 [persistent Docker trust procedure](pe-certificate-trust.md).
 
-## Validation Evidence
+## NKP Validation Evidence (Preview)
+
+Open **Advanced Automation > NKP Validation Evidence (Preview)** for specialist
+NKP and ZTF UAT evidence records and exports. Its title does not imply that an AHV
+cluster, PE/PC endpoint or recovery target has passed operational verification.
+Use Monitor & Verify, job logs and fresh target readbacks for those checks.
+The original route, saved records, both evidence sources and permissions are retained.
 
 Validation Evidence creates timestamped evidence records for UAT, change
 records, handover, and internal audit.
@@ -605,7 +615,7 @@ Feature areas:
 | Feature | Purpose | Use case |
 |---|---|---|
 | Framework status | Detect NKP framework path and readiness. | Confirm integration after install or appliance update. |
-| Safe phases | Launch allowlisted NKP phases such as validate, prepare, generate, registry, deploy, verify, kubeconfig, secrets, backup, runs, and CI. | Governed NKP preparation and validation. |
+| Safe phases (Preview) | Launch only the installed allowlisted phases. Registry and Deploy are planning output; apply, registry push, upgrade and destroy remain blocked. | Governed preparation and evidence; not an end-to-end NKP cluster deployment. |
 | Deployment Profile Builder | Build NKP deployment profiles with Prism Central, cluster, network, VLAN, DNS, NTP, and node inventory data. | Standardize management, workload, or air-gapped NKP deployment inputs. |
 | Template packs | Seed Management Cluster, Workload Cluster, or Air-Gapped / Local Registry profile drafts. | Reduce setup errors while keeping profiles editable. |
 | Example discovery | Discover installed examples from the configured NKP framework path. | Align generated YAML with the installed framework. |

@@ -60,3 +60,16 @@ a distinct local tag and must not be represented as published release bundles.
 
 Screenshot from isolated browser tests, not live infrastructure evidence. The
 running console displays its own recorded data; the pictured counts are examples.
+
+## Current screen examples
+
+Refreshed 2 November 2026 from the isolated v1.8.5-rc1 frontend; records are simulated.
+
+![Overview with deployment, configuration, recovery and monitoring](assets/guide/v1.8.5-rc1/dashboard.png)
+
+![Saved cluster profiles grouped by datacenter](assets/guide/v1.8.5-rc1/clusters.png)
+
+![Monitor & Verify with execution history rather than NKP evidence](assets/guide/v1.8.5-rc1/monitor-verify.png)
+
+[Capture provenance](assets/guide/v1.8.5-rc1/README.md) and
+[Overview 00 and the full video series](user-guide-videos.md).
