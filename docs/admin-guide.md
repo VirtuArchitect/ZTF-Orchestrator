@@ -154,7 +154,7 @@ select a target automatically. Follow [the complete journey](start-here.md).
 The Dashboard is the operational cockpit. Admins should use it at the start of
 each maintenance window and during incident response. Its leading cards are
 Deploy, Configure, Recover and Monitor. Recorded attention/activity and recovery
-preparation are shown first; expand **Platform details and integrations** for the
+preparation are shown first; expand **Platform details and advanced operational visibility** for the
 retained panels below. Profile counts do not imply discovery or target health.
 
 Key functions:

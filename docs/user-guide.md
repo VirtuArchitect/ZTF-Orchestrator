@@ -94,7 +94,7 @@ Use Dashboard as the daily operations cockpit.
 Overview leads with Deploy, Configure, Recover and Monitor, followed by recorded
 attention/activity and recovery preparation. Counts describe saved records, not
 a live discovery or independent health assessment. Open the underlying job, drift
-result or profile before acting. Expand **Platform details and integrations** for
+result or profile before acting. Expand **Platform details and advanced operational visibility** for
 the retained framework, evidence, schedule and storage panels described below.
 
 Key functions:
