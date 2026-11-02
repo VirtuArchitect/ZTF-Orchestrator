@@ -10,7 +10,18 @@ release installation remains disabled.
 
 Included changes
 ----------------
-- Refreshed 2 November documentation: 139-page manual, current screenshots and
+- Administrator-only Users > Sessions lists server-side unexpired sign-ins and
+  distinct user/session counts. Recently active means sign-in or reported trusted
+  visible console interaction within five minutes, never background polling.
+  Activity reports are throttled to 30 seconds and never extend expiry; legacy
+  activity can be Not tracked. Confirmed safe-UUID revocation is audited, including
+  self-revocation. In-flight requests may finish and durable jobs continue.
+- Session documentation/manual updates explain additive PostgreSQL metadata
+  migration preserving tokens and expiry, compatible-image rollback, and fresh generic
+  session captures. Part 11 predates the panel; videos are unchanged.
+- Foundation VM guidance now shows Implemented; the outdated controlled-UAT
+  qualifier is removed from this established deployment path.
+- Refreshed 2 November documentation: 144-page manual, current screenshots and
   a 15-part illustrated video series beginning with ZTF-Orchestrator Overview 00.
   Static demo file sizes, pipeline file selection and audit dates now use the
   expected display fields. Simulated examples remain separate from live evidence;

@@ -18,6 +18,17 @@ it does not move to another browser or appliance automatically.
 Scripts, YAML Studio and ZTF 2.x IaC remain directly accessible under
 **Advanced Automation**. Existing bookmarks and role restrictions remain in place.
 
+## Foundation VM status label
+
+Updated source guidance labels **Foundation VM** as **Implemented**, removing the
+older controlled-UAT qualifier from this established deployment method. Older
+screenshots and videos can retain that historical label. This text change does
+not change mutation flags, administrator access, exact confirmations, approvals,
+image validation or site-specific target verification. It does not promote the
+release candidate or expand vendor support.
+
+![Deployment guidance showing Foundation VM Implemented with simulated data](assets/guide/v1.8.5-rc1/deployment-guide.png)
+
 ## Deploy a cluster
 
 1. Open **Start Here → Deploy a Cluster**. Choose Foundation VM, Foundation

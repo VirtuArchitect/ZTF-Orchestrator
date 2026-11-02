@@ -10,7 +10,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Current 139-page administrator/user manual, refreshed console screenshot galleries
+- Administrator-only Users > Sessions panel for unexpired server-side sign-ins,
+  distinct user/session counts, five-minute recent activity and confirmed audited
+  UUID revocation. Trusted visible console interactions report at most once per
+  30 seconds; polling does not count and expiry is never extended. Legacy activity
+  remains Not tracked. In-flight requests may finish; durable jobs continue.
+- Session management procedure and updated operator/manual references, including
+  additive PostgreSQL metadata migration preserving existing sessions and
+  compatible-image rollback guidance. Fresh generic panel/revocation captures
+  are included; Part 11 predates
+  the panel and videos are retained unchanged.
+- Current 144-page administrator/user manual, refreshed console screenshot galleries
   and a 15-part narrated GitHub Pages guide beginning with Overview 00. Simulated
   examples and preview boundaries remain explicit; published demo identity is recorded.
 - Guided appliance ZIP updates with administrator approval, conservative disk-space
@@ -24,6 +34,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   host installation and application activation remain explicit separate steps.
 
 ### Fixed
+- Foundation VM deployment guidance uses the neutral Implemented status, reflecting
+  established production deployment use without a controlled-UAT label.
 - Static demo file metadata and audit fields match their screens, avoiding NaN file
   sizes, missing pipeline file choices and invalid audit dates. Release-document
   wording distinguishes successful production use from candidate/stable status.

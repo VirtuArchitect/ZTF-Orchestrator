@@ -2,7 +2,7 @@
 
 [Open or download the illustrated PDF guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf)
 
-The primary published guide is a searchable 139-page PDF with searchable text,
+The primary published guide is a searchable 144-page PDF with searchable text,
 a linked table of contents and the revision 3 landscape process-flow appendix.
 The [editable Word source](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
 is retained for maintenance.
@@ -13,7 +13,7 @@ Reviewed **2 November 2026** against merged application revision
 It preserves the supplied guide's original portrait pages, typography, tables,
 headers and footers. A landscape appendix adds the revision 3 process overview
 and two enlarged stage views. The body includes current Disaster Recovery and
-guided-update procedures, bootstrap/health ordering and navigation. Its 73 inline
+guided-update procedures, bootstrap/health ordering and navigation. Its 75 inline
 illustrations include refreshed current console captures from the
 [current simulated screenshot gallery](../assets/guide/v1.8.5-rc1/README.md),
 including repeated dashboard/pipeline examples. They are not live target evidence.
@@ -25,11 +25,19 @@ Docker build identity, safe PE local-user diagnostics, independent user/role
 verification, the effective appliance Compose trust configuration and update
 space planning. It retains detailed installation, workflow/script, pipeline,
 Upgrade Advisor, live drift, backup, recovery and governance instructions.
+The updated source documentation adds administrator-only session visibility,
+five-minute recent activity, 30-second interaction reporting with stale reports
+discarded after 60 seconds, confirmed UUID revocation/audit, and additive
+PostgreSQL migration/rollback guidance. These additions were reviewed against
+updated source on 2 November and are separate from the immutable earlier bundle.
+Users, Sessions, revocation and Foundation VM guidance use fresh generic simulated
+captures. Video Part 11 predates the panel and remains unchanged. Foundation VM
+is labelled Implemented; mutation and approval gates remain in place.
 No unfinished deployment-engine work is included.
 
-PDF SHA256: `c9b64818f53955d7d1a3f78ff550a3552a4157ee0362215aa0fd33762b5e6bf1`.
+PDF SHA256: `3b4a1b32e06610b2d8723124b565e84918f73bec77bdc952e246a3cf62017556`.
 
-Editable source SHA256: `d5e328a6a85740db9c0b90d6bc1c258101debe4b08ae236b2202d562de2bbc9b`.
+Editable source SHA256: `774efa3c3acbdfa297eb05160518452540038e0e1589e65c5a24ade32bda31d0`.
 
 [Revision 3 deployment process](../cluster-deployment-process.md) provides
 the full-resolution PNG, editable SVG and accessible text sequence. Its approval

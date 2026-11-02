@@ -32,4 +32,4 @@ def test_published_manual_checksums_match_current_reference():
     for suffix in ['pdf', 'docx']:
         path = folder / f'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.{suffix}'
         assert hashlib.sha256(path.read_bytes()).hexdigest() in index
-    assert '139-page' in index and '2 November 2026' in index
+    assert '144-page' in index and '2 November 2026' in index

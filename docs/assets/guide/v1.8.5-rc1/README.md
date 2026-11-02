@@ -5,12 +5,15 @@ Application version: **v1.8.5-rc1**. Source revision:
 The capture also includes this revision's demo-only file-metadata and audit-date corrections.
 Capture date: **2 November 2026**.
 
-All 46 images show the current frontend with **simulated demo data**. No live
+All 48 images show the frontend with **simulated demo data**. No live
 PE, PC, Foundation or appliance was contacted. Demo identities, inventories,
 jobs and readiness results do not establish UAT completion or target health.
 
-Demo-only fixture corrections in this revision are included in the captures.
-No backend execution behavior changes.
+Users, Sessions, revocation confirmation and deployment guidance were refreshed
+for administrator session management and the Foundation VM implementation label.
+Their per-image provenance and checksums are recorded in `capture-manifest.json`;
+other captures retain their earlier baseline. Session revocation in the demo
+changes only synthetic browser-memory records and cannot revoke a live sign-in.
 
 Viewport: 1600 x 1050; light theme; UTC; en-GB. Some form captures scroll the
 main content to expose lower inputs. The classic installer form is populated
@@ -64,6 +67,8 @@ before every capture, and fails on browser errors. It does not run deployments.
 | Schedules | [PNG](schedules.png) |
 | Scripts 2X | [PNG](scripts-2x.png) |
 | Scripts | [PNG](scripts.png) |
+| Sessions | [PNG](sessions.png) |
+| Session revocation confirmation | [PNG](session-revocation.png) |
 | Settings | [PNG](settings.png) |
 | Setup | [PNG](setup.png) |
 | Start Here | [PNG](start-here.png) |

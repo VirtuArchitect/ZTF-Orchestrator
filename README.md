@@ -43,7 +43,10 @@ Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README
 with current simulated screenshots and operational procedures for deployment,
 post-configuration, PE account verification, certificate trust and appliance
 updates. Documentation was reviewed against merged application revision
-`ea9dcf0` on 2 November 2026; historical release documents remain archived.
+`ea9dcf0` on 2 November 2026, with session management and Foundation VM
+status-label additions reviewed against updated source the same day. Those
+additions do not change the immutable earlier package; historical release
+documents remain archived.
 
 The [revision 3 cluster deployment process](docs/cluster-deployment-process.md)
 shows the ten stages from design to operational acceptance, with approval,
@@ -999,6 +1002,20 @@ Three roles are available:
 | **operator** | Execute workflows, manage config files, read executions |
 | **viewer** | Read-only — configs, executions, system check |
 
+
+Open **Administration > Users > Sessions** as an administrator to review
+server-side unexpired sign-ins, signed-in users, total sessions and recently
+active users. Recently active means sign-in or an explicit reported trusted
+interaction in a visible console tab within five minutes; background polling
+does not count. Reports are throttled to once per 30 seconds per mounted console
+activity reporter, and never extend expiry. Unexpired sessions do not prove a
+browser is open. Legacy activity can be **Not tracked**.
+
+Use **Revoke** to confirm removal of one sign-in using its safe session UUID;
+revoking **This session** signs you out. Revocation is audited. In-flight requests
+may finish and durable jobs continue. See [Session management](docs/session-management.md)
+for the procedure, API, PostgreSQL migration and rollback boundaries.
+
 ### Settings
 ZTF path, Python executable, config directory. Write access is admin-only.
 **Storage:** view active backend, database location, retention windows, and
@@ -1265,6 +1282,7 @@ ZTF-Orchestrator is developed and maintained by **ZTF-Orchestrator maintainers**
 
 | Guide | Description |
 |---|---|
+| [docs/session-management.md](docs/session-management.md) | Administrator session counts, activity, safe revocation, persistence and rollback |
 | [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
 | [docs/admin-guide.md](docs/admin-guide.md) | Administrator guide covering features, use cases, operating boundaries, governance, DR rebuild scenarios, and support procedures |
 | [docs/infrastructure-recovery.md](docs/infrastructure-recovery.md) | Infrastructure rebuild preparation, capability boundaries, and recovery acceptance gates |
