@@ -1,0 +1,21 @@
+Part 2 - Deploy a Cluster with Foundation VM
+
+Simulated console illustrations. Synthetic narration.
+
+Select the correct deployment method
+From Start Here, choose Deploy a Cluster and select Foundation V M. Use this method when you have the classic Foundation virtual machine service. Foundation Central and standalone F C A are different backends. Review supported hardware and software for your environment. The guided journey opens existing workflows; moving between guidance stages does not deploy a cluster or mark it verified.
+
+Prepare the connection and credentials
+Open Cluster Create for Foundation V M. Enter the actual Foundation endpoint and service port, not a Prism address or browser page path. Select the required credential references. Confirm that the appliance can reach Foundation and the provisioning networks. Keep secrets in the credential store. Import a reviewed saved configuration when one exists, then inspect its targets rather than assuming the filename is correct.
+
+Select the approved installation images
+Stage the approved A H V and A O S installation files on Foundation, then refresh image inventory in the workflow. Choose the exact available filenames and supply the A H V I S O checksum expected by Foundation. An image mounted somewhere else is not necessarily available to its installer. Review upload gates and capacity before staging. Resolve inventory or checksum errors before imaging.
+
+Review every physical node
+Review each node serial, block identity and position, host name, host address, controller address and management address. Select the appropriate node role and supported controller memory. Check per-node management credential references, subnet masks, gateways and V LAN settings. Re-foundation can overwrite existing installations. A valid form or selected hardware platform does not itself establish vendor compatibility or permission to erase a node.
+
+Validate and approve the exact configuration
+Save the configuration and run Dry Run. Review the native schema checks, selected images, connectivity and credential findings that the workflow provides. Fix every blocker. Review the generated target list and obtain approval for the exact configuration where policy requires it. Enter the required deployment confirmation deliberately. Saving, importing and approving are separate from actually selecting Run Workflow.
+
+Monitor and accept the real result
+Submit once, then follow the linked job and Foundation session. Read phase and node progress, logs and actual target state. A missing response or interrupted browser is not a reason to submit imaging again. After Foundation finishes, confirm cluster identity and membership. Continue to reviewed post-configuration. When initial access needs a password and EULA bootstrap, use the supported bootstrap sequence before the required health verification.

@@ -1,0 +1,147 @@
+1
+00:00:00,088 --> 00:00:03,288
+Expand Advanced Automation and open Workflows.
+
+2
+00:00:03,675 --> 00:00:06,975
+Read the description and select the service actually available.
+
+3
+00:00:07,388 --> 00:00:12,500
+Integrated Foundation Central, standalone F C A and classic Foundation
+
+4
+00:00:12,512 --> 00:00:14,625
+V M use different contracts.
+
+5
+00:00:15,025 --> 00:00:19,825
+Import or complete the matching form and review its generated configuration.
+
+6
+00:00:20,212 --> 00:00:24,162
+Do not assume that a similarly named action has the same credentials
+
+7
+00:00:24,288 --> 00:00:25,725
+or execution semantics.
+
+8
+00:00:26,892 --> 00:00:29,867
+Open Scripts for a specific allowlisted action.
+
+9
+00:00:30,267 --> 00:00:34,554
+Use its parameter wizard and installed schema, then review the generated
+
+10
+00:00:34,567 --> 00:00:35,067
+input.
+
+11
+00:00:35,467 --> 00:00:38,917
+A script sequence and a workflow are different launch modes.
+
+12
+00:00:39,329 --> 00:00:42,654
+Supply the required configuration file in either case.
+
+13
+00:00:43,042 --> 00:00:48,029
+Confirm any sensitive operation deliberately and inspect its verification
+
+14
+00:00:48,042 --> 00:00:51,867
+result rather than relying only on the subprocess return code.
+
+15
+00:00:53,096 --> 00:00:56,758
+For local P E users choose Create Local Users for P E.
+
+16
+00:00:57,158 --> 00:01:01,033
+Each requested username needs its own matching credential reference.
+
+17
+00:01:01,446 --> 00:01:05,558
+Select the intended role set explicitly and respect the installed
+
+18
+00:01:05,571 --> 00:01:06,108
+schema.
+
+19
+00:01:06,508 --> 00:01:08,296
+Run Dry Run before submission.
+
+20
+00:01:08,696 --> 00:01:12,708
+After creation, independently confirm that each account is enabled
+
+21
+00:01:13,021 --> 00:01:16,358
+and has both Cluster Admin and User Admin when those are the
+
+22
+00:01:16,358 --> 00:01:17,296
+approved roles.
+
+23
+00:01:18,462 --> 00:01:23,175
+Inspect the stage and safe category when local user creation fails.
+
+24
+00:01:23,588 --> 00:01:28,600
+Credential resolution, certificate trust, identity mismatch, network
+
+25
+00:01:28,612 --> 00:01:33,388
+access, creation, role assignment and verification are separate failure
+
+26
+00:01:33,388 --> 00:01:33,912
+points.
+
+27
+00:01:34,325 --> 00:01:37,525
+Check whether any accounts or roles were already created.
+
+28
+00:01:37,925 --> 00:01:42,538
+Correct the actual cause and rerun only through the supported process.
+
+29
+00:01:42,938 --> 00:01:47,175
+Do not paste passwords or raw authentication headers into a support
+
+30
+00:01:47,175 --> 00:01:47,762
+request.
+
+31
+00:01:48,975 --> 00:01:52,700
+The C V M and Dell i D R A C rotation
+
+32
+00:01:52,712 --> 00:01:56,350
+workflow has a separate support boundary and exact confirmations.
+
+33
+00:01:56,750 --> 00:02:01,450
+Verify each C V M host-key fingerprint independently, establish the
+
+34
+00:02:01,450 --> 00:02:04,962
+required access and keep an out-of-band recovery path.
+
+35
+00:02:05,362 --> 00:02:11,100
+Review any manual follow-up, including host I P M I credential synchronization.
+
+36
+00:02:11,475 --> 00:02:15,625
+A dry run or approval does not prove that live rotation is
+
+37
+00:02:15,625 --> 00:02:17,800
+validated for your firmware and release.

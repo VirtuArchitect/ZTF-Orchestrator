@@ -1,0 +1,6 @@
+00:00:00 Prepare one configuration sequence per cluster
+00:00:27 Handle the administrator password transition
+00:00:56 Apply the core cluster settings
+00:01:23 Configure networks, storage and optional controls
+00:01:54 Create and review the pipeline
+00:02:23 Verify the completed cluster configuration

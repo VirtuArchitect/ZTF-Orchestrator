@@ -1,0 +1,21 @@
+Part 0 - ZTF-Orchestrator Overview
+
+Simulated console illustrations. Synthetic narration.
+
+What ZTF-Orchestrator is
+Z T F Orchestrator is a web based operations console for planning, executing and tracking Nutanix infrastructure automation. It brings saved configuration files, secure credential references, workflows, scripts and sequential pipelines into one operator interface. Its core use is deploying A H V H C I clusters, applying their post deployment configuration, and preparing repeatable infrastructure rebuilds. It helps turn a reviewed design into a traceable sequence of actions.
+
+How the components work together
+The console is the operator entry point. A saved Y A M L file describes the intended targets and settings. Credential references identify separately stored secrets. A workflow or script selects the action to perform, and the installed execution runtime carries it out against the relevant service. The Z T F one point X runtime supports the established ZeroTouch Framework paths. The Foundation V M workflow uses its dedicated integration to submit and monitor Foundation imaging requests. The appliance runs the application and stores operational records.
+
+From physical nodes to a configured cluster
+For a new cluster, an operator selects the correct Foundation service, installation images, physical nodes and network settings. Orchestrator validates the available inputs, applies the required approval controls and submits the reviewed request. Foundation performs node imaging and cluster creation. After deployment, post configuration can apply supported password, EULA, Pulse, D N S, N T P, networking and storage settings. A pipeline pairs each action with a saved file and executes the steps in order. A failed step stops the remaining sequence.
+
+Preparing infrastructure recovery
+Disaster Recovery groups saved cluster recovery profiles by datacenter. Each profile can link the Foundation V M configuration and the post deployment pipeline needed to reconstruct that cluster. Reviewed snapshots, destructive approvals, job tracking, bootstrap configuration and health verification structure the recovery process. Re-foundation can erase existing node installations. This feature prepares the infrastructure onto which you recover. Restoring virtual machines, application data and business services remains with your backup platform and recovery procedures.
+
+Monitoring and governing operations
+After deployment, live Prism Element drift checks can compare fresh D N S, N T P and Pulse settings with the saved desired configuration. Upgrade Advisor collects inventory and records readiness assessments; it does not install upgrades. Jobs, logs, approvals, schedules and audit records help operators follow what happened and what still needs attention. Successful execution is one piece of evidence. Confirm the actual settings and cluster health before accepting the result. Collection errors remain unknown rather than being presented as a healthy match.
+
+Scope, maturity and where to start
+The established deployment and post configuration paths have been used for production cluster delivery. That experience does not make every integration equally mature or replace vendor support and compatibility checks. N K P and Z T F two point X features are explicitly labelled previews and have narrower execution boundaries. Begin at Start Here, choose deploy, configure, monitor or saved automation, and follow the relevant guide in this series. These videos use simulated console examples and synthetic narration. They demonstrate the interface without executing changes on live infrastructure.

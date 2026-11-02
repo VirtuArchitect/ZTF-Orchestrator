@@ -1,0 +1,191 @@
+1
+00:00:00,100 --> 00:00:04,612
+Begin with the actual P E endpoint and a credential reference authorized
+
+2
+00:00:04,612 --> 00:00:05,875
+for the necessary reads.
+
+3
+00:00:06,288 --> 00:00:08,812
+Add P C context when the assessment needs it.
+
+4
+00:00:09,225 --> 00:00:13,375
+Establish persistent certificate trust in the appliance and preserve
+
+5
+00:00:13,375 --> 00:00:15,912
+the trust mount across container replacement.
+
+6
+00:00:16,288 --> 00:00:20,812
+Verify that the certificate matches the endpoint name or address.
+
+7
+00:00:21,225 --> 00:00:25,175
+Testing from your workstation alone does not prove connectivity from
+
+8
+00:00:25,175 --> 00:00:25,938
+the Orchestrator.
+
+9
+00:00:27,142 --> 00:00:30,592
+Open Upgrade Advisor and collect fresh inventory from the reviewed
+
+10
+00:00:30,592 --> 00:00:31,267
+connections.
+
+11
+00:00:31,667 --> 00:00:35,542
+Inspect discovered versions and fields that remain unknown.
+
+12
+00:00:35,892 --> 00:00:40,742
+Enter the intended target versions and supporting evidence, then run
+
+13
+00:00:40,817 --> 00:00:41,617
+the assessment.
+
+14
+00:00:41,992 --> 00:00:46,429
+Review blockers, warnings, unknowns and readiness actions.
+
+15
+00:00:46,842 --> 00:00:49,892
+Save an immutable assessment snapshot for the change record.
+
+16
+00:00:50,292 --> 00:00:55,054
+This read-only advisor does not run an upgrade or replace vendor compatibility
+
+17
+00:00:55,254 --> 00:00:56,479
+and lifecycle checks.
+
+18
+00:00:57,683 --> 00:01:01,758
+Save a desired configuration for D N S, N T P and
+
+19
+00:01:01,758 --> 00:01:04,683
+Pulse with the correct cluster and credential reference.
+
+20
+00:01:05,071 --> 00:01:09,021
+In Drift Detection select that file and Live Prism Element as the
+
+21
+00:01:09,021 --> 00:01:11,333
+source, then run a manual check.
+
+22
+00:01:11,733 --> 00:01:15,308
+Every live scheduled run collects fresh settings.
+
+23
+00:01:15,721 --> 00:01:18,296
+Stored-snapshot comparisons are a separate mode.
+
+24
+00:01:18,696 --> 00:01:22,446
+An unknown collection result must not be counted as a healthy match.
+
+25
+00:01:23,642 --> 00:01:28,292
+Add or edit the Automation entry, choose the correct file, source
+
+26
+00:01:28,304 --> 00:01:32,129
+and baseline, and review the five-field U T C cron expression.
+
+27
+00:01:32,529 --> 00:01:35,467
+Save it enabled only after the manual check works.
+
+28
+00:01:35,879 --> 00:01:39,517
+Inspect the next actual scheduled result and its timestamp.
+
+29
+00:01:39,917 --> 00:01:41,517
+Pause schedules for maintenance.
+
+30
+00:01:41,904 --> 00:01:46,004
+Editing or enabling an entry is not proof that a scheduled read
+
+31
+00:01:46,017 --> 00:01:47,529
+has completed successfully.
+
+32
+00:01:48,712 --> 00:01:52,700
+A certificate trust failure requires the approved issuing chain or
+
+33
+00:01:52,712 --> 00:01:54,350
+appropriate trust configuration.
+
+34
+00:01:54,738 --> 00:01:59,438
+An I P or subject-alternative-name mismatch requires a matching endpoint
+
+35
+00:01:59,512 --> 00:02:00,212
+or certificate.
+
+36
+00:02:00,600 --> 00:02:05,938
+A network failure requires routing, firewall, name-resolution or target-service
+
+37
+00:02:05,938 --> 00:02:07,512
+investigation from the appliance.
+
+38
+00:02:07,912 --> 00:02:11,825
+These failures remain unknown, not drifted or matched.
+
+39
+00:02:12,225 --> 00:02:16,450
+Do not disable verification or change the desired baseline just to
+
+40
+00:02:16,450 --> 00:02:17,700
+obtain a green result.
+
+41
+00:02:18,892 --> 00:02:24,067
+Monitor and Verify links to Drift Detection, inventory and upgrade
+
+42
+00:02:24,079 --> 00:02:26,792
+readiness, and Execution History and Logs.
+
+43
+00:02:27,192 --> 00:02:31,779
+Correlate a job with the configuration, actual target reads and change
+
+44
+00:02:31,792 --> 00:02:32,192
+record.
+
+45
+00:02:32,592 --> 00:02:37,217
+N K P Validation Evidence remains under Advanced Automation with a
+
+46
+00:02:37,217 --> 00:02:39,942
+Preview badge and its retained evidence sources.
+
+47
+00:02:40,342 --> 00:02:44,479
+A specialist evidence pack or successful process is not an independent
+
+48
+00:02:44,479 --> 00:02:48,517
+declaration that an A H V cluster is ready for workloads.

@@ -1,0 +1,143 @@
+1
+00:00:00,100 --> 00:00:03,650
+Open Optional Integrations, N K P Framework.
+
+2
+00:00:04,062 --> 00:00:08,025
+This is a preview workspace for the configured N K P ZeroTouch
+
+3
+00:00:08,038 --> 00:00:12,612
+framework, profiles, binaries, schema and guarded phases.
+
+4
+00:00:13,012 --> 00:00:17,375
+A ready profile or generated document is not a completed Kubernetes
+
+5
+00:00:17,388 --> 00:00:17,988
+deployment.
+
+6
+00:00:18,375 --> 00:00:23,375
+Review the exact installed integration, available commands and environment
+
+7
+00:00:23,375 --> 00:00:26,100
+requirements before planning any target mutation.
+
+8
+00:00:27,242 --> 00:00:31,217
+Use the profile and schema views to prepare the intended management
+
+9
+00:00:31,329 --> 00:00:32,842
+or workload-cluster inputs.
+
+10
+00:00:33,229 --> 00:00:37,929
+Review networking, registry, binaries and the selected framework revision.
+
+11
+00:00:38,342 --> 00:00:41,617
+Keep saved profiles and credential references protected.
+
+12
+00:00:42,017 --> 00:00:46,192
+A template is an operational starter, not a guarantee that its generated
+
+13
+00:00:46,192 --> 00:00:49,729
+values satisfy every environment or current provider schema.
+
+14
+00:00:50,129 --> 00:00:53,904
+Resolve unknown or blocked findings before proceeding.
+
+15
+00:00:55,062 --> 00:00:59,050
+Review the N K P readiness view and the binary or bundle
+
+16
+00:00:59,050 --> 00:01:01,538
+inventory required by the chosen path.
+
+17
+00:01:01,962 --> 00:01:07,138
+For an isolated site, verify actual artifacts, registry access and
+
+18
+00:01:07,138 --> 00:01:08,312
+network dependencies.
+
+19
+00:01:08,700 --> 00:01:12,012
+A checklist score can record preparation and evidence;
+
+20
+00:01:12,412 --> 00:01:14,788
+it does not prove Kubernetes workloads are running.
+
+21
+00:01:15,188 --> 00:01:19,488
+Confirm the real command versions and target-side results separately.
+
+22
+00:01:20,671 --> 00:01:25,383
+Inspect the available phase, command preview and approval policy before
+
+23
+00:01:25,396 --> 00:01:25,908
+submission.
+
+24
+00:01:26,321 --> 00:01:31,433
+Schema, validation, parsing, generation, registry or plan-related
+
+25
+00:01:31,446 --> 00:01:32,971
+actions have different scopes.
+
+26
+00:01:33,358 --> 00:01:37,183
+A phase name alone does not establish that a full provisioning lifecycle
+
+27
+00:01:37,521 --> 00:01:39,271
+is implemented and verified.
+
+28
+00:01:39,708 --> 00:01:43,071
+Follow the returned blockers and supported installed behavior.
+
+29
+00:01:43,483 --> 00:01:47,246
+Do not turn off safeguards to make an unavailable phase execute.
+
+30
+00:01:48,471 --> 00:01:52,996
+Find N K P Validation Evidence under Advanced Automation with its
+
+31
+00:01:53,008 --> 00:01:53,896
+Preview badge.
+
+32
+00:01:54,296 --> 00:01:59,071
+Select the correct evidence source and profile, including the retained
+
+33
+00:01:59,196 --> 00:02:02,846
+Z T F U A T packs where appropriate.
+
+34
+00:02:03,233 --> 00:02:08,033
+Record the actual scope, review findings and export a sanitized pack.
+
+35
+00:02:08,446 --> 00:02:13,258
+This workspace is not a general A H V cluster-health monitor and
+
+36
+00:02:13,683 --> 00:02:16,458
+does not replace independent operational acceptance.

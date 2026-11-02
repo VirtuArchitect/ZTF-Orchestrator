@@ -1,0 +1,18 @@
+Part 8 - Workflows Scripts and Local PE Administrators
+
+Simulated console illustrations. Synthetic narration.
+
+Choose a workflow for the required backend
+Expand Advanced Automation and open Workflows. Read the description and select the service actually available. Integrated Foundation Central, standalone F C A and classic Foundation V M use different contracts. Import or complete the matching form and review its generated configuration. Do not assume that a similarly named action has the same credentials or execution semantics.
+
+Use scripts for focused actions
+Open Scripts for a specific allowlisted action. Use its parameter wizard and installed schema, then review the generated input. A script sequence and a workflow are different launch modes. Supply the required configuration file in either case. Confirm any sensitive operation deliberately and inspect its verification result rather than relying only on the subprocess return code.
+
+Create named local PE administrators
+For local P E users choose Create Local Users for P E. Each requested username needs its own matching credential reference. Select the intended role set explicitly and respect the installed schema. Run Dry Run before submission. After creation, independently confirm that each account is enabled and has both Cluster Admin and User Admin when those are the approved roles.
+
+Read a stage-specific failure
+Inspect the stage and safe category when local user creation fails. Credential resolution, certificate trust, identity mismatch, network access, creation, role assignment and verification are separate failure points. Check whether any accounts or roles were already created. Correct the actual cause and rerun only through the supported process. Do not paste passwords or raw authentication headers into a support request.
+
+Treat credential rotation as a sensitive operation
+The C V M and Dell i D R A C rotation workflow has a separate support boundary and exact confirmations. Verify each C V M host-key fingerprint independently, establish the required access and keep an out-of-band recovery path. Review any manual follow-up, including host I P M I credential synchronization. A dry run or approval does not prove that live rotation is validated for your firmware and release.

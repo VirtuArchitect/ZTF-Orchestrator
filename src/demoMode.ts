@@ -2,7 +2,8 @@ import { useStore } from './store'
 import { APP_VERSION } from './version'
 
 const DEMO_TOKEN = 'ztf-orchestrator-demo-token'
-const now = new Date('2026-08-13T09:30:00Z')
+// Fixed documentation dataset date, not the time of a real infrastructure read.
+const now = new Date('2026-11-02T09:30:00Z')
 
 export function isDemoMode() {
   return import.meta.env.VITE_ZTF_DEMO === 'true'
@@ -555,11 +556,13 @@ async function demoResponse(request: Request) {
   }
   if (path.includes('/run-now')) return okAction('Schedule run simulated.')
   if (path.startsWith('/api/schedules/')) return okAction('Schedule update simulated.')
-  if (path === '/api/configs') return json(Object.keys(configs))
+  if (path === '/api/configs') return json(Object.entries(configs).map(([name, content]) => ({
+    name, size: new TextEncoder().encode(content).length, modified: iso(90),
+  })))
   if (path.startsWith('/api/configs/')) {
     const parts = path.split('/')
     const name = decodeURIComponent(parts[3] || '')
-    if (path.endsWith('/backups')) return json([{ version: 'demo-1', timestamp: iso(120), size: configs[name]?.length || 0 }])
+    if (path.endsWith('/backups')) return json([{ version: 1, modified: new Date(iso(120)).getTime() / 1000, size: new TextEncoder().encode(configs[name] || '').length }])
     if (path.includes('/restore/')) return okAction('Config restore simulated.')
     if (method === 'DELETE') return okAction('Config delete simulated.')
     if (method === 'PUT' || method === 'POST') return okAction('Config save simulated.', { name })
@@ -681,13 +684,13 @@ async function demoResponse(request: Request) {
     })
   }
   if (path.startsWith('/api/recovery/')) return json({ error: 'Recovery detail, changes and execution require a connected authorised backend. Demo records are illustrative only.' }, { status: 403 })
-  if (path === '/api/pipelines') return json([{ id: 'demo-pipeline-001', name: 'Deploy and validate PC', steps: [{ workflow: 'deploy-pc', configFile: 'pc-deploy-demo.yml' }], createdAt: iso(800), updatedAt: iso(90) }])
+  if (path === '/api/pipelines') return json([{ id: 'demo-pipeline-001', name: 'Post-deployment baseline (simulated)', steps: [{ workflow: 'config-cluster', configFile: 'cluster-baseline-demo.yml' }], createdAt: iso(800), updatedAt: iso(90) }])
   if (path.startsWith('/api/pipelines/')) return okAction('Pipeline action simulated.')
   if (path === '/api/parallel-runs') return json([])
   if (path.startsWith('/api/parallel-runs')) return okAction('Parallel run action simulated.')
   if (path === '/api/users') return json([{ username: 'demo-admin', role: 'admin' }, { username: 'demo-operator', role: 'operator' }, { username: 'demo-viewer', role: 'viewer' }])
   if (path.startsWith('/api/users/')) return okAction('User action simulated.')
-  if (path === '/api/audit-log') return json([{ id: 'demo-audit-001', actor: 'demo-admin', action: 'demo.started', resource: 'github-pages', timestamp: iso(5), details: { mode: 'simulated' } }])
+  if (path === '/api/audit-log') return json([{ ts: iso(5), level: 'INFO', msg: 'demo_started', event: 'demo', user: 'demo-admin', action: 'demo.started', details: { mode: 'simulated' } }])
   if (path === '/api/native-foundation/phases') return json({
     workflow: 'native-foundation-deploy',
     contractVersion: 'native-foundation-adapter-contract/v1.8.4-readonly',

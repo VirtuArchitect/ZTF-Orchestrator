@@ -5,8 +5,10 @@ Use that address for future public references; it is separate from the demo UI.
 
 ## Current Candidate
 
-**v1.8.5-rc1** is the current controlled-UAT release candidate, not a stable
-or production-certified release.
+**v1.8.5-rc1** is the current prerelease. Established deployment and pipeline
+post-configuration paths have been used successfully for production clusters.
+That experience does not promote this candidate to Latest stable or certify every
+integration. Environment-specific verification and release gates still apply.
 
 - [Published prerelease and offline update ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1)
 - [Release notes](../../release-notes-v1.8.5-rc1.txt)

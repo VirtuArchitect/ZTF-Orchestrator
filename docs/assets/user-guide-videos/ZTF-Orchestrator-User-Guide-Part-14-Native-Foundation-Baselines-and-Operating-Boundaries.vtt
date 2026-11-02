@@ -1,0 +1,115 @@
+WEBVTT
+
+00:00:00.088 --> 00:00:03.762
+Native Foundation is a separate planning and controlled-adapter lane.
+
+00:00:04.175 --> 00:00:08.362
+Do not confuse it with the classic Foundation V M deployment workflow
+
+00:00:08.775 --> 00:00:10.412
+used elsewhere in this series.
+
+00:00:10.800 --> 00:00:15.475
+Inspect its returned read-only state, adapter readiness and blockers.
+
+00:00:15.862 --> 00:00:20.425
+A long list of successful review artifacts does not mean that physical
+
+00:00:20.475 --> 00:00:23.075
+imaging or cluster formation has taken place.
+
+00:00:24.267 --> 00:00:28.779
+A hardware probe can test selected connectivity and authentication
+
+00:00:28.779 --> 00:00:29.454
+conditions.
+
+00:00:29.854 --> 00:00:31.842
+Read each result and its scope.
+
+00:00:32.242 --> 00:00:35.804
+A passed count can represent checks rather than the number of configured
+
+00:00:35.804 --> 00:00:36.367
+nodes.
+
+00:00:36.742 --> 00:00:41.642
+Review manifests, provider operations, missing evidence and enabled
+
+00:00:41.729 --> 00:00:43.454
+execution flags separately.
+
+00:00:43.867 --> 00:00:48.492
+Evidence records, reservation plans and authorization reviews do not
+
+00:00:48.492 --> 00:00:51.817
+themselves prove that a deployment was admitted or executed.
+
+00:00:53.017 --> 00:00:57.079
+The post-foundation baseline workflows classify controls as apply,
+
+00:00:57.542 --> 00:00:59.667
+evidence, manual or blocked.
+
+00:01:00.067 --> 00:01:02.567
+Only verified apply mappings execute.
+
+00:01:02.942 --> 00:01:05.917
+Evidence-only records capture observations.
+
+00:01:06.317 --> 00:01:10.804
+Manual controls still require a supported target procedure and retained
+
+00:01:10.804 --> 00:01:11.292
+proof.
+
+00:01:11.704 --> 00:01:14.029
+Blocked controls need their gate resolved.
+
+00:01:14.429 --> 00:01:19.117
+A successful overall job does not mean that every requested security,
+
+00:01:19.504 --> 00:01:22.917
+monitoring, network or certificate setting was changed.
+
+00:01:24.125 --> 00:01:28.088
+For hardware out-of-band access, controller credentials and certificates,
+
+00:01:28.288 --> 00:01:31.762
+confirm the supported platform procedure and your recovery path.
+
+00:01:32.150 --> 00:01:35.975
+Inspect any manual follow-up rather than treating an acknowledgement
+
+00:01:36.175 --> 00:01:36.988
+as completion.
+
+00:01:37.388 --> 00:01:40.875
+Review independent target evidence for the controls that matter.
+
+00:01:41.288 --> 00:01:43.712
+Reconcile partial changes before retry.
+
+00:01:44.112 --> 00:01:48.050
+Keep both the configuration intent and the actual verified result
+
+00:01:48.062 --> 00:01:48.938
+with the change record.
+
+00:01:50.142 --> 00:01:54.792
+Before enabling a specialist integration, verify its exact supported
+
+00:01:54.792 --> 00:01:58.979
+scope, keep approvals and preserve the original recovery path.
+
+00:01:59.392 --> 00:02:03.817
+Use the established Foundation V M and post-configuration workflows
+
+00:02:03.892 --> 00:02:05.392
+for the core cluster tasks.
+
+00:02:05.804 --> 00:02:08.742
+Check actual target state before accepting a change.
+
+00:02:09.142 --> 00:02:11.967
+Open Overview when you are ready to choose your next task.

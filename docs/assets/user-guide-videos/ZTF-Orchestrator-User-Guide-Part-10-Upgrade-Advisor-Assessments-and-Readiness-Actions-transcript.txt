@@ -1,0 +1,18 @@
+Part 10 - Upgrade Advisor Assessments and Readiness Actions
+
+Simulated console illustrations. Synthetic narration.
+
+Choose the assessment scope
+Use Upgrade Advisor to decide which evidence is still needed before an upgrade. Enter the cluster context and reviewed P E and optional P C connections. Establish verified certificate trust first. The advisor can collect bounded inventory and evaluate inputs, but it does not execute an upgrade or automatically certify a supported upgrade path.
+
+Inspect what inventory actually discovered
+Collect fresh inventory and inspect the timestamp, returned fields and collection errors. P E cluster and host reads can supply A O S and homogeneous A H V versions. P C product-header detection is limited context, not an authenticated permission test. Other components can remain manual or unknown. Do not replace missing values with guessed versions.
+
+Supply target versions and supporting evidence
+Enter the intended target versions and environment signals. Review release notes, compatibility, lifecycle prechecks and any dark-site bundle requirements using the actual vendor material. Mark evidence complete only when it was reviewed. Curated rule packs contribute explicit guardrails and sources. They are not an automatic scrape of every support article or private defect record.
+
+Read findings and readiness actions
+Run the assessment and review each blocker, warning, review item and unknown. Read the guidance, source and missing evidence rather than looking only at an overall score. Assign the necessary follow-up and collect its real evidence. A clear result remains limited to the reviewed inputs and rules; it does not replace actual lifecycle checks or authorize change execution.
+
+Save an immutable assessment snapshot
+Save the reviewed assessment with its owner and context, then export the evidence bundle if required. The snapshot preserves the assessed inputs and findings. Collecting newer inventory later does not rewrite that saved assessment. Compare a new snapshot when conditions change and retain the relevant version with the change record and final vendor precheck results.

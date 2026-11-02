@@ -1,0 +1,21 @@
+Part 1 - Dashboard Overview
+
+Simulated console illustrations. Synthetic narration.
+
+Choose your starting point
+If you want to deploy a cluster, start with Deploy a Cluster. You do not need to search through script names. Start Here offers four choices: deploy, configure an existing cluster, monitor and verify, or run saved automation. This series follows the current console with simulated examples. It does not execute changes against a real environment.
+
+Read the operations dashboard
+Open Overview for the daily operations view. Its four main cards take you to deployment, configuration, infrastructure recovery, and monitoring. These are navigation links, not execution buttons. The summary below shows recorded cluster profiles, datacenters, running jobs and approvals. A profile count comes from saved recovery records. It is not an automatic discovery of every cluster.
+
+Investigate what needs attention
+Read Needs attention before starting new work. A drift result, profile review warning, pending approval or failed job should take you to its detailed record. Check the target, timestamp and latest result there. A job marked succeeded means the execution completed. It does not mean that cluster health, requested settings or recovery readiness have been independently verified.
+
+Find saved cluster profiles
+Open Clusters to find saved recovery profiles. Filter by datacenter or cluster name, then open the matching profile. Check its captured baseline and review status before preparing recovery. Other cluster configuration files remain in Config Files. An empty profile list does not mean there are no physical clusters, and a listed profile does not prove its target is reachable.
+
+Find the specialist tools
+The streamlined sidebar keeps ordinary tasks visible. Expand Advanced Automation for workflows, scripts, configuration files, schedules and execution history. Optional Integrations contains the preview integration paths. Administration contains setup, credentials, appliance operations and settings. N K P Validation Evidence carries a Preview badge and retains its specialist sources. Use execution history and target readbacks for ordinary cluster verification.
+
+Start safely and follow the evidence
+For a normal task, choose the correct workflow, review the saved configuration, run the available dry run, obtain any required approval, and submit once. Follow its record in Jobs and Queue. Investigate failures before retrying. You can retain Start Here or Overview as your browser landing preference. Part two follows cluster deployment through the Foundation V M workflow.

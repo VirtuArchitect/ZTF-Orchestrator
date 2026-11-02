@@ -10,6 +10,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Current 139-page administrator/user manual, refreshed console screenshot galleries
+  and a 15-part narrated GitHub Pages guide beginning with Overview 00. Simulated
+  examples and preview boundaries remain explicit; published demo identity is recorded.
 - Guided appliance ZIP updates with administrator approval, conservative disk-space
   readiness, reviewed cache/backup cleanup and restart-independent progress reports.
   An optional root-installed host service executes fixed operations without giving
@@ -21,6 +24,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   host installation and application activation remain explicit separate steps.
 
 ### Fixed
+- Static demo file metadata and audit fields match their screens, avoiding NaN file
+  sizes, missing pipeline file choices and invalid audit dates. Release-document
+  wording distinguishes successful production use from candidate/stable status.
 - Clarify Monitor & Verify navigation: use execution history/logs for cluster
   journeys and label NKP Validation Evidence as Preview under Advanced Automation.
   Preserve existing evidence URLs, records, both export sources and permissions.

@@ -37,6 +37,18 @@ jobs:
       - name: Add SPA fallback
         run: cp dist-demo/index.html dist-demo/404.html
 
+      - name: Add illustrated user-guide videos
+        run: |
+          mkdir -p dist-demo/tutorials/media
+          cp docs/assets/user-guide-videos/* dist-demo/tutorials/media/
+          (cd dist-demo/tutorials/media && sha256sum -c SHA256SUMS)
+
+      - name: Record published source identity
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          node -e 'const fs = require("fs"); const version = require("./package.json").version; fs.writeFileSync("dist-demo/demo-build.json", JSON.stringify({version, sourceRevision: process.env.SOURCE_SHA, simulated: true}) + "\n")'
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:

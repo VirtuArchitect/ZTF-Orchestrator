@@ -1,0 +1,18 @@
+Part 13 - ZTF Two Point X IaC Preview
+
+Simulated console illustrations. Synthetic narration.
+
+Use the separate preview runtime
+The two point x integration is a separate desired-state plan and apply model. Configure its own checkout path, executable and reference. Keep Workflows and Scripts one point x on their compatible legacy runtime. Runtime recognition only identifies a layout. It does not prove that a target provider, resource schema or mutation is supported for your environment.
+
+Generate intent from preview workflows
+Open Workflows two point x under Optional Integrations and select the intended starter. Review the input document, editable global configuration and unique state filename. Match the installed resource schema and target scope. A template selection is not approval. Keep state and reviewed inputs associated so later guarded actions cannot silently target a different plan or environment.
+
+Understand converted script actions
+Scripts two point x contains converted intent starters. They do not execute as the legacy main script command. Generate the input and review the corresponding plan in the separate runtime. P E-only, controller, Foundation and other unmapped legacy actions remain in Scripts one point x. Do not infer feature parity from similar names across both catalogues.
+
+Review the governed plan result
+Submit the plan through the preview workspace and inspect its durable job and retained evidence. Confirm the target, resource changes, state and supported provider behavior. Resolve schema errors and unknowns before considering apply. A successful plan does not itself perform or authorize the target change. Preserve the exact source and input used to produce it.
+
+Keep apply and destroy separately governed
+Apply and destroy remain distinct approval-bound actions where the guarded lane is enabled. Review the exact request and use an authorized environment with a recovery path. Do not bypass approval or use legacy launchers as a workaround. Independently read back the target result. Preview status and passing software tests do not establish vendor support or compatibility for every resource.

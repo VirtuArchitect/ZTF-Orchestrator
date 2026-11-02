@@ -28,7 +28,7 @@ under Appliance Ops → Updates: upload a ZIP, check space, review cleanup, appr
 the version, install and verify. A one-time host-service installation is required;
 the application does not receive Docker access. The existing CLI procedure remains.
 
-For infrastructure rebuild preparation, open **Recovery → Disaster Recovery**
+For infrastructure rebuild preparation, open **Operations → Disaster Recovery**
 to group cluster baselines and post-configuration pipelines by datacenter.
 See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
 Use the [illustrated datacenter and recovery profile setup guide](docs/disaster-recovery-setup.md)
@@ -43,7 +43,7 @@ Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README
 with current simulated screenshots and operational procedures for deployment,
 post-configuration, PE account verification, certificate trust and appliance
 updates. Documentation was reviewed against merged application revision
-`4a01072` on 27 October 2026; historical release documents remain archived.
+`ea9dcf0` on 2 November 2026; historical release documents remain archived.
 
 The [revision 3 cluster deployment process](docs/cluster-deployment-process.md)
 shows the ten stages from design to operational acceptance, with approval,
@@ -89,7 +89,9 @@ TLS verification remains mandatory. See [connection diagnostics](docs/live-pe-dr
 
 ![ZTF-Orchestrator v1.8.5-rc1 dashboard, simulated demo data](docs/assets/readme/v1.8.5-rc1/dashboard.png)
 
-Current screenshots show the v1.8.5-rc1 frontend with simulated demo data, not
+**New to ZTF-Orchestrator?** Watch [00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/) and the complete 15-part user-guide series. The narrated videos cover deployment, post-configuration, Disaster Recovery, monitoring, updates and specialist/preview features. All console examples are simulated; preview features retain their stated boundaries. See the [video guide and transcripts](docs/user-guide-videos.md).
+
+Current screenshots, refreshed on 2 November 2026, show the v1.8.5-rc1 frontend with simulated demo data, not
 live infrastructure or proof of completed UAT. [Screenshot provenance](docs/assets/readme/v1.8.5-rc1/README.md).
 
 <p>
@@ -104,7 +106,7 @@ live infrastructure or proof of completed UAT. [Screenshot provenance](docs/asse
 
 [![v1.8.5-rc1 simulated controlled-UAT candidate demo, 90 seconds](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural-poster.jpg)](https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough)
 
-**Simulated controlled-UAT candidate demo:** this narrated v1.8.5-rc1 screen tour
+**Earlier candidate walkthrough (historical navigation):** this narrated v1.8.5-rc1 screen tour
 uses simulated data, with normal-rate neural narration and English captions.
 It does not connect to or operate live infrastructure and is not proof of
 completed UAT or production readiness. **v1.8.4 remains the latest stable release.**
@@ -193,7 +195,7 @@ recovery authorization. Supported imaging, cluster creation, configuration,
 and validation paths provide building blocks for an infrastructure rebuild;
 backup and application teams retain ownership of workload restoration.
 
-The **Recovery → Disaster Recovery** section now provides datacenters, versioned
+The **Operations → Disaster Recovery** section now provides datacenters, versioned
 cluster recovery profiles, governed Foundation VM rebuild runs, sequential
 post-configuration jobs and rehearsal history. Independent health evidence and
 final acceptance remain explicit gates. It does not establish that compromised

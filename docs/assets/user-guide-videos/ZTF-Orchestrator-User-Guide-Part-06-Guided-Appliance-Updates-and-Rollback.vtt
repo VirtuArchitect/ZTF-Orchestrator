@@ -1,0 +1,151 @@
+WEBVTT
+
+00:00:00.088 --> 00:00:04.562
+Guided updates require the restricted Linux host update service and
+
+00:00:04.562 --> 00:00:06.112
+matching application mounts.
+
+00:00:06.512 --> 00:00:10.588
+Install the checksummed host kit once during an idle maintenance window,
+
+00:00:11.088 --> 00:00:13.712
+then activate the matching application image.
+
+00:00:14.100 --> 00:00:17.538
+An enabled and active host service alone does not prove that the
+
+00:00:17.538 --> 00:00:18.750
+container has been updated.
+
+00:00:19.175 --> 00:00:23.600
+Windows Docker Desktop retains its reviewed manual update procedure.
+
+00:00:24.012 --> 00:00:26.988
+The web application does not need the Docker socket.
+
+00:00:28.142 --> 00:00:32.429
+Open Appliance Operations, Updates, and Review Storage Before Upload.
+
+00:00:32.829 --> 00:00:36.892
+Check the capacity allowance and review eligible cleanup candidates.
+
+00:00:37.292 --> 00:00:40.979
+Remove only specifically reviewed obsolete artifacts.
+
+00:00:41.379 --> 00:00:45.404
+Keep the selected package, retained rollback material and protected
+
+00:00:45.404 --> 00:00:46.067
+backups.
+
+00:00:46.467 --> 00:00:48.192
+Nothing is automatically pruned.
+
+00:00:48.592 --> 00:00:52.079
+Storage review cannot approve an installation, and a fixed amount
+
+00:00:52.079 --> 00:00:55.979
+of free space is not a guarantee that backup and image expansion
+
+00:00:55.979 --> 00:00:56.504
+will fit.
+
+00:00:57.671 --> 00:01:02.871
+Obtain the complete trusted offline ZIP and verify its independently
+
+00:01:02.883 --> 00:01:03.708
+published checksum.
+
+00:01:04.083 --> 00:01:08.596
+Upload and verify the ZIP, then select its imported package and check
+
+00:01:08.596 --> 00:01:09.196
+readiness.
+
+00:01:09.596 --> 00:01:13.496
+The service checks image identity, protocol, Compose and database
+
+00:01:13.508 --> 00:01:15.946
+access, storage and active work.
+
+00:01:16.346 --> 00:01:20.171
+Resolve every blocker and obtain a fresh readiness plan.
+
+00:01:20.571 --> 00:01:24.858
+Importing a package does not run its host installer or replace the
+
+00:01:24.871 --> 00:01:25.796
+running application.
+
+00:01:26.962 --> 00:01:31.075
+Review the version and interruption notice, then type the exact I
+
+00:01:31.175 --> 00:01:34.362
+N S T A L L phrase shown.
+
+00:01:34.775 --> 00:01:38.788
+The plan expires after fifteen minutes and is bound to that operation.
+
+00:01:39.200 --> 00:01:41.150
+Select Back Up and Install once.
+
+00:01:41.550 --> 00:01:45.825
+The guided service stops the application, verifies the backup pair
+
+00:01:46.138 --> 00:01:49.938
+and recreates the application while PostgreSQL remains running.
+
+00:01:50.312 --> 00:01:54.625
+Reconnect after interruption and inspect the retained operation rather
+
+00:01:54.625 --> 00:01:55.550
+than submitting again.
+
+00:01:56.700 --> 00:02:00.812
+Review the completed operation report and verify the exact running
+
+00:02:00.812 --> 00:02:04.950
+image, source commit, application health and database readiness.
+
+00:02:05.362 --> 00:02:09.538
+The general release label may still say version one point eight point
+
+00:02:09.550 --> 00:02:11.000
+five release candidate one;
+
+00:02:11.525 --> 00:02:14.100
+the build identity distinguishes patches.
+
+00:02:14.512 --> 00:02:19.000
+Check saved configurations, credentials, pipelines, schedules and
+
+00:02:19.000 --> 00:02:21.775
+recovery profiles before resuming automation.
+
+00:02:22.175 --> 00:02:26.112
+Keep the receipts and download the sanitized operation report.
+
+00:02:27.308 --> 00:02:31.808
+If the console is reachable, the previous-image recovery control requires
+
+00:02:31.821 --> 00:02:35.971
+independent database compatibility confirmation and its exact rollback
+
+00:02:35.971 --> 00:02:36.596
+phrase.
+
+00:02:37.008 --> 00:02:41.083
+It restores the retained application image, not the database, data,
+
+00:02:41.521 --> 00:02:44.396
+host settings or changes made to Nutanix targets.
+
+00:02:44.796 --> 00:02:48.983
+Use authorized host recovery when the console is unavailable.
+
+00:02:49.396 --> 00:02:54.583
+Connected discovery is metadata-only: unattended downloads and automatic
+
+00:02:54.583 --> 00:02:56.221
+installation are not enabled.

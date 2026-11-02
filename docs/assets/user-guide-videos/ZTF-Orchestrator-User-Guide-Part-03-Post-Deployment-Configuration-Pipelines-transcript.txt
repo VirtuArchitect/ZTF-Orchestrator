@@ -1,0 +1,21 @@
+Part 3 - Post Deployment Configuration Pipelines
+
+Simulated console illustrations. Synthetic narration.
+
+Prepare one configuration sequence per cluster
+Start with reviewed cluster-specific configuration files. Give them clear ordered names and keep the same cluster identity throughout. Each pipeline step pairs an action with its saved configuration. Keep passwords in separate credential references rather than in the files. Saving a pipeline does not execute it. Review every file against the installed framework schema before adding it to the sequence.
+
+Handle the administrator password transition
+Place a required initial administrator password change first. Use the current credential to authorize it and a separate reference for the replacement credential. Verification must establish a fresh authenticated session with the new password. Later files must use that replacement reference. Leave password-change settings unused in later steps so they skip cleanly. Never repeat a completed password change simply because a subsequent step failed.
+
+Apply the core cluster settings
+Use a narrowly reviewed configuration for EULA acceptance and the approved Pulse setting. Add the required D N S and N T P settings according to the installed schema. Check that later steps can authenticate and reach the cluster after the initial access changes. Legal acceptance and telemetry settings are explicit organizational decisions; do not treat either as an automatic default for every environment.
+
+Configure networks, storage and optional controls
+Add supported virtual-machine networks, storage containers and any approved high-availability settings. Review naming, V LANs, replication and capacity choices against the design. Verify the actual returned properties after creation, not only whether a container name exists. Additional local administrators use their own credential references and explicit roles. Check that every optional action is supported by the selected workflow and target release.
+
+Create and review the pipeline
+Open Pipelines, create a descriptive name and add the saved actions in their approved order. Select the exact file for each step. Review the password transition, targets and required approvals before saving. Steps execute sequentially. A failure stops later work; it does not roll back earlier changes. Approval-mandatory steps may require direct approved execution rather than unattended pipeline chaining.
+
+Verify the completed cluster configuration
+After execution, inspect every step and independently read back the requested settings. Verify new account access and both requested administrator roles. Before Prism Central registration, check its connectivity and trust, then confirm cluster identity and inventory there. If a step failed, reconcile the partial state and rerun only the pending action through a supported path. Preserve the successful jobs and final acceptance evidence.
