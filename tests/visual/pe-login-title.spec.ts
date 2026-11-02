@@ -80,6 +80,7 @@ test('Scripts wizard preserves title and TLS choice and reports invalid formatti
   const preservedTitle = '  Operations: "Blue" #1 \\ cluster  '
   await title.fill(preservedTitle)
   await page.getByRole('button', { name: 'Generate YAML' }).click()
+  await expect(page.getByRole('button', { name: 'Dry Run', exact: true })).toBeEnabled()
   const generated = yaml.load(await page.locator('textarea').last().inputValue()) as any
   expect(generated.prism_login_title_verify_tls).toBe(true)
   expect(generated.clusters[values.cluster_ip]).toEqual({ name: values.cluster_name, pe_credential: values.pe_credential, prism_login_title: preservedTitle })
