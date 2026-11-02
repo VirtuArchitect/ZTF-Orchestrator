@@ -10,6 +10,7 @@ import { WORKFLOWS, SCRIPTS } from '../data'
 import { actionName } from '../startGuide'
 import type { Pipeline, PipelineStep } from '../types'
 import clsx from 'clsx'
+import { ScopedConfigPicker } from '../components/ConfigScope'
 
 type ConfigFile = { name: string }
 
@@ -191,16 +192,7 @@ export default function Pipelines() {
                     </select>
 
                     {/* Config file selector */}
-                    <select
-                      className="input flex-1 text-sm"
-                      value={step.configFile}
-                      onChange={e => updateStep(i, 'configFile', e.target.value)}
-                    >
-                      <option value="">— no config file —</option>
-                      {configs.map(c => (
-                        <option key={c.name} value={c.name}>{c.name}</option>
-                      ))}
-                    </select>
+                    <ScopedConfigPicker files={configs} value={step.configFile} onChange={name => updateStep(i, 'configFile', name)} />
 
                     {/* Reorder */}
                     <div className="flex flex-col gap-0.5">

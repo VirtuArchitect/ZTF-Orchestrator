@@ -77,3 +77,8 @@ show the implemented interface, not production credentials or a live update.
 ![Cluster and shared-service credential groups](assets/credential-groups-desktop.png)
 
 ![Completed guided-update stages shown in green](assets/guided-update-completed-green.png)
+
+## Reuse groups for config files
+
+The same group catalogue organizes [Config Files](config-file-groups.md). Config
+labels are stored separately and never change credential resolution or YAML.

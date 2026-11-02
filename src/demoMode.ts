@@ -2,6 +2,7 @@ import { useStore } from './store'
 import { APP_VERSION } from './version'
 import { emptyOrganization, type CredentialOrganization } from './utils/credentialOrganization'
 
+let demoConfigOrganization = { version: 1, revision: 0, assignments: {} as Record<string, { groupId: string; purpose: string }> }
 let demoCredentialOrganization: CredentialOrganization = emptyOrganization()
 
 const DEMO_TOKEN = 'ztf-orchestrator-demo-token'
@@ -593,6 +594,14 @@ async function demoResponse(request: Request) {
     if (method === 'DELETE') return okAction('Config delete simulated.')
     if (method === 'PUT' || method === 'POST') return okAction('Config save simulated.', { name })
     return json({ name, content: configs[name] || '# Demo config placeholder\n' })
+  }
+  if (path === '/api/config-organization') {
+    if (method === 'PUT') {
+      const value = await requestJson(request)
+      if (value.revision !== demoConfigOrganization.revision) return json({ error: 'Grouping changed. Reload before saving.' }, { status: 409 })
+      demoConfigOrganization = { version: 1, revision: demoConfigOrganization.revision + 1, assignments: value.assignments as Record<string, { groupId: string; purpose: string }> }
+    }
+    return json({ ...demoConfigOrganization, groups: demoCredentialOrganization.groups })
   }
   if (path === '/api/credential-organization') {
     if (method === 'PUT') {
