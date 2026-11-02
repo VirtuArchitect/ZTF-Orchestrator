@@ -1,5 +1,8 @@
 # Appliance Update Manager
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 For updated source builds, see [Guided appliance updates](guided-appliance-updates.md).
 After a one-time optional host-service installation, the console can request a
 reviewed offline application update with readiness, selected cleanup, verified

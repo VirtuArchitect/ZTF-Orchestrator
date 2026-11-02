@@ -1,5 +1,8 @@
 # Disaster Recovery: datacenters and cluster rebuilds
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 The **Recovery → Disaster Recovery** section groups cluster recovery profiles by
 datacenter. Each profile captures a versioned Foundation VM configuration and a
 saved post-configuration pipeline. Recovery runs and rehearsals execute through

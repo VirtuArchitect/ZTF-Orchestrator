@@ -1,401 +1,321 @@
 {
   "version": "1.8.5-rc1",
-  "sourceBaseline": "ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae",
+  "sourceBaseline": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
   "date": "2026-11-02",
   "simulated": true,
-  "fixtureCorrections": "This documentation revision fixes demo file metadata and audit display fields.",
+  "fixtureCorrections": "Generic credential/config labels and read-only recovery/update fixtures in the documentation capture helpers. No live backend calls.",
   "screens": [
     {
       "file": "about.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "0a90debd11116c9cc0a8bdf664be14640bc5e3f586fd8b704e705cdd6328761e"
+      "sha256": "b0475036292ccc9994307f60a94cd8ac560169d98becaa719b0a36c0f66ede87",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "appliance.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "b9063a75cf28a61abeadb4642923e77adf0d4e5b1bcbc8525b0315e2f9ea1eda"
+      "sha256": "8d7afb8fc7a5c9a1780625f916a9d6043af082c20fdfd19b6deae98d4db2b75e",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "approvals.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "4a891024d0f47e42210952f5b855456990337b1203e2536bd335cac6902e8dd4"
+      "sha256": "4a891024d0f47e42210952f5b855456990337b1203e2536bd335cac6902e8dd4",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "audit-log.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "09749f2050db25f42829cad8b29016e5c47ca65135273ef0b2dc8f64e3e734ae"
+      "sha256": "72a2865128f3cd26e5b12dcf07a76875b48d2225cda0782a2cbd62e1c2e48809",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "clusters.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "7b4f67180734de62dd8f4733efcdab157f20b01425f54c8f2e893a9957118326"
+      "sha256": "7b4f67180734de62dd8f4733efcdab157f20b01425f54c8f2e893a9957118326",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
+    },
+    {
+      "file": "config-groups.png",
+      "sha256": "2c020d9c09a091d538629833cc0b5601dee818e9e6e3084eaa5fc5ff8d8741c0",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "configs.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "b94c658a51d642853271ebf7f8223421badb2b243244e0260a1b91c12f333808"
+      "sha256": "09da36566c6bae8f718a859289fa1de4926aaa794fe393054d78b2f60ca5a4c9",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "configure-cluster.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "806da1788afcb57e4d94128682efdce0e66c7b34694d54e9d67d2fdf98b7a6a5"
+      "sha256": "f7f54097755965c1a1aecabd371e33937b711d5da2216803c934ebde76d55a18",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "connections.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "7e0771a425e40ba7bf8f05dc2a2823162914e3c363ae457d5ffa1ac0238a3f21"
+      "sha256": "833e907b355ded0e99e6918a2940ed40713367c60fe11a5a722d600b4a541c0b",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "credential-rotation.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "484a608e4dea78be38d9586640f4701c68fa43375b310ec58778b33d4f5f2b16"
+      "sha256": "2cd15c7fd20751537390458aacf1f7437a682341bd28b037614c567ba1299997",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "dashboard.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "aed5a87ba45b127256b594f2bdb0edfcf834681caf015e09417760a548733ba8"
+      "sha256": "070308a8889512989e71d3187632366c6d7164945c4b8e0f17f37175b0cb2208",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "deployment-guide.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "cbceeaf4b00d3377aa3d98645eb8bcd577b6a0ee06c9da43546820d5b94f36cb",
-      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
-      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
+      "sha256": "20f05091386ce496756696bb1950700f722287e06eed7a173c5a6844afea4240",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "disaster-recovery.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "3a3d36ca21c380ef43890e72210377cc9ff39a869349e226bc533a0a4b1a8531"
+      "sha256": "89755cdac98d89ad161e09143a4f5d993328145b7605d08c3f43589b813cea9e",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "drift-edit.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "21aa0d9b7778c0388dc2f348b70b9d742bd4ee8ea725c91794da33a6c59596e1"
+      "sha256": "add8e556ef5fbc17e074d96e6948fb52ea85109c7fd3a1a6fb6da0e2472895cd",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "drift.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "d19b364b348c462f0e0445e5b13ddf731f4b633d5a748bc4997a78ab51287daa"
+      "sha256": "1c565a6d16a3dd68ad12f345ce7a291b72f89a4e79325a774c3b61b0a7742cf2",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "executions.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "4f06f65ead04794fc458bd4724c9cffa68876cac7b73a2e8070550a4d3da8a37"
+      "sha256": "4f06f65ead04794fc458bd4724c9cffa68876cac7b73a2e8070550a4d3da8a37",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "first-boot.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "8b189507fa7d00dff688a1a4ed5d2ace76a69fa51bd7033e23744f03873423e2"
+      "sha256": "3f7d1703a72f7968c3744982371722377734b4a04a3a26f1bdbc4e0c420b1f18",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "foundation-images.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "052d864221ba36e9975b2ae4ecd6ae50177f2407ab26fa9a23a6561d0b58f512"
+      "sha256": "e383202709d66ea3800359412a2966ad9fab5269a2fb3002a1111dfa2ddaa171",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "foundation-nodes.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "ded6494a135a1e855b8801d8d4b0cf7ec22839095f525945d4190a81d4e97435"
+      "sha256": "d8bbad1b784980815e7cdbaefb7e524300eebce9973e89954a86065571ba8d97",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "foundation-vm.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "474b0987bb385bff876f06e05fd12f3a4c4dc9f65584e4839d4fd7271e4464c9"
+      "sha256": "fe1d266d84ae3153d3d898cc9c1b7c64b37d14d18ff1d41767c6dfa841be919f",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "global-config.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "749c6cb1289eb799a5e00b901afad163ced648d613c0c11c81b8095e2ae7023e"
+      "sha256": "42a7d6ae810e6ffb7d2dbbc03cbb378e8671974b6d8be87d400c00698204da45",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "governance.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "c5c12fdf33162333feea54543aed50046cf3eb7b23d3e2eabb1b9a60992bf919"
+      "sha256": "a654a56c3965caff8cb65e5c0049fa600881ba0ee278320010c917a16ee6216b",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "jobs.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "53258fe2e4da7fa3a79e38e3878675f2db2a7e21a876697a389dcf4ca73caa51"
+      "sha256": "09d3f5215d1eab46be36d99175c1debc239fc013c493593b4542742384abfc1a",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "monitor-verify.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "fdd5ceb36e430838ccaf41e8c79088af81fe5aef6e9fcea8dced9155c73c615d"
+      "sha256": "fdd5ceb36e430838ccaf41e8c79088af81fe5aef6e9fcea8dced9155c73c615d",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "native-foundation.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "c903181382c02b9bfa58642de3adab6738cc40046a7f5c0db5e1bea9e0110bc3"
+      "sha256": "36ce54dbf8375bf23d88f1e9cd1e29a4b3b7a3a2e146c5a61d2dd8de93a69b57",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "nkp-readiness.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "59ae6746f4ca74c3349fc52024f0dcd4c5b3a9e38e2eb3b9e602f0434d0cd4e7"
+      "sha256": "a8223cdaa7e88be953ce2ba91f225327843d741db6be6bdfc2a54b6abcdb90ae",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "nkp.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "399be8c3eed2d369cac45a2c636a90addd36da27d76715d069b4f41e4ba459e6"
+      "sha256": "15008cf2431a12d73bbc5d10561b3b696055e79643c69c22eb14d5fe0c1a3d15",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "notifications.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "f3bc8e45acfc511f68a5ea595943038cbe2206c5709e2c97d2d5fccbac199473"
+      "sha256": "ed79e269257ab9cfe025683ddde71efa53debd9dbe9751b7e46d85ce141bf3f9",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "parallel.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "19e82020c574e91be939219d3da3d4bf658a5ac2e00a00e890964648c39904fb"
+      "sha256": "19e82020c574e91be939219d3da3d4bf658a5ac2e00a00e890964648c39904fb",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
+    },
+    {
+      "file": "pe-login-title.png",
+      "sha256": "69aac0f5916d05f88c377fedc3cb2133004eb22fb1d09dc01b80c1e1e5bb4e9e",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
+    },
+    {
+      "file": "pipeline-config-groups.png",
+      "sha256": "ce6865fcc5f5163a7385470b6851ed40e51c0e4e53edbdf56b396230abf416fa",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "pipelines.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "a6e132219006b3913ebf68c77634cec4b01b5fffefda37598e41286fa91c70eb"
+      "sha256": "2aebee87a17cb1b43ea485946e870d5c6091aff09ccef8edc30ac4e284c0c14d",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "post-configuration.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "2d9bc6be8b60f25b5b7aec778fe1e9928027d0f164ef81a88eec0b69a80ba1c0"
+      "sha256": "2d9bc6be8b60f25b5b7aec778fe1e9928027d0f164ef81a88eec0b69a80ba1c0",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "schedules.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "06b08b0d7dbdb67444589fe3e6bebf4f89d87b6a18385159dc143932481920ed"
+      "sha256": "06b08b0d7dbdb67444589fe3e6bebf4f89d87b6a18385159dc143932481920ed",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "scripts-2x.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "e7e012f82071814c92541a10ec06df2bcdad0404c3071f3e4c7016ad000033f2"
+      "sha256": "d83c99a8b26e1fe5f52e9d74ceba17c1c37df989e18be05aa2e41541b2bd1136",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "scripts.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "1d3bb0824ef1d2006c82c3451b03b2785388e75d05889ea5f34ab9f4bf666bd9"
+      "sha256": "920147f0ed167ef7e015d8fcdc26e46c66af980c8d4215eb5d78bdd7949c3b12",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "session-revocation.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "c970f3b22d1690ea0270654b9696e72363d75f09802aee110f6003f4b22f9ec6",
-      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
-      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
+      "sha256": "2a12b15da900a728fd92d3e0428b9cd0f6e34aeafd32c276689c2ae30a283f9e",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "sessions.png",
-      "size": [
-        1600,
-        1050
-      ],
       "sha256": "cc41e6dcddb7d93b82b43e7903d0341e501092da7ce9e0ae81798bcccfe1f4fe",
-      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
-      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "settings.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "daa8ace5e3c8f91c95fe2086d504748d210535500ca30b0c2ac393a5bde70f42"
+      "sha256": "daa8ace5e3c8f91c95fe2086d504748d210535500ca30b0c2ac393a5bde70f42",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "setup.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "e17b32be2af2d17254c702f2372f1cf20aafd9ee4d9bfd0975a65ff75c5071a9"
+      "sha256": "e17b32be2af2d17254c702f2372f1cf20aafd9ee4d9bfd0975a65ff75c5071a9",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "start-here.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0"
+      "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "storage.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "cc744a5f1a3a257df160fbd4e5fe65d45c4a199dec3d027d1793360fc7f0838a"
+      "sha256": "9e42d7ff341e9da47317309aacc67d49bae9d18394bb2ef0df98b3030c3eb484",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
+    },
+    {
+      "file": "update-progress.png",
+      "sha256": "b7c428b5a3a7722b3b9fa384955fd85a1a502fee421998a92db2249e1216caa0",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "updates.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "fdf4e86f1e9d749dfac56e1c92f2d539c06608dbd4d0caf2b5abe7f5e86bbbc7"
+      "sha256": "0a0cd3dbcdab1cf87b3d5975e3baa33c617f351d1a1fb08dbaac00fea3f3a4ed",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "upgrade-advisor.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "b8b3d671f817532cc2ae8d38b2ae6723a7ae7d7e9eb7172201b108c31c83fe3c"
+      "sha256": "cdfa75865102ae0eacb925f9cf52066b589df3927d91f60b8e39ab610933967c",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "users.png",
-      "size": [
-        1600,
-        1050
-      ],
       "sha256": "cc41e6dcddb7d93b82b43e7903d0341e501092da7ce9e0ae81798bcccfe1f4fe",
-      "sourceBaseline": "9508e5e483ed9b91ff5bf975e5bf897681731653",
-      "sourceChanges": "Administrator sessions panel and Foundation VM implementation label; simulated documentation fixture, no live actions."
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "validation-evidence.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "23583f610928ce993be8040970fcbddd227a21d2b6a7eb81d2cfab596c110fce"
+      "sha256": "c1c2b1f51574685403540f35b6e0ea4a2c47c1a13afba88bd22afd78521a1161",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "workflows-2x.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "e1cf29c28a0c14454c7cf8bb765ca6b298e8433cd3666cda1e43d0af2cd01776"
+      "sha256": "e1cf29c28a0c14454c7cf8bb765ca6b298e8433cd3666cda1e43d0af2cd01776",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "workflows.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "e06a38b43b9e0324e430707256c2e2fd8476b92a98c93df4d20a95b97591ec92"
+      "sha256": "e06a38b43b9e0324e430707256c2e2fd8476b92a98c93df4d20a95b97591ec92",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "yaml-studio.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "1adf311c39834509395edcecfaf08c18c9348d03fc738d751c3a117daa8bd208"
+      "sha256": "1adf311c39834509395edcecfaf08c18c9348d03fc738d751c3a117daa8bd208",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "ztf-modes.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "6e736b7af128b65a3f25b90d6e7410b8b256377b07693b47252d9a347b61ce13"
+      "sha256": "37eed0970b19c4379879e9d420c85a8a59405d02e8f8661a494e1faf2c2e3073",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     },
     {
       "file": "ztf2-iac.png",
-      "size": [
-        1600,
-        1050
-      ],
-      "sha256": "40c6272083e4c55875c1b56dc3775ff71cbbe8b37e50685682c1c941f2c3c8e2"
+      "sha256": "a0650737cc231a5457e80f60cc1efeb4c162802560ce4cad3efb7420ac0e31b0",
+      "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+      "simulated": true
     }
   ]
 }

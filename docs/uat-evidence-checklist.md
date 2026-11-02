@@ -1,6 +1,6 @@
 # UAT Evidence Checklist
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
 Use this checklist to capture defensible evidence for controlled
 ZTF-Orchestrator UAT. The goal is to prove what was tested, by whom, with which

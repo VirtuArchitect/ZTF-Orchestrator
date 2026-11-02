@@ -1,9 +1,12 @@
 # Illustrated Disaster Recovery setup
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Create a datacenter, link a saved **Cluster Create (Foundation VM)** configuration
 and post-deployment pipeline, and review the recovery baseline **without deploying**.
 This procedure covers **v1.8.5-rc1**, reviewed against source revision
-`867fe83f6c90dff1ee785e8caf0fe2b82b969174` on 29 October 2026.
+`a3c9c79832efe4552cab5b208d5fbe49936dcbf8` on 2 November 2026.
 The release remains a prerelease; v1.8.4 remains Latest stable.
 
 - [Read the illustrated PDF guide](manuals/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf)
@@ -30,6 +33,10 @@ the approved deployment YAML for **exactly one cluster**. Verify:
 Save the configuration in **Config Files**, for example
 `create_foundation_vm_cluster_CLUSTER01.yml`. Use the workflow's non-mutating
 **Dry Run**, resolve failures and review the output. **Do not select Run Workflow.**
+Use the shared credential/config group catalogue to label the saved file as
+Deployment; this catalogue is separate from recovery datacenters and does not
+change the endpoint or physical targets.
+
 Saving a recovery profile does not perform these live connectivity or credential
 checks for you.
 

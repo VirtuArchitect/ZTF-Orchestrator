@@ -1,6 +1,6 @@
 # ZTF-Orchestrator Testing
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
 This folder indexes test strategy and regression guard documentation.
 

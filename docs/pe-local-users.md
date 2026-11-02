@@ -1,5 +1,8 @@
 # Create Local Users (PE)
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Updated source builds expose `CreateLocalUsersPe` in **Scripts 1.x** and
 **Pipelines**. This is a community extension to the bundled ZTF runtime, not
 the Prism Central `AddLocalUsers` operation. Environment-specific PE API UAT

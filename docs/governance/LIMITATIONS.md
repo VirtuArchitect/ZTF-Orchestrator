@@ -1,6 +1,6 @@
 # Limitations
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
 This document records current product and validation limits that matter for
 operator-controlled or production-assessable use.

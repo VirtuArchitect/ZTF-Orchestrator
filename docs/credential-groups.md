@@ -1,5 +1,8 @@
 # Credential groups by datacenter and cluster
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Updated v1.8.5-rc1 source adds grouping under **Administration > Global Config >
 Credentials**. Use cluster groups for PE, CVM, individual BMC references and local
 administrator references. Use shared-service groups for services such as Prism

@@ -1,5 +1,7 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
+See [current documented build and update details](docs/current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+
 **Used successfully to deploy production AHV HCI clusters, with post-configuration
 through pipelines.**
 
@@ -49,10 +51,8 @@ Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README
 with current simulated screenshots and operational procedures for deployment,
 post-configuration, PE account verification, certificate trust and appliance
 updates. Documentation was reviewed against merged application revision
-`ea9dcf0` on 2 November 2026, with session management and Foundation VM
-status-label additions reviewed against updated source the same day. Those
-additions do not change the immutable earlier package; historical release
-documents remain archived.
+`a3c9c79` on 2 November 2026. The current consolidated application bundle is
+`v1.8.5-rc1-636f191`; historical bundles and release documents remain unchanged.
 
 The [revision 3 cluster deployment process](docs/cluster-deployment-process.md)
 shows the ten stages from design to operational acceptance, with approval,

@@ -1,5 +1,8 @@
 # Live Prism Element drift monitoring
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Live PE monitoring compares approved DNS, NTP and Pulse settings with fresh
 read-only API results on every manual, run-now and scheduled check. It does not
 change Prism settings. Existing Last Applied and Stored Snapshot policies keep

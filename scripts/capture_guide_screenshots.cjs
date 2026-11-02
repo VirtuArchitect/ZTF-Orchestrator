@@ -35,6 +35,9 @@ const screens = [
   ['post-configuration', 'start/configure'],
   ['monitor-verify', 'start/monitor'], ['clusters', 'clusters'],
   ['disaster-recovery', 'recovery'],
+  ['config-groups', 'configs', '@config-groups'],
+  ['pipeline-config-groups', 'pipelines', '@pipeline-config-groups'],
+  ['pe-login-title', 'scripts', '@login-title'],
 ];
 
 (async () => {
@@ -56,14 +59,41 @@ const screens = [
     const selected = process.env.ZTF_SCREENSHOT_NAMES?.split(',');
     const captures = screens.filter(([name]) => !selected || selected.includes(name));
     for (const [name, route, tab, scroll] of captures) {
-      await page.goto(new URL(route, base).href, { waitUntil: 'networkidle' });
+      await page.goto(new URL('start', base).href, { waitUntil: 'networkidle' });
+      await page.evaluate(async target => {
+        const groups = [{ id: 'dc1-cluster01', name: 'DEV_LAB', datacenter: 'DC1', kind: 'cluster' }, { id: 'shared-templates', name: 'Shared Templates', datacenter: '', kind: 'shared' }];
+        const credential = await fetch('/api/credential-organization', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: 1, revision: 0, groups, assignments: { pe_user: { groupId: 'dc1-cluster01', purpose: 'PE Administrator' } } }) });
+        if (!credential.ok) throw new Error('Unable to seed isolated credential labels');
+        const config = await fetch('/api/config-organization', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: 1, revision: 0, assignments: { 'cluster-baseline-demo.yml': { groupId: 'dc1-cluster01', purpose: 'Post-configuration' }, 'pc-deploy-demo.yml': { groupId: 'shared-templates', purpose: 'Deployment' } } }) });
+        if (!config.ok) throw new Error('Unable to seed isolated config labels');
+        history.pushState({}, '', target); window.dispatchEvent(new PopStateEvent('popstate'));
+      }, new URL(route, base).pathname);
       await page.getByText('Demo mode: simulated data only. No Nutanix environment is connected and no workflows are executed.', { exact: true }).waitFor();
       await page.getByText(`ZeroTouch Orchestrator v${version}`, { exact: true }).waitFor();
       if (name.startsWith('foundation-')) {
         // Enter a documentation-only classic installer endpoint through the form.
         await page.locator('input[value="https://foundation-demo.local:9440"]').fill('http://foundation.example.com:8000');
       }
-      if (tab === '@revoke-session') {
+      if (tab === '@config-groups') {
+        await page.getByRole('button', { name: 'DEV_LAB', exact: true }).click();
+        await page.getByText('cluster-baseline-demo.yml', { exact: true }).click();
+      }
+      else if (tab === '@pipeline-config-groups') {
+        await page.getByRole('button', { name: 'Edit pipeline' }).first().click();
+        await page.getByText('Filter config files by datacenter / cluster', { exact: true }).first().click();
+        await page.getByRole('button', { name: 'DEV_LAB', exact: true }).first().click();
+      }
+      else if (tab === '@login-title') {
+        await page.getByRole('button', { name: 'Prism Element', exact: true }).click();
+        await page.getByPlaceholder('Search scripts...').fill('Set Prism Login Title');
+        await page.getByRole('button', { name: /Set Prism Login Title \(PE\)/ }).click();
+        await page.getByLabel('Prism Element IP', { exact: false }).fill('192.0.2.10');
+        await page.getByLabel('Cluster Name', { exact: false }).fill('DEV_LAB');
+        await page.getByLabel('PE Credential Ref', { exact: false }).fill('pe_user');
+        await page.getByLabel('Prism Login Title', { exact: false }).fill('DEV_LAB');
+        await page.getByRole('button', { name: 'Generate YAML' }).click();
+      }
+      else if (tab === '@revoke-session') {
         await page.getByTestId('sessions-panel').scrollIntoViewIfNeeded();
         await page.getByRole('button', { name: /^Revoke session / }).first().click();
       }

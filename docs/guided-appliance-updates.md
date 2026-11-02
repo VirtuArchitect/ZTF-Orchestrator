@@ -1,5 +1,8 @@
 # Guided appliance updates
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Updated source builds add **Appliance Ops → Updates → Guided Appliance Update**.
 After the host service is installed once, routine supported appliance ZIP updates
 can be requested in the console without SSH. This is an opt-in addition to the
@@ -170,3 +173,12 @@ a recorded stage turns green after the host advances beyond it. A successful
 `complete` report marks all installation stages complete. The retained host
 report remains authoritative across browser reconnects; do not repeat an update
 because its application connection temporarily disconnects.
+
+## Read the stage indicators
+
+![Simulated update progress with completed and current stages](assets/guide/v1.8.5-rc1/update-progress.png)
+
+Completed stages show a green check; the current stage is blue. Pending stages
+remain grey, failures are red and interruptions are amber. Entering a stage alone
+is not proof that it completed. Final success requires the host's completion
+report and installed-image health verification. This image is simulated.

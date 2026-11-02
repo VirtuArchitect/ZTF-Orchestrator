@@ -1,9 +1,10 @@
 # Production Readiness Boundary
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
-ZTF-Orchestrator can be operated in a controlled UAT posture when procedures,
-approvals, backups, evidence capture, and recovery paths are in place. It
+Operators report successful production AHV cluster deployments and pipeline
+post-configuration. Procedures, approvals, backups, evidence capture and recovery
+paths remain necessary in each environment. It
 should not be described as broadly production validated without
 environment-specific proof.
 
@@ -14,7 +15,9 @@ environment-specific proof.
 - RBAC, approvals, durable jobs, schedules, audit history, drift checks,
   validation evidence, YAML Studio, and appliance update surfaces are present.
 - YAML Studio is non-mutating.
-- Current workflow/script execution targets the legacy ZTF 1.x CLI.
+- ZTF 1.x workflow/script actions use the legacy CLI; Foundation VM and selected
+  PE extensions use explicit Orchestrator integrations. ZTF 2.x and NKP retain
+  their separate documented execution and preview boundaries.
 
 ## Claims Requiring More Evidence
 

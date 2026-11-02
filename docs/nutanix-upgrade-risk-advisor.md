@@ -1,5 +1,8 @@
 # Nutanix Upgrade Risk Advisor
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 The Nutanix Upgrade Risk Advisor is a read-only pre-upgrade assessment surface
 for ZTF-Orchestrator. It is designed to help operators decide whether a planned
 Nutanix upgrade has enough evidence to proceed.

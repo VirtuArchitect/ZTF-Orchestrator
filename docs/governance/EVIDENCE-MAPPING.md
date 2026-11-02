@@ -1,6 +1,6 @@
 # Evidence Mapping
 
-Current release marker: `v1.8.5-rc1` (controlled-UAT release candidate).
+Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
 Use this mapping to connect operational claims to evidence sources.
 

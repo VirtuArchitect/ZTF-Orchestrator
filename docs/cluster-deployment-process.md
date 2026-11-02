@@ -1,5 +1,7 @@
 # AHV HCI cluster deployment process
 
+See [current application and documentation status](current-status.md) for the latest consolidated appliance build and operator changes.
+
 **Revision 3 | 27 October 2026 | v1.8.5-rc1**
 
 Use this process to prepare, deploy, configure and accept an AHV HCI cluster.

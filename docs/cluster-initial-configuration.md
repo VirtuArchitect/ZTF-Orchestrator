@@ -1,5 +1,8 @@
 # Initial Cluster Configuration
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Configure Cluster (`config-cluster`) invokes the installed ZTF 1.x `ClusterConfig`
 workflow. That workflow changes the default PE admin password first, then runs
 EULA/Pulse and selected cluster operations. Do not precede it with the standalone

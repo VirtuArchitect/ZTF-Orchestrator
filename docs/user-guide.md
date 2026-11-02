@@ -1,15 +1,17 @@
 # ZTF-Orchestrator User Guide
 
+See [current documented build and update details](current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+
 Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
-`ea9dcf0` on 2 November 2026. v1.8.4 remains Latest stable. Download the
+`a3c9c79` on 2 November 2026. v1.8.4 remains Latest stable. Download the
 [illustrated PDF manual](manuals/README.md) or begin with [Start Here](start-here.md).
-Session management and Foundation VM status-label additions were reviewed against
-updated source on the same date and are separate from the immutable earlier package.
+Session management, PE login-title customization, credential/config grouping and
+update-stage indicators are included in consolidated bundle `v1.8.5-rc1-636f191`.
 All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
 
 For Disaster Recovery, use the updated manual and the focused
 [illustrated recovery setup guide](disaster-recovery-setup.md), reviewed against
-`867fe83` on 29 October 2026. It covers datacenters, Foundation VM configuration
+`a3c9c79` on 2 November 2026. It covers datacenters, Foundation VM configuration
 and pipeline links, and reviewed baselines without deployment. Its screenshots
 use generic simulated records; PDF and Word downloads are included.
 
@@ -209,6 +211,11 @@ Actions:
 | Download | Downloads the generated `global.yml`. |
 | Save to ZTF | Saves the generated global configuration through the backend. |
 
+Administrators can use Add group to create a datacenter/cluster or shared-service
+group. Assign existing references and purposes, then Save grouping. This saves
+labels only; Save to ZTF separately persists credential definitions and provider
+settings. Group removal never deletes credentials. See [credential groups](credential-groups.md).
+
 Use this page before running workflows that reference credentials, vaults, or
 IPAM settings.
 
@@ -218,6 +225,16 @@ allocation is enabled. Live provider operations depend on the corresponding
 adapter being configured, permitted, and validated for the environment.
 
 ### Config Files
+
+Select a datacenter, cluster or shared group using the same catalogue as Global
+Config credentials. Search by filename, cluster, datacenter or purpose. Open a
+file, choose File group and Purpose, then Save grouping. Existing files remain
+Ungrouped until assigned. New files/uploads inherit the selected group and
+purpose; an All files or datacenter selection leaves them ungrouped. Grouping
+never renames files or changes YAML. See [the grouping procedure](config-file-groups.md).
+
+![Configuration grouping with simulated labels](assets/guide/v1.8.5-rc1/config-groups.png)
+
 
 Use Config Files to manage saved YAML and JSON configuration files used by
 workflows, scripts, schedules, pipelines, NKP phases, drift checks, and evidence
@@ -1298,4 +1315,28 @@ summary into adapter lock metadata without acquiring locks or reserving windows.
 | Approval missing | Approvals, Settings > Governance, Workflow detail approved request selector. |
 | Config changed unexpectedly | Config Files history, Drift Detection, Audit Log > Config. |
 | Appliance update uncertain | Appliance Ops update record, Settings > About Installed Build, Settings > Storage backup state. |
-| UAT evidence missing | Validation Evidence, Execution History, Jobs / Queue trace metadata, Config Files. |
+| NKP preview evidence missing | Advanced Automation > NKP Validation Evidence (Preview); use Execution History and Jobs / Queue for general execution records. |
+
+## Cluster aware configuration selection
+
+In a pipeline editor, expand Filter config files by datacenter / cluster. Cluster
+filters include shared files. Show all files restores the complete library.
+Existing selections remain selected outside the filter and are labelled as such;
+a filter does not replace or validate the target configuration.
+
+![Scoped pipeline config selection using simulated records](assets/guide/v1.8.5-rc1/pipeline-config-groups.png)
+
+In a workflow, expand Load a saved configuration by datacenter / cluster. Choose
+the file and Load into form; confirm replacement of unsaved form changes. The
+normal import size/schema checks still apply. Loading never executes or grants
+approval. Review YAML, Dry Run, exact targets and a matching approval before Run.
+
+## Prism Element login title
+
+Use Scripts > Prism Element > Set Prism Login Title (PE), or select that script
+as a pipeline action. Supply the existing PE credential reference, cluster name
+and title; retain TLS verification and trusted certificates. The action changes
+only the login-screen title and verifies it with a fresh read-back. It does not
+rename the cluster or CVMs. See [the compatibility and YAML procedure](pe-login-title.md).
+
+![PE login title configuration with simulated records](assets/guide/v1.8.5-rc1/pe-login-title.png)

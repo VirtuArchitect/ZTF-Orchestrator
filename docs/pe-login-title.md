@@ -1,5 +1,8 @@
 # Set Prism Login Title (PE)
 
+Current application baseline: `a3c9c79`; consolidated appliance bundle
+`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+
 Updated v1.8.5-rc1 source adds **Set Prism Login Title (PE)** to Scripts and
 pipelines. Its internal identifier is `SetPrismLoginTitlePe`. It changes the
 large title on the Prism Element login screen. The cluster name, CVM/host names,
