@@ -3,14 +3,23 @@ import { Building2, RefreshCw, Server } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useRecoverySummary } from '../components/OperationsOverview'
 import { Link } from '../router'
+import { ClusterWorkspace, PersistentAttention, useOperations } from '../components/ClusterOperations'
+import ClusterRecordEditor from '../components/ClusterRecordEditor'
+import { useStore } from '../store'
 
 export default function Clusters() {
+  const operations = useOperations()
+  const admin = useStore(s => s.user?.role === 'admin')
   const { data, error } = useRecoverySummary()
   const [search, setSearch] = useState('')
   const [datacenter, setDatacenter] = useState('')
   const profiles = data?.profiles.filter(profile => (!datacenter || profile.datacenterId === datacenter) && profile.name.toLowerCase().includes(search.toLowerCase())) || []
-  return <Layout title="Clusters" subtitle="Saved recovery cluster profiles by datacenter">
+  return <Layout title="Clusters" subtitle="Managed cluster records, observations and saved recovery profiles">
     <div className="space-y-5">
+      {admin && operations.data && <ClusterRecordEditor data={operations.data} refresh={operations.refresh} />}
+      <ClusterWorkspace {...operations} editable />
+      <PersistentAttention {...operations} />
+      <h2 className="section-title">Existing recovery cluster profiles</h2>
       <div className="card flex gap-3 items-start"><Server size={22} className="text-nutanix-cyan shrink-0" /><p className="text-sm text-gray-400">This view lists saved recovery profiles, not discovered live clusters or verified health. Create and review profiles in Disaster Recovery. Other deployment and configuration files remain in <Link to="/configs" className="text-nutanix-cyan">Config Files</Link>.</p></div>
       <div className="flex flex-wrap gap-3">
         <label className="text-sm text-gray-400 flex-1 min-w-[180px]">Search profiles<input className="input mt-2" value={search} onChange={e => setSearch(e.target.value)} placeholder="Cluster profile name" /></label>

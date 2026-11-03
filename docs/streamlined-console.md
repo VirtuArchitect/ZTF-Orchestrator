@@ -1,5 +1,10 @@
 # Streamlined operations console
 
+New source adds [managed-cluster records and persistent attention](cluster-operations.md).
+Overview links these records to automation and optional PE readbacks. The existing
+recovery-profile list remains available; it is separate from the explicit managed
+cluster catalogue. Older screenshots below retain their documented provenance.
+
 Current application baseline: `a3c9c79`; consolidated appliance bundle
 `v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
 

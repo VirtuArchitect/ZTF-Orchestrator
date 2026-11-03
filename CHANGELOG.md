@@ -9,6 +9,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Operations
+- Add managed-cluster records linking saved configurations, pipelines and recovery
+  profiles without rewriting automation or credential references.
+- Retain observed failed/interrupted jobs in a revision-checked attention register
+  with ownership, review notes, explicit resolution and audit logging.
+- Add explicit read-only, verified-HTTPS PE identity, complete membership and
+  reported-health checks. Missing evidence stays unknown; results stale after
+  15 minutes and never replace recovery/NCC/acceptance gates.
+- Show appliance health, backup-record age, update-service availability and reported
+  build identity without presenting a backup record as restore verification.
+- Surface failed recovery refreshes, honour Retry-After and pause hidden-tab
+  polling; existing-run links never replay imaging or configuration.
+
 ### Added
 - Upgrade Advisor offers separate PE/PC Verify TLS certificate controls, enabled
   by default. Temporary administrator-only exceptions reset after collection,

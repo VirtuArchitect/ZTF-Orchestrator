@@ -143,3 +143,15 @@ can disable verification for one inventory collection; the exception is audited,
 flags reset afterward, and collection/saved-assessment/report provenance retains
 the warning. Operators cannot bypass this restriction through the API. No other
 workflow or drift TLS policy changes. See docs/upgrade-advisor-tls.md.
+
+Cluster-focused operations source addition
+----------------------------------------
+Managed-cluster records link saved configurations, pipelines and optional recovery
+profiles. Observed failures remain in an owned attention register until explicit
+review/resolution. Administrators/operators can explicitly collect bounded,
+verified-HTTPS PE identity, full expected membership and reported health; missing
+evidence remains Unknown and results stale after 15 minutes. Existing automation,
+approvals, credentials and recovery execution gates are unchanged. Recovery read
+polling now exposes stale state and backs off without retrying execution. No SQL
+migration or new runtime dependency is required. Published older ZIPs are not
+changed by this source addition. See docs/cluster-operations.md.

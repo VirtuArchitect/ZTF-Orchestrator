@@ -20,6 +20,13 @@ operations and recovery preparation. Existing tools remain available through
 collapsible navigation groups and dashboard details; no integration is removed.
 See the [streamlined console guide](docs/streamlined-console.md).
 
+The latest source adds a [cluster-focused operational workspace](docs/cluster-operations.md):
+administrator-managed cluster records, persistent owned review items, explicit
+read-only PE identity/membership/health observations and timestamped stale-data
+warnings. Job success never becomes a cluster-health claim. Existing execution,
+approval and recovery gates remain unchanged; previously published bundles do
+not acquire this feature automatically.
+
 Upgrade Advisor supports [audited, temporary PE/PC TLS exceptions](docs/upgrade-advisor-tls.md)
 for administrator inventory collection; verification remains enabled by default.
 
