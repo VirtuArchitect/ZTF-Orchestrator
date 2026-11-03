@@ -5,6 +5,7 @@ import { Link, useLocation } from '../router'
 import { apiFetch } from '../utils/api'
 import { useStore } from '../store'
 import type { Pipeline } from '../types'
+import { httpFailure, pollReadOnly } from '../utils/readOnlyPolling'
 
 type Check = 'reviewed' | 'needs_review'
 type DC = { id: string; name: string; foundationEndpoint: string; notes: string; prerequisites: Record<string, Check> }
@@ -61,6 +62,9 @@ export default function DisasterRecovery() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [overviewPollError, setOverviewPollError] = useState('')
+  const [runPollError, setRunPollError] = useState('')
+  const [runReadAt, setRunReadAt] = useState('')
   const [dcForm, setDcForm] = useState<Partial<DC> | null>(null)
   const [profileForm, setProfileForm] = useState<{ id?: string; name: string; datacenterId: string; deploymentConfigFile: string; pipelineId: string; kind: string; observedConfigFile: string } | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -84,9 +88,9 @@ export default function DisasterRecovery() {
     const response = await apiFetch(path, body === undefined ? {} : { method, body: JSON.stringify(body) })
     let result
     try { result = await response.json() } catch {
-      throw new Error(`Recovery request returned a non-JSON response (HTTP ${response.status}). Check Jobs / Queue and server logs; do not resubmit a deployment because of this message.`)
+      throw httpFailure(response, `Recovery request returned a non-JSON response (HTTP ${response.status}). Check Jobs / Queue and server logs; do not resubmit a deployment because of this message.`)
     }
-    if (!response.ok) throw new Error(result.error || 'Recovery request failed')
+    if (!response.ok) throw httpFailure(response, result.error || `Recovery request failed (HTTP ${response.status})`)
     return result as T
   }
   async function load() {
@@ -95,23 +99,29 @@ export default function DisasterRecovery() {
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not load recovery records') }
   }
   useEffect(() => {
-    void load()
     void Promise.all([call<{ name: string }[]>('/api/configs'), call<Pipeline[]>('/api/pipelines')]).then(([c, p]) => { setConfigs(c); setPipelines(p) }).catch(() => {})
-    const timer = setInterval(() => { void load() }, 5000)
-    return () => clearInterval(timer)
+    return pollReadOnly(() => call<Overview>('/api/recovery'), value => { setData(value); setOverviewPollError('') }, message => setOverviewPollError(`${message} Displayed recovery records may be stale.`), 10_000)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setTab(location.pathname.endsWith('/rehearsals') ? 'Rehearsals' : location.pathname.endsWith('/runs') ? 'Recovery Runs' : 'Recovery Overview') }, [location.pathname])
   useEffect(() => {
     if (!run?.id) return
-    let active = true
-    const timer = setInterval(() => { void call<Run>(`/api/recovery/runs/${run.id}`).then(value => { if (active) setRun(value) }).catch(() => {}) }, 5000)
-    return () => { active = false; clearInterval(timer) }
+    return pollReadOnly(() => call<Run>(`/api/recovery/runs/${run.id}`), value => {
+      setRun(value); setRunPollError(''); setRunReadAt(new Date().toISOString())
+    }, message => setRunPollError(`${message} This run's displayed state is stale. Check its existing job before any retry.`), 10_000)
   }, [run?.id])
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('run')
+    if (!id) return
+    let active = true
+    void call<Run>(`/api/recovery/runs/${encodeURIComponent(id)}`).then(value => { if (active) openRun(value) }).catch(e => { if (active) setError(e instanceof Error ? e.message : 'Recovery run unavailable') })
+    return () => { active = false }
+  }, [location.search])
   async function act(action: () => Promise<void>) {
     setBusy(true); setError('')
     try { await action(); await load() } catch (e) { setError(e instanceof Error ? e.message : 'Recovery operation failed') } finally { setBusy(false) }
   }
   function openRun(value: Run) {
+    setRunPollError(''); setRunReadAt(new Date().toISOString())
     setBootstrapApprovals({}); setBootstrapPhrase(''); setBootstrapAcknowledged(false)
     setRun(value); setProfile(null); setNotes(''); setEvidence(''); setIdentity(''); setTargetPhrase(''); setFoundationPhrase(''); setScriptPhrase(''); setApprovalId(value.approvalId || ''); setDirectJob(''); setChecked(false); setResume(false); setStepIndex(value.steps.length)
   }
@@ -131,6 +141,7 @@ export default function DisasterRecovery() {
   const submitProfile = (e: FormEvent) => { e.preventDefault(); void act(async () => { await call(`/api/recovery/profiles${profileForm?.id ? `/${profileForm.id}` : ''}`, profileForm, profileForm?.id ? 'PUT' : 'POST'); setProfileForm(null); setProfile(null) }) }
 
   return <Layout title="Disaster Recovery" subtitle="Prepare and rehearse cluster rebuilds by datacenter" actions={<div className="flex gap-2"><button className="btn-secondary" onClick={() => void load()} aria-label="Refresh recovery records"><RefreshCw size={16} /></button>{admin && <><button className="btn-secondary" onClick={() => { setError(''); setDcForm({ name: '', foundationEndpoint: '', notes: '', prerequisites: { ...emptyChecks } }) }}><Building2 size={16} /> Add Datacenter</button><button className="btn-primary" disabled={!data.datacenters.length} onClick={() => { setError(''); setProfileForm({ name: '', datacenterId: dcFilter || data.datacenters[0]?.id || '', deploymentConfigFile: '', pipelineId: '', kind: 'existing', observedConfigFile: '' }) }}><Plus size={16} /> Create Recovery Profile</button></>}</div>}>
+    {overviewPollError && <p role="status" className="mb-4 text-sm text-amber-400">{overviewPollError}</p>}
     {error && <div role="alert" className="fixed left-1/2 top-20 z-[70] w-[min(90vw,700px)] -translate-x-1/2 rounded-lg border border-red-500 bg-gray-950 p-4 text-sm text-red-500 shadow-xl">{error}<button className="ml-3 underline" onClick={() => setError('')}>Dismiss</button></div>}
     {admin && <div className="mb-4 flex flex-wrap gap-2 sm:hidden"><button className="btn-secondary" onClick={() => setDcForm({ name: '', foundationEndpoint: '', notes: '', prerequisites: { ...emptyChecks } })}>Add Datacenter</button><button className="btn-primary" disabled={!data.datacenters.length} onClick={() => setProfileForm({ name: '', datacenterId: dcFilter || data.datacenters[0]?.id || '', deploymentConfigFile: '', pipelineId: '', kind: 'existing', observedConfigFile: '' })}>Create Recovery Profile</button></div>}
     <div className="mb-5 rounded-lg border border-nutanix-blue/30 bg-nutanix-blue/5 p-3 text-sm text-gray-300">Rebuild approved infrastructure through existing workflows. VM restoration is a separate handoff to your backup platform. Rehearsals also execute real changes.</div>
@@ -147,7 +158,7 @@ export default function DisasterRecovery() {
 
     {profile && revision && <Dialog title={`Review Profile - ${profile.name}`} close={() => setProfile(null)}><div className="space-y-4"><select aria-label="Profile revision" className="input" value={revisionIndex < 0 ? profile.revisions!.length - 1 : revisionIndex} onChange={e => setRevisionIndex(Number(e.target.value))}>{profile.revisions!.map((r, i) => <option key={r.revision} value={i}>Revision {r.revision}{r.approvedBy ? ' · Reviewed' : ' · Draft'}</option>)}</select><p className="text-sm text-gray-300">{revision.clusterName} · {revision.clusterVip} · {revision.targets.length} physical nodes · {revision.steps.length} configuration steps</p><p className="break-all font-mono text-xs text-gray-400">Baseline SHA256: {revision.sha256}</p><p className="text-sm text-gray-300">Exact serials: {revision.targets.join(', ')}</p>{revision.observation && <p className="text-xs text-gray-400">Separate observed import: {revision.observation.configFile}. Operator supplied; not live discovery.</p>}<Field title="Deployment snapshot - review exact physical targets"><textarea className="input h-52 w-full font-mono text-xs" readOnly value={revision.deploymentContent} /></Field><h3 className="font-semibold text-gray-100">Post-configuration snapshot</h3>{revision.steps.map((s, i) => <details className="rounded border border-border p-3" key={i}><summary className="cursor-pointer text-sm text-gray-300">{i+1}. {s.workflow} · {s.configFile}</summary><pre className="mt-2 overflow-auto whitespace-pre-wrap text-xs text-gray-400">{s.configContent}</pre></details>)}{admin && <><Field title="Baseline review notes"><textarea className="input w-full" maxLength={2000} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Confirm the intended clean recovery baseline and resolve imported gaps." /></Field><div className="flex flex-wrap gap-3"><button disabled={busy || revision.revision !== profile.revisions!.length || !notes.trim()} className="btn-secondary" onClick={() => void act(async () => { await call(`/api/recovery/profiles/${profile.id}/approve`, { sha256: revision.sha256, notes }); setProfile(await call<Profile>(`/api/recovery/profiles/${profile.id}`)) })}>Mark Baseline Reviewed</button>{['recovery', 'rehearsal'].map(mode => <button key={mode} disabled={busy || !revision.approvedBy || revision.revision !== profile.revisions!.length} className="btn-primary" onClick={() => void act(async () => openRun(await call<Run>('/api/recovery/runs', { profileId: profile.id, sha256: revision.sha256, mode })))}>Prepare {mode === 'rehearsal' ? 'Rehearsal' : 'Recovery'}</button>)}<button className="btn-secondary" onClick={() => setProfileForm({ id: profile.id, name: profile.name, datacenterId: profile.datacenterId, pipelineId: profile.pipelineId, deploymentConfigFile: profile.deploymentConfigFile, kind: profile.kind, observedConfigFile: '' })}>Capture New Revision</button></div><p className="text-xs text-gray-400">Reviewing a baseline is not permission to image hardware. A prepared run still requires a separate approved destructive deployment request.</p></>}</div></Dialog>}
 
-    {run?.snapshot && <Dialog title={`${run.mode === 'rehearsal' ? 'Rehearsal' : 'Recovery'} - ${run.clusterName}`} close={() => setRun(null)}><div className="space-y-4"><div className="flex flex-wrap items-center justify-between gap-3"><Badge value={run.status} /><span className="text-xs text-gray-400">Revision {run.revision} · {run.id}</span></div><p className="text-sm text-gray-300">{run.clusterVip} · Foundation {run.foundationEndpoint} · {run.snapshot.targets.length} physical nodes</p><p className="text-sm text-amber-500">Both recovery and rehearsal can overwrite the listed nodes. VM restore remains external.</p><details className="rounded border border-border p-3"><summary className="cursor-pointer text-sm text-gray-300">Exact deployment snapshot and targets</summary><p className="my-2 text-xs text-gray-400">{run.snapshot.targets.join(', ')} · SHA256 {run.baselineSha256}</p><pre className="overflow-auto whitespace-pre-wrap text-xs text-gray-400">{run.snapshot.deploymentContent}</pre><button className="btn-secondary mt-2" onClick={() => download(run.snapshot!.deploymentContent, `dr-${run.id}-deploy.yml`)}>Download Deployment YAML</button></details>{run.deploymentJobId && <p className="text-sm text-gray-300">Deployment job: {run.deploymentJobId} · <Link to="/jobs" className="text-nutanix-blue">Open Jobs / Queue and logs</Link></p>}{run.currentJobId && <p className="text-sm text-gray-300">Current configuration job: {run.currentJobId}</p>}
+    {run?.snapshot && <Dialog title={`${run.mode === 'rehearsal' ? 'Rehearsal' : 'Recovery'} - ${run.clusterName}`} close={() => setRun(null)}><div className="space-y-4"><p className="text-xs text-gray-400">Last successful run refresh: {date(runReadAt)}</p>{runPollError && <p role="status" className="text-sm text-amber-400">{runPollError}</p>}<div className="flex flex-wrap items-center justify-between gap-3"><Badge value={run.status} /><span className="text-xs text-gray-400">Revision {run.revision} · {run.id}</span></div><p className="text-sm text-gray-300">{run.clusterVip} · Foundation {run.foundationEndpoint} · {run.snapshot.targets.length} physical nodes</p><p className="text-sm text-amber-500">Both recovery and rehearsal can overwrite the listed nodes. VM restore remains external.</p><details className="rounded border border-border p-3"><summary className="cursor-pointer text-sm text-gray-300">Exact deployment snapshot and targets</summary><p className="my-2 text-xs text-gray-400">{run.snapshot.targets.join(', ')} · SHA256 {run.baselineSha256}</p><pre className="overflow-auto whitespace-pre-wrap text-xs text-gray-400">{run.snapshot.deploymentContent}</pre><button className="btn-secondary mt-2" onClick={() => download(run.snapshot!.deploymentContent, `dr-${run.id}-deploy.yml`)}>Download Deployment YAML</button></details>{run.deploymentJobId && <p className="text-sm text-gray-300">Deployment job: {run.deploymentJobId} · <Link to="/jobs" className="text-nutanix-blue">Open Jobs / Queue and logs</Link></p>}{run.currentJobId && <p className="text-sm text-gray-300">Current configuration job: {run.currentJobId}</p>}
       {admin && run.status === 'prepared' && <><button disabled={busy} className="btn-secondary" onClick={() => void act(async () => { const a = await call<{ id: string }>(`/api/recovery/runs/${run.id}/approval`, {}); setApprovalId(a.id); setRun(await call<Run>(`/api/recovery/runs/${run.id}`)) })}>Request Deployment Approval</button><p className="text-sm text-gray-400">A different administrator reviews the exact YAML in <Link to="/approvals" className="text-nutanix-blue">Approvals</Link>. Approval is required here even if general workflow policy is disabled.</p><Field title="Approved request ID"><input className="input w-full" value={approvalId} onChange={e => setApprovalId(e.target.value)} /></Field><Field title={`Target confirmation: REFOUNDATION ${run.clusterName}`}><input className="input w-full" value={targetPhrase} onChange={e => setTargetPhrase(e.target.value)} /></Field><Field title="Foundation confirmation: DEPLOY FOUNDATION VM"><input className="input w-full" value={foundationPhrase} onChange={e => setFoundationPhrase(e.target.value)} /></Field><label className="flex gap-2 text-sm text-gray-300"><input type="checkbox" checked={checked} onChange={e => setChecked(e.target.checked)} /> I reviewed the exact serials and acknowledge destructive imaging.</label><button className="btn-primary" disabled={busy || !checked || targetPhrase !== `REFOUNDATION ${run.clusterName}` || foundationPhrase !== 'DEPLOY FOUNDATION VM' || !approvalId} onClick={() => void act(async () => { await runPost('deploy', { approvalId, targetConfirmation: targetPhrase, destructiveConfirmation: foundationPhrase, riskAcknowledged: checked }); setChecked(false) })}><Play size={16} /> Deploy Reviewed Recovery</button></>}
       {admin && bootstrapPending && ['awaiting_bootstrap', 'awaiting_health_verification', 'bootstrapping'].includes(run.status) && <section className="space-y-3 rounded-lg border border-border p-4">
         <h3 className="font-semibold text-gray-100">Initial access bootstrap before PE health verification</h3>

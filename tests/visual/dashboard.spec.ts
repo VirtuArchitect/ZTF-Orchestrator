@@ -163,6 +163,18 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
       })
       return
     }
+    if (url.endsWith('/api/config-organization')) {
+      await route.fulfill({ json: { version: 1, revision: 0, groups: [], assignments: {} } })
+      return
+    }
+    if (url.endsWith('/api/credential-organization')) {
+      await route.fulfill({ json: { version: 1, revision: 0, groups: [], assignments: {} } })
+      return
+    }
+    if (url.endsWith('/api/operations')) {
+      await route.fulfill({ json: { version: 1, revision: 0, collectedAt: new Date().toISOString(), clusters: [], attention: {}, jobs: [], pipelines: [], recoveryProfiles: [], recoveryRuns: [] } })
+      return
+    }
     if (url.endsWith('/api/system/check')) {
       await route.fulfill({ json: { checks: [], ztfInstalled: true } })
       return
@@ -674,7 +686,7 @@ test('standalone FCA cluster workflow emits standalone config keys', async ({ pa
   await expect(page.getByRole('heading', { name: 'Cluster Create (Standalone FCA)', level: 2 })).toBeVisible()
   await expect(page.getByText('--workflow cluster-create-standalone-fca -f create_fca_cluster.yml')).toBeVisible()
 
-  const target = page.locator('select.input').first()
+  const target = page.locator('select.input').filter({ has: page.locator('option[value="standalone_fca"]') })
   await expect(target).toHaveValue('standalone_fca')
   await expect(target).toBeDisabled()
 

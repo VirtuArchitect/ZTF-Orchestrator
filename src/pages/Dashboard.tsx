@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import Layout from '../components/Layout'
 import OperationsOverview from '../components/OperationsOverview'
+import OperationalPlatformStatus from '../components/OperationalPlatformStatus'
 import { useStore } from '../store'
 import type { ApprovalRequest, DriftRun, Execution, ExecutionJob, Schedule, SystemCheck } from '../types'
 import { apiFetch } from '../utils/api'
@@ -21,6 +22,7 @@ interface SystemStatus {
 
 interface PlatformHealth {
   status: string
+  installed?: { versionTag?: string }
   storage: string
   database?: {
     configured: boolean
@@ -106,11 +108,12 @@ export default function Dashboard() {
   const [visibility, setVisibility] = useState<OperationalVisibility | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [overviewRefresh, setOverviewRefresh] = useState(0)
   const [collectionError, setCollectionError] = useState('')
   const isAdmin = user?.role === 'admin'
 
   const refresh = async (showSpinner = false) => {
-    if (showSpinner) setRefreshing(true)
+    if (showSpinner) { setRefreshing(true); setOverviewRefresh(value => value + 1) }
     try {
       const [sysResp, execResp, healthResp, driftResp, jobsResp, approvalsResp, schedulesResp, backupsResp, visibilityResp] = await Promise.all([
         apiFetch('/api/system/check'),
@@ -293,7 +296,8 @@ export default function Dashboard() {
       }
     >
       {collectionError && <p role="status" className="mb-4 text-sm text-yellow-400">{collectionError}</p>}
-      <OperationsOverview jobs={jobs} driftRuns={driftRuns} pendingApprovals={pendingApprovals} runningJobs={runningJobs} loading={loading} unavailable={Boolean(collectionError)} healthIssues={healthIssueCount} />
+      <OperationsOverview refreshToken={overviewRefresh} jobs={jobs} driftRuns={driftRuns} pendingApprovals={pendingApprovals} runningJobs={runningJobs} loading={loading} unavailable={Boolean(collectionError)} healthIssues={healthIssueCount} />
+      <div className="mb-5"><OperationalPlatformStatus health={health} backupAt={latestBackup?.createdAt} unavailable={Boolean(collectionError)} /></div>
       <details id="platform-details" className="rounded-lg border border-border bg-surface p-4">
         <summary className="cursor-pointer text-sm font-semibold text-gray-300">Platform details and advanced operational visibility</summary>
         <p className="text-sm text-gray-500 my-4">All existing readiness, runtime, storage, schedule, deployment and execution panels remain available here. These records do not replace independent infrastructure verification.</p>

@@ -43762,6 +43762,26 @@ _recovery_service = RecoveryService({
 }, _job_manager._lock)
 register_recovery_routes(app, _recovery_service, require_role, limiter)
 
+# Additive operational metadata. This service never calls the job submit API or
+# changes execution approvals, configuration bytes or credential definitions.
+from cluster_operations import OperationsService, empty as empty_operations, collect_health as collect_operations_health, register_routes as register_operations_routes
+
+_operations_service = OperationsService({
+    'read': lambda: _read_group_document(CONFIG_DIR / 'cluster_operations.json', empty_operations()),
+    'write': lambda value: write_json(CONFIG_DIR / 'cluster_operations.json', value),
+    'can_write': lambda: not _maintenance_active(),
+    'jobs': lambda: [{**job, 'configFile': (job.get('trace') or {}).get('configFile') or job.get('configFile', '')}
+                     for job in _job_manager.list_jobs(limit=1000000)],
+    'recovery': _recovery_service.overview,
+    'pipelines': _load_pipelines,
+    'pipeline': lambda identity: next((p for p in _load_pipelines() if p['id'] == identity), None),
+    'config_exists': lambda name: bool((path := safe_config_path(name, get_configs_dir())) and path.is_file()),
+    'collect': lambda record: collect_operations_health(record, _lookup_credential_ref),
+    'audit': lambda action, actor, identity: log.info('cluster_operations_action', extra={
+        'action': action, 'user': actor, 'operationRecordId': identity}),
+}, _job_manager._lock)
+register_operations_routes(app, _operations_service, require_role, limiter)
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':

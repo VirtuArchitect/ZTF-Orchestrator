@@ -1,5 +1,10 @@
 # Administrator and User Guide
 
+For the newer source-only managed-cluster workspace, attention register and
+explicit PE observations, use the [cluster operations addendum](../cluster-operations.md).
+The dated PDF/Word editions below have not been regenerated for that addition;
+their screenshots and appliance package provenance remain unchanged.
+
 [Open or download the illustrated PDF guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf)
 
 The primary published guide is a searchable 147-page PDF with searchable text,

@@ -18,6 +18,7 @@ async function seed(page: Page, role = 'admin') {
     const url = new URL(route.request().url())
     if (url.pathname === '/api/system/check') return route.fulfill({ json: { checks: [], ztfInstalled: true } })
     if (url.pathname === '/api/recovery') return route.fulfill({ json: recovery })
+    if (url.pathname === '/api/operations') return route.fulfill({ json: { version: 1, revision: 0, collectedAt: new Date().toISOString(), clusters: [], attention: {}, jobs: [], pipelines: [], recoveryProfiles: [], recoveryRuns: [] } })
     if (url.pathname === '/api/jobs') return route.fulfill({ json: [{ id: 'job1', workflow: 'cluster-create-foundation-vm', type: 'workflow', user: 'example-operator', status: 'success', createdAt: '2026-10-31T11:00:00Z', updatedAt: '2026-10-31T12:00:00Z' }] })
     if (url.pathname === '/api/drift') return route.fulfill({ json: [
       { id: 'old', configFile: 'baseline.yml', workflow: 'config-cluster', status: 'drifted', timestamp: '2026-10-29T10:00:00Z', summary: { changed: 1, missing: 0, unexpected: 0 }, findings: [] },

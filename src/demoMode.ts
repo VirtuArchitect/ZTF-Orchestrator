@@ -430,6 +430,18 @@ async function demoResponse(request: Request) {
   if (path === '/health') return json({ status: 'healthy', version: APP_VERSION, installed: DEMO_INSTALLED_BUILD, storage: 'demo' })
   if (!path.startsWith('/api/')) return null
 
+  if (path === '/api/operations' && method === 'GET') return json({
+    version: 1, revision: 0, collectedAt: iso(0),
+    clusters: [{ id: 'demo-cluster-01', name: 'HCI-CLUSTER-01', datacenter: 'DC-A', owner: 'Infrastructure team',
+      peEndpoint: 'https://pe.example.com:9440', peCredential: 'pe_monitor', expectedUuid: '', expectedNodes: [],
+      configFiles: ['cluster-baseline-demo.yml'], pipelineId: 'demo-pipeline-001', recoveryProfileId: 'demo-recovery-profile',
+      updatedAt: iso(20), observationFresh: false }],
+    attention: { 'demo-review': { id: 'demo-review', title: 'Illustrative job requires review', detail: 'Simulated post-configuration result', status: 'open', owner: 'Infrastructure team', notes: 'Demonstration only; no target was contacted.', updatedAt: iso(10) } },
+    jobs: [], recoveryProfiles: [{ id: 'demo-recovery-profile', name: 'HCI-CLUSTER-01', revision: 1, reviewed: false, drifted: false }],
+    recoveryRuns: [], pipelines: [{ id: 'demo-pipeline-001', name: 'Post-deployment baseline (simulated)' }],
+  })
+  if (path.startsWith('/api/operations')) return json({ error: 'Operational record changes and PE collection require a connected authorized backend. Demo data is illustrative only.' }, { status: 403 })
+
   if (path === '/api/auth/login') {
     return json({ token: DEMO_TOKEN, user: { username: 'demo-admin', role: 'admin' } })
   }

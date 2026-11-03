@@ -38,4 +38,10 @@ The [PDF manual and editable source](manuals/README.md) retain their existing de
 
 ## Newer source capability
 
+The [cluster-focused operations workspace](cluster-operations.md) adds managed
+cluster records, persistent review items and explicit verified-HTTPS PE
+observations. This source addition is not part of the existing 636f191 or 17aa3f2
+appliance ZIPs. Existing runtime/deployment and immutable package evidence remain
+separate from these new implementation and fixture checks.
+
 Upgrade Advisor now includes [request-scoped PE/PC TLS verification controls](upgrade-advisor-tls.md). These are source changes after the 636f191 bundle; that immutable bundle does not contain them. Use the newly published consolidated update for this feature.
