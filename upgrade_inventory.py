@@ -1,4 +1,4 @@
-"""Bounded, verified HTTPS inventory reads; never invokes upgrade operations."""
+"""Bounded HTTPS inventory reads with scoped TLS choices; no upgrade operations."""
 import base64
 import datetime
 import json
@@ -12,15 +12,38 @@ from prism_drift import endpoint, NoRedirect
 COMPONENTS = ('aos', 'ahv', 'prismCentral', 'ncc', 'lcm', 'foundation', 'firmware')
 
 
-def read(url, ref, path, lookup, product_header=False):
+def tls_verification(data):
+    """Validate optional per-endpoint TLS flags; omitted flags always verify."""
+    allowed = {'peEndpoint', 'peCredential', 'pcEndpoint', 'pcCredential', 'peVerifyTls', 'pcVerifyTls'}
+    if not isinstance(data, dict) or set(data) - allowed:
+        raise ValueError('Only PE/PC endpoints, credential references and TLS verification flags are accepted')
+    flags = {}
+    for kind in ('pe', 'pc'):
+        value = data.get(kind + 'VerifyTls', True)
+        if type(value) is not bool:
+            raise ValueError('TLS verification flags must be booleans')
+        if not value and not data.get(kind + 'Endpoint'):
+            raise ValueError('A TLS exception requires its PE or PC endpoint')
+        flags[kind] = value
+    return flags
+
+
+def read(url, ref, path, lookup, product_header=False, verify_tls=True):
+    if type(verify_tls) is not bool:
+        raise ValueError('TLS verification flag must be a boolean')
     user, password, error = lookup(ref)
     if error or not user or not password:
         raise ValueError('Credential reference could not be resolved')
     authorization = base64.b64encode(f'{user}:{password}'.encode()).decode('ascii')
     req = urllib.request.Request(url + path, headers={
         'Authorization': 'Basic ' + authorization, 'Accept': 'application/json'}, method='GET')
+    context = ssl.create_default_context() if verify_tls else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    if not verify_tls:
+        # Explicit, request-scoped administrator exception. Never changes global trust.
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect(),
-                                        urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+                                        urllib.request.HTTPSHandler(context=context))
     try:
         try:
             # Validated HTTPS target; fixed GET paths, without redirects or proxies.
@@ -53,8 +76,7 @@ def text(value):
 
 
 def collect(data, lookup):
-    if not isinstance(data, dict) or set(data) - {'peEndpoint', 'peCredential', 'pcEndpoint', 'pcCredential'}:
-        raise ValueError('Only PE/PC endpoints and credential references are accepted')
+    flags = tls_verification(data)
     targets = []
     for kind in ('pe', 'pc'):
         address, ref = data.get(kind + 'Endpoint'), data.get(kind + 'Credential')
@@ -66,10 +88,14 @@ def collect(data, lookup):
         raise ValueError('At least one PE or PC endpoint is required')
     result = dict(clusterName='', components={}, observations=[], errors=[], readOnly=True,
                   collectedAt=datetime.datetime.now(datetime.timezone.utc).isoformat())
+    result['tlsVerification'] = {kind: flags[kind] for kind, _, _ in targets}
+    result['securityWarnings'] = [
+        f'{kind.upper()}: Certificate verification disabled; server identity was not verified.'
+        for kind, _, _ in targets if not flags[kind]]
     for kind, url, ref in targets:
         if kind == 'pc':
             try:
-                version = read(url, ref, '/', lookup, product_header=True)
+                version = read(url, ref, '/', lookup, product_header=True, verify_tls=flags[kind])
                 result['components']['prismCentral'] = version
                 result['observations'].append(dict(component='prismCentral', value=version, endpoint=url,
                                                    source='HTTPS product header; not an authenticated API permission check'))
@@ -79,7 +105,7 @@ def collect(data, lookup):
         for component, path in [('aos', '/PrismGateway/services/rest/v2.0/cluster/'),
                                 ('ahv', '/PrismGateway/services/rest/v2.0/hosts/')]:
             try:
-                body = read(url, ref, path, lookup)
+                body = read(url, ref, path, lookup, verify_tls=flags[kind])
                 if not isinstance(body, dict):
                     raise ValueError('Unsupported inventory response')
                 if component == 'aos':

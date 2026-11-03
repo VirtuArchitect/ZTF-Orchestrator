@@ -35,3 +35,7 @@ ZIP SHA-256: `6824c285cef93852f42bdfcc2b0d0651be9605dde018bb3e41fc6a53c2ff4ccf`.
 Required PR checks passed: 1,142 tests passed, 2 skipped and 81.39% coverage, with frontend build/audit successful. Package/host-service checksums, exact Docker archive tags, isolated image health/API and package import were verified. Local Docker cutover was healthy with persistent configuration hashes and records preserved. A target Linux appliance activation and recovery rehearsal remain separate operator verification.
 
 The [PDF manual and editable source](manuals/README.md) retain their existing design. [Current screenshots](assets/guide/v1.8.5-rc1/README.md) use generic simulated data. Dated evidence, archived release documents and existing videos retain their original provenance; a documentation refresh neither modifies earlier ZIPs nor turns simulated media into live validation.
+
+## Newer source capability
+
+Upgrade Advisor now includes [request-scoped PE/PC TLS verification controls](upgrade-advisor-tls.md). These are source changes after the 636f191 bundle; that immutable bundle does not contain them. Use the newly published consolidated update for this feature.

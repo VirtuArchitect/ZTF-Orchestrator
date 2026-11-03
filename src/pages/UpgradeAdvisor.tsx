@@ -43,7 +43,7 @@ const STATUS_COPY: Record<UpgradeAdvisorStatus, string> = {
 
 type VersionMap = Record<string, string>
 const canonical = (input: unknown) => JSON.stringify(input, (_key, value) => value && typeof value === 'object' && !Array.isArray(value) ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))) : value)
-type Collection = { id: string; clusterName: string; components: VersionMap; collectedAt: string; unknownComponents: string[]; errors: Array<{ component: string; message: string }> }
+type Collection = { id: string; clusterName: string; components: VersionMap; collectedAt: string; unknownComponents: string[]; errors: Array<{ component: string; message: string }>; tlsVerification?: { pe?: boolean; pc?: boolean }; securityWarnings?: string[] }
 type SavedAssessment = { id: string; clusterName: string; status: UpgradeAdvisorStatus; createdAt: string; createdBy: string }
 
 export default function UpgradeAdvisor() {
@@ -56,6 +56,7 @@ export default function UpgradeAdvisor() {
   const [current, setCurrent] = useState<VersionMap>({})
   const [targets, setTargets] = useState<VersionMap>({})
   const [connections, setConnections] = useState({ peEndpoint: '', peCredential: '', pcEndpoint: '', pcCredential: '' })
+  const [verifyTls, setVerifyTls] = useState({ pe: true, pc: true })
   const [collection, setCollection] = useState<Collection | null>(null)
   const [history, setHistory] = useState<SavedAssessment[]>([])
   const [collecting, setCollecting] = useState(false)
@@ -113,13 +114,13 @@ export default function UpgradeAdvisor() {
   const collectInventory = async () => {
     setCollecting(true); setError('')
     try {
-      const resp = await apiFetch('/api/upgrade-advisor/inventory', { method: 'POST', body: JSON.stringify(connections) })
+      const resp = await apiFetch('/api/upgrade-advisor/inventory', { method: 'POST', body: JSON.stringify({ ...connections, peVerifyTls: verifyTls.pe, pcVerifyTls: verifyTls.pc }) })
       const data = await resp.json()
       if (!resp.ok) throw new Error(data.error || 'Inventory collection failed')
       setCollection(data); setCurrent(data.components); setClusterName(data.clusterName || clusterName)
       setAssessment(null); setAssessmentInput(null); setSavedId('')
     } catch (err) { setError(err instanceof Error ? err.message : 'Inventory collection failed') }
-    finally { setCollecting(false) }
+    finally { setCollecting(false); setVerifyTls({ pe: true, pc: true }) }
   }
   const saveAssessment = async () => {
     setSaving(true); setError('')
@@ -177,7 +178,7 @@ export default function UpgradeAdvisor() {
       }
       const resp = await apiFetch('/api/upgrade-advisor/assess', {
         method: 'POST',
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, inventorySnapshotId: collection?.id }),
       })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) {
@@ -292,8 +293,22 @@ export default function UpgradeAdvisor() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           {(['peEndpoint', 'peCredential', 'pcEndpoint', 'pcCredential'] as const).map(key => <label key={key} className="block"><span className="label">{{ peEndpoint: 'PE HTTPS endpoint', peCredential: 'PE credential reference', pcEndpoint: 'PC HTTPS endpoint', pcCredential: 'PC credential reference' }[key]}</span><input className="input" value={connections[key]} onChange={e => setConnections({ ...connections, [key]: e.target.value })} /></label>)}
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {(['pe', 'pc'] as const).map(kind => <div key={kind} className="space-y-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={verifyTls[kind]} disabled={user?.role !== 'admin' || collecting}
+                onChange={e => setVerifyTls(value => ({ ...value, [kind]: e.target.checked }))} />
+              Verify {kind.toUpperCase()} TLS certificate
+            </label>
+            {!verifyTls[kind] && <p role="alert" className="rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+              {kind.toUpperCase()}: Certificate verification disabled for the next collection. Server identity cannot be verified; credentials could be exposed to an impersonating endpoint. This exception is audited.
+            </p>}
+          </div>)}
+        </div>
+        <p className="text-xs text-gray-500">Verification defaults to enabled and resets after each collection. Only administrators can make a temporary exception. Persistent certificate trust is recommended.</p>
         {canManagePacks && <button className="btn-secondary gap-2" onClick={collectInventory} disabled={collecting}><RefreshCw size={14} className={collecting ? 'animate-spin' : ''} /> Collect inventory</button>}
         {collection && <div className="text-sm space-y-1"><p>Collected {new Date(collection.collectedAt).toLocaleString()} · {Object.keys(collection.components).length} versions · Unknown: {collection.unknownComponents.join(', ') || 'None'}</p>
+          {collection.securityWarnings?.map((warning, index) => <p key={`tls-${index}`} role="alert" className="rounded border border-amber-500/50 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">{warning} Install trusted certificates and recollect before treating this as verified evidence.</p>)}
           {collection.errors.map((item, index) => <p key={index} className="text-red-500">{item.component}: {item.message}</p>)}
           <p>Provenance: {Object.entries(collection.components).map(([key, value]) => `${key}: ${current[key] === value ? 'collected' : 'manually changed'}`).join(' · ')}</p></div>}
       </section>

@@ -763,13 +763,15 @@ service restarts.
 
 ### Upgrade Advisor
 
-Use Upgrade Advisor for read-only Nutanix upgrade risk assessment.
+Use Upgrade Advisor for read-only Nutanix upgrade risk assessment. See the
+[temporary PE/PC TLS controls](upgrade-advisor-tls.md) for administrator exceptions
+and the warning retained with unverified inventory.
 
 Key functions:
 
 | Function | Purpose |
 |---|---|
-| Collect inventory | Reads PE AOS/AHV versions over verified HTTPS and, where available, the PC HTTPS product version header. Partial failures remain Unknown. |
+| Collect inventory | Reads PE AOS/AHV versions and, where available, the PC HTTPS product header. TLS verification defaults on; administrators may use audited per-collection exceptions. Partial failures remain Unknown. |
 | Current Versions | Captures the versions currently running in the environment. |
 | Target Versions | Captures proposed target versions. |
 | Evidence toggles | Records whether LCM prechecks, release notes, compatibility review, Prism Central context, dark-site bundle review, or other supporting evidence has been completed. |

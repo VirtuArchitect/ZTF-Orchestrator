@@ -74,7 +74,9 @@ automatic upgrade executor.
 ## Operational procedure
 
 1. Add read-capable PE/PC credential references in Global Config. Establish CA
-   trust and matching certificate SAN identities. No insecure TLS mode exists.
+   trust and matching certificate SAN identities. TLS verification is enabled by
+   default. Administrators can make a per-endpoint exception for the next
+   inventory collection only; see [temporary TLS exceptions](upgrade-advisor-tls.md).
 2. Enter the PE and optional PC HTTPS endpoints and their credential references.
    Select Collect inventory. Only fixed GET paths are called, with ten-second
    timeouts, a 1 MiB response limit, no proxies and no redirect following.

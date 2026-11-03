@@ -9,6 +9,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Upgrade Advisor offers separate PE/PC Verify TLS certificate controls, enabled
+  by default. Temporary administrator-only exceptions reset after collection,
+  are audited, and remain visible in saved inventory and assessment reports.
+  Other workflow and drift TLS policies are unchanged.
+
+
 ### Documentation
 - Refresh active guides and formatted Word/PDF manuals for consolidated build
   v1.8.5-rc1-636f191, including generic current screenshots, credential/config

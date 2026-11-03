@@ -122,6 +122,15 @@ def render_upgrade_assessment_markdown(assessment: dict[str, Any]) -> str:
         '## Inventory',
         '',
     ]
+    collection = _dict(assessment.get('inventoryCollection'))
+    verification = _dict(collection.get('tlsVerification'))
+    if verification:
+        lines.extend(['## Inventory transport verification', ''])
+        for kind in ('pe', 'pc'):
+            if kind in verification:
+                state = 'enabled' if verification[kind] is True else 'DISABLED - server identity not verified'
+                lines.append(f'- {kind.upper()} TLS certificate verification: **{state}**')
+        lines.append('')
     inventory = _dict(assessment.get('inventory'))
     cluster_name = inventory.get('clusterName') or 'unknown'
     lines.append(f"- Cluster: `{cluster_name}`")
