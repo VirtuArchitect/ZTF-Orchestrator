@@ -83,3 +83,5 @@ candidate to stable. Verify exact installed build metadata independently.
 - [Credential groups](../credential-groups.md)
 - [Config Files grouping](../config-file-groups.md)
 - [PE login-title procedure](../pe-login-title.md)
+
+- [Upgrade Advisor temporary TLS exceptions](../upgrade-advisor-tls.md): current procedure addendum; earlier manual editions describe the verified-only collector.

@@ -20,6 +20,9 @@ operations and recovery preparation. Existing tools remain available through
 collapsible navigation groups and dashboard details; no integration is removed.
 See the [streamlined console guide](docs/streamlined-console.md).
 
+Upgrade Advisor supports [audited, temporary PE/PC TLS exceptions](docs/upgrade-advisor-tls.md)
+for administrator inventory collection; verification remains enabled by default.
+
 **Monitor & Verify** opens drift checks, inventory/upgrade readiness and execution
 history. **NKP Validation Evidence (Preview)** remains under Advanced Automation;
 its original route, saved evidence and ZTF UAT pack exports are retained. Preview

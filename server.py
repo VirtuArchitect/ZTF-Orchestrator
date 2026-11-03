@@ -46,7 +46,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from storage_backend import StorageError, create_storage
-from upgrade_inventory import collect as collect_upgrade_inventory, assessment_input as normalize_upgrade_input
+from upgrade_inventory import collect as collect_upgrade_inventory, assessment_input as normalize_upgrade_input, tls_verification as upgrade_inventory_tls_verification
 from upgrade_advisor import (
     assess_upgrade_risk,
     load_upgrade_rules,
@@ -43287,7 +43287,15 @@ def assess_upgrade_advisor():
     targets = data.get('targets')
     if not isinstance(targets, dict) or not any(str(value).strip() for value in targets.values()):
         return jsonify({'error': 'At least one target version is required'}), 400
+    try:
+        inventory = _upgrade_inventory_snapshot(data.get('inventorySnapshotId'))
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     result = assess_upgrade_risk(data, _active_upgrade_rules_pack())
+    if inventory:
+        result['inventoryCollection'] = inventory
+    if request.current_user['role'] == 'viewer':
+        result = _viewer_safe_upgrade_assessment({'assessment': result})['assessment']
     log.info('upgrade_advisor_assess',
              extra={'user': request.current_user['username'],
                     'action': 'upgrade_advisor_assess',
@@ -43297,6 +43305,17 @@ def assess_upgrade_advisor():
 
 
 _upgrade_history_lock = threading.RLock()
+
+
+def _upgrade_inventory_snapshot(snapshot_id):
+    if not snapshot_id:
+        return None
+    if not isinstance(snapshot_id, str) or not re.fullmatch(r'[0-9a-f-]{36}', snapshot_id):
+        raise ValueError('Invalid inventory snapshot ID')
+    inventory = read_json(CONFIG_DIR / f'upgrade_inventory_{snapshot_id}.json', None)
+    if not inventory:
+        raise ValueError('Inventory snapshot not found; collect again')
+    return inventory
 
 
 def _viewer_safe_upgrade_assessment(record):
@@ -43324,8 +43343,17 @@ def _viewer_safe_upgrade_assessment(record):
 @limiter.limit('5 per minute')
 @require_role('admin', 'operator')
 def collect_upgrade_inventory_api():
+    data = request.get_json(silent=True)
     try:
-        result = collect_upgrade_inventory(request.get_json(silent=True), _lookup_credential_ref)
+        verification = upgrade_inventory_tls_verification(data)
+        if not all(verification.values()):
+            permitted = request.current_user['role'] == 'admin'
+            log.warning('upgrade_inventory_tls_exception', extra={
+                'user': request.current_user['username'], 'action': 'upgrade_inventory_tls_exception',
+                'tlsVerification': verification, 'outcome': 'requested' if permitted else 'denied'})
+            if not permitted:
+                return jsonify({'error': 'Only administrators may disable inventory TLS certificate verification'}), 403
+        result = collect_upgrade_inventory(data, _lookup_credential_ref)
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400
     result['id'] = str(uuid.uuid4())
@@ -43337,7 +43365,8 @@ def collect_upgrade_inventory_api():
         write_json(CONFIG_DIR / f'upgrade_inventory_{result["id"]}.json', result)
         write_json(index, [result['id']] + snapshots)
     log.info('upgrade_inventory_collected', extra={'user': request.current_user['username'],
-             'action': 'upgrade_inventory_collected', 'unknownCount': len(result['unknownComponents'])})
+             'action': 'upgrade_inventory_collected', 'unknownCount': len(result['unknownComponents']),
+             'tlsVerification': result.get('tlsVerification', {})})
     return jsonify(result)
 
 
@@ -43354,14 +43383,10 @@ def upgrade_assessment_history():
         normalized = normalize_upgrade_input(data)
     except ValueError as exc:
         return jsonify({'error': str(exc)}), 400
-    inventory = None
-    snapshot_id = data.get('inventorySnapshotId')
-    if snapshot_id:
-        if not isinstance(snapshot_id, str) or not re.fullmatch(r'[0-9a-f-]{36}', snapshot_id):
-            return jsonify({'error': 'Invalid inventory snapshot ID'}), 400
-        inventory = read_json(CONFIG_DIR / f'upgrade_inventory_{snapshot_id}.json', None)
-        if not inventory:
-            return jsonify({'error': 'Inventory snapshot not found; collect again'}), 400
+    try:
+        inventory = _upgrade_inventory_snapshot(data.get('inventorySnapshotId'))
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 400
     result = assess_upgrade_risk(normalized, _active_upgrade_rules_pack())
     result['id'] = str(uuid.uuid4())
     record = dict(id=result['id'], assessment=result, assessmentInput=normalized,

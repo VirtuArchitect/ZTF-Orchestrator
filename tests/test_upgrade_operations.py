@@ -16,7 +16,7 @@ def sample():
 
 
 def test_collector_preserves_partial_errors(monkeypatch):
-    def read(url, ref, path, lookup, product_header=False):
+    def read(url, ref, path, lookup, product_header=False, verify_tls=True):
         if product_header:
             return 'pc.2024.3.1'
         if path.endswith('/cluster/'):

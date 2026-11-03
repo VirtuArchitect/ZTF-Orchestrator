@@ -303,6 +303,7 @@ const configs: Record<string, string> = {
 }
 
 const upgradeDemoAssessments: Record<string, unknown>[] = []
+let upgradeDemoInventory: Record<string, unknown> | null = null
 
 function demoUpgradeAssessment(input: Record<string, unknown>) {
   const inventory = input.inventory && typeof input.inventory === 'object'
@@ -815,13 +816,23 @@ async function demoResponse(request: Request) {
       mutatingUat: 'ZTF_NATIVE_FOUNDATION_ENABLE_DELL_IDRAC_MUTATION=true',
     },
   })
-  if (path === '/api/upgrade-advisor/inventory') return json({ id: 'demo-inventory', clusterName: 'Example', components: { aos: '7.3.0', ahv: 'Nutanix 10.3.0' }, collectedAt: new Date().toISOString(), unknownComponents: ['prismCentral', 'ncc', 'lcm', 'foundation', 'firmware'], errors: [], readOnly: true })
-  if (path === '/api/upgrade-advisor/assess') return json(demoUpgradeAssessment(await requestJson(request)))
+  if (path === '/api/upgrade-advisor/inventory') {
+    const input = await requestJson(request)
+    const tlsVerification = Object.fromEntries((['pe', 'pc'] as const).filter(kind => input[`${kind}Endpoint`]).map(kind => [kind, input[`${kind}VerifyTls`] !== false]))
+    const securityWarnings = Object.entries(tlsVerification).filter(([, verified]) => !verified).map(([kind]) => `${kind.toUpperCase()}: Certificate verification disabled; server identity was not verified.`)
+    upgradeDemoInventory = { id: 'demo-inventory', clusterName: 'Example', components: { aos: '7.3.0', ahv: 'Nutanix 10.3.0' }, collectedAt: new Date().toISOString(), unknownComponents: ['prismCentral', 'ncc', 'lcm', 'foundation', 'firmware'], errors: [], readOnly: true, tlsVerification, securityWarnings }
+    return json(upgradeDemoInventory)
+  }
+  if (path === '/api/upgrade-advisor/assess') {
+    const input = await requestJson(request)
+    return json({ ...demoUpgradeAssessment(input), ...(input.inventorySnapshotId === upgradeDemoInventory?.id ? { inventoryCollection: upgradeDemoInventory } : {}) })
+  }
   if (path === '/api/upgrade-advisor/assessments') {
     if (method === 'GET') return json({ assessments: upgradeDemoAssessments })
     const input = await requestJson(request)
-    const assessment = demoUpgradeAssessment(input)
-    const record = { id: assessment.id, clusterName: assessment.inventory.clusterName, status: assessment.status, createdAt: assessment.generatedAt, createdBy: 'demo-admin', assessment, assessmentInput: input, inventoryCollection: null }
+    const inventoryCollection = input.inventorySnapshotId === upgradeDemoInventory?.id ? upgradeDemoInventory : null
+    const assessment = { ...demoUpgradeAssessment(input), ...(inventoryCollection ? { inventoryCollection } : {}) }
+    const record = { id: assessment.id, clusterName: assessment.inventory.clusterName, status: assessment.status, createdAt: assessment.generatedAt, createdBy: 'demo-admin', assessment, assessmentInput: input, inventoryCollection }
     upgradeDemoAssessments.unshift(record)
     return json(record, { status: 201 })
   }
