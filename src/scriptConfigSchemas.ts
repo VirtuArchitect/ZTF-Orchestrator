@@ -153,6 +153,20 @@ function peCluster(values: Values, body: Record<string, unknown>) {
 }
 
 const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
+  UnregisterPeFromPc: {
+    scriptId: 'UnregisterPeFromPc', title: 'Unregister PE from PC', riskLevel: 'high',
+    description: 'Generate draft removal YAML, then use the administrator removal wizard for identity review, exact-content approval and verification.',
+    fields: [
+      { key: 'pc_endpoint', label: 'PC endpoint', type: 'text', required: true, placeholder: 'https://pc.example.com:9440' },
+      { key: 'pc_credential', label: 'PC credential reference', type: 'text', required: true, placeholder: 'pc_admin_ref' },
+      { key: 'pe_cluster_uuid', label: 'PE cluster UUID', type: 'text', required: true, placeholder: '00000000-0000-4000-8000-000000000001' },
+    ],
+    build: values => {
+      const pc = text(values, 'pc_endpoint'), ref = text(values, 'pc_credential'), id = text(values, 'pe_cluster_uuid')
+      if (!/^https:\/\//.test(pc) || !/^[A-Za-z0-9_.-]{1,128}$/.test(ref) || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) throw new Error('Provide an HTTPS endpoint, credential reference and canonical PE UUID.')
+      return toYaml({ pc_endpoint: pc, pc_credential: ref, pe_cluster_uuid: id })
+    },
+  },
   SetPrismLoginTitlePe: {
     scriptId: 'SetPrismLoginTitlePe',
     title: 'Set Prism Login Title (PE)',

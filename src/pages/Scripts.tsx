@@ -10,6 +10,7 @@ import ScriptConfigWizard from '../components/ScriptConfigWizard'
 import { SCRIPT_CONFIG_SCHEMAS } from '../scriptConfigSchemas'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
+import { Link } from '../router'
 
 interface LogLine { type: string; data: string; ts: number }
 interface ScriptProgress { phase: string; percent: number; detail: string; estimated: boolean }
@@ -71,7 +72,7 @@ export default function Scripts() {
 
   // ── Run ───────────────────────────────────────────────────────────────────
   const runScripts = async (dryRun = false) => {
-    if (!queue.length) return
+    if (!queue.length || queue.includes('UnregisterPeFromPc')) return
     const selectedQueue = [...queue]
     const destructive = selectedQueue.filter(id => SCRIPT_CONFIG_SCHEMAS[id]?.riskLevel === 'destructive')
     const confirmationPhrase = destructive.length ? `RUN ${destructive.join(',')}` : ''
@@ -255,7 +256,12 @@ export default function Scripts() {
 
         {/* ── Right: queue + config + terminal ──────────────────────────── */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          {queue.length > 0 ? (
+          {queue.includes('UnregisterPeFromPc') ? <section className="card space-y-3">
+            <h2 className="section-title">Unregister PE from PC</h2>
+            <p>Removal runs alone through its administrator wizard, with PC/PE identity review, exact YAML approval and verification.</p>
+            <Link className="btn-primary" to="/workflows/unregister-pe-from-pc">Open removal wizard</Link>
+            <button className="btn-secondary ml-3" onClick={() => setQueue([])}>Clear selection</button>
+          </section> : queue.length > 0 ? (
             <>
               {/* Queue panel */}
               <div className="card">

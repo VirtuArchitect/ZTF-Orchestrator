@@ -1,3 +1,6 @@
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+Unregister PE from PC: administrator wizard, reference-only YAML, exact-content independent approval, single-use native jobs and PC task/inventory verification. Requires v4.2 API compatibility; PE-side cleanup remains separate. Mocked validation only; see docs/unregister-pe-from-pc.md.
+
 ZTF-Orchestrator v1.8.5-rc1
 Release candidate - prerelease channel; v1.8.4 remains Latest stable
 

@@ -7,6 +7,7 @@ import Setup         from './pages/Setup'
 import GlobalConfig  from './pages/GlobalConfig'
 import Workflows     from './pages/Workflows'
 import WorkflowDetail from './pages/WorkflowDetail'
+import UnregisterPeFromPc from './pages/UnregisterPeFromPc'
 import Scripts       from './pages/Scripts'
 import Scripts2x     from './pages/Scripts2x'
 import Executions    from './pages/Executions'
@@ -93,6 +94,9 @@ export default function App() {
         } />
         <Route path="/workflows" element={
           <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf1" /></RequireRole>
+        } />
+        <Route path="/workflows/unregister-pe-from-pc" element={
+          <RequireRole roles={['admin']}><UnregisterPeFromPc /></RequireRole>
         } />
         <Route path="/workflows/:id" element={
           <RequireRole roles={['admin', 'operator']}><WorkflowDetail /></RequireRole>

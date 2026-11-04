@@ -2,6 +2,12 @@ import type { WorkflowDef, ScriptDef, Ztf2ScriptDef } from './types'
 
 export const WORKFLOWS: WorkflowDef[] = [
   {
+    id: 'unregister-pe-from-pc', name: 'Unregister PE from PC', category: 'Prism Central', icon: 'ShieldCheck',
+    description: 'Review and remove one exact PE registration from Prism Central',
+    configFile: 'unregister-pe-from-pc.yml',
+    details: 'Administrator-only PC-side removal with strict HTTPS, exact-content approval, vendor preflight and verified PC task/inventory results. PE-side cleanup and dependent services require separate verification.',
+  },
+  {
     id: 'cvm-idrac-password-rotation',
     name: 'CVM & iDRAC Password Rotation',
     description: 'Rotate CVM SSH and Dell iDRAC passwords with verified logins',
@@ -413,6 +419,7 @@ export const SCRIPTS: ScriptDef[] = [
   { id: 'RegisterInitClusterNdb', name: 'Register NDB Cluster', category: 'Database', description: 'Registers and initializes a cluster with NDB' },
   // Prism Central
   { id: 'DeployPC', name: 'Deploy Prism Central', category: 'Prism Central', description: 'Deploys a Prism Central VM' },
+  { id: 'UnregisterPeFromPc', name: 'Unregister PE from PC', category: 'Prism Central', description: 'Opens the administrator removal wizard; exact-content approval and verification required' },
   { id: 'RegisterToPc', name: 'Register PE to PC', category: 'Prism Central', description: 'Registers Prism Element clusters with Prism Central' },
   { id: 'EnableMicrosegmentation', name: 'Enable Microsegmentation (PC)', category: 'Prism Central', description: 'Enables Flow microsegmentation on Prism Central' },
   { id: 'DisableMicrosegmentation', name: 'Disable Microsegmentation (PC)', category: 'Prism Central', description: 'Disables Flow microsegmentation on Prism Central' },
