@@ -27,6 +27,8 @@ warnings. Job success never becomes a cluster-health claim. Existing execution,
 approval and recovery gates remain unchanged; previously published bundles do
 not acquire this feature automatically.
 
+Latest source also adds an administrator-only [Unregister PE from PC wizard](docs/unregister-pe-from-pc.md), with exact-identity review, mandatory approval and PC-side verification. This is not yet a live-validated appliance release; PE-side cleanup remains separate.
+
 Upgrade Advisor supports [audited, temporary PE/PC TLS exceptions](docs/upgrade-advisor-tls.md)
 for administrator inventory collection; verification remains enabled by default.
 

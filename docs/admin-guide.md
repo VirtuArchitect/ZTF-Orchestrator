@@ -1047,3 +1047,8 @@ An administrative change is complete when:
 - `docs/runbooks/README.md`
 - `docs/testing/README.md`
 - `docs/uat/README.md`
+
+
+## Unregister a PE from PC
+
+Use the administrator-only [Unregister PE from PC wizard](unregister-pe-from-pc.md) to generate reference-only YAML, review the exact PC/PE identity and request a separate administrator approval. Removal requires an exact UUID confirmation and single-use approval. PC task completion and inventory absence are verified; PE-side cleanup and dependent-service checks remain separate. Unsupported v4.2 APIs fail closed.

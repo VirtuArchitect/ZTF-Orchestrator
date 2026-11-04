@@ -37,6 +37,7 @@ import bcrypt
 import yaml
 import credential_rotation as rotation
 import appliance_updates as guided_updates
+import pc_unregistration as unregistration
 from pe_login_title import has_title_intent, validate_intent as validate_pe_login_title_intent
 from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
 from pe_local_users import validate_intent as validate_pe_local_users_intent
@@ -3122,6 +3123,7 @@ POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
 }
 
 ALLOWED_WORKFLOWS = {
+    unregistration.WORKFLOW,
     rotation.WORKFLOW,
     'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
     'imaging-only', 'imaging-only-standalone-fca',
@@ -3135,6 +3137,7 @@ ALLOWED_WORKFLOWS = {
 } | POST_FOUNDATION_WORKFLOWS
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
+    unregistration.WORKFLOW,
     rotation.WORKFLOW,
     'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
     'imaging-only', 'imaging-only-standalone-fca',
@@ -3155,6 +3158,7 @@ def _is_allowed_approval_workflow(workflow: str) -> bool:
     return False
 
 ALLOWED_SCRIPTS = {
+    unregistration.SCRIPT,
     'CreateLocalUsersPe', 'SetPrismLoginTitlePe',
     'AcceptEulaPc', 'AcceptEulaPe',
     'AddAdServerPc', 'AddAdServerPe', 'AddAuthorizationPolicy', 'AddDirectoryServices',
@@ -3230,6 +3234,8 @@ def _script_ids_from_payload(raw_script) -> list[str]:
 
 
 def _normalize_script_ids(script_ids: list[str]) -> tuple[list[str], str | None]:
+    if unregistration.SCRIPT in script_ids and len(script_ids) != 1:
+        return [], 'UnregisterPeFromPc must run alone through the approved removal wizard'
     if 'SetPrismLoginTitlePe' in script_ids and len(script_ids) != 1:
         return [], 'SetPrismLoginTitlePe must run as its own script or pipeline step'
     if 'CreateLocalUsersPe' in script_ids and len(script_ids) != 1:
@@ -3309,7 +3315,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 
 
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
-    if workflow == rotation.WORKFLOW:
+    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -6090,6 +6096,8 @@ _parallel_engine:  ParallelEngine  | None = None
 _approval_manager: ApprovalManager | None = None
 
 def _scheduled_pe_user_error(script) -> str:
+    if unregistration.SCRIPT in _script_ids_from_payload(script):
+        return 'PE unregistration cannot be scheduled; use the approved removal wizard'
     if 'SetPrismLoginTitlePe' in _script_ids_from_payload(script):
         return 'PE login-title changes cannot be scheduled; use an administrator-confirmed script or pipeline run'
     if 'CreateLocalUsersPe' in _script_ids_from_payload(script):
@@ -34783,7 +34791,54 @@ class ExecutionJobManager:
                                       return_code=code, diagnostics=diagnostics)
             self._complete(job_id, status, code)
 
+    def _run_unregistration_job(self, job_id, payload, user):
+        status, diagnostics = 'failed', {'followupRequired': True, 'peSideCleanupVerified': False}
+        acquired = unregistration.LOCK.acquire(blocking=False)
+        try:
+            if not acquired:
+                raise unregistration.UnregistrationError('Another PC unregistration is active; no changes attempted.')
+            with _UNREGISTRATION_SUBMIT_LOCK:
+                error, config, _ = _unregistration_submission(payload, 'admin', job_id)
+            if error:
+                raise unregistration.UnregistrationError(error)
+            credential = unregistration.credentials(config, _pe_login_title_resolver({}))
+            if payload.get('dryRun') is True:
+                self._emit(job_id, 'stdout', 'Intent and selected-vault reference validated; no target requests were made.')
+                diagnostics = {'dryRun': True, 'targetRequestsMade': False}
+            else:
+                deadline = time.monotonic() + EXEC_TIMEOUT
+                def cancelled():
+                    return self._stop or (self.get_job(job_id) or {}).get('status') == 'cancelling' or time.monotonic() >= deadline
+                def authorize():
+                    with _UNREGISTRATION_SUBMIT_LOCK:
+                        gate_error, _, _ = _unregistration_submission(payload, 'admin', job_id)
+                    if gate_error:
+                        raise unregistration.UnregistrationError(gate_error)
+                diagnostics = unregistration.execute(config, credential,
+                    lambda line: self._emit(job_id, 'stdout', line), cancelled=cancelled, authorize=authorize)
+            status = 'success'
+        except unregistration.UnregistrationError as error:
+            self._emit(job_id, 'error', str(error))
+        except Exception:
+            self._emit(job_id, 'error', 'Unregistration could not be verified; inspect PC and PE state before retrying.')
+        finally:
+            if acquired:
+                unregistration.LOCK.release()
+            self._set_diagnostics(job_id, diagnostics)
+            code = 0 if status == 'success' else -1
+            _record_execution_history(execution_id=job_id, workflow_or_script=unregistration.WORKFLOW,
+                execution_type='workflow', status=status, user=user, config_file=payload.get('configFile') or '',
+                config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
+            self._complete(job_id, status, code)
+
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('workflow') == unregistration.WORKFLOW:
+            self._run_unregistration_job(job_id, payload, user)
+            return
+        if unregistration.SCRIPT in _script_ids_from_payload(payload.get('script')):
+            self._emit(job_id, 'error', 'PE unregistration requires the dedicated approval-bound job path')
+            self._complete(job_id, 'failed', -1)
+            return
         if payload.get('workflow') == rotation.WORKFLOW:
             self._run_rotation_job(job_id, payload, user)
             return
@@ -41677,6 +41732,85 @@ def upload_foundation_vm_image():
         except OSError:
             log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
 
+_UNREGISTRATION_SUBMIT_LOCK = threading.Lock()
+
+
+def _unregistration_submission(data, role, worker_job_id=''):
+    if role != 'admin':
+        return 'PE unregistration requires an Orchestrator administrator', {}, None
+    if data.get('workflow') not in (None, unregistration.WORKFLOW):
+        return 'PE unregistration cannot be combined with another workflow', {}, None
+    scripts = _script_ids_from_payload(data.get('script'))
+    if scripts and scripts != [unregistration.SCRIPT]:
+        return 'PE unregistration cannot be combined with other scripts', {}, None
+    if data.get('framework') not in (None, 'pc-unregistration'):
+        return 'PE unregistration requires its dedicated job path', {}, None
+    content = data.get('configContent')
+    if not isinstance(content, str) or not content or len(content) > 16384:
+        return 'Provide reference-only unregistration YAML of at most 16 KiB', {}, None
+    try:
+        config = yaml.safe_load(content)
+        unregistration.validate_intent(config, reviewed=data.get('dryRun') is not True)
+    except Exception:
+        return 'Invalid or unreviewed PE unregistration intent', {}, None
+    if data.get('dryRun') is True:
+        return None, config, None
+    expected = 'UNREGISTER ' + config['pe_cluster_uuid']
+    if data.get('riskAcknowledged') is not True or data.get('destructiveConfirmation') != expected:
+        return 'Acknowledge removal and type exactly: ' + expected, {}, None
+    _require_engines()
+    approval = _approval_manager.get_approval(str(data.get('approvalId') or ''))
+    error = _workflow_approval_error(approval, unregistration.WORKFLOW, str(data.get('configFile') or ''), content)
+    if error:
+        return error, {}, None
+    if not _parse_iso_datetime(approval.get('expiresAt')) or not approval.get('decidedBy') or approval.get('decidedBy') == approval.get('requestedBy'):
+        return 'A different administrator must approve this expiring removal request', {}, None
+    if approval.get('configContent') != content or approval.get('configFile') != data.get('configFile'):
+        return 'Unregistration approval must bind the exact YAML and filename', {}, None
+    if (worker_job_id and approval.get('jobId') != worker_job_id) or (not worker_job_id and approval.get('jobId')):
+        return 'This approval has already been used; reconcile target state before requesting another', {}, None
+    return None, config, approval
+
+
+def _submit_unregistration_request(data, stream=False):
+    session = getattr(request, 'current_user', {})
+    with _UNREGISTRATION_SUBMIT_LOCK:
+        error, config, approval = _unregistration_submission(data, str(session.get('role') or ''))
+        if error:
+            return jsonify({'error': error}), 403
+        payload = {'workflow': unregistration.WORKFLOW, 'framework': 'pc-unregistration',
+            'configContent': data['configContent'], 'configFile': data.get('configFile') or 'unregister-pe-from-pc.yml',
+            'dryRun': data.get('dryRun') is True, 'riskAcknowledged': data.get('riskAcknowledged') is True,
+            'destructiveConfirmation': data.get('destructiveConfirmation'), 'approvalId': data.get('approvalId') or ''}
+        job = _job_manager.submit(payload, session.get('username', 'unknown'))
+        if approval:
+            _approval_manager.link_job(approval['id'], job['id'])
+    if stream:
+        return Response(_job_manager.stream_events(job['id']), mimetype='text/event-stream', headers={'Cache-Control': 'no-cache'})
+    return jsonify(job), 202
+
+
+@app.route('/api/pc-unregistration/review', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def review_pc_unregistration():
+    data = request.json or {}
+    try:
+        content = data.get('configContent')
+        if not isinstance(content, str) or len(content) > 16384:
+            return jsonify({'error': 'Provide reference-only YAML of at most 16 KiB'}), 400
+        config = yaml.safe_load(content)
+        unregistration.validate_intent(config)
+        credential = unregistration.credentials(config, _pe_login_title_resolver({}))
+        reviewed = unregistration.review(config, credential)
+        log.info('pc_unregistration_identity_reviewed', extra={'user': request.current_user['username'], 'event': 'pc_unregistration_identity_reviewed'})
+        return jsonify({'config': reviewed, 'verificationScope': 'PC identity and PE inventory only; dependent-service prerequisites require operator review.'})
+    except unregistration.UnregistrationError as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'PC identity review failed; no unregistration was submitted'}), 400
+
+
 _ROTATION_SUBMIT_LOCK = threading.Lock()
 
 
@@ -41741,6 +41875,8 @@ def execute_workflow():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    if data.get('workflow') == unregistration.WORKFLOW or unregistration.SCRIPT in _script_ids_from_payload(data.get('script')):
+        return _submit_unregistration_request(data, stream=True)
     if data.get('workflow') == rotation.WORKFLOW:
         return _submit_rotation_request(data, stream=True)
     workflow       = data.get('workflow')
@@ -42081,6 +42217,8 @@ def submit_job():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    if data.get('workflow') == unregistration.WORKFLOW or unregistration.SCRIPT in _script_ids_from_payload(data.get('script')):
+        return _submit_unregistration_request(data)
     if data.get('workflow') == rotation.WORKFLOW:
         return _submit_rotation_request(data)
     settings = get_settings()
@@ -43587,6 +43725,18 @@ def create_approval():
     workflow = data.get('workflow', '')
     if not workflow or not _is_allowed_approval_workflow(workflow):
         return jsonify({'error': 'Unknown workflow'}), 400
+    if workflow == unregistration.WORKFLOW:
+        if getattr(request, 'current_user', {}).get('role') != 'admin':
+            return jsonify({'error': 'PE unregistration requires an Orchestrator administrator'}), 403
+        try:
+            content = data.get('configContent')
+            if not isinstance(content, str) or len(content) > 16384:
+                raise ValueError()
+            unregistration.validate_intent(yaml.safe_load(content), reviewed=True)
+            if not re.fullmatch(r'[A-Za-z0-9_.-]+\.ya?ml', str(data.get('configFile') or '')):
+                raise ValueError()
+        except Exception:
+            return jsonify({'error': 'Review the reference-only removal YAML and use a YAML filename before approval'}), 400
     metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     approval = _approval_manager.create_request(
@@ -43620,6 +43770,9 @@ def approve_request(aid):
         return jsonify({'error': 'not found'}), 404
     if approval.get('status') == 'pending' and approval.get('requestedBy') == current_user:
         return jsonify({'error': 'Self-approval is not allowed'}), 403
+    removal = _approval_manager.get_approval(aid)
+    if removal and removal.get('workflow') == unregistration.WORKFLOW and removal.get('requestedBy') == current_user:
+        return jsonify({'error': 'A different administrator must approve PE unregistration'}), 403
     result = _approval_manager.decide(aid, 'approved', current_user, notes)
     return jsonify(result)
 
