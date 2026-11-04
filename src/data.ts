@@ -2,6 +2,12 @@ import type { WorkflowDef, ScriptDef, Ztf2ScriptDef } from './types'
 
 export const WORKFLOWS: WorkflowDef[] = [
   {
+    id: 'cluster-storage-standard', name: 'Cluster Storage Standard', category: 'Configuration', icon: 'Database',
+    description: 'Create three cluster-specific containers and clean up the discovered default container',
+    configFile: 'cluster-storage-standard.yml',
+    details: 'Administrator-only, exact-YAML approved storage provisioning. Verifies three replacement containers before default cleanup; ambiguous identities, VDisk dependencies or incomplete inventories stop cleanup. No force deletion or disk migration.',
+  },
+  {
     id: 'unregister-pe-from-pc', name: 'Unregister PE from PC', category: 'Prism Central', icon: 'ShieldCheck',
     description: 'Review and remove one exact PE registration from Prism Central',
     configFile: 'unregister-pe-from-pc.yml',

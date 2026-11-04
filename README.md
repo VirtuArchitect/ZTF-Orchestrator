@@ -179,6 +179,11 @@ Foundation VM deployments include a persistent phase/node telemetry view in
 execution and saved jobs. Missing telemetry is shown as "Not reported", not
 assumed complete; verify the actual Foundation VM response mapping during UAT.
 
+The [Cluster Storage Standard workflow](docs/cluster-storage-standard.md) accepts
+three container definitions per cluster, verifies replacements and discovers the
+numeric-suffix default container for independently approved cleanup. VDisk blockers
+stop cleanup; validation is simulated and no live cleanup is implied.
+
 ## Appliance Downloads
 
 The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)
