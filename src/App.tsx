@@ -1,3 +1,4 @@
+import ClusterStorageStandard from './pages/ClusterStorageStandard'
 import { BrowserRouter, Routes, Route, Navigate } from './router'
 import { useStore } from './store'
 import Dashboard     from './pages/Dashboard'
@@ -94,6 +95,9 @@ export default function App() {
         } />
         <Route path="/workflows" element={
           <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf1" /></RequireRole>
+        } />
+        <Route path="/workflows/cluster-storage-standard" element={
+          <RequireRole roles={['admin']}><ClusterStorageStandard /></RequireRole>
         } />
         <Route path="/workflows/unregister-pe-from-pc" element={
           <RequireRole roles={['admin']}><UnregisterPeFromPc /></RequireRole>

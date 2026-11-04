@@ -38,6 +38,7 @@ import yaml
 import credential_rotation as rotation
 import appliance_updates as guided_updates
 import pc_unregistration as unregistration
+import cluster_storage_standard as storage_standard
 from pe_login_title import has_title_intent, validate_intent as validate_pe_login_title_intent
 from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
 from pe_local_users import validate_intent as validate_pe_local_users_intent
@@ -3123,6 +3124,7 @@ POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
 }
 
 ALLOWED_WORKFLOWS = {
+    storage_standard.WORKFLOW,
     unregistration.WORKFLOW,
     rotation.WORKFLOW,
     'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
@@ -3137,6 +3139,7 @@ ALLOWED_WORKFLOWS = {
 } | POST_FOUNDATION_WORKFLOWS
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
+    storage_standard.WORKFLOW,
     unregistration.WORKFLOW,
     rotation.WORKFLOW,
     'cluster-create', 'cluster-create-standalone-fca', 'cluster-create-foundation-vm',
@@ -3315,7 +3318,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 
 
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
-    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW}:
+    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -34831,7 +34834,54 @@ class ExecutionJobManager:
                 config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
             self._complete(job_id, status, code)
 
+    def _run_storage_standard_job(self, job_id, payload, user):
+        status, diagnostics = 'failed', {'defaultRemovalVerified': False, 'followupRequired': True}
+        acquired = storage_standard.LOCK.acquire(blocking=False)
+        try:
+            if not acquired:
+                raise storage_standard.StorageError('Another cluster storage job is active; no changes attempted.')
+            with _STORAGE_STANDARD_SUBMIT_LOCK:
+                error, config, _ = _storage_standard_submission(payload, 'admin', job_id)
+            if error:
+                raise storage_standard.StorageError(error)
+            credential = storage_standard.credentials(config, _pe_login_title_resolver({}))
+            if payload.get('dryRun') is True:
+                self._emit(job_id, 'stdout', 'Intent and selected-vault reference validated; no target requests were made.')
+                diagnostics = {'dryRun': True, 'targetRequestsMade': False}
+            else:
+                deadline = time.monotonic() + EXEC_TIMEOUT
+                def cancelled():
+                    return self._stop or (self.get_job(job_id) or {}).get('status') == 'cancelling' or time.monotonic() >= deadline
+                def authorize():
+                    with _STORAGE_STANDARD_SUBMIT_LOCK:
+                        gate_error, _, _ = _storage_standard_submission(payload, 'admin', job_id)
+                    if gate_error:
+                        raise storage_standard.StorageError(gate_error)
+                diagnostics = storage_standard.execute(config, credential,
+                    lambda line: self._emit(job_id, 'stdout', line), cancelled=cancelled, authorize=authorize)
+            status = 'success'
+        except storage_standard.StorageError as error:
+            blocked = isinstance(error, storage_standard.CleanupBlocked)
+            diagnostics.update(category='storage_cleanup_blocked' if blocked else 'storage_standard_failed',
+                defaultCleanup='blocked' if blocked else 'unverified', reason=str(error),
+                replacementContainersVerified=blocked)
+            self._emit(job_id, 'error', str(error))
+        except Exception:
+            self._emit(job_id, 'error', 'Storage standard could not be verified; reconcile partial cluster changes before retrying.')
+        finally:
+            if acquired:
+                storage_standard.LOCK.release()
+            self._set_diagnostics(job_id, diagnostics)
+            code = 0 if status == 'success' else -1
+            _record_execution_history(execution_id=job_id, workflow_or_script=storage_standard.WORKFLOW,
+                execution_type='workflow', status=status, user=user, config_file=payload.get('configFile') or '',
+                config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
+            self._complete(job_id, status, code)
+
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('workflow') == storage_standard.WORKFLOW:
+            self._run_storage_standard_job(job_id, payload, user)
+            return
         if payload.get('workflow') == unregistration.WORKFLOW:
             self._run_unregistration_job(job_id, payload, user)
             return
@@ -41732,6 +41782,64 @@ def upload_foundation_vm_image():
         except OSError:
             log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
 
+_STORAGE_STANDARD_SUBMIT_LOCK = threading.Lock()
+
+
+def _storage_standard_submission(data, role, worker_job_id=''):
+    if role != 'admin':
+        return 'Cluster storage standard requires an Orchestrator administrator', {}, None
+    if data.get('workflow') not in (None, storage_standard.WORKFLOW):
+        return 'Cluster storage standard cannot be combined with another workflow', {}, None
+    scripts = _script_ids_from_payload(data.get('script'))
+    if scripts:
+        return 'Cluster storage standard cannot be combined with other scripts', {}, None
+    if data.get('framework') not in (None, 'cluster-storage-standard'):
+        return 'Cluster storage standard requires its dedicated job path', {}, None
+    content = data.get('configContent')
+    if not isinstance(content, str) or not content or len(content) > 16384:
+        return 'Provide reference-only storage YAML of at most 16 KiB', {}, None
+    try:
+        config = yaml.safe_load(content)
+        storage_standard.validate_intent(config, reviewed=data.get('dryRun') is not True)
+    except Exception:
+        return 'Invalid or unreviewed Cluster storage standard intent', {}, None
+    if data.get('dryRun') is True:
+        return None, config, None
+    expected = 'APPLY STORAGE ' + config['expected_cluster_uuid']
+    if data.get('riskAcknowledged') is not True or data.get('destructiveConfirmation') != expected:
+        return 'Acknowledge removal and type exactly: ' + expected, {}, None
+    _require_engines()
+    approval = _approval_manager.get_approval(str(data.get('approvalId') or ''))
+    error = _workflow_approval_error(approval, storage_standard.WORKFLOW, str(data.get('configFile') or ''), content)
+    if error:
+        return error, {}, None
+    if not _parse_iso_datetime(approval.get('expiresAt')) or not approval.get('decidedBy') or approval.get('decidedBy') == approval.get('requestedBy'):
+        return 'A different administrator must approve this expiring removal request', {}, None
+    if approval.get('configContent') != content or approval.get('configFile') != data.get('configFile'):
+        return 'Storage approval must bind the exact YAML and filename', {}, None
+    if (worker_job_id and approval.get('jobId') != worker_job_id) or (not worker_job_id and approval.get('jobId')):
+        return 'This approval has already been used; reconcile target state before requesting another', {}, None
+    return None, config, approval
+
+
+def _submit_storage_standard_request(data, stream=False):
+    session = getattr(request, 'current_user', {})
+    with _STORAGE_STANDARD_SUBMIT_LOCK:
+        error, config, approval = _storage_standard_submission(data, str(session.get('role') or ''))
+        if error:
+            return jsonify({'error': error}), 403
+        payload = {'workflow': storage_standard.WORKFLOW, 'framework': 'cluster-storage-standard',
+            'configContent': data['configContent'], 'configFile': data.get('configFile') or 'cluster-storage-standard.yml',
+            'dryRun': data.get('dryRun') is True, 'riskAcknowledged': data.get('riskAcknowledged') is True,
+            'destructiveConfirmation': data.get('destructiveConfirmation'), 'approvalId': data.get('approvalId') or ''}
+        job = _job_manager.submit(payload, session.get('username', 'unknown'))
+        if approval:
+            _approval_manager.link_job(approval['id'], job['id'])
+    if stream:
+        return Response(_job_manager.stream_events(job['id']), mimetype='text/event-stream', headers={'Cache-Control': 'no-cache'})
+    return jsonify(job), 202
+
+
 _UNREGISTRATION_SUBMIT_LOCK = threading.Lock()
 
 
@@ -41810,6 +41918,26 @@ def review_pc_unregistration():
     except Exception:
         return jsonify({'error': 'PC identity review failed; no unregistration was submitted'}), 400
 
+@app.route('/api/cluster-storage-standard/review', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def review_cluster_storage_standard():
+    data = request.json or {}
+    try:
+        content = data.get('configContent')
+        if not isinstance(content, str) or len(content) > 16384:
+            return jsonify({'error': 'Provide reference-only YAML of at most 16 KiB'}), 400
+        config = yaml.safe_load(content)
+        storage_standard.validate_intent(config)
+        credential = storage_standard.credentials(config, _pe_login_title_resolver({}))
+        reviewed = storage_standard.review(config, credential)
+        log.info('cluster_storage_identity_reviewed', extra={'user': request.current_user['username'], 'event': 'cluster_storage_identity_reviewed'})
+        return jsonify({'config': reviewed, 'verificationScope': 'Cluster and default container identity only; VDisk checks occur at execution and do not replace operator dependency review.'})
+    except storage_standard.StorageError as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'Storage identity review failed; no changes were submitted'}), 400
+
 
 _ROTATION_SUBMIT_LOCK = threading.Lock()
 
@@ -41875,6 +42003,8 @@ def execute_workflow():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    if data.get('workflow') == storage_standard.WORKFLOW:
+        return _submit_storage_standard_request(data, stream=True)
     if data.get('workflow') == unregistration.WORKFLOW or unregistration.SCRIPT in _script_ids_from_payload(data.get('script')):
         return _submit_unregistration_request(data, stream=True)
     if data.get('workflow') == rotation.WORKFLOW:
@@ -42217,6 +42347,8 @@ def submit_job():
     if _maintenance_active():
         body, status_code = _maintenance_error()
         return jsonify(body), status_code
+    if data.get('workflow') == storage_standard.WORKFLOW:
+        return _submit_storage_standard_request(data)
     if data.get('workflow') == unregistration.WORKFLOW or unregistration.SCRIPT in _script_ids_from_payload(data.get('script')):
         return _submit_unregistration_request(data)
     if data.get('workflow') == rotation.WORKFLOW:
@@ -43725,6 +43857,18 @@ def create_approval():
     workflow = data.get('workflow', '')
     if not workflow or not _is_allowed_approval_workflow(workflow):
         return jsonify({'error': 'Unknown workflow'}), 400
+    if workflow == storage_standard.WORKFLOW:
+        if getattr(request, 'current_user', {}).get('role') != 'admin':
+            return jsonify({'error': 'Cluster storage standard requires an Orchestrator administrator'}), 403
+        try:
+            content = data.get('configContent')
+            if not isinstance(content, str) or len(content) > 16384:
+                raise ValueError()
+            storage_standard.validate_intent(yaml.safe_load(content), reviewed=True)
+            if not re.fullmatch(r'[A-Za-z0-9_.-]+\.ya?ml', str(data.get('configFile') or '')):
+                raise ValueError()
+        except Exception:
+            return jsonify({'error': 'Review the reference-only storage YAML and use a YAML filename before approval'}), 400
     if workflow == unregistration.WORKFLOW:
         if getattr(request, 'current_user', {}).get('role') != 'admin':
             return jsonify({'error': 'PE unregistration requires an Orchestrator administrator'}), 403
@@ -43771,8 +43915,8 @@ def approve_request(aid):
     if approval.get('status') == 'pending' and approval.get('requestedBy') == current_user:
         return jsonify({'error': 'Self-approval is not allowed'}), 403
     removal = _approval_manager.get_approval(aid)
-    if removal and removal.get('workflow') == unregistration.WORKFLOW and removal.get('requestedBy') == current_user:
-        return jsonify({'error': 'A different administrator must approve PE unregistration'}), 403
+    if removal and removal.get('workflow') in {unregistration.WORKFLOW, storage_standard.WORKFLOW} and removal.get('requestedBy') == current_user:
+        return jsonify({'error': 'A different administrator must approve this workflow'}), 403
     result = _approval_manager.decide(aid, 'approved', current_user, notes)
     return jsonify(result)
 
