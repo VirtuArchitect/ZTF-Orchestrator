@@ -7,9 +7,17 @@ import urllib.error
 import urllib.request
 import ssl
 
-from prism_drift import endpoint, NoRedirect
+from prism_drift import endpoint, NoRedirect, connection_error
 
 COMPONENTS = ('aos', 'ahv', 'prismCentral', 'ncc', 'lcm', 'foundation', 'firmware')
+
+
+class PEReadError(ValueError):
+    """Safe, application-authored diagnostics; never raw remote/exception text."""
+
+
+def read_failure(detailed, legacy, safe_message):
+    return PEReadError(safe_message) if detailed else ValueError(legacy)
 
 
 def tls_verification(data):
@@ -28,16 +36,25 @@ def tls_verification(data):
     return flags
 
 
-def read(url, ref, path, lookup, product_header=False, verify_tls=True):
+def read(url, ref, path, lookup, product_header=False, verify_tls=True, detailed_errors=False):
     if type(verify_tls) is not bool:
         raise ValueError('TLS verification flag must be a boolean')
-    user, password, error = lookup(ref)
+    try:
+        user, password, error = lookup(ref)
+    except (ValueError, TypeError, KeyError, OSError):
+        raise read_failure(detailed_errors, 'Credential reference could not be resolved',
+                           'PE credential reference could not be resolved. Check the saved reference and selected vault; no PE authentication was attempted.') from None
     if error or not user or not password:
-        raise ValueError('Credential reference could not be resolved')
+        raise read_failure(detailed_errors, 'Credential reference could not be resolved',
+                           'PE credential reference could not be resolved. Check the saved reference and selected vault; no PE authentication was attempted.') from None
     authorization = base64.b64encode(f'{user}:{password}'.encode()).decode('ascii')
     req = urllib.request.Request(url + path, headers={
         'Authorization': 'Basic ' + authorization, 'Accept': 'application/json'}, method='GET')
-    context = ssl.create_default_context() if verify_tls else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    try:
+        context = ssl.create_default_context() if verify_tls else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except (OSError, ValueError):
+        raise read_failure(detailed_errors, 'Inventory connection or TLS verification failed',
+                           'PE TLS trust configuration could not be loaded. Check the container CA bundle and SSL_CERT_FILE; TLS verification remains required.') from None
     if not verify_tls:
         # Explicit, request-scoped administrator exception. Never changes global trust.
         context.check_hostname = False
@@ -61,14 +78,22 @@ def read(url, ref, path, lookup, product_header=False, verify_tls=True):
                 return version
             raw = response.read(1024 * 1024 + 1)
             if len(raw) > 1024 * 1024:
-                raise ValueError('Inventory response exceeds 1 MiB')
+                raise read_failure(detailed_errors, 'Inventory response exceeds 1 MiB',
+                                   'PE API response exceeds the 1 MiB collection limit. Review API compatibility and inventory size.')
             return json.loads(raw)
     except urllib.error.HTTPError as exc:
-        raise ValueError(f'Inventory returned HTTP {exc.code}') from None
-    except (urllib.error.URLError, OSError):
-        raise ValueError('Inventory connection or TLS verification failed') from None
+        code = exc.code if type(exc.code) is int and 100 <= exc.code <= 599 else 502
+        message = {
+            401: 'PE authentication rejected (HTTP 401). Check the selected credential reference, username and current password; do not repeatedly retry a locked or expired account.',
+            403: 'PE access denied (HTTP 403). Check account permissions and PE access policy for this read-only API.',
+        }.get(code, f'PE API returned HTTP {code}. Check PE service availability and API compatibility; redirects are not followed.')
+        raise read_failure(detailed_errors, f'Inventory returned HTTP {exc.code}', message) from None
+    except (urllib.error.URLError, OSError) as exc:
+        raise read_failure(detailed_errors, 'Inventory connection or TLS verification failed',
+                           connection_error(exc)) from None
     except (UnicodeError, json.JSONDecodeError):
-        raise ValueError('Inventory returned invalid JSON') from None
+        raise read_failure(detailed_errors, 'Inventory returned invalid JSON',
+                           'PE API returned invalid JSON. Check the endpoint, any intervening gateway and API compatibility.') from None
 
 
 def text(value):
