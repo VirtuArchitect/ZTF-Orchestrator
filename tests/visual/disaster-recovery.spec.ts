@@ -174,8 +174,9 @@ test('archive and restore require exact confirmation and preserve review history
   const writes = await seed(page)
   await page.goto('/recovery')
   if (process.env.ZTF_CAPTURE_PROFILE_GUIDE) {
+    await page.setViewportSize({width:1440,height:1000})
     await page.getByRole('button', {name:'Cluster Profiles',exact:true}).click()
-    await page.getByRole('button', {name:'Edit profile HCI-01 Recovery', exact:true}).waitFor()
+    await expect(page.getByRole('button', {name:'Archive profile HCI-01 Recovery', exact:true})).toBeEnabled()
     await page.screenshot({path:'docs/assets/guide/v1.8.5-rc1/recovery-profile-management.png',fullPage:true})
   }
   await page.getByRole('button', { name: 'Archive profile HCI-01 Recovery', exact: true }).click()
