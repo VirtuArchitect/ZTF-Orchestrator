@@ -178,7 +178,7 @@ test('archive and restore require exact confirmation and preserve review history
     await page.setViewportSize({width:1440,height:1000})
     await page.getByRole('button', {name:'Cluster Profiles',exact:true}).click()
     await expect(page.getByRole('button', {name:'Archive profile HCI-01 Recovery', exact:true})).toBeEnabled()
-    await page.screenshot({path:'docs/assets/guide/v1.8.5-rc1/recovery-profile-management.png',fullPage:true})
+    await page.screenshot({path:'docs/assets/recovery-profile-management/recovery-profile-management.png',fullPage:true})
   }
   await page.getByRole('button', { name: 'Archive profile HCI-01 Recovery', exact: true }).click()
   let dialog = page.getByRole('dialog')

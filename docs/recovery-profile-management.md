@@ -2,7 +2,7 @@
 
 Source update: 5 November 2026, v1.8.5-rc1 prerelease. v1.8.4 remains Latest stable. This capability changes profile management; Foundation imaging, bootstrap, health verification, approvals and configuration execution retain their existing gates.
 
-![Recovery profile management controls](assets/guide/v1.8.5-rc1/recovery-profile-management.png)
+![Recovery profile management controls](assets/recovery-profile-management/recovery-profile-management.png)
 
 Simulated browser fixture with generic targets; no infrastructure execution.
 
