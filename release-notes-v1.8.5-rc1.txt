@@ -1,4 +1,7 @@
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+Recovery profile management: explicit Edit Profile, Archive/Restore and Delete Unused Profile. Open runs block changes; never-submitted prepared runs have an audited close action. Any run history or managed-cluster link prevents deletion. Existing snapshots and execution gates remain intact. See docs/recovery-profile-management.md.
+
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
 Cluster Storage Standard: three cluster-specific containers from YAML, exact default discovery, independent approval and dependency-gated verified cleanup. Simulated validation only; see docs/cluster-storage-standard.md.
 
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)

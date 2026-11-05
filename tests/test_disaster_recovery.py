@@ -55,6 +55,7 @@ def harness():
         state.update(deepcopy(value))
     service = RecoveryService({
         'read': lambda: deepcopy(state), 'write': write, 'config': config,
+        'profile_references': lambda identity: [],
         'pipeline': lambda identity: deepcopy(pipeline) if identity == 'pipe' else None,
         'validate_foundation': server._validate_foundation_vm_intent,
         'endpoint_config': server._recovery_endpoint_config, 'endpoint_text': server._recovery_endpoint_text,

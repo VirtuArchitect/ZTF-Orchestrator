@@ -1,0 +1,17 @@
+{
+  "version": "1.8.5-rc1",
+  "date": "2026-11-05",
+  "sourceRevision": "75ab11593e827bcc0e3238794dded96d20418d16",
+  "simulated": true,
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "fixture": "tests/visual/disaster-recovery.spec.ts, mocked API, no infrastructure execution",
+  "screens": [
+    {
+      "file": "recovery-profile-management.png",
+      "sha256": "d40eb3976a501df649eea2dd9ef49d7cb548de3e5d993b08224af245ecac7645"
+    }
+  ]
+}

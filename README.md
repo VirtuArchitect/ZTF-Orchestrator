@@ -1,5 +1,7 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
+Recovery profile maintenance now includes [revision-based editing, archive/restore and guarded unused-profile deletion](docs/recovery-profile-management.md), preserving deployment history and existing approval gates.
+
 See [current documented build and update details](docs/current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
 
 **Used successfully to deploy production AHV HCI clusters, with post-configuration

@@ -187,3 +187,7 @@ tests and browser smoke checks are separate from that physical exercise.
 Related: [Infrastructure Recovery Guide](infrastructure-recovery.md),
 [Recovery Rehearsal Checklist](recovery-rehearsal-checklist.md),
 [Start Here](start-here.md), [Administrator Guide](admin-guide.md).
+
+## Maintain recovery profiles
+
+Use the profile table's **Edit Profile**, **Archive Profile / Restore Profile** and **Delete Unused Profile** controls. See [Recovery profile management](recovery-profile-management.md) for permissions, blocking runs, retained history and concurrency checks. These actions never deploy or repeat Foundation imaging.

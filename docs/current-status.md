@@ -45,3 +45,5 @@ appliance ZIPs. Existing runtime/deployment and immutable package evidence remai
 separate from these new implementation and fixture checks.
 
 Upgrade Advisor now includes [request-scoped PE/PC TLS verification controls](upgrade-advisor-tls.md). These are source changes after the 636f191 bundle; that immutable bundle does not contain them. Use the newly published consolidated update for this feature.
+
+Recovery profile lifecycle management adds visible editing, blocking-run links, reversible archive/restore and guarded unused-profile deletion. See [Recovery profile management](recovery-profile-management.md). This source addition is not retroactively included in older immutable update ZIPs; use the consolidated bundle published with its merged PR.
