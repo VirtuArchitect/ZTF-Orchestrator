@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
 
 function fixture() {
-  return { version: 1, revision: 0, collectedAt: new Date().toISOString(), clusters: [{ id: 'cluster1', name: 'HCI-01', datacenter: 'DC01', owner: 'Infrastructure', peEndpoint: 'https://pe.example.com:9440', peCredential: 'pe_monitor', expectedUuid: '00000000-0000-4000-8000-000000000001', expectedNodes: [{ serial: 'NODE1', hostIp: '192.0.2.22', cvmIp: '192.0.2.23' }], configFiles: ['post.yml'], pipelineId: 'pipe1', recoveryProfileId: '', updatedAt: new Date().toISOString(), observationFresh: true, observation: { status: 'good', collectedAt: new Date().toISOString(), message: 'Expected identity and membership matched; PE reports Good.', checks: [{ name: 'PE identity', status: 'passed' }] } }],
-    attention: { 'job-old': { id: 'job-old', jobId: 'old', title: 'Job requires review', detail: 'config-cluster', status: 'open', owner: '', notes: '', updatedAt: new Date().toISOString() } }, jobs: [{ id: 'job1', workflow: 'config-cluster', configFile: 'post.yml', status: 'success', updatedAt: new Date().toISOString() }], pipelines: [{ id: 'pipe1', name: 'Post deployment' }], recoveryProfiles: [], recoveryRuns: [] }
+  const at = new Date().toISOString()
+  return { version: 1, revision: 0, collectedAt: at, clusters: [{ id: 'cluster1', name: 'HCI-01', datacenter: 'DC01', owner: 'Infrastructure', peEndpoint: 'https://pe.example.com:9440', peCredential: 'pe_monitor', expectedUuid: '00000000-0000-4000-8000-000000000001', expectedNodes: [{ serial: 'NODE1', hostIp: '192.0.2.22', cvmIp: '192.0.2.23' }], configFiles: ['post.yml'], pipelineId: 'pipe1', recoveryProfileId: '', updatedAt: at, observationFresh: true, observation: { collectionStatus:'completed', status: 'good', collectedAt: at, message: 'Expected identity and membership matched; PE reports Good.', checks: [{ name: 'PE identity', status: 'passed' }] } }],
+    attention: { 'job-old': { id: 'job-old', jobId: 'old', title: 'Job requires review', detail: 'config-cluster', status: 'open', owner: '', notes: '', updatedAt: at } }, jobs: [{ id: 'job1', workflow: 'config-cluster', configFile: 'post.yml', status: 'success', updatedAt: at }], pipelines: [{ id: 'pipe1', name: 'Post deployment' }], recoveryProfiles: [], recoveryRuns: [] }
 }
 
 async function seed(page: Page, role = 'admin', state = fixture()) {
@@ -50,10 +51,10 @@ test('overview links cluster context and does not collect PE or submit automatio
 })
 
 test('stale good observations never present as fresh health', async ({ page }) => {
-  const state = fixture(); state.clusters[0].observationFresh = false
+  const state = fixture(); state.clusters[0].observationFresh = false; state.clusters[0].observation.collectedAt = new Date(Date.parse(state.collectedAt)-901_000).toISOString()
   await seed(page, 'admin', state)
   await page.goto('/clusters')
-  await expect(page.getByText('Stale observation', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText('Evidence expired', { exact: true }).first()).toBeVisible()
   await expect(page.getByText('PE-reported health: Good', { exact: true })).toHaveCount(0)
 })
 
@@ -163,4 +164,92 @@ test('existing recovery run deep link is read-only and failed refresh stays expl
   await page.clock.fastForward(119_000)
   expect(reads).toBe(previous)
   expect(writes).toEqual([])
+})
+
+
+for (const offset of [-3_600_000, 3_600_000]) {
+  test(`browser clock offset ${offset} warns without expiring fresh appliance evidence`, async ({ page }) => {
+    await page.clock.install()
+    const state = fixture()
+    state.collectedAt = '2026-11-05T08:13:59Z'
+    state.clusters[0].observation.collectedAt = '2026-11-05T08:12:01Z'
+    await page.clock.setSystemTime(new Date(Date.parse(state.collectedAt)+offset))
+    const {writes} = await seed(page,'admin',state)
+    await page.goto('/overview')
+    const workspace = page.getByRole('region',{name:'Managed cluster workspace'})
+    await expect(workspace.getByText('PE-reported health: Good',{exact:true}).first()).toBeVisible()
+    await expect(workspace.getByRole('status')).toContainText('Browser/appliance clock mismatch')
+    await expect(workspace.getByText(/Evidence age: 1m 58s/)).toBeVisible()
+    await expect(workspace.getByText('Evidence expired',{exact:true})).toHaveCount(0)
+    expect(writes).toEqual([])
+  })
+}
+
+test('failed collection is distinct from completed unknown health and retains the cause after expiry', async ({page}) => {
+  const state=fixture();state.clusters[0].observation.collectionStatus='failed';state.clusters[0].observation.status='unknown'
+  state.clusters[0].observation.message='PE observation failed. Check the credential reference, certificate trust/SAN, connectivity and API compatibility.'
+  state.clusters[0].observation.collectedAt=new Date(Date.parse(state.collectedAt)-901_000).toISOString()
+  state.clusters[0].observationFresh=false
+  const {writes}=await seed(page,'admin',state)
+  await page.goto('/clusters')
+  await expect(page.getByText('Collection failed',{exact:true}).first()).toBeVisible()
+  await expect(page.getByText(/15-minute window expired/)).toBeVisible()
+  await expect(page.getByText(/certificate trust\/SAN/)).toBeVisible()
+  await expect(page.getByText('PE-reported health: Good',{exact:true})).toHaveCount(0)
+  expect(writes).toEqual([])
+})
+
+test('future evidence and invalid timestamps have explicit labels', async ({page}) => {
+  const state=fixture();state.clusters[0].observation.collectedAt=new Date(Date.parse(state.collectedAt)+120_000).toISOString();state.clusters[0].observationFresh=false
+  await seed(page,'admin',state)
+  await page.goto('/clusters')
+  await expect(page.getByText('Evidence clock mismatch',{exact:true}).first()).toBeVisible()
+  state.clusters[0].observation.collectedAt='2026-11-05T08:12:01'
+  await page.reload()
+  await expect(page.getByText('Invalid evidence timestamp',{exact:true}).first()).toBeVisible()
+  await expect(page.getByText('PE-reported health: Good',{exact:true})).toHaveCount(0)
+})
+
+test('dashboard refresh failure does not claim that PE collection failed', async ({page}) => {
+  await page.clock.install()
+  await seed(page)
+  let reads=0
+  await page.route('**/api/operations',route => ++reads<=2 ? route.fulfill({json:fixture()}) : route.fulfill({status:503,json:{error:'unavailable'}}))
+  await page.goto('/clusters')
+  await expect(page.getByText('PE-reported health: Good',{exact:true}).first()).toBeVisible()
+  await page.clock.fastForward(30_001)
+  await expect(page.getByText('Dashboard refresh failed',{exact:true}).first()).toBeVisible()
+  await expect(page.getByText('Collection failed',{exact:true})).toHaveCount(0)
+})
+
+test('monotonic elapsed time expires evidence between dashboard refreshes', async ({page}) => {
+  await page.clock.install()
+  const state=fixture();state.clusters[0].observation.collectedAt=new Date(Date.parse(state.collectedAt)-899_000).toISOString()
+  await seed(page,'admin',state)
+  await page.goto('/clusters')
+  await expect(page.getByText('PE-reported health: Good',{exact:true}).first()).toBeVisible()
+  await page.clock.fastForward(2_100)
+  await expect(page.getByText('Evidence expired',{exact:true}).first()).toBeVisible()
+  await expect(page.getByText('PE-reported health: Good',{exact:true})).toHaveCount(0)
+})
+
+
+test('health status reference view separates outcomes without making collection requests', async ({page}) => {
+  const state=fixture(), base=structuredClone(state.clusters[0])
+  state.clusters=['fresh','expired','failed','clock'].map((kind,index) => {
+    const row=structuredClone(base);row.id='cluster'+index;row.name='HCI-0'+(index+1)
+    row.observation.collectedAt=new Date(Date.parse(state.collectedAt)+({fresh:-118_000,expired:-960_000,failed:-30_000,clock:120_000}[kind] || 0)).toISOString()
+    row.observationFresh=kind==='fresh'
+    if(kind==='failed') {row.observation.collectionStatus='failed';row.observation.status='unknown';row.observation.message='PE collection failed; check credentials, certificate trust/SAN and connectivity.'}
+    return row
+  })
+  const review=state.attention['job-old']
+  state.attention=Object.fromEntries(['PE evidence expired','PE collection failed','PE evidence clock mismatch'].map((title,index)=>['health-'+index,{...review,id:'health-'+index,title,clusterId:'cluster'+(index+1),jobId:undefined,detail:'HCI-0'+(index+2)}])) as typeof state.attention
+  const {writes}=await seed(page,'admin',state)
+  await page.setViewportSize({width:1600,height:1100})
+  await page.goto('/clusters')
+  const workspace=page.getByRole('region',{name:'Managed cluster workspace'})
+  for(const label of ['PE-reported health: Good','Evidence expired','Collection failed','Evidence clock mismatch']) await expect(workspace.getByText(label,{exact:true}).first()).toBeVisible()
+  expect(writes).toEqual([])
+  if(process.env.ZTF_CAPTURE_HEALTH_GUIDE) await page.screenshot({path:'docs/assets/pe-health-reporting/health-states.png',fullPage:true,animations:'disabled'})
 })

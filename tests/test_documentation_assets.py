@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 @pytest.mark.parametrize("relative", [
     "docs/assets/guide/v1.8.5-rc1",
     "docs/assets/recovery-profile-management",
+    "docs/assets/pe-health-reporting",
     "docs/assets/readme/v1.8.5-rc1",
     "docs/assets/disaster-recovery/setup-v1.8.5-rc1",
 ])

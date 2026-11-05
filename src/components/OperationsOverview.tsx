@@ -81,7 +81,7 @@ export default function OperationsOverview({ jobs, driftRuns, pendingApprovals, 
     { title: 'Managed clusters', value: operations.error ? null : operations.data?.clusters.length, icon: Server, to: '/clusters' },
     { title: 'Open review items', value: operations.error ? null : operations.data ? Object.values(operations.data.attention).filter(i => i.status !== 'resolved').length : null, icon: AlertTriangle, to: '/clusters' },
     { title: 'Running jobs', value: loading || unavailable ? null : runningJobs, icon: Activity, to: '/jobs' },
-    { title: 'Fresh PE Good readbacks', value: operations.error ? null : operations.data?.clusters.filter(c => freshObservation(c) && c.observation?.status === 'good').length, icon: ShieldCheck, to: '/clusters' },
+    { title: 'Fresh PE Good readbacks', value: operations.error ? null : operations.data?.clusters.filter(c => freshObservation(c, operations.data || undefined) && c.observation?.status === 'good').length, icon: ShieldCheck, to: '/clusters' },
   ]
   return <div className="space-y-5 mb-6" data-testid="operations-overview">
     <section aria-labelledby="operations-heading">

@@ -15,6 +15,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Administrator-only Unregister PE from PC wizard with reference-only YAML, strict HTTPS identity lookup, dependency acknowledgement, mandatory independent exact-content approval and single-use durable jobs. Vendor preflight and task/PC-inventory verification fail closed; PE-side cleanup remains separate. No live-target validation or new released appliance version is implied.
 
 ### Operations
+- Distinguish expired PE evidence, failed collection, future/invalid evidence timestamps and dashboard refresh failures. Evidence age uses appliance time and monotonic elapsed display time; a separate browser/appliance clock warning does not invalidate a fresh valid readback. Existing read-only/TLS and recovery gates remain unchanged.
 - Add managed-cluster records linking saved configurations, pipelines and recovery
   profiles without rewriting automation or credential references.
 - Retain observed failed/interrupted jobs in a revision-checked attention register

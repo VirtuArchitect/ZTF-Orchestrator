@@ -218,3 +218,76 @@ def test_operations_api_permissions_storage_and_no_automatic_collection(client, 
     assert client.get('/api/operations', headers=auth_headers).status_code != 200
     assert client.post('/api/operations/clusters', headers=auth_headers, json={**record(), 'configFiles': [], 'pipelineId': '', 'revision': 0}).status_code != 200
     assert path.read_text() == '{broken'
+
+
+@pytest.mark.parametrize('timestamp,expected', [
+    ('2026-11-05T08:12:01+00:00', 'fresh'),
+    ('2026-11-05T08:00:00+00:00', 'fresh'),
+    ('2026-11-05T07:59:59+00:00', 'expired'),
+    ('2026-11-05T08:16:00+00:00', 'clock_mismatch'),
+    ('2026-11-05T08:12:01', 'invalid_timestamp'),
+    ('invalid', 'invalid_timestamp'),
+])
+def test_evidence_state_uses_appliance_reference_time(timestamp, expected):
+    value = ops.observation_diagnostics({'status': 'good', 'collectedAt': timestamp}, '2026-11-05T08:15:00+00:00')
+    assert value['state'] == expected and value['ttlSeconds'] == 900
+
+
+def test_recent_failure_and_completed_unknown_are_distinct(monkeypatch):
+    def fail(*args): raise ValueError('private-password and raw API payload')
+    monkeypatch.setattr(ops, 'read', fail)
+    failed = ops.collect_health(record(), None)
+    assert failed['collectionStatus'] == 'failed' and failed['status'] == 'unknown'
+    assert 'private-password' not in json.dumps(failed)
+    assert ops.observation_diagnostics(failed, failed['completedAt'])['state'] == 'collection_failed'
+    cluster, hosts = pe_responses(); cluster.pop('health_summary')
+    monkeypatch.setattr(ops, 'read', lambda u, r, p, l: cluster if '/cluster/' in p else hosts)
+    completed = ops.collect_health(record(), None)
+    assert completed['collectionStatus'] == 'completed' and completed['status'] == 'unknown'
+    assert ops.observation_diagnostics(completed, completed['completedAt'])['state'] == 'fresh'
+    not_attempted = ops.collect_health({**record(), 'expectedUuid': ''}, None)
+    assert not_attempted['collectionStatus'] == 'not_attempted'
+
+
+@pytest.mark.parametrize('kind,title', [('expired','PE evidence expired'),('clock','PE evidence clock mismatch'),('invalid','PE evidence timestamp invalid'),('failed','PE collection failed')])
+def test_summary_explains_unusable_health_without_collecting(harness, kind, title):
+    service, state, _, _ = harness; identity = create(harness)
+    stamp = datetime.now(timezone.utc)
+    if kind == 'expired': stamp -= timedelta(minutes=16)
+    if kind == 'clock': stamp += timedelta(minutes=2)
+    observation = {'status':'unknown' if kind == 'failed' else 'good', 'collectedAt':'invalid' if kind == 'invalid' else stamp.isoformat(), 'checks':[]}
+    if kind == 'failed': observation['collectionStatus'] = 'failed'
+    state['clusters'][0]['observation'] = observation
+    service.s['collect'] = lambda row: pytest.fail('Summary must never collect PE')
+    summary = service.summary()
+    assert summary['clusters'][0]['observationFresh'] is False
+    assert summary['attention']['health-'+identity]['title'] == title
+    assert ops.age_seconds(observation['collectedAt'], summary['collectedAt']) == summary['clusters'][0]['observationDiagnostics']['ageSeconds']
+
+
+def test_title_refinement_preserves_acknowledgement_and_old_metadata(harness):
+    service, state, _, _ = harness; identity = create(harness)
+    observation = {'status':'unknown','collectedAt':ops.now(),'checks':[],'collectionStatus':'failed'}
+    state['clusters'][0]['observation'] = observation
+    service.summary(); key = 'health-'+identity
+    service.attention(key,{'revision':state['revision'],'status':'acknowledged','owner':'Operations','notes':'Investigating trust'},'operator')
+    state['attention'][key]['title'] = 'PE observation needs review'
+    before = deepcopy(state['attention'][key]['reviews'])
+    view = service.summary()
+    assert view['attention'][key]['title'] == 'PE collection failed'
+    assert view['attention'][key]['status'] == 'acknowledged' and view['attention'][key]['reviews'] == before
+    assert 'observationDiagnostics' not in state['clusters'][0]
+    state['clusters'][0]['observation'] = {'status':'unknown','collectedAt':ops.now(),'checks':[]}
+    assert service.summary()['clusters'][0]['observationDiagnostics']['state'] == 'fresh'
+
+
+def test_old_naive_and_offset_timestamps_do_not_crash_age_parsing():
+    assert ops.age_seconds('2026-11-05T08:12:01') is None
+    assert ops.age_seconds(None) is None
+    assert ops.age_seconds('2026-11-05T09:12:01+01:00','2026-11-05T08:13:59Z') == 118
+
+
+def test_unknown_collection_outcome_cannot_masquerade_as_completed_evidence(harness):
+    service,state,*_ = harness;create(harness)
+    state['clusters'][0]['observation']={'status':'good','collectedAt':ops.now(),'collectionStatus':'unexpected'}
+    with pytest.raises(ValueError,match='outcome is unreadable'): service.summary()

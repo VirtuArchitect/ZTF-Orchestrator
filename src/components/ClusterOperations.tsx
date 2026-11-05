@@ -4,18 +4,20 @@ import { apiFetch } from '../utils/api'
 import { useStore } from '../store'
 import { Link } from '../router'
 import { httpFailure, pollReadOnly } from '../utils/readOnlyPolling'
+import { clockWarning, evidenceAgeLabel, freshObservation, healthLabel, type ObservationRecord, type PEObservation } from '../utils/peObservation'
+export { freshObservation, healthLabel } from '../utils/peObservation'
 
-export type ClusterRecord = {
+export type ClusterRecord = ObservationRecord & {
   id: string; name: string; datacenter: string; peEndpoint: string; peCredential: string; expectedUuid: string
   expectedNodes: { serial: string; hostIp: string; cvmIp: string }[]
   configFiles: string[]; pipelineId: string; recoveryProfileId: string; owner: string
   updatedAt: string; observationFresh?: boolean
-  observation?: { status: string; collectedAt: string; message: string; checks: { name: string; status: string }[] }
+  observation?: PEObservation
 }
 type AttentionItem = { id: string; title: string; detail: string; status: string; owner: string; notes: string; jobId?: string; recoveryRunId?: string; clusterId?: string; updatedAt: string }
 type Job = { id: string; workflow: string; configFile?: string; status: string; updatedAt: string }
 export type Operations = {
-  revision: number; collectedAt: string; clusters: ClusterRecord[]; attention: Record<string, AttentionItem>; jobs: Job[]
+  revision: number; collectedAt: string; clientReceivedAt?: number; clusters: ClusterRecord[]; attention: Record<string, AttentionItem>; jobs: Job[]
   pipelines: { id: string; name: string }[]
   recoveryProfiles: { id: string; name: string; revision: number; reviewed: boolean; drifted: boolean; lastRehearsal?: string; archivedAt?: string }[]
   recoveryRuns: { id: string; profileId: string; status: string; updatedAt: string; steps: { jobId: string }[]; deploymentJobId?: string; currentJobId?: string; healthEvidence?: { at: string; source?: string } }[]
@@ -37,6 +39,11 @@ export function useOperations(externalRefresh = 0) {
   const [data, setData] = useState<Operations | null>(null)
   const [error, setError] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [, tick] = useState(0)
+  useEffect(() => {
+    const timer = setInterval(() => { if (!document.hidden) tick(n => n + 1) }, 1000)
+    return () => clearInterval(timer)
+  }, [])
   const refresh = useCallback(() => setRefreshKey(v => v + 1), [])
   useEffect(() => {
     return pollReadOnly(async signal => {
@@ -46,21 +53,10 @@ export function useOperations(externalRefresh = 0) {
       try { value = await response.json() } catch { throw new Error('Operational response was not JSON. Previously displayed records may be stale.') }
       if (!value || !['clusters', 'jobs', 'pipelines', 'recoveryProfiles', 'recoveryRuns'].every(key => Array.isArray(value[key]))
           || !value.attention || typeof value.attention !== 'object' || Array.isArray(value.attention)) throw new Error('Operational response is unavailable. Previously displayed records may be stale.')
-      return value as Operations
+      return { ...value, clientReceivedAt: performance.now() } as Operations
     }, value => { setData(value); setError('') }, setError)
   }, [refreshKey, externalRefresh])
   return { data, error, refresh }
-}
-
-export function freshObservation(cluster: ClusterRecord) {
-  const age = Date.now() - Date.parse(cluster.observation?.collectedAt || '')
-  return cluster.observationFresh === true && Number.isFinite(age) && age >= 0 && age <= 900_000
-}
-
-export function healthLabel(cluster: ClusterRecord, unavailable = false) {
-  if (!cluster.observation) return 'Not checked'
-  if (unavailable || !freshObservation(cluster)) return 'Stale observation'
-  return cluster.observation.status === 'good' ? 'PE-reported health: Good' : cluster.observation.status === 'not_good' ? 'PE-reported health needs attention' : 'Unknown / review required'
 }
 
 export function ClusterWorkspace({ data, error, refresh, editable = false, aside }: { data: Operations | null; error: string; refresh: () => void; editable?: boolean; aside?: ReactNode }) {
@@ -84,11 +80,12 @@ export function ClusterWorkspace({ data, error, refresh, editable = false, aside
     <div className="flex flex-wrap justify-between gap-3"><div><h2 className="section-title mb-1">Managed clusters</h2><p className="text-sm text-gray-400">Explicit cluster records link automation and evidence. Registering a record does not deploy or discover infrastructure.</p></div><div className="flex gap-2 items-start"><button className="btn-secondary" onClick={refresh} aria-label="Refresh operational records"><RefreshCw size={15} /></button>{!editable && <Link to="/clusters" className="btn-secondary">Manage clusters</Link>}</div></div>
     <div className="grid sm:grid-cols-2 gap-3"><label className="text-sm text-gray-400 min-w-0">Search clusters<input className="input mt-1" value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, owner or PE endpoint" /></label><label className="text-sm text-gray-400">Managed datacenter<select className="input mt-1" value={dc} onChange={e => setDc(e.target.value)}><option value="">All datacenters</option>{[...new Set(data?.clusters.map(c => c.datacenter).filter(Boolean))].sort().map(name => <option key={name}>{name}</option>)}</select></label></div>
     {error && <p role="status" className="text-sm text-amber-400">{error}</p>}
-    <p className="text-xs text-gray-500">Last successful refresh: {when(data?.collectedAt)}. PE observations become stale after 15 minutes; viewing this page never contacts PE.</p>
-    <div className={aside ? "grid xl:grid-cols-3 gap-4 items-start" : ""}><div className={aside ? "xl:col-span-2 min-w-0" : "min-w-0"}><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-gray-400">{['Cluster', 'Datacenter', 'Observed state', 'Last PE readback', 'Action'].map(h => <th className="p-3" key={h}>{h}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id} className={`border-b border-border ${cluster?.id === row.id ? 'bg-nutanix-blue/5' : ''}`}><td className="p-3 font-semibold text-gray-100">{row.name}<p className="text-xs font-normal text-gray-500">{row.owner || 'Owner not assigned'}</p></td><td className="p-3 text-gray-400">{row.datacenter || 'Unassigned'}</td><td className={`p-3 ${!error && freshObservation(row) && row.observation?.status === 'good' ? 'text-emerald-400' : 'text-amber-400'}`}>{healthLabel(row, Boolean(error))}</td><td className="p-3 text-gray-400 whitespace-nowrap">{when(row.observation?.collectedAt)}</td><td className="p-3"><button className="text-nutanix-cyan" onClick={() => { setSelected(row.id); setMessage('') }}>Review {row.name}</button></td></tr>)}</tbody></table></div>
+    <p className="text-xs text-gray-500">Last successful refresh: {when(data?.collectedAt)}. Saved PE evidence expires after 15 minutes; refresh reloads records without contacting PE.</p>
+    {clockWarning(data || undefined) && <p role="status" className="text-sm text-amber-400">{clockWarning(data || undefined)}</p>}
+    <div className={aside ? "grid xl:grid-cols-3 gap-4 items-start" : ""}><div className={aside ? "xl:col-span-2 min-w-0" : "min-w-0"}><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-border text-gray-400">{['Cluster', 'Datacenter', 'Observed state', 'Last PE collection', 'Action'].map(h => <th className="p-3" key={h}>{h}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id} className={`border-b border-border ${cluster?.id === row.id ? 'bg-nutanix-blue/5' : ''}`}><td className="p-3 font-semibold text-gray-100">{row.name}<p className="text-xs font-normal text-gray-500">{row.owner || 'Owner not assigned'}</p></td><td className="p-3 text-gray-400">{row.datacenter || 'Unassigned'}</td><td className={`p-3 ${!error && freshObservation(row, data || undefined) && row.observation?.status === 'good' ? 'text-emerald-400' : 'text-amber-400'}`}>{healthLabel(row, Boolean(error), data || undefined)}</td><td className="p-3 text-gray-400 whitespace-nowrap">{when(row.observation?.collectedAt)}</td><td className="p-3"><button className="text-nutanix-cyan" onClick={() => { setSelected(row.id); setMessage('') }}>Review {row.name}</button></td></tr>)}</tbody></table></div>
     {!rows.length && <p className="text-sm text-gray-400">{data ? 'No managed clusters match. Add a cluster record in Clusters; existing recovery profiles and automation remain unchanged.' : 'Loading operational records…'}</p>}</div>{aside && <div className="min-w-0">{aside}</div>}</div>
     {cluster && <div className="border border-border rounded-lg p-4 space-y-4" aria-label="Selected cluster details"><div className="flex flex-wrap justify-between gap-3"><h3 className="font-semibold text-gray-100">{cluster.name} <span className="text-sm font-normal text-gray-400">{cluster.datacenter}</span></h3><p className="text-sm text-gray-400 break-all">{cluster.peEndpoint}</p></div>
-      <div className="grid lg:grid-cols-3 gap-5"><div><h4 className="font-semibold text-sm text-gray-200">PE observation</h4><p className="text-sm mt-2">{healthLabel(cluster, Boolean(error))}</p><p className="text-xs text-gray-400 mt-2">{cluster.observation?.message || 'No live evidence has been collected. Job success does not imply healthy infrastructure.'}</p>{role !== 'viewer' && <button className="btn-secondary mt-3" disabled={busy || !cluster.expectedUuid || !cluster.expectedNodes.length || !cluster.peCredential} onClick={() => void observe()}>{busy ? 'Collecting read-only PE evidence…' : 'Collect PE health (read-only)'}</button>}<p className="text-xs text-gray-500 mt-2">Requires expected UUID, node baseline, a credential reference and trusted HTTPS. No TLS bypass. This is not NCC, resilience or application verification.</p>{cluster.observation?.checks.map(check => <p className="text-xs mt-1 text-gray-400" key={check.name}>{check.name}: {check.status.replace(/_/g, ' ')}</p>)}</div>
+      <div className="grid lg:grid-cols-3 gap-5"><div><h4 className="font-semibold text-sm text-gray-200">PE observation</h4><p className="text-sm mt-2">{healthLabel(cluster, Boolean(error), data || undefined)}</p><p className="text-xs text-gray-400 mt-2">{cluster.observation ? 'Recorded collection result: ' : ''}{cluster.observation?.message || 'No live evidence has been collected. Job success does not imply healthy infrastructure.'}</p>{cluster.observation && <><p className="text-xs text-gray-400 mt-2">{evidenceAgeLabel(cluster, data || undefined)}</p>{cluster.observation.completedAt && <p className="text-xs text-gray-400">Collection finished: {when(cluster.observation.completedAt)}</p>}<p className="text-xs text-gray-400 mt-2">{cluster.observationDiagnostics?.message || (cluster.observation.collectionStatus ? 'Review the recorded outcome and individual checks. Fresh evidence does not replace NCC or acceptance.' : 'Older observation metadata may not identify collection failures. Collect a fresh readback to establish the outcome.')}</p></>}{role !== 'viewer' && <button className="btn-secondary mt-3" disabled={busy || !cluster.expectedUuid || !cluster.expectedNodes.length || !cluster.peCredential} onClick={() => void observe()}>{busy ? 'Collecting read-only PE evidence…' : 'Collect PE health (read-only)'}</button>}<p className="text-xs text-gray-500 mt-2">Requires expected UUID, node baseline, a credential reference and trusted HTTPS. No TLS bypass. This is not NCC, resilience or application verification.</p>{cluster.observation?.checks.map(check => <p className="text-xs mt-1 text-gray-400" key={check.name}>{check.name}: {check.status.replace(/_/g, ' ')}</p>)}</div>
       <div><h4 className="font-semibold text-sm text-gray-200">Configuration and jobs</h4><p className="text-sm mt-2 text-gray-400">{data?.pipelines.find(p => p.id === cluster.pipelineId)?.name || 'No pipeline linked'}</p><p className="text-xs text-gray-400 mt-2">{cluster.configFiles.length} linked files · {related.length} associated jobs. Filename association is navigation, not verified target ownership.</p><div className="flex flex-wrap gap-3 mt-3"><Link className="text-sm text-nutanix-cyan" to="/pipelines">Open pipelines</Link><Link className="text-sm text-nutanix-cyan" to="/configs">Open configuration files</Link></div><ul className="space-y-2 mt-3">{related.slice(0, 4).map(j => <li key={j.id} className="text-xs text-gray-400"><Link className="text-nutanix-cyan" to={`/jobs?job=${encodeURIComponent(j.id)}`}>{j.workflow}</Link> · {j.status === 'success' ? 'Job succeeded' : j.status}</li>)}</ul></div>
       <div><h4 className="font-semibold text-sm text-gray-200">Recovery preparation</h4><p className="text-sm mt-2 text-gray-400">{profile ? `${profile.archivedAt ? 'Archived profile' : profile.reviewed && !profile.drifted ? 'Reviewed baseline' : 'Baseline needs review'} · Revision ${profile.revision}` : 'No recovery profile linked'}</p><p className="text-xs text-gray-400 mt-2">Last rehearsal recorded: {when(profile?.lastRehearsal)}</p><p className="text-xs text-gray-400 mt-2">{run ? `Latest run: ${run.status.replace(/_/g, ' ')} · ${run.steps.length} successful configuration steps recorded` : 'No recovery run recorded'}</p><Link className="text-sm text-nutanix-cyan inline-block mt-3" to={run ? `/recovery?run=${encodeURIComponent(run.id)}` : '/recovery'}>{run ? 'Review existing recovery run' : 'Open recovery profiles'}</Link><p className="text-xs text-gray-500 mt-2">Continue only through the existing approval, health and reconciliation gates. No automatic replay.</p></div></div>
       {message && <p role="status" className="text-sm text-amber-400">{message}</p>}</div>}

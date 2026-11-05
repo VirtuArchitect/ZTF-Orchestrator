@@ -61,12 +61,14 @@ passwords or authorization headers are retained.
 **PE-reported health: Good** requires the expected UUID and cluster name, complete
 host inventory, matching node serials/AHV/CVM addresses, and explicit PE-reported
 `Good` cluster and host health. Explicit supported negative health values produce
-an attention state. Missing fields, unsupported responses, authentication, trust
-or connectivity failures remain **Unknown / review required**. A failed new
-collection replaces the previous result; it does not preserve an old green badge.
+an attention state. Authentication, trust, connectivity and unparseable responses
+have a separate **Collection failed** outcome. Completed responses with missing
+health fields or mismatched identity/membership remain **Unknown / review required**.
+A failed new collection replaces the previous result; it does not preserve an old
+green badge.
 
 Every result displays its collection time. After 15 minutes it is shown as
-**Stale observation** and excluded from the fresh-Good count. Job success and
+**Evidence expired** and excluded from the fresh-Good count. Collection failures, invalid timestamps and clock mismatches are reported separately; see [PE health reporting](pe-health-reporting.md). Browser wall-clock skew warns separately without expiring valid appliance-time evidence. Job success and
 manual recovery attestations never populate this badge. These checks do not
 establish NCC compliance, storage resilience, backup restorability, workload
 availability, or final recovery acceptance.
