@@ -13,7 +13,7 @@ export default function Clusters() {
   const { data, error } = useRecoverySummary()
   const [search, setSearch] = useState('')
   const [datacenter, setDatacenter] = useState('')
-  const profiles = data?.profiles.filter(profile => (!datacenter || profile.datacenterId === datacenter) && profile.name.toLowerCase().includes(search.toLowerCase())) || []
+  const profiles = data?.profiles.filter(profile => !profile.archivedAt && (!datacenter || profile.datacenterId === datacenter) && profile.name.toLowerCase().includes(search.toLowerCase())) || []
   return <Layout title="Clusters" subtitle="Managed cluster records, observations and saved recovery profiles">
     <div className="space-y-5">
       {admin && operations.data && <ClusterRecordEditor data={operations.data} refresh={operations.refresh} />}

@@ -8,7 +8,7 @@ import { ClusterWorkspace, PersistentAttention, useOperations, freshObservation 
 
 export interface RecoverySummary {
   datacenters: { id: string; name: string }[]
-  profiles: { id: string; name: string; datacenterId: string; reviewed: boolean; drifted: boolean; lastRehearsal?: string }[]
+  profiles: { id: string; name: string; datacenterId: string; reviewed: boolean; drifted: boolean; lastRehearsal?: string; archivedAt?: string }[]
   runs: { id: string; profileId: string; clusterName: string; status: string; mode: string; deploymentJobId?: string; currentJobId?: string; updatedAt: string; steps?: { jobId: string }[] }[]
 }
 
@@ -67,9 +67,9 @@ export default function OperationsOverview({ jobs, driftRuns, pendingApprovals, 
     if (!latest.has(key)) latest.set(key, run)
   }
   const drift = [...latest.values()].find(run => run.status !== 'matched')
-  const needsReview = data?.profiles.filter(p => !p.reviewed || p.drifted).length
-  const reviewed = data?.profiles.filter(p => p.reviewed && !p.drifted).length
-  const rehearsed = data?.profiles.filter(p => p.lastRehearsal).length
+  const needsReview = data?.profiles.filter(p => !p.archivedAt && (!p.reviewed || p.drifted)).length
+  const reviewed = data?.profiles.filter(p => !p.archivedAt && p.reviewed && !p.drifted).length
+  const rehearsed = data?.profiles.filter(p => !p.archivedAt && p.lastRehearsal).length
   const recent = [...jobs].sort((a, b) => Date.parse(b.updatedAt || b.createdAt) - Date.parse(a.updatedAt || a.createdAt)).slice(0, 5)
   const attention = [
     ...(healthIssues ? [{ title: 'Platform checks need attention', text: `${healthIssues} reported check(s) require review.`, to: '#platform-details', action: 'Review details' }] : []),
@@ -115,7 +115,7 @@ export default function OperationsOverview({ jobs, driftRuns, pendingApprovals, 
         <p className="text-sm text-gray-400 mb-5">Review dates and evidence before recovery.</p>
         <dl className="space-y-4 text-sm">{[['Reviewed profiles', reviewed], ['Profiles with rehearsal recorded', rehearsed], ['Profiles needing review', needsReview]].map(([label, value]) => <div key={label} className="flex gap-3 justify-between"><dt className="text-gray-400">{label}</dt><dd className="font-semibold text-gray-100">{error ? '—' : value ?? '—'}</dd></div>)}</dl>
         <Link to="/recovery" className="inline-flex items-center gap-2 mt-6 text-sm text-nutanix-cyan">View datacenters<ArrowRight size={16} /></Link>
-        <Link to="/clusters" className="block mt-3 text-sm text-nutanix-cyan">Cluster profiles: {error ? '—' : data?.profiles.length ?? '—'}</Link>
+        <Link to="/clusters" className="block mt-3 text-sm text-nutanix-cyan">Cluster profiles: {error ? '—' : data?.profiles.filter(p => !p.archivedAt).length ?? '—'}</Link>
       </section>
     </div>
     <section className="card" aria-labelledby="recent-jobs-heading">

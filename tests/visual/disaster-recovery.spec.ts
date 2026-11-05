@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-async function seed(page: Page, role = 'admin') {
+async function seed(page: Page, role = 'admin', options: { blocker?: string; used?: boolean; linked?: boolean } = {}) {
   await page.addInitScript(role => sessionStorage.setItem('ztf-ui-store', JSON.stringify({ state: {
     sessionToken: 'isolated-fixture', user: { username: 'recovery-reviewer', role }, sidebarOpen: false,
     sidebarPreferenceInitialized: true, settings: {},
@@ -8,22 +8,33 @@ async function seed(page: Page, role = 'admin') {
   const checks = { network: 'reviewed', images: 'reviewed', credentials: 'reviewed', dnsNtp: 'reviewed', backupAccess: 'reviewed' }
   const dc = { id: 'dc1', name: 'Datacenter Alpha', foundationEndpoint: 'http://foundation.example.com:8000', notes: 'Approved recovery network', prerequisites: checks }
   const revision = { revision: 1, sha256: 'a'.repeat(64), deploymentConfigFile: 'deploy.yml', deploymentContent: 'foundation_vm_ip: foundation.example.com\n', clusterName: 'HCI-01', clusterVip: '192.0.2.20', targets: ['NODE1', 'NODE2', 'NODE3'], steps: [{ workflow: 'config-cluster', configFile: 'post.yml', configContent: 'clusters: {}\n', sha256: 'b'.repeat(64) }], pipelineName: 'Post deployment', approvedBy: 'reviewer', approvedAt: '2026-10-28T08:00:00Z' }
-  const profile = { id: 'p1', name: 'HCI-01 Recovery', datacenterId: dc.id, kind: 'existing', revision: 1, reviewed: true, drifted: false, deploymentConfigFile: 'deploy.yml', pipelineId: 'pipe', revisions: [revision] }
+  const profile = { id: 'p1', name: 'HCI-01 Recovery', datacenterId: dc.id, kind: 'existing', revision: 1, reviewed: true, drifted: false, deploymentConfigFile: 'deploy.yml', pipelineId: 'pipe', revisions: [revision], updatedAt: '2026-11-05T08:00:00Z', archivedAt: '', archiveNotes: '', lifecycle: {} }
   const writes: string[] = []
   const datacenters = [dc]
   let preparedRun: unknown = null
+  let removed = false
+  const lifecycle = () => ({canEdit: !profile.archivedAt && !options.blocker, canArchive: !profile.archivedAt && !options.blocker, canRestore: Boolean(profile.archivedAt) && !options.blocker, canDelete: !options.used && !options.blocker && !options.linked, runCount: options.used || options.blocker ? 1 : 0, linkedClusterCount: options.linked ? 1 : 0, blockers: options.blocker ? [{id:'blocking-run',status:options.blocker}] : [], editReason: options.blocker ? 'Open recovery run requires completion or reconciliation: blocking-run ('+options.blocker+')' : profile.archivedAt ? 'Restore this archived profile before editing.' : '', archiveReason: options.blocker ? 'Open recovery run requires completion or reconciliation.' : '', restoreReason:'', deleteReason: options.used || options.blocker ? 'Recovery run history is retained. Archive this profile instead.' : options.linked ? 'Managed-cluster records reference this profile.' : ''})
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname
     if (request.method() !== 'GET' && path !== '/api/auth/activity') writes.push(path)
+    profile.lifecycle = lifecycle()
     let value: unknown = []
     if (path === '/api/system/check') value = { checks: [], ztfInstalled: true }
     if (path === '/api/configs') value = [{ name: 'deploy.yml' }, { name: 'post.yml' }]
     if (path === '/api/pipelines') value = [{ id: 'pipe', name: 'Post deployment', steps: [] }]
-    if (path === '/api/recovery') value = { datacenters, profiles: [profile], runs: [] }
+    if (path === '/api/recovery') value = { datacenters, profiles: removed ? [] : [profile], runs: [] }
     if (path === '/api/recovery/datacenters') {
       const added = { ...request.postDataJSON(), id: 'dc2' }; datacenters.push(added); value = added
     }
-    if (path === '/api/recovery/profiles/p1') value = profile
+    if (path === '/api/recovery/profiles/p1') {
+      if (request.method() === 'PUT') {
+        const body = request.postDataJSON(); profile.name = body.name; profile.revision++; profile.revisions.push({...revision, revision:profile.revision, approvedBy:''}); profile.updatedAt='2026-11-05T08:01:00Z'
+      }
+      if (request.method() === 'DELETE') removed = true
+      value = removed ? {deleted:true,id:profile.id} : profile
+    }
+    if (path === '/api/recovery/profiles/p1/archive') {profile.archivedAt='2026-11-05T08:01:00Z';profile.archiveNotes=request.postDataJSON().notes;profile.updatedAt='2026-11-05T08:01:00Z';profile.lifecycle=lifecycle();value=profile}
+    if (path === '/api/recovery/profiles/p1/restore') {profile.archivedAt='';profile.updatedAt='2026-11-05T08:02:00Z';profile.lifecycle=lifecycle();value=profile}
     if (path === '/api/recovery/runs') {
       preparedRun = { id: 'run1', profileId: profile.id, profileName: profile.name, datacenterId: dc.id, mode: request.postDataJSON().mode, status: 'prepared', revision: 1, clusterName: revision.clusterName, clusterVip: revision.clusterVip, baselineSha256: revision.sha256, foundationEndpoint: dc.foundationEndpoint, steps: [], snapshot: revision }
       value = preparedRun
@@ -141,4 +152,96 @@ test('HTML API errors explain the HTTP status without leaking the response', asy
   await expect(page.getByRole('status')).toContainText('do not resubmit a deployment')
   await expect(page.getByRole('status')).not.toContainText('private raw response')
   expect(writes).toEqual([])
+})
+
+test('Edit Profile is visible in the list and saves a new draft revision', async ({ page }) => {
+  const writes = await seed(page)
+  await page.goto('/recovery')
+  await page.getByRole('button', { name: 'Edit profile HCI-01 Recovery', exact: true }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('Edit Recovery Profile')
+  await dialog.getByLabel('Profile name', { exact: true }).fill('HCI-01 Recovery Updated')
+  const save = page.waitForRequest(r => r.method() === 'PUT' && r.url().endsWith('/api/recovery/profiles/p1'))
+  await dialog.getByRole('button', { name: 'Save Draft Revision' }).click()
+  const request = await save
+  expect(request.postDataJSON()).toMatchObject({expectedRevision:1, expectedUpdatedAt:'2026-11-05T08:00:00Z'})
+  await expect(page.getByRole('cell', { name: /HCI-01 Recovery Updated existing cluster/ })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Revision 2', exact: true })).toBeVisible()
+  expect(writes).toEqual(['/api/recovery/profiles/p1'])
+})
+
+test('archive and restore require exact confirmation and preserve review history', async ({ page }) => {
+  const writes = await seed(page)
+  await page.goto('/recovery')
+  if (process.env.ZTF_CAPTURE_PROFILE_GUIDE) {
+    await page.getByRole('button', {name:'Cluster Profiles',exact:true}).click()
+    await page.getByRole('button', {name:'Edit profile HCI-01 Recovery', exact:true}).waitFor()
+    await page.screenshot({path:'docs/assets/guide/v1.8.5-rc1/recovery-profile-management.png',fullPage:true})
+  }
+  await page.getByRole('button', { name: 'Archive profile HCI-01 Recovery', exact: true }).click()
+  let dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('button', { name:'Confirm archive' })).toBeDisabled()
+  await dialog.getByLabel('Confirmation: ARCHIVE HCI-01 Recovery', {exact:true}).fill('ARCHIVE HCI-01 Recovery')
+  await dialog.getByLabel('Profile action notes (no secrets)', {exact:true}).fill('Retired baseline; retain recovery evidence.')
+  await dialog.getByRole('button', { name:'Confirm archive' }).click()
+  await expect(page.getByRole('button', {name:'Review Profile'})).toHaveCount(0)
+  await page.getByLabel(/Include archived profiles/).check()
+  await page.getByRole('button', {name:'Review Profile'}).click()
+  dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('NODE1')
+  await expect(dialog.getByRole('button', {name:'Prepare Recovery',exact:true})).toBeDisabled()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', {name:'Restore profile HCI-01 Recovery',exact:true}).click()
+  dialog=page.getByRole('dialog')
+  await dialog.getByLabel('Confirmation: RESTORE HCI-01 Recovery', {exact:true}).fill('RESTORE HCI-01 Recovery')
+  await dialog.getByLabel('Profile action notes (no secrets)', {exact:true}).fill('Reinstated after review.')
+  await dialog.getByRole('button', {name:'Confirm restore'}).click()
+  await expect(page.getByRole('button', {name:'Edit profile HCI-01 Recovery',exact:true})).toBeEnabled()
+  expect(writes).toEqual(['/api/recovery/profiles/p1/archive','/api/recovery/profiles/p1/restore'])
+})
+
+test('blocking run explains disabled management actions and historical usage prevents deletion', async ({ page }) => {
+  const writes=await seed(page,'admin',{blocker:'needs_reconciliation'})
+  await page.goto('/recovery')
+  await expect(page.getByRole('button',{name:'Edit profile HCI-01 Recovery',exact:true})).toBeDisabled()
+  await expect(page.getByRole('button',{name:'Archive profile HCI-01 Recovery',exact:true})).toBeDisabled()
+  await expect(page.getByRole('button',{name:'Delete unused profile HCI-01 Recovery',exact:true})).toBeDisabled()
+  await expect(page.getByRole('button',{name:/Review blocking run blocking-run/})).toBeVisible()
+  await expect(page.getByText(/Open recovery run requires completion or reconciliation:/)).toBeVisible()
+  expect(writes).toEqual([])
+})
+
+test('unused profile deletion is deliberate and makes no deployment requests', async ({ page }) => {
+  const writes=await seed(page)
+  await page.goto('/recovery')
+  await page.getByRole('button',{name:'Delete unused profile HCI-01 Recovery',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  await expect(dialog).toContainText('Saved YAML files, pipelines, credentials and datacenters are retained')
+  await expect(dialog.getByRole('button',{name:'Confirm delete'})).toBeDisabled()
+  await dialog.getByLabel('Confirmation: DELETE HCI-01 Recovery',{exact:true}).fill('DELETE HCI-01 Recovery')
+  await dialog.getByLabel('Profile action notes (no secrets)',{exact:true}).fill('Unused duplicate profile.')
+  const request=page.waitForRequest(r=>r.method()==='DELETE' && r.url().endsWith('/api/recovery/profiles/p1'))
+  await dialog.getByRole('button',{name:'Confirm delete'}).click()
+  expect((await request).method()).toBe('DELETE')
+  await expect(page.getByRole('button',{name:'Review Profile'})).toHaveCount(0)
+  expect(writes).toEqual(['/api/recovery/profiles/p1'])
+})
+
+test('viewer has no profile lifecycle mutation controls',async({page})=>{
+  const writes=await seed(page,'viewer')
+  await page.goto('/recovery')
+  for(const name of ['Edit profile HCI-01 Recovery','Archive profile HCI-01 Recovery','Delete unused profile HCI-01 Recovery']) await expect(page.getByRole('button',{name,exact:true})).toHaveCount(0)
+  expect(writes).toEqual([])
+})
+
+test('stale profile update keeps the draft and reports the conflict',async({page})=>{
+  await seed(page)
+  await page.route('**/api/recovery/profiles/p1',route=>route.request().method()==='PUT'?route.fulfill({status:409,json:{error:'Profile changed. Reload and review it before changing it.'}}):route.fallback())
+  await page.goto('/recovery')
+  await page.getByRole('button',{name:'Edit profile HCI-01 Recovery',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  await dialog.getByLabel('Profile name',{exact:true}).fill('Draft retained')
+  await dialog.getByRole('button',{name:'Save Draft Revision'}).click()
+  await expect(page.getByRole('alert')).toContainText('Profile changed')
+  await expect(dialog.getByLabel('Profile name',{exact:true})).toHaveValue('Draft retained')
 })

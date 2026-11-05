@@ -44036,11 +44036,21 @@ def _recovery_read():
     return read_json(RECOVERY_FILE, {'datacenters': [], 'profiles': [], 'runs': []})
 
 
+def _recovery_profile_references(identity):
+    value = _read_group_document(CONFIG_DIR / 'cluster_operations.json', {'clusters': []})
+    if (not isinstance(value, dict) or not isinstance(value.get('clusters'), list)
+            or any(not isinstance(row, dict) or not isinstance(row.get('recoveryProfileId'), str)
+                   for row in value['clusters'])):
+        raise RecoveryError('Managed-cluster reference metadata is unreadable', 503)
+    return [row['id'] for row in value['clusters'] if row['recoveryProfileId'] == identity]
+
+
 _recovery_service = RecoveryService({
     'read': _recovery_read,
     'write': lambda state: write_json(RECOVERY_FILE, state),
     'config': _recovery_config,
     'pipeline': lambda identity: next((p for p in _load_pipelines() if p['id'] == identity), None),
+    'profile_references': _recovery_profile_references,
     'validate_foundation': _validate_foundation_vm_intent,
     'endpoint_config': _recovery_endpoint_config,
     'endpoint_text': _recovery_endpoint_text,

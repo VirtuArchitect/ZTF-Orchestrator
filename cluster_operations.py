@@ -179,10 +179,10 @@ class OperationsService:
             raise ValueError('A linked configuration file is unavailable')
         if proposed['pipelineId'] and not self.s['pipeline'](proposed['pipelineId']):
             raise ValueError('The linked pipeline is unavailable')
-        recovery = self.s['recovery']()
-        if proposed['recoveryProfileId'] and not any(p['id'] == proposed['recoveryProfileId'] for p in recovery['profiles']):
-            raise ValueError('The linked recovery profile is unavailable')
         with self.lock:
+            recovery = self.s['recovery']()
+            if proposed['recoveryProfileId'] and not any(p['id'] == proposed['recoveryProfileId'] for p in recovery['profiles']):
+                raise ValueError('The linked recovery profile is unavailable')
             state = self.load()
             if data['revision'] != state['revision']:
                 return {'error': 'Operational records changed. Reload before saving.'}, 409

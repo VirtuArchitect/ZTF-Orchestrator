@@ -23,6 +23,8 @@ WORKFLOW = 'cluster-create-foundation-vm'
 POST_ACTIONS = {'config-cluster', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'}
 ACTIVE = {'submitting', 'deploying', 'awaiting_health_verification', 'ready_for_configuration',
           'awaiting_bootstrap', 'bootstrapping', 'configuring', 'awaiting_acceptance', 'needs_reconciliation', 'stopping'}
+PROFILE_BLOCKING = ACTIVE | {'prepared'}
+PROFILE_TERMINAL = {'accepted', 'closed_reconciled'}
 TERMINAL_JOBS = {'success', 'failed', 'cancelled', 'interrupted'}
 PREREQUISITES = ('network', 'images', 'credentials', 'dnsNtp', 'backupAccess')
 
@@ -174,6 +176,8 @@ class RecoveryService:
             raise RecoveryError('Recovery records are unreadable; restore or repair storage before execution', 503)
         for key in ('datacenters', 'profiles', 'runs'):
             state.setdefault(key, [])
+        if 'profileEvents' in state and not isinstance(state['profileEvents'], list):
+            raise RecoveryError('Profile lifecycle history is unreadable; repair storage before changing profiles', 503)
         return state
 
     def shutdown(self):
@@ -220,6 +224,76 @@ class RecoveryService:
             result.pop('events', None)
         return result
 
+    def profile_lifecycle(self, state, profile):
+        runs = [r for r in state['runs'] if r['profileId'] == profile['id']]
+        blockers = [{'id': r['id'], 'status': r['status']} for r in runs if r['status'] not in PROFILE_TERMINAL]
+        try:
+            references = self.s['profile_references'](profile['id'])
+        except (ValueError, OSError, TypeError, KeyError):
+            references = None
+        archived = bool(profile.get('archivedAt'))
+        blocked = ('Open recovery run requires completion or reconciliation: ' +
+                   ', '.join(f"{r['id']} ({r['status']})" for r in blockers)) if blockers else ''
+        return {'blockers': blockers, 'runCount': len(runs), 'linkedClusterCount': None if references is None else len(references),
+                'canEdit': not archived and not blockers,
+                'canArchive': not archived and not blockers, 'canRestore': archived and not blockers,
+                'canDelete': not runs and references == [],
+                'editReason': 'Restore this archived profile before editing.' if archived else blocked,
+                'archiveReason': blocked, 'restoreReason': blocked,
+                'deleteReason': ('Recovery run history is retained. Archive this profile instead.' if runs else
+                                 'Managed-cluster reference checks are unavailable. Repair operational metadata before deletion.' if references is None else
+                                 'Managed-cluster records reference this profile. Remove those links before deletion.' if references else '')}
+
+    def profile_view(self, state, profile):
+        return {**deepcopy(profile), 'lifecycle': self.profile_lifecycle(state, profile)}
+
+    @staticmethod
+    def check_profile_version(profile, data, required_version=False):
+        fields = {'expectedRevision', 'expectedUpdatedAt'}
+        if required_version or fields & set(data):
+            if (type(data.get('expectedRevision')) is not int or
+                    not isinstance(data.get('expectedUpdatedAt'), str)):
+                raise RecoveryError('Reload the profile and supply its revision and update timestamp')
+            if (data['expectedRevision'] != len(profile['revisions']) or
+                    data['expectedUpdatedAt'] != profile.get('updatedAt', '')):
+                raise RecoveryError('Profile changed. Reload and review it before changing it.', 409)
+
+    def profile_action(self, identity, actor, data, action):
+        if set(data) != {'expectedRevision', 'expectedUpdatedAt', 'confirmation', 'notes'}:
+            raise RecoveryError('Supply profile revision, update timestamp, confirmation and notes')
+        notes = required(data.get('notes'), 'Profile action notes', 2000)
+        if any(ord(c) < 32 and c not in '\n\t' for c in notes):
+            raise RecoveryError('Profile action notes contain invalid control characters')
+        with self.lock:
+            state = self.load()
+            profile = self.find(state, 'profiles', identity)
+            self.check_profile_version(profile, data, True)
+            if data.get('confirmation') != f'{action.upper()} {profile["name"]}':
+                raise RecoveryError('Profile action confirmation does not match the current profile name')
+            lifecycle = self.profile_lifecycle(state, profile)
+            permission = {'archive': 'canArchive', 'restore': 'canRestore', 'delete': 'canDelete'}[action]
+            if not lifecycle[permission]:
+                reason = lifecycle[action + 'Reason'] or 'This profile is already in the requested state.'
+                raise RecoveryError(reason, 409)
+            event = {'at': now(), 'actor': actor, 'action': action, 'profileId': identity,
+                     'profileName': profile['name'], 'notes': notes}
+            state.setdefault('profileEvents', []).append(event)
+            state['profileEvents'] = state['profileEvents'][-2000:]
+            if action == 'delete':
+                state['profiles'] = [p for p in state['profiles'] if p['id'] != identity]
+                result = {'deleted': True, 'id': identity}
+            else:
+                if action == 'archive':
+                    profile.update(archivedAt=event['at'], archivedBy=actor, archiveNotes=notes)
+                else:
+                    for key in ('archivedAt', 'archivedBy', 'archiveNotes'):
+                        profile.pop(key, None)
+                profile.update(updatedAt=event['at'], updatedBy=actor)
+                result = self.profile_view(state, profile)
+            self.save(state)
+            self.audit('profile_' + action, actor, identity)
+            return result
+
     def overview(self):
         with self.lock:
             state = self.load()
@@ -246,6 +320,7 @@ class RecoveryService:
                 item['lastRehearsal'] = next((r['updatedAt'] for r in reversed(state['runs'])
                                               if r['profileId'] == profile['id'] and r['mode'] == 'rehearsal'
                                               and r['status'] == 'accepted'), None)
+                item['lifecycle'] = self.profile_lifecycle(state, profile)
                 profiles.append(item)
             return {'datacenters': state['datacenters'], 'profiles': profiles,
                     'runs': [self.public(r) for r in reversed(state['runs'])],
@@ -283,8 +358,10 @@ class RecoveryService:
             dc = self.find(state, 'datacenters', data.get('datacenterId'))
             if identity:
                 item = self.find(state, 'profiles', identity)
-                if any(r['profileId'] == identity and r['status'] in ACTIVE for r in state['runs']):
-                    raise RecoveryError('Profile has an active or unreconciled run', 409)
+                self.check_profile_version(item, data)
+                lifecycle = self.profile_lifecycle(state, item)
+                if not lifecycle['canEdit']:
+                    raise RecoveryError(lifecycle['editReason'], 409)
             else:
                 item = {'id': str(uuid.uuid4()), 'revisions': [], 'createdAt': now()}
                 state['profiles'].append(item)
@@ -342,12 +419,17 @@ class RecoveryService:
 
     def detail_profile(self, identity):
         with self.lock:
-            return deepcopy(self.find(self.load(), 'profiles', identity))
+            state = self.load()
+            result = self.profile_view(state, self.find(state, 'profiles', identity))
+            result['lifecycleEvents'] = [deepcopy(e) for e in state.get('profileEvents', []) if e['profileId'] == identity]
+            return result
 
     def approve(self, identity, actor, data):
         with self.lock:
             state = self.load()
             profile = self.find(state, 'profiles', identity)
+            if profile.get('archivedAt'):
+                raise RecoveryError('Restore this archived profile before reviewing its baseline.', 409)
             revision = profile['revisions'][-1]
             if data.get('sha256') != revision['sha256']:
                 raise RecoveryError('Review hash does not match the current revision', 409)
@@ -360,6 +442,8 @@ class RecoveryService:
         with self.lock:
             state = self.load()
             profile = self.find(state, 'profiles', data.get('profileId'))
+            if profile.get('archivedAt'):
+                raise RecoveryError('Restore this archived profile before preparing a recovery or rehearsal.', 409)
             revision = profile['revisions'][-1]
             if not revision.get('approvedBy') or data.get('sha256') != revision['sha256']:
                 raise RecoveryError('Review and approve the current baseline before preparing a run', 409)
@@ -844,6 +928,9 @@ def register_routes(app, service, require_role, limiter):
     add('/profiles', ['POST'], lambda d, u, a: service.profile(d, u), admin)
     add('/profiles/<identity>', ['GET'], lambda d, u, a, identity: service.detail_profile(identity), read)
     add('/profiles/<identity>', ['PUT'], lambda d, u, a, identity: service.profile(d, u, identity), admin)
+    add('/profiles/<identity>/archive', ['POST'], lambda d, u, a, identity: service.profile_action(identity, u, d, 'archive'), admin)
+    add('/profiles/<identity>/restore', ['POST'], lambda d, u, a, identity: service.profile_action(identity, u, d, 'restore'), admin)
+    add('/profiles/<identity>', ['DELETE'], lambda d, u, a, identity: service.profile_action(identity, u, d, 'delete'), admin)
     add('/profiles/<identity>/approve', ['POST'], lambda d, u, a, identity: service.approve(identity, u, d), admin)
     add('/runs', ['POST'], lambda d, u, a: service.prepare(d, u), admin)
     add('/runs/<identity>', ['GET'], lambda d, u, a, identity: service.detail_run(identity), read)
