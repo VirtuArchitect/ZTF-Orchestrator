@@ -1,0 +1,25 @@
+{
+  "version": "1.8.5-rc1",
+  "date": "2026-11-05",
+  "sourceBaseline": "80c744c9b09bfb531bed5db5b8be3af8fcfa750c",
+  "sourcePatch": "Health-reporting changes; source file hashes identify the capture candidate.",
+  "sources": {
+    "cluster_operations.py": "4b2bddb9b1ae713eb35f1e13828474575e54d60b0a31f1c3f7cee59f690ef97e",
+    "src/components/ClusterOperations.tsx": "10f824772a1812f92a6dc01fd597d2311dfb919a3293c5fd3a238a4a7f285e17",
+    "src/components/OperationsOverview.tsx": "acf57b1c5e9c0fb348633b68f9161166129c0b9b1207723fd06e6dc57c58a80e",
+    "src/utils/peObservation.ts": "77378bf298b3ed3b651fb6fe54749f7c4379956e87cacaf479c21416d4f871d8",
+    "tests/visual/cluster-operations.spec.ts": "722499cd40f188ff9f67c32c68366742a30f2a3ab7968a92d61789ed2182291b"
+  },
+  "simulated": true,
+  "viewport": {
+    "width": 1600,
+    "height": 1100
+  },
+  "fixture": "Mocked operational API; generic documentation targets; no PE collection or execution",
+  "screens": [
+    {
+      "file": "health-states.png",
+      "sha256": "59a692e45dbc358a78a5bca6f37a35b9b5d30adf432370c512c86742b107398c"
+    }
+  ]
+}

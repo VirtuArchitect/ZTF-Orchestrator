@@ -1,4 +1,7 @@
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+PE health reporting separates evidence expiry, collection failure, invalid/future timestamps and dashboard refresh errors. Appliance-time age is independent of browser wall-clock skew; existing TLS, read-only and execution gates remain intact. See docs/pe-health-reporting.md.
+
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
 Recovery profile management: explicit Edit Profile, Archive/Restore and Delete Unused Profile. Open runs block changes; never-submitted prepared runs have an audited close action. Any run history or managed-cluster link prevents deletion. Existing snapshots and execution gates remain intact. See docs/recovery-profile-management.md.
 
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)

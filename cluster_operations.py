@@ -30,11 +30,35 @@ def empty():
     return {'version': 1, 'revision': 0, 'clusters': [], 'attention': {}}
 
 
-def age_seconds(value):
+def age_seconds(value, reference=None):
     try:
-        return (datetime.now(timezone.utc) - datetime.fromisoformat(value)).total_seconds()
-    except (ValueError, TypeError):
+        timestamp = datetime.fromisoformat(value)
+        anchor = datetime.fromisoformat(reference) if reference is not None else datetime.now(timezone.utc)
+        if timestamp.utcoffset() is None or anchor.utcoffset() is None:
+            return None
+        return (anchor - timestamp).total_seconds()
+    except (ValueError, TypeError, OverflowError):
         return None
+
+
+def observation_diagnostics(observation, reference):
+    """Appliance-time evidence state; never infer health from a collection failure."""
+    age = age_seconds(observation.get('collectedAt'), reference) if observation else None
+    if not observation:
+        state, message = 'not_checked', 'No PE health collection has been recorded.'
+    elif age is None:
+        state, message = 'invalid_timestamp', 'Evidence timestamp is invalid or has no timezone. Collect fresh PE evidence.'
+    elif age < 0:
+        state, message = 'clock_mismatch', 'Evidence timestamp is ahead of the appliance clock. Check appliance time/NTP and collect fresh evidence.'
+    elif observation.get('collectionStatus') == 'failed':
+        state, message = 'collection_failed', 'The latest PE collection failed. Check credentials, certificate trust/SAN, connectivity and API compatibility; then collect again.'
+    elif age > 900:
+        state, message = 'expired', 'The saved PE evidence is older than 15 minutes. Collect fresh PE health; dashboard refresh does not contact PE.'
+    elif observation.get('collectionStatus') == 'not_attempted':
+        state, message = 'unknown', 'Complete the expected cluster UUID, node baseline and credential reference before collection.'
+    else:
+        state, message = 'fresh', 'Evidence is within the 15-minute appliance-time window. Review the actual PE result and checks.'
+    return {'state': state, 'ageSeconds': age, 'ttlSeconds': 900, 'message': message}
 
 
 def validate_cluster(data):
@@ -90,7 +114,7 @@ def collect_health(record, lookup):
     """Two fixed GETs; HTTPS identity verification is mandatory, with no bypass."""
     checks = []
     result = {'collectedAt': now(), 'status': 'unknown', 'checks': checks,
-              'source': 'verified-https-pe-readback', 'message': 'Expected UUID, credential and complete node baseline are required.'}
+              'source': 'verified-https-pe-readback', 'collectionStatus': 'not_attempted', 'message': 'Expected UUID, credential and complete node baseline are required.'}
     if not record['expectedUuid'] or not record['peCredential'] or not record['expectedNodes']:
         return result
     try:
@@ -126,6 +150,7 @@ def collect_health(record, lookup):
             return isinstance(summary, dict) and summary.get('health_status') == 'Good'
         check('PE-reported cluster health Good', good(cluster))
         check('PE-reported host health Good', complete and all(good(n) for n in entities))
+        result['collectionStatus'] = 'completed'
         result['status'] = 'good' if all(c['status'] == 'passed' for c in checks) else 'unknown'
         reported = ([cluster.get('health_summary', {})] + [h.get('health_summary', {}) for h in entities]) if complete else []
         if identity and matches and any(isinstance(s, dict) and s.get('health_status') in ('Critical', 'Warning', 'Bad', 'Error') for s in reported):
@@ -133,6 +158,7 @@ def collect_health(record, lookup):
         result['message'] = ('PE reports Good; expected identity and membership matched. This is not NCC or application acceptance.'
                              if result['status'] == 'good' else 'PE readback is incomplete or differs from the expected identity, membership or reported health.')
     except (ValueError, TypeError, KeyError, OSError):
+        result['collectionStatus'] = 'failed'
         result['message'] = 'PE observation failed. Check the credential reference, certificate trust/SAN, connectivity and API compatibility.'
     result['completedAt'] = now()
     return result
@@ -159,6 +185,8 @@ class OperationsService:
                     or observation.get('status') not in ('good', 'unknown', 'not_good')
                     or not isinstance(observation.get('collectedAt'), str)):
                 raise ValueError('Operational observation is unreadable; reconcile storage before saving')
+            if observation is not None and 'collectionStatus' in observation and observation['collectionStatus'] not in ('completed', 'failed', 'not_attempted'):
+                raise ValueError('Operational collection outcome is unreadable; reconcile storage before saving')
         for key, item in value['attention'].items():
             if (not isinstance(key, str) or not isinstance(item, dict) or item.get('id') != key
                     or item.get('status') not in ('open', 'acknowledged', 'resolved')
@@ -235,6 +263,7 @@ class OperationsService:
         with self.lock:
             state = self.load()
             changed = False
+            generated_at = now()
             sources = []
             for job in jobs:
                 if job.get('status') not in ('failed', 'interrupted'):
@@ -244,10 +273,12 @@ class OperationsService:
                                 'detail': str(job.get('workflow') or 'Job')[:128], 'sourceVersion': str(job['id'])})
             for row in state['clusters']:
                 observed = row.get('observation')
-                age = age_seconds((observed or {}).get('collectedAt'))
-                if observed and (observed.get('status') != 'good' or age is None or age < 0 or age > 900):
+                diagnostic = observation_diagnostics(observed, generated_at)
+                age = diagnostic['ageSeconds']
+                if observed and (observed.get('status') != 'good' or diagnostic['state'] != 'fresh'):
                     sources.append({'id': 'health-' + row['id'], 'clusterId': row['id'],
-                                    'title': 'PE observation needs review', 'detail': row['name'],
+                                    'title': {'expired': 'PE evidence expired', 'collection_failed': 'PE collection failed',
+                                              'clock_mismatch': 'PE evidence clock mismatch', 'invalid_timestamp': 'PE evidence timestamp invalid'}.get(diagnostic['state'], 'PE observation needs review'), 'detail': row['name'],
                                     'sourceVersion': observed['collectedAt'] + ('-stale' if age is not None and age > 900 else '')})
             for run in recovery['runs']:
                 if run.get('status') in ('needs_reconciliation', 'stopping'):
@@ -265,14 +296,19 @@ class OperationsService:
                     # successful collection never silently resolves an incident.
                     previous.update(source, status='open', updatedAt=now())
                     changed = True
+                elif any(previous.get(k) != source[k] for k in ('title', 'detail')):
+                    # Refine the explanation without reopening an unchanged review.
+                    previous.update(title=source['title'], detail=source['detail'])
+                    changed = True
             if changed and self.s.get('can_write', lambda: True)():
                 self.save(state)
             view = deepcopy(state)
         for row in view['clusters']:
-            age = age_seconds((row.get('observation') or {}).get('collectedAt'))
-            row['observationFresh'] = age is not None and 0 <= age <= 900
+            diagnostic = observation_diagnostics(row.get('observation'), generated_at)
+            row['observationDiagnostics'] = diagnostic
+            row['observationFresh'] = diagnostic['state'] == 'fresh'
         # No raw config, payload, target passwords or job log output is returned.
-        view.update(collectedAt=now(), recoveryProfiles=recovery['profiles'], recoveryRuns=[{
+        view.update(collectedAt=generated_at, recoveryProfiles=recovery['profiles'], recoveryRuns=[{
             k: r.get(k) for k in ('id', 'profileId', 'clusterName', 'status', 'updatedAt', 'steps', 'deploymentJobId', 'currentJobId', 'healthEvidence')
         } for r in recovery['runs']], pipelines=[{'id': p['id'], 'name': p['name']} for p in self.s['pipelines']()])
         view['jobs'] = [{k: j.get(k) for k in ('id', 'workflow', 'status', 'createdAt', 'updatedAt', 'configFile')} for j in jobs]
