@@ -2,7 +2,7 @@
 
 Recovery profile maintenance now includes [revision-based editing, archive/restore and guarded unused-profile deletion](docs/recovery-profile-management.md), preserving deployment history and existing approval gates.
 
-[PE health reporting](docs/pe-health-reporting.md) distinguishes expired evidence, failed collections and clock mismatches while retaining verified, read-only collection.
+[PE health reporting](docs/pe-health-reporting.md) distinguishes expired evidence, failed collections and clock mismatches while retaining verified, read-only collection. Updated source also explains specific certificate trust/SAN, credential and connectivity failures at the cluster or host collection stage.
 
 See [current documented build and update details](docs/current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
 

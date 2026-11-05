@@ -159,7 +159,7 @@ def pe_responses():
 def test_pe_health_reads_are_fixed_verified_get_paths(monkeypatch):
     cluster, hosts = pe_responses(); calls = []
     def read(url, ref, path, lookup, **kwargs):
-        assert kwargs == {}  # Defaults enforce verified TLS; no bypass accepted.
+        assert kwargs == {'detailed_errors': True}  # Verified TLS remains the default; no bypass accepted.
         calls.append((url, ref, path))
         return cluster if '/cluster/' in path else hosts
     monkeypatch.setattr(ops, 'read', read)
@@ -179,13 +179,13 @@ def test_missing_or_mismatched_evidence_never_passes(monkeypatch, failure):
     if failure == 'pagination': hosts['metadata']['grand_total_entities'] = 2
     if failure == 'health_missing': del cluster['health_summary']
     if failure == 'critical': cluster['health_summary']['health_status'] = 'Critical'
-    monkeypatch.setattr(ops, 'read', lambda u, r, p, l: cluster if '/cluster/' in p else hosts)
+    monkeypatch.setattr(ops, 'read', lambda u, r, p, l, **kwargs: cluster if '/cluster/' in p else hosts)
     result = ops.collect_health(record(), None)
     assert result['status'] == ('not_good' if failure == 'critical' else 'unknown')
 
 
 def test_incomplete_baseline_never_contacts_pe_and_errors_are_sanitized(monkeypatch):
-    def read(*args):
+    def read(*args, **kwargs):
         raise ValueError('private-password raw exception')
     monkeypatch.setattr(ops, 'read', read)
     result = ops.collect_health({**record(), 'expectedUuid': ''}, None)
@@ -241,7 +241,7 @@ def test_recent_failure_and_completed_unknown_are_distinct(monkeypatch):
     assert 'private-password' not in json.dumps(failed)
     assert ops.observation_diagnostics(failed, failed['completedAt'])['state'] == 'collection_failed'
     cluster, hosts = pe_responses(); cluster.pop('health_summary')
-    monkeypatch.setattr(ops, 'read', lambda u, r, p, l: cluster if '/cluster/' in p else hosts)
+    monkeypatch.setattr(ops, 'read', lambda u, r, p, l, **kwargs: cluster if '/cluster/' in p else hosts)
     completed = ops.collect_health(record(), None)
     assert completed['collectionStatus'] == 'completed' and completed['status'] == 'unknown'
     assert ops.observation_diagnostics(completed, completed['completedAt'])['state'] == 'fresh'

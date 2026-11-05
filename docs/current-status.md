@@ -49,3 +49,8 @@ Upgrade Advisor now includes [request-scoped PE/PC TLS verification controls](up
 Recovery profile lifecycle management adds visible editing, blocking-run links, reversible archive/restore and guarded unused-profile deletion. See [Recovery profile management](recovery-profile-management.md). This source addition is not retroactively included in older immutable update ZIPs; use the consolidated bundle published with its merged PR.
 
 [PE health-reporting diagnostics](pe-health-reporting.md) now distinguish evidence expiry, collection failure, evidence-clock/invalid timestamp problems and dashboard refresh failures. Browser clock skew warns separately from appliance-based evidence age. Use the consolidated update published with this change; earlier ZIPs are immutable.
+
+
+## PE collection diagnostics source update
+
+Updated source adds safe, stage-specific certificate trust/SAN, credential resolution, HTTP 401/403 and connectivity errors for explicit PE health collection. The earlier expiry/clock fix remains included. Existing packages are immutable; use the new consolidated package containing these changes. No additional PE calls, TLS bypass or recovery-gate changes are introduced. See [PE health reporting](pe-health-reporting.md).

@@ -17,6 +17,28 @@ Source update for v1.8.5-rc1. This changes reporting, not deployment or recovery
 
 A collection failure remains visible even when its attempt is older than 15 minutes. Its age line also says the evidence window expired. Unsupported or missing health fields never become Good just because the HTTPS request succeeded. Older records without an explicit collection outcome remain compatible; an old Unknown record is not retroactively classified as a known connection failure. Collect again for the new outcome metadata.
 
+## Specific collection failure messages
+
+Updated source preserves the cause of a failed verified-HTTPS read. The recorded collection result identifies **cluster identity/health** or **host inventory/health**, followed by safe, application-authored guidance:
+
+| Message | Meaning and action |
+|---|---|
+| Credential reference could not be resolved | Check the exact saved reference and selected vault. No PE authentication was attempted. |
+| Authentication rejected (HTTP 401) | Check the selected username/current password and account state; avoid repeated retries that could lock an account. |
+| Access denied (HTTP 403) | Check account permissions and PE access policy. This alone does not prove that the password is wrong. |
+| TLS certificate trust failed | Install the approved issuer/CA chain in persistent container trust. |
+| TLS hostname/IP mismatch | The target is not covered by the certificate SAN; use a covered reachable name/IP or replace the certificate. |
+| TLS certificate validity failed | Check certificate dates and appliance UTC/NTP. |
+| TLS trust configuration could not be loaded | Check the container CA bundle and SSL_CERT_FILE configuration. |
+| TLS handshake failed | Check the HTTPS port and supported TLS configuration. |
+| DNS resolution failed | Check the target hostname and container DNS. |
+| Network timeout / connection refused / network unreachable | Check routing, firewall access, configured port and PE responsiveness as indicated. |
+| API returned HTTP status / invalid JSON / unsupported response format | Check PE service availability, endpoint and API compatibility. Redirects are not followed. |
+
+Messages do not include raw exception strings, response bodies, authorization headers or passwords. Unknown internal failures keep a generic safe message rather than echoing arbitrary text. These are failed collections, not a claim that the cluster is unhealthy. Existing recorded failures retain their old message until an authorized new collection replaces them.
+
+The Upgrade Advisor's existing inventory error contract is retained; detailed diagnostics are requested only by the PE operational-health collector. No new response field, database migration or runtime dependency is required.
+
 ## Browser and appliance clocks
 
 Evidence age is computed against the appliance response timestamp. The browser advances that age with elapsed monotonic time while displaying the response; changing the workstation wall clock does not expire a recent valid observation.

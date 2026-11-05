@@ -253,3 +253,23 @@ test('health status reference view separates outcomes without making collection 
   expect(writes).toEqual([])
   if(process.env.ZTF_CAPTURE_HEALTH_GUIDE) await page.screenshot({path:'docs/assets/pe-health-reporting/health-states.png',fullPage:true,animations:'disabled'})
 })
+
+for (const [kind, message] of [
+  ['certificate trust', 'PE collection failed during cluster identity/health: PE TLS certificate trust failed: install the approved CA chain.'],
+  ['IP SAN', 'PE collection failed during cluster identity/health: PE TLS hostname/IP mismatch: use a covered name or replace the certificate.'],
+  ['credentials', 'PE collection failed during cluster identity/health: PE authentication rejected (HTTP 401). Check the selected credential reference.'],
+  ['connectivity', 'PE collection failed during host inventory/health: PE network unreachable: check container routing and firewall access.'],
+]) {
+  test(`recorded ${kind} collection error is visible without retrying PE`, async ({ page }) => {
+    const state = fixture()
+    state.clusters[0].observationFresh = false
+    Object.assign(state.clusters[0].observation, { status: 'unknown', collectionStatus: 'failed', message, checks: [] })
+    const { writes } = await seed(page, 'admin', state)
+    await page.goto('/clusters')
+    await page.getByRole('button', { name: 'Review HCI-01', exact: true }).click()
+    await expect(page.getByText(`Recorded collection result: ${message}`, { exact: true })).toBeVisible()
+    await expect(page.getByText('Collection failed', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('PE-reported health: Good', { exact: true })).toHaveCount(0)
+    expect(writes).toEqual([])
+  })
+}

@@ -10,7 +10,7 @@ import uuid
 
 from flask import jsonify, request
 from prism_drift import endpoint
-from upgrade_inventory import read
+from upgrade_inventory import read, PEReadError
 
 
 def now():
@@ -117,13 +117,17 @@ def collect_health(record, lookup):
               'source': 'verified-https-pe-readback', 'collectionStatus': 'not_attempted', 'message': 'Expected UUID, credential and complete node baseline are required.'}
     if not record['expectedUuid'] or not record['peCredential'] or not record['expectedNodes']:
         return result
+    stage = 'cluster identity/health'
     try:
         cluster = read(record['peEndpoint'], record['peCredential'],
-                       '/PrismGateway/services/rest/v2.0/cluster/?include_health_summary=true', lookup)
+                       '/PrismGateway/services/rest/v2.0/cluster/?include_health_summary=true', lookup, detailed_errors=True)
+        if not isinstance(cluster, dict):
+            raise PEReadError('PE cluster API response format is unsupported. Expected a JSON object; review API compatibility.')
+        stage = 'host inventory/health'
         hosts = read(record['peEndpoint'], record['peCredential'],
-                     '/PrismGateway/services/rest/v2.0/hosts/?include_health_summary=true', lookup)
-        if not isinstance(cluster, dict) or not isinstance(hosts, dict):
-            raise ValueError('Unsupported readback')
+                     '/PrismGateway/services/rest/v2.0/hosts/?include_health_summary=true', lookup, detailed_errors=True)
+        if not isinstance(hosts, dict):
+            raise PEReadError('PE host API response format is unsupported. Expected a JSON object; review API compatibility.')
         def check(name, passed):
             checks.append({'name': name, 'status': 'passed' if passed else 'unknown_or_failed'})
         identity = (cluster.get('uuid') == record['expectedUuid'] and cluster.get('name') == record['name'])
@@ -157,6 +161,9 @@ def collect_health(record, lookup):
             result['status'] = 'not_good'
         result['message'] = ('PE reports Good; expected identity and membership matched. This is not NCC or application acceptance.'
                              if result['status'] == 'good' else 'PE readback is incomplete or differs from the expected identity, membership or reported health.')
+    except PEReadError as error:
+        result['collectionStatus'] = 'failed'
+        result['message'] = f'PE collection failed during {stage}: {error}'
     except (ValueError, TypeError, KeyError, OSError):
         result['collectionStatus'] = 'failed'
         result['message'] = 'PE observation failed. Check the credential reference, certificate trust/SAN, connectivity and API compatibility.'
