@@ -889,6 +889,28 @@ class RecoveryService:
             self.audit('run_accepted' if accept else 'run_reconciled', actor, identity)
             return self.public(run, True)
 
+    def close_prepared(self, identity, actor, data):
+        """Close only a never-submitted snapshot; do not cancel or contact targets."""
+        with self.lock:
+            state = self.load()
+            run = self.find(state, 'runs', identity)
+            if (run['status'] != 'prepared' or run.get('deploymentJobId') or
+                    run.get('currentJobId') or run['steps']):
+                raise RecoveryError('Only an unsubmitted prepared run can be closed here; use reconciliation for submitted work.', 409)
+            if data.get('expectedUpdatedAt') != run['updatedAt']:
+                raise RecoveryError('Run changed. Reload and review it before closing.', 409)
+            if data.get('confirmation') != f'CLOSE PREPARED {run["clusterName"]}':
+                raise RecoveryError('Prepared-run confirmation does not match the cluster name')
+            notes = required(data.get('notes'), 'Prepared-run closure notes', 2000)
+            if any(ord(c) < 32 and c not in '\n\t' for c in notes):
+                raise RecoveryError('Closure notes contain invalid control characters')
+            run['reconciliation'] = {'at': now(), 'by': actor, 'notes': notes, 'source': 'unsubmitted_preparation'}
+            run['status'] = 'closed_reconciled'
+            self.event(run, 'Closed prepared run without submitting a deployment; snapshot and history retained', actor)
+            self.save(state)
+            self.audit('prepared_run_closed', actor, identity)
+            return self.public(run, True)
+
     def stop(self, identity, actor):
         with self.lock:
             state = self.load()
@@ -944,4 +966,5 @@ def register_routes(app, service, require_role, limiter):
     add('/runs/<identity>/configuration-job', ['POST'], lambda d, u, a, identity: service.link_configuration_job(identity, u, d), admin)
     add('/runs/<identity>/accept', ['POST'], lambda d, u, a, identity: service.attest(identity, u, d, True), admin)
     add('/runs/<identity>/reconcile', ['POST'], lambda d, u, a, identity: service.attest(identity, u, d), admin)
+    add('/runs/<identity>/close-prepared', ['POST'], lambda d, u, a, identity: service.close_prepared(identity, u, d), admin)
     add('/runs/<identity>/stop', ['POST'], lambda d, u, a, identity: service.stop(identity, u), admin)

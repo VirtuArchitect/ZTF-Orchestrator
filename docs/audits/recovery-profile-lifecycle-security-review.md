@@ -12,3 +12,5 @@ Scope: administrator-only profile editing, archive/restore and unused-profile de
 - Existing single-process locking/storage assumptions remain. Multiple independent application processes are outside this guarantee. A rollback to older code cannot enforce archive semantics; operator review is required.
 
 Validation: focused service/API tests, concurrent prepare/delete coverage and browser fixtures cover permission, retention, blockers, stale changes, confirmation and archive behavior. No production targets or recovery profiles are mutated by these checks.
+
+Prepared-run closure is admin-only, exact-confirmed, note-bounded and timestamp-checked under the same lock as deployment submission. It rejects submitting/active states, any job identity or recorded configuration step. It records an audit event and closes metadata without submitting, cancelling or contacting targets.

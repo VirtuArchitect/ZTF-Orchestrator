@@ -36,9 +36,10 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
     if (path === '/api/recovery/profiles/p1/archive') {profile.archivedAt='2026-11-05T08:01:00Z';profile.archiveNotes=request.postDataJSON().notes;profile.updatedAt='2026-11-05T08:01:00Z';profile.lifecycle=lifecycle();value=profile}
     if (path === '/api/recovery/profiles/p1/restore') {profile.archivedAt='';profile.updatedAt='2026-11-05T08:02:00Z';profile.lifecycle=lifecycle();value=profile}
     if (path === '/api/recovery/runs') {
-      preparedRun = { id: 'run1', profileId: profile.id, profileName: profile.name, datacenterId: dc.id, mode: request.postDataJSON().mode, status: 'prepared', revision: 1, clusterName: revision.clusterName, clusterVip: revision.clusterVip, baselineSha256: revision.sha256, foundationEndpoint: dc.foundationEndpoint, steps: [], snapshot: revision }
+      preparedRun = { id: 'run1', profileId: profile.id, profileName: profile.name, datacenterId: dc.id, mode: request.postDataJSON().mode, status: 'prepared', updatedAt:'2026-11-05T08:00:00Z', revision: 1, clusterName: revision.clusterName, clusterVip: revision.clusterVip, baselineSha256: revision.sha256, foundationEndpoint: dc.foundationEndpoint, steps: [], snapshot: revision }
       value = preparedRun
     }
+    if (path === '/api/recovery/runs/run1/close-prepared') { (preparedRun as {status:string}).status = 'closed_reconciled'; value = preparedRun }
     if (path === '/api/recovery/runs/run1/approval') value = { id: 'approval1' }
     if (path === '/api/recovery/runs/run1') {
       await new Promise(resolve => setTimeout(resolve, 200))
@@ -245,4 +246,21 @@ test('stale profile update keeps the draft and reports the conflict',async({page
   await dialog.getByRole('button',{name:'Save Draft Revision'}).click()
   await expect(page.getByRole('alert')).toContainText('Profile changed')
   await expect(dialog.getByLabel('Profile name',{exact:true})).toHaveValue('Draft retained')
+})
+
+
+test('abandoned prepared run can close without any deployment request', async ({page}) => {
+  const writes = await seed(page)
+  await page.goto('/recovery')
+  await page.getByRole('button',{name:'Review Profile',exact:true}).click()
+  await page.getByRole('button',{name:'Prepare Rehearsal',exact:true}).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByText('Close prepared run without deploying',{exact:true}).click()
+  const close = dialog.getByRole('button',{name:'Close Prepared Run',exact:true})
+  await expect(close).toBeDisabled()
+  await dialog.getByLabel('Closure confirmation: CLOSE PREPARED HCI-01',{exact:true}).fill('CLOSE PREPARED HCI-01')
+  await dialog.getByLabel('Prepared-run closure notes',{exact:true}).fill('Abandoned before submission; baseline requires revision.')
+  await close.click()
+  await expect(dialog).toContainText('closed reconciled')
+  expect(writes).toEqual(['/api/recovery/runs','/api/recovery/runs/run1/close-prepared'])
 })

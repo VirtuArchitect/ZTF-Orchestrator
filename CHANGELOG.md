@@ -10,7 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Recovery profile management: visible revision-based editing, blocking-run links, reversible archive/restore and admin-only deletion of unused, unreferenced profiles. Existing run history, configuration files and pipelines are preserved; lifecycle actions require exact confirmation, notes and current revision metadata.
+- Recovery profile management: visible revision-based editing, blocking-run links, reversible archive/restore and admin-only deletion of unused, unreferenced profiles. Existing run history, configuration files and pipelines are preserved; lifecycle actions require exact confirmation, notes and current revision metadata. Abandoned prepared runs can be closed without submitting jobs; submitted work still requires reconciliation.
 - Cluster Storage Standard: three per-cluster YAML container definitions, read-only numeric-suffix default discovery, exact-identity independent approval, verified provisioning and conservative dependency-gated cleanup. Standalone post-deployment workflow; no live validation or new released version is implied.
 - Administrator-only Unregister PE from PC wizard with reference-only YAML, strict HTTPS identity lookup, dependency acknowledgement, mandatory independent exact-content approval and single-use durable jobs. Vendor preflight and task/PC-inventory verification fail closed; PE-side cleanup remains separate. No live-target validation or new released appliance version is implied.
 

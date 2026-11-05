@@ -13,7 +13,7 @@ Simulated browser fixture with generic targets; no infrastructure execution.
 3. Change the profile name, datacenter, saved Foundation VM configuration or post-deployment pipeline. Save **Draft Revision**.
 4. Saving captures a new immutable revision. The previous revision and existing run snapshots remain unchanged. Review the new baseline before preparing another run.
 
-Open runs block editing and archive/restore. The table explains the reason and links to each blocking run. Prepared runs also block changes; complete or close them through the existing reconciliation process. Only `accepted` and `closed_reconciled` are terminal for this purpose. Unknown future states fail closed. Do not delete records or bypass reconciliation to clear a blocker.
+Open runs block editing and archive/restore. The table explains the reason and links to each blocking run. Prepared runs also block changes. To abandon one, open its blocking-run link, expand **Close prepared run without deploying**, type `CLOSE PREPARED <exact cluster name>` and record a reason. This works only before job submission, preserves the snapshot/history and releases the editing blocker. Submitted or uncertain work must use the existing stop/reconciliation process. Only `accepted` and `closed_reconciled` are terminal for this purpose. Unknown future states fail closed. Do not delete records or bypass reconciliation to clear a blocker.
 
 ## Archive and restore
 

@@ -161,3 +161,46 @@ def test_missing_reference_provider_disables_irreversible_delete(harness):
     assert lifecycle['canArchive'] and not lifecycle['canDelete']
     with pytest.raises(RecoveryError, match='unavailable'):
         s.profile_action(p['id'], 'admin', action_data(p, 'delete'), 'delete')
+
+
+@pytest.mark.parametrize('status', ['prepared', 'submitting', 'deploying', 'needs_reconciliation'])
+def test_prepared_closure_never_hides_submitted_work(harness, status):
+    s, state, _, _, _, calls, *_ = harness; p = profile(harness)
+    s.approve(p['id'], 'reviewer', {'sha256': p['revisions'][0]['sha256'], 'notes': 'Reviewed'})
+    r = s.prepare({'profileId': p['id'], 'sha256': p['revisions'][0]['sha256'], 'mode': 'rehearsal'}, 'admin')
+    data = {'expectedUpdatedAt': r['updatedAt'], 'confirmation': 'CLOSE PREPARED ' + r['clusterName'], 'notes': 'Abandoned before any deployment.'}
+    state['runs'][0]['status'] = status
+    if status != 'prepared':
+        with pytest.raises(RecoveryError): s.close_prepared(r['id'], 'admin', data)
+    else:
+        with pytest.raises(RecoveryError, match='changed'): s.close_prepared(r['id'], 'admin', {**data,'expectedUpdatedAt':'stale'})
+        with pytest.raises(RecoveryError, match='confirmation'): s.close_prepared(r['id'], 'admin', {**data,'confirmation':'wrong'})
+        state['runs'][0]['deploymentJobId'] = 'uncertain-job'
+        with pytest.raises(RecoveryError, match='unsubmitted'): s.close_prepared(r['id'], 'admin', data)
+        state['runs'][0].pop('deploymentJobId')
+        closed = s.close_prepared(r['id'], 'admin', data)
+        assert closed['status'] == 'closed_reconciled' and closed['snapshot'] == r['snapshot']
+        assert closed['reconciliation']['source'] == 'unsubmitted_preparation'
+        permissions = s.detail_profile(p['id'])['lifecycle']
+        assert permissions['canEdit'] and permissions['canArchive'] and not permissions['canDelete']
+        with pytest.raises(RecoveryError): s.deploy(r['id'], 'admin', {}, '')
+    assert calls == []
+
+
+def test_prepared_closure_api_is_admin_only_and_audited(client, auth_headers, harness, monkeypatch):
+    import server
+    s = harness[0]; p = profile(harness)
+    audit = []; s.s['audit'] = lambda *args: audit.append(args)
+    monkeypatch.setattr(server._recovery_service, 's', s.s)
+    s.approve(p['id'], 'reviewer', {'sha256': p['revisions'][0]['sha256'], 'notes': 'Reviewed'})
+    r = s.prepare({'profileId': p['id'], 'sha256': p['revisions'][0]['sha256'], 'mode': 'rehearsal'}, 'admin')
+    url = '/api/recovery/runs/' + r['id'] + '/close-prepared'
+    data = {'expectedUpdatedAt':r['updatedAt'],'confirmation':'CLOSE PREPARED '+r['clusterName'],'notes':'Abandoned before submission.'}
+    assert client.post(url,json=data).status_code == 401
+    for role in ('viewer','operator'):
+        client.post('/api/users',headers=auth_headers,json={'username':role,'password':'FixtureOnly123!','role':role})
+        token = client.post('/api/auth/login',json={'username':role,'password':'FixtureOnly123!'}).get_json()['token']
+        assert client.post(url,headers={'Authorization':'Bearer '+token},json=data).status_code == 403
+    response = client.post(url,headers=auth_headers,json=data)
+    assert response.status_code == 200 and response.get_json()['status'] == 'closed_reconciled'
+    assert audit[-1] == ('prepared_run_closed','admin',r['id'])
