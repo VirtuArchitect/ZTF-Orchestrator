@@ -18,9 +18,9 @@ infrastructure recovery through governed ZeroTouch Framework workflows.
 
 *The Overview screen captured from the interactive demo. All displayed records are simulated.*
 
-| Deploy Clusters | Operate & Govern | Prepare for Recovery |
+| [Deploy Clusters](docs/start-here.md#deploy-a-cluster) | [Operate & Govern](docs/cluster-operations.md) | [Prepare for Recovery](docs/disaster-recovery.md) |
 |---|---|---|
-| Follow the guided deployment flow and run post-configuration pipelines. [Deployment guide](docs/start-here.md#deploy-a-cluster) | Review approvals, jobs, and cluster health, and monitor configuration drift. [Operations guide](docs/cluster-operations.md) | Review cluster baselines and rehearse rebuilds with approved configuration and verification steps. [Recovery guide](docs/disaster-recovery.md) |
+| Build AHV clusters and run setup pipelines. | Review jobs, approvals, health, and drift. | Review baselines and rehearse cluster rebuilds. |
 
 ## Appliance Downloads
 
