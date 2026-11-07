@@ -1,5 +1,105 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
+![ZTF-Orchestrator banner with three connected server clusters](docs/assets/readme-hero/ztf-orchestrator-banner.webp)
+
+Deploy and configure Nutanix clusters, manage day-to-day operations, and rehearse
+infrastructure recovery through governed ZeroTouch Framework workflows.
+
+**[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/)** ·
+**[Quick Start](docs/start-here.md)** ·
+**[Download](#appliance-downloads)** ·
+**[Documentation](#deployment-guides)**
+
+[Stable v1.8.4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4) ·
+[Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) ·
+[Current appliance build](docs/current-status.md)
+
+[![ZTF-Orchestrator Overview showing deployment, configuration, recovery, and monitoring shortcuts with simulated cluster data](docs/assets/readme-hero/interactive-demo-overview.png)](https://virtuarchitect.github.io/ZTF-Orchestrator/)
+
+*The Overview screen captured from the interactive demo. All displayed records are simulated.*
+
+| [Deploy Clusters](docs/start-here.md#deploy-a-cluster) | [Operate & Govern](docs/cluster-operations.md) | [Prepare for Recovery](docs/disaster-recovery.md) |
+|---|---|---|
+| Build AHV clusters and run setup pipelines. | Review jobs, approvals, health, and drift. | Review baselines and rehearse cluster rebuilds. |
+
+## Appliance Downloads
+
+The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)
+adds guarded CVM SSH and iDRAC password changes with replacement-login checks.
+Nutanix host IPMI credential synchronization remains a required manual follow-up.
+
+Download versioned ZTF-Orchestrator appliance artifacts from the
+[Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C).
+
+ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
+an internal operations console: teams can define connection settings, generate
+workflow, baseline, or NKP profile YAML through YAML Studio, register NKP
+binaries, check CLI compatibility, submit execution jobs, capture validation
+evidence, track output, detect drift, schedule repeatable tasks, request
+approvals, and review audit history without every operator working directly in
+Git, YAML, and CLI commands.
+
+## What Problem Does This Solve?
+
+ZeroTouch Framework is powerful automation, but operational teams often need
+more than a CLI invocation and a YAML file. They need guided inputs, reviewable
+configuration, approval gates, durable job logs, failure context, evidence
+capture, and a clear boundary between simulated, lab, controlled UAT, and
+production validation.
+
+ZTF-Orchestrator adds that operations layer. It helps teams make Nutanix
+automation easier to run, easier to govern, and easier to trust without hiding
+the generated YAML or bypassing the underlying ZeroTouch Framework execution
+model. Native Foundation Dell iDRAC work now has a guarded controlled-UAT
+adapter path for lab validation; broad production support still requires
+environment-specific evidence and signoff.
+
+## Disaster Recovery Preparation and Rehearsal
+
+> Backups preserve what you need to recover. Our focus is preparing and
+> rehearsing how to rebuild the infrastructure you recover onto.
+
+ZTF-Orchestrator can help teams prepare, rehearse, and coordinate rebuilding
+Nutanix infrastructure from reviewed baselines after incident containment and
+recovery authorization. Supported imaging, cluster creation, configuration,
+and validation paths provide building blocks for an infrastructure rebuild;
+backup and application teams retain ownership of workload restoration.
+
+The **Operations → Disaster Recovery** section now provides datacenters, versioned
+cluster recovery profiles, governed Foundation VM rebuild runs, sequential
+post-configuration jobs and rehearsal history. Independent health evidence and
+final acceptance remain explicit gates. It does not establish that compromised
+systems are clean, perform forensic investigation, or restore backup data.
+Physical recovery validation and measured recovery times remain environment-specific.
+
+Start with [Disaster Recovery setup and operation](docs/disaster-recovery.md).
+See also the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) and
+[Recovery Rehearsal Checklist](docs/recovery-rehearsal-checklist.md).
+
+## At A Glance
+
+| Question | Answer |
+|---|---|
+| What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
+| Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
+| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and Native Foundation intents through governed jobs. Dell iDRAC Redfish deployment remains controlled-UAT only and requires explicit runtime adapter enablement. |
+| Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
+| Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
+| What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
+
+## Demo
+
+Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/)
+to preview ZTF-Orchestrator with simulated dashboard, workflow, job, drift,
+YAML Studio, appliance, and governance data. The demo is a static GitHub Pages
+build and does not connect to Prism Central, Prism Element, Foundation Central,
+or NKP targets.
+
+For scope and evidence boundaries, see the
+[demo and simulator guide](docs/demo/README.md).
+
+## Release and Validation Notes
+
 Recovery profile maintenance now includes [revision-based editing, archive/restore and guarded unused-profile deletion](docs/recovery-profile-management.md), preserving deployment history and existing approval gates.
 
 [PE health reporting](docs/pe-health-reporting.md) distinguishes expired evidence, failed collections and clock mismatches while retaining verified, read-only collection. Updated source also explains specific certificate trust/SAN, credential and connectivity failures at the cluster or host collection stage.
@@ -118,8 +218,6 @@ New source builds distinguish certificate trust, hostname/IP SAN mismatch and
 network failures with sanitized guidance; failed reads remain **Unknown** and
 TLS verification remains mandatory. See [connection diagnostics](docs/live-pe-drift-monitoring.md#connection-diagnostics).
 
-![ZTF-Orchestrator v1.8.5-rc1 dashboard, simulated demo data](docs/assets/readme/v1.8.5-rc1/dashboard.png)
-
 **New to ZTF-Orchestrator?** Watch [00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/) and the complete 15-part user-guide series. The narrated videos cover deployment, post-configuration, Disaster Recovery, monitoring, updates and specialist/preview features. All console examples are simulated; preview features retain their stated boundaries. See the [video guide and transcripts](docs/user-guide-videos.md).
 
 Current screenshots, refreshed on 2 November 2026, show the v1.8.5-rc1 frontend with simulated demo data, not
@@ -187,82 +285,6 @@ The [Cluster Storage Standard workflow](docs/cluster-storage-standard.md) accept
 three container definitions per cluster, verifies replacements and discovers the
 numeric-suffix default container for independently approved cleanup. VDisk blockers
 stop cleanup; validation is simulated and no live cleanup is implied.
-
-## Appliance Downloads
-
-The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)
-adds guarded CVM SSH and iDRAC password changes with replacement-login checks.
-Nutanix host IPMI credential synchronization remains a required manual follow-up.
-
-Download versioned ZTF-Orchestrator appliance artifacts from the
-[Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C).
-
-ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
-an internal operations console: teams can define connection settings, generate
-workflow, baseline, or NKP profile YAML through YAML Studio, register NKP
-binaries, check CLI compatibility, submit execution jobs, capture validation
-evidence, track output, detect drift, schedule repeatable tasks, request
-approvals, and review audit history without every operator working directly in
-Git, YAML, and CLI commands.
-
-## What Problem Does This Solve?
-
-ZeroTouch Framework is powerful automation, but operational teams often need
-more than a CLI invocation and a YAML file. They need guided inputs, reviewable
-configuration, approval gates, durable job logs, failure context, evidence
-capture, and a clear boundary between simulated, lab, controlled UAT, and
-production validation.
-
-ZTF-Orchestrator adds that operations layer. It helps teams make Nutanix
-automation easier to run, easier to govern, and easier to trust without hiding
-the generated YAML or bypassing the underlying ZeroTouch Framework execution
-model. Native Foundation Dell iDRAC work now has a guarded controlled-UAT
-adapter path for lab validation; broad production support still requires
-environment-specific evidence and signoff.
-
-## Disaster Recovery Preparation and Rehearsal
-
-> Backups preserve what you need to recover. Our focus is preparing and
-> rehearsing how to rebuild the infrastructure you recover onto.
-
-ZTF-Orchestrator can help teams prepare, rehearse, and coordinate rebuilding
-Nutanix infrastructure from reviewed baselines after incident containment and
-recovery authorization. Supported imaging, cluster creation, configuration,
-and validation paths provide building blocks for an infrastructure rebuild;
-backup and application teams retain ownership of workload restoration.
-
-The **Operations → Disaster Recovery** section now provides datacenters, versioned
-cluster recovery profiles, governed Foundation VM rebuild runs, sequential
-post-configuration jobs and rehearsal history. Independent health evidence and
-final acceptance remain explicit gates. It does not establish that compromised
-systems are clean, perform forensic investigation, or restore backup data.
-Physical recovery validation and measured recovery times remain environment-specific.
-
-Start with [Disaster Recovery setup and operation](docs/disaster-recovery.md).
-See also the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) and
-[Recovery Rehearsal Checklist](docs/recovery-rehearsal-checklist.md).
-
-## At A Glance
-
-| Question | Answer |
-|---|---|
-| What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
-| Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
-| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and Native Foundation intents through governed jobs. Dell iDRAC Redfish deployment remains controlled-UAT only and requires explicit runtime adapter enablement. |
-| Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
-| Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
-| What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
-
-## Demo
-
-Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/)
-to preview ZTF-Orchestrator with simulated dashboard, workflow, job, drift,
-YAML Studio, appliance, and governance data. The demo is a static GitHub Pages
-build and does not connect to Prism Central, Prism Element, Foundation Central,
-or NKP targets.
-
-For scope and evidence boundaries, see the
-[demo and simulator guide](docs/demo/README.md).
 
 ## Product Screenshots
 
