@@ -37,6 +37,12 @@ jobs:
       - name: Add SPA fallback
         run: cp dist-demo/index.html dist-demo/404.html
 
+      - name: Add project landing page
+        run: |
+          mkdir -p dist-demo/project
+          cp -R docs/pages/project/. dist-demo/project/
+          cp docs/assets/readme-hero/interactive-demo-overview.png dist-demo/project/demo-overview.png
+
       - name: Add illustrated user-guide videos
         run: |
           mkdir -p dist-demo/tutorials/media
