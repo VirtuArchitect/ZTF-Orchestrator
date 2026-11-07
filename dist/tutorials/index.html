@@ -17,6 +17,23 @@ function showPlayerOnMobile() {
   player.scrollIntoView({ block: 'start' });
 }
 
+function saveTranscriptPosition(event) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  player.pause();
+  history.replaceState({
+    ...history.state,
+    transcriptPosition: { part: partNumber(videos[selected]), time: player.currentTime },
+  }, '');
+}
+
+function restoreTranscriptPosition() {
+  const position = history.state?.transcriptPosition;
+  if (position?.part !== partNumber(videos[selected]) || !Number.isFinite(position.time) || position.time < 0) return;
+  history.replaceState({ ...history.state, transcriptPosition: null }, '');
+  player.pause();
+  player.currentTime = position.time;
+}
+
 function select(index) {
   if (index === selected) return;
   selected = index;
@@ -30,6 +47,7 @@ function select(index) {
     link.href = 'media/' + video.file.replace(/\.mp4$/, suffix);
     link.textContent = label;
     link.style.marginRight = '20px';
+    if (suffix === '-transcript.txt') link.addEventListener('click', saveTranscriptPosition);
     downloads.append(link);
   }
   Array.from(parts.children).forEach((button, i) => button.setAttribute('aria-current', String(i === index)));
@@ -63,4 +81,8 @@ videos.forEach((video, index) => {
 });
 const requestedPart = new URLSearchParams(location.search).get('part');
 select(Math.max(0, videos.findIndex(video => partNumber(video) === requestedPart)));
+restoreTranscriptPosition();
+window.addEventListener('pageshow', event => {
+  if (event.persisted) restoreTranscriptPosition();
+});
 </script></html>

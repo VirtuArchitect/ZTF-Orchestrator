@@ -5,6 +5,8 @@
 [Watch the full series, starting with 00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
 Use the player to select a part or jump to a chapter. Each video has burned-in
 English captions, an MP4 download, transcript, SRT/VTT captions and chapter markers.
+After opening a transcript from the player, use the browser's Back button to
+return to the same part and timestamp. The video stays paused.
 
 The overview explains the operations console, saved YAML, credential references,
 execution runtimes and Foundation handoff. It introduces deployment, post-configuration,
