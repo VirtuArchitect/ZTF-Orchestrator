@@ -1,12 +1,15 @@
-Part 4 - Disaster Recovery and Cluster Rebuilds
-
-Simulated console illustrations. Synthetic narration.
+Part 04 - Disaster Recovery and Cluster Rebuilds
+Updated 4 November 2026. Simulated console examples; synthetic narration.
 
 Prepare the datacenter and recovery profile
 Open Disaster Recovery from Operations. Add or review the datacenter, its Foundation endpoint and dependency reviews. Link a complete Foundation V M configuration and the cluster post-configuration pipeline to a recovery profile. Use existing cluster to rebuild for re-foundation. Recovery reconstructs infrastructure. Restoring virtual machines and applications remains the responsibility of your backup and recovery platform.
 
-Freeze the baseline and approve imaging
-Review the exact cluster name, virtual address, node serials, image selections, network settings and every captured pipeline step. Record the baseline review and retain its hash. Prepare the recovery run, then obtain the matching independent deployment approval. Imaging and deployed rehearsals can overwrite physical nodes. Baseline review, execution approval and destructive confirmation are separate controls.
+Review revisions and approve imaging
+Review Profile shows the captured deployment and pipeline snapshots. Check the exact cluster name, address, physical node serials, images, networks and every configuration step. The status is calculated from the latest revision and its source files.
+
+Baseline changed means a source file, pipeline or datacenter Foundation endpoint no longer matches the reviewed snapshot. To adopt the intended current settings, choose Capture New Revision, save the draft, inspect its targets, enter Baseline review notes and select Mark Baseline Reviewed. Marking the old snapshot reviewed does not clear a continuing mismatch.
+
+Capture New Revision is the current profile editing path and retains earlier revisions. The current interface has no profile delete action. Baseline review does not image hardware. Prepare a run only after review, then obtain the separate exact-content deployment approval and destructive confirmations. Deployed rehearsals also make real changes.
 
 Submit once and monitor the existing run
 Enter the required cluster and Foundation confirmation phrases, acknowledge the imaging scope, and deploy once. Follow the linked job and Foundation session. A non-JSON response or H T T P four twenty-nine can be a transport or rate-limit issue while imaging continues. Inspect the existing job and target state before retrying. Stop Orchestration does not prove that Foundation has stopped.

@@ -1,5 +1,5 @@
-00:00:00 Set up the correct execution runtime
-00:00:25 Manage named console users and roles
-00:00:50 Review runtime connections and governance settings
-00:01:18 Back up operational state and rehearse restoration
-00:01:48 Use audit and build identity during support
+00:00:00.000 Set up the correct execution runtime
+00:00:25.917 Manage users and administrator sessions
+00:01:24.583 Review runtime connections and governance settings
+00:01:52.792 Back up state and review appliance signals
+00:02:48.708 Use audit and build identity during support

@@ -1,6 +1,6 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 2 November 2026 | 15 videos | approximately 39 minutes**
+**v1.8.5-rc1 | 4 November 2026 refresh | 15 videos | approximately 45 minutes**
 
 [Watch the full series, starting with 00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
 Use the player to select a part or jump to a chapter. Each video has burned-in
@@ -30,18 +30,19 @@ infrastructure recovery, monitoring and the boundaries of preview integrations.
 | 13 | ZTF Two Point X IaC Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt) |
 | 14 | Native Foundation Baselines and Operating Boundaries | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
 
-## Session panel update
+## 4 November refresh
 
-Part 11, Administration Settings Audit and Backups, predates the **Users > Sessions**
-panel. Its account-management illustration does not show session counts, recent
-activity or revocation. Follow the [current session procedure](session-management.md)
-and [manual](manuals/README.md) for those controls. The videos are retained unchanged.
+Parts 00, 01, 04, 05, 06, 07, 08, 10 and 11 were revised against source
+`8c7843a`. The refresh covers managed clusters, PE evidence freshness, recovery
+baseline review, guided-update progress, credential and configuration groups,
+PE login-title configuration, Upgrade Advisor TLS controls and administrator
+sessions. The other six parts retain their original recordings.
 
 ## Evidence and maintenance boundaries
 
-The general console captures use source baseline `ea9dcf0`; the unchanged detailed
-recovery illustrations use `416a480`. The current screenshot gallery includes later
-demo fixture corrections. Screens are generic simulated records, not live cluster,
+The updated chapters use simulated captures and generic documentation fixtures.
+Unchanged illustrations retain their original capture baselines, including
+`ea9dcf0` and detailed recovery illustrations from `416a480`. Screens are not live cluster,
 recovery or host-update evidence. No infrastructure actions were executed for these videos.
 The synthetic voice is not a clone of a user. Technical decoding, caption timing,
 chapter counts, final visual samples and player navigation were checked. A listening
@@ -60,10 +61,8 @@ See the [current manual](manuals/README.md), [static demo guide](demo/README.md)
 
 ## Changes after the recorded videos
 
-The existing MP4s retain their original recording and narration. For the current
-`v1.8.5-rc1-636f191` behavior, use [current build status](current-status.md) and the
-updated manual. Parts 07 and 09 predate datacenter/cluster config selection and
-credential labels; Part 08 predates Set Prism Login Title (PE); Part 06 predates
-the completed-stage color changes; Part 11 predates Sessions. Current screenshots
-and written procedures supersede those screen details. No old video is relabelled
-as a newly recorded demonstration.
+The revised videos reflect the 3 November source baseline, not every change in
+later consolidated updates. Part 09 retains its original configuration-selection
+illustration, and Part 04 predates recovery profile archive and deletion controls.
+Use [current build status](current-status.md) and the written procedures for later
+changes. The standalone demo and long-form recovery tutorial are separate.

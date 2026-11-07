@@ -35,125 +35,161 @@ Verify the relevant non-mutating command before allowing operational
 work.
 
 10
-00:00:26,017 --> 00:00:30,104
-Administrators create named console users and assign the appropriate
+00:00:26,017 --> 00:00:30,654
+Administrators create named console users with administrator operator or
 
 11
-00:00:30,104 --> 00:00:32,654
-administrator, operator or viewer role.
+00:00:30,654 --> 00:00:34,904
+viewer roles These are Orchestrator accounts separate from local P E
 
 12
-00:00:33,067 --> 00:00:36,267
-These are Orchestrator accounts, not local P E accounts.
+00:00:34,904 --> 00:00:40,167
+accounts Provision initial access securely and review execution
 
 13
-00:00:36,679 --> 00:00:40,504
-Provision initial access through a secure channel, review who can
+00:00:40,167 --> 00:00:44,987
+permissions Users now includes the administrator-only Sessions panel
 
 14
-00:00:40,517 --> 00:00:43,754
-execute changes and keep management access restricted.
+00:00:45,267 --> 00:00:49,704
+Signed-in users and total sessions are different counts because a user can
 
 15
-00:00:44,154 --> 00:00:48,392
-A visible navigation link never grants permission beyond the server
+00:00:49,704 --> 00:00:54,517
+have multiple sign-ins Recently active means recorded interaction within
 
 16
-00:00:48,392 --> 00:00:49,617
-authorization checks.
+00:00:54,517 --> 00:00:59,679
+five minutes Polling and an idle open tab do not count as activity or
 
 17
-00:00:50,808 --> 00:00:55,333
-Settings contains runtime paths, connection profiles, governance,
+00:00:59,679 --> 00:01:04,524
+extend expiry Older sessions can show Not tracked Inspect the user
 
 18
-00:00:55,546 --> 00:00:58,571
-storage, notifications and build identity.
+00:01:04,842 --> 00:01:09,892
+role sign-in time expiry and activity before revoking an individual
 
 19
-00:00:58,971 --> 00:01:01,508
-Review a profile before using its defaults.
+00:01:09,892 --> 00:01:14,954
+session Confirm the selected revocation revoking your current session signs
 
 20
-00:01:01,883 --> 00:01:05,408
-A connection test has a specific scope and does not create target
+00:01:14,954 --> 00:01:20,204
+you out In-flight requests may finish and durable jobs continue Session
 
 21
-00:01:05,408 --> 00:01:08,558
-accounts or prove every A P I permission.
+00:01:20,204 --> 00:01:24,312
+revocation is audited and does not cancel infrastructure work
 
 22
-00:01:08,958 --> 00:01:13,233
-Preserve effective trust mounts and runtime settings during updates.
+00:01:24,683 --> 00:01:29,208
+Settings contains runtime paths, connection profiles, governance,
 
 23
-00:01:13,621 --> 00:01:17,808
-Review exact approval policy before enabling a sensitive lane.
+00:01:29,421 --> 00:01:32,446
+storage, notifications and build identity.
 
 24
-00:01:19,017 --> 00:01:23,004
-Use the established backup procedure for the actual storage backend.
+00:01:32,846 --> 00:01:35,383
+Review a profile before using its defaults.
 
 25
-00:01:23,429 --> 00:01:28,104
-Preserve credentials, configuration, recovery records, job evidence
+00:01:35,758 --> 00:01:39,283
+A connection test has a specific scope and does not create target
 
 26
-00:01:28,254 --> 00:01:29,567
-and required host settings.
+00:01:39,283 --> 00:01:42,433
+accounts or prove every A P I permission.
 
 27
-00:01:29,954 --> 00:01:34,879
-Retain the matching database and data recovery materials independently.
+00:01:42,833 --> 00:01:47,108
+Preserve effective trust mounts and runtime settings during updates.
 
 28
-00:01:35,279 --> 00:01:38,392
-Test readability and rehearse restoration safely.
+00:01:47,496 --> 00:01:51,683
+Review exact approval policy before enabling a sensitive lane.
 
 29
-00:01:38,804 --> 00:01:42,942
-Application-image rollback is not database restoration, and restoring
+00:01:52,892 --> 00:01:57,679
+Use the established backup procedure for the actual storage backend Preserve
 
 30
-00:01:42,942 --> 00:01:46,579
-the Orchestrator does not reverse changes already made on Nutanix
+00:01:57,679 --> 00:02:03,124
+credentials configurations managed cluster records persistent review items
 
 31
-00:01:46,579 --> 00:01:47,192
-systems.
+00:02:03,279 --> 00:02:07,979
+recovery history and required host settings Retain database and data
 
 32
-00:01:48,338 --> 00:01:52,850
-Audit Log helps trace authentication, authorization, configuration,
+00:02:07,979 --> 00:02:12,817
+recovery materials independently Operational appliance signals now show
 
 33
-00:01:53,225 --> 00:01:54,925
-jobs and governance actions.
+00:02:12,817 --> 00:02:17,862
+reported application health backup-record age update-service availability
 
 34
-00:01:55,338 --> 00:01:59,575
-Correlate the record with a timestamp, exact installed build and job
+00:02:17,967 --> 00:02:22,762
+and build identity These help decide what to inspect A recent backup record
 
 35
-00:01:59,575 --> 00:02:00,262
-identifier.
+00:02:22,767 --> 00:02:27,179
+is not proof that a restore works and reported build identity should be
 
 36
-00:02:00,675 --> 00:02:04,075
-Settings About and the running image distinguish patch builds;
+00:02:27,179 --> 00:02:31,642
+checked against the running image during support Test backup readability and
 
 37
-00:02:04,362 --> 00:02:06,338
-the footer release alone may not.
+00:02:31,642 --> 00:02:36,142
+rehearse restoration safely Application-image rollback is separate from
 
 38
-00:02:06,738 --> 00:02:09,312
-Export only sanitized support evidence.
+00:02:36,142 --> 00:02:41,042
+database restoration Restoring Orchestrator state does not reverse changes
 
 39
-00:02:09,725 --> 00:02:15,188
-Keep passwords, session tokens, private keys and secret-bearing configuration
+00:02:41,042 --> 00:02:46,037
+already made on Nutanix targets Use the actual backend recovery procedure
 
 40
-00:02:15,375 --> 00:02:16,450
+00:02:46,167 --> 00:02:48,424
+and retain the matching evidence
+
+41
+00:02:48,796 --> 00:02:53,308
+Audit Log helps trace authentication, authorization, configuration,
+
+42
+00:02:53,683 --> 00:02:55,383
+jobs and governance actions.
+
+43
+00:02:55,796 --> 00:03:00,033
+Correlate the record with a timestamp, exact installed build and job
+
+44
+00:03:00,033 --> 00:03:00,720
+identifier.
+
+45
+00:03:01,133 --> 00:03:04,533
+Settings About and the running image distinguish patch builds;
+
+46
+00:03:04,820 --> 00:03:06,796
+the footer release alone may not.
+
+47
+00:03:07,196 --> 00:03:09,770
+Export only sanitized support evidence.
+
+48
+00:03:10,183 --> 00:03:15,646
+Keep passwords, session tokens, private keys and secret-bearing configuration
+
+49
+00:03:15,833 --> 00:03:16,908
 out of public reports.

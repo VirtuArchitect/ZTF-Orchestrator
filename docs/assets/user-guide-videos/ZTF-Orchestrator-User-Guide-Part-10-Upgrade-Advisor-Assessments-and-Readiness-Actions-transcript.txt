@@ -1,9 +1,12 @@
 Part 10 - Upgrade Advisor Assessments and Readiness Actions
+Updated 4 November 2026. Simulated console examples; synthetic narration.
 
-Simulated console illustrations. Synthetic narration.
+Choose the assessment scope and TLS policy
+Use Upgrade Advisor to identify evidence needed before an upgrade. Enter the cluster context and reviewed P E and optional P C connections. Establish verified certificate trust first. The advisor does not execute upgrades or certify a supported upgrade path.
 
-Choose the assessment scope
-Use Upgrade Advisor to decide which evidence is still needed before an upgrade. Enter the cluster context and reviewed P E and optional P C connections. Establish verified certificate trust first. The advisor can collect bounded inventory and evaluate inputs, but it does not execute an upgrade or automatically certify a supported upgrade path.
+Verify T L S certificate is enabled separately for P E and P C inventory collection. Administrators can use an explicitly scoped temporary exception where authorized. It resets after collection, is audited, and is preserved as a qualification in saved inventory and assessment reports.
+
+Review that qualification with the findings. An exception weakens identity assurance for that collection; it is not a trust repair or a general workflow setting. Other workflows, drift checks and recovery keep their own certificate policies.
 
 Inspect what inventory actually discovered
 Collect fresh inventory and inspect the timestamp, returned fields and collection errors. P E cluster and host reads can supply A O S and homogeneous A H V versions. P C product-header detection is limited context, not an authenticated permission test. Other components can remain manual or unknown. Do not replace missing values with guessed versions.
