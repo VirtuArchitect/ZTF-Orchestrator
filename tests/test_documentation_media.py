@@ -21,7 +21,7 @@ def test_training_media_integrity_and_pages_packaging():
     assert manifest['parts'] == 15 and manifest['liveActionsExecuted'] is False
     page = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
     assert 'ZTF-Orchestrator Overview' in page and 'media/' in page
-    catalogue = json.loads(page.split('const videos=', 1)[1].split(';const player=', 1)[0])
+    catalogue, _ = json.JSONDecoder().raw_decode(page.split('const videos=', 1)[1])
     assert len(catalogue) == len(manifest['verification']) == 15
     for entry, recording in zip(catalogue, manifest['verification']):
         assert entry['part'] == recording['part']
