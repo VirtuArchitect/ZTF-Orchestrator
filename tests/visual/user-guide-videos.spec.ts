@@ -37,6 +37,7 @@ test('mobile part and chapter selection reveal the player and the transcript pre
   await page.setViewportSize({ width: 390, height: 720 })
   await page.goto('tutorials/')
   const player = page.locator('video')
+  await expect(player).toHaveAttribute('playsinline', '')
   const selected = page.getByRole('button', { name: /^11\. Administration/ })
   const fullyVisible = () => player.evaluate(video => {
     const { top, bottom } = video.getBoundingClientRect()
