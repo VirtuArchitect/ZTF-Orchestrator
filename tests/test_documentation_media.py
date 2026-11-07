@@ -21,6 +21,20 @@ def test_training_media_integrity_and_pages_packaging():
     assert manifest['parts'] == 15 and manifest['liveActionsExecuted'] is False
     page = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
     assert 'ZTF-Orchestrator Overview' in page and 'media/' in page
+    catalogue = json.loads(page.split('const videos=', 1)[1].split(';const player=', 1)[0])
+    assert len(catalogue) == len(manifest['verification']) == 15
+    for entry, recording in zip(catalogue, manifest['verification']):
+        assert entry['part'] == recording['part']
+        assert entry['file'] == recording['file']
+        assert hashlib.sha256((media / entry['file']).read_bytes()).hexdigest() == recording['sha256']
+        starts = [chapter['at'] for chapter in entry['chapters']]
+        assert starts == sorted(set(starts)) and starts[0] == 0 and starts[-1] < recording['duration']
+        if recording['updated']:
+            assert starts == [chapter['start'] for chapter in recording['chapters']]
+        stem = Path(entry['file']).stem
+        assert all(stem + suffix in files for suffix in (
+            '-poster.jpg', '-chapters.txt', '-transcript.txt', '.vtt', '.srt',
+        ))
     workflow = (ROOT / '.github/workflows/pages-demo.yml').read_text(encoding='utf-8')
     assert 'cp docs/assets/user-guide-videos/* dist-demo/tutorials/media/' in workflow
     assert 'demo-build.json' in workflow

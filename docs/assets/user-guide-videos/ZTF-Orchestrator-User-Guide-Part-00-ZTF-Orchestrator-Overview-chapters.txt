@@ -1,6 +1,6 @@
-00:00:00 What ZTF-Orchestrator is
-00:00:33 How the components work together
-00:01:14 From physical nodes to a configured cluster
-00:01:54 Preparing infrastructure recovery
-00:02:32 Monitoring and governing operations
-00:03:10 Scope, maturity and where to start
+00:00:00.000 What ZTF-Orchestrator is
+00:00:33.583 How the components work together
+00:01:14.292 From physical nodes to a configured cluster
+00:01:54.292 Preparing infrastructure recovery
+00:02:32.417 Monitoring and governing operations
+00:03:26.167 Scope, maturity and where to start

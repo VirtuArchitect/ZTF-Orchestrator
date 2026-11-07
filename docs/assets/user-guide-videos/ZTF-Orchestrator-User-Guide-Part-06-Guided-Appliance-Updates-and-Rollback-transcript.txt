@@ -1,6 +1,5 @@
-Part 6 - Guided Appliance Updates and Rollback
-
-Simulated console illustrations. Synthetic narration.
+Part 06 - Guided Appliance Updates and Rollback
+Updated 4 November 2026. Simulated console examples; synthetic narration.
 
 Install the Linux host service once
 Guided updates require the restricted Linux host update service and matching application mounts. Install the checksummed host kit once during an idle maintenance window, then activate the matching application image. An enabled and active host service alone does not prove that the container has been updated. Windows Docker Desktop retains its reviewed manual update procedure. The web application does not need the Docker socket.

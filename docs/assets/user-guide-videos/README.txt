@@ -1,17 +1,18 @@
 ZTF ORCHESTRATOR USER GUIDE VIDEO SERIES
-Updated 2 November 2026
+Updated 4 November 2026
 
-Extract this complete folder and open index.html, or play each MP4 directly.
+Open the public player at https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/
+or play each MP4 directly.
 The MP4s are 1920 x 1080, 24 fps H.264 with AAC narration. Each has embedded
 chapters and burned-in English captions. SRT and VTT files are supplied for
 editing/accessibility workflows; do not enable a second subtitle overlay on top
 of the already captioned video. Transcripts and chapter text are included.
 
 The console illustrations use generic simulated records, not live deployments.
-The current general frontend was captured on 2 November 2026 from ea9dcf0.
-Guided-update states use isolated host-status fixtures from 1 November.
-Detailed recovery controls retain the unchanged 29 October 416a480 illustrations;
-the narration uses the current Operations > Disaster Recovery navigation.
+Parts 00, 01, 04, 05, 06, 07, 08, 10 and 11 use updated chapters based on 8c7843a.
+Unchanged chapters retain their original provenance, including general console
+illustrations from ea9dcf0 and detailed recovery illustrations from 416a480.
+See series-manifest.json for per-part and chapter provenance.
 Preview chapters describe current boundaries, not production certification.
 Workload restoration remains with the backup platform.
 

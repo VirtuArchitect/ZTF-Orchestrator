@@ -1,6 +1,6 @@
-00:00:00 Choose your starting point
-00:00:22 Read the operations dashboard
-00:00:49 Investigate what needs attention
-00:01:14 Find saved cluster profiles
-00:01:40 Find the specialist tools
-00:02:15 Start safely and follow the evidence
+00:00:00.000 Choose your starting point
+00:00:22.542 Read the operations overview
+00:01:03.375 Investigate persistent review items
+00:01:47.708 Manage cluster records and fresh observations
+00:02:50.708 Find the specialist tools
+00:03:25.500 Start safely and follow the evidence

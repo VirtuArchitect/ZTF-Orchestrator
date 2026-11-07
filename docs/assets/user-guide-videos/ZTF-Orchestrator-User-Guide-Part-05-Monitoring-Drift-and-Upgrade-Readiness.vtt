@@ -1,145 +1,169 @@
 WEBVTT
 
-00:00:00.100 --> 00:00:04.612
-Begin with the actual P E endpoint and a credential reference authorized
+00:00:00.100 --> 00:00:04.588
+Begin with the actual P E endpoint and a credential reference authorized for
 
-00:00:04.612 --> 00:00:05.875
-for the necessary reads.
+00:00:04.588 --> 00:00:09.638
+the necessary reads Add P C context when needed Establish persistent
 
-00:00:06.288 --> 00:00:08.812
-Add P C context when the assessment needs it.
+00:00:09.638 --> 00:00:14.200
+certificate trust in the appliance and preserve the trust mount across
 
-00:00:09.225 --> 00:00:13.375
-Establish persistent certificate trust in the appliance and preserve
+00:00:14.200 --> 00:00:18.462
+container replacement The certificate must match the endpoint name or
 
-00:00:13.375 --> 00:00:15.912
-the trust mount across container replacement.
+00:00:18.462 --> 00:00:23.838
+address Upgrade Advisor now offers separate Verify T L S
 
-00:00:16.288 --> 00:00:20.812
-Verify that the certificate matches the endpoint name or address.
+00:00:23.838 --> 00:00:28.862
+certificate controls for P E and P C inventory collection enabled by
 
-00:00:21.225 --> 00:00:25.175
-Testing from your workstation alone does not prove connectivity from
+00:00:28.862 --> 00:00:33.450
+default A temporary exception is administrator-only applies to that
 
-00:00:25.175 --> 00:00:25.938
-the Orchestrator.
+00:00:33.450 --> 00:00:38.000
+inventory collection and resets afterward The exception is audited and
 
-00:00:27.142 --> 00:00:30.592
+00:00:38.000 --> 00:00:43.238
+remains visible in saved inventory and assessment reports Keep verification
+
+00:00:43.238 --> 00:00:47.562
+enabled for normal operation and correct the trust problem This scoped
+
+00:00:47.562 --> 00:00:52.400
+inventory exception does not change drift recovery or other workflow trust
+
+00:00:52.400 --> 00:00:57.350
+policies Workstation connectivity alone does not establish access from the
+
+00:00:57.350 --> 00:00:58.195
+appliance
+
+00:00:58.559 --> 00:01:02.009
 Open Upgrade Advisor and collect fresh inventory from the reviewed
 
-00:00:30.592 --> 00:00:31.267
+00:01:02.009 --> 00:01:02.684
 connections.
 
-00:00:31.667 --> 00:00:35.542
+00:01:03.084 --> 00:01:06.959
 Inspect discovered versions and fields that remain unknown.
 
-00:00:35.892 --> 00:00:40.742
+00:01:07.309 --> 00:01:12.159
 Enter the intended target versions and supporting evidence, then run
 
-00:00:40.817 --> 00:00:41.617
+00:01:12.234 --> 00:01:13.034
 the assessment.
 
-00:00:41.992 --> 00:00:46.429
+00:01:13.409 --> 00:01:17.846
 Review blockers, warnings, unknowns and readiness actions.
 
-00:00:46.842 --> 00:00:49.892
+00:01:18.259 --> 00:01:21.309
 Save an immutable assessment snapshot for the change record.
 
-00:00:50.292 --> 00:00:55.054
+00:01:21.709 --> 00:01:26.471
 This read-only advisor does not run an upgrade or replace vendor compatibility
 
-00:00:55.254 --> 00:00:56.479
+00:01:26.671 --> 00:01:27.896
 and lifecycle checks.
 
-00:00:57.683 --> 00:01:01.758
+00:01:29.100 --> 00:01:33.175
 Save a desired configuration for D N S, N T P and
 
-00:01:01.758 --> 00:01:04.683
+00:01:33.175 --> 00:01:36.100
 Pulse with the correct cluster and credential reference.
 
-00:01:05.071 --> 00:01:09.021
+00:01:36.488 --> 00:01:40.438
 In Drift Detection select that file and Live Prism Element as the
 
-00:01:09.021 --> 00:01:11.333
+00:01:40.438 --> 00:01:42.750
 source, then run a manual check.
 
-00:01:11.733 --> 00:01:15.308
+00:01:43.150 --> 00:01:46.725
 Every live scheduled run collects fresh settings.
 
-00:01:15.721 --> 00:01:18.296
+00:01:47.138 --> 00:01:49.713
 Stored-snapshot comparisons are a separate mode.
 
-00:01:18.696 --> 00:01:22.446
+00:01:50.113 --> 00:01:53.863
 An unknown collection result must not be counted as a healthy match.
 
-00:01:23.642 --> 00:01:28.292
+00:01:55.059 --> 00:01:59.709
 Add or edit the Automation entry, choose the correct file, source
 
-00:01:28.304 --> 00:01:32.129
+00:01:59.721 --> 00:02:03.546
 and baseline, and review the five-field U T C cron expression.
 
-00:01:32.529 --> 00:01:35.467
+00:02:03.946 --> 00:02:06.884
 Save it enabled only after the manual check works.
 
-00:01:35.879 --> 00:01:39.517
+00:02:07.296 --> 00:02:10.934
 Inspect the next actual scheduled result and its timestamp.
 
-00:01:39.917 --> 00:01:41.517
+00:02:11.334 --> 00:02:12.934
 Pause schedules for maintenance.
 
-00:01:41.904 --> 00:01:46.004
+00:02:13.321 --> 00:02:17.421
 Editing or enabling an entry is not proof that a scheduled read
 
-00:01:46.017 --> 00:01:47.529
+00:02:17.434 --> 00:02:18.946
 has completed successfully.
 
-00:01:48.712 --> 00:01:52.700
+00:02:20.129 --> 00:02:24.117
 A certificate trust failure requires the approved issuing chain or
 
-00:01:52.712 --> 00:01:54.350
+00:02:24.129 --> 00:02:25.767
 appropriate trust configuration.
 
-00:01:54.738 --> 00:01:59.438
+00:02:26.155 --> 00:02:30.855
 An I P or subject-alternative-name mismatch requires a matching endpoint
 
-00:01:59.512 --> 00:02:00.212
+00:02:30.929 --> 00:02:31.629
 or certificate.
 
-00:02:00.600 --> 00:02:05.938
+00:02:32.017 --> 00:02:37.355
 A network failure requires routing, firewall, name-resolution or target-service
 
-00:02:05.938 --> 00:02:07.512
+00:02:37.355 --> 00:02:38.929
 investigation from the appliance.
 
-00:02:07.912 --> 00:02:11.825
+00:02:39.329 --> 00:02:43.242
 These failures remain unknown, not drifted or matched.
 
-00:02:12.225 --> 00:02:16.450
+00:02:43.642 --> 00:02:47.867
 Do not disable verification or change the desired baseline just to
 
-00:02:16.450 --> 00:02:17.700
+00:02:47.867 --> 00:02:49.117
 obtain a green result.
 
-00:02:18.892 --> 00:02:24.067
-Monitor and Verify links to Drift Detection, inventory and upgrade
+00:02:50.308 --> 00:02:55.258
+Monitor and Verify links to Drift Detection inventory and upgrade
 
-00:02:24.079 --> 00:02:26.792
-readiness, and Execution History and Logs.
+00:02:55.258 --> 00:03:00.633
+readiness and Execution History and Logs Overview and Clusters now add
 
-00:02:27.192 --> 00:02:31.779
-Correlate a job with the configuration, actual target reads and change
+00:03:00.633 --> 00:03:05.683
+explicit managed records and P E observations These are separate evidence
 
-00:02:31.792 --> 00:02:32.192
-record.
+00:03:05.683 --> 00:03:10.671
+sources with different scopes A P E observation becomes stale after fifteen
 
-00:02:32.592 --> 00:02:37.217
-N K P Validation Evidence remains under Advanced Automation with a
+00:03:10.671 --> 00:03:16.041
+minutes Overview Refresh reads saved records Collect P E health
 
-00:02:37.217 --> 00:02:39.942
-Preview badge and its retained evidence sources.
+00:03:16.321 --> 00:03:21.221
+read-only explicitly contacts the target Review identity full
 
-00:02:40.342 --> 00:02:44.479
-A specialist evidence pack or successful process is not an independent
+00:03:21.221 --> 00:03:25.508
+expected membership and reported health then use the appropriate independent
 
-00:02:44.479 --> 00:02:48.517
-declaration that an A H V cluster is ready for workloads.
+00:03:25.508 --> 00:03:30.358
+acceptance checks N K P Validation Evidence remains under Advanced
+
+00:03:30.358 --> 00:03:34.771
+Automation with a Preview badge and its retained sources A specialist
+
+00:03:34.771 --> 00:03:39.858
+evidence pack successful job or fresh P E Good result cannot
+
+00:03:39.858 --> 00:03:42.578
+independently declare a cluster ready for workloads

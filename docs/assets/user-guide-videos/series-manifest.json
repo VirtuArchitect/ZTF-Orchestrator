@@ -1,209 +1,1283 @@
 {
   "title": "ZTF Orchestrator Full Console User Guide Videos",
-  "date": "2 November 2026",
-  "sourceRevision": "ea9dcf0e46a66e7d1c3780fed7fb60c772bcf2ae",
+  "date": "4 November 2026",
+  "sourceRevision": "8c7843ad7c9c5a2f8dc53fbf0fb823f2eb6e0a7b",
   "parts": 15,
-  "durationSeconds": 2342.75,
+  "durationSeconds": 2692.5,
   "chapters": 82,
   "narration": "Synthetic en-US-AndrewMultilingualNeural at normal rate; not a cloned user voice",
-  "screens": "Isolated simulated console examples; current general UI at ea9dcf0; unchanged DR control illustrations at 416a480",
+  "screens": "New simulated captures at 8c7843a; current existing generic screenshots; retained unchanged chapter illustrations preserve original provenance",
   "liveActionsExecuted": false,
   "listeningReview": "not_performed",
+  "updatedParts": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11
+  ],
   "verification": [
     {
       "part": 0,
+      "title": "ZTF-Orchestrator Overview",
       "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
-      "duration": 231.4,
-      "chapters": 6,
-      "captions": 60,
-      "fullDecode": "passed",
-      "peakDb": -3.1,
-      "meanDb": -22.0,
-      "encodedFrames": 6,
+      "duration": 247.48,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "What ZTF-Orchestrator is",
+          "start": 0,
+          "duration": 33.583333333333336,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 0
+        },
+        {
+          "chapter": 2,
+          "title": "How the components work together",
+          "start": 33.583333333333336,
+          "duration": 40.708333333333336,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 33.583333333333336
+        },
+        {
+          "chapter": 3,
+          "title": "From physical nodes to a configured cluster",
+          "start": 74.29166666666667,
+          "duration": 40.0,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 74.29166666666667
+        },
+        {
+          "chapter": 4,
+          "title": "Preparing infrastructure recovery",
+          "start": 114.29166666666667,
+          "duration": 38.125,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 114.29166666666667
+        },
+        {
+          "chapter": 5,
+          "title": "Monitoring and governing operations",
+          "start": 152.41666666666669,
+          "duration": 53.75,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 6,
+          "title": "Scope, maturity and where to start",
+          "start": 206.16666666666669,
+          "duration": 41.291666666666664,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 190.08333333333334
+        }
+      ],
+      "captionCues": 59,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "b431e9f684b1e411044610ebea5212bf7562a971213c4b1e1e1d62f4b5e040be"
+      "sha256": "4e59cadad85bed5ae5d1f0d984221330d378ac154ee3aa5419b23b73c52e8b92",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 59,
+      "encodedChapterFrames": 6,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
+        "integratedLufs": -21.86,
+        "truePeakDbtp": -5.93,
+        "rangeLu": 3.4
+      }
     },
     {
       "part": 1,
+      "title": "Dashboard Overview",
       "file": "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4",
-      "duration": 160.73,
-      "chapters": 6,
-      "captions": 43,
-      "fullDecode": "passed",
-      "peakDb": -2.9,
-      "meanDb": -21.5,
-      "encodedFrames": 6,
+      "duration": 231.19,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Choose your starting point",
+          "start": 0,
+          "duration": 22.541666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Read the operations overview",
+          "start": 22.541666666666668,
+          "duration": 40.833333333333336,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 3,
+          "title": "Investigate persistent review items",
+          "start": 63.375,
+          "duration": 44.333333333333336,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 4,
+          "title": "Manage cluster records and fresh observations",
+          "start": 107.70833333333334,
+          "duration": 63.0,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 5,
+          "title": "Find the specialist tools",
+          "start": 170.70833333333334,
+          "duration": 34.791666666666664,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 100.25
+        },
+        {
+          "chapter": 6,
+          "title": "Start safely and follow the evidence",
+          "start": 205.5,
+          "duration": 25.666666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 135.04166666666666
+        }
+      ],
+      "captionCues": 53,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "ebab37e8ec3dd1c81a4861c363c7dd78db184ce876368b068fdf14b5d87e035c"
+      "sha256": "3cda22f6abf3e05c5965d4841db2573d44fa28d5e39346f60cc02e8b22bb1246",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 53,
+      "encodedChapterFrames": 6,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4",
+        "integratedLufs": -21.29,
+        "truePeakDbtp": -5.91,
+        "rangeLu": 3.4
+      }
     },
     {
       "part": 2,
       "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
+      "title": "Deploy a Cluster with Foundation VM",
+      "updated": false,
       "duration": 176.48,
-      "chapters": 6,
-      "captions": 50,
+      "sha256": "1a9fb36ed0594c2cf1e1e6dc6140f0dd9fc94ebaee0844a78a4cd622cc0efea8",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Select the correct deployment method",
+          "duration": 26.041666666666668,
+          "spoken": 25.32,
+          "file": "p02-c01-caption-v4-fps.mp4",
+          "cuts": [
+            5.0375,
+            16.2875
+          ],
+          "key": "deployment-guide",
+          "start": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Prepare the connection and credentials",
+          "duration": 28.041666666666668,
+          "spoken": 27.336,
+          "file": "p02-c02-caption-v4-fps.mp4",
+          "cuts": [
+            5.2875,
+            17.9375
+          ],
+          "key": "foundation-vm",
+          "start": 26.041666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Select the approved installation images",
+          "duration": 30.375,
+          "spoken": 29.64,
+          "file": "p02-c03-caption-v4-fps.mp4",
+          "cuts": [
+            5.1625,
+            18.8875
+          ],
+          "key": "foundation-images",
+          "start": 54.083333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Review every physical node",
+          "duration": 32.541666666666664,
+          "spoken": 31.824,
+          "file": "p02-c04-caption-v4-fps.mp4",
+          "cuts": [
+            6.3375,
+            21.75
+          ],
+          "key": "foundation-nodes",
+          "start": 84.45833333333334
+        },
+        {
+          "chapter": 5,
+          "title": "Validate and approve the exact configuration",
+          "duration": 28.0,
+          "spoken": 27.288,
+          "file": "p02-c05-caption-v4-fps.mp4",
+          "cuts": [
+            3.9125,
+            16.525
+          ],
+          "key": "foundation-vm",
+          "start": 117.0
+        },
+        {
+          "chapter": 6,
+          "title": "Monitor and accept the real result",
+          "duration": 31.458333333333332,
+          "spoken": 30.72,
+          "file": "p02-c06-caption-v4-fps.mp4",
+          "cuts": [
+            5.4875,
+            19.725
+          ],
+          "key": "jobs",
+          "start": 145.0
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "peakDb": -1.4,
-      "meanDb": -21.8,
-      "encodedFrames": 6,
+      "captions": 50,
+      "encodedChapterFrames": 6,
       "listeningReview": "not_performed",
-      "sha256": "1a9fb36ed0594c2cf1e1e6dc6140f0dd9fc94ebaee0844a78a4cd622cc0efea8"
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
+        "integratedLufs": -21.61,
+        "truePeakDbtp": -1.39,
+        "rangeLu": 3.8
+      }
     },
     {
       "part": 3,
       "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
+      "title": "Post Deployment Configuration Pipelines",
+      "updated": false,
       "duration": 173.85,
-      "chapters": 6,
-      "captions": 55,
+      "sha256": "b416b3e17e2397fede078a539bbb753013bf9055d51e7435d4586e1083120d4e",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Prepare one configuration sequence per cluster",
+          "duration": 27.416666666666668,
+          "spoken": 26.688,
+          "file": "p03-c01-caption-v4-fps-example2.mp4",
+          "cuts": [
+            6.525,
+            18.7
+          ],
+          "key": "configs",
+          "start": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Handle the administrator password transition",
+          "duration": 28.916666666666668,
+          "spoken": 28.176,
+          "file": "p03-c02-caption-v4-fps.mp4",
+          "cuts": [
+            5.5,
+            18.1
+          ],
+          "key": "configure-cluster",
+          "start": 27.416666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Apply the core cluster settings",
+          "duration": 27.166666666666668,
+          "spoken": 26.448,
+          "file": "p03-c03-caption-v4-fps.mp4",
+          "cuts": [
+            4.8875,
+            15.1
+          ],
+          "key": "configure-cluster",
+          "start": 56.333333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Configure networks, storage and optional controls",
+          "duration": 31.041666666666668,
+          "spoken": 30.312,
+          "file": "p03-c04-caption-v4-fps.mp4",
+          "cuts": [
+            7.05,
+            21.0
+          ],
+          "key": "configure-cluster",
+          "start": 83.5
+        },
+        {
+          "chapter": 5,
+          "title": "Create and review the pipeline",
+          "duration": 28.708333333333332,
+          "spoken": 28.008,
+          "file": "p03-c05-caption-v4-fps-example2.mp4",
+          "cuts": [
+            4.4875,
+            17.65
+          ],
+          "key": "pipelines",
+          "start": 114.54166666666667
+        },
+        {
+          "chapter": 6,
+          "title": "Verify the completed cluster configuration",
+          "duration": 30.583333333333332,
+          "spoken": 29.88,
+          "file": "p03-c06-caption-v4-fps.mp4",
+          "cuts": [
+            6.6,
+            21.1625
+          ],
+          "key": "executions",
+          "start": 143.25
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "peakDb": -2.9,
-      "meanDb": -21.8,
-      "encodedFrames": 6,
+      "captions": 55,
+      "encodedChapterFrames": 6,
       "listeningReview": "not_performed",
-      "sha256": "b416b3e17e2397fede078a539bbb753013bf9055d51e7435d4586e1083120d4e"
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
+        "integratedLufs": -21.63,
+        "truePeakDbtp": -2.87,
+        "rangeLu": 3.7
+      }
     },
     {
       "part": 4,
+      "title": "Disaster Recovery and Cluster Rebuilds",
       "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
-      "duration": 177.6,
-      "chapters": 6,
-      "captions": 48,
-      "fullDecode": "passed",
-      "peakDb": -3.1,
-      "meanDb": -21.7,
-      "encodedFrames": 6,
+      "duration": 213.56,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Prepare the datacenter and recovery profile",
+          "start": 0,
+          "duration": 29.5,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Review revisions and approve imaging",
+          "start": 29.5,
+          "duration": 64.45833333333333,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 3,
+          "title": "Submit once and monitor the existing run",
+          "start": 93.95833333333333,
+          "duration": 27.833333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 58.0
+        },
+        {
+          "chapter": 4,
+          "title": "Complete initial access bootstrap first",
+          "start": 121.79166666666666,
+          "duration": 28.958333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 85.83333333333333
+        },
+        {
+          "chapter": 5,
+          "title": "Collect fresh health evidence",
+          "start": 150.75,
+          "duration": 33.166666666666664,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 114.79166666666666
+        },
+        {
+          "chapter": 6,
+          "title": "Resume pending work and hand off restoration",
+          "start": 183.91666666666666,
+          "duration": 29.625,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 147.95833333333331
+        }
+      ],
+      "captionCues": 53,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "f696f511234b19b12c8482dadb6473281b79ac4404f6be0c2ddbe766c01cd13b"
+      "sha256": "6a2f94bf03f00218d80984af220d1c815b5809239a4cc16858b11ff30a9d3629",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 53,
+      "encodedChapterFrames": 6,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
+        "integratedLufs": -21.56,
+        "truePeakDbtp": -5.88,
+        "rangeLu": 3.6
+      }
     },
     {
       "part": 5,
+      "title": "Monitoring Drift and Upgrade Readiness",
       "file": "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.mp4",
-      "duration": 169.65,
-      "chapters": 6,
-      "captions": 48,
-      "fullDecode": "passed",
-      "peakDb": -2.6,
-      "meanDb": -21.7,
-      "encodedFrames": 6,
+      "duration": 222.85,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Prepare trusted PE and PC connections",
+          "start": 0,
+          "duration": 58.458333333333336,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 2,
+          "title": "Collect inventory and save an assessment",
+          "start": 58.458333333333336,
+          "duration": 30.541666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 27.041666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Configure a live PE drift comparison",
+          "start": 89.0,
+          "duration": 25.958333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 57.583333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Save and test the drift schedule",
+          "start": 114.95833333333333,
+          "duration": 25.083333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 83.54166666666667
+        },
+        {
+          "chapter": 5,
+          "title": "Interpret collection failures accurately",
+          "start": 140.04166666666666,
+          "duration": 30.166666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 108.625
+        },
+        {
+          "chapter": 6,
+          "title": "Review cluster evidence and execution history",
+          "start": 170.20833333333331,
+          "duration": 52.625,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        }
+      ],
+      "captionCues": 56,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "b4145531e225f3cfb0400457bbc942f66ad75cc8d78837ca9eedddf64a7f16a5"
+      "sha256": "aa502fb33e69a571da01945efb9db0f6ea2c3bad30ba83d2a2e8e0902cc24d4f",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 56,
+      "encodedChapterFrames": 6,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.mp4",
+        "integratedLufs": -21.51,
+        "truePeakDbtp": -5.62,
+        "rangeLu": 3.5
+      }
     },
     {
       "part": 6,
+      "title": "Guided Appliance Updates and Rollback",
       "file": "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4",
       "duration": 177.31,
-      "chapters": 6,
-      "captions": 50,
-      "fullDecode": "passed",
-      "peakDb": -2.9,
-      "meanDb": -21.8,
-      "encodedFrames": 6,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Install the Linux host service once",
+          "start": 0,
+          "duration": 28.041666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Review storage before uploading",
+          "start": 28.041666666666668,
+          "duration": 29.541666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 28.041666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Import and check the exact package",
+          "start": 57.583333333333336,
+          "duration": 29.291666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 57.583333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Approve and monitor one installation",
+          "start": 86.875,
+          "duration": 29.75,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 5,
+          "title": "Verify the installed build and saved state",
+          "start": 116.625,
+          "duration": 30.583333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 116.625
+        },
+        {
+          "chapter": 6,
+          "title": "Use rollback within its actual boundaries",
+          "start": 147.20833333333334,
+          "duration": 30.083333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 147.20833333333334
+        }
+      ],
+      "captionCues": 50,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "a5eaa7485b4247c14015a5cae321335e6fd47f4cb17a20522c6eaa97b3ebbfa0"
+      "sha256": "b18095f561f0cc71b93d06221bc46037b455dad94c01a826769a4f3015504f1e",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 50,
+      "encodedChapterFrames": 6,
+      "visualOnlyUpdate": true,
+      "narrationSourceRevision": "ea9dcf0",
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4",
+        "integratedLufs": -21.66,
+        "truePeakDbtp": -5.86,
+        "rangeLu": 3.5
+      }
     },
     {
       "part": 7,
+      "title": "Credentials Config Files and YAML Studio",
       "file": "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4",
-      "duration": 130.19,
-      "chapters": 5,
-      "captions": 34,
-      "fullDecode": "passed",
-      "peakDb": -3.0,
-      "meanDb": -21.7,
-      "encodedFrames": 5,
+      "duration": 182.27,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Organize credentials by datacenter and purpose",
+          "start": 0,
+          "duration": 49.666666666666664,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 2,
+          "title": "Use separate named credential references",
+          "start": 49.666666666666664,
+          "duration": 26.166666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 25.541666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Organize the saved configuration library",
+          "start": 75.83333333333333,
+          "duration": 51.208333333333336,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 4,
+          "title": "Generate a reviewed YAML document",
+          "start": 127.04166666666666,
+          "duration": 28.0,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 74.95833333333334
+        },
+        {
+          "chapter": 5,
+          "title": "Keep the input and approval aligned",
+          "start": 155.04166666666666,
+          "duration": 27.208333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 102.95833333333334
+        }
+      ],
+      "captionCues": 41,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "cd19a2765f2ea828b5fdc9e3e8d6f38ce80b8a6603e309af71a4ffb3dcbb97c2"
+      "sha256": "13441711fd8b926a641dff14edc8c85e54948ca1fff7df49b9aed100dcd03aeb",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 41,
+      "encodedChapterFrames": 5,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4",
+        "integratedLufs": -21.53,
+        "truePeakDbtp": -6.06,
+        "rangeLu": 3.8
+      }
     },
     {
       "part": 8,
+      "title": "Workflows Scripts and Local PE Administrators",
       "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
-      "duration": 138.94,
-      "chapters": 5,
-      "captions": 37,
-      "fullDecode": "passed",
-      "peakDb": -2.7,
-      "meanDb": -21.5,
-      "encodedFrames": 5,
+      "duration": 170.06,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Choose a workflow for the required backend",
+          "start": 0,
+          "duration": 26.791666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Use scripts for focused actions",
+          "start": 26.791666666666668,
+          "duration": 57.291666666666664,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 3,
+          "title": "Create named local PE administrators",
+          "start": 84.08333333333333,
+          "duration": 25.416666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 52.958333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Read a stage-specific failure",
+          "start": 109.5,
+          "duration": 30.5,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 78.375
+        },
+        {
+          "chapter": 5,
+          "title": "Treat credential rotation as a sensitive operation",
+          "start": 140.0,
+          "duration": 30.041666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 108.875
+        }
+      ],
+      "captionCues": 42,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "fd37c09aa463f83068ec286d5c922ee74f550f05c4dee6a247a01ff725899eaa"
+      "sha256": "23f60aeb23499eeb56dc27a2076567facb1eee9d2f3a64fe842aa5c7124103ec",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 42,
+      "encodedChapterFrames": 5,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
+        "integratedLufs": -21.46,
+        "truePeakDbtp": -5.73,
+        "rangeLu": 3.4
+      }
     },
     {
       "part": 9,
       "file": "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.mp4",
+      "title": "Jobs Schedules Parallel Execution and Approvals",
+      "updated": false,
       "duration": 138.9,
-      "chapters": 5,
-      "captions": 39,
+      "sha256": "4e4daab60c2d87908e4b3e28013a1cbb9aca30ebee69b06e7ddd700f554a6777",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Follow durable jobs and their evidence",
+          "duration": 25.958333333333332,
+          "spoken": 25.224,
+          "file": "p09-c01-caption-v4-fps.mp4",
+          "cuts": [
+            3.5625,
+            16.3
+          ],
+          "key": "jobs",
+          "start": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Review the exact approval request",
+          "duration": 28.708333333333332,
+          "spoken": 27.984,
+          "file": "p09-c02-caption-v4-fps.mp4",
+          "cuts": [
+            5.025,
+            19.1875
+          ],
+          "key": "approvals",
+          "start": 25.958333333333332
+        },
+        {
+          "chapter": 3,
+          "title": "Create a schedule only after a successful manual test",
+          "duration": 25.666666666666668,
+          "spoken": 24.96,
+          "file": "p09-c03-caption-v4-fps.mp4",
+          "cuts": [
+            3.9375,
+            17.0
+          ],
+          "key": "schedules",
+          "start": 54.666666666666664
+        },
+        {
+          "chapter": 4,
+          "title": "Understand the parallel execution boundary",
+          "duration": 30.375,
+          "spoken": 29.664,
+          "file": "p09-c04-caption-v4-fps.mp4",
+          "cuts": [
+            5.5625,
+            19.475
+          ],
+          "key": "parallel",
+          "start": 80.33333333333333
+        },
+        {
+          "chapter": 5,
+          "title": "Handle interruption without replaying writes",
+          "duration": 28.166666666666668,
+          "spoken": 27.456,
+          "file": "p09-c05-caption-v4-fps.mp4",
+          "cuts": [
+            4.8625,
+            18.3625
+          ],
+          "key": "executions",
+          "start": 110.70833333333333
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "peakDb": -3.3,
-      "meanDb": -21.6,
-      "encodedFrames": 5,
+      "captions": 39,
+      "encodedChapterFrames": 5,
       "listeningReview": "not_performed",
-      "sha256": "4e4daab60c2d87908e4b3e28013a1cbb9aca30ebee69b06e7ddd700f554a6777"
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.mp4",
+        "integratedLufs": -21.43,
+        "truePeakDbtp": -3.28,
+        "rangeLu": 3.7
+      }
     },
     {
       "part": 10,
+      "title": "Upgrade Advisor Assessments and Readiness Actions",
       "file": "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4",
-      "duration": 127.98,
-      "chapters": 5,
-      "captions": 36,
-      "fullDecode": "passed",
-      "peakDb": -2.5,
-      "meanDb": -21.7,
-      "encodedFrames": 5,
+      "duration": 158.06,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Choose the assessment scope and TLS policy",
+          "start": 0,
+          "duration": 54.791666666666664,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 2,
+          "title": "Inspect what inventory actually discovered",
+          "start": 54.791666666666664,
+          "duration": 26.083333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 24.708333333333332
+        },
+        {
+          "chapter": 3,
+          "title": "Supply target versions and supporting evidence",
+          "start": 80.875,
+          "duration": 26.833333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 50.791666666666664
+        },
+        {
+          "chapter": 4,
+          "title": "Read findings and readiness actions",
+          "start": 107.70833333333333,
+          "duration": 25.833333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 77.625
+        },
+        {
+          "chapter": 5,
+          "title": "Save an immutable assessment snapshot",
+          "start": 133.54166666666666,
+          "duration": 24.5,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 103.45833333333333
+        }
+      ],
+      "captionCues": 40,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "844a960012c7d002676388e35e7d177819f312f3489e027d299622a780163995"
+      "sha256": "2f251560ae3d2d1477656a57a35554eca6e6771a5e0e559abbf64d3f4ae196cc",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 40,
+      "encodedChapterFrames": 5,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4",
+        "integratedLufs": -21.47,
+        "truePeakDbtp": -5.49,
+        "rangeLu": 3.5
+      }
     },
     {
       "part": 11,
+      "title": "Administration Settings Audit and Backups",
       "file": "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4",
-      "duration": 137.56,
-      "chapters": 5,
-      "captions": 40,
-      "fullDecode": "passed",
-      "peakDb": -2.5,
-      "meanDb": -21.7,
-      "encodedFrames": 5,
+      "duration": 198.02,
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Set up the correct execution runtime",
+          "start": 0,
+          "duration": 25.916666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Manage users and administrator sessions",
+          "start": 25.916666666666668,
+          "duration": 58.666666666666664,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 3,
+          "title": "Review runtime connections and governance settings",
+          "start": 84.58333333333333,
+          "duration": 28.208333333333332,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 50.708333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Back up state and review appliance signals",
+          "start": 112.79166666666666,
+          "duration": 55.916666666666664,
+          "updated": true,
+          "sourceRevision": "8c7843a",
+          "sourceIn": null
+        },
+        {
+          "chapter": 5,
+          "title": "Use audit and build identity during support",
+          "start": 168.70833333333331,
+          "duration": 29.291666666666668,
+          "updated": false,
+          "sourceRevision": "ea9dcf0",
+          "sourceIn": 108.25
+        }
+      ],
+      "captionCues": 49,
+      "voice": "en-US-AndrewMultilingualNeural",
+      "naturalSpeed": true,
+      "fps": 24,
+      "resolution": "1920x1080",
+      "sourceRevision": "8c7843a",
+      "retainedChapterSourceRevision": "ea9dcf0",
+      "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "520905866a05adb95e1812c06676ae70cd704af1a40519aca9a33bc376b13d69"
+      "sha256": "4e289b8155de40d8404e0794ed5a9d24b3c5495afd563354614c150682cb0c94",
+      "updated": true,
+      "fullDecode": "passed",
+      "captions": 49,
+      "encodedChapterFrames": 5,
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4",
+        "integratedLufs": -21.57,
+        "truePeakDbtp": -5.06,
+        "rangeLu": 3.5
+      }
     },
     {
       "part": 12,
       "file": "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.mp4",
+      "title": "NKP Framework and Validation Evidence Preview",
+      "updated": false,
       "duration": 137.56,
-      "chapters": 5,
-      "captions": 36,
+      "sha256": "9fb0120393fff029fc37ed779b9572a5bd6ed3520d0b2f5e6d20dbed0f56c0ce",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Recognize the preview integration scope",
+          "duration": 27.166666666666668,
+          "spoken": 26.448,
+          "file": "p12-c01-caption-v4-fps.mp4",
+          "cuts": [
+            4.3875,
+            16.2625
+          ],
+          "key": "nkp",
+          "start": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Prepare profiles and verify the schema",
+          "duration": 27.833333333333332,
+          "spoken": 27.12,
+          "file": "p12-c02-caption-v4-fps.mp4",
+          "cuts": [
+            4.1625,
+            17.5375
+          ],
+          "key": "nkp",
+          "start": 27.166666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Inspect readiness and binaries",
+          "duration": 25.583333333333332,
+          "spoken": 24.864,
+          "file": "p12-c03-caption-v4-fps.mp4",
+          "cuts": [
+            3.675,
+            16.1125
+          ],
+          "key": "nkp-readiness",
+          "start": 55.0
+        },
+        {
+          "chapter": 4,
+          "title": "Use only the permitted guarded phases",
+          "duration": 27.75,
+          "spoken": 27.024,
+          "file": "p12-c04-caption-v4-fps.mp4",
+          "cuts": [
+            5.7375,
+            19.125
+          ],
+          "key": "nkp",
+          "start": 80.58333333333333
+        },
+        {
+          "chapter": 5,
+          "title": "Keep NKP evidence separate from AHV readiness",
+          "duration": 29.208333333333332,
+          "spoken": 28.488,
+          "file": "p12-c05-caption-v4-fps.mp4",
+          "cuts": [
+            5.0375,
+            18.4875
+          ],
+          "key": "validation-evidence",
+          "start": 108.33333333333333
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "peakDb": -3.5,
-      "meanDb": -21.7,
-      "encodedFrames": 5,
+      "captions": 36,
+      "encodedChapterFrames": 5,
       "listeningReview": "not_performed",
-      "sha256": "9fb0120393fff029fc37ed779b9572a5bd6ed3520d0b2f5e6d20dbed0f56c0ce"
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.mp4",
+        "integratedLufs": -21.6,
+        "truePeakDbtp": -3.5,
+        "rangeLu": 4.1
+      }
     },
     {
       "part": 13,
       "file": "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.mp4",
+      "title": "ZTF Two Point X IaC Preview",
+      "updated": false,
       "duration": 131.85,
-      "chapters": 5,
-      "captions": 39,
+      "sha256": "172f725a95f7a82cd8926449538c2d4e6a588948576b30eea5085f4f368edd78",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Use the separate preview runtime",
+          "duration": 25.25,
+          "spoken": 24.528,
+          "file": "p13-c01-caption-v4-fps.mp4",
+          "cuts": [
+            3.95,
+            17.375
+          ],
+          "key": "ztf-modes",
+          "start": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Generate intent from preview workflows",
+          "duration": 27.208333333333332,
+          "spoken": 26.496,
+          "file": "p13-c02-caption-v4-fps.mp4",
+          "cuts": [
+            4.8125,
+            16.9375
+          ],
+          "key": "workflows-2x",
+          "start": 25.25
+        },
+        {
+          "chapter": 3,
+          "title": "Understand converted script actions",
+          "duration": 26.125,
+          "spoken": 25.392,
+          "file": "p13-c03-caption-v4-fps.mp4",
+          "cuts": [
+            4.775,
+            17.25
+          ],
+          "key": "scripts-2x",
+          "start": 52.45833333333333
+        },
+        {
+          "chapter": 4,
+          "title": "Review the governed plan result",
+          "duration": 25.958333333333332,
+          "spoken": 25.248,
+          "file": "p13-c04-caption-v4-fps.mp4",
+          "cuts": [
+            4.3375,
+            17.4625
+          ],
+          "key": "ztf2-iac",
+          "start": 78.58333333333333
+        },
+        {
+          "chapter": 5,
+          "title": "Keep apply and destroy separately governed",
+          "duration": 27.291666666666668,
+          "spoken": 26.568,
+          "file": "p13-c05-caption-v4-fps.mp4",
+          "cuts": [
+            5.0,
+            16.6375
+          ],
+          "key": "ztf2-iac",
+          "start": 104.54166666666666
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "peakDb": -3.4,
-      "meanDb": -21.6,
-      "encodedFrames": 5,
+      "captions": 39,
+      "encodedChapterFrames": 5,
       "listeningReview": "not_performed",
-      "sha256": "172f725a95f7a82cd8926449538c2d4e6a588948576b30eea5085f4f368edd78"
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.mp4",
+        "integratedLufs": -21.41,
+        "truePeakDbtp": -3.35,
+        "rangeLu": 4.2
+      }
     },
     {
       "part": 14,
       "file": "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4",
+      "title": "Native Foundation Baselines and Operating Boundaries",
+      "updated": false,
       "duration": 133.06,
-      "chapters": 5,
-      "captions": 38,
+      "sha256": "c1920469e08ccc03cc2531686d40fcb96319e76c7e41a3279573fde127f1b20c",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Distinguish the Native Foundation lane",
+          "duration": 24.166666666666668,
+          "spoken": 23.448,
+          "file": "p14-c01-caption-v4-fps.mp4",
+          "cuts": [
+            4.275,
+            15.9125
+          ],
+          "key": "native-foundation",
+          "start": 0
+        },
+        {
+          "chapter": 2,
+          "title": "Read probes and review counts accurately",
+          "duration": 28.75,
+          "spoken": 28.032,
+          "file": "p14-c02-caption-v4-fps.mp4",
+          "cuts": [
+            6.05,
+            18.25
+          ],
+          "key": "native-foundation",
+          "start": 24.166666666666668
+        },
+        {
+          "chapter": 3,
+          "title": "Review the post-foundation baseline mappings",
+          "duration": 31.083333333333332,
+          "spoken": 30.36,
+          "file": "p14-c03-caption-v4-fps.mp4",
+          "cuts": [
+            6.225,
+            20.5
+          ],
+          "key": "workflows",
+          "start": 52.91666666666667
+        },
+        {
+          "chapter": 4,
+          "title": "Handle hardware and certificate controls explicitly",
+          "duration": 26.041666666666668,
+          "spoken": 25.32,
+          "file": "p14-c04-caption-v4-fps.mp4",
+          "cuts": [
+            5.3,
+            17.2875
+          ],
+          "key": "credential-rotation",
+          "start": 84.0
+        },
+        {
+          "chapter": 5,
+          "title": "Operate within the demonstrated scope",
+          "duration": 23.0,
+          "spoken": 22.296,
+          "file": "p14-c05-caption-v4-fps.mp4",
+          "cuts": [
+            5.55,
+            16.4875
+          ],
+          "key": "overview-alias",
+          "start": 110.04166666666667
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "peakDb": -3.5,
-      "meanDb": -21.7,
-      "encodedFrames": 5,
+      "captions": 38,
+      "encodedChapterFrames": 5,
       "listeningReview": "not_performed",
-      "sha256": "c1920469e08ccc03cc2531686d40fcb96319e76c7e41a3279573fde127f1b20c"
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4",
+        "integratedLufs": -21.53,
+        "truePeakDbtp": -3.51,
+        "rangeLu": 3.6
+      }
     }
-  ]
+  ],
+  "updatedNarratedChapters": 13,
+  "updatedVisualOnlyChapters": 1,
+  "browserSmoke": {
+    "videosLoaded": 15,
+    "linksChecked": 62,
+    "playbackParts": [
+      1,
+      4,
+      11
+    ],
+    "result": "passed"
+  }
 }

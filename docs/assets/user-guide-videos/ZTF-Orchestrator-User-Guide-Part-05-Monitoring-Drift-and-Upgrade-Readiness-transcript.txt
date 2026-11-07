@@ -1,9 +1,12 @@
-Part 5 - Monitoring Drift and Upgrade Readiness
-
-Simulated console illustrations. Synthetic narration.
+Part 05 - Monitoring Drift and Upgrade Readiness
+Updated 4 November 2026. Simulated console examples; synthetic narration.
 
 Prepare trusted PE and PC connections
-Begin with the actual P E endpoint and a credential reference authorized for the necessary reads. Add P C context when the assessment needs it. Establish persistent certificate trust in the appliance and preserve the trust mount across container replacement. Verify that the certificate matches the endpoint name or address. Testing from your workstation alone does not prove connectivity from the Orchestrator.
+Begin with the actual P E endpoint and a credential reference authorized for the necessary reads. Add P C context when needed. Establish persistent certificate trust in the appliance and preserve the trust mount across container replacement. The certificate must match the endpoint name or address.
+
+Upgrade Advisor now offers separate Verify T L S certificate controls for P E and P C inventory collection, enabled by default. A temporary exception is administrator-only, applies to that inventory collection and resets afterward. The exception is audited and remains visible in saved inventory and assessment reports.
+
+Keep verification enabled for normal operation and correct the trust problem. This scoped inventory exception does not change drift, recovery or other workflow trust policies. Workstation connectivity alone does not establish access from the appliance.
 
 Collect inventory and save an assessment
 Open Upgrade Advisor and collect fresh inventory from the reviewed connections. Inspect discovered versions and fields that remain unknown. Enter the intended target versions and supporting evidence, then run the assessment. Review blockers, warnings, unknowns and readiness actions. Save an immutable assessment snapshot for the change record. This read-only advisor does not run an upgrade or replace vendor compatibility and lifecycle checks.
@@ -17,5 +20,9 @@ Add or edit the Automation entry, choose the correct file, source and baseline, 
 Interpret collection failures accurately
 A certificate trust failure requires the approved issuing chain or appropriate trust configuration. An I P or subject-alternative-name mismatch requires a matching endpoint or certificate. A network failure requires routing, firewall, name-resolution or target-service investigation from the appliance. These failures remain unknown, not drifted or matched. Do not disable verification or change the desired baseline just to obtain a green result.
 
-Review execution records and specialist evidence
-Monitor and Verify links to Drift Detection, inventory and upgrade readiness, and Execution History and Logs. Correlate a job with the configuration, actual target reads and change record. N K P Validation Evidence remains under Advanced Automation with a Preview badge and its retained evidence sources. A specialist evidence pack or successful process is not an independent declaration that an A H V cluster is ready for workloads.
+Review cluster evidence and execution history
+Monitor and Verify links to Drift Detection, inventory and upgrade readiness, and Execution History and Logs. Overview and Clusters now add explicit managed records and P E observations. These are separate evidence sources with different scopes.
+
+A P E observation becomes stale after fifteen minutes. Overview Refresh reads saved records; Collect P E health, read-only, explicitly contacts the target. Review identity, full expected membership and reported health, then use the appropriate independent acceptance checks.
+
+N K P Validation Evidence remains under Advanced Automation with a Preview badge and its retained sources. A specialist evidence pack, successful job or fresh P E Good result cannot independently declare a cluster ready for workloads.

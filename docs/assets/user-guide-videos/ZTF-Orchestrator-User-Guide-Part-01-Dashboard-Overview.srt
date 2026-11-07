@@ -23,149 +23,189 @@ This series follows the current console with simulated examples.
 It does not execute changes against a real environment.
 
 7
-00:00:22,642 --> 00:00:24,742
-Open Overview for the daily operations view.
+00:00:22,642 --> 00:00:26,804
+Open Overview for the daily operations view The four action cards open
 
 8
-00:00:25,142 --> 00:00:29,929
-Its four main cards take you to deployment, configuration, infrastructure
+00:00:26,804 --> 00:00:31,992
+deployment configuration infrastructure recovery and monitoring These links
 
 9
-00:00:29,942 --> 00:00:31,429
-recovery, and monitoring.
+00:00:31,992 --> 00:00:37,154
+do not execute work The summary now shows Managed clusters Open review
 
 10
-00:00:31,829 --> 00:00:34,954
-These are navigation links, not execution buttons.
+00:00:37,154 --> 00:00:42,554
+items Running jobs and Fresh P E Good readbacks Managed cluster
 
 11
-00:00:35,367 --> 00:00:40,117
-The summary below shows recorded cluster profiles, datacenters, running
+00:00:42,554 --> 00:00:47,104
+counts come from explicitly registered records They are not automatic
 
 12
-00:00:40,117 --> 00:00:41,854
-jobs and approvals.
+00:00:47,104 --> 00:00:52,017
+discovery and recovery profile counts remain a separate concept Read the
 
 13
-00:00:42,267 --> 00:00:44,992
-A profile count comes from saved recovery records.
+00:00:52,017 --> 00:00:57,174
+timestamp and evidence below each record Refresh reloads saved
 
 14
-00:00:45,404 --> 00:00:48,829
-It is not an automatic discovery of every cluster.
+00:00:57,179 --> 00:01:02,217
+operational records Merely opening or refreshing this page never contacts
 
 15
-00:00:50,017 --> 00:00:52,317
-Read Needs attention before starting new work.
+00:01:02,217 --> 00:01:03,099
+Prism Element
 
 16
-00:00:52,717 --> 00:00:57,229
-A drift result, profile review warning, pending approval or failed
+00:01:03,438 --> 00:01:08,338
+Needs attention retains observed failed or interrupted jobs and P E
 
 17
-00:00:57,229 --> 00:00:59,504
-job should take you to its detailed record.
+00:01:08,338 --> 00:01:12,688
+observation issues Open the original job or review the cluster before
 
 18
-00:00:59,917 --> 00:01:02,829
-Check the target, timestamp and latest result there.
+00:01:12,688 --> 00:01:17,800
+deciding what to do A newer successful job does not erase an earlier failure
 
 19
-00:01:03,217 --> 00:01:06,617
-A job marked succeeded means the execution completed.
+00:01:17,800 --> 00:01:23,125
+record Choose Update review assign an owner and record useful reconciliation
 
 20
-00:01:07,029 --> 00:01:10,967
-It does not mean that cluster health, requested settings or recovery
+00:01:23,125 --> 00:01:28,208
+notes without secrets Acknowledge the item while follow-up is in progress
 
 21
-00:01:10,967 --> 00:01:13,067
-readiness have been independently verified.
+00:01:28,475 --> 00:01:32,520
+Choose Resolved after review only after checking the actual outcome
 
 22
-00:01:14,267 --> 00:01:17,379
-Open Clusters to find saved recovery profiles.
+00:01:32,812 --> 00:01:37,575
+Acknowledgement and resolution update the review record They do not fix the
 
 23
-00:01:17,817 --> 00:01:22,179
-Filter by datacenter or cluster name, then open the matching profile.
+00:01:37,575 --> 00:01:42,708
+target approve execution change recovery gates or replay a job
 
 24
-00:01:22,579 --> 00:01:27,017
-Check its captured baseline and review status before preparing recovery.
+00:01:42,975 --> 00:01:47,458
+A new failed P E readback can reopen a resolved observation item
 
 25
-00:01:27,429 --> 00:01:31,117
-Other cluster configuration files remain in Config Files.
+00:01:47,808 --> 00:01:52,696
+Open Clusters to add or edit an explicit managed record Link its saved
 
 26
-00:01:31,517 --> 00:01:35,629
-An empty profile list does not mean there are no physical clusters,
+00:01:52,696 --> 00:01:57,808
+configuration files pipeline and recovery profile then enter the expected
 
 27
-00:01:35,892 --> 00:01:39,142
-and a listed profile does not prove its target is reachable.
+00:01:57,808 --> 00:02:02,658
+cluster identity complete node baseline and credential reference Importing
 
 28
-00:01:40,350 --> 00:01:44,138
-The streamlined sidebar keeps ordinary tasks visible.
+00:02:02,658 --> 00:02:08,058
+expected membership from Foundation Y A M L does not discover the
 
 29
-00:01:44,538 --> 00:01:49,612
-Expand Advanced Automation for workflows, scripts, configuration files,
+00:02:08,058 --> 00:02:13,058
+actual target Stale observation means the stored P E evidence is older than
 
 30
-00:01:49,862 --> 00:01:52,125
-schedules and execution history.
+00:02:13,058 --> 00:02:18,228
+fifteen minutes or is unavailable as fresh evidence It does not by itself
 
 31
-00:01:52,512 --> 00:01:56,338
-Optional Integrations contains the preview integration paths.
+00:02:18,283 --> 00:02:23,658
+mean the cluster is unhealthy Select Review for the cluster then Collect P E
 
 32
-00:01:56,725 --> 00:02:01,588
-Administration contains setup, credentials, appliance operations and
+00:02:23,658 --> 00:02:28,933
+health read-only to request new evidence Collection requires expected
 
 33
-00:02:01,588 --> 00:02:02,262
-settings.
+00:02:28,933 --> 00:02:34,308
+U U I D node baseline a credential reference and trusted H
 
 34
-00:02:02,662 --> 00:02:07,088
-N K P Validation Evidence carries a Preview badge and retains its
+00:02:34,308 --> 00:02:39,608
+T T P S Missing or failed evidence stays unknown P E reported
 
 35
-00:02:07,100 --> 00:02:08,338
-specialist sources.
+00:02:39,608 --> 00:02:44,721
+health is narrower than N C C resilience testing and application
 
 36
-00:02:08,750 --> 00:02:13,925
-Use execution history and target readbacks for ordinary cluster verification.
+00:02:44,721 --> 00:02:49,646
+acceptance Existing recovery profiles remain listed separately on
 
 37
-00:02:15,179 --> 00:02:20,054
-For a normal task, choose the correct workflow, review the saved configuration,
+00:02:49,646 --> 00:02:50,453
+Clusters
 
 38
-00:02:20,542 --> 00:02:25,204
-run the available dry run, obtain any required approval, and submit
+00:02:50,808 --> 00:02:54,596
+The streamlined sidebar keeps ordinary tasks visible.
 
 39
-00:02:25,204 --> 00:02:25,679
-once.
+00:02:54,996 --> 00:03:00,070
+Expand Advanced Automation for workflows, scripts, configuration files,
 
 40
-00:02:26,179 --> 00:02:27,892
-Follow its record in Jobs and Queue.
+00:03:00,320 --> 00:03:02,583
+schedules and execution history.
 
 41
-00:02:28,279 --> 00:02:30,717
-Investigate failures before retrying.
+00:03:02,970 --> 00:03:06,796
+Optional Integrations contains the preview integration paths.
 
 42
-00:02:31,117 --> 00:02:35,142
-You can retain Start Here or Overview as your browser landing preference.
+00:03:07,183 --> 00:03:12,046
+Administration contains setup, credentials, appliance operations and
 
 43
-00:02:35,554 --> 00:02:39,629
+00:03:12,046 --> 00:03:12,720
+settings.
+
+44
+00:03:13,120 --> 00:03:17,546
+N K P Validation Evidence carries a Preview badge and retains its
+
+45
+00:03:17,558 --> 00:03:18,796
+specialist sources.
+
+46
+00:03:19,208 --> 00:03:24,383
+Use execution history and target readbacks for ordinary cluster verification.
+
+47
+00:03:25,637 --> 00:03:30,512
+For a normal task, choose the correct workflow, review the saved configuration,
+
+48
+00:03:31,000 --> 00:03:35,662
+run the available dry run, obtain any required approval, and submit
+
+49
+00:03:35,662 --> 00:03:36,137
+once.
+
+50
+00:03:36,637 --> 00:03:38,350
+Follow its record in Jobs and Queue.
+
+51
+00:03:38,737 --> 00:03:41,175
+Investigate failures before retrying.
+
+52
+00:03:41,575 --> 00:03:45,600
+You can retain Start Here or Overview as your browser landing preference.
+
+53
+00:03:46,012 --> 00:03:50,087
 Part two follows cluster deployment through the Foundation V M workflow.

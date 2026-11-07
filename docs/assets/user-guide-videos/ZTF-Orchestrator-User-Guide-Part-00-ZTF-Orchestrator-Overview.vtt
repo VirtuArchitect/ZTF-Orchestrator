@@ -114,68 +114,65 @@ Restoring virtual machines, application data and business services
 00:02:27.967 --> 00:02:31.317
 remains with your backup platform and recovery procedures.
 
-00:02:32.517 --> 00:02:36.804
-After deployment, live Prism Element drift checks can compare fresh
+00:02:32.517 --> 00:02:37.799
+Overview now brings managed cluster records open review items running jobs
 
-00:02:36.804 --> 00:02:40.204
-D N S, N T P and Pulse settings with the saved
+00:02:37.892 --> 00:02:43.362
+and fresh P E Good readbacks together Managed records link saved files
 
-00:02:40.204 --> 00:02:41.392
-desired configuration.
+00:02:43.442 --> 00:02:48.679
+pipelines and recovery profiles adding a record does not discover or deploy
 
-00:02:41.767 --> 00:02:46.054
-Upgrade Advisor collects inventory and records readiness assessments;
+00:02:48.679 --> 00:02:53.762
+a cluster Collect P E health explicitly to read expected identity
 
-00:02:46.454 --> 00:02:48.042
-it does not install upgrades.
+00:02:53.992 --> 00:02:58.712
+complete membership and reported health through verified H T T P S
 
-00:02:48.454 --> 00:02:52.967
-Jobs, logs, approvals, schedules and audit records help operators
+00:02:59.204 --> 00:03:04.017
+Evidence becomes stale after fifteen minutes A successful job or a refreshed
 
-00:02:52.967 --> 00:02:55.454
-follow what happened and what still needs attention.
+00:03:04.017 --> 00:03:09.429
+page cannot replace a fresh target readback Persistent review items retain
 
-00:02:55.867 --> 00:02:58.967
-Successful execution is one piece of evidence.
+00:03:09.429 --> 00:03:13.792
+observed failures until an operator reviews and resolves them Drift
 
-00:02:59.354 --> 00:03:03.054
-Confirm the actual settings and cluster health before accepting the
+00:03:13.792 --> 00:03:18.242
+Detection and Upgrade Advisor remain separate tools for configuration
 
-00:03:03.054 --> 00:03:03.479
-result.
+00:03:18.242 --> 00:03:22.967
+comparisons and upgrade planning Neither a clean dashboard nor a saved
 
-00:03:03.879 --> 00:03:08.079
-Collection errors remain unknown rather than being presented as a
+00:03:22.967 --> 00:03:25.912
+assessment establishes recovery acceptance
 
-00:03:08.092 --> 00:03:09.017
-healthy match.
-
-00:03:10.171 --> 00:03:13.808
+00:03:26.254 --> 00:03:29.891
 The established deployment and post configuration paths have been
 
-00:03:13.808 --> 00:03:15.746
+00:03:29.891 --> 00:03:31.829
 used for production cluster delivery.
 
-00:03:16.158 --> 00:03:20.383
+00:03:32.241 --> 00:03:36.466
 That experience does not make every integration equally mature or
 
-00:03:20.396 --> 00:03:23.221
+00:03:36.479 --> 00:03:39.304
 replace vendor support and compatibility checks.
 
-00:03:23.583 --> 00:03:27.646
+00:03:39.666 --> 00:03:43.729
 N K P and Z T F two point X features are
 
-00:03:27.658 --> 00:03:31.808
+00:03:43.741 --> 00:03:47.891
 explicitly labelled previews and have narrower execution boundaries.
 
-00:03:32.208 --> 00:03:37.683
+00:03:48.291 --> 00:03:53.766
 Begin at Start Here, choose deploy, configure, monitor or saved automation,
 
-00:03:38.096 --> 00:03:39.971
+00:03:54.179 --> 00:03:56.054
 and follow the relevant guide in this series.
 
-00:03:40.383 --> 00:03:45.196
+00:03:56.466 --> 00:04:01.279
 These videos use simulated console examples and synthetic narration.
 
-00:03:45.608 --> 00:03:50.271
+00:04:01.691 --> 00:04:06.354
 They demonstrate the interface without executing changes on live infrastructure.

@@ -1,12 +1,15 @@
-Part 8 - Workflows Scripts and Local PE Administrators
-
-Simulated console illustrations. Synthetic narration.
+Part 08 - Workflows Scripts and Local PE Administrators
+Updated 4 November 2026. Simulated console examples; synthetic narration.
 
 Choose a workflow for the required backend
 Expand Advanced Automation and open Workflows. Read the description and select the service actually available. Integrated Foundation Central, standalone F C A and classic Foundation V M use different contracts. Import or complete the matching form and review its generated configuration. Do not assume that a similarly named action has the same credentials or execution semantics.
 
 Use scripts for focused actions
-Open Scripts for a specific allowlisted action. Use its parameter wizard and installed schema, then review the generated input. A script sequence and a workflow are different launch modes. Supply the required configuration file in either case. Confirm any sensitive operation deliberately and inspect its verification result rather than relying only on the subprocess return code.
+Open Scripts for a specific allowlisted action. Use its parameter wizard and installed schema, then review the generated input. A script sequence and a workflow are different launch modes. Supply the required saved file and inspect verification after execution.
+
+Set Prism Login Title for P E is now available as a focused script or pipeline action, with title-only Configure Cluster support. Review the exact title and cluster, select the correct vault credential reference and retain certificate verification.
+
+The action compares the existing setting, applies a change only when needed, and requires a fresh readback to verify the requested title. Legacy U I A P I compatibility still needs validation against the target A O S version. A saved title or subprocess success alone does not prove the target displays it.
 
 Create named local PE administrators
 For local P E users choose Create Local Users for P E. Each requested username needs its own matching credential reference. Select the intended role set explicitly and respect the installed schema. Run Dry Run before submission. After creation, independently confirm that each account is enabled and has both Cluster Admin and User Admin when those are the approved roles.

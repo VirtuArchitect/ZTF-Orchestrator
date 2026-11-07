@@ -1,6 +1,6 @@
-00:00:00 Prepare the datacenter and recovery profile
-00:00:29 Freeze the baseline and approve imaging
-00:00:58 Submit once and monitor the existing run
-00:01:25 Complete initial access bootstrap first
-00:01:54 Collect fresh health evidence
-00:02:27 Resume pending work and hand off restoration
+00:00:00.000 Prepare the datacenter and recovery profile
+00:00:29.500 Review revisions and approve imaging
+00:01:33.958 Submit once and monitor the existing run
+00:02:01.792 Complete initial access bootstrap first
+00:02:30.750 Collect fresh health evidence
+00:03:03.917 Resume pending work and hand off restoration
