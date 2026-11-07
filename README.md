@@ -6,6 +6,7 @@ Deploy and configure Nutanix clusters, manage day-to-day operations, and rehears
 infrastructure recovery through governed ZeroTouch Framework workflows.
 
 **[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/)** ·
+**[Project Site](https://virtuarchitect.github.io/ZTF-Orchestrator/project/)** ·
 **[Quick Start](docs/start-here.md)** ·
 **[Download](#appliance-downloads)** ·
 **[Documentation](#deployment-guides)**
