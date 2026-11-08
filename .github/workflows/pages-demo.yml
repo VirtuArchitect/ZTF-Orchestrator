@@ -41,7 +41,7 @@ jobs:
         run: |
           mkdir -p dist-demo/project
           cp -R docs/pages/project/. dist-demo/project/
-          cp docs/assets/readme-hero/interactive-demo-overview.png dist-demo/project/demo-overview.png
+          cp docs/assets/readme-hero/interactive-demo-overview-light.png dist-demo/project/demo-overview-light.png
 
       - name: Add illustrated user-guide videos
         run: |
