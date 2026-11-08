@@ -1,6 +1,6 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
-![ZTF-Orchestrator banner with three connected server clusters](docs/assets/readme-hero/ztf-orchestrator-banner.webp)
+![ZTF-Orchestrator banner with three teal-linked server clusters on a pale background](docs/assets/readme-hero/ztf-orchestrator-banner-light.webp)
 
 Deploy and configure Nutanix clusters, manage day-to-day operations, and rehearse
 infrastructure recovery through governed ZeroTouch Framework workflows.
@@ -15,7 +15,7 @@ infrastructure recovery through governed ZeroTouch Framework workflows.
 [Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) ·
 [Current appliance build](docs/current-status.md)
 
-[![ZTF-Orchestrator Overview showing deployment, configuration, recovery, and monitoring shortcuts with simulated cluster data](docs/assets/readme-hero/interactive-demo-overview.png)](https://virtuarchitect.github.io/ZTF-Orchestrator/)
+[![ZTF-Orchestrator Overview in light mode showing deployment, configuration, recovery, and monitoring shortcuts with simulated cluster data](docs/assets/readme-hero/interactive-demo-overview-light.png)](https://virtuarchitect.github.io/ZTF-Orchestrator/)
 
 *The Overview screen captured from the interactive demo. All displayed records are simulated.*
 
