@@ -32,7 +32,7 @@ host IPMI metadata. Live controlled-UAT requirements are in the
 
 
 - Hosted static UI demo:
-  <https://virtuarchitect.github.io/ZTF-Orchestrator/>
+  <https://virtuarchitect.github.io/ZTF-Orchestrator/demo/>
 - Demo and simulator paths are local or lab evidence.
 - They can prove API shape, UI behavior, validation, and evidence packaging.
 - They can show workflow config generation, import, preview, and guarded submit

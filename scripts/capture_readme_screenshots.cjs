@@ -3,7 +3,7 @@ const path = require('node:path');
 const { chromium } = require('@playwright/test');
 
 // Capture only the local static demo; never use an authenticated live appliance.
-const base = new URL(process.env.ZTF_SCREENSHOT_URL || 'http://127.0.0.1:15187/ZTF-Orchestrator/');
+const base = new URL(process.env.ZTF_SCREENSHOT_URL || 'http://127.0.0.1:15187/ZTF-Orchestrator/demo/');
 if (!['127.0.0.1', 'localhost'].includes(base.hostname)) {
   throw new Error('Screenshot capture requires a local demo URL');
 }

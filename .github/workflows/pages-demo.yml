@@ -32,16 +32,20 @@ jobs:
       - name: Build demo
         env:
           VITE_ZTF_DEMO: 'true'
-        run: npm run build:demo
+        run: npm run build:demo -- --outDir dist-demo/demo
 
       - name: Add SPA fallback
-        run: cp dist-demo/index.html dist-demo/404.html
+        run: cp dist-demo/demo/index.html dist-demo/404.html
 
-      - name: Add project landing page
+      - name: Assemble the site root and legacy project URL
         run: |
           mkdir -p dist-demo/project
-          cp -R docs/pages/project/. dist-demo/project/
-          cp docs/assets/readme-hero/interactive-demo-overview-light.png dist-demo/project/demo-overview-light.png
+          mv dist-demo/demo/releases dist-demo/demo/tutorials dist-demo/
+          cp public/favicon.png public/favicon.svg public/zto-logo-mark.svg dist-demo/
+          cp -R docs/pages/project/. dist-demo/
+          cp docs/pages/project-redirect.html dist-demo/project/index.html
+          cp docs/assets/readme-hero/interactive-demo-overview-light.png dist-demo/demo-overview-light.png
+          cp dist-demo/social-preview.png dist-demo/demo-overview-light.png dist-demo/project/
 
       - name: Add illustrated user-guide videos
         run: |

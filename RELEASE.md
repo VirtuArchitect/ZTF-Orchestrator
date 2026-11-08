@@ -92,7 +92,7 @@ ZTF_VISUAL_BASE_URL=http://127.0.0.1:5173 npm run smoke:visual
 - [ ] For API changes, test one valid request and one invalid request.
 - [ ] For UI or documentation-affecting releases, confirm the hosted demo link
   still resolves and reflects the expected release boundary:
-  <https://virtuarchitect.github.io/ZTF-Orchestrator/>.
+  <https://virtuarchitect.github.io/ZTF-Orchestrator/demo/>.
 - [ ] For appliance changes, document whether the smoke test used a staging
   appliance, local Docker, or code-level verification only.
 

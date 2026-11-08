@@ -154,7 +154,7 @@ def test_pages_release_index_preserves_pinned_historical_links():
     assert {path for _, path in html_pins} == archived
     assert not {'script', 'form', 'iframe'} & set(parser.tags)
     for link in parser.links:
-        assert link in ('../',) or link.startswith('https://github.com/VirtuArchitect/ZTF-Orchestrator')
+        assert link == '../demo/' or link.startswith('https://github.com/VirtuArchitect/ZTF-Orchestrator')
     assert "default-src 'none'" in page
     assert 'Latest stable' in page and '>v1.8.4<' in page
     assert 'v1.8.5-rc1' in page and 'Current prerelease' in page
@@ -540,18 +540,27 @@ def test_static_demo_pages_configuration_is_present():
     demo_env = (ROOT / '.env.demo').read_text(encoding='utf-8')
     workflow = (ROOT / '.github' / 'workflows' / 'pages-demo.yml').read_text(encoding='utf-8')
     vite_config = (ROOT / 'vite.config.ts').read_text(encoding='utf-8')
+    landing = (ROOT / 'docs' / 'pages' / 'project' / 'index.html').read_text(encoding='utf-8')
+    redirect = (ROOT / 'docs' / 'pages' / 'project-redirect.html').read_text(encoding='utf-8')
 
-    assert 'https://virtuarchitect.github.io/ZTF-Orchestrator/' in readme
+    pages_root = 'https://virtuarchitect.github.io/ZTF-Orchestrator/'
+    assert f'[Project Site]({pages_root})' in readme
+    assert f'[Try the Demo]({pages_root}demo/)' in readme
     assert 'VITE_ZTF_DEMO=true' in demo_env
-    assert 'VITE_ZTF_BASE=/ZTF-Orchestrator/' in demo_env
+    assert 'VITE_ZTF_BASE=/ZTF-Orchestrator/demo/' in demo_env
     assert "const defaultTheme = '%VITE_ZTF_DEMO%' === 'true' ? 'light' : 'system'" in index_html
     assert "localStorage.getItem('ztf-theme-mode') || defaultTheme" in index_html
-    assert 'npm run build:demo' in workflow
+    assert 'npm run build:demo -- --outDir dist-demo/demo' in workflow
     assert 'actions/deploy-pages' in workflow
     assert 'enablement: true' in workflow
     assert "mode === 'demo' ? 'dist-demo' : 'dist'" in vite_config
-    assert 'cp dist-demo/index.html dist-demo/404.html' in workflow
+    assert 'cp dist-demo/demo/index.html dist-demo/404.html' in workflow
+    assert 'cp -R docs/pages/project/. dist-demo/' in workflow
+    assert 'cp docs/pages/project-redirect.html dist-demo/project/index.html' in workflow
     assert 'path: dist-demo' in workflow
+    assert f'rel="canonical" href="{pages_root}"' in landing
+    assert f'rel="canonical" href="{pages_root}"' in redirect
+    assert 'href="./demo/"' in landing
     assert '/ZTF-Orchestrator/assets/' not in dist_index
     assert 'src="/assets/' in dist_index
 

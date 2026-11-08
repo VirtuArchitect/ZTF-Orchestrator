@@ -64,9 +64,9 @@ deleted by this cleanup.
 
 ## Maintaining The Web Index
 
-`public/releases/index.html` is a standalone, script-free document copied by
-Vite into `dist-demo/releases/index.html`. The existing Pages workflow publishes
-that directory without changing the demo's SPA fallback. Keep current channel
+`public/releases/index.html` is a standalone, script-free document. The Pages
+workflow moves the built release index from the demo output to the public
+`/releases/` route. Keep current channel
 labels and the historical link sets aligned with this directory; release-integrity
 tests check both. Update the indexes for a new release without changing existing
 historical SHA links. No root compatibility stubs are required.
