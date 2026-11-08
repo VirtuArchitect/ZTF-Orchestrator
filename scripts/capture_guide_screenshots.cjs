@@ -3,7 +3,7 @@ const path = require('node:path');
 const { chromium } = require('@playwright/test');
 
 // Only the isolated static demo is permitted. No production sessions or APIs.
-const base = new URL(process.env.ZTF_SCREENSHOT_URL || 'http://127.0.0.1:15187/ZTF-Orchestrator/');
+const base = new URL(process.env.ZTF_SCREENSHOT_URL || 'http://127.0.0.1:15187/ZTF-Orchestrator/demo/');
 if (!['127.0.0.1', 'localhost'].includes(base.hostname)) throw new Error('A loopback demo URL is required');
 const root = path.resolve(__dirname, '..');
 const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;

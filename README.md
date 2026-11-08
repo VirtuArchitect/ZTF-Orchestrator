@@ -5,8 +5,8 @@
 Deploy and configure Nutanix clusters, manage day-to-day operations, and rehearse
 infrastructure recovery through governed ZeroTouch Framework workflows.
 
-**[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/)** ·
-**[Project Site](https://virtuarchitect.github.io/ZTF-Orchestrator/project/)** ·
+**[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)** ·
+**[Project Site](https://virtuarchitect.github.io/ZTF-Orchestrator/)** ·
 **[Quick Start](docs/start-here.md)** ·
 **[Download](#appliance-downloads)** ·
 **[Documentation](#deployment-guides)**
@@ -15,7 +15,7 @@ infrastructure recovery through governed ZeroTouch Framework workflows.
 [Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) ·
 [Current appliance build](docs/current-status.md)
 
-[![ZTF-Orchestrator Overview in light mode showing deployment, configuration, recovery, and monitoring shortcuts with simulated cluster data](docs/assets/readme-hero/interactive-demo-overview-light.png)](https://virtuarchitect.github.io/ZTF-Orchestrator/)
+[![ZTF-Orchestrator Overview in light mode showing deployment, configuration, recovery, and monitoring shortcuts with simulated cluster data](docs/assets/readme-hero/interactive-demo-overview-light.png)](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)
 
 *The Overview screen captured from the interactive demo. All displayed records are simulated.*
 
@@ -85,12 +85,12 @@ See also the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) an
 | Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
 | What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and Native Foundation intents through governed jobs. Dell iDRAC Redfish deployment remains controlled-UAT only and requires explicit runtime adapter enablement. |
 | Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
-| Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
+| Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
 | What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
 
 ## Demo
 
-Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/)
+Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)
 to preview ZTF-Orchestrator with simulated dashboard, workflow, job, drift,
 YAML Studio, appliance, and governance data. The demo is a static GitHub Pages
 build and does not connect to Prism Central, Prism Element, Foundation Central,
@@ -227,7 +227,7 @@ live infrastructure or proof of completed UAT. [Screenshot provenance](docs/asse
 <p>
   <a href="https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough"><strong>Watch the v1.8.5-rc1 simulated controlled-UAT candidate demo (90 seconds)</strong></a>
   &nbsp;|&nbsp;
-  <a href="https://virtuarchitect.github.io/ZTF-Orchestrator/"><strong>Try the static demo</strong></a>
+  <a href="https://virtuarchitect.github.io/ZTF-Orchestrator/demo/"><strong>Try the static demo</strong></a>
   &nbsp;|&nbsp;
   <a href="docs/demo/README.md">Demo and simulator guide</a>
   &nbsp;|&nbsp;

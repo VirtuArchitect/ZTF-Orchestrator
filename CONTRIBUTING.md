@@ -211,7 +211,7 @@ documentation change is needed, state why in the pull request.
 
 When UI or user-facing workflow changes are released, verify the hosted demo
 link and document whether the demo is static-only or backed by live APIs:
-<https://virtuarchitect.github.io/ZTF-Orchestrator/>.
+<https://virtuarchitect.github.io/ZTF-Orchestrator/demo/>.
 
 ## Engineering Practices
 
