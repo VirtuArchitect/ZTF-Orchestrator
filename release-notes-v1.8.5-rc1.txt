@@ -1,4 +1,7 @@
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+AHV Uplink Migration wizard with read-only preflight, per-host NIC selections, and independent approval. Live changes are disabled by default. See docs/ahv-uplink-migration.md.
+
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
 Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. Save errors identify the failing step, and disabled deletion exposes the reason. See docs/disaster-recovery.md.
 
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
