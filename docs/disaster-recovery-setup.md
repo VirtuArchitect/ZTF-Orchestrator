@@ -51,6 +51,7 @@ without running it. Recovery profiles accept **1–30 steps** using:
 - **Configure Cluster** (`config-cluster`).
 - **Change Default Admin Password (PE)** (`ChangeDefaultAdminPasswordPe`).
 - **Create Local Users (PE)** (`CreateLocalUsersPe`).
+- **Set Prism Login Title (PE)** (`SetPrismLoginTitlePe`), in a dedicated step after PE health verification.
 
 Every referenced YAML must target **only the recovery cluster VIP** and specify
 the **exact cluster name** used by the Foundation configuration. Keep all passwords

@@ -8,7 +8,7 @@ import time
 import pytest
 import yaml
 
-from disaster_recovery import RecoveryError, RecoveryService, reference_only, now, bootstrap_count
+from disaster_recovery import RecoveryError, RecoveryService, reference_only, now, bootstrap_count, pe_host
 
 
 def foundation_config():
@@ -289,12 +289,67 @@ def test_invalid_endpoint_rejected(harness, url):
 def test_pipeline_target_scope_and_actions_are_enforced(harness):
     h = harness
     h[3]['steps'][0]['workflow'] = 'deploy-pc'
-    with pytest.raises(RecoveryError, match='post-configuration supports'):
+    with pytest.raises(RecoveryError, match=r'Pipeline step 1 \(deploy-pc\) is unsupported'):
         profile(h)
     h[3]['steps'][0]['workflow'] = 'config-cluster'
     h[2]['post.yml'] = h[2]['post.yml'].replace('192.0.2.20', '192.0.2.99')
     with pytest.raises(RecoveryError, match='only the recovery cluster'):
         profile(h)
+
+
+def test_login_title_profile_revision_validates_before_saving(harness):
+    service, _, files, pipeline, _, calls, dc, _ = harness
+    original = profile(harness)
+    edit = {'name': original['name'], 'datacenterId': dc['id'], 'deploymentConfigFile': 'deploy.yml',
+            'pipelineId': 'pipe', 'expectedRevision': 1, 'expectedUpdatedAt': original['updatedAt']}
+    pipeline['steps'].append({'workflow': 'SetPrismLoginTitlePe', 'configFile': 'title.yml'})
+    files['title.yml'] = 'clusters: [invalid'
+    with pytest.raises(RecoveryError, match='Pipeline step 2: Configuration must contain valid YAML'):
+        service.profile(edit, 'admin', original['id'])
+    title = {'name': 'HCI-01', 'pe_credential': 'pe_admin', 'prism_login_title': '<invalid>'}
+    files['title.yml'] = yaml.safe_dump({'clusters': {'192.0.2.20': title}})
+    with pytest.raises(RecoveryError, match=r'Pipeline step 2 \(Set Prism Login Title \(PE\)\).*plain-text'):
+        service.profile(edit, 'admin', original['id'])
+    assert len(service.detail_profile(original['id'])['revisions']) == 1
+    title['prism_login_title'] = 'HCI-01'
+    files['title.yml'] = yaml.safe_dump({'clusters': {'192.0.2.99': title}})
+    with pytest.raises(RecoveryError, match='Pipeline step 2:.*only the recovery cluster VIP'):
+        service.profile(edit, 'admin', original['id'])
+    files['title.yml'] = yaml.safe_dump({'clusters': {'192.0.2.20': title}})
+    updated = service.profile(edit, 'admin', original['id'])
+    assert len(updated['revisions']) == 2
+    assert updated['revisions'][-1]['steps'][1]['configContent'] == files['title.yml']
+    assert not updated['revisions'][-1].get('approvedBy') and not calls
+
+
+def test_login_title_runs_after_health_as_a_script(harness):
+    service, _, files, pipeline, _, calls, _, _ = harness
+    files['title.yml'] = yaml.safe_dump({'clusters': {'192.0.2.20': {
+        'name': 'HCI-01', 'pe_credential': 'pe_admin', 'prism_login_title': 'HCI-01',
+    }}})
+    pipeline['steps'] = [{'workflow': 'SetPrismLoginTitlePe', 'configFile': 'title.yml'}]
+    run = deploy(harness)
+    assert service.detail_run(run['id'])['status'] == 'awaiting_health_verification'
+    with pytest.raises(RecoveryError, match='Verify cluster health'):
+        service.start_configuration(run['id'], 'admin', {}, 'Bearer private-test-session')
+    service.attest_health(run['id'], 'admin', {
+        'clusterIdentity': 'HCI-01', 'membershipVerified': True, 'servicesHealthy': True,
+        'notes': 'Fresh PE readback', 'evidenceRef': 'change/123/health',
+    })
+    with pytest.raises(RecoveryError, match='RUN SetPrismLoginTitlePe'):
+        service.start_configuration(run['id'], 'admin', {}, 'Bearer private-test-session')
+    assert len(calls) == 1
+    service.start_configuration(run['id'], 'admin', {
+        'riskAcknowledged': True, 'destructiveConfirmation': 'RUN SetPrismLoginTitlePe',
+    }, 'Bearer private-test-session')
+    wait_status(service, run['id'], 'awaiting_acceptance')
+    assert calls[1]['script'] == 'SetPrismLoginTitlePe'
+    assert calls[1]['configContent'] == files['title.yml']
+
+
+def test_recovery_scope_distinguishes_ipv6_targets():
+    assert pe_host('2001:db8::20') != pe_host('2001:db8::99')
+    assert pe_host('2001:db8::20') == pe_host('https://[2001:db8:0::20]:9440')
 
 
 def test_changed_pipeline_cannot_use_prior_review(harness):

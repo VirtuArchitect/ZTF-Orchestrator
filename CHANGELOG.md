@@ -9,6 +9,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. The editor identifies the failing pipeline step and shows why profile deletion is unavailable.
+
 ### Added
 - Recovery profile management: visible revision-based editing, blocking-run links, reversible archive/restore and admin-only deletion of unused, unreferenced profiles. Existing run history, configuration files and pipelines are preserved; lifecycle actions require exact confirmation, notes and current revision metadata. Abandoned prepared runs can be closed without submitting jobs; submitted work still requires reconciliation.
 - Cluster Storage Standard: three per-cluster YAML container definitions, read-only numeric-suffix default discovery, exact-identity independent approval, verified provisioning and conservative dependency-gated cleanup. Standalone post-deployment workflow; no live validation or new released version is implied.

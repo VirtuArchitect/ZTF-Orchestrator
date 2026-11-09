@@ -1,4 +1,7 @@
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. Save errors identify the failing step, and disabled deletion exposes the reason. See docs/disaster-recovery.md.
+
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
 PE health collection now reports safe, stage-specific certificate trust/SAN, credential resolution, HTTP authentication/authorization, DNS, timeout and routing errors. Verified TLS and the two fixed GETs remain mandatory; no raw exception, response body or credential is returned. See docs/pe-health-reporting.md.
 
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)

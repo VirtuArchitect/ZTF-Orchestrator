@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 export type ProfileLifecycle = {
   canEdit: boolean; canArchive: boolean; canRestore: boolean; canDelete: boolean
   editReason: string; archiveReason: string; restoreReason: string; deleteReason: string
@@ -12,6 +14,7 @@ export default function RecoveryProfileActions({ profile, admin, busy, review, e
   action: (action: ProfileAction) => void; openRun: (id: string) => void
 }) {
   const lifecycle = profile.lifecycle
+  const deleteReasonId = useId()
   const reason = !lifecycle ? 'Reload profile permissions before making changes.' : lifecycle.editReason || lifecycle.archiveReason || lifecycle.restoreReason
   return <div className="min-w-[250px] space-y-2">
     <div className="flex flex-wrap gap-2">
@@ -19,11 +22,11 @@ export default function RecoveryProfileActions({ profile, admin, busy, review, e
       {admin && <>
         <button className="btn-secondary" disabled={busy || !lifecycle?.canEdit} aria-label={`Edit profile ${profile.name}`} onClick={edit}>Edit Profile</button>
         <button className="btn-secondary" disabled={busy || !(profile.archivedAt ? lifecycle?.canRestore : lifecycle?.canArchive)} aria-label={`${profile.archivedAt ? 'Restore' : 'Archive'} profile ${profile.name}`} onClick={() => action(profile.archivedAt ? 'restore' : 'archive')}>{profile.archivedAt ? 'Restore Profile' : 'Archive Profile'}</button>
-        <button className="btn-secondary" disabled={busy || !lifecycle?.canDelete} aria-label={`Delete unused profile ${profile.name}`} onClick={() => action('delete')}>Delete Unused Profile</button>
+        <button className="btn-secondary" disabled={busy || !lifecycle?.canDelete} aria-label={`Delete unused profile ${profile.name}`} aria-describedby={lifecycle?.deleteReason ? deleteReasonId : undefined} onClick={() => action('delete')}>Delete Unused Profile</button>
       </>}
     </div>
     {admin && reason && <p className="text-xs text-amber-400">{reason}</p>}
     {admin && lifecycle?.blockers.map(run => <button key={run.id} className="block text-xs text-nutanix-cyan" onClick={() => openRun(run.id)}>Review blocking run {run.id} · {run.status.replace(/_/g, ' ')}</button>)}
-    {admin && lifecycle?.deleteReason && <p className="text-xs text-gray-400">{lifecycle.deleteReason}</p>}
+    {admin && lifecycle?.deleteReason && <p id={deleteReasonId} className="text-xs text-gray-400">{lifecycle.deleteReason}</p>}
   </div>
 }
