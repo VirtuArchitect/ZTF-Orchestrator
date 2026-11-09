@@ -36,7 +36,9 @@ It stops at reviewed-baseline verification without preparing or deploying a run.
    these live checks or prove that the dependencies are reachable.
 3. Save the post-configuration pipeline. Each step must target only that cluster
    VIP and exact cluster name. Supported actions are **Configure Cluster**,
-   **Change Default Admin Password (PE)** and **Create Local Users (PE)**.
+   **Change Default Admin Password (PE)**, **Create Local Users (PE)** and
+   **Set Prism Login Title (PE)**. Put the title change in a dedicated step
+   after PE health verification.
    Keep passwords in the existing credential store, not the YAML. The recovery
    snapshot parser rejects literal password, secret, token and private-key fields.
 4. Open **Disaster Recovery → Add Datacenter**. Give it a name, the Foundation VM

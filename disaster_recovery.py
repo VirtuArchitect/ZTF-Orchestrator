@@ -9,6 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timezone, timedelta
 import hashlib
+import ipaddress
 import json
 import re
 import threading
@@ -18,9 +19,11 @@ from urllib.parse import urlsplit
 import yaml
 from flask import jsonify, request
 
+from pe_login_title import LoginTitleError, SCRIPT_ID as PE_LOGIN_TITLE, validate_intent as validate_pe_login_title
+
 
 WORKFLOW = 'cluster-create-foundation-vm'
-POST_ACTIONS = {'config-cluster', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe'}
+POST_ACTIONS = {'config-cluster', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', PE_LOGIN_TITLE}
 ACTIVE = {'submitting', 'deploying', 'awaiting_health_verification', 'ready_for_configuration',
           'awaiting_bootstrap', 'bootstrapping', 'configuring', 'awaiting_acceptance', 'needs_reconciliation', 'stopping'}
 PROFILE_BLOCKING = ACTIVE | {'prepared'}
@@ -100,12 +103,20 @@ def reference_only(content):
 
 def pe_host(value):
     try:
+        return str(ipaddress.ip_address(value))
+    except ValueError:
+        pass
+    try:
         parsed = urlsplit(value if '://' in value else f'//{value}')
     except ValueError:
         raise RecoveryError('Invalid PE target identity') from None
     if parsed.username or parsed.password or not parsed.hostname:
         raise RecoveryError('Invalid PE target identity')
-    return parsed.hostname.lower().rstrip('.')
+    host = parsed.hostname.lower().rstrip('.')
+    try:
+        return str(ipaddress.ip_address(host))
+    except ValueError:
+        return host
 
 
 def bootstrap_step(step):
@@ -384,18 +395,29 @@ class RecoveryService:
             if not pipeline or not pipeline.get('steps') or len(pipeline['steps']) > 30:
                 raise RecoveryError('Select a saved pipeline with 1-30 post-configuration steps')
             steps = []
-            for step in pipeline['steps']:
+            for index, step in enumerate(pipeline['steps'], start=1):
                 if step.get('workflow') not in POST_ACTIONS:
-                    raise RecoveryError('Recovery post-configuration supports Configure Cluster and the PE admin scripts only')
-                file = required(step.get('configFile'), 'Pipeline config file')
-                text = self.s['config'](file)
-                parsed = reference_only(text)
-                targets = parsed.get('clusters')
-                if not isinstance(targets, dict) or len(targets) != 1 or pe_host(next(iter(targets))) != pe_host(cluster['cluster_vip']):
-                    raise RecoveryError('Every pipeline file must target only the recovery cluster VIP')
-                target = next(iter(targets.values()))
-                if not isinstance(target, dict) or target.get('name') != cluster['cluster_name']:
-                    raise RecoveryError('Every pipeline file must name the recovery cluster')
+                    raise RecoveryError(
+                        f'Pipeline step {index} ({step.get("workflow")}) is unsupported. Recovery post-configuration supports '
+                        'Configure Cluster, Change Default Admin Password (PE), Create Local Users (PE), '
+                        'and Set Prism Login Title (PE).'
+                    )
+                try:
+                    file = required(step.get('configFile'), 'Pipeline config file')
+                    text = self.s['config'](file)
+                    parsed = reference_only(text)
+                    targets = parsed.get('clusters')
+                    if not isinstance(targets, dict) or len(targets) != 1 or pe_host(next(iter(targets))) != pe_host(cluster['cluster_vip']):
+                        raise RecoveryError('Every pipeline file must target only the recovery cluster VIP')
+                    target = next(iter(targets.values()))
+                    if not isinstance(target, dict) or target.get('name') != cluster['cluster_name']:
+                        raise RecoveryError('Every pipeline file must name the recovery cluster')
+                    if step['workflow'] == PE_LOGIN_TITLE:
+                        validate_pe_login_title(parsed)
+                except RecoveryError as error:
+                    raise RecoveryError(f'Pipeline step {index}: {error}', error.status) from None
+                except LoginTitleError as error:
+                    raise RecoveryError(f'Pipeline step {index} (Set Prism Login Title (PE)): {error.detail}') from None
                 steps.append({'workflow': step['workflow'], 'configFile': file, 'configContent': text, 'sha256': digest(text)})
             snapshot = {'deploymentConfigFile': data['deploymentConfigFile'], 'deploymentContent': content,
                         'foundationEndpoint': dc['foundationEndpoint'], 'pipelineId': pipeline['id'],
