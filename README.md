@@ -287,6 +287,11 @@ three container definitions per cluster, verifies replacements and discovers the
 numeric-suffix default container for independently approved cleanup. VDisk blockers
 stop cleanup; validation is simulated and no live cleanup is implied.
 
+The [DARE wizard](docs/dare-workflow.md) provides administrator-only discovery,
+read-only preflight and independent approval for cluster-wide software encryption
+with Native KMS (Local). Live enablement is off by default and requires lab
+validation on the target Prism versions.
+
 ## Product Screenshots
 
 | Dashboard | YAML Studio |

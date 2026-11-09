@@ -39,6 +39,7 @@ import credential_rotation as rotation
 import appliance_updates as guided_updates
 import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
+import dare_workflow as dare
 import cluster_storage_standard as storage_standard
 from pe_login_title import has_title_intent, validate_intent as validate_pe_login_title_intent
 from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
@@ -3319,7 +3320,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 
 
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
-    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW}:
+    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, dare.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -34926,7 +34927,50 @@ class ExecutionJobManager:
                 config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
             self._complete(job_id, status, code)
 
+    def _run_dare_job(self, job_id, payload, user):
+        status = 'failed'
+        diagnostics = {'category': 'dare_enablement', 'encryptionState': 'unverified'}
+        try:
+            with dare.LOCK:
+                plan = dare.parse_plan(payload.get('configContent'))
+                deadline = time.monotonic() + EXEC_TIMEOUT
+
+                def cancelled():
+                    return (self._stop or time.monotonic() >= deadline
+                            or (self.get_job(job_id, include_logs=False) or {}).get('status') != 'running')
+
+                def authorize():
+                    if cancelled() or not dare.writes_enabled() or _maintenance_active():
+                        raise dare.DareError('DARE enablement is disabled, cancelled or blocked by maintenance.')
+                    with _DARE_SUBMIT_LOCK:
+                        approval = _check_dare_approval(payload, user)
+                        if approval.get('jobId') != job_id:
+                            raise dare.DareError('Approval is not bound to this job.')
+
+                authorize()
+                diagnostics.update(dare.execute(plan, _pe_login_title_resolver({}), authorize, cancelled,
+                                                lambda line: self._emit(job_id, 'stdout', line)))
+                status = 'success'
+        except (dare.DareError, uplink_migration.MigrationError, unregistration.UnregistrationError,
+                storage_standard.StorageError) as error:
+            diagnostics['evidence'] = str(error)
+        except Exception:
+            diagnostics['evidence'] = 'The target response could not be verified.'
+        finally:
+            if status == 'failed':
+                diagnostics['likelyFix'] = 'Check Prism Tasks and read back encryption and KMS state before submitting a new request. Accepted tasks can continue after a lost response.'
+                self._emit(job_id, 'error', diagnostics['evidence'])
+            self._set_diagnostics(job_id, diagnostics)
+            code = 0 if status == 'success' else -1
+            _record_execution_history(execution_id=job_id, workflow_or_script=dare.WORKFLOW,
+                execution_type='workflow', status=status, user=user, config_file=dare.FILENAME,
+                config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
+            self._complete(job_id, status, code)
+
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('workflow') == dare.WORKFLOW:
+            self._run_dare_job(job_id, payload, user)
+            return
         if payload.get('workflow') == uplink_migration.WORKFLOW:
             self._run_ahv_uplink_job(job_id, payload, user)
             return
@@ -41833,6 +41877,89 @@ def upload_foundation_vm_image():
         except OSError:
             log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
 
+_DARE_SUBMIT_LOCK = threading.Lock()
+_DARE_TARGET_ERRORS = (dare.DareError, uplink_migration.MigrationError, unregistration.UnregistrationError,
+                       storage_standard.StorageError)
+
+
+def _check_dare_approval(payload, actor):
+    approval = _approval_manager.get_approval(str(payload.get('approvalId') or ''))
+    content = payload.get('configContent')
+    error = _workflow_approval_error(approval, dare.WORKFLOW, dare.FILENAME, content)
+    if error:
+        raise dare.DareError(error)
+    requester, decider = approval.get('requestedBy'), approval.get('decidedBy')
+    if (not _parse_iso_datetime(approval.get('expiresAt')) or requester != actor
+            or not decider or decider.casefold() == requester.casefold()
+            or approval.get('configContent') != content or approval.get('configFile') != dare.FILENAME):
+        raise dare.DareError('A different administrator must approve this exact plan for its requester.')
+    return approval
+
+
+@app.route('/api/dare')
+@require_role('admin')
+def dare_capabilities():
+    return jsonify({'applyEnabled': dare.writes_enabled()})
+
+
+@app.route('/api/dare/<action>', methods=['POST'])
+@require_role('admin')
+@limiter.limit('10 per minute')
+def dare_operation(action):
+    data = request.get_json(silent=True)
+    try:
+        if action == 'discover':
+            return jsonify(dare.inspect(data, _pe_login_title_resolver({})))
+        if action == 'preflight':
+            plan = dare.preflight(data, _pe_login_title_resolver({}))
+            return jsonify({'content': uplink_migration.canonical(plan), 'sha256': uplink_migration.fingerprint(plan),
+                            'cluster': plan['cluster'], 'state': plan['encryption']['state'],
+                            'lastKeyBackupAt': plan['encryption']['lastKeyBackupAt']})
+        if action not in {'approval', 'apply'}:
+            return jsonify({'error': 'Unknown DARE operation'}), 404
+        if _maintenance_active():
+            body, status = _maintenance_error()
+            return jsonify(body), status
+        if action == 'apply' and not dare.writes_enabled():
+            return jsonify({'error': 'Live DARE enablement is disabled on this Orchestrator.'}), 403
+        keys = {'content'} if action == 'approval' else {'content', 'approvalId', 'confirmation'}
+        if not isinstance(data, dict) or set(data) != keys:
+            raise dare.DareError('Provide the exact preflight plan and required approval details.')
+        content = data['content']
+        plan = dare.parse_plan(content)
+        if uplink_migration.canonical(plan) != content:
+            raise dare.DareError('Use the canonical preflight output.')
+        _require_engines()
+        actor = request.current_user['username']
+        if action == 'approval':
+            if dare.preflight(plan['intent'], _pe_login_title_resolver({})) != plan:
+                return jsonify({'error': 'Target state changed. Run preflight again.'}), 409
+            if plan['encryption']['state'] != 'unconfigured':
+                return jsonify({'error': 'The requested configuration is already present. No approval is required.'}), 409
+            approval = _approval_manager.create_request(dare.WORKFLOW, dare.FILENAME, content, actor,
+                notes='Irreversible cluster-wide software encryption using Native KMS (Local). Review the exact target and key recovery arrangements.')
+            return jsonify({'id': approval['id']}), 201
+        expected = 'ENCRYPT ' + plan['intent']['connection']['cluster_uuid']
+        if data['confirmation'] != expected or plan['encryption'].get('state') != 'unconfigured':
+            return jsonify({'error': f'Type exactly: {expected}. Only an unconfigured target is eligible.'}), 403
+        payload = {'workflow': dare.WORKFLOW, 'framework': dare.WORKFLOW, 'configFile': dare.FILENAME,
+                   'configContent': content, 'approvalId': str(data['approvalId'] or '')}
+        with _DARE_SUBMIT_LOCK:
+            try:
+                approval = _check_dare_approval(payload, actor)
+            except dare.DareError as error:
+                return jsonify({'error': str(error)}), 403
+            if approval.get('jobId'):
+                return jsonify({'id': approval['jobId']}), 202
+            job = _job_manager.submit(payload, actor)
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify({'id': job['id']}), 202
+    except _DARE_TARGET_ERRORS as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'The DARE request could not be verified. Review the existing job or approval before retrying.'}), 400
+
+
 _AHV_UPLINK_SUBMIT_LOCK = threading.Lock()
 
 
@@ -44084,7 +44211,7 @@ def approve_request(aid):
         return jsonify({'error': 'not found'}), 404
     if approval.get('status') == 'pending' and (
         approval.get('requestedBy') == current_user
-        or (approval.get('workflow') == uplink_migration.WORKFLOW
+        or (approval.get('workflow') in {uplink_migration.WORKFLOW, dare.WORKFLOW}
             and str(approval.get('requestedBy') or '').casefold() == current_user.casefold())
     ):
         return jsonify({'error': 'Self-approval is not allowed'}), 403

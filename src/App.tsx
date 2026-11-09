@@ -1,3 +1,4 @@
+import DareWizard from './pages/DareWizard'
 import AhvUplinkMigration from './pages/AhvUplinkMigration'
 import ClusterStorageStandard from './pages/ClusterStorageStandard'
 import { BrowserRouter, Routes, Route, Navigate } from './router'
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="/workflows" element={
           <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf1" /></RequireRole>
         } />
+        <Route path="/configure/dare" element={<RequireRole roles={['admin']}><DareWizard /></RequireRole>} />
         <Route path="/configure/ahv-uplink-migration" element={
           <RequireRole roles={['admin']}><AhvUplinkMigration /></RequireRole>
         } />

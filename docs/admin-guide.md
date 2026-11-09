@@ -152,6 +152,11 @@ select a target automatically. Follow [the complete journey](start-here.md).
 
 ![Post-configuration handoff](assets/guide/v1.8.5-rc1/post-configuration.png)
 
+Administrators can open **Configure → Enable Data-at-Rest Encryption (DARE)** to
+review a read-only Prism preflight and request independent approval for software
+encryption with Native KMS (Local). Live enablement defaults to off. See the
+[DARE wizard guide](dare-workflow.md) for prerequisites and verification.
+
 ## Overview Dashboard
 
 The Dashboard is the operational cockpit. Admins should use it at the start of

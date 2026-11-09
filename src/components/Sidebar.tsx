@@ -169,6 +169,7 @@ export default function Sidebar() {
               <div id={`nav-${group.label.replace(/ /g, '-').toLowerCase()}`} className="space-y-0.5" hidden={group.collapsible && !expanded[group.label]}>
                 {group.items.map(item => {
                   const active = location.pathname === item.path ||
+                    (item.path === '/start/configure' && location.pathname === '/configure/dare') ||
                     (!['/', '/recovery', '/start'].includes(item.path) && location.pathname.startsWith(`${item.path}/`))
                   return (
                     <Link
