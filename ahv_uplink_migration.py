@@ -124,7 +124,7 @@ class PcClient(prism.Client):
                     raise ValueError()
                 return data, response.headers.get('ETag'), envelope.get('metadata', {})
         except urllib.error.HTTPError as error:
-            raise MigrationError(f'Prism Central returned HTTP {error.code}. Check permissions and v4.2 API support.') from None
+            raise MigrationError(f'Prism Central returned HTTP {error.code}. Check permissions and support for the requested Prism API version.') from None
         except urllib.error.URLError as error:
             if isinstance(error.reason, ssl.SSLCertVerificationError):
                 raise MigrationError('Prism Central certificate trust or hostname verification failed.') from None

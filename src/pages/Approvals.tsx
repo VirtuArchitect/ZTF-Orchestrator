@@ -51,7 +51,7 @@ const EMPTY_FORM: FormState = {
 }
 
 function approvalConfig(workflow: string, content: string) {
-  if (workflow !== 'ahv-uplink-migration') return content
+  if (workflow !== 'ahv-uplink-migration' && workflow !== 'enable-dare') return content
   try { return JSON.stringify(JSON.parse(content), null, 2) } catch { return content }
 }
 
