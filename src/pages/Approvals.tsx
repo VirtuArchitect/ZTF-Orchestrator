@@ -50,6 +50,11 @@ const EMPTY_FORM: FormState = {
   statePath: '',
 }
 
+function approvalConfig(workflow: string, content: string) {
+  if (workflow !== 'ahv-uplink-migration') return content
+  try { return JSON.stringify(JSON.parse(content), null, 2) } catch { return content }
+}
+
 export default function Approvals() {
   const sessionToken = useStore(s => s.sessionToken)
   const user         = useStore(s => s.user)
@@ -254,7 +259,7 @@ export default function Approvals() {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Config</p>
                         <pre className="text-xs font-mono text-gray-300 bg-gray-900/60 rounded-lg p-3 overflow-x-auto max-h-48 whitespace-pre-wrap">
-                          {a.configContent}
+                          {approvalConfig(a.workflow, a.configContent)}
                         </pre>
                       </div>
                     )}

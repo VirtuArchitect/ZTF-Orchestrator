@@ -38,6 +38,7 @@ import yaml
 import credential_rotation as rotation
 import appliance_updates as guided_updates
 import pc_unregistration as unregistration
+import ahv_uplink_migration as uplink_migration
 import cluster_storage_standard as storage_standard
 from pe_login_title import has_title_intent, validate_intent as validate_pe_login_title_intent
 from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
@@ -3318,7 +3319,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 
 
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
-    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW}:
+    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -34878,7 +34879,57 @@ class ExecutionJobManager:
                 config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
             self._complete(job_id, status, code)
 
+    def _run_ahv_uplink_job(self, job_id, payload, user):
+        status = 'failed'
+        diagnostics = {'category': 'ahv_uplink_migration', 'verifiedHosts': []}
+        try:
+            with uplink_migration.LOCK:
+                plan = uplink_migration.load_plan(payload.get('configContent'))
+                deadline = time.monotonic() + EXEC_TIMEOUT
+
+                def cancelled():
+                    return (self._stop or time.monotonic() >= deadline
+                            or (self.get_job(job_id, include_logs=False) or {}).get('status') != 'running')
+
+                def authorize():
+                    if cancelled() or not uplink_migration.writes_enabled() or _maintenance_active():
+                        raise uplink_migration.MigrationError('Mutation is disabled, cancelled or blocked by maintenance.')
+                    with _AHV_UPLINK_SUBMIT_LOCK:
+                        approval = _check_ahv_uplink_approval(payload, user)
+                        if approval.get('jobId') != job_id:
+                            raise uplink_migration.MigrationError('Approval is not bound to this execution job.')
+
+                authorize()
+                pc, pe = uplink_migration.clients(plan['intent']['connection'], _pe_login_title_resolver({}))
+                def report(rows):
+                    for row in rows:
+                        host_results[row['hostId']] = row
+                    diagnostics['verifiedHosts'] = list(host_results.values())
+                    self._set_diagnostics(job_id, diagnostics)
+
+                host_results = {}
+                uplink_migration.execute(plan, pc, pe, lambda line: self._emit(job_id, 'stdout', line),
+                                         authorize, cancelled, report)
+                status = 'success'
+        except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
+            diagnostics['evidence'] = str(error)
+        except Exception:
+            diagnostics['evidence'] = 'AHV uplink migration could not be verified.'
+        finally:
+            if status == 'failed':
+                diagnostics['likelyFix'] = 'Inspect the recorded Prism tasks and current switch memberships before any new approval. An accepted Prism task can continue after a lost response.'
+                self._emit(job_id, 'error', diagnostics['evidence'])
+            self._set_diagnostics(job_id, diagnostics)
+            code = 0 if status == 'success' else -1
+            _record_execution_history(execution_id=job_id, workflow_or_script=uplink_migration.WORKFLOW,
+                execution_type='workflow', status=status, user=user, config_file=uplink_migration.FILENAME,
+                config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
+            self._complete(job_id, status, code)
+
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('workflow') == uplink_migration.WORKFLOW:
+            self._run_ahv_uplink_job(job_id, payload, user)
+            return
         if payload.get('workflow') == storage_standard.WORKFLOW:
             self._run_storage_standard_job(job_id, payload, user)
             return
@@ -41782,6 +41833,125 @@ def upload_foundation_vm_image():
         except OSError:
             log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
 
+_AHV_UPLINK_SUBMIT_LOCK = threading.Lock()
+
+
+def _check_ahv_uplink_approval(payload, actor):
+    approval = _approval_manager.get_approval(str(payload.get('approvalId') or ''))
+    content = payload.get('configContent')
+    error = _workflow_approval_error(approval, uplink_migration.WORKFLOW, uplink_migration.FILENAME, content)
+    if error:
+        raise uplink_migration.MigrationError(error)
+    requester, decider = approval.get('requestedBy'), approval.get('decidedBy')
+    if (not _parse_iso_datetime(approval.get('expiresAt')) or requester != actor
+            or not decider or decider.casefold() == requester.casefold()
+            or approval.get('configContent') != content or approval.get('configFile') != uplink_migration.FILENAME):
+        raise uplink_migration.MigrationError('A different administrator must approve this exact plan for its requester.')
+    return approval
+
+
+@app.route('/api/ahv-uplink-migration')
+@require_role('admin')
+def ahv_uplink_capabilities():
+    return jsonify({'applyEnabled': uplink_migration.writes_enabled()})
+
+
+@app.route('/api/ahv-uplink-migration/discover', methods=['POST'])
+@require_role('admin')
+@limiter.limit('8 per minute')
+def discover_ahv_uplinks():
+    try:
+        config = uplink_migration.connection(request.get_json(silent=True))
+        pc, pe = uplink_migration.clients(config, _pe_login_title_resolver({}))
+        return jsonify(uplink_migration.collect(config, pc, pe))
+    except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'AHV inventory is incomplete or has an unsupported response format.'}), 400
+
+
+def _fresh_ahv_uplink_plan(intent):
+    config = uplink_migration.draft(intent)['connection']
+    pc, pe = uplink_migration.clients(config, _pe_login_title_resolver({}))
+    return uplink_migration.preflight(intent, pc, pe)
+
+
+@app.route('/api/ahv-uplink-migration/preflight', methods=['POST'])
+@require_role('admin')
+@limiter.limit('8 per minute')
+def preflight_ahv_uplinks():
+    try:
+        plan = _fresh_ahv_uplink_plan(request.get_json(silent=True))
+        return jsonify({'content': uplink_migration.canonical(plan), 'sha256': uplink_migration.fingerprint(plan),
+                        'assignments': plan['assignments'], 'clusterName': plan['inventory']['clusterName']})
+    except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'AHV preflight could not verify complete inventory.'}), 400
+
+
+@app.route('/api/ahv-uplink-migration/approval', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def approve_ahv_uplink_plan():
+    if _maintenance_active():
+        body, code = _maintenance_error()
+        return jsonify(body), code
+    try:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or set(data) != {'content'}:
+            raise uplink_migration.MigrationError('Provide the reviewed preflight output.')
+        plan = uplink_migration.load_plan(data['content'])
+        if _fresh_ahv_uplink_plan(plan['intent']) != plan:
+            return jsonify({'error': 'Inventory changed. Run preflight again before requesting approval.'}), 409
+    except (ValueError, storage_standard.StorageError) as error:
+        message = str(error) if isinstance(error, (uplink_migration.MigrationError, unregistration.UnregistrationError,
+                                                    storage_standard.StorageError)) else 'Invalid reviewed plan.'
+        return jsonify({'error': message}), 400
+    except Exception:
+        return jsonify({'error': 'Cannot verify the reviewed plan.'}), 400
+    _require_engines()
+    approval = _approval_manager.create_request(uplink_migration.WORKFLOW, uplink_migration.FILENAME,
+        data['content'], request.current_user['username'],
+        notes='Review source and destination switch settings and the exact keep/move assignments for every host.')
+    return jsonify({'id': approval['id']}), 201
+
+
+@app.route('/api/ahv-uplink-migration/apply', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def apply_ahv_uplink_plan():
+    if _maintenance_active():
+        body, code = _maintenance_error()
+        return jsonify(body), code
+    if not uplink_migration.writes_enabled():
+        return jsonify({'error': 'Live AHV uplink changes are disabled on this Orchestrator.'}), 403
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or set(data) != {'content', 'approvalId', 'confirmation'}:
+        return jsonify({'error': 'Provide an approved plan and its exact confirmation.'}), 400
+    _require_engines()
+    actor = request.current_user['username']
+    try:
+        plan = uplink_migration.load_plan(data['content'])
+        expected = 'APPLY UPLINKS ' + plan['intent']['connection']['cluster_uuid']
+        if data['confirmation'] != expected:
+            raise uplink_migration.MigrationError(f'Type exactly: {expected}')
+        payload = {'workflow': uplink_migration.WORKFLOW, 'framework': uplink_migration.WORKFLOW,
+                   'configContent': data['content'], 'configFile': uplink_migration.FILENAME,
+                   'approvalId': str(data['approvalId'] or '')}
+        with _AHV_UPLINK_SUBMIT_LOCK:
+            approval = _check_ahv_uplink_approval(payload, actor)
+            if approval.get('jobId'):
+                return jsonify({'id': approval['jobId']}), 202
+            job = _job_manager.submit(payload, actor)
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify({'id': job['id']}), 202
+    except uplink_migration.MigrationError as error:
+        return jsonify({'error': str(error)}), 403
+    except ValueError:
+        return jsonify({'error': 'Invalid reviewed plan.'}), 400
+
+
 _STORAGE_STANDARD_SUBMIT_LOCK = threading.Lock()
 
 
@@ -43912,7 +44082,11 @@ def approve_request(aid):
     approval = _approval_manager.get_approval(aid)
     if not approval:
         return jsonify({'error': 'not found'}), 404
-    if approval.get('status') == 'pending' and approval.get('requestedBy') == current_user:
+    if approval.get('status') == 'pending' and (
+        approval.get('requestedBy') == current_user
+        or (approval.get('workflow') == uplink_migration.WORKFLOW
+            and str(approval.get('requestedBy') or '').casefold() == current_user.casefold())
+    ):
         return jsonify({'error': 'Self-approval is not allowed'}), 403
     removal = _approval_manager.get_approval(aid)
     if removal and removal.get('workflow') in {unregistration.WORKFLOW, storage_standard.WORKFLOW} and removal.get('requestedBy') == current_user:
