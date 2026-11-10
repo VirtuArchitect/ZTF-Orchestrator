@@ -37,7 +37,16 @@ def test_training_media_integrity_and_pages_packaging():
             '-poster.jpg', '-chapters.txt', '-transcript.txt', '.vtt', '.srt',
         ))
     workflow = (ROOT / '.github/workflows/pages-demo.yml').read_text(encoding='utf-8')
-    assert 'cp docs/assets/user-guide-videos/* dist-demo/tutorials/media/' in workflow
+    external = [entry for entry in catalogue if 'videoUrl' in entry]
+    assert [entry['part'] for entry in external] == [15]
+    part = external[0]
+    assert re.fullmatch(
+        r'https://raw\.githubusercontent\.com/VirtuArchitect/ZTF-Orchestrator/'
+        r'[a-f0-9]{40}/docs/assets/user-guide-videos/' + re.escape(part['file']),
+        part['videoUrl'],
+    )
+    assert f"PART_15_MP4={part['file']}" in workflow
+    assert 'sha256sum -c SHA256SUMS' in workflow
     assert 'demo-build.json' in workflow
     assert 'docs' in (ROOT / '.dockerignore').read_text(encoding='utf-8').splitlines()
 
