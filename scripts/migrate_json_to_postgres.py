@@ -19,6 +19,7 @@ DOCUMENTS = [
     'settings.json',
     'history.json',
     'pipelines.json',
+    'post-deployment-runs.json',
     'drift.json',
     'schedules.json',
     'parallel_runs.json',

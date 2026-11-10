@@ -237,10 +237,9 @@ def execute(config, credentials, python_path, emit, cancelled=lambda: False,
         return False, results
 
 
-def ssh_worker(data):
-    """Runs only inside the already-installed ZTF SSH runtime."""
+def pinned_cvm_client(node, credential):
     import paramiko
-    node = data['node']
+
     class PinnedKey(paramiko.MissingHostKeyPolicy):
         def missing_host_key(self, client, hostname, key):
             fingerprint = 'SHA256:' + base64.b64encode(hashlib.sha256(key.asbytes()).digest()).decode().rstrip('=')
@@ -249,8 +248,19 @@ def ssh_worker(data):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(PinnedKey())
     try:
-        client.connect(node['address'], username='nutanix', password=data['credential'][1],
+        client.connect(node['address'], username='nutanix', password=credential[1],
                        allow_agent=False, look_for_keys=False, timeout=15, auth_timeout=15, banner_timeout=15)
+        return client
+    except Exception:
+        client.close()
+        raise
+
+
+def ssh_worker(data):
+    """Runs only inside the already-installed ZTF SSH runtime."""
+    node = data['node']
+    client = pinned_cvm_client(node, data['credential'])
+    try:
         if data['action'] == 'verify':
             return {'ok': True}
         if data['action'] == 'discover':

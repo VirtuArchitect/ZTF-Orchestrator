@@ -40,6 +40,9 @@ import appliance_updates as guided_updates
 import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
 import dare_workflow as dare
+import post_deployment
+import post_deployment_ncc
+import post_deployment_sequence as post_sequence
 import cluster_storage_standard as storage_standard
 from pe_login_title import has_title_intent, validate_intent as validate_pe_login_title_intent
 from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
@@ -111,6 +114,7 @@ USERS_FILE     = CONFIG_DIR / 'users.json'
 HISTORY_FILE   = CONFIG_DIR / 'history.json'
 SETTINGS_FILE  = CONFIG_DIR / 'settings.json'
 PIPELINES_FILE = CONFIG_DIR / 'pipelines.json'
+POST_DEPLOYMENT_RUNS_FILE = CONFIG_DIR / 'post-deployment-runs.json'
 DRIFT_FILE     = CONFIG_DIR / 'drift.json'
 DRIFT_POLICIES_FILE = CONFIG_DIR / 'drift-policies.json'
 SCHEDULES_FILE = CONFIG_DIR / 'schedules.json'
@@ -3320,6 +3324,8 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 
 
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
+    if workflow in post_deployment.WORKFLOWS:
+        return True
     if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, dare.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
@@ -34668,6 +34674,13 @@ class ExecutionJobManager:
                 return dict(job.get('payload') or {})
         return None
 
+    def post_deployment_attempt(self, run_id, attempt):
+        for job in self._load_jobs():
+            payload = job.get('payload') or {}
+            if payload.get('postDeploymentRunId') == run_id and payload.get('postDeploymentAttempt') == attempt:
+                return self._public_job(job)
+        return None
+
     def cancel(self, job_id: str, user: str) -> dict | None:
         proc = None
         with self._condition:
@@ -34967,7 +34980,106 @@ class ExecutionJobManager:
                 config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
             self._complete(job_id, status, code)
 
+    def _run_post_deployment_job(self, job_id, payload, user):
+        workflow = payload['workflow']
+        diagnostics = {'category': 'post_deployment', 'status': 'unverified'}
+        status = 'failed'
+        deadline = time.monotonic() + EXEC_TIMEOUT
+
+        def cancelled():
+            return (self._stop or time.monotonic() >= deadline
+                    or (self.get_job(job_id, include_logs=False) or {}).get('status') != 'running')
+
+        def authorize():
+            if cancelled() or not post_deployment.writes_enabled(workflow) or _maintenance_active():
+                raise post_deployment.PostDeploymentError('The operation is disabled, cancelled or blocked by maintenance.')
+            if (_find_user(user) or {}).get('role') != 'admin':
+                raise post_deployment.PostDeploymentError('The requester is no longer an administrator.')
+            if payload.get('postDeploymentRunId'):
+                _post_run_for_job(payload, user)
+            with _POST_DEPLOYMENT_SUBMIT_LOCK:
+                approval = _check_post_deployment_approval(payload, user)
+                if approval.get('jobId') != job_id:
+                    raise post_deployment.PostDeploymentError('Approval is not bound to this job.')
+                if (_find_user(approval['decidedBy']) or {}).get('role') != 'admin':
+                    raise post_deployment.PostDeploymentError('The approver is no longer an administrator.')
+
+        try:
+            with _POST_DEPLOYMENT_EXECUTION_LOCK:
+                authorize()
+                plan = post_deployment.parse_plan(payload['configContent'])
+                if plan['workflow'] != workflow:
+                    raise post_deployment.PostDeploymentError('Job and approved operation do not match.')
+                diagnostics.update(post_deployment.execute(plan, _pe_login_title_resolver({}), authorize, cancelled,
+                                                          lambda line: self._emit(job_id, 'stdout', line)))
+                status = 'success'
+        except _POST_DEPLOYMENT_ERRORS as error:
+            diagnostics['evidence'] = str(error)
+        except Exception:
+            diagnostics['evidence'] = 'The target response could not be verified.'
+        finally:
+            if status == 'failed':
+                diagnostics['likelyFix'] = 'Check Prism Tasks and reconcile actual target state before requesting a new operation.'
+                self._emit(job_id, 'error', diagnostics['evidence'])
+            self._set_diagnostics(job_id, diagnostics)
+            code = 0 if status == 'success' else -1
+            _record_execution_history(execution_id=job_id, workflow_or_script=workflow,
+                execution_type='workflow', status=status, user=user, config_file=payload['configFile'],
+                config_content=payload['configContent'], return_code=code, diagnostics=diagnostics)
+            self._complete(job_id, status, code)
+
+    def _run_post_deployment_ncc(self, job_id, payload, user):
+        diagnostics = {'category': 'post_deployment_ncc', 'status': 'unverified'}
+        deadline = time.monotonic() + min(EXEC_TIMEOUT, post_deployment_ncc.TIMEOUT + 60)
+
+        def cancelled():
+            return (self._stop or time.monotonic() >= deadline
+                    or (self.get_job(job_id, include_logs=False) or {}).get('status') != 'running')
+
+        try:
+            if not post_deployment_ncc.enabled() or _maintenance_active() or cancelled():
+                raise ValueError()
+            if (_find_user(user) or {}).get('role') != 'admin':
+                raise ValueError()
+            run = _post_run_for_job(payload, user)
+            config = run['intent']
+            resolve = _pe_login_title_resolver({})
+            _post_run_target(run, resolve)
+            plan = post_deployment.cvm_rename_plan({key: config[key] for key in ('connection', 'hostSerials')}, resolve)
+            target = next(node for node in plan['nodes'] if node['serial'] == config['ncc']['hostSerial'])
+            credential = resolve(config['ncc']['credential'])
+            if credential[0] != 'nutanix' or cancelled() or _maintenance_active() or not post_deployment_ncc.enabled():
+                raise ValueError()
+            self._emit(job_id, 'stdout', 'Running the fixed NCC health-check suite on the pinned CVM.')
+            diagnostics.update(post_deployment_ncc.run(get_settings()['pythonPath'], {
+                'address': target['cvmAddress'], 'ssh_host_key_sha256': config['ncc']['hostKey'],
+            }, credential, cancelled))
+            if diagnostics['status'] == 'passed' and not cancelled():
+                _post_run_target(run, resolve)
+                verified = post_deployment.cvm_rename_plan({key: config[key] for key in ('connection', 'hostSerials')}, resolve)
+                if target not in verified['nodes'] or cancelled():
+                    raise ValueError()
+            elif diagnostics['status'] == 'passed':
+                raise ValueError()
+        except Exception:
+            diagnostics['status'] = 'unverified'
+        status = 'success' if diagnostics['status'] == 'passed' else 'failed'
+        if status != 'success':
+            self._emit(job_id, 'stderr', 'NCC did not return a complete all-PASS result. Review NCC on the CVM and reconcile before retrying.')
+        self._set_diagnostics(job_id, diagnostics)
+        code = 0 if status == 'success' else -1
+        _record_execution_history(execution_id=job_id, workflow_or_script=post_sequence.NCC, execution_type='workflow',
+                                  status=status, user=user, config_file='', config_content='',
+                                  return_code=code, diagnostics=diagnostics)
+        self._complete(job_id, status, code)
+
     def _run_job(self, job_id: str, payload: dict, user: str) -> None:
+        if payload.get('workflow') == post_sequence.NCC:
+            self._run_post_deployment_ncc(job_id, payload, user)
+            return
+        if payload.get('workflow') in post_deployment.WORKFLOWS:
+            self._run_post_deployment_job(job_id, payload, user)
+            return
         if payload.get('workflow') == dare.WORKFLOW:
             self._run_dare_job(job_id, payload, user)
             return
@@ -41878,6 +41990,324 @@ def upload_foundation_vm_image():
             log.warning('foundation_vm_staging_cleanup_failed', extra={'uploadFilename': filename})
 
 _DARE_SUBMIT_LOCK = threading.Lock()
+_POST_DEPLOYMENT_SUBMIT_LOCK = threading.Lock()
+_POST_DEPLOYMENT_EXECUTION_LOCK = threading.Lock()
+_POST_DEPLOYMENT_RUN_LOCK = threading.Lock()
+_POST_DEPLOYMENT_ERRORS = (post_deployment.PostDeploymentError, dare.DareError, uplink_migration.MigrationError,
+                           unregistration.UnregistrationError, storage_standard.StorageError)
+
+
+def _check_post_deployment_approval(payload, actor):
+    workflow, content = payload['workflow'], payload['configContent']
+    filename = post_deployment.filename(workflow)
+    approval = _approval_manager.get_approval(payload['approvalId'])
+    error = _workflow_approval_error(approval, workflow, filename, content)
+    if error:
+        raise post_deployment.PostDeploymentError(error)
+    decider = approval.get('decidedBy')
+    if (not _parse_iso_datetime(approval.get('expiresAt')) or approval.get('requestedBy') != actor
+            or not isinstance(decider, str) or not decider or decider.casefold() == actor.casefold()
+            or approval.get('configContent') != content or approval.get('configFile') != filename
+            or (approval.get('metadata') or {}).get('postDeploymentRunId') != payload.get('postDeploymentRunId')):
+        raise post_deployment.PostDeploymentError('A different administrator must approve this exact plan for its requester.')
+    return approval
+
+
+@app.route('/api/post-deployment')
+@require_role('admin')
+def post_deployment_capabilities():
+    return jsonify({workflow: post_deployment.writes_enabled(workflow) for workflow in post_deployment.WORKFLOWS})
+
+
+@app.route('/api/post-deployment/<action>', methods=['POST'])
+@require_role('admin')
+@limiter.limit('10 per minute')
+def post_deployment_operation(action):
+    data = request.get_json(silent=True)
+    resolve = _pe_login_title_resolver({})
+    try:
+        if action == 'acceptance':
+            return jsonify(post_deployment.acceptance(data, resolve))
+        if action == 'certificate-check':
+            return jsonify(post_deployment.certificate_check(data, resolve))
+        if action == 'cvm-rename-plan':
+            return jsonify(post_deployment.cvm_rename_plan(data, resolve))
+        if action == 'preflight':
+            if (not isinstance(data, dict) or set(data) != {'workflow', 'intent'}
+                    or not isinstance(data['workflow'], str)):
+                raise post_deployment.PostDeploymentError('Provide the operation and its intent.')
+            plan = post_deployment.preflight(data['workflow'], data['intent'], resolve)
+            return jsonify({'content': uplink_migration.canonical(plan), 'sha256': uplink_migration.fingerprint(plan),
+                            'confirmation': post_deployment.confirmation(plan)})
+        if action not in {'approval', 'apply'}:
+            return jsonify({'error': 'Unknown post-deployment operation'}), 404
+        if _maintenance_active():
+            body, status = _maintenance_error()
+            return jsonify(body), status
+        keys = {'content'} if action == 'approval' else {'content', 'approvalId', 'confirmation'}
+        if not isinstance(data, dict) or set(data) != keys:
+            raise post_deployment.PostDeploymentError('Provide the exact preflight plan and approval details.')
+        plan = post_deployment.parse_plan(data['content'])
+        workflow = plan['workflow']
+        if not post_deployment.writes_enabled(workflow):
+            return jsonify({'error': 'Submission is disabled for this operation.'}), 403
+        _require_engines()
+        actor = request.current_user['username']
+        filename = post_deployment.filename(workflow)
+        if action == 'approval':
+            if post_deployment.preflight(workflow, plan['intent'], resolve) != plan:
+                return jsonify({'error': 'Target state changed. Run preflight again.'}), 409
+            if workflow == post_deployment.FQDN and plan['observed']['current'] == plan['intent']['fqdn']:
+                return jsonify({'error': 'The FQDN already matches. No change is required.'}), 409
+            approval = _approval_manager.create_request(workflow, filename, data['content'], actor,
+                notes='Review the exact managed cluster, requested change and observed preflight state.')
+            return jsonify({'id': approval['id']}), 201
+        if data['confirmation'] != post_deployment.confirmation(plan):
+            return jsonify({'error': 'Type the exact cluster-bound confirmation.'}), 403
+        if not isinstance(data['approvalId'], str) or len(data['approvalId']) > 128:
+            return jsonify({'error': 'Provide a valid approval ID.'}), 400
+        payload = {'workflow': workflow, 'framework': workflow, 'configFile': filename,
+                   'configContent': data['content'], 'approvalId': data['approvalId']}
+        with _POST_DEPLOYMENT_SUBMIT_LOCK:
+            try:
+                approval = _check_post_deployment_approval(payload, actor)
+            except post_deployment.PostDeploymentError as error:
+                return jsonify({'error': str(error)}), 403
+            if approval.get('jobId'):
+                return jsonify({'id': approval['jobId']}), 202
+            job = _job_manager.submit(payload, actor)
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify({'id': job['id']}), 202
+    except _POST_DEPLOYMENT_ERRORS as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'The request could not be verified. Review the existing job or approval before retrying.'}), 400
+
+
+def _post_run_target(run, resolve):
+    _, _, observed = post_deployment._clients(run['intent']['connection'], resolve)
+    if observed != run['pcUuid']:
+        raise post_deployment.PostDeploymentError('The registered Prism Central identity changed.')
+
+
+def _post_runs():
+    if _storage.name == 'file':
+        # The generic file reader returns an empty default on corruption. A
+        # missing submission fence must never be inferred from an unreadable file.
+        try:
+            runs = json.loads(POST_DEPLOYMENT_RUNS_FILE.read_text(encoding='utf-8'))
+        except FileNotFoundError:
+            runs = []
+    else:
+        runs = read_json(POST_DEPLOYMENT_RUNS_FILE, [])
+    if not isinstance(runs, list):
+        raise post_deployment.PostDeploymentError('Post-deployment run storage is unavailable.')
+    return runs
+
+
+def _post_run_for_job(payload, actor):
+    run = next((row for row in _post_runs() if row['id'] == payload['postDeploymentRunId']), None)
+    if (not run or run['owner'] != actor or run['stage'] != payload['workflow']
+            or run['attempt'] != payload.get('postDeploymentAttempt')
+            or (run['approvalId'] or None) != payload.get('approvalId')):
+        raise post_deployment.PostDeploymentError('The queued operation is no longer bound to the current stage.')
+    return run
+
+
+def _post_run_save(runs, run):
+    run['revision'] += 1
+    run['updatedAt'] = post_sequence.now()
+    write_json(POST_DEPLOYMENT_RUNS_FILE, runs)
+
+
+def _post_run_job(run):
+    return _job_manager.post_deployment_attempt(run['id'], run['attempt']) if run['attempt'] else None
+
+
+def _post_run_view(run):
+    job = _post_run_job(run)
+    approval = _approval_manager.get_approval(run['approvalId']) if run['approvalId'] and _approval_manager else None
+    approval_status = (approval or {}).get('status', '')
+    expiry = _parse_iso_datetime((approval or {}).get('expiresAt'))
+    if approval_status in {'pending', 'approved'} and (not expiry or expiry <= datetime.datetime.now(datetime.timezone.utc)):
+        approval_status = 'expired'
+    return {**run, 'job': {key: job.get(key) for key in ('id', 'status', 'diagnostics')} if job else None,
+            'jobVerified': bool(job and post_sequence.job_evidence(run['stage'], job)),
+            'approvalStatus': approval_status,
+            'confirmation': post_deployment.confirmation({'workflow': run['stage'], 'intent': run['intent']})
+            if run['stage'] in post_deployment.WORKFLOWS else '',
+            'nccEnabled': post_deployment_ncc.enabled()}
+
+
+@app.route('/api/post-deployment/runs', methods=['GET', 'POST'])
+@require_role('admin')
+@limiter.limit('30 per minute')
+def post_deployment_runs():
+    actor = request.current_user['username']
+    try:
+        with _POST_DEPLOYMENT_RUN_LOCK:
+            runs = _post_runs()
+            if request.method == 'GET':
+                return jsonify([_post_run_view(run) for run in runs if run['owner'] == actor])
+            if _maintenance_active():
+                return jsonify({'error': 'Run creation is blocked by maintenance.'}), 409
+            config = post_sequence.validate(request.get_json(silent=True))
+            if len(runs) >= 1000:
+                return jsonify({'error': 'The post-deployment run store is full.'}), 409
+            if any(row['intent']['connection']['cluster_uuid'] == config['connection']['cluster_uuid']
+                   and row['stage'] not in {'complete', 'abandoned'} for row in runs):
+                return jsonify({'error': 'A post-deployment run already exists for this cluster.'}), 409
+            resolve = _pe_login_title_resolver({})
+            _, _, pc_id = post_deployment._clients(config['connection'], resolve)
+            run = post_sequence.create(config, pc_id, actor)
+            runs.insert(0, run)
+            write_json(POST_DEPLOYMENT_RUNS_FILE, runs)
+            return jsonify(_post_run_view(run)), 201
+    except _POST_DEPLOYMENT_ERRORS as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'The post-deployment run could not be verified.'}), 409
+
+
+def _advance_post_deployment(runs, run, action, data, actor):
+    stage, config = run['stage'], run['intent']
+    job = _post_run_job(run)
+    if stage in {'complete', 'abandoned'}:
+        return 'This run is closed.'
+    if action in {'reconcile', 'abandon'}:
+        if job and job['status'] in post_sequence.ACTIVE:
+            return 'Wait for the active job to settle before reconciling.'
+        if action == 'reconcile' and not run['attempt']:
+            return 'There is no attempted job to reconcile.'
+        if action == 'reconcile' and job and post_sequence.job_evidence(stage, job):
+            return 'The completed job can advance the run without reconciliation.'
+        if len(run['reconciliations']) >= 100:
+            return 'This run has reached its reconciliation limit.'
+        run['reconciliations'].append({'stage': stage, 'attempt': run['attempt'], 'jobId': (job or {}).get('id'),
+                                       'actor': actor, 'at': post_sequence.now(),
+                                       'reference': post_sequence.reference(data.get('reference'))})
+        run['attempt'] = run['approvalId'] = ''
+        if action == 'abandon':
+            run['stage'] = 'abandoned'
+        _post_run_save(runs, run)
+        return None
+    if run['attempt']:
+        evidence = post_sequence.job_evidence(stage, job) if job else None
+        if evidence:
+            post_sequence.finish(run, actor, evidence)
+            _post_run_save(runs, run)
+            return None
+        if job and job['status'] in post_sequence.ACTIVE:
+            return 'The current job is still active.'
+        return 'The outcome is unverified. Reconcile on Prism or the CVM before preparing a new attempt.'
+
+    resolve = _pe_login_title_resolver({})
+    _post_run_target(run, resolve)
+    if stage in post_sequence.CHECKPOINTS:
+        evidence = {'reference': post_sequence.reference(data.get('reference'))}
+        if stage == 'certificate':
+            expected = data.get('fingerprint')
+            if not isinstance(expected, str) or not re.fullmatch(r'[a-f0-9]{64}', expected):
+                return 'Provide the approved leaf certificate SHA-256 in lowercase hex.'
+            verified = post_deployment.certificate_check({key: config[key] for key in ('connection', 'fqdn')}, resolve)
+            if not verified['endpoints'] or any(row['leafSha256'] != expected for row in verified['endpoints']):
+                return 'The installed certificate does not match the approved fingerprint on every endpoint.'
+            evidence['certificate'] = verified
+        elif stage == 'cvm-renames':
+            evidence['reviewedMapping'] = post_deployment.cvm_rename_plan(
+                {key: config[key] for key in ('connection', 'hostSerials')}, resolve)['nodes']
+        elif stage == 'signoff':
+            ncc = next(item for item in reversed(run['completed']) if item['stage'] == post_sequence.NCC)
+            finished = _parse_iso_datetime(ncc['evidence'].get('finishedAt'))
+            now = datetime.datetime.now(datetime.timezone.utc)
+            if not finished or not now - datetime.timedelta(hours=24) <= finished <= now:
+                run['stage'] = post_sequence.NCC
+                _post_run_save(runs, run)
+                return None
+            evidence['acceptance'] = post_deployment.acceptance({key: item for key, item in config.items() if key != 'ncc'}, resolve)
+            if evidence['acceptance']['status'] != 'operator_review_required':
+                return 'A fresh acceptance check did not verify. Sign-off is blocked.'
+        post_sequence.finish(run, actor, evidence)
+    elif stage == 'acceptance':
+        evidence = post_deployment.acceptance({key: item for key, item in config.items() if key != 'ncc'}, resolve)
+        if evidence['status'] != 'operator_review_required':
+            return 'One or more acceptance checks did not verify. Use the standalone acceptance view for details.'
+        post_sequence.finish(run, actor, evidence)
+    elif stage in post_deployment.WORKFLOWS:
+        field = 'fqdn' if stage == post_deployment.FQDN else 'repository'
+        plan = post_deployment.preflight(stage, {key: config[key] for key in ('connection', field)}, resolve)
+        if plan['pcUuid'] != run['pcUuid']:
+            return 'The target changed during preflight.'
+        if stage == post_deployment.FQDN and plan['observed']['current'] == config['fqdn']:
+            post_sequence.finish(run, actor, {'status': 'already_configured', 'fqdn': config['fqdn']})
+        else:
+            if not post_deployment.writes_enabled(stage):
+                return 'Submission is disabled for this operation.'
+            _require_engines()
+            content = uplink_migration.canonical(plan)
+            previous = _approval_manager.get_approval(run['approvalId']) if run['approvalId'] else None
+            expires = _parse_iso_datetime((previous or {}).get('expiresAt'))
+            if (not previous or previous.get('configContent') != content or previous['status'] not in {'pending', 'approved'}
+                    or not expires or expires <= datetime.datetime.now(datetime.timezone.utc)):
+                approval = _approval_manager.create_request(stage, post_deployment.filename(stage), content, actor,
+                    notes='Review the exact post-deployment change and observed target state.',
+                    metadata={'postDeploymentRunId': run['id']})
+                run['approvalId'] = approval['id']
+            else:
+                if data.get('confirmation') != post_deployment.confirmation(plan):
+                    return 'Type the exact cluster-bound confirmation after independent approval.'
+                payload = {'workflow': stage, 'framework': stage, 'configFile': post_deployment.filename(stage),
+                           'configContent': content, 'approvalId': run['approvalId'], 'postDeploymentRunId': run['id']}
+                with _POST_DEPLOYMENT_SUBMIT_LOCK:
+                    approval = _check_post_deployment_approval(payload, actor)
+                    if approval.get('jobId') or (_find_user(approval['decidedBy']) or {}).get('role') != 'admin':
+                        return 'A fresh approval from a different administrator is required.'
+                    run['attempt'] = payload['postDeploymentAttempt'] = str(uuid.uuid4())
+                    _post_run_save(runs, run)
+                    submitted = _job_manager.submit(payload, actor)
+                    _approval_manager.link_job(approval['id'], submitted['id'])
+                return None
+    elif stage == post_sequence.NCC:
+        if not post_deployment_ncc.enabled():
+            return 'Automated NCC is disabled on this appliance.'
+        run['attempt'] = str(uuid.uuid4())
+        _post_run_save(runs, run)
+        _job_manager.submit({'workflow': stage, 'framework': stage, 'postDeploymentRunId': run['id'],
+                             'postDeploymentAttempt': run['attempt']}, actor)
+        return None
+    else:
+        return 'Unrecognized run stage.'
+    _post_run_save(runs, run)
+    return None
+
+
+@app.route('/api/post-deployment/runs/<run_id>', methods=['POST'])
+@require_role('admin')
+@limiter.limit('20 per minute')
+def update_post_deployment_run(run_id):
+    data = request.get_json(silent=True)
+    if (not isinstance(data, dict) or set(data) - {'revision', 'action', 'reference', 'fingerprint', 'confirmation'}
+            or type(data.get('revision')) is not int or data.get('action') not in ('continue', 'reconcile', 'abandon')):
+        return jsonify({'error': 'Provide the current run revision and a valid action.'}), 400
+    actor = request.current_user['username']
+    try:
+        with _POST_DEPLOYMENT_RUN_LOCK:
+            runs = _post_runs()
+            run = next((row for row in runs if row['id'] == run_id and row['owner'] == actor), None)
+            if not run:
+                return jsonify({'error': 'Run not found.'}), 404
+            if run['revision'] != data['revision']:
+                return jsonify({'error': 'The run changed. Reload it before continuing.'}), 409
+            if _maintenance_active():
+                return jsonify({'error': 'The run is blocked by maintenance.'}), 409
+            error = _advance_post_deployment(runs, run, data['action'], data, actor)
+            return (jsonify({'error': error}), 409) if error else jsonify(_post_run_view(run))
+    except _POST_DEPLOYMENT_ERRORS as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception:
+        return jsonify({'error': 'The operation could not be confirmed. Reload the run before taking any further action.'}), 409
+
+
 _DARE_TARGET_ERRORS = (dare.DareError, uplink_migration.MigrationError, unregistration.UnregistrationError,
                        storage_standard.StorageError)
 
@@ -44211,7 +44641,7 @@ def approve_request(aid):
         return jsonify({'error': 'not found'}), 404
     if approval.get('status') == 'pending' and (
         approval.get('requestedBy') == current_user
-        or (approval.get('workflow') in {uplink_migration.WORKFLOW, dare.WORKFLOW}
+        or (approval.get('workflow') in {uplink_migration.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
             and str(approval.get('requestedBy') or '').casefold() == current_user.casefold())
     ):
         return jsonify({'error': 'Self-approval is not allowed'}), 403

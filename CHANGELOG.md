@@ -13,6 +13,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. The editor identifies the failing pipeline step and shows why profile deletion is unavailable.
 
 ### Added
+- Administrator post-deployment checks for cluster FQDN, managed-cluster LCM inventory, installed PE certificate verification, CVM rename planning and read-only acceptance. FQDN and inventory submission require separate exact-plan approvals and default to disabled. Certificate replacement, CVM renames and final workload signoff remain supervised.
+- Durable post-deployment sequence with supervised certificate and CVM checkpoints, approval-bound FQDN and LCM stages, opt-in pinned-SSH NCC, and explicit reconciliation for interrupted or unverified jobs.
 - Administrator-only DARE wizard for cluster-wide software encryption with Native KMS (Local). Includes trusted read-only Prism preflight, independent exact-plan approval and task plus configuration verification. Live enablement defaults to off.
 - AHV Uplink Migration wizard for read-only discovery and preflight, exact-plan approvals, and per-host uplink verification through Prism v4.2. Live application requires explicit host-side enablement after hardware validation.
 - Recovery profile management: visible revision-based editing, blocking-run links, reversible archive/restore and admin-only deletion of unused, unreferenced profiles. Existing run history, configuration files and pipelines are preserved; lifecycle actions require exact confirmation, notes and current revision metadata. Abandoned prepared runs can be closed without submitting jobs; submitted work still requires reconciliation.
