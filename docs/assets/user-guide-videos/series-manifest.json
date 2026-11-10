@@ -1329,7 +1329,9 @@
       "fullDecode": "passed",
       "captions": 43,
       "encodedChapterFrames": 8,
-      "listeningReview": "not_performed"
+      "listeningReview": "not_performed",
+      "updated": true,
+      "sha256": "ed8fa2615bed1e16c2ddbc807af639d221abd7c278757a52d2816c0e58923a2e"
     }
   ],
   "updatedNarratedChapters": 13,
