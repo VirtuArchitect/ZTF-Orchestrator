@@ -13,6 +13,7 @@ The release remains a prerelease; v1.8.4 remains Latest stable.
 - [Download the editable Word guide](manuals/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.docx)
 - [Screenshot provenance](assets/disaster-recovery/setup-v1.8.5-rc1/README.md)
 - [Recovery execution and operating boundaries](disaster-recovery.md)
+- [Watch the full recovery walkthrough (2:24)](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15)
 
 The screenshots show the implemented interface with generic **simulated API
 records in an isolated browser session**. No live backend, Foundation VM or Prism

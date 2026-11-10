@@ -2,10 +2,10 @@
   "title": "ZTF Orchestrator Full Console User Guide Videos",
   "date": "4 November 2026",
   "sourceRevision": "8c7843ad7c9c5a2f8dc53fbf0fb823f2eb6e0a7b",
-  "parts": 15,
-  "durationSeconds": 2692.5,
-  "chapters": 82,
-  "narration": "Synthetic en-US-AndrewMultilingualNeural at normal rate; not a cloned user voice",
+  "parts": 16,
+  "durationSeconds": 2836.79,
+  "chapters": 90,
+  "narration": "Synthetic narration at natural rate. Parts 00-14 use en-US-AndrewMultilingualNeural. Part 15 uses HeyGen Joanna - Warm & Conversational.",
   "screens": "New simulated captures at 8c7843a; current existing generic screenshots; retained unchanged chapter illustrations preserve original provenance",
   "liveActionsExecuted": false,
   "listeningReview": "not_performed",
@@ -1266,6 +1266,70 @@
         "truePeakDbtp": -3.51,
         "rangeLu": 3.6
       }
+    },
+    {
+      "part": 15,
+      "title": "Disaster Recovery Start to Finish",
+      "file": "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4",
+      "publishedEntryAdded": "10 November 2026",
+      "duration": 144.29,
+      "sourceRevision": "28e9f71",
+      "screens": "Light-mode React console with isolated simulated API fixtures and illustrative job progress",
+      "narration": "HeyGen Joanna - Warm & Conversational",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Recover an existing AHV cluster",
+          "start": 0.0,
+          "duration": 11.333333333333334
+        },
+        {
+          "chapter": 2,
+          "title": "Prepare the deployment and pipeline",
+          "start": 11.333333333333334,
+          "duration": 18.541666666666664
+        },
+        {
+          "chapter": 3,
+          "title": "Create and review the recovery profile",
+          "start": 29.875,
+          "duration": 19.791666666666664
+        },
+        {
+          "chapter": 4,
+          "title": "Approve and deploy the reviewed recovery",
+          "start": 49.666666666666664,
+          "duration": 19.750000000000007
+        },
+        {
+          "chapter": 5,
+          "title": "Restore administrative access",
+          "start": 69.41666666666667,
+          "duration": 16.625
+        },
+        {
+          "chapter": 6,
+          "title": "Verify the rebuilt cluster in Prism Element",
+          "start": 86.04166666666667,
+          "duration": 16.666666666666657
+        },
+        {
+          "chapter": 7,
+          "title": "Run the remaining pipeline steps",
+          "start": 102.70833333333333,
+          "duration": 23.04166666666667
+        },
+        {
+          "chapter": 8,
+          "title": "Accept the cluster for restore handoff",
+          "start": 125.75,
+          "duration": 18.541666666666657
+        }
+      ],
+      "fullDecode": "passed",
+      "captions": 43,
+      "encodedChapterFrames": 8,
+      "listeningReview": "not_performed"
     }
   ],
   "updatedNarratedChapters": 13,

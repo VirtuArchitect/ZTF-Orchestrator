@@ -1,4 +1,4 @@
-8e4157d6dcfbaf2cbfeec15a9d20c767eed1397907fa17f6d8b2b8f34eb387ef  README.txt
+447f8c2690cef5733f9520348d6f1defc8faf224c8a14d33728e3957d7f3eca8  README.txt
 884567446f87c656d600b7c58ef267b7412008ebd31669fd1a6bc1a9a2cd388c  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-chapters.txt
 41366d04f5adb63b0020d27e517281e424341b21946688dcc2c6f61e8fca50ab  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-poster.jpg
 2a54db15128ecb0a80f068083ed77877dd1955349ceb3c3550cad3fc045dec6b  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt
@@ -89,4 +89,10 @@ cdd176df7e0dd9adc0c1fedc879b282ded316716840817c93e7583a72b1a8279  ZTF-Orchestrat
 c1920469e08ccc03cc2531686d40fcb96319e76c7e41a3279573fde127f1b20c  ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4
 4dc792c5ace6f94d97dc6d552b0e6389798c7bd0e2131c82be5ce62db2ea0133  ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.srt
 3815e6ffb8b9ee711e5399aef9bb2ddb5412d9d164f9ddcddd913f0cea0206a2  ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.vtt
-0d41a4ccbcc56024934de1b7ae03af54f85f172e49a4b532f73aac7451eea16a  series-manifest.json
+bd59b5a73199c3a63446eb49bc2decc3c9a6f2875ce8873ee41b905c0b03aa1b  ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-chapters.txt
+bfb100df62fccfcbe09b90fa402e655876e0bfd6383768744714ee1a59976426  ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-poster.jpg
+0e388710738fec627682f53094cfbc76ba3c8b0f48ccb577ef7b03c36a584cb3  ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt
+ed8fa2615bed1e16c2ddbc807af639d221abd7c278757a52d2816c0e58923a2e  ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4
+27684184bee6d0d48272a547a0e84e6b3eb28f88d667940778d0ba05c8f12157  ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.srt
+9ecf42aace773d4a052bf18b94e48c5bd18e1c3c9837e6c5be6911cf861072e5  ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.vtt
+dd435d098a0f550f434f81c1e3437957b664487f82a31cb38df999e4e1517d6a  series-manifest.json
