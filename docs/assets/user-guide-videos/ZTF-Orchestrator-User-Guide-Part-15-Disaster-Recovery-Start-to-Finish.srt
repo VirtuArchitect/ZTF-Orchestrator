@@ -1,0 +1,171 @@
+1
+00:00:00,256 --> 00:00:03,115
+An existing AHV cluster needs a rebuild.
+
+2
+00:00:03,456 --> 00:00:07,296
+In this simulated recovery, we’ll use a recovery profile to take
+
+3
+00:00:07,339 --> 00:00:11,190
+one cluster from its saved build plan to workload restore handoff.
+
+4
+00:00:11,470 --> 00:00:14,158
+Before creating the profile, verify the approved
+
+5
+00:00:14,286 --> 00:00:17,891
+node serials, network settings, and image checksums.
+
+6
+00:00:18,211 --> 00:00:20,558
+Save the Foundation VM deployment file and
+
+7
+00:00:20,601 --> 00:00:23,105
+a post-configuration pipeline for the same cluster.
+
+8
+00:00:23,433 --> 00:00:26,463
+Open Disaster Recovery, add the datacenter, and record
+
+9
+00:00:26,676 --> 00:00:29,634
+the Foundation VM endpoint and dependency reviews.
+
+10
+00:00:30,089 --> 00:00:34,262
+Choose Create Recovery Profile and select Existing cluster to rebuild.
+
+11
+00:00:34,553 --> 00:00:38,457
+Link the saved deployment file and pipeline, then save the draft.
+
+12
+00:00:38,862 --> 00:00:42,361
+Open Review Profile, check the target nodes, cluster address
+
+13
+00:00:42,532 --> 00:00:45,913
+and captured steps, and select Mark Baseline Reviewed.
+
+14
+00:00:46,180 --> 00:00:49,408
+If the source changes, capture and review a new revision.
+
+15
+00:00:49,892 --> 00:00:51,406
+Select Prepare Recovery.
+
+16
+00:00:51,684 --> 00:00:53,732
+Request deployment approval and have a second
+
+17
+00:00:53,902 --> 00:00:56,751
+administrator approve the exact run in Approvals.
+
+18
+00:00:57,040 --> 00:00:59,131
+Back in the recovery run, enter both
+
+19
+00:00:59,216 --> 00:01:02,331
+confirmation phrases and acknowledge the imaging risk.
+
+20
+00:01:02,629 --> 00:01:05,787
+Select Deploy Reviewed Recovery, then follow the linked
+
+21
+00:01:05,872 --> 00:01:09,247
+Foundation job until imaging and cluster formation succeed.
+
+22
+00:01:09,596 --> 00:01:13,350
+After Foundation succeeds, run initial access bootstrap if
+
+23
+00:01:13,393 --> 00:01:16,316
+the captured pipeline includes eligible first steps.
+
+24
+00:01:16,635 --> 00:01:19,494
+Use separate approvals where required, then run the
+
+25
+00:01:19,537 --> 00:01:22,362
+approved password and EULA or Pulse actions.
+
+26
+00:01:22,797 --> 00:01:25,827
+Verify the replacement credential before broader configuration.
+
+27
+00:01:26,253 --> 00:01:28,643
+Select Collect PE Health Readbacks.
+
+28
+00:01:28,899 --> 00:01:31,757
+Confirm the expected cluster identity, complete host
+
+29
+00:01:31,885 --> 00:01:34,671
+membership, and health reported by Prism Element.
+
+30
+00:01:34,981 --> 00:01:38,757
+Resolve any certificate or access error, then collect again.
+
+31
+00:01:38,992 --> 00:01:42,477
+Start the remaining pipeline within fifteen minutes of fresh evidence.
+
+32
+00:01:42,960 --> 00:01:45,295
+Select Run Remaining Pipeline Steps.
+
+33
+00:01:45,625 --> 00:01:50,553
+Watch the saved DNS, time, network and storage settings run in order.
+
+34
+00:01:50,873 --> 00:01:53,070
+Each completed step has a linked job.
+
+35
+00:01:53,305 --> 00:01:56,377
+If a step fails, reconcile actual state and
+
+36
+00:01:56,420 --> 00:01:59,180
+resume unfinished work after fresh health evidence.
+
+37
+00:01:59,550 --> 00:02:02,366
+If policy requires a separate approval, run the
+
+38
+00:02:02,409 --> 00:02:05,524
+approved step directly and link its successful job.
+
+39
+00:02:05,951 --> 00:02:09,442
+Read back the requested settings and check current cluster health.
+
+40
+00:02:09,691 --> 00:02:12,635
+Enter verification notes and an evidence reference,
+
+41
+00:02:12,934 --> 00:02:15,728
+then select Accept for Restore Handoff.
+
+42
+00:02:16,134 --> 00:02:18,651
+The backup team now has the rebuilt cluster and
+
+43
+00:02:18,694 --> 00:02:21,878
+the recovery evidence it needs to begin restoring workloads.

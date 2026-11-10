@@ -1,6 +1,6 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 4 November 2026 refresh | 15 videos | approximately 45 minutes**
+**v1.8.5-rc1 | 10 November 2026 | 16 videos | approximately 47 minutes**
 
 [Watch the full series, starting with 00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
 Use the player to select a part or jump to a chapter. Each video has burned-in
@@ -31,6 +31,15 @@ infrastructure recovery, monitoring and the boundaries of preview integrations.
 | 12 | NKP Framework and Validation Evidence Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-transcript.txt) |
 | 13 | ZTF Two Point X IaC Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt) |
 | 14 | Native Foundation Baselines and Operating Boundaries | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
+| 15 | [Disaster Recovery Start to Finish](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt) |
+
+## 10 November addition
+
+Part 15 follows one simulated AHV cluster from creating a recovery profile
+through approved Foundation imaging, initial access, Prism Element health
+checks, post-configuration and workload restore handoff. It also shows how to
+reconcile a failed pipeline step. The light-mode walkthrough uses the Joanna
+studio voice and console captures from source `28e9f71`.
 
 ## 4 November refresh
 
@@ -63,7 +72,7 @@ See the [current manual](manuals/README.md), [static demo guide](demo/README.md)
 
 ## Changes after the recorded videos
 
-The revised videos reflect the 3 November source baseline, not every change in
+The 4 November refresh reflects the 3 November source baseline, not every change in
 later consolidated updates. Part 09 retains its original configuration-selection
 illustration, and Part 04 predates recovery profile archive and deletion controls.
 Use [current build status](current-status.md) and the written procedures for later

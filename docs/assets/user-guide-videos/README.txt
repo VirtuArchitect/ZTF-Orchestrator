@@ -1,5 +1,5 @@
 ZTF ORCHESTRATOR USER GUIDE VIDEO SERIES
-Updated 4 November 2026
+Updated 10 November 2026
 
 Open the public player at https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/
 or play each MP4 directly.
@@ -16,8 +16,8 @@ See series-manifest.json for per-part and chapter provenance.
 Preview chapters describe current boundaries, not production certification.
 Workload restoration remains with the backup platform.
 
-Narration uses the same male synthetic voice as the reference tutorial, at its
-natural rate. It is not a clone of the user's voice. No real cluster deployment,
+Parts 00-14 use the original synthetic narrator. Part 15 uses the Joanna studio
+voice over light-mode console captures with simulated records. No real cluster deployment,
 account creation, installer, update, recovery or application mutation was run.
 
 Verification: full H.264/AAC decode, image/frame-rate/stream identity, chapter
@@ -44,3 +44,4 @@ PARTS
 12. NKP Framework and Validation Evidence Preview (2:17)
 13. ZTF Two Point X IaC Preview (2:11)
 14. Native Foundation Baselines and Operating Boundaries (2:13)
+15. Disaster Recovery Start to Finish (2:24)

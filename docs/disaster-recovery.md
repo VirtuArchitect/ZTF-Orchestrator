@@ -20,6 +20,13 @@ of this new coordinator. No new runtime dependencies are required.
 The screenshot is from an isolated software smoke test with generic fixtures.
 It is not a production environment or evidence of a physical recovery run.
 
+## Video walkthrough
+
+[Watch Disaster Recovery Start to Finish (2:24)](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15).
+Follow a simulated AHV cluster from profile creation and baseline review through
+approved imaging, initial access, health verification, pipeline reconciliation
+and acceptance for workload restore.
+
 ## Prepare the recovery baseline
 
 For field-by-field instructions, screenshot examples and PDF/Word downloads,
