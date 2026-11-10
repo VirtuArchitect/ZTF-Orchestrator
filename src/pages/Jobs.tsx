@@ -282,7 +282,7 @@ export default function Jobs() {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-red-200">Delete queue record</p>
-                          <p className="mt-1 text-xs text-red-200/70">Removes this durable queue record only. Execution history and audit logs are retained.</p>
+                          <p className="mt-1 text-xs text-gray-300">Removes this durable queue record only. Execution history and audit logs are retained.</p>
                         </div>
                         <button
                           onClick={() => deleteJob(job)}
