@@ -65,8 +65,11 @@ is separate from the established paths' successful production use; v1.8.4 remain
 Latest stable. The videos do not update an installed appliance or an immutable bundle.
 
 Media checksums are in [SHA256SUMS](assets/user-guide-videos/SHA256SUMS).
-Media lives under docs/assets and is copied into the GitHub Pages tutorial directory
-by the Pages workflow. It is excluded from Docker by the existing docs exclusion.
+The Pages workflow copies the tutorial media from `docs/assets`. Part 15 streams
+its MP4 from a commit-pinned GitHub repository URL. Its poster, transcript,
+captions and chapter list are served by Pages. The repository checksum list
+covers all media. The Pages copy covers the files hosted on Pages. The media
+is excluded from Docker by the existing docs exclusion.
 See the [current manual](manuals/README.md), [static demo guide](demo/README.md),
 [Disaster Recovery procedure](disaster-recovery.md) and [guided updates](guided-appliance-updates.md).
 
