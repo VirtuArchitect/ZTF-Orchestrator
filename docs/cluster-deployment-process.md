@@ -78,6 +78,7 @@ separate from successful production deployment use; v1.8.4 remains Latest stable
 
 - [Start Here and deployment guidance](start-here.md)
 - [PE post-configuration verification](pe-post-configuration-verification.md)
+- [Post-deployment checks and supervised handoffs](post-deployment-checks.md)
 - [PE local users and diagnostics](pe-local-users.md)
 - [Persistent PE certificate trust](pe-certificate-trust.md)
 - [Live PE drift monitoring](live-pe-drift-monitoring.md)
