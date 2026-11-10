@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { load } from 'js-yaml'
 
 test('Foundation VM ISO checksum survives import edit validation and export', async ({ page }) => {
@@ -368,8 +368,8 @@ async function seedUiSession(page: Page, options: { driftRuns?: VisualDriftRun[]
   })
 }
 
-async function expectLightThemeReadable(page: Page) {
-  const violations = await page.evaluate(() => {
+async function expectReadableContrast(elements: Locator) {
+  const violations = await elements.evaluateAll(nodes => {
     type Rgb = [number, number, number]
     type Rgba = [number, number, number, number]
 
@@ -436,7 +436,7 @@ async function expectLightThemeReadable(page: Page) {
       .join(' ')
       .trim()
 
-    return Array.from(document.querySelectorAll('body *'))
+    return nodes
       .filter(element => visible(element) && ownText(element).length > 0)
       .map(element => {
         const style = window.getComputedStyle(element)
@@ -827,6 +827,34 @@ test('script execution opens a large modal terminal', async ({ page }) => {
   ).__copiedTerminalOutput || '')).toContain('visible script output line')
 })
 
+for (const theme of ['light', 'dark']) {
+  test(`completed job deletion notice is readable in ${theme} theme`, async ({ page }) => {
+    await seedUiSession(page)
+    await page.addInitScript(theme => {
+      window.localStorage.setItem('ztf-theme-mode', theme)
+    }, theme)
+    await page.route('**/api/jobs?limit=500', route => route.fulfill({
+      json: [{
+        id: 'completed-foundation-job',
+        workflow: 'cluster-create-foundation-vm',
+        type: 'foundation-vm-deployment',
+        status: 'success',
+        createdAt: '2026-01-01T12:00:00Z',
+        returnCode: 0,
+        logs: [],
+      }],
+    }))
+    await page.goto('/jobs')
+    await expect(page.locator('html')).toHaveClass(new RegExp(`theme-${theme}`))
+    await page.getByRole('button', { name: 'Expand job details' }).click()
+    const notice = page.locator('main div:has(> button.btn-danger)').filter({
+      has: page.getByRole('button', { name: 'Delete Queue Record', exact: true }),
+    })
+    await expect(notice.getByText('Removes this durable queue record only. Execution history and audit logs are retained.')).toBeVisible()
+    await expectReadableContrast(notice.locator('p'))
+  })
+}
+
 test('main pages keep readable text contrast in light theme', async ({ page }) => {
   await seedUiSession(page)
   const pageErrors: string[] = []
@@ -869,7 +897,7 @@ test('main pages keep readable text contrast in light theme', async ({ page }) =
       expect(pageErrors.slice(previousErrorCount)).toEqual([])
       await expect(page.locator('html')).toHaveClass(/theme-light/)
       await expect(page.locator('main')).toBeVisible()
-      await expectLightThemeReadable(page)
+      await expectReadableContrast(page.locator('body *'))
     })
   }
 })
