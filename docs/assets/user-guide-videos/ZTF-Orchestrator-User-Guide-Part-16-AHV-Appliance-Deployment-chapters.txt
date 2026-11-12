@@ -1,0 +1,7 @@
+00:00:00.000 Prepare the VM
+00:00:19.708 Generate an SSH key
+00:00:41.292 Provision ztfadmin
+00:01:04.875 Verify SSH and sudo
+00:01:33.500 Set the management IP
+00:01:58.333 Retrieve the web password
+00:02:26.875 Sign in and hand over

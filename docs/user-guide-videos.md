@@ -32,6 +32,7 @@ infrastructure recovery, monitoring and the boundaries of preview integrations.
 | 13 | ZTF Two Point X IaC Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt) |
 | 14 | Native Foundation Baselines and Operating Boundaries | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
 | 15 | [Disaster Recovery Start to Finish](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt) |
+| 16 | [AHV Appliance Deployment and SSH Setup](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-transcript.txt) |
 
 ## 10 November addition
 
