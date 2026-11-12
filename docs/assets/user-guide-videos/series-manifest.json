@@ -2,9 +2,9 @@
   "title": "ZTF Orchestrator Full Console User Guide Videos",
   "date": "4 November 2026",
   "sourceRevision": "8c7843ad7c9c5a2f8dc53fbf0fb823f2eb6e0a7b",
-  "parts": 16,
-  "durationSeconds": 2836.79,
-  "chapters": 90,
+  "parts": 17,
+  "durationSeconds": 3002.29,
+  "chapters": 97,
   "narration": "Synthetic narration at natural rate. Parts 00-14 use en-US-AndrewMultilingualNeural. Part 15 uses HeyGen Joanna - Warm & Conversational.",
   "screens": "New simulated captures at 8c7843a; current existing generic screenshots; retained unchanged chapter illustrations preserve original provenance",
   "liveActionsExecuted": false,
@@ -1332,6 +1332,65 @@
       "listeningReview": "not_performed",
       "updated": true,
       "sha256": "ed8fa2615bed1e16c2ddbc807af639d221abd7c278757a52d2816c0e58923a2e"
+    },
+    {
+      "part": 16,
+      "title": "AHV Appliance Deployment and SSH Setup",
+      "file": "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4",
+      "publishedEntryAdded": "12 November 2026",
+      "duration": 165.5,
+      "sourceRevision": "b74357c",
+      "screens": "Light-mode illustrated console and terminal examples with simulated data",
+      "narration": "HeyGen Joanna - Warm & Conversational",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Prepare the VM",
+          "start": 0,
+          "duration": 19.708333333333332
+        },
+        {
+          "chapter": 2,
+          "title": "Generate an SSH key",
+          "start": 19.708333333333332,
+          "duration": 21.583333333333332
+        },
+        {
+          "chapter": 3,
+          "title": "Provision ztfadmin",
+          "start": 41.291666666666664,
+          "duration": 23.583333333333336
+        },
+        {
+          "chapter": 4,
+          "title": "Verify SSH and sudo",
+          "start": 64.875,
+          "duration": 28.625
+        },
+        {
+          "chapter": 5,
+          "title": "Set the management IP",
+          "start": 93.5,
+          "duration": 24.83333333333333
+        },
+        {
+          "chapter": 6,
+          "title": "Retrieve the web password",
+          "start": 118.33333333333333,
+          "duration": 28.54166666666667
+        },
+        {
+          "chapter": 7,
+          "title": "Sign in and hand over",
+          "start": 146.875,
+          "duration": 18.625
+        }
+      ],
+      "fullDecode": "passed",
+      "captions": 48,
+      "listeningReview": "not_performed",
+      "updated": true,
+      "sha256": "89cb66136b120323f7a3cf8028ea54d70f26e203e53889ea253bae1d3539a60f"
     }
   ],
   "updatedNarratedChapters": 13,
