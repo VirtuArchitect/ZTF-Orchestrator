@@ -11,6 +11,7 @@ import { SCRIPT_CONFIG_SCHEMAS } from '../scriptConfigSchemas'
 import clsx from 'clsx'
 import { apiFetch } from '../utils/api'
 import { Link } from '../router'
+import { useStore } from '../store'
 
 interface LogLine { type: string; data: string; ts: number }
 interface ScriptProgress { phase: string; percent: number; detail: string; estimated: boolean }
@@ -31,6 +32,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 }
 
 export default function Scripts() {
+  const user = useStore(state => state.user)
   const [search,        setSearch]        = useState('')
   const [category,      setCategory]      = useState('All')
   const [queue,         setQueue]         = useState<string[]>([])   // ordered script IDs
@@ -194,6 +196,7 @@ export default function Scripts() {
 
         {/* ── Left: list ─────────────────────────────────────────────────── */}
         <div className="w-80 flex-shrink-0 flex flex-col gap-3">
+          {user?.role === 'admin' && <Link className="btn-secondary" to="/scripts/change-virtual-switch-mtu">Change Virtual Switch MTU</Link>}
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input

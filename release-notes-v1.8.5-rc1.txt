@@ -1,4 +1,7 @@
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+Adds the guarded VS0 MTU workflow with read-only preflight, approval, verification and rollback. Workflow actions remain visible on mobile, imported generic YAML stays in the editor, and Site Deploy and Management Prism Central preflight validate the expected framework input shape.
+
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
 DARE wizard for cluster-wide software encryption with Native KMS (Local), read-only Prism preflight and independent approval. Live enablement defaults to off. See docs/dare-workflow.md.
 
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)

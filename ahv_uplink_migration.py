@@ -198,7 +198,7 @@ def switch_config(value, cluster_id, expected_hosts):
     return result
 
 
-def collect(config, pc, pe, destination=None):
+def collect(config, pc, pe, destination=None, *, include_nic_mtu=False):
     cluster_id = config['cluster_uuid']
     path = CLUSTERS + '/' + cluster_id
     cluster, _, _ = pc.exchange('GET', path)
@@ -270,6 +270,8 @@ def collect(config, pc, pe, destination=None):
                            'switchId': nic.get('virtualSwitchExtId') or None, 'mac': nic.get('macAddress'),
                            'switchPort': nic.get('switchPortId') or '', 'switchDevice': nic.get('switchDeviceId') or '',
                            'restricted': bool(nic.get('nicProfileExtId') or nic.get('virtualNicExtIds'))}
+            if include_nic_mtu:
+                ports[name]['mtu'] = nic.get('mtuInBytes')
         if not set(source_ports[identity] + dest_ports.get(identity, [])).issubset(ports):
             raise MigrationError('Switch uplink membership does not match the physical NIC inventory.')
         hosts.append({'id': identity, 'name': row['hostName'], 'serial': row['nodeSerial'],

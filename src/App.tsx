@@ -2,6 +2,7 @@ import DareWizard from './pages/DareWizard'
 import PostDeployment from './pages/PostDeployment'
 import PostDeploymentRuns from './pages/PostDeploymentRuns'
 import AhvUplinkMigration from './pages/AhvUplinkMigration'
+import VirtualSwitchMtu from './pages/VirtualSwitchMtu'
 import ClusterStorageStandard from './pages/ClusterStorageStandard'
 import { BrowserRouter, Routes, Route, Navigate } from './router'
 import { useStore } from './store'
@@ -101,6 +102,7 @@ export default function App() {
           <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf1" /></RequireRole>
         } />
         <Route path="/configure/dare" element={<RequireRole roles={['admin']}><DareWizard /></RequireRole>} />
+        <Route path="/scripts/change-virtual-switch-mtu" element={<RequireRole roles={['admin']}><VirtualSwitchMtu /></RequireRole>} />
         <Route path="/configure/post-deployment" element={<RequireRole roles={['admin']}><PostDeployment /></RequireRole>} />
         <Route path="/configure/post-deployment/runs" element={<RequireRole roles={['admin']}><PostDeploymentRuns /></RequireRole>} />
         <Route path="/configure/ahv-uplink-migration" element={

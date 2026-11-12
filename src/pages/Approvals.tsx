@@ -51,7 +51,7 @@ const EMPTY_FORM: FormState = {
 }
 
 function approvalConfig(workflow: string, content: string) {
-  if (!['ahv-uplink-migration', 'enable-dare', 'set-cluster-fqdn', 'managed-cluster-lcm-inventory'].includes(workflow)) return content
+  if (!['ahv-uplink-migration', 'change-virtual-switch-mtu', 'enable-dare', 'set-cluster-fqdn', 'managed-cluster-lcm-inventory'].includes(workflow)) return content
   try { return JSON.stringify(JSON.parse(content), null, 2) } catch { return content }
 }
 

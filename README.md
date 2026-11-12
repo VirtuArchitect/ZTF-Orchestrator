@@ -125,6 +125,11 @@ operations and recovery preparation. Existing tools remain available through
 collapsible navigation groups and dashboard details; no integration is removed.
 See the [streamlined console guide](docs/streamlined-console.md).
 
+Administrators can plan an AHV default virtual switch MTU change from
+**Advanced Automation → Scripts → Change Virtual Switch MTU**. The workflow
+includes per-host preflight and verification, with live writes disabled by
+default. See the [VS0 MTU operator guide](docs/change-virtual-switch-mtu.md).
+
 The latest source adds a [cluster-focused operational workspace](docs/cluster-operations.md):
 administrator-managed cluster records, persistent owned review items, explicit
 read-only PE identity/membership/health observations and timestamped stale-data

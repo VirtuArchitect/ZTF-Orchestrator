@@ -44,7 +44,7 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
   const themeTitle = `Theme: ${themeMode}. Click to switch to ${themeMode === 'system' ? 'dark' : themeMode === 'dark' ? 'light' : 'system'}.`
 
   return (
-    <header className="min-h-16 border-b border-border flex items-center px-4 sm:px-6 gap-3 sm:gap-4 bg-gray-950/90 backdrop-blur-sm flex-shrink-0">
+    <header className="min-h-16 border-b border-border flex flex-wrap items-center px-4 py-3 sm:px-6 gap-3 sm:gap-4 bg-gray-950/90 backdrop-blur-sm flex-shrink-0">
       <button onClick={toggleSidebar} className="btn-ghost p-1.5 -ml-1.5" aria-label="Toggle navigation">
         <Menu size={18} />
       </button>
@@ -55,8 +55,8 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
       </div>
 
       {actions && (
-        <div className="hidden min-w-0 max-w-[70vw] flex-shrink overflow-x-auto sm:flex">
-          <div className="flex items-center gap-2 whitespace-nowrap pr-1">
+        <div className="order-last basis-full min-w-0 overflow-x-auto sm:order-none sm:basis-auto sm:max-w-[70vw] sm:flex-shrink" role="group" aria-label="Page actions">
+          <div className="flex flex-wrap items-center gap-2 whitespace-nowrap pb-1 sm:flex-nowrap sm:pb-0 pr-1 [&>div]:flex-wrap sm:[&>div]:flex-nowrap">
             {actions}
           </div>
         </div>

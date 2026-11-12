@@ -10,9 +10,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Keep workflow actions visible on narrow screens, retain imported generic workflow YAML, and validate Site Deploy and Management Prism Central inputs against the bundled framework.
 - Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. The editor identifies the failing pipeline step and shows why profile deletion is unavailable.
 
 ### Added
+- Add an administrator-only VS0 MTU workflow with read-only preflight, exact-plan approval, per-host verification, and a separately approved rollback. Live writes default to disabled.
 - Administrator post-deployment checks for cluster FQDN, managed-cluster LCM inventory, installed PE certificate verification, CVM rename planning and read-only acceptance. FQDN and inventory submission require separate exact-plan approvals and default to disabled. Certificate replacement, CVM renames and final workload signoff remain supervised.
 - Durable post-deployment sequence with supervised certificate and CVM checkpoints, approval-bound FQDN and LCM stages, opt-in pinned-SSH NCC, and explicit reconciliation for interrupted or unverified jobs.
 - Administrator-only DARE wizard for cluster-wide software encryption with Native KMS (Local). Includes trusted read-only Prism preflight, independent exact-plan approval and task plus configuration verification. Live enablement defaults to off.
