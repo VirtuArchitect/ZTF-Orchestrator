@@ -58,6 +58,8 @@ and verification boundaries also apply to the illustrated appendix.
 
 ## Related procedures
 
+- [AHV Appliance Deployment Quick Guide (PDF)](ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) covers QCOW2 deployment, SSH key generation and `ztfadmin` provisioning before first boot, management addressing, SSH and sudo verification, and the initial web admin sign-in.
+
 - [Illustrated Disaster Recovery setup](../disaster-recovery-setup.md): separate
   nine-page supplement refreshed against `a3c9c79` on 2 November 2026, with
   generic simulated screenshots of datacenter creation, Foundation VM/pipeline

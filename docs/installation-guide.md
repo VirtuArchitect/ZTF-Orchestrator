@@ -383,6 +383,8 @@ docker exec -it ztf-orchestrator ls -la /opt/zerotouch-framework
 
 ## Option D: Appliance Deployment
 
+Use the [AHV Appliance Deployment Quick Guide (PDF)](manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) for the first-time operator walkthrough. It shows how to provision `ztfadmin` with an SSH key before power-on, verify SSH and sudo, and retrieve the separate web admin password.
+
 Use this for a small Linux VM on AHV or another virtualization platform. The
 appliance Compose file pulls the published container image and starts a local
 PostgreSQL container.
