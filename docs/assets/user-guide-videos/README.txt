@@ -45,3 +45,4 @@ PARTS
 13. ZTF Two Point X IaC Preview (2:11)
 14. Native Foundation Baselines and Operating Boundaries (2:13)
 15. Disaster Recovery Start to Finish (2:24)
+16. AHV Appliance Deployment and SSH Setup (2:46)
