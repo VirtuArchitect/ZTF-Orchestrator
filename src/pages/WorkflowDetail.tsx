@@ -67,6 +67,7 @@ const WORKFLOW_IMPORT_KEYS: Record<string, string[]> = {
   'site-deploy-standalone-fca': ['fca_ip', 'fca_credential', 'sites'],
   'native-foundation-deploy': ['ztf_orchestrator', 'foundation_engine', 'sites'],
   'deploy-pc': ['clusters'],
+  'deploy-management-pc': ['pod'],
   'config-cluster': ['clusters'],
   'post-foundation-baseline': ['ztf_orchestrator', 'target', 'plan'],
   'pe-monitoring-baseline': ['ztf_orchestrator', 'target', 'plan'],

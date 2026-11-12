@@ -39,6 +39,7 @@ import credential_rotation as rotation
 import appliance_updates as guided_updates
 import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
+import virtual_switch_mtu as switch_mtu
 import dare_workflow as dare
 import post_deployment
 import post_deployment_ncc
@@ -3326,7 +3327,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
     if workflow in post_deployment.WORKFLOWS:
         return True
-    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, dare.WORKFLOW}:
+    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -3515,10 +3516,14 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'fca_lifecycle': True,
     },
     'site-deploy': {
-        'required':    ['pc_ip', 'pc_credential', 'cvm_credential'],
+        'required':    ['pc_ip', 'pc_credential', 'cvm_credential', 'sites'],
         'credential_fields': {'pc_credential': 'Foundation Central', 'cvm_credential': 'CVM'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Prism Central')],
+        'site_list_field': 'sites',
+        'site_list_required_keys': ['site_name', 'clusters'],
+        'site_cluster_required_keys': ['cluster_name', 'cluster_vip', 'node_details'],
+        'site_node_required_keys': [],
     },
     'site-deploy-standalone-fca': {
         'required':    ['fca_ip', 'fca_credential', 'cvm_credential', 'sites'],
@@ -3556,9 +3561,13 @@ WORKFLOW_PREFLIGHT: dict[str, dict] = {
         'connect':     [('pc_ip', 9440, 'Prism Central')],
     },
     'deploy-management-pc': {
-        'required':    ['pc_ip', 'pe_credential'],
+        'config_scope': 'pod',
+        'required':    ['pc_ip', 'pc_credential', 'clusters'],
+        'credential_fields': {'pc_credential': 'Management PC'},
         'ip_fields':   ['pc_ip'],
         'connect':     [('pc_ip', 9440, 'Management PC')],
+        'cluster_dict_connect': (9440, 'Prism Element'),
+        'cluster_dict_required_keys': ['pe_credential', 'cvm_credential', 'deploy_pc_config'],
     },
     'config-management-pc': {
         'required':    ['pc_ip', 'pe_credential'],
@@ -33939,6 +33948,14 @@ def _run_preflight(workflow: str, config_content: str, execution_id: str) -> Gen
         return
 
     preflight = _preflight_for_execution(workflow)
+    scope = preflight.get('config_scope')
+    if scope:
+        scoped_config = config.get(scope) if isinstance(config, dict) else None
+        if not isinstance(scoped_config, dict) or not scoped_config:
+            yield from send('stdout', f'[FAIL] {scope} must be a non-empty mapping matching the bundled runtime')
+            yield from send('done', {'status': 'failed', 'dryRun': True, 'passed': passed, 'failed': failed + 1})
+            return
+        config = scoped_config
     if not preflight:
         yield from send('stdout', f'[INFO] No preflight schema defined for "{workflow}" — YAML check only')
 
@@ -34895,10 +34912,11 @@ class ExecutionJobManager:
 
     def _run_ahv_uplink_job(self, job_id, payload, user):
         status = 'failed'
-        diagnostics = {'category': 'ahv_uplink_migration', 'verifiedHosts': []}
+        workflow = switch_mtu if payload['workflow'] == switch_mtu.WORKFLOW else uplink_migration
+        diagnostics = {'category': workflow.WORKFLOW.replace('-', '_'), 'verifiedHosts': []}
         try:
             with uplink_migration.LOCK:
-                plan = uplink_migration.load_plan(payload.get('configContent'))
+                plan = workflow.load_plan(payload.get('configContent'))
                 deadline = time.monotonic() + EXEC_TIMEOUT
 
                 def cancelled():
@@ -34906,12 +34924,15 @@ class ExecutionJobManager:
                             or (self.get_job(job_id, include_logs=False) or {}).get('status') != 'running')
 
                 def authorize():
-                    if cancelled() or not uplink_migration.writes_enabled() or _maintenance_active():
+                    if cancelled() or not workflow.writes_enabled() or _maintenance_active():
                         raise uplink_migration.MigrationError('Mutation is disabled, cancelled or blocked by maintenance.')
                     with _AHV_UPLINK_SUBMIT_LOCK:
-                        approval = _check_ahv_uplink_approval(payload, user)
+                        approval = _check_ahv_uplink_approval(payload, user, workflow)
                         if approval.get('jobId') != job_id:
                             raise uplink_migration.MigrationError('Approval is not bound to this execution job.')
+                        if workflow is switch_mtu and any((_find_user(name) or {}).get('role') != 'admin'
+                                for name in (user, approval['decidedBy'])):
+                            raise uplink_migration.MigrationError('The requester and approver must remain administrators.')
 
                 authorize()
                 pc, pe = uplink_migration.clients(plan['intent']['connection'], _pe_login_title_resolver({}))
@@ -34922,21 +34943,28 @@ class ExecutionJobManager:
                     self._set_diagnostics(job_id, diagnostics)
 
                 host_results = {}
-                uplink_migration.execute(plan, pc, pe, lambda line: self._emit(job_id, 'stdout', line),
-                                         authorize, cancelled, report)
+                def mark_attempt():
+                    diagnostics['submissionAttempted'] = True
+                    self._set_diagnostics(job_id, diagnostics)
+
+                options = {}
+                if workflow is switch_mtu:
+                    options = {'original': _original_mtu_plan(plan['intent']), 'mark_attempt': mark_attempt}
+                workflow.execute(plan, pc, pe, lambda line: self._emit(job_id, 'stdout', line),
+                                 authorize, cancelled, report, **options)
                 status = 'success'
         except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
             diagnostics['evidence'] = str(error)
         except Exception:
-            diagnostics['evidence'] = 'AHV uplink migration could not be verified.'
+            diagnostics['evidence'] = 'The virtual switch operation could not be verified.'
         finally:
             if status == 'failed':
                 diagnostics['likelyFix'] = 'Inspect the recorded Prism tasks and current switch memberships before any new approval. An accepted Prism task can continue after a lost response.'
                 self._emit(job_id, 'error', diagnostics['evidence'])
             self._set_diagnostics(job_id, diagnostics)
             code = 0 if status == 'success' else -1
-            _record_execution_history(execution_id=job_id, workflow_or_script=uplink_migration.WORKFLOW,
-                execution_type='workflow', status=status, user=user, config_file=uplink_migration.FILENAME,
+            _record_execution_history(execution_id=job_id, workflow_or_script=workflow.WORKFLOW,
+                execution_type='workflow', status=status, user=user, config_file=workflow.FILENAME,
                 config_content=payload.get('configContent') or '', return_code=code, diagnostics=diagnostics)
             self._complete(job_id, status, code)
 
@@ -35083,7 +35111,7 @@ class ExecutionJobManager:
         if payload.get('workflow') == dare.WORKFLOW:
             self._run_dare_job(job_id, payload, user)
             return
-        if payload.get('workflow') == uplink_migration.WORKFLOW:
+        if payload.get('workflow') in {uplink_migration.WORKFLOW, switch_mtu.WORKFLOW}:
             self._run_ahv_uplink_job(job_id, payload, user)
             return
         if payload.get('workflow') == storage_standard.WORKFLOW:
@@ -42393,16 +42421,16 @@ def dare_operation(action):
 _AHV_UPLINK_SUBMIT_LOCK = threading.Lock()
 
 
-def _check_ahv_uplink_approval(payload, actor):
+def _check_ahv_uplink_approval(payload, actor, workflow=uplink_migration):
     approval = _approval_manager.get_approval(str(payload.get('approvalId') or ''))
     content = payload.get('configContent')
-    error = _workflow_approval_error(approval, uplink_migration.WORKFLOW, uplink_migration.FILENAME, content)
+    error = _workflow_approval_error(approval, workflow.WORKFLOW, workflow.FILENAME, content)
     if error:
         raise uplink_migration.MigrationError(error)
     requester, decider = approval.get('requestedBy'), approval.get('decidedBy')
     if (not _parse_iso_datetime(approval.get('expiresAt')) or requester != actor
             or not decider or decider.casefold() == requester.casefold()
-            or approval.get('configContent') != content or approval.get('configFile') != uplink_migration.FILENAME):
+            or approval.get('configContent') != content or approval.get('configFile') != workflow.FILENAME):
         raise uplink_migration.MigrationError('A different administrator must approve this exact plan for its requester.')
     return approval
 
@@ -42507,6 +42535,85 @@ def apply_ahv_uplink_plan():
         return jsonify({'error': str(error)}), 403
     except ValueError:
         return jsonify({'error': 'Invalid reviewed plan.'}), 400
+
+
+def _original_mtu_plan(intent):
+    switch_mtu.connection(intent)
+    job_id = intent['rollbackJobId']
+    if not job_id:
+        return None
+    job = _job_manager.get_job(job_id, include_logs=False) or {}
+    payload = _job_manager.get_payload(job_id) or {}
+    if (job.get('status') not in {'success', 'failed', 'cancelled', 'interrupted'}
+            or not (job.get('diagnostics') or {}).get('submissionAttempted')
+            or payload.get('workflow') != switch_mtu.WORKFLOW):
+        raise uplink_migration.MigrationError('Use a settled MTU change job that attempted a Prism submission.')
+    return switch_mtu.load_plan(payload.get('configContent'))
+
+
+def _fresh_mtu_plan(intent):
+    config = switch_mtu.connection(intent)
+    original = _original_mtu_plan(intent)
+    pc, pe = uplink_migration.clients(config, _pe_login_title_resolver({}))
+    return switch_mtu.preflight(intent, pc, pe, original)
+
+
+@app.route('/api/virtual-switch-mtu')
+@require_role('admin')
+def virtual_switch_mtu_capabilities():
+    return jsonify({'applyEnabled': switch_mtu.writes_enabled()})
+
+
+@app.route('/api/virtual-switch-mtu/<action>', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def virtual_switch_mtu_action(action):
+    if action not in {'preflight', 'approval', 'apply'}:
+        return jsonify({'error': 'Unknown MTU action.'}), 404
+    if action != 'preflight' and _maintenance_active():
+        body, code = _maintenance_error()
+        return jsonify(body), code
+    if action == 'apply' and not switch_mtu.writes_enabled():
+        return jsonify({'error': 'Live virtual switch MTU changes are disabled.'}), 403
+    data = request.get_json(silent=True)
+    try:
+        _require_engines()
+        if action == 'preflight':
+            plan = _fresh_mtu_plan(data)
+            return jsonify({'plan': plan, 'content': uplink_migration.canonical(plan),
+                            'changeRequired': switch_mtu.needs_change(plan)})
+        fields = {'content'} if action == 'approval' else {'content', 'approvalId', 'confirmation'}
+        if not isinstance(data, dict) or set(data) != fields:
+            raise uplink_migration.MigrationError('Provide the exact reviewed MTU plan and required approval fields.')
+        content = data['content']
+        plan = switch_mtu.load_plan(content)
+        intent = plan['intent']
+        connection = switch_mtu.connection(intent)
+        actor = request.current_user['username']
+        if action == 'approval':
+            if _fresh_mtu_plan(intent) != plan or not switch_mtu.needs_change(plan):
+                return jsonify({'error': 'Target changed or the requested MTU is already verified. Run preflight again.'}), 409
+            approval = _approval_manager.create_request(switch_mtu.WORKFLOW, switch_mtu.FILENAME, content, actor,
+                notes='Review vs0 switch identity, MTU, physical uplinks and any referenced rollback job.')
+            return jsonify({'id': approval['id']}), 201
+        expected = ('ROLLBACK MTU ' if intent['rollbackJobId'] else 'APPLY MTU ') + connection['cluster_uuid']
+        if data['confirmation'] != expected:
+            return jsonify({'error': f'Type exactly: {expected}'}), 403
+        payload = {'workflow': switch_mtu.WORKFLOW, 'framework': switch_mtu.WORKFLOW,
+                   'configFile': switch_mtu.FILENAME, 'configContent': content,
+                   'approvalId': str(data['approvalId'] or '')}
+        with _AHV_UPLINK_SUBMIT_LOCK:
+            approval = _check_ahv_uplink_approval(payload, actor, switch_mtu)
+            if approval.get('jobId'):
+                return jsonify({'id': approval['jobId']}), 202
+            job = _job_manager.submit(payload, actor)
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify({'id': job['id']}), 202
+    except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
+        return jsonify({'error': str(error)}), 403 if action == 'apply' else 400
+    except Exception:
+        return jsonify({'error': 'The MTU request could not be verified. Review existing approvals and jobs before retrying.'}), 400
+
 
 
 _STORAGE_STANDARD_SUBMIT_LOCK = threading.Lock()
@@ -44641,7 +44748,7 @@ def approve_request(aid):
         return jsonify({'error': 'not found'}), 404
     if approval.get('status') == 'pending' and (
         approval.get('requestedBy') == current_user
-        or (approval.get('workflow') in {uplink_migration.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
+        or (approval.get('workflow') in {uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
             and str(approval.get('requestedBy') or '').casefold() == current_user.casefold())
     ):
         return jsonify({'error': 'Self-approval is not allowed'}), 403

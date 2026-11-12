@@ -7,6 +7,7 @@ interface Props {
   workflow: WorkflowDef
   onYamlChange: (yaml: string) => void
   profile?: ConnectionProfile
+  importedConfig?: unknown
 }
 
 const PLACEHOLDERS: Record<string, string> = {
@@ -44,15 +45,14 @@ pod:
             - cluster_ip: 10.0.0.100
 `,
   'deploy-management-pc': `# Management PC Deployment
-pe_credential: pe_user
-cvm_credential: cvm_credential
-
-management_pc:
-  cluster_ip: 10.0.0.100
+pod:
+  pod_name: management
   pc_ip: 10.0.0.51
-  network: vlan0-managed
-  gateway: 10.0.0.1
-  subnetmask: 255.255.255.0
+  pc_credential: pc_user
+  clusters: {}
+  ovas: []
+  images: []
+  ncm: []
 `,
   'config-management-pc': `# Management PC Configuration
 pc_ip: 10.0.0.51
@@ -195,10 +195,14 @@ function withProfileDefaults(content: string, profile?: ConnectionProfile): stri
   return next
 }
 
-export default function GenericWorkflowForm({ workflow, onYamlChange, profile }: Props) {
+export default function GenericWorkflowForm({ workflow, onYamlChange, profile, importedConfig }: Props) {
   const placeholder = PLACEHOLDERS[workflow.id] || `# ${workflow.name} Configuration\n# Edit this YAML configuration for ${workflow.id}\n`
   const isNativeFoundation = workflow.id === 'native-foundation-deploy'
   const [content, setContent] = useState(withProfileDefaults(placeholder, profile))
+
+  useEffect(() => {
+    if (importedConfig !== undefined) setContent(toYaml(importedConfig))
+  }, [importedConfig])
 
   useEffect(() => {
     onYamlChange(content)
