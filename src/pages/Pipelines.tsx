@@ -9,12 +9,32 @@ import { apiFetch } from '../utils/api'
 import { WORKFLOWS, SCRIPTS } from '../data'
 import { actionName } from '../startGuide'
 import type { Pipeline, PipelineStep } from '../types'
+import { useStore } from '../store'
 import clsx from 'clsx'
 import { ScopedConfigPicker } from '../components/ConfigScope'
 
 type ConfigFile = { name: string }
 
 export default function Pipelines() {
+  const admin = useStore(s => s.user?.role === 'admin')
+  const [executor, setExecutor] = useState<'legacy' | 'native'>('legacy')
+  const [compatibility, setCompatibility] = useState<{ key: string; text: string } | null>(null)
+  const checkCompatibility = async () => {
+    const key = compatibilityKey
+    try {
+      const response = await apiFetch('/api/pipelines/compatibility', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ steps: formSteps }),
+      })
+      const result = await response.json()
+      setCompatibility({ key, text: !response.ok ? result.error : result.compatible
+        ? 'All steps are compatible with Native.'
+        : result.steps.filter((row: { compatible: boolean }) => !row.compatible)
+          .map((row: { step: number; reason: string }) => `Step ${row.step} · ${row.reason}`).join('\n') })
+    } catch {
+      setCompatibility({ key, text: 'Compatibility check failed. Try again.' })
+    }
+  }
   const [pipelines,   setPipelines]   = useState<Pipeline[]>([])
   const [configs,     setConfigs]     = useState<ConfigFile[]>([])
   const [loading,     setLoading]     = useState(true)
@@ -25,6 +45,7 @@ export default function Pipelines() {
   // New / edit form state
   const [formName,    setFormName]    = useState('')
   const [formSteps,   setFormSteps]   = useState<PipelineStep[]>([])
+  const compatibilityKey = JSON.stringify(formSteps)
   const [creating,    setCreating]    = useState(false)
 
   const load = async () => {
@@ -69,6 +90,8 @@ export default function Pipelines() {
   const openCreate = () => {
     setEditId(null)
     setFormName('')
+    setExecutor('legacy')
+    setCompatibility(null)
     setFormSteps([{ workflow: WORKFLOWS[0].id, configFile: '' }])
     setCreating(true)
     setError('')
@@ -77,6 +100,8 @@ export default function Pipelines() {
   const openEdit = (p: Pipeline) => {
     setEditId(p.id)
     setFormName(p.name)
+    setExecutor(p.executor ?? 'legacy')
+    setCompatibility(null)
     setFormSteps(p.steps.map(s => ({ ...s })))
     setCreating(true)
     setError('')
@@ -89,7 +114,7 @@ export default function Pipelines() {
     if (formSteps.length < 1) { setError('Add at least one step'); return }
     setError('')
 
-    const body = { name: formName.trim(), steps: formSteps }
+    const body = { name: formName.trim(), steps: formSteps, ...(admin ? { executor } : {}) }
     const resp = editId
       ? await apiFetch(`/api/pipelines/${editId}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -144,6 +169,16 @@ export default function Pipelines() {
               </button>
             </div>
 
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="flex flex-col gap-1 text-sm">Executor for new runs
+                <select className="input" value={executor} disabled={!admin} onChange={e => setExecutor(e.target.value as 'legacy' | 'native')}>
+                  <option value="legacy">ZTF 1.x (default)</option>
+                  <option value="native">Native (opt-in)</option>
+                </select>
+              </label>
+              {admin && <button className="btn-secondary" type="button" onClick={() => void checkCompatibility()}>Check compatibility</button>}
+            </div>
+            {compatibility?.key === compatibilityKey && <p role="status" className="whitespace-pre-line text-sm">{compatibility?.text}</p>}
             {/* Name */}
             <div className="mb-4">
               <label className="label">Pipeline Name</label>

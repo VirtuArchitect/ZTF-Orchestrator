@@ -678,3 +678,103 @@ def test_existing_health_waiting_run_bootstraps_without_repeating_imaging(bootst
     assert result['snapshot']['deploymentContent'] == original_content
     assert len(result['steps']) == 2
     assert sum(p.get('workflow') == 'cluster-create-foundation-vm' for p in h[5]) == 1
+
+
+def test_registration_retry_eligibility_is_limited_to_pending_step_08(harness):
+    service, _, _, _, jobs, _, _, _ = harness
+    jobs['failed'] = {'id': 'failed', 'status': 'failed'}
+    registration = {'pc_ip': '192.0.2.50', 'pc_credential': 'pc', 'clusters': {
+        '192.0.2.20': {'name': 'HCI-01', 'pe_credential': 'pe'},
+    }}
+    final = {'workflow': 'config-cluster', 'configContent': yaml.safe_dump(registration)}
+    run = {'snapshot': {'steps': [{}] * 7 + [final]}, 'status': 'needs_reconciliation',
+           'steps': [{'index': i} for i in range(7)], 'currentJobId': 'failed'}
+    assert service.can_retry_registration(run)
+    run['steps'].pop()
+    assert not service.can_retry_registration(run)
+    run['steps'].append({'index': 6})
+    registration['clusters']['192.0.2.20']['dsip'] = '192.0.2.21'
+    final['configContent'] = yaml.safe_dump(registration)
+    assert not service.can_retry_registration(run)
+
+def test_rehearse_only_step_08_after_registration_reconciliation(bootstrap_harness, monkeypatch):
+    original_wait = threading.Event.wait
+    monkeypatch.setattr(threading.Event, 'wait', lambda self, timeout=None: original_wait(self, .001 if timeout == 1 else timeout))
+    h = bootstrap_harness
+    service, state, configs, pipeline, jobs, calls, _, _ = h
+    authorization = 'Bearer private-test-session'
+    cluster = {'name': 'HCI-01', 'pe_credential': 'new_admin'}
+    for filename, changes in [
+        ('ha.yml', {'ha': {'enable_failover': True}}),
+        ('rebuild.yml', {'rebuild_reservation': True}),
+        ('storage.yml', {'storage_containers': [{'name': 'test'}]}),
+        ('title.yml', {'prism_login_title': 'HCI-01'}),
+        ('registration.yml', {}),
+    ]:
+        config = {'clusters': {'192.0.2.20': {**cluster, **changes}}}
+        if filename == 'registration.yml':
+            config.update(pc_ip='192.0.2.50', pc_credential='pc_admin')
+        configs[filename] = yaml.safe_dump(config)
+        action = 'SetPrismLoginTitlePe' if filename == 'title.yml' else 'config-cluster'
+        pipeline['steps'].append({'workflow': action, 'configFile': filename})
+
+    run = deploy(h)
+    identity = run['id']
+    service.start_bootstrap(identity, 'admin', {
+        'riskAcknowledged': True, 'confirmation': 'BOOTSTRAP HCI-01',
+    }, authorization)
+    wait_status(service, identity, 'awaiting_health_verification')
+
+    health = {'clusterIdentity': 'HCI-01', 'membershipVerified': True, 'servicesHealthy': True,
+              'notes': 'Simulated independent PE readback', 'evidenceRef': 'mock/health-before-failure'}
+    service.attest_health(identity, 'admin', health)
+    submit = service.s['submit']
+
+    def fail_registration(payload, *args):
+        job = submit(payload, *args)
+        if payload['configContent'] == configs['registration.yml']:
+            jobs[job['id']]['status'] = 'failed'
+        return job
+
+    service.s['submit'] = fail_registration
+    service.start_configuration(identity, 'admin', {
+        'riskAcknowledged': True, 'destructiveConfirmation': 'RUN SetPrismLoginTitlePe',
+    }, authorization)
+    failed = wait_status(service, identity, 'needs_reconciliation')
+    assert failed['canRetryRegistration'] and len(failed['steps']) == 7
+    assert len(calls) == 9
+    assert calls[-1]['configContent'] == configs['registration.yml']
+    completed_ids = [failed['deploymentJobId'], *(step['jobId'] for step in failed['steps'])]
+    completed_jobs = {job_id: deepcopy(jobs[job_id]) for job_id in completed_ids}
+    retry = {'retryRegistrationOnly': True}
+
+    with pytest.raises(RecoveryError):
+        service.start_configuration(identity, 'admin', retry, authorization)
+    reconciliation = {'foundationSessionEnded': True, 'targetReconciled': True,
+                      'resumeConfiguration': True, 'notes': 'Simulated PE and PC readbacks',
+                      'evidenceRef': 'mock/registration'}
+    with pytest.raises(RecoveryError, match='registration is absent'):
+        service.attest(identity, 'admin', reconciliation)
+    service.attest(identity, 'admin', {**reconciliation, 'registrationAbsent': True})
+    assert 'healthEvidence' not in service.detail_run(identity)
+    with pytest.raises(RecoveryError):
+        service.start_configuration(identity, 'admin', retry, authorization)
+    service.attest_health(identity, 'admin', {**health, 'evidenceRef': 'mock/health-after-reconciliation'})
+    state['runs'][0]['healthEvidence']['at'] = (datetime.now(timezone.utc) - timedelta(minutes=16)).isoformat()
+    with pytest.raises(RecoveryError, match='older than 15 minutes'):
+        service.start_configuration(identity, 'admin', retry, authorization)
+    assert len(calls) == 9
+
+    service.attest_health(identity, 'admin', {**health, 'evidenceRef': 'mock/fresh-health'})
+    service.s['submit'] = submit
+    service.start_configuration(identity, 'admin', retry, authorization)
+    final = wait_status(service, identity, 'awaiting_acceptance')
+    assert len(calls) == 10
+    assert calls[9] == calls[8]
+    assert final['deploymentJobId'] == failed['deploymentJobId']
+    assert final['steps'][:7] == failed['steps']
+    assert {job_id: jobs[job_id] for job_id in completed_ids} == completed_jobs
+    assert final['steps'][7]['index'] == 7
+    assert final['steps'][7]['jobId'] != failed['currentJobId']
+    assert jobs[failed['currentJobId']]['status'] == 'failed'
+    assert jobs[final['steps'][7]['jobId']]['status'] == 'success'
