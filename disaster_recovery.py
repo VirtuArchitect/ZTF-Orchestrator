@@ -227,9 +227,36 @@ class RecoveryService:
                        if run['status'] == 'awaiting_bootstrap' else
                        'Deployment job succeeded; independent PE health evidence is required', 'system')
 
+    def can_retry_registration(self, run):
+        steps = run['snapshot']['steps']
+        if (len(steps) != 8 or [step['index'] for step in run['steps']] != list(range(7))
+                or run['status'] not in {'needs_reconciliation', 'awaiting_health_verification',
+                                         'ready_for_configuration'}):
+            return False
+        step = steps[-1]
+        if step['workflow'] != 'config-cluster':
+            return False
+        try:
+            config = reference_only(step['configContent'])
+        except RecoveryError:
+            return False
+        clusters = config.get('clusters')
+        if (set(config) != {'pc_ip', 'pc_credential', 'clusters'}
+                or not all(isinstance(config[key], str) and config[key].strip()
+                           for key in ('pc_ip', 'pc_credential'))
+                or not isinstance(clusters, dict) or len(clusters) != 1):
+            return False
+        cluster = next(iter(clusters.values()))
+        job = self.s['job'](run.get('currentJobId', ''))
+        return (isinstance(cluster, dict) and set(cluster) == {'name', 'pe_credential'}
+                and bool(job) and job.get('status') == 'failed')
+
     def public(self, run, detail=False):
         result = deepcopy(run)
         result['bootstrapStepCount'] = bootstrap_count(run['snapshot'])
+        result['executor'] = 'legacy'
+        if detail:
+            result['canRetryRegistration'] = self.can_retry_registration(run)
         if not detail:
             result.pop('snapshot', None)
             result.pop('events', None)
@@ -394,6 +421,8 @@ class RecoveryService:
             pipeline = self.s['pipeline'](required(data.get('pipelineId'), 'Post-configuration pipeline'))
             if not pipeline or not pipeline.get('steps') or len(pipeline['steps']) > 30:
                 raise RecoveryError('Select a saved pipeline with 1-30 post-configuration steps')
+            if pipeline.get('executor', 'legacy') != 'legacy':
+                raise RecoveryError('Recovery currently requires a ZTF 1.x pipeline')
             steps = []
             for index, step in enumerate(pipeline['steps'], start=1):
                 if step.get('workflow') not in POST_ACTIONS:
@@ -741,6 +770,12 @@ class RecoveryService:
             if run['status'] != 'ready_for_configuration':
                 raise RecoveryError('Verify cluster health before running post-configuration', 409)
             self.check_health(run)
+            if (data.get('retryRegistrationOnly') is True or self.can_retry_registration(run)) and (
+                not self.can_retry_registration(run)
+                or not run.get('reconciliation', {}).get('registrationAbsent')
+                or run['reconciliation'].get('failedJobId') != run.get('currentJobId')
+            ):
+                raise RecoveryError('Step 08 retry requires reconciliation confirming registration is absent', 409)
             for step in run['snapshot']['steps'][len(run['steps']):]:
                 error = self.s['step_error'](step)
                 if error:
@@ -885,9 +920,15 @@ class RecoveryService:
                 raise RecoveryError('Confirm configuration readbacks and current cluster health')
             evidence = {'at': now(), 'by': actor, 'notes': required(data.get('notes'), 'Independent verification notes', 2000),
                         'reference': required(data.get('evidenceRef'), 'Evidence reference', 500)}
+            if not accept and data.get('registrationAbsent') is True:
+                if run['status'] != 'needs_reconciliation' or not self.can_retry_registration(run):
+                    raise RecoveryError('Only an isolated failed step 08 can record registration absence', 409)
+                evidence.update(registrationAbsent=True, failedJobId=run['currentJobId'])
             run['acceptance' if accept else 'reconciliation'] = evidence
             resume = not accept and data.get('resumeConfiguration') is True
             if resume:
+                if self.can_retry_registration(run) and not evidence.get('registrationAbsent'):
+                    raise RecoveryError('Confirm registration is absent before resuming step 08', 409)
                 deployment = self.s['job'](run.get('deploymentJobId', ''))
                 if not deployment or deployment.get('status') != 'success':
                     raise RecoveryError('Only a successfully deployed cluster can resume remaining configuration', 409)

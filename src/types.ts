@@ -254,6 +254,7 @@ export interface PipelineStep {
 }
 
 export interface Pipeline {
+  executor?: 'legacy' | 'native'
   id:        string
   name:      string
   steps:     PipelineStep[]
