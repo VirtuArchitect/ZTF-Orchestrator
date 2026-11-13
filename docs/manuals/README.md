@@ -58,6 +58,10 @@ and verification boundaries also apply to the illustrated appendix.
 
 ## Related procedures
 
+[Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word)](ZTF-Orchestrator-UAT-Update-and-Verification-v1.8.5-rc1-c660955.docx) covers guided update readiness, Native opt-in,
+compatibility results, the offline step 08-only retry rehearsal, and rollback.
+Screenshots use simulated records.
+
 - [AHV Appliance Deployment Quick Guide (PDF)](ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) covers QCOW2 deployment, SSH key generation and `ztfadmin` provisioning before first boot, management addressing, SSH and sudo verification, and the initial web admin sign-in.
 
 - [Illustrated Disaster Recovery setup](../disaster-recovery-setup.md): separate
