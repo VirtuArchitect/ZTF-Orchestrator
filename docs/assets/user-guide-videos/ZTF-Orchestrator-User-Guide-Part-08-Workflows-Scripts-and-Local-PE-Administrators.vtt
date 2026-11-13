@@ -1,127 +1,127 @@
 WEBVTT
 
-00:00:00.088 --> 00:00:03.288
+00:00:00.256 --> 00:00:03.221
 Expand Advanced Automation and open Workflows.
 
-00:00:03.675 --> 00:00:06.975
+00:00:03.541 --> 00:00:06.699
 Read the description and select the service actually available.
 
-00:00:07.388 --> 00:00:12.500
-Integrated Foundation Central, standalone F C A and classic Foundation
+00:00:07.083 --> 00:00:12.032
+Integrated Foundation Central, standalone F C A and classic Foundation V M
 
-00:00:12.512 --> 00:00:14.625
-V M use different contracts.
+00:00:12.245 --> 00:00:13.436
+use different contracts.
 
-00:00:15.025 --> 00:00:19.825
+00:00:13.645 --> 00:00:17.698
 Import or complete the matching form and review its generated configuration.
 
-00:00:20.212 --> 00:00:24.162
-Do not assume that a similarly named action has the same credentials
+00:00:18.125 --> 00:00:21.751
+Do not assume that a similarly named action has the same credentials or
 
-00:00:24.288 --> 00:00:25.725
-or execution semantics.
+00:00:21.837 --> 00:00:23.074
+execution semantics.
 
-00:00:26.879 --> 00:00:32.017
-Open Scripts for a specific allowlisted action Use its parameter wizard and
+00:00:23.415 --> 00:00:26.024
+Open Scripts for a specific allowlisted action.
 
-00:00:32.017 --> 00:00:37.004
-installed schema then review the generated input A script sequence and a
+00:00:26.328 --> 00:00:30.296
+Use its parameter wizard and installed schema, then review the generated
 
-00:00:37.004 --> 00:00:42.042
-workflow are different launch modes Supply the required saved file and
+00:00:30.381 --> 00:00:31.021
+input.
 
-00:00:42.042 --> 00:00:47.174
-inspect verification after execution Set Prism Login Title for P
+00:00:31.277 --> 00:00:34.712
+A script sequence and a workflow are different launch modes.
 
-00:00:47.217 --> 00:00:52.354
-E is now available as a focused script or pipeline action with title-only
+00:00:35.032 --> 00:00:39.178
+Supply the required saved file and inspect verification after execution.
 
-00:00:52.354 --> 00:00:57.229
-Configure Cluster support Review the exact title and cluster select the
+00:00:39.619 --> 00:00:44.013
+Set Prism Login Title for P E is now available as a focused script or
 
-00:00:57.229 --> 00:01:01.692
-correct vault credential reference and retain certificate verification The
+00:00:44.056 --> 00:00:47.635
+pipeline action, with title-only Configure Cluster support.
 
-00:01:01.692 --> 00:01:06.767
-action compares the existing setting applies a change only when needed and
+00:00:48.057 --> 00:00:51.726
+Review the exact title and cluster, select the correct vault credential
 
-00:01:06.767 --> 00:01:11.779
-requires a fresh readback to verify the requested title Legacy U
+00:00:51.939 --> 00:00:54.423
+reference and retain certificate verification.
 
-00:01:11.779 --> 00:01:17.037
-I A P I compatibility still needs validation against the target
+00:00:54.954 --> 00:00:59.008
+The action compares the existing setting, applies a change only when needed,
 
-00:01:17.104 --> 00:01:22.142
-A O S version A saved title or subprocess success alone does not
+00:00:59.221 --> 00:01:02.592
+and requires a fresh readback to verify the requested title.
 
-00:01:22.142 --> 00:01:23.812
-prove the target displays it
+00:01:03.018 --> 00:01:07.882
+Legacy U I A P I compatibility still needs validation against the target A O
 
-00:01:24.221 --> 00:01:27.883
+00:01:08.010 --> 00:01:08.724
+S version.
+
+00:01:09.096 --> 00:01:13.747
+A saved title or subprocess success alone does not prove the target displays
+
+00:01:13.832 --> 00:01:14.117
+it.
+
+00:01:14.515 --> 00:01:18.184
 For local P E users choose Create Local Users for P E.
 
-00:01:28.283 --> 00:01:32.158
+00:01:18.355 --> 00:01:21.880
 Each requested username needs its own matching credential reference.
 
-00:01:32.571 --> 00:01:36.683
-Select the intended role set explicitly and respect the installed
+00:01:22.163 --> 00:01:26.707
+Select the intended role set explicitly and respect the installed schema.
 
-00:01:36.696 --> 00:01:37.233
-schema.
-
-00:01:37.633 --> 00:01:39.421
+00:01:27.027 --> 00:01:28.918
 Run Dry Run before submission.
 
-00:01:39.821 --> 00:01:43.833
-After creation, independently confirm that each account is enabled
+00:01:29.273 --> 00:01:33.753
+After creation, independently confirm that each account is enabled and has
 
-00:01:44.146 --> 00:01:47.483
-and has both Cluster Admin and User Admin when those are the
+00:01:33.796 --> 00:01:37.707
+both Cluster Admin and User Admin when those are the approved roles.
 
-00:01:47.483 --> 00:01:48.421
-approved roles.
-
-00:01:49.587 --> 00:01:54.300
+00:01:38.276 --> 00:01:42.231
 Inspect the stage and safe category when local user creation fails.
 
-00:01:54.713 --> 00:01:59.725
-Credential resolution, certificate trust, identity mismatch, network
+00:01:42.603 --> 00:01:47.445
+Credential resolution, certificate trust, identity mismatch, network access,
 
-00:01:59.737 --> 00:02:04.513
-access, creation, role assignment and verification are separate failure
+00:01:47.808 --> 00:01:52.096
+creation, role assignment and verification are separate failure points.
 
-00:02:04.513 --> 00:02:05.037
-points.
-
-00:02:05.450 --> 00:02:08.650
+00:01:52.416 --> 00:01:55.348
 Check whether any accounts or roles were already created.
 
-00:02:09.050 --> 00:02:13.663
+00:01:55.719 --> 00:01:59.644
 Correct the actual cause and rerun only through the supported process.
 
-00:02:14.063 --> 00:02:18.300
-Do not paste passwords or raw authentication headers into a support
+00:02:00.028 --> 00:02:04.278
+Do not paste passwords or raw authentication headers into a support request.
 
-00:02:18.300 --> 00:02:18.887
-request.
+00:02:04.841 --> 00:02:09.151
+The C V M and Dell i D R A C rotation workflow has a separate support
 
-00:02:20.100 --> 00:02:23.825
-The C V M and Dell i D R A C rotation
+00:02:09.364 --> 00:02:11.305
+boundary and exact confirmations.
 
-00:02:23.837 --> 00:02:27.475
-workflow has a separate support boundary and exact confirmations.
+00:02:11.668 --> 00:02:16.404
+Verify each C V M host-key fingerprint independently, establish the required
 
-00:02:27.875 --> 00:02:32.575
-Verify each C V M host-key fingerprint independently, establish the
+00:02:16.532 --> 00:02:19.223
+access and keep an out-of-band recovery path.
 
-00:02:32.575 --> 00:02:36.087
-required access and keep an out-of-band recovery path.
+00:02:19.568 --> 00:02:23.280
+Review any manual follow-up, including host I P M I credential
 
-00:02:36.487 --> 00:02:42.225
-Review any manual follow-up, including host I P M I credential synchronization.
+00:02:23.493 --> 00:02:24.368
+synchronization.
 
-00:02:42.600 --> 00:02:46.750
-A dry run or approval does not prove that live rotation is
+00:02:24.688 --> 00:02:28.955
+A dry run or approval does not prove that live rotation is validated for
 
-00:02:46.750 --> 00:02:48.925
-validated for your firmware and release.
+00:02:28.997 --> 00:02:30.435
+your firmware and release.

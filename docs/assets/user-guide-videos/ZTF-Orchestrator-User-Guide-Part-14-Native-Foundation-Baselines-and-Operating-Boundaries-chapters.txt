@@ -1,5 +1,5 @@
-00:00:00 Distinguish the Native Foundation lane
-00:00:24 Read probes and review counts accurately
-00:00:52 Review the post-foundation baseline mappings
-00:01:24 Handle hardware and certificate controls explicitly
-00:01:50 Operate within the demonstrated scope
+00:00:00.000 Distinguish the Native Foundation lane
+00:00:21.266 Read probes and review counts accurately
+00:00:46.869 Review the post-foundation baseline mappings
+00:01:14.345 Handle hardware and certificate controls explicitly
+00:01:39.270 Operate within the demonstrated scope

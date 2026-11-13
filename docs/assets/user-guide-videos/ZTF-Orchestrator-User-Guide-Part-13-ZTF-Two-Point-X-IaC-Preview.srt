@@ -1,155 +1,143 @@
 1
-00:00:00,100 --> 00:00:04,300
+00:00:00,341 --> 00:00:04,053
 The two point x integration is a separate desired-state plan and apply
 
 2
-00:00:04,300 --> 00:00:04,762
+00:00:04,139 --> 00:00:04,608
 model.
 
 3
-00:00:05,150 --> 00:00:09,288
+00:00:04,907 --> 00:00:08,427
 Configure its own checkout path, executable and reference.
 
 4
-00:00:09,700 --> 00:00:14,000
-Keep Workflows and Scripts one point x on their compatible legacy
+00:00:08,747 --> 00:00:13,073
+Keep Workflows and Scripts one point x on their compatible legacy runtime.
 
 5
-00:00:14,012 --> 00:00:14,575
-runtime.
-
-6
-00:00:14,975 --> 00:00:18,000
+00:00:13,262 --> 00:00:16,142
 Runtime recognition only identifies a layout.
 
+6
+00:00:16,376 --> 00:00:20,600
+It does not prove that a target provider, resource schema or mutation is
+
 7
-00:00:18,400 --> 00:00:22,712
-It does not prove that a target provider, resource schema or mutation
+00:00:20,643 --> 00:00:22,088
+supported for your environment.
 
 8
-00:00:22,725 --> 00:00:24,175
-is supported for your environment.
+00:00:22,505 --> 00:00:26,472
+Open Workflows two point x under Optional Integrations and select the
 
 9
-00:00:25,350 --> 00:00:30,000
-Open Workflows two point x under Optional Integrations and select
+00:00:26,515 --> 00:00:27,646
+intended starter.
 
 10
-00:00:30,000 --> 00:00:31,000
-the intended starter.
+00:00:27,923 --> 00:00:31,976
+Review the input document, editable global configuration and unique state
 
 11
-00:00:31,388 --> 00:00:35,625
-Review the input document, editable global configuration and unique
+00:00:32,062 --> 00:00:32,766
+filename.
 
 12
-00:00:35,638 --> 00:00:36,562
-state filename.
-
-13
-00:00:36,938 --> 00:00:40,138
+00:00:33,043 --> 00:00:35,780
 Match the installed resource schema and target scope.
 
-14
-00:00:40,550 --> 00:00:42,750
+13
+00:00:35,958 --> 00:00:38,347
 A template selection is not approval.
 
+14
+00:00:38,688 --> 00:00:43,040
+Keep state and reviewed inputs associated so later guarded actions cannot
+
 15
-00:00:43,150 --> 00:00:47,788
-Keep state and reviewed inputs associated so later guarded actions
+00:00:43,211 --> 00:00:45,899
+silently target a different plan or environment.
 
 16
-00:00:47,950 --> 00:00:51,375
-cannot silently target a different plan or environment.
-
-17
-00:00:52,546 --> 00:00:56,458
+00:00:46,326 --> 00:00:49,726
 Scripts two point x contains converted intent starters.
 
-18
-00:00:56,846 --> 00:01:00,396
+17
+00:00:50,096 --> 00:00:53,040
 They do not execute as the legacy main script command.
 
-19
-00:01:00,808 --> 00:01:04,508
+18
+00:00:53,424 --> 00:00:56,710
 Generate the input and review the corresponding plan in the separate
 
-20
-00:01:04,508 --> 00:01:05,021
+19
+00:00:56,752 --> 00:00:57,499
 runtime.
 
+20
+00:00:57,819 --> 00:01:02,982
+P E-only, controller, Foundation and other unmapped legacy actions remain in
+
 21
-00:01:05,421 --> 00:01:10,521
-P E-only, controller, Foundation and other unmapped legacy actions
+00:01:03,024 --> 00:01:04,542
+Scripts one point x.
 
 22
-00:01:10,533 --> 00:01:12,483
-remain in Scripts one point x.
-
-23
-00:01:12,883 --> 00:01:17,483
+00:01:04,865 --> 00:01:08,862
 Do not infer feature parity from similar names across both catalogues.
 
+23
+00:01:09,260 --> 00:01:12,886
+Submit the plan through the preview workspace and inspect its durable job
+
 24
-00:01:18,683 --> 00:01:22,908
-Submit the plan through the preview workspace and inspect its durable
+00:01:13,057 --> 00:01:14,179
+and retained evidence.
 
 25
-00:01:22,921 --> 00:01:24,808
-job and retained evidence.
+00:01:14,619 --> 00:01:19,483
+Confirm the target, resource changes, state and supported provider behavior.
 
 26
-00:01:25,208 --> 00:01:29,608
-Confirm the target, resource changes, state and supported provider
-
-27
-00:01:29,608 --> 00:01:30,133
-behavior.
-
-28
-00:01:30,521 --> 00:01:34,533
+00:01:19,739 --> 00:01:23,131
 Resolve schema errors and unknowns before considering apply.
 
-29
-00:01:34,933 --> 00:01:39,208
-A successful plan does not itself perform or authorize the target
+27
+00:01:23,408 --> 00:01:27,769
+A successful plan does not itself perform or authorize the target change.
 
-30
-00:01:39,221 --> 00:01:39,708
-change.
-
-31
-00:01:40,121 --> 00:01:43,471
+28
+00:01:28,119 --> 00:01:31,290
 Preserve the exact source and input used to produce it.
 
+29
+00:01:31,575 --> 00:01:35,585
+Apply and destroy remain distinct approval-bound actions where the guarded
+
+30
+00:01:35,671 --> 00:01:36,695
+lane is enabled.
+
+31
+00:01:36,908 --> 00:01:40,620
+Review the exact request and use an authorized environment with a recovery
+
 32
-00:01:44,642 --> 00:01:48,492
-Apply and destroy remain distinct approval-bound actions where the
+00:01:40,833 --> 00:01:41,420
+path.
 
 33
-00:01:48,504 --> 00:01:50,154
-guarded lane is enabled.
-
-34
-00:01:50,529 --> 00:01:54,392
-Review the exact request and use an authorized environment with a
-
-35
-00:01:54,392 --> 00:01:55,429
-recovery path.
-
-36
-00:01:55,817 --> 00:01:59,892
+00:01:41,793 --> 00:01:45,611
 Do not bypass approval or use legacy launchers as a workaround.
 
-37
-00:02:00,292 --> 00:02:02,804
+34
+00:01:45,889 --> 00:01:48,299
 Independently read back the target result.
 
-38
-00:02:03,192 --> 00:02:07,604
-Preview status and passing software tests do not establish vendor
+35
+00:01:48,747 --> 00:01:53,270
+Preview status and passing software tests do not establish vendor support or
 
-39
-00:02:07,604 --> 00:02:10,729
-support or compatibility for every resource.
+36
+00:01:53,313 --> 00:01:55,508
+compatibility for every resource.

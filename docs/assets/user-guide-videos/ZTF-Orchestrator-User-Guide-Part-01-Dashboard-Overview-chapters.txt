@@ -1,6 +1,6 @@
 00:00:00.000 Choose your starting point
-00:00:22.542 Read the operations overview
-00:01:03.375 Investigate persistent review items
-00:01:47.708 Manage cluster records and fresh observations
-00:02:50.708 Find the specialist tools
-00:03:25.500 Start safely and follow the evidence
+00:00:22.147 Read the operations overview
+00:00:59.156 Investigate persistent review items
+00:01:38.682 Manage cluster records and fresh observations
+00:02:34.163 Find the specialist tools
+00:03:03.339 Start safely and follow the evidence

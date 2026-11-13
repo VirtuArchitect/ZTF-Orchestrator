@@ -1,6 +1,6 @@
-00:00:00 Select the correct deployment method
-00:00:26 Prepare the connection and credentials
-00:00:54 Select the approved installation images
-00:01:24 Review every physical node
-00:01:57 Validate and approve the exact configuration
-00:02:25 Monitor and accept the real result
+00:00:00.000 Select the correct deployment method
+00:00:24.862 Prepare the connection and credentials
+00:00:50.526 Select the approved installation images
+00:01:15.861 Review every physical node
+00:01:44.878 Validate and approve the exact configuration
+00:02:10.852 Monitor and accept the real result

@@ -1,10 +1,10 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 10 November 2026 | 16 videos | approximately 47 minutes**
+**v1.8.5-rc1 | 13 November 2026 | 17 videos | approximately 45 minutes**
 
 [Watch the full series, starting with 00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
 Use the player to select a part or jump to a chapter. Each video has burned-in
-English captions, an MP4 download, transcript, SRT/VTT captions and chapter markers.
+English captions, Joanna studio narration, an MP4 download, transcript, SRT/VTT captions and chapter markers.
 After opening a transcript from the player, use the browser's Back button to
 return to the same part and timestamp. The video stays paused.
 
