@@ -544,6 +544,9 @@ including Docker, appliance, Kubernetes starters, manual installs, and
 air-gapped deployment, see
 [Installation Guide](docs/installation-guide.md).
 
+For a first AHV appliance deployment, use the [Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) and watch
+[Part 16 — AHV Appliance Deployment and SSH Setup](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16).
+
 ### Option A: One-Command (Linux / macOS) - Recommended
 
 ```bash
