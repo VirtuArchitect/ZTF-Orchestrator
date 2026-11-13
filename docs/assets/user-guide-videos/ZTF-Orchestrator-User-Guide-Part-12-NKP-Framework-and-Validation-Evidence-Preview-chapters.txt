@@ -1,5 +1,5 @@
-00:00:00 Recognize the preview integration scope
-00:00:27 Prepare profiles and verify the schema
-00:00:55 Inspect readiness and binaries
-00:01:20 Use only the permitted guarded phases
-00:01:48 Keep NKP evidence separate from AHV readiness
+00:00:00.000 Recognize the preview integration scope
+00:00:24.257 Prepare profiles and verify the schema
+00:00:49.515 Inspect readiness and binaries
+00:01:11.704 Use only the permitted guarded phases
+00:01:37.465 Keep NKP evidence separate from AHV readiness

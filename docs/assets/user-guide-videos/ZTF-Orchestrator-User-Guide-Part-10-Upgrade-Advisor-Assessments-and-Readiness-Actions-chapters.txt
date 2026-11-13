@@ -1,5 +1,5 @@
 00:00:00.000 Choose the assessment scope and TLS policy
-00:00:54.792 Inspect what inventory actually discovered
-00:01:20.875 Supply target versions and supporting evidence
-00:01:47.708 Read findings and readiness actions
-00:02:13.542 Save an immutable assessment snapshot
+00:00:48.702 Inspect what inventory actually discovered
+00:01:11.062 Supply target versions and supporting evidence
+00:01:34.323 Read findings and readiness actions
+00:01:56.486 Save an immutable assessment snapshot

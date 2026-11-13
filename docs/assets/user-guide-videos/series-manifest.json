@@ -1,85 +1,74 @@
 {
   "title": "ZTF Orchestrator Full Console User Guide Videos",
-  "date": "4 November 2026",
+  "date": "13 November 2026",
   "sourceRevision": "8c7843ad7c9c5a2f8dc53fbf0fb823f2eb6e0a7b",
   "parts": 17,
-  "durationSeconds": 3002.29,
+  "durationSeconds": 2712.04,
   "chapters": 97,
-  "narration": "Synthetic narration at natural rate. Parts 00-14 use en-US-AndrewMultilingualNeural. Part 15 uses HeyGen Joanna - Warm & Conversational.",
+  "narration": "HeyGen Joanna - Warm & Conversational across all 17 parts.",
   "screens": "New simulated captures at 8c7843a; current existing generic screenshots; retained unchanged chapter illustrations preserve original provenance",
   "liveActionsExecuted": false,
   "listeningReview": "not_performed",
   "updatedParts": [
     0,
     1,
+    2,
+    3,
     4,
     5,
     6,
     7,
     8,
+    9,
     10,
-    11
+    11,
+    12,
+    13,
+    14,
+    16
   ],
   "verification": [
     {
       "part": 0,
       "title": "ZTF-Orchestrator Overview",
       "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
-      "duration": 247.48,
+      "duration": 222.875,
       "chapters": [
         {
           "chapter": 1,
           "title": "What ZTF-Orchestrator is",
           "start": 0,
-          "duration": 33.583333333333336,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 0
+          "duration": 31.654
         },
         {
           "chapter": 2,
           "title": "How the components work together",
-          "start": 33.583333333333336,
-          "duration": 40.708333333333336,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 33.583333333333336
+          "start": 31.654,
+          "duration": 35.047
         },
         {
           "chapter": 3,
           "title": "From physical nodes to a configured cluster",
-          "start": 74.29166666666667,
-          "duration": 40.0,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 74.29166666666667
+          "start": 66.701,
+          "duration": 35.69200000000001
         },
         {
           "chapter": 4,
           "title": "Preparing infrastructure recovery",
-          "start": 114.29166666666667,
-          "duration": 38.125,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 114.29166666666667
+          "start": 102.393,
+          "duration": 34.153999999999996
         },
         {
           "chapter": 5,
           "title": "Monitoring and governing operations",
-          "start": 152.41666666666669,
-          "duration": 53.75,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 136.547,
+          "duration": 49.82900000000001
         },
         {
           "chapter": 6,
           "title": "Scope, maturity and where to start",
-          "start": 206.16666666666669,
-          "duration": 41.291666666666664,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 190.08333333333334
+          "start": 186.376,
+          "duration": 36.498999999999995
         }
       ],
       "captionCues": 59,
@@ -91,77 +80,60 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "4e59cadad85bed5ae5d1f0d984221330d378ac154ee3aa5419b23b73c52e8b92",
+      "sha256": "9c9f95a228f46db53cd16888c28ce923bb573c83345a0a0146e1217571e6a004",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 59,
+      "captions": 61,
       "encodedChapterFrames": 6,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
         "integratedLufs": -21.86,
         "truePeakDbtp": -5.93,
         "rangeLu": 3.4
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 1,
       "title": "Dashboard Overview",
       "file": "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4",
-      "duration": 231.19,
+      "duration": 205.95833333333334,
       "chapters": [
         {
           "chapter": 1,
           "title": "Choose your starting point",
           "start": 0,
-          "duration": 22.541666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 0
+          "duration": 22.147
         },
         {
           "chapter": 2,
           "title": "Read the operations overview",
-          "start": 22.541666666666668,
-          "duration": 40.833333333333336,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 22.147,
+          "duration": 37.009
         },
         {
           "chapter": 3,
           "title": "Investigate persistent review items",
-          "start": 63.375,
-          "duration": 44.333333333333336,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 59.156,
+          "duration": 39.526
         },
         {
           "chapter": 4,
           "title": "Manage cluster records and fresh observations",
-          "start": 107.70833333333334,
-          "duration": 63.0,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 98.682,
+          "duration": 55.48100000000001
         },
         {
           "chapter": 5,
           "title": "Find the specialist tools",
-          "start": 170.70833333333334,
-          "duration": 34.791666666666664,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 100.25
+          "start": 154.163,
+          "duration": 29.175999999999988
         },
         {
           "chapter": 6,
           "title": "Start safely and follow the evidence",
-          "start": 205.5,
-          "duration": 25.666666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 135.04166666666666
+          "start": 183.339,
+          "duration": 22.619333333333344
         }
       ],
       "captionCues": 53,
@@ -173,103 +145,120 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "3cda22f6abf3e05c5965d4841db2573d44fa28d5e39346f60cc02e8b22bb1246",
+      "sha256": "51ecbd3a2817715274b7fa7b13f0c8e7bec568036e375f4a884e2d5f0792ac22",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 53,
+      "captions": 64,
       "encodedChapterFrames": 6,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4",
         "integratedLufs": -21.29,
         "truePeakDbtp": -5.91,
         "rangeLu": 3.4
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 2,
       "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
       "title": "Deploy a Cluster with Foundation VM",
-      "updated": false,
-      "duration": 176.48,
-      "sha256": "1a9fb36ed0594c2cf1e1e6dc6140f0dd9fc94ebaee0844a78a4cd622cc0efea8",
+      "updated": true,
+      "duration": 158.5,
+      "sha256": "e5c5a3f4251c4a35de73b9b0b00c9299e05b30ed0d7922bf69d75f7d2fa999b6",
       "chapters": [
         {
           "chapter": 1,
           "title": "Select the correct deployment method",
-          "duration": 26.041666666666668,
-          "spoken": 25.32,
-          "file": "p02-c01-caption-v4-fps.mp4",
-          "cuts": [
-            5.0375,
-            16.2875
-          ],
-          "key": "deployment-guide",
-          "start": 0
+          "start": 0,
+          "duration": 24.862
         },
         {
           "chapter": 2,
           "title": "Prepare the connection and credentials",
-          "duration": 28.041666666666668,
-          "spoken": 27.336,
-          "file": "p02-c02-caption-v4-fps.mp4",
-          "cuts": [
-            5.2875,
-            17.9375
-          ],
-          "key": "foundation-vm",
-          "start": 26.041666666666668
+          "start": 24.862,
+          "duration": 25.664000000000005
         },
         {
           "chapter": 3,
           "title": "Select the approved installation images",
-          "duration": 30.375,
-          "spoken": 29.64,
-          "file": "p02-c03-caption-v4-fps.mp4",
-          "cuts": [
-            5.1625,
-            18.8875
-          ],
-          "key": "foundation-images",
-          "start": 54.083333333333336
+          "start": 50.526,
+          "duration": 25.335
         },
         {
           "chapter": 4,
           "title": "Review every physical node",
-          "duration": 32.541666666666664,
-          "spoken": 31.824,
-          "file": "p02-c04-caption-v4-fps.mp4",
-          "cuts": [
-            6.3375,
-            21.75
-          ],
-          "key": "foundation-nodes",
-          "start": 84.45833333333334
+          "start": 75.861,
+          "duration": 29.016999999999996
         },
         {
           "chapter": 5,
           "title": "Validate and approve the exact configuration",
-          "duration": 28.0,
-          "spoken": 27.288,
-          "file": "p02-c05-caption-v4-fps.mp4",
-          "cuts": [
-            3.9125,
-            16.525
-          ],
-          "key": "foundation-vm",
-          "start": 117.0
+          "start": 104.878,
+          "duration": 25.974000000000004
         },
         {
           "chapter": 6,
           "title": "Monitor and accept the real result",
-          "duration": 31.458333333333332,
-          "spoken": 30.72,
-          "file": "p02-c06-caption-v4-fps.mp4",
-          "cuts": [
-            5.4875,
-            19.725
-          ],
-          "key": "jobs",
-          "start": 145.0
+          "start": 130.852,
+          "duration": 27.647999999999996
+        }
+      ],
+      "sourceRevision": "ea9dcf0",
+      "fullDecode": "passed",
+      "captions": 49,
+      "encodedChapterFrames": 6,
+      "listeningReview": "not_performed",
+      "audioLevels": {
+        "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
+        "integratedLufs": -21.61,
+        "truePeakDbtp": -1.39,
+        "rangeLu": 3.8
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
+    },
+    {
+      "part": 3,
+      "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
+      "title": "Post Deployment Configuration Pipelines",
+      "updated": true,
+      "duration": 154.5,
+      "sha256": "f7283ece8d6630ce15f044a471cdd3ad5253911074523778b836ad7ed5633153",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Prepare one configuration sequence per cluster",
+          "start": 0,
+          "duration": 23.515
+        },
+        {
+          "chapter": 2,
+          "title": "Handle the administrator password transition",
+          "start": 23.515,
+          "duration": 25.725
+        },
+        {
+          "chapter": 3,
+          "title": "Apply the core cluster settings",
+          "start": 49.24,
+          "duration": 24.690999999999995
+        },
+        {
+          "chapter": 4,
+          "title": "Configure networks, storage and optional controls",
+          "start": 73.931,
+          "duration": 27.85900000000001
+        },
+        {
+          "chapter": 5,
+          "title": "Create and review the pipeline",
+          "start": 101.79,
+          "duration": 25.12899999999999
+        },
+        {
+          "chapter": 6,
+          "title": "Verify the completed cluster configuration",
+          "start": 126.919,
+          "duration": 27.581000000000003
         }
       ],
       "sourceRevision": "ea9dcf0",
@@ -278,170 +267,54 @@
       "encodedChapterFrames": 6,
       "listeningReview": "not_performed",
       "audioLevels": {
-        "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
-        "integratedLufs": -21.61,
-        "truePeakDbtp": -1.39,
-        "rangeLu": 3.8
-      }
-    },
-    {
-      "part": 3,
-      "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
-      "title": "Post Deployment Configuration Pipelines",
-      "updated": false,
-      "duration": 173.85,
-      "sha256": "b416b3e17e2397fede078a539bbb753013bf9055d51e7435d4586e1083120d4e",
-      "chapters": [
-        {
-          "chapter": 1,
-          "title": "Prepare one configuration sequence per cluster",
-          "duration": 27.416666666666668,
-          "spoken": 26.688,
-          "file": "p03-c01-caption-v4-fps-example2.mp4",
-          "cuts": [
-            6.525,
-            18.7
-          ],
-          "key": "configs",
-          "start": 0
-        },
-        {
-          "chapter": 2,
-          "title": "Handle the administrator password transition",
-          "duration": 28.916666666666668,
-          "spoken": 28.176,
-          "file": "p03-c02-caption-v4-fps.mp4",
-          "cuts": [
-            5.5,
-            18.1
-          ],
-          "key": "configure-cluster",
-          "start": 27.416666666666668
-        },
-        {
-          "chapter": 3,
-          "title": "Apply the core cluster settings",
-          "duration": 27.166666666666668,
-          "spoken": 26.448,
-          "file": "p03-c03-caption-v4-fps.mp4",
-          "cuts": [
-            4.8875,
-            15.1
-          ],
-          "key": "configure-cluster",
-          "start": 56.333333333333336
-        },
-        {
-          "chapter": 4,
-          "title": "Configure networks, storage and optional controls",
-          "duration": 31.041666666666668,
-          "spoken": 30.312,
-          "file": "p03-c04-caption-v4-fps.mp4",
-          "cuts": [
-            7.05,
-            21.0
-          ],
-          "key": "configure-cluster",
-          "start": 83.5
-        },
-        {
-          "chapter": 5,
-          "title": "Create and review the pipeline",
-          "duration": 28.708333333333332,
-          "spoken": 28.008,
-          "file": "p03-c05-caption-v4-fps-example2.mp4",
-          "cuts": [
-            4.4875,
-            17.65
-          ],
-          "key": "pipelines",
-          "start": 114.54166666666667
-        },
-        {
-          "chapter": 6,
-          "title": "Verify the completed cluster configuration",
-          "duration": 30.583333333333332,
-          "spoken": 29.88,
-          "file": "p03-c06-caption-v4-fps.mp4",
-          "cuts": [
-            6.6,
-            21.1625
-          ],
-          "key": "executions",
-          "start": 143.25
-        }
-      ],
-      "sourceRevision": "ea9dcf0",
-      "fullDecode": "passed",
-      "captions": 55,
-      "encodedChapterFrames": 6,
-      "listeningReview": "not_performed",
-      "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
         "integratedLufs": -21.63,
         "truePeakDbtp": -2.87,
         "rangeLu": 3.7
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 4,
       "title": "Disaster Recovery and Cluster Rebuilds",
       "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
-      "duration": 213.56,
+      "duration": 191.375,
       "chapters": [
         {
           "chapter": 1,
           "title": "Prepare the datacenter and recovery profile",
           "start": 0,
-          "duration": 29.5,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 0
+          "duration": 26.417
         },
         {
           "chapter": 2,
           "title": "Review revisions and approve imaging",
-          "start": 29.5,
-          "duration": 64.45833333333333,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 26.417,
+          "duration": 60.507999999999996
         },
         {
           "chapter": 3,
           "title": "Submit once and monitor the existing run",
-          "start": 93.95833333333333,
-          "duration": 27.833333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 58.0
+          "start": 86.925,
+          "duration": 24.450000000000003
         },
         {
           "chapter": 4,
           "title": "Complete initial access bootstrap first",
-          "start": 121.79166666666666,
-          "duration": 28.958333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 85.83333333333333
+          "start": 111.375,
+          "duration": 25.339
         },
         {
           "chapter": 5,
           "title": "Collect fresh health evidence",
-          "start": 150.75,
-          "duration": 33.166666666666664,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 114.79166666666666
+          "start": 136.714,
+          "duration": 27.917
         },
         {
           "chapter": 6,
           "title": "Resume pending work and hand off restoration",
-          "start": 183.91666666666666,
-          "duration": 29.625,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 147.95833333333331
+          "start": 164.631,
+          "duration": 26.744
         }
       ],
       "captionCues": 53,
@@ -453,77 +326,60 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "6a2f94bf03f00218d80984af220d1c815b5809239a4cc16858b11ff30a9d3629",
+      "sha256": "69287e8e129f4ad4a4dfb8d2848de1b799f1d0ba62acbedfc73db72128de5e88",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 53,
+      "captions": 57,
       "encodedChapterFrames": 6,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
         "integratedLufs": -21.56,
         "truePeakDbtp": -5.88,
         "rangeLu": 3.6
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 5,
       "title": "Monitoring Drift and Upgrade Readiness",
       "file": "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.mp4",
-      "duration": 222.85,
+      "duration": 203.66666666666666,
       "chapters": [
         {
           "chapter": 1,
           "title": "Prepare trusted PE and PC connections",
           "start": 0,
-          "duration": 58.458333333333336,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "duration": 54.482
         },
         {
           "chapter": 2,
           "title": "Collect inventory and save an assessment",
-          "start": 58.458333333333336,
-          "duration": 30.541666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 27.041666666666668
+          "start": 54.482,
+          "duration": 26.948999999999998
         },
         {
           "chapter": 3,
           "title": "Configure a live PE drift comparison",
-          "start": 89.0,
-          "duration": 25.958333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 57.583333333333336
+          "start": 81.431,
+          "duration": 24.24000000000001
         },
         {
           "chapter": 4,
           "title": "Save and test the drift schedule",
-          "start": 114.95833333333333,
-          "duration": 25.083333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 83.54166666666667
+          "start": 105.671,
+          "duration": 21.802999999999997
         },
         {
           "chapter": 5,
           "title": "Interpret collection failures accurately",
-          "start": 140.04166666666666,
-          "duration": 30.166666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 108.625
+          "start": 127.474,
+          "duration": 28.279999999999987
         },
         {
           "chapter": 6,
           "title": "Review cluster evidence and execution history",
-          "start": 170.20833333333331,
-          "duration": 52.625,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 155.754,
+          "duration": 47.91266666666667
         }
       ],
       "captionCues": 56,
@@ -535,77 +391,60 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "aa502fb33e69a571da01945efb9db0f6ea2c3bad30ba83d2a2e8e0902cc24d4f",
+      "sha256": "b8728f8794db41e6fd46ef328903ceede61ef47a55b08f14b6efd7268c34101b",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 56,
+      "captions": 62,
       "encodedChapterFrames": 6,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.mp4",
         "integratedLufs": -21.51,
         "truePeakDbtp": -5.62,
         "rangeLu": 3.5
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 6,
       "title": "Guided Appliance Updates and Rollback",
       "file": "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4",
-      "duration": 177.31,
+      "duration": 159.58333333333334,
       "chapters": [
         {
           "chapter": 1,
           "title": "Install the Linux host service once",
           "start": 0,
-          "duration": 28.041666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 0
+          "duration": 24.165
         },
         {
           "chapter": 2,
           "title": "Review storage before uploading",
-          "start": 28.041666666666668,
-          "duration": 29.541666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 28.041666666666668
+          "start": 24.165,
+          "duration": 26.634
         },
         {
           "chapter": 3,
           "title": "Import and check the exact package",
-          "start": 57.583333333333336,
-          "duration": 29.291666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 57.583333333333336
+          "start": 50.799,
+          "duration": 26.506999999999998
         },
         {
           "chapter": 4,
           "title": "Approve and monitor one installation",
-          "start": 86.875,
-          "duration": 29.75,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 77.306,
+          "duration": 26.793999999999997
         },
         {
           "chapter": 5,
           "title": "Verify the installed build and saved state",
-          "start": 116.625,
-          "duration": 30.583333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 116.625
+          "start": 104.1,
+          "duration": 28.02600000000001
         },
         {
           "chapter": 6,
           "title": "Use rollback within its actual boundaries",
-          "start": 147.20833333333334,
-          "duration": 30.083333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 147.20833333333334
+          "start": 132.126,
+          "duration": 27.457333333333338
         }
       ],
       "captionCues": 50,
@@ -617,10 +456,10 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "b18095f561f0cc71b93d06221bc46037b455dad94c01a826769a4f3015504f1e",
+      "sha256": "293f76b7ca72a08d1353afa803c6c742dc098dd85fb2eb95fe2ed2b4853a6f01",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 50,
+      "captions": 47,
       "encodedChapterFrames": 6,
       "visualOnlyUpdate": true,
       "narrationSourceRevision": "ea9dcf0",
@@ -629,58 +468,44 @@
         "integratedLufs": -21.66,
         "truePeakDbtp": -5.86,
         "rangeLu": 3.5
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 7,
       "title": "Credentials Config Files and YAML Studio",
       "file": "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4",
-      "duration": 182.27,
+      "duration": 163.83333333333334,
       "chapters": [
         {
           "chapter": 1,
           "title": "Organize credentials by datacenter and purpose",
           "start": 0,
-          "duration": 49.666666666666664,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "duration": 45.079
         },
         {
           "chapter": 2,
           "title": "Use separate named credential references",
-          "start": 49.666666666666664,
-          "duration": 26.166666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 25.541666666666668
+          "start": 45.079,
+          "duration": 22.993999999999993
         },
         {
           "chapter": 3,
           "title": "Organize the saved configuration library",
-          "start": 75.83333333333333,
-          "duration": 51.208333333333336,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 68.073,
+          "duration": 45.85000000000001
         },
         {
           "chapter": 4,
           "title": "Generate a reviewed YAML document",
-          "start": 127.04166666666666,
-          "duration": 28.0,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 74.95833333333334
+          "start": 113.923,
+          "duration": 24.657999999999987
         },
         {
           "chapter": 5,
           "title": "Keep the input and approval aligned",
-          "start": 155.04166666666666,
-          "duration": 27.208333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 102.95833333333334
+          "start": 138.581,
+          "duration": 25.252333333333354
         }
       ],
       "captionCues": 41,
@@ -692,68 +517,54 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "13441711fd8b926a641dff14edc8c85e54948ca1fff7df49b9aed100dcd03aeb",
+      "sha256": "e61295dc01bbae4f47b1cffa190acfff3704f56fffacc35443c05fe96cf41ea7",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 41,
+      "captions": 49,
       "encodedChapterFrames": 5,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4",
         "integratedLufs": -21.53,
         "truePeakDbtp": -6.06,
         "rangeLu": 3.8
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 8,
       "title": "Workflows Scripts and Local PE Administrators",
       "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
-      "duration": 170.06,
+      "duration": 150.625,
       "chapters": [
         {
           "chapter": 1,
           "title": "Choose a workflow for the required backend",
           "start": 0,
-          "duration": 26.791666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 0
+          "duration": 23.415
         },
         {
           "chapter": 2,
           "title": "Use scripts for focused actions",
-          "start": 26.791666666666668,
-          "duration": 57.291666666666664,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 23.415,
+          "duration": 51.1
         },
         {
           "chapter": 3,
           "title": "Create named local PE administrators",
-          "start": 84.08333333333333,
-          "duration": 25.416666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 52.958333333333336
+          "start": 74.515,
+          "duration": 23.760999999999996
         },
         {
           "chapter": 4,
           "title": "Read a stage-specific failure",
-          "start": 109.5,
-          "duration": 30.5,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 78.375
+          "start": 98.276,
+          "duration": 26.564999999999998
         },
         {
           "chapter": 5,
           "title": "Treat credential rotation as a sensitive operation",
-          "start": 140.0,
-          "duration": 30.041666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 108.875
+          "start": 124.841,
+          "duration": 25.784000000000006
         }
       ],
       "captionCues": 42,
@@ -765,7 +576,7 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "23f60aeb23499eeb56dc27a2076567facb1eee9d2f3a64fe842aa5c7124103ec",
+      "sha256": "5ec768fdd7e10563d60097017d4d01924c5cce4b2d913971ae92b9aa8ca7d2ab",
       "updated": true,
       "fullDecode": "passed",
       "captions": 42,
@@ -775,85 +586,51 @@
         "integratedLufs": -21.46,
         "truePeakDbtp": -5.73,
         "rangeLu": 3.4
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 9,
       "file": "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.mp4",
       "title": "Jobs Schedules Parallel Execution and Approvals",
-      "updated": false,
-      "duration": 138.9,
-      "sha256": "4e4daab60c2d87908e4b3e28013a1cbb9aca30ebee69b06e7ddd700f554a6777",
+      "updated": true,
+      "duration": 122.75,
+      "sha256": "6df1cc73cd1c3658f03d6867e561bd3d7874472db19362beec6f7060babca247",
       "chapters": [
         {
           "chapter": 1,
           "title": "Follow durable jobs and their evidence",
-          "duration": 25.958333333333332,
-          "spoken": 25.224,
-          "file": "p09-c01-caption-v4-fps.mp4",
-          "cuts": [
-            3.5625,
-            16.3
-          ],
-          "key": "jobs",
-          "start": 0
+          "start": 0,
+          "duration": 21.936
         },
         {
           "chapter": 2,
           "title": "Review the exact approval request",
-          "duration": 28.708333333333332,
-          "spoken": 27.984,
-          "file": "p09-c02-caption-v4-fps.mp4",
-          "cuts": [
-            5.025,
-            19.1875
-          ],
-          "key": "approvals",
-          "start": 25.958333333333332
+          "start": 21.936,
+          "duration": 25.902
         },
         {
           "chapter": 3,
           "title": "Create a schedule only after a successful manual test",
-          "duration": 25.666666666666668,
-          "spoken": 24.96,
-          "file": "p09-c03-caption-v4-fps.mp4",
-          "cuts": [
-            3.9375,
-            17.0
-          ],
-          "key": "schedules",
-          "start": 54.666666666666664
+          "start": 47.838,
+          "duration": 23.973000000000006
         },
         {
           "chapter": 4,
           "title": "Understand the parallel execution boundary",
-          "duration": 30.375,
-          "spoken": 29.664,
-          "file": "p09-c04-caption-v4-fps.mp4",
-          "cuts": [
-            5.5625,
-            19.475
-          ],
-          "key": "parallel",
-          "start": 80.33333333333333
+          "start": 71.811,
+          "duration": 26.71799999999999
         },
         {
           "chapter": 5,
           "title": "Handle interruption without replaying writes",
-          "duration": 28.166666666666668,
-          "spoken": 27.456,
-          "file": "p09-c05-caption-v4-fps.mp4",
-          "cuts": [
-            4.8625,
-            18.3625
-          ],
-          "key": "executions",
-          "start": 110.70833333333333
+          "start": 98.529,
+          "duration": 24.221000000000004
         }
       ],
       "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "captions": 39,
+      "captions": 37,
       "encodedChapterFrames": 5,
       "listeningReview": "not_performed",
       "audioLevels": {
@@ -861,58 +638,44 @@
         "integratedLufs": -21.43,
         "truePeakDbtp": -3.28,
         "rangeLu": 3.7
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 10,
       "title": "Upgrade Advisor Assessments and Readiness Actions",
       "file": "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4",
-      "duration": 158.06,
+      "duration": 137.375,
       "chapters": [
         {
           "chapter": 1,
           "title": "Choose the assessment scope and TLS policy",
           "start": 0,
-          "duration": 54.791666666666664,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "duration": 48.702
         },
         {
           "chapter": 2,
           "title": "Inspect what inventory actually discovered",
-          "start": 54.791666666666664,
-          "duration": 26.083333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 24.708333333333332
+          "start": 48.702,
+          "duration": 22.36
         },
         {
           "chapter": 3,
           "title": "Supply target versions and supporting evidence",
-          "start": 80.875,
-          "duration": 26.833333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 50.791666666666664
+          "start": 71.062,
+          "duration": 23.260999999999996
         },
         {
           "chapter": 4,
           "title": "Read findings and readiness actions",
-          "start": 107.70833333333333,
-          "duration": 25.833333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 77.625
+          "start": 94.323,
+          "duration": 22.16300000000001
         },
         {
           "chapter": 5,
           "title": "Save an immutable assessment snapshot",
-          "start": 133.54166666666666,
-          "duration": 24.5,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 103.45833333333333
+          "start": 116.486,
+          "duration": 20.888999999999996
         }
       ],
       "captionCues": 40,
@@ -924,68 +687,54 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "2f251560ae3d2d1477656a57a35554eca6e6771a5e0e559abbf64d3f4ae196cc",
+      "sha256": "41eaed30a4756e74204c554b5ef209cb241b036133f3b9522901aa16f8b0ac0a",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 40,
+      "captions": 42,
       "encodedChapterFrames": 5,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4",
         "integratedLufs": -21.47,
         "truePeakDbtp": -5.49,
         "rangeLu": 3.5
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 11,
       "title": "Administration Settings Audit and Backups",
       "file": "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4",
-      "duration": 198.02,
+      "duration": 182.45833333333334,
       "chapters": [
         {
           "chapter": 1,
           "title": "Set up the correct execution runtime",
           "start": 0,
-          "duration": 25.916666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 0
+          "duration": 22.88
         },
         {
           "chapter": 2,
           "title": "Manage users and administrator sessions",
-          "start": 25.916666666666668,
-          "duration": 58.666666666666664,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 22.88,
+          "duration": 53.643
         },
         {
           "chapter": 3,
           "title": "Review runtime connections and governance settings",
-          "start": 84.58333333333333,
-          "duration": 28.208333333333332,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 50.708333333333336
+          "start": 76.523,
+          "duration": 25.52300000000001
         },
         {
           "chapter": 4,
           "title": "Back up state and review appliance signals",
-          "start": 112.79166666666666,
-          "duration": 55.916666666666664,
-          "updated": true,
-          "sourceRevision": "8c7843a",
-          "sourceIn": null
+          "start": 102.046,
+          "duration": 52.849000000000004
         },
         {
           "chapter": 5,
           "title": "Use audit and build identity during support",
-          "start": 168.70833333333331,
-          "duration": 29.291666666666668,
-          "updated": false,
-          "sourceRevision": "ea9dcf0",
-          "sourceIn": 108.25
+          "start": 154.895,
+          "duration": 27.563333333333333
         }
       ],
       "captionCues": 49,
@@ -997,90 +746,56 @@
       "retainedChapterSourceRevision": "ea9dcf0",
       "simulated": true,
       "listeningReview": "not_performed",
-      "sha256": "4e289b8155de40d8404e0794ed5a9d24b3c5495afd563354614c150682cb0c94",
+      "sha256": "a156f7564450f9d1287a56fe58e36e0997dc14a6d68b9df9c994fa16acbc3ec4",
       "updated": true,
       "fullDecode": "passed",
-      "captions": 49,
+      "captions": 52,
       "encodedChapterFrames": 5,
       "audioLevels": {
         "file": "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4",
         "integratedLufs": -21.57,
         "truePeakDbtp": -5.06,
         "rangeLu": 3.5
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 12,
       "file": "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.mp4",
       "title": "NKP Framework and Validation Evidence Preview",
-      "updated": false,
-      "duration": 137.56,
-      "sha256": "9fb0120393fff029fc37ed779b9572a5bd6ed3520d0b2f5e6d20dbed0f56c0ce",
+      "updated": true,
+      "duration": 121.20833333333333,
+      "sha256": "fd6f6fff7f3e5aeed4cf7cca86a6daaa907ec40e772e7f6cc1e3044825b9e57c",
       "chapters": [
         {
           "chapter": 1,
           "title": "Recognize the preview integration scope",
-          "duration": 27.166666666666668,
-          "spoken": 26.448,
-          "file": "p12-c01-caption-v4-fps.mp4",
-          "cuts": [
-            4.3875,
-            16.2625
-          ],
-          "key": "nkp",
-          "start": 0
+          "start": 0,
+          "duration": 24.257
         },
         {
           "chapter": 2,
           "title": "Prepare profiles and verify the schema",
-          "duration": 27.833333333333332,
-          "spoken": 27.12,
-          "file": "p12-c02-caption-v4-fps.mp4",
-          "cuts": [
-            4.1625,
-            17.5375
-          ],
-          "key": "nkp",
-          "start": 27.166666666666668
+          "start": 24.257,
+          "duration": 25.258
         },
         {
           "chapter": 3,
           "title": "Inspect readiness and binaries",
-          "duration": 25.583333333333332,
-          "spoken": 24.864,
-          "file": "p12-c03-caption-v4-fps.mp4",
-          "cuts": [
-            3.675,
-            16.1125
-          ],
-          "key": "nkp-readiness",
-          "start": 55.0
+          "start": 49.515,
+          "duration": 22.188999999999993
         },
         {
           "chapter": 4,
           "title": "Use only the permitted guarded phases",
-          "duration": 27.75,
-          "spoken": 27.024,
-          "file": "p12-c04-caption-v4-fps.mp4",
-          "cuts": [
-            5.7375,
-            19.125
-          ],
-          "key": "nkp",
-          "start": 80.58333333333333
+          "start": 71.704,
+          "duration": 25.76100000000001
         },
         {
           "chapter": 5,
           "title": "Keep NKP evidence separate from AHV readiness",
-          "duration": 29.208333333333332,
-          "spoken": 28.488,
-          "file": "p12-c05-caption-v4-fps.mp4",
-          "cuts": [
-            5.0375,
-            18.4875
-          ],
-          "key": "validation-evidence",
-          "start": 108.33333333333333
+          "start": 97.465,
+          "duration": 23.743333333333325
         }
       ],
       "sourceRevision": "ea9dcf0",
@@ -1093,85 +808,51 @@
         "integratedLufs": -21.6,
         "truePeakDbtp": -3.5,
         "rangeLu": 4.1
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 13,
       "file": "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.mp4",
       "title": "ZTF Two Point X IaC Preview",
-      "updated": false,
-      "duration": 131.85,
-      "sha256": "172f725a95f7a82cd8926449538c2d4e6a588948576b30eea5085f4f368edd78",
+      "updated": true,
+      "duration": 115.70833333333333,
+      "sha256": "ea353912b1a16ea484589279b569f15c599d90bd2dc71576407c5433daaa2a38",
       "chapters": [
         {
           "chapter": 1,
           "title": "Use the separate preview runtime",
-          "duration": 25.25,
-          "spoken": 24.528,
-          "file": "p13-c01-caption-v4-fps.mp4",
-          "cuts": [
-            3.95,
-            17.375
-          ],
-          "key": "ztf-modes",
-          "start": 0
+          "start": 0,
+          "duration": 22.505
         },
         {
           "chapter": 2,
           "title": "Generate intent from preview workflows",
-          "duration": 27.208333333333332,
-          "spoken": 26.496,
-          "file": "p13-c02-caption-v4-fps.mp4",
-          "cuts": [
-            4.8125,
-            16.9375
-          ],
-          "key": "workflows-2x",
-          "start": 25.25
+          "start": 22.505,
+          "duration": 23.821
         },
         {
           "chapter": 3,
           "title": "Understand converted script actions",
-          "duration": 26.125,
-          "spoken": 25.392,
-          "file": "p13-c03-caption-v4-fps.mp4",
-          "cuts": [
-            4.775,
-            17.25
-          ],
-          "key": "scripts-2x",
-          "start": 52.45833333333333
+          "start": 46.326,
+          "duration": 22.934000000000005
         },
         {
           "chapter": 4,
           "title": "Review the governed plan result",
-          "duration": 25.958333333333332,
-          "spoken": 25.248,
-          "file": "p13-c04-caption-v4-fps.mp4",
-          "cuts": [
-            4.3375,
-            17.4625
-          ],
-          "key": "ztf2-iac",
-          "start": 78.58333333333333
+          "start": 69.26,
+          "duration": 22.314999999999998
         },
         {
           "chapter": 5,
           "title": "Keep apply and destroy separately governed",
-          "duration": 27.291666666666668,
-          "spoken": 26.568,
-          "file": "p13-c05-caption-v4-fps.mp4",
-          "cuts": [
-            5.0,
-            16.6375
-          ],
-          "key": "ztf2-iac",
-          "start": 104.54166666666666
+          "start": 91.575,
+          "duration": 24.133333333333326
         }
       ],
       "sourceRevision": "ea9dcf0",
       "fullDecode": "passed",
-      "captions": 39,
+      "captions": 36,
       "encodedChapterFrames": 5,
       "listeningReview": "not_performed",
       "audioLevels": {
@@ -1179,80 +860,46 @@
         "integratedLufs": -21.41,
         "truePeakDbtp": -3.35,
         "rangeLu": 4.2
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 14,
       "file": "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4",
       "title": "Native Foundation Baselines and Operating Boundaries",
-      "updated": false,
-      "duration": 133.06,
-      "sha256": "c1920469e08ccc03cc2531686d40fcb96319e76c7e41a3279573fde127f1b20c",
+      "updated": true,
+      "duration": 120.125,
+      "sha256": "34a38ee48e3988236948a6ce7a0f88b688ac23fa758be4515efd457f67525a58",
       "chapters": [
         {
           "chapter": 1,
           "title": "Distinguish the Native Foundation lane",
-          "duration": 24.166666666666668,
-          "spoken": 23.448,
-          "file": "p14-c01-caption-v4-fps.mp4",
-          "cuts": [
-            4.275,
-            15.9125
-          ],
-          "key": "native-foundation",
-          "start": 0
+          "start": 0,
+          "duration": 21.266
         },
         {
           "chapter": 2,
           "title": "Read probes and review counts accurately",
-          "duration": 28.75,
-          "spoken": 28.032,
-          "file": "p14-c02-caption-v4-fps.mp4",
-          "cuts": [
-            6.05,
-            18.25
-          ],
-          "key": "native-foundation",
-          "start": 24.166666666666668
+          "start": 21.266,
+          "duration": 25.603
         },
         {
           "chapter": 3,
           "title": "Review the post-foundation baseline mappings",
-          "duration": 31.083333333333332,
-          "spoken": 30.36,
-          "file": "p14-c03-caption-v4-fps.mp4",
-          "cuts": [
-            6.225,
-            20.5
-          ],
-          "key": "workflows",
-          "start": 52.91666666666667
+          "start": 46.869,
+          "duration": 27.476
         },
         {
           "chapter": 4,
           "title": "Handle hardware and certificate controls explicitly",
-          "duration": 26.041666666666668,
-          "spoken": 25.32,
-          "file": "p14-c04-caption-v4-fps.mp4",
-          "cuts": [
-            5.3,
-            17.2875
-          ],
-          "key": "credential-rotation",
-          "start": 84.0
+          "start": 74.345,
+          "duration": 24.924999999999997
         },
         {
           "chapter": 5,
           "title": "Operate within the demonstrated scope",
-          "duration": 23.0,
-          "spoken": 22.296,
-          "file": "p14-c05-caption-v4-fps.mp4",
-          "cuts": [
-            5.55,
-            16.4875
-          ],
-          "key": "overview-alias",
-          "start": 110.04166666666667
+          "start": 99.27,
+          "duration": 20.855000000000004
         }
       ],
       "sourceRevision": "ea9dcf0",
@@ -1265,7 +912,8 @@
         "integratedLufs": -21.53,
         "truePeakDbtp": -3.51,
         "rangeLu": 3.6
-      }
+      },
+      "narration": "HeyGen Joanna - Warm & Conversational"
     },
     {
       "part": 15,
@@ -1338,59 +986,59 @@
       "title": "AHV Appliance Deployment and SSH Setup",
       "file": "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4",
       "publishedEntryAdded": "12 November 2026",
-      "duration": 165.5,
+      "duration": 157.20833333333334,
       "sourceRevision": "b74357c",
-      "screens": "Light-mode illustrated console and terminal examples with simulated data",
+      "screens": "Light-mode simulated examples covering static IP before SSH, console access, Netplan permissions and web admin password reset",
       "narration": "HeyGen Joanna - Warm & Conversational",
       "chapters": [
         {
           "chapter": 1,
-          "title": "Prepare the VM",
+          "title": "Prepare the appliance",
           "start": 0,
-          "duration": 19.708333333333332
+          "duration": 12.25
         },
         {
           "chapter": 2,
-          "title": "Generate an SSH key",
-          "start": 19.708333333333332,
-          "duration": 21.583333333333332
+          "title": "Prepare access before boot",
+          "start": 12.25,
+          "duration": 29.375
         },
         {
           "chapter": 3,
-          "title": "Provision ztfadmin",
-          "start": 41.291666666666664,
-          "duration": 23.583333333333336
+          "title": "Set the IP before SSH",
+          "start": 41.625,
+          "duration": 21.416666666666664
         },
         {
           "chapter": 4,
-          "title": "Verify SSH and sudo",
-          "start": 64.875,
-          "duration": 28.625
+          "title": "Secure and test Netplan",
+          "start": 63.041666666666664,
+          "duration": 24.708333333333336
         },
         {
           "chapter": 5,
-          "title": "Set the management IP",
-          "start": 93.5,
-          "duration": 24.83333333333333
+          "title": "Verify SSH and sudo",
+          "start": 87.75,
+          "duration": 27.08333333333333
         },
         {
           "chapter": 6,
-          "title": "Retrieve the web password",
-          "start": 118.33333333333333,
-          "duration": 28.54166666666667
+          "title": "Retrieve or reset the web password",
+          "start": 114.83333333333333,
+          "duration": 26.58333333333333
         },
         {
           "chapter": 7,
-          "title": "Sign in and hand over",
-          "start": 146.875,
-          "duration": 18.625
+          "title": "Sign in and verify",
+          "start": 141.41666666666666,
+          "duration": 15.791666666666686
         }
       ],
       "fullDecode": "passed",
       "captions": 48,
       "listeningReview": "not_performed",
       "updated": true,
-      "sha256": "89cb66136b120323f7a3cf8028ea54d70f26e203e53889ea253bae1d3539a60f"
+      "sha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508"
     }
   ],
   "updatedNarratedChapters": 13,

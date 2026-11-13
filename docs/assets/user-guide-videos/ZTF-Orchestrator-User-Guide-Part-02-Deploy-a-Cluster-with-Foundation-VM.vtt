@@ -1,151 +1,148 @@
 WEBVTT
 
-00:00:00.125 --> 00:00:04.550
+00:00:00.299 --> 00:00:05.013
 From Start Here, choose Deploy a Cluster and select Foundation V M.
 
-00:00:05.038 --> 00:00:07.862
+00:00:05.333 --> 00:00:08.277
 Use this method when you have the classic Foundation virtual machine
 
-00:00:07.862 --> 00:00:08.400
+00:00:08.533 --> 00:00:09.131
 service.
 
-00:00:08.850 --> 00:00:13.150
+00:00:09.472 --> 00:00:13.391
 Foundation Central and standalone F C A are different backends.
 
-00:00:13.550 --> 00:00:16.975
+00:00:13.641 --> 00:00:16.820
 Review supported hardware and software for your environment.
 
-00:00:17.388 --> 00:00:20.300
-The guided journey opens existing workflows;
+00:00:17.097 --> 00:00:21.406
+The guided journey opens existing workflows; moving between guidance stages
 
-00:00:20.700 --> 00:00:24.312
-moving between guidance stages does not deploy a cluster or mark it
+00:00:21.620 --> 00:00:24.293
+does not deploy a cluster or mark it verified.
 
-00:00:24.312 --> 00:00:24.950
-verified.
-
-00:00:26.142 --> 00:00:28.567
+00:00:24.862 --> 00:00:27.560
 Open Cluster Create for Foundation V M.
 
-00:00:29.204 --> 00:00:33.192
-Enter the actual Foundation endpoint and service port, not a Prism
+00:00:27.826 --> 00:00:32.135
+Enter the actual Foundation endpoint and service port, not a Prism address
 
-00:00:33.204 --> 00:00:35.154
-address or browser page path.
+00:00:32.306 --> 00:00:33.671
+or browser page path.
 
-00:00:35.567 --> 00:00:37.804
+00:00:33.970 --> 00:00:36.210
 Select the required credential references.
 
-00:00:38.204 --> 00:00:41.967
+00:00:36.530 --> 00:00:39.559
 Confirm that the appliance can reach Foundation and the provisioning
 
-00:00:41.979 --> 00:00:42.604
+00:00:39.644 --> 00:00:40.356
 networks.
 
-00:00:43.004 --> 00:00:44.942
+00:00:40.726 --> 00:00:42.667
 Keep secrets in the credential store.
 
-00:00:45.317 --> 00:00:49.979
-Import a reviewed saved configuration when one exists, then inspect
+00:00:42.902 --> 00:00:47.296
+Import a reviewed saved configuration when one exists, then inspect its
 
-00:00:49.979 --> 00:00:53.017
-its targets rather than assuming the filename is correct.
+00:00:47.424 --> 00:00:50.051
+targets rather than assuming the filename is correct.
 
-00:00:54.171 --> 00:00:59.058
-Stage the approved A H V and A O S installation files
+00:00:50.526 --> 00:00:55.901
+Stage the approved A H V and A O S installation files on Foundation, then
 
-00:00:59.071 --> 00:01:02.983
-on Foundation, then refresh image inventory in the workflow.
+00:00:55.987 --> 00:00:58.184
+refresh image inventory in the workflow.
 
-00:01:03.358 --> 00:01:08.558
-Choose the exact available filenames and supply the A H V I
+00:00:58.462 --> 00:01:03.368
+Choose the exact available filenames and supply the A H V I S O checksum
 
-00:01:08.696 --> 00:01:11.396
-S O checksum expected by Foundation.
+00:01:03.496 --> 00:01:04.803
+expected by Foundation.
 
-00:01:11.796 --> 00:01:15.483
+00:01:05.086 --> 00:01:08.456
 An image mounted somewhere else is not necessarily available to its
 
-00:01:15.496 --> 00:01:16.133
+00:01:08.542 --> 00:01:09.267
 installer.
 
-00:01:16.521 --> 00:01:19.458
+00:01:09.480 --> 00:01:12.232
 Review upload gates and capacity before staging.
 
-00:01:19.871 --> 00:01:23.358
+00:01:12.552 --> 00:01:15.419
 Resolve inventory or checksum errors before imaging.
 
-00:01:24.533 --> 00:01:29.946
+00:01:15.861 --> 00:01:20.256
 Review each node serial, block identity and position, host name, host
 
-00:01:30.046 --> 00:01:32.883
+00:01:20.469 --> 00:01:23.520
 address, controller address and management address.
 
-00:01:33.283 --> 00:01:36.946
+00:01:23.797 --> 00:01:27.095
 Select the appropriate node role and supported controller memory.
 
-00:01:37.358 --> 00:01:42.108
-Check per-node management credential references, subnet masks, gateways
+00:01:27.364 --> 00:01:32.399
+Check per-node management credential references, subnet masks, gateways and
 
-00:01:42.308 --> 00:01:43.658
-and V LAN settings.
+00:01:32.484 --> 00:01:33.551
+V LAN settings.
 
-00:01:44.046 --> 00:01:48.058
+00:01:33.807 --> 00:01:36.996
 Re-foundation can overwrite existing installations.
 
-00:01:48.446 --> 00:01:52.833
-A valid form or selected hardware platform does not itself establish
+00:01:37.412 --> 00:01:41.934
+A valid form or selected hardware platform does not itself establish vendor
 
-00:01:52.833 --> 00:01:55.933
-vendor compatibility or permission to erase a node.
+00:01:41.977 --> 00:01:44.452
+compatibility or permission to erase a node.
 
-00:01:57.088 --> 00:01:59.312
+00:01:44.878 --> 00:01:47.387
 Save the configuration and run Dry Run.
 
-00:01:59.712 --> 00:02:04.125
+00:01:47.676 --> 00:01:51.943
 Review the native schema checks, selected images, connectivity and
 
-00:02:04.125 --> 00:02:06.712
+00:01:51.986 --> 00:01:54.418
 credential findings that the workflow provides.
 
-00:02:07.162 --> 00:02:08.262
+00:01:54.674 --> 00:01:56.030
 Fix every blocker.
 
-00:02:08.650 --> 00:02:12.262
+00:01:56.319 --> 00:01:59.860
 Review the generated target list and obtain approval for the exact
 
-00:02:12.262 --> 00:02:14.788
+00:02:00.031 --> 00:02:02.271
 configuration where policy requires it.
 
-00:02:15.175 --> 00:02:18.412
+00:02:02.549 --> 00:02:05.399
 Enter the required deployment confirmation deliberately.
 
-00:02:18.812 --> 00:02:23.050
-Saving, importing and approving are separate from actually selecting
+00:02:05.732 --> 00:02:09.785
+Saving, importing and approving are separate from actually selecting Run
 
-00:02:23.062 --> 00:02:23.925
-Run Workflow.
+00:02:09.828 --> 00:02:10.482
+Workflow.
 
-00:02:25.100 --> 00:02:29.038
+00:02:10.852 --> 00:02:14.436
 Submit once, then follow the linked job and Foundation session.
 
-00:02:29.438 --> 00:02:33.688
+00:02:14.735 --> 00:02:18.650
 Read phase and node progress, logs and actual target state.
 
-00:02:34.050 --> 00:02:38.438
-A missing response or interrupted browser is not a reason to submit
+00:02:18.938 --> 00:02:22.778
+A missing response or interrupted browser is not a reason to submit imaging
 
-00:02:38.450 --> 00:02:39.150
-imaging again.
+00:02:22.906 --> 00:02:23.332
+again.
 
-00:02:39.562 --> 00:02:43.850
+00:02:23.546 --> 00:02:27.770
 After Foundation finishes, confirm cluster identity and membership.
 
-00:02:44.250 --> 00:02:46.675
+00:02:27.983 --> 00:02:30.232
 Continue to reviewed post-configuration.
 
-00:02:47.088 --> 00:02:52.438
+00:02:30.603 --> 00:02:34.955
 When initial access needs a password and EULA bootstrap, use the supported
 
-00:02:52.438 --> 00:02:55.375
+00:02:35.126 --> 00:02:38.282
 bootstrap sequence before the required health verification.

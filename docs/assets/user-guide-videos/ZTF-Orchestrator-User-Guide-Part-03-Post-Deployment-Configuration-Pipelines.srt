@@ -1,219 +1,199 @@
 1
-00:00:00,088 --> 00:00:03,850
+00:00:00,256 --> 00:00:03,413
 Start with reviewed cluster-specific configuration files.
 
 2
-00:00:04,238 --> 00:00:08,700
+00:00:03,755 --> 00:00:07,723
 Give them clear ordered names and keep the same cluster identity throughout.
 
 3
-00:00:09,112 --> 00:00:12,850
+00:00:07,979 --> 00:00:11,557
 Each pipeline step pairs an action with its saved configuration.
 
 4
-00:00:13,262 --> 00:00:17,338
-Keep passwords in separate credential references rather than in the
+00:00:11,807 --> 00:00:15,647
+Keep passwords in separate credential references rather than in the files.
 
 5
-00:00:17,338 --> 00:00:18,000
-files.
-
-6
-00:00:18,400 --> 00:00:20,738
+00:00:15,988 --> 00:00:18,356
 Saving a pipeline does not execute it.
 
+6
+00:00:18,591 --> 00:00:22,388
+Review every file against the installed framework schema before adding it to
+
 7
-00:00:21,138 --> 00:00:25,375
-Review every file against the installed framework schema before adding
+00:00:22,431 --> 00:00:23,076
+the sequence.
 
 8
-00:00:25,375 --> 00:00:26,325
-it to the sequence.
-
-9
-00:00:27,529 --> 00:00:31,279
+00:00:23,515 --> 00:00:27,099
 Place a required initial administrator password change first.
 
+9
+00:00:27,440 --> 00:00:31,024
+Use the current credential to authorize it and a separate reference for the
+
 10
-00:00:31,667 --> 00:00:34,992
-Use the current credential to authorize it and a separate reference
+00:00:31,067 --> 00:00:32,143
+replacement credential.
 
 11
-00:00:34,992 --> 00:00:36,254
-for the replacement credential.
+00:00:32,494 --> 00:00:36,163
+Verification must establish a fresh authenticated session with the new
 
 12
-00:00:36,667 --> 00:00:41,129
-Verification must establish a fresh authenticated session with the
+00:00:36,206 --> 00:00:36,931
+password.
 
 13
-00:00:41,129 --> 00:00:42,104
-new password.
-
-14
-00:00:42,504 --> 00:00:44,917
+00:00:37,188 --> 00:00:39,684
 Later files must use that replacement reference.
 
+14
+00:00:40,004 --> 00:00:44,174
+Leave password-change settings unused in later steps so they skip cleanly.
+
 15
-00:00:45,317 --> 00:00:49,154
-Leave password-change settings unused in later steps so they skip
+00:00:44,461 --> 00:00:48,173
+Never repeat a completed password change simply because a subsequent step
 
 16
-00:00:49,167 --> 00:00:49,742
-cleanly.
+00:00:48,301 --> 00:00:48,756
+failed.
 
 17
-00:00:50,129 --> 00:00:54,454
-Never repeat a completed password change simply because a subsequent
+00:00:49,240 --> 00:00:53,251
+Use a narrowly reviewed configuration for EULA acceptance and the approved
 
 18
-00:00:54,454 --> 00:00:55,242
-step failed.
+00:00:53,421 --> 00:00:54,268
+Pulse setting.
 
 19
-00:00:56,433 --> 00:01:00,396
-Use a narrowly reviewed configuration for EULA acceptance and the
+00:00:54,602 --> 00:00:59,615
+Add the required D N S and N T P settings according to the installed schema.
 
 20
-00:01:00,396 --> 00:01:01,583
-approved Pulse setting.
+00:00:59,935 --> 00:01:03,477
+Check that later steps can authenticate and reach the cluster after the
 
 21
-00:01:01,983 --> 00:01:06,171
-Add the required D N S and N T P settings according
+00:01:03,519 --> 00:01:04,832
+initial access changes.
 
 22
-00:01:06,171 --> 00:01:07,233
-to the installed schema.
-
-23
-00:01:07,621 --> 00:01:10,921
-Check that later steps can authenticate and reach the cluster after
-
-24
-00:01:10,921 --> 00:01:12,508
-the initial access changes.
-
-25
-00:01:12,896 --> 00:01:17,183
+00:01:05,250 --> 00:01:08,962
 Legal acceptance and telemetry settings are explicit organizational
 
+23
+00:01:09,175 --> 00:01:12,716
+decisions; do not treat either as an automatic default for every
+
+24
+00:01:12,930 --> 00:01:13,548
+environment.
+
+25
+00:01:13,931 --> 00:01:18,283
+Add supported virtual-machine networks, storage containers and any approved
+
 26
-00:01:17,183 --> 00:01:17,908
-decisions;
+00:01:18,411 --> 00:01:19,883
+high-availability settings.
 
 27
-00:01:18,308 --> 00:01:22,421
-do not treat either as an automatic default for every environment.
+00:01:20,160 --> 00:01:25,140
+Review naming, V LANs, replication and capacity choices against the design.
 
 28
-00:01:23,588 --> 00:01:27,750
-Add supported virtual-machine networks, storage containers and any
+00:01:25,554 --> 00:01:29,650
+Verify the actual returned properties after creation, not only whether a
 
 29
-00:01:27,750 --> 00:01:29,838
-approved high-availability settings.
+00:01:29,693 --> 00:01:31,122
+container name exists.
 
 30
-00:01:30,225 --> 00:01:35,300
-Review naming, V LANs, replication and capacity choices against the
+00:01:31,570 --> 00:01:35,111
+Additional local administrators use their own credential references and
 
 31
-00:01:35,312 --> 00:01:35,762
-design.
+00:01:35,154 --> 00:01:36,168
+explicit roles.
 
 32
-00:01:36,162 --> 00:01:40,550
-Verify the actual returned properties after creation, not only whether
+00:01:36,500 --> 00:01:40,297
+Check that every optional action is supported by the selected workflow and
 
 33
-00:01:40,550 --> 00:01:41,925
-a container name exists.
+00:01:40,340 --> 00:01:41,164
+target release.
 
 34
-00:01:42,338 --> 00:01:46,325
-Additional local administrators use their own credential references
+00:01:41,790 --> 00:01:46,014
+Open Pipelines, create a descriptive name and add the saved actions in their
 
 35
-00:01:46,550 --> 00:01:47,788
-and explicit roles.
+00:01:46,100 --> 00:01:46,910
+approved order.
 
 36
-00:01:48,200 --> 00:01:52,225
-Check that every optional action is supported by the selected workflow
-
-37
-00:01:52,400 --> 00:01:53,462
-and target release.
-
-38
-00:01:54,642 --> 00:01:58,979
-Open Pipelines, create a descriptive name and add the saved actions
-
-39
-00:01:59,029 --> 00:02:00,054
-in their approved order.
-
-40
-00:02:00,467 --> 00:02:03,029
+00:01:47,209 --> 00:01:49,458
 Select the exact file for each step.
 
-41
-00:02:03,442 --> 00:02:07,979
+37
+00:01:49,701 --> 00:01:53,499
 Review the password transition, targets and required approvals before
 
-42
-00:02:07,992 --> 00:02:08,467
+38
+00:01:53,712 --> 00:01:54,267
 saving.
 
-43
-00:02:08,867 --> 00:02:10,617
+39
+00:01:54,608 --> 00:01:56,144
 Steps execute sequentially.
 
-44
-00:02:11,029 --> 00:02:12,517
-A failure stops later work;
+40
+00:01:56,443 --> 00:02:00,379
+A failure stops later work; it does not roll back earlier changes.
 
-45
-00:02:12,904 --> 00:02:15,054
-it does not roll back earlier changes.
+41
+00:02:00,817 --> 00:02:04,913
+Approval-mandatory steps may require direct approved execution rather than
 
-46
-00:02:15,467 --> 00:02:20,492
-Approval-mandatory steps may require direct approved execution rather
+42
+00:02:04,956 --> 00:02:06,492
+unattended pipeline chaining.
 
-47
-00:02:20,492 --> 00:02:22,192
-than unattended pipeline chaining.
-
-48
-00:02:23,338 --> 00:02:28,338
+43
+00:02:06,919 --> 00:02:11,015
 After execution, inspect every step and independently read back the
 
-49
-00:02:28,350 --> 00:02:29,438
+44
+00:02:11,057 --> 00:02:12,175
 requested settings.
 
-50
-00:02:29,850 --> 00:02:33,875
+45
+00:02:12,483 --> 00:02:16,323
 Verify new account access and both requested administrator roles.
 
-51
-00:02:34,288 --> 00:02:38,525
-Before Prism Central registration, check its connectivity and trust,
+46
+00:02:16,664 --> 00:02:21,144
+Before Prism Central registration, check its connectivity and trust, then
 
-52
-00:02:38,788 --> 00:02:42,038
-then confirm cluster identity and inventory there.
+47
+00:02:21,229 --> 00:02:23,843
+confirm cluster identity and inventory there.
 
-53
-00:02:42,438 --> 00:02:46,688
-If a step failed, reconcile the partial state and rerun only the
+48
+00:02:24,109 --> 00:02:28,504
+If a step failed, reconcile the partial state and rerun only the pending
 
-54
-00:02:46,700 --> 00:02:48,825
-pending action through a supported path.
+49
+00:02:28,675 --> 00:02:30,403
+action through a supported path.
 
-55
-00:02:49,238 --> 00:02:52,762
+50
+00:02:30,723 --> 00:02:34,299
 Preserve the successful jobs and final acceptance evidence.

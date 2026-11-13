@@ -1,22 +1,22 @@
 AHV Appliance Deployment and SSH Setup
 
-0:00  Prepare the VM
-Start with the approved ZTF Orchestrator appliance image and its checksum. Verify the download, then import the image as a disk in Prism. Create the virtual machine, put the imported disk first in the boot order, and connect its network adapter to the approved management subnet. Leave the machine powered off while you set up access.
+Prepare the appliance
+Verify the approved appliance image against its checksum. Import it as a disk in Prism, create the virtual machine, and connect its adapter to the management subnet. Keep the machine powered off while you prepare access.
 
-0:19  Generate an SSH key
-On your Windows workstation, open Command Prompt and run the commands shown. Choose a filename you have never used before and protect the private key with a passphrase. The file ending in dot pub is your public key. Copy its entire line for the appliance. Keep the private key on your workstation. If your team issued a key, use the approved key instead.
+Prepare access before boot
+On Windows, generate an SSH key with the commands on screen. Copy the full public key line from the dot pub file. Keep the private key on your workstation. In guest customization, provision the Z T F admin account and add its public key. On a static-only network, arrange a Linux administrator login for the Prism console if you need to set the address there. The SSH key example leaves the console password unset. Keep SSH password authentication disabled.
 
-0:41  Provision ztfadmin
-In your approved AHV guest customization or cloud-init user data field, enter the example from the guide. It creates the Linux account named Z T F admin and adds your public key. Replace the entire example key line and keep the indentation. If your site uses its own access profile, have the provisioning administrator apply it. Save the customization before powering on the machine.
+Set the IP before SSH
+Now power on. If you use DHCP, confirm the assigned address. If the subnet has no DHCP, verify the static address set by provisioning, or sign in through the Prism virtual machine console to set it. If you have no address and no working console login, ask the provisioning administrator to supply access before continuing.
 
-1:04  Verify SSH and sudo
-Find the appliance address in Prism or your DHCP records. Replace the example address in the SSH command with that address. Verify the server fingerprint with your administrator before accepting it. When you get a Linux prompt, run who am I and sudo dash V. You should see the Z T F admin username and a successful sudo check. If SSH says permission denied, check the username and matching key before asking the provisioning administrator to review guest customization.
+Secure and test Netplan
+For a console-configured static address, identify the correct interface and back up its Netplan file. Use the approved IP, prefix, gateway and DNS. If cloud-init owns the file, make the change at the provisioning source. Set ownership to root and permissions to six hundred on the file named in the warning. Run Netplan generate, then start the trial from the console. Keep that console open.
 
-1:33  Set the management IP
-Keep DHCP if your site uses a reservation. For a static address, use a working Prism console login or ask the provisioning administrator to set it at the source. Follow the Quick Guide to identify the adapter, back up the Netplan file, and try the change. Reconnect over SSH at the intended address before keeping it. If access fails, let the trial expire and restore the saved configuration from the console.
+Verify SSH and sudo
+Once the IP is active, connect as Z T F admin with the matching private key. Verify the server fingerprint before accepting it. At the Linux prompt, run who am I and sudo dash V. Expect the Z T F admin username and a successful sudo check. If you are testing a Netplan change, accept it from the console after verifying the route and SSH access. If the checks fail, let the trial expire and restore the backup.
 
-1:58  Retrieve the web password
-In your verified Linux session, check that the Orchestrator and PostgreSQL containers are running and that the local health endpoint reports healthy. Search the service journal for the first-run banner. If there is no match, check the container log with the second command on screen. Look for username admin and the generated password underneath. That password is for the Z T F web console. If both logs are empty and the app is healthy, ask the appliance owner to recover the web account.
+Retrieve or reset the web password
+Check that both containers are running and that the local health endpoint reports healthy. Search the service journal for the first-run password, then check Docker logs if the journal has no match. If both logs lack the banner and you have no current web credential, open the Quick Guide's password reset page. Run the full command from an interactive Linux session and enter a new password twice. If the admin account is missing, preserve the user store and contact the appliance maintainer.
 
-2:26  Sign in and hand over
-Open the approved appliance address in your browser, sign in as admin, and change the generated password under Administration, Users. Confirm the installed build in Settings, About. Record the management address and health result, and keep credentials in the approved store.
+Sign in and verify
+Open the approved appliance address in your browser and sign in as admin. If you used the generated password, rotate it under Administration, Users. Confirm the installed build and record the management address and health result.

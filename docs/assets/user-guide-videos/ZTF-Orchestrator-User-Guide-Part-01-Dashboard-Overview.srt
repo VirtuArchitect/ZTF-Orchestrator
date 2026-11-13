@@ -1,211 +1,255 @@
 1
-00:00:00,100 --> 00:00:02,950
+00:00:00,299 --> 00:00:03,584
 If you want to deploy a cluster, start with Deploy a Cluster.
 
 2
-00:00:03,362 --> 00:00:05,400
+00:00:03,925 --> 00:00:06,165
 You do not need to search through script names.
 
 3
-00:00:05,800 --> 00:00:10,562
+00:00:06,528 --> 00:00:11,221
 Start Here offers four choices: deploy, configure an existing cluster,
 
 4
-00:00:10,850 --> 00:00:13,962
+00:00:11,520 --> 00:00:14,722
 monitor and verify, or run saved automation.
 
 5
-00:00:14,362 --> 00:00:18,075
+00:00:15,064 --> 00:00:18,670
 This series follows the current console with simulated examples.
 
 6
-00:00:18,488 --> 00:00:21,475
+00:00:18,904 --> 00:00:21,834
 It does not execute changes against a real environment.
 
 7
-00:00:22,642 --> 00:00:26,804
-Open Overview for the daily operations view The four action cards open
+00:00:22,147 --> 00:00:24,720
+Open Overview for the daily operations view.
 
 8
-00:00:26,804 --> 00:00:31,992
-deployment configuration infrastructure recovery and monitoring These links
+00:00:25,031 --> 00:00:29,127
+The four action cards open deployment, configuration, infrastructure
 
 9
-00:00:31,992 --> 00:00:37,154
-do not execute work The summary now shows Managed clusters Open review
+00:00:29,170 --> 00:00:30,620
+recovery and monitoring.
 
 10
-00:00:37,154 --> 00:00:42,554
-items Running jobs and Fresh P E Good readbacks Managed cluster
+00:00:30,919 --> 00:00:32,810
+These links do not execute work.
 
 11
-00:00:42,554 --> 00:00:47,104
-counts come from explicitly registered records They are not automatic
+00:00:33,180 --> 00:00:37,746
+The summary now shows Managed clusters, Open review items, Running jobs and
 
 12
-00:00:47,104 --> 00:00:52,017
-discovery and recovery profile counts remain a separate concept Read the
+00:00:37,788 --> 00:00:39,419
+Fresh P E Good readbacks.
 
 13
-00:00:52,017 --> 00:00:57,174
-timestamp and evidence below each record Refresh reloads saved
+00:00:39,471 --> 00:00:43,055
+Managed cluster counts come from explicitly registered records.
 
 14
-00:00:57,179 --> 00:01:02,217
-operational records Merely opening or refreshing this page never contacts
+00:00:43,396 --> 00:00:47,194
+They are not automatic discovery, and recovery profile counts remain a
 
 15
-00:01:02,217 --> 00:01:03,099
-Prism Element
+00:00:47,236 --> 00:00:48,019
+separate concept.
 
 16
-00:01:03,438 --> 00:01:08,338
-Needs attention retains observed failed or interrupted jobs and P E
+00:00:48,474 --> 00:00:51,319
+Read the timestamp and evidence below each record.
 
 17
-00:01:08,338 --> 00:01:12,688
-observation issues Open the original job or review the cluster before
+00:00:51,690 --> 00:00:54,506
+Refresh reloads saved operational records.
 
 18
-00:01:12,688 --> 00:01:17,800
-deciding what to do A newer successful job does not erase an earlier failure
+00:00:54,847 --> 00:00:58,730
+Merely opening or refreshing this page never contacts Prism Element.
 
 19
-00:01:17,800 --> 00:01:23,125
-record Choose Update review assign an owner and record useful reconciliation
+00:00:59,156 --> 00:01:03,508
+Needs attention retains observed failed or interrupted jobs and P E
 
 20
-00:01:23,125 --> 00:01:28,208
-notes without secrets Acknowledge the item while follow-up is in progress
+00:01:03,551 --> 00:01:04,584
+observation issues.
 
 21
-00:01:28,475 --> 00:01:32,520
-Choose Resolved after review only after checking the actual outcome
+00:01:04,934 --> 00:01:08,454
+Open the original job or review the cluster before deciding what to do.
 
 22
-00:01:32,812 --> 00:01:37,575
-Acknowledgement and resolution update the review record They do not fix the
+00:01:08,689 --> 00:01:12,173
+A newer successful job does not erase an earlier failure record.
 
 23
-00:01:37,575 --> 00:01:42,708
-target approve execution change recovery gates or replay a job
+00:01:12,657 --> 00:01:16,923
+Choose Update review, assign an owner, and record useful reconciliation
 
 24
-00:01:42,975 --> 00:01:47,458
-A new failed P E readback can reopen a resolved observation item
+00:01:17,137 --> 00:01:18,425
+notes without secrets.
 
 25
-00:01:47,808 --> 00:01:52,696
-Open Clusters to add or edit an explicit managed record Link its saved
+00:01:18,732 --> 00:01:21,249
+Acknowledge the item while follow-up is in progress.
 
 26
-00:01:52,696 --> 00:01:57,808
-configuration files pipeline and recovery profile then enter the expected
+00:01:21,633 --> 00:01:25,032
+Choose Resolved after review only after checking the actual outcome.
 
 27
-00:01:57,808 --> 00:02:02,658
-cluster identity complete node baseline and credential reference Importing
+00:01:25,260 --> 00:01:28,366
+Acknowledgement and resolution update the review record.
 
 28
-00:02:02,658 --> 00:02:08,058
-expected membership from Foundation Y A M L does not discover the
+00:01:28,784 --> 00:01:33,050
+They do not fix the target, approve execution, change recovery gates or
 
 29
-00:02:08,058 --> 00:02:13,058
-actual target Stale observation means the stored P E evidence is older than
+00:01:33,093 --> 00:01:34,053
+replay a job.
 
 30
-00:02:13,058 --> 00:02:18,228
-fifteen minutes or is unavailable as fresh evidence It does not by itself
+00:01:34,330 --> 00:01:38,426
+A new failed P E readback can reopen a resolved observation item.
 
 31
-00:02:18,283 --> 00:02:23,658
-mean the cluster is unhealthy Select Review for the cluster then Collect P E
+00:01:38,682 --> 00:01:42,234
+Open Clusters to add or edit an explicit managed record.
 
 32
-00:02:23,658 --> 00:02:28,933
-health read-only to request new evidence Collection requires expected
+00:01:42,542 --> 00:01:46,980
+Link its saved configuration files, pipeline and recovery profile, then
 
 33
-00:02:28,933 --> 00:02:34,308
-U U I D node baseline a credential reference and trusted H
+00:01:47,065 --> 00:01:50,948
+enter the expected cluster identity, complete node baseline and credential
 
 34
-00:02:34,308 --> 00:02:39,608
-T T P S Missing or failed evidence stays unknown P E reported
+00:01:51,161 --> 00:01:51,859
+reference.
 
 35
-00:02:39,608 --> 00:02:44,721
-health is narrower than N C C resilience testing and application
+00:01:52,215 --> 00:01:56,737
+Importing expected membership from Foundation Y A M L does not discover the
 
 36
-00:02:44,721 --> 00:02:49,646
-acceptance Existing recovery profiles remain listed separately on
+00:01:56,780 --> 00:01:57,591
+actual target.
 
 37
-00:02:49,646 --> 00:02:50,453
-Clusters
+00:01:58,017 --> 00:02:01,858
+Stale observation means the stored P E evidence is older than fifteen
 
 38
-00:02:50,808 --> 00:02:54,596
-The streamlined sidebar keeps ordinary tasks visible.
+00:02:01,943 --> 00:02:04,319
+minutes or is unavailable as fresh evidence.
 
 39
-00:02:54,996 --> 00:03:00,070
-Expand Advanced Automation for workflows, scripts, configuration files,
+00:02:04,689 --> 00:02:07,441
+It does not by itself mean the cluster is unhealthy.
 
 40
-00:03:00,320 --> 00:03:02,583
-schedules and execution history.
+00:02:07,761 --> 00:02:12,326
+Select Review for the cluster, then Collect P E health, read-only, to
 
 41
-00:03:02,970 --> 00:03:06,796
-Optional Integrations contains the preview integration paths.
+00:02:12,369 --> 00:02:13,358
+request new evidence.
 
 42
-00:03:07,183 --> 00:03:12,046
-Administration contains setup, credentials, appliance operations and
+00:02:13,886 --> 00:02:18,920
+Collection requires expected U U I D, node baseline, a credential reference
 
 43
-00:03:12,046 --> 00:03:12,720
-settings.
+00:02:19,133 --> 00:02:21,395
+and trusted H T T P S.
 
 44
-00:03:13,120 --> 00:03:17,546
-N K P Validation Evidence carries a Preview badge and retains its
+00:02:21,694 --> 00:02:23,955
+Missing or failed evidence stays unknown.
 
 45
-00:03:17,558 --> 00:03:18,796
-specialist sources.
+00:02:24,254 --> 00:02:28,520
+P E reported health is narrower than N C C, resilience testing and
 
 46
-00:03:19,208 --> 00:03:24,383
-Use execution history and target readbacks for ordinary cluster verification.
+00:02:28,563 --> 00:02:29,870
+application acceptance.
 
 47
-00:03:25,637 --> 00:03:30,512
-For a normal task, choose the correct workflow, review the saved configuration,
+00:02:30,152 --> 00:02:33,736
+Existing recovery profiles remain listed separately on Clusters.
 
 48
-00:03:31,000 --> 00:03:35,662
-run the available dry run, obtain any required approval, and submit
+00:02:34,163 --> 00:02:37,192
+The streamlined sidebar keeps ordinary tasks visible.
 
 49
-00:03:35,662 --> 00:03:36,137
-once.
+00:02:37,448 --> 00:02:41,971
+Expand Advanced Automation for workflows, scripts, configuration files,
 
 50
-00:03:36,637 --> 00:03:38,350
-Follow its record in Jobs and Queue.
+00:02:42,184 --> 00:02:44,156
+schedules and execution history.
 
 51
-00:03:38,737 --> 00:03:41,175
-Investigate failures before retrying.
+00:02:44,507 --> 00:02:47,942
+Optional Integrations contains the preview integration paths.
 
 52
-00:03:41,575 --> 00:03:45,600
-You can retain Start Here or Overview as your browser landing preference.
+00:02:48,134 --> 00:02:52,400
+Administration contains setup, credentials, appliance operations and
 
 53
-00:03:46,012 --> 00:03:50,087
+00:02:52,443 --> 00:02:53,168
+settings.
+
+54
+00:02:53,510 --> 00:02:57,435
+N K P Validation Evidence carries a Preview badge and retains its specialist
+
+55
+00:02:57,520 --> 00:02:58,062
+sources.
+
+56
+00:02:58,433 --> 00:03:01,803
+Use execution history and target readbacks for ordinary cluster
+
+57
+00:03:01,974 --> 00:03:02,714
+verification.
+
+58
+00:03:03,339 --> 00:03:07,051
+For a normal task, choose the correct workflow, review the saved
+
+59
+00:03:07,179 --> 00:03:11,958
+configuration, run the available dry run, obtain any required approval, and
+
+60
+00:03:12,001 --> 00:03:12,880
+submit once.
+
+61
+00:03:13,206 --> 00:03:15,318
+Follow its record in Jobs and Queue.
+
+62
+00:03:15,552 --> 00:03:17,771
+Investigate failures before retrying.
+
+63
+00:03:18,112 --> 00:03:21,718
+You can retain Start Here or Overview as your browser landing preference.
+
+64
+00:03:21,952 --> 00:03:25,903
 Part two follows cluster deployment through the Foundation V M workflow.

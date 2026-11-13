@@ -1,5 +1,5 @@
 00:00:00.000 Choose a workflow for the required backend
-00:00:26.792 Use scripts for focused actions
-00:01:24.083 Create named local PE administrators
-00:01:49.500 Read a stage-specific failure
-00:02:20.000 Treat credential rotation as a sensitive operation
+00:00:23.415 Use scripts for focused actions
+00:01:14.515 Create named local PE administrators
+00:01:38.276 Read a stage-specific failure
+00:02:04.841 Treat credential rotation as a sensitive operation
