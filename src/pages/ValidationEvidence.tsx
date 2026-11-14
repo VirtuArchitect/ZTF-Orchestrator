@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from '../router'
 import { AlertTriangle, Download, FileArchive, Loader, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch, authHeaders } from '../utils/api'
 import { useStore } from '../store'
 import clsx from 'clsx'
 import type { Execution } from '../types'
-
-interface NkpProfile {
-  id: string
-  name: string
-  revision?: number
-}
 
 interface EvidenceRecord {
   id: string
@@ -46,16 +39,12 @@ export default function ValidationEvidence() {
   const canEdit = user?.role === 'admin' || user?.role === 'operator'
   const isAdmin = user?.role === 'admin'
   const [records, setRecords] = useState<EvidenceRecord[]>([])
-  const [profiles, setProfiles] = useState<NkpProfile[]>([])
   const [executions, setExecutions] = useState<Execution[]>([])
   const [configs, setConfigs] = useState<ConfigFile[]>([])
-  const [source] = useState<'nkp' | 'ztf-workflow'>('ztf-workflow')
-  const [selectedProfile, setSelectedProfile] = useState('')
   const [selectedExecution, setSelectedExecution] = useState('')
   const [selectedConfig, setSelectedConfig] = useState('')
   const [workflowName, setWorkflowName] = useState('')
   const [notes, setNotes] = useState('')
-  const [includeCompatibility, setIncludeCompatibility] = useState(false)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [message, setMessage] = useState('')
@@ -66,18 +55,12 @@ export default function ValidationEvidence() {
   const load = async () => {
     setLoading(true)
     try {
-      const [evidenceResp, profilesResp, executionsResp, configsResp] = await Promise.all([
+      const [evidenceResp, executionsResp, configsResp] = await Promise.all([
         apiFetch('/api/validation-evidence'),
-        apiFetch('/api/nkp/profiles'),
         apiFetch('/api/executions'),
         apiFetch('/api/configs'),
       ])
-      if (evidenceResp.ok) setRecords(await evidenceResp.json())
-      if (profilesResp.ok) {
-        const data = await profilesResp.json()
-        setProfiles(data)
-        if (!selectedProfile && data.length) setSelectedProfile(data[0].id)
-      }
+      if (evidenceResp.ok) setRecords((await evidenceResp.json() as EvidenceRecord[]).filter(record => record.source && record.source !== 'nkp'))
       if (executionsResp.ok) {
         const data = await executionsResp.json()
         setExecutions(data)
@@ -102,11 +85,7 @@ export default function ValidationEvidence() {
   }, [])
 
   const createEvidence = async () => {
-    if (source === 'nkp' && !selectedProfile) {
-      setError('Select an NKP profile first.')
-      return
-    }
-    if (source === 'ztf-workflow' && !selectedExecution && !selectedConfig) {
+    if (!selectedExecution && !selectedConfig) {
       setError('Select an execution or saved config file first.')
       return
     }
@@ -117,14 +96,7 @@ export default function ValidationEvidence() {
       const selectedExec = executions.find(item => item.id === selectedExecution)
       const resp = await apiFetch('/api/validation-evidence', {
         method: 'POST',
-        body: JSON.stringify(source === 'nkp'
-          ? {
-              source: 'nkp',
-              profileId: selectedProfile,
-              includeCompatibility,
-              notes,
-            }
-          : {
+        body: JSON.stringify({
               source: 'ztf-workflow',
               jobId: selectedExecution || undefined,
               workflow: workflowName || selectedExec?.workflow || undefined,
@@ -182,8 +154,8 @@ export default function ValidationEvidence() {
 
   return (
     <Layout
-      title="NKP Validation Evidence"
-      subtitle="Capture and export defensible UAT records for NKP readiness, ZTF workflows, native Foundation reviews, approvals, jobs, and execution output"
+      title="Validation Evidence"
+      subtitle="Capture and export ZTF workflow and Foundation validation records"
       actions={
         <button onClick={load} disabled={loading} className="btn-secondary gap-1.5">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -192,21 +164,17 @@ export default function ValidationEvidence() {
       }
     >
       <div className="space-y-6">
-        <section className="card space-y-2" aria-label="Evidence scope">
-          <span className="badge badge-blue">Preview</span>
-          <p className="text-sm text-gray-400">NKP readiness evidence is a preview feature. It does not verify AHV cluster deployment or PE/PC configuration. Existing ZTF UAT pack creation, saved records and downloads remain available below; exported records do not replace fresh infrastructure checks.</p>
-        </section>
         <div className="card">
           <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
             <div>
               <h2 className="font-semibold text-gray-100">Create Evidence Run</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Build a timestamped bundle from either an NKP profile or a ZTF workflow execution/config record.
+                Build a timestamped bundle from a ZTF workflow execution or saved configuration.
               </p>
             </div>
             <button
               onClick={createEvidence}
-              disabled={!canEdit || creating || (source === 'nkp' ? !selectedProfile : (!selectedExecution && !selectedConfig))}
+              disabled={!canEdit || creating || (!selectedExecution && !selectedConfig)}
               className="btn-primary gap-1.5"
             >
               {creating ? <Loader size={14} className="animate-spin" /> : <Plus size={14} />}
@@ -217,25 +185,6 @@ export default function ValidationEvidence() {
           {error && <div className="mt-4 rounded-lg border border-red-500/30 bg-red-950/20 px-4 py-3 text-sm text-red-200">{error}</div>}
           {message && <div className="mt-4 rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-4 py-3 text-sm text-nutanix-teal">{message}</div>}
 
-          {source === 'nkp' ? (
-            <div className="mt-5 grid grid-cols-1 xl:grid-cols-[1fr_2fr] gap-4">
-              <label className="block">
-                <span className="label">NKP Profile</span>
-                <select className="input" value={selectedProfile} onChange={event => setSelectedProfile(event.target.value)} disabled={!canEdit}>
-                  <option value="">Select profile</option>
-                  {profiles.map(profile => (
-                    <option key={profile.id} value={profile.id}>
-                      {profile.name} {profile.revision ? `(rev ${profile.revision})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="label">Notes</span>
-                <input className="input" value={notes} onChange={event => setNotes(event.target.value)} disabled={!canEdit} placeholder="Lab dry-run, CLI compatibility, customer UAT checkpoint..." />
-              </label>
-            </div>
-          ) : (
             <div className="mt-5 grid grid-cols-1 xl:grid-cols-3 gap-4">
               <label className="block">
                 <span className="label">Execution</span>
@@ -275,16 +224,6 @@ export default function ValidationEvidence() {
                 <input className="input" value={notes} onChange={event => setNotes(event.target.value)} disabled={!canEdit} placeholder="UAT checkpoint, expected Prism state, change ticket, evidence store label..." />
               </label>
             </div>
-          )}
-          {source === 'nkp' && (
-            <label className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-gray-950/40 px-3 py-3">
-              <input type="checkbox" checked={includeCompatibility} disabled={!canEdit} onChange={event => setIncludeCompatibility(event.target.checked)} />
-              <span>
-                <span className="block text-sm font-medium text-gray-200">Include NKP CLI compatibility check</span>
-                <span className="block text-xs text-gray-500">Runs local `nkp --version` and help checks when the profile has a resolvable NKP binary path.</span>
-              </span>
-            </label>
-          )}
         </div>
 
         <div className="card">
@@ -297,18 +236,8 @@ export default function ValidationEvidence() {
               <FileArchive size={32} className="mx-auto mb-3 text-gray-700" />
               <p className="text-sm font-medium text-gray-400">No validation evidence captured yet</p>
               <p className="mx-auto mt-1 max-w-xl text-xs text-gray-600">
-                Production handover evidence should include an NKP readiness record or a ZTF workflow UAT pack with config hash, approval/job references, execution output, and operator notes.
+                Create a ZTF evidence pack to retain the configuration hash, approval and job references, execution output, and operator notes.
               </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <Link to="/nkp#profiles" className="btn-primary gap-1.5">
-                  <Plus size={14} />
-                  Create NKP Profile
-                </Link>
-                <Link to="/nkp#profiles" className="btn-secondary gap-1.5">
-                  <ShieldCheck size={14} />
-                  Run Readiness
-                </Link>
-              </div>
             </div>
           ) : (
             <div className="space-y-3">
