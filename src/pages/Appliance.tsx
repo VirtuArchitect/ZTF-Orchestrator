@@ -162,7 +162,6 @@ const EXAMPLE_UPDATE_MANIFEST = JSON.stringify({
 const DEFAULT_UPDATE_TARGETS: UpdateTarget[] = [
   { id: 'ztf-orchestrator', label: 'ZTF-Orchestrator', defaultRepo: 'VirtuArchitect/ZTF-Orchestrator', defaultPath: '' },
   { id: 'ztf-framework', label: 'ZeroTouch Framework', defaultRepo: 'nutanixdev/zerotouch-framework', defaultPath: '/opt/zerotouch-framework' },
-  { id: 'nkp-framework', label: 'NKP Framework', defaultRepo: 'VirtuArchitect/nkp-zerotouch-framework', defaultPath: '/var/lib/ztf-orchestrator/nkp-zerotouch-framework' },
 ]
 
 export default function Appliance() {
@@ -454,7 +453,7 @@ export default function Appliance() {
   return (
     <Layout
       title="Appliance Operations"
-      subtitle="Archive AHV artifacts, validate first boot, review NKP readiness, and track ZTF compatibility"
+      subtitle="Archive AHV artifacts, validate first boot and track ZTF compatibility"
       actions={
         <button onClick={load} disabled={loading} className="btn-secondary gap-1.5">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -470,7 +469,6 @@ export default function Appliance() {
           <TabButton active={tab === 'artifacts'} icon={Archive} label="Artifacts" onClick={() => setTab('artifacts')} />
           <TabButton active={tab === 'updates'} icon={PackageCheck} label="Updates" onClick={() => setTab('updates')} />
           <TabButton active={tab === 'firstboot'} icon={Server} label="First Boot" onClick={() => setTab('firstboot')} />
-          <TabButton active={tab === 'readiness'} icon={ShieldCheck} label="NKP Readiness" onClick={() => setTab('readiness')} />
           <TabButton active={tab === 'ztf'} icon={Layers} label="ZTF Modes" onClick={() => setTab('ztf')} />
         </div>
 
@@ -583,7 +581,7 @@ export default function Appliance() {
               <div className="mb-4">
                 <h2 className="font-semibold text-gray-100">Appliance Update Manager</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Discover release metadata for the appliance, ZeroTouch Framework, or NKP Framework, then stage a host-side update request.
+                  Discover release metadata for the appliance or ZeroTouch Framework, then stage a host-side update request.
                 </p>
               </div>
 
@@ -847,7 +845,7 @@ export default function Appliance() {
               <Metric label="Current Mode" value={ztf?.compatible ? 'legacy ready' : 'blocked'} tone={ztf?.compatible ? 'good' : 'bad'} />
             </div>
             <div className="space-y-3">
-              {ztf?.supportedModes.map(mode => (
+              {ztf?.supportedModes.filter(mode => mode.id !== 'ztf2-iac').map(mode => (
                 <CheckRow key={mode.id} label={mode.label} ok={mode.available} warn={!mode.available && mode.id === 'ztf2-iac'} value={mode.description} />
               ))}
             </div>

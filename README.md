@@ -1,5 +1,7 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
+See [console integration retirement](docs/console-retirement.md) for supported pipeline execution and access to historical records.
+
 ![ZTF-Orchestrator banner with three teal-linked server clusters on a pale background](docs/assets/readme-hero/ztf-orchestrator-banner-light.webp)
 
 Deploy and configure Nutanix clusters, manage day-to-day operations, and rehearse

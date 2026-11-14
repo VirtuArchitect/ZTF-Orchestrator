@@ -15,7 +15,6 @@ import Workflows     from './pages/Workflows'
 import WorkflowDetail from './pages/WorkflowDetail'
 import UnregisterPeFromPc from './pages/UnregisterPeFromPc'
 import Scripts       from './pages/Scripts'
-import Scripts2x     from './pages/Scripts2x'
 import Executions    from './pages/Executions'
 import Jobs          from './pages/Jobs'
 import Settings      from './pages/Settings'
@@ -28,12 +27,10 @@ import DriftDetection    from './pages/DriftDetection'
 import Schedules         from './pages/Schedules'
 import ParallelExecution from './pages/ParallelExecution'
 import Approvals         from './pages/Approvals'
-import NKPFramework      from './pages/NKPFramework'
 import ValidationEvidence from './pages/ValidationEvidence'
 import Appliance          from './pages/Appliance'
 import UpgradeAdvisor     from './pages/UpgradeAdvisor'
 import YamlStudio         from './pages/YamlStudio'
-import Ztf2Iac            from './pages/Ztf2Iac'
 import Login             from './pages/Login'
 import Layout            from './components/Layout'
 import SessionActivity from './components/SessionActivity'
@@ -117,26 +114,14 @@ export default function App() {
         <Route path="/workflows/:id" element={
           <RequireRole roles={['admin', 'operator']}><WorkflowDetail /></RequireRole>
         } />
-        <Route path="/workflows-2x" element={
-          <RequireRole roles={['admin', 'operator']}><Workflows runtimeMode="ztf2" /></RequireRole>
-        } />
-        <Route path="/workflows-2x/:id" element={
-          <RequireRole roles={['admin', 'operator']}><WorkflowDetail /></RequireRole>
-        } />
         <Route path="/scripts" element={
           <RequireRole roles={['admin', 'operator']}><Scripts /></RequireRole>
-        } />
-        <Route path="/scripts-2x" element={
-          <RequireRole roles={['admin', 'operator']}><Scripts2x /></RequireRole>
         } />
         <Route path="/configs" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ConfigFiles /></RequireRole>
         } />
         <Route path="/yaml-studio" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><YamlStudio /></RequireRole>
-        } />
-        <Route path="/ztf2-iac" element={
-          <RequireRole roles={['admin', 'operator']}><Ztf2Iac /></RequireRole>
         } />
         <Route path="/executions" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><Executions /></RequireRole>
@@ -164,9 +149,6 @@ export default function App() {
         } />
         <Route path="/parallel" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ParallelExecution /></RequireRole>
-        } />
-        <Route path="/nkp" element={
-          <RequireRole roles={['admin', 'operator', 'viewer']}><NKPFramework /></RequireRole>
         } />
         <Route path="/validation-evidence" element={
           <RequireRole roles={['admin', 'operator', 'viewer']}><ValidationEvidence /></RequireRole>

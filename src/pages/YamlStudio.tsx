@@ -87,7 +87,6 @@ const BASELINE_DEFAULTS: BaselineValues = {
 const tabs: Array<{ id: StudioKind; label: string }> = [
   { id: 'cluster-baseline', label: 'Cluster Baseline' },
   { id: 'workflow-config', label: 'Workflow YAML' },
-  { id: 'ztf2-iac', label: 'ZTF 2.x IaC' },
   { id: 'global-config', label: 'Global Config' },
   { id: 'upgrade-rule-pack', label: 'Upgrade Rules' },
 ]
@@ -542,7 +541,7 @@ export default function YamlStudio() {
               <p className="mt-1 text-xs text-gray-500">Choose a known config shape, then validate before saving.</p>
             </div>
             <div className="space-y-2">
-              {templates.map(template => (
+              {templates.filter(template => template.id !== 'ztf2-iac').map(template => (
                 <button
                   key={template.id}
                   type="button"

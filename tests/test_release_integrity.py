@@ -762,11 +762,11 @@ def test_ztf2_converted_script_actions_are_separate_from_legacy_launcher():
     user_guide = (ROOT / 'docs' / 'user-guide.md').read_text(encoding='utf-8')
     demo_guide = (ROOT / 'docs' / 'demo' / 'README.md').read_text(encoding='utf-8')
 
-    assert 'Scripts2x' in app
-    assert 'path="/scripts-2x"' in app
+    assert 'Scripts2x' not in app
+    assert 'path="/scripts-2x"' not in app
     assert "path: '/scripts', icon: Terminal, label: 'Scripts', roles: OPERATORS" in sidebar
-    assert "label: 'Optional Integrations'" in sidebar
-    assert "label: 'Scripts 2.x'" in sidebar
+    assert "label: 'Optional Integrations'" not in sidebar
+    assert "label: 'Scripts 2.x'" not in sidebar
 
     assert 'export const ZTF2_SCRIPTS' in data
     for action_id in [

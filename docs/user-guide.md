@@ -1,5 +1,7 @@
 # ZTF-Orchestrator User Guide
 
+The [console retirement procedure](console-retirement.md) describes current ZTF 1.x operation and historical integration access.
+
 See [current documented build and update details](current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
 
 Current candidate: **v1.8.5-rc1**, reviewed against merged application revision

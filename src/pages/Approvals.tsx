@@ -9,8 +9,6 @@ import { WORKFLOWS as CATALOG_WORKFLOWS } from '../data'
 
 const WORKFLOWS = [
   ...CATALOG_WORKFLOWS.map(workflow => workflow.id),
-  'ztf2:apply',
-  'ztf2:destroy',
 ]
 
 const STATUS_FILTERS: ApprovalStatus[] = ['pending','approved','rejected','expired']

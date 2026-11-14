@@ -59,3 +59,10 @@ def admin_token(client, isolated_data_dir):
 @pytest.fixture()
 def auth_headers(admin_token):
     return {'Authorization': f'Bearer {admin_token}'}
+
+
+@pytest.fixture
+def historical_integration_contract(monkeypatch):
+    """Exercise retained implementation without changing production defaults."""
+    import server
+    monkeypatch.setattr(server, '_integrations_retired', lambda: False)
