@@ -9,6 +9,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Retire Native pipeline opt-in, NKP and ZTF 2.x console execution while preserving ZTF 1.x pipelines and recovery.
+
 ### Fixed
 - Keep workflow actions visible on narrow screens, retain imported generic workflow YAML, and validate Site Deploy and Management Prism Central inputs against the bundled framework.
 - Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. The editor identifies the failing pipeline step and shows why profile deletion is unavailable.

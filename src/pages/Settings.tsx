@@ -770,22 +770,7 @@ export default function Settings() {
                     <span className="block text-xs text-gray-500">Uses v1.5.2 and the existing workflow/script catalog.</span>
                   </span>
                 </label>
-                <label className={clsx(
-                  'flex items-start gap-3 rounded-lg border px-3 py-3 transition-colors',
-                  form.ztf2Enabled ? 'border-amber-500/30 bg-amber-500/10' : 'border-border bg-gray-950/40'
-                )}>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(form.ztf2Enabled)}
-                    disabled={!isAdmin}
-                    onChange={event => setForm(p => ({ ...p, ztf2Enabled: event.target.checked }))}
-                    className="mt-1"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-gray-100">ZTF 2.x Plan/Apply</span>
-                    <span className="block text-xs text-gray-500">Separate IaC lane. Apply and destroy require approval-bound plans.</span>
-                  </span>
-                </label>
+
               </div>
             </Section>
 
@@ -795,18 +780,6 @@ export default function Settings() {
                 <Field label="ZTF Installation Path" value={form.ztfPath} disabled={!isAdmin} mono
                   placeholder="/home/user/zerotouch-framework"
                   onChange={value => setForm(p => ({ ...p, ztfPath: value }))} />
-                <Field label="ZTF 2.x Runtime Path" value={form.ztf2Path || ''} disabled={!isAdmin} mono
-                  placeholder="/opt/zerotouch-framework-2x"
-                  onChange={value => setForm(p => ({ ...p, ztf2Path: value }))} />
-                <Field label="ZTF 2.x Command" value={form.ztf2Command || ''} disabled={!isAdmin} mono
-                  placeholder="ztf"
-                  onChange={value => setForm(p => ({ ...p, ztf2Command: value }))} />
-                <Field label="ZTF 2.x Project Directory" value={form.ztf2ProjectDir || ''} disabled={!isAdmin} mono
-                  placeholder="/var/lib/ztf-orchestrator/ztf2-projects/default"
-                  onChange={value => setForm(p => ({ ...p, ztf2ProjectDir: value }))} />
-                <Field label="NKP Framework Path" value={form.nkpPath} disabled={!isAdmin} mono
-                  placeholder="/home/user/nkp-zerotouch-framework"
-                  onChange={value => setForm(p => ({ ...p, nkpPath: value }))} />
                 <Field label="Python Executable" value={form.pythonPath} disabled={!isAdmin} mono
                   placeholder="python3"
                   onChange={value => setForm(p => ({ ...p, pythonPath: value }))} />
@@ -820,13 +793,8 @@ export default function Settings() {
               <Field label="ZTF Repository URL" value={form.repoUrl} disabled={!isAdmin} mono
                 placeholder="https://github.com/nutanixdev/zerotouch-framework.git"
                 onChange={value => setForm(p => ({ ...p, repoUrl: value }))} />
-              <div className="mt-4">
-                <Field label="NKP Repository URL" value={form.nkpRepoUrl} disabled={!isAdmin} mono
-                  placeholder="https://github.com/VirtuArchitect/nkp-zerotouch-framework.git"
-                  onChange={value => setForm(p => ({ ...p, nkpRepoUrl: value }))} />
-              </div>
               <p className="text-xs text-gray-500 mt-3">
-                Used during Setup & Install and NKP Framework setup. Use approved repositories or internal mirrors.
+                Used during Setup & Install. Use approved repositories or internal mirrors.
               </p>
             </Section>
             </div>

@@ -212,7 +212,7 @@ def test_install_skips_git_pull_for_invalid_git_marker(client, auth_headers, tmp
     assert all(call[:2] != ['git', 'pull'] for call in calls)
 
 
-def test_ztf2_install_uses_separate_checkout_and_runtime(client, auth_headers, tmp_path, monkeypatch):
+def test_ztf2_install_uses_separate_checkout_and_runtime(historical_integration_contract, client, auth_headers, tmp_path, monkeypatch):
     """ZTF 2.x install must use ztf2Path/ztf2Command rather than the legacy runtime."""
     import subprocess
 
@@ -267,7 +267,7 @@ def test_ztf2_install_uses_separate_checkout_and_runtime(client, auth_headers, t
     assert any(call == [str(ztf2_command), '--help'] for call in calls)
 
 
-def test_ztf2_install_clones_into_existing_empty_runtime_dir(client, auth_headers, tmp_path, monkeypatch):
+def test_ztf2_install_clones_into_existing_empty_runtime_dir(historical_integration_contract, client, auth_headers, tmp_path, monkeypatch):
     """Docker/appliance images create the ZTF 2.x path before the repo is cloned."""
     import subprocess
 

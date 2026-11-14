@@ -6643,6 +6643,32 @@ def require_role(*roles):
 
 # ─── Request / response hooks ─────────────────────────────────────────────────
 
+def _integrations_retired() -> bool:
+    return True
+
+
+@app.before_request
+def retired_integration_actions():
+    if not _integrations_retired():
+        return None
+    if request.method in {'GET', 'HEAD', 'OPTIONS'}:
+        return None
+    path = request.path.rstrip('/')
+    retired = path.startswith(('/api/nkp/', '/api/ztf2/'))
+    preserve_delete = request.method == 'DELETE'
+    if retired and not preserve_delete:
+        return jsonify({'error': 'This integration is retired. Saved records remain available for review.'}), 410
+    if path in {'/api/jobs', '/api/approvals', '/api/validation-evidence'} and request.is_json:
+        payload = request.get_json(silent=True)
+        if isinstance(payload, dict) and (
+            payload.get('framework') in ('nkp', 'ztf2')
+            or str(payload.get('workflow', '')).startswith(('nkp:', 'ztf2:'))
+            or (path == '/api/validation-evidence' and payload.get('source') == 'nkp')
+        ):
+            return jsonify({'error': 'This integration is retired.'}), 410
+    return None
+
+
 @app.before_request
 def check_body_size():
     if request.path == '/api/nkp/binaries/upload':
@@ -35130,6 +35156,10 @@ class ExecutionJobManager:
         if payload.get('framework') == 'native-foundation':
             self._run_native_foundation_review_job(job_id, payload, user)
             return
+        if _integrations_retired() and payload.get('framework') in ('nkp', 'ztf2'):
+            self._emit(job_id, 'error', 'This integration is retired.')
+            self._complete(job_id, 'failed', -1)
+            return
         if payload.get('framework') == 'nkp':
             self._run_nkp_job(job_id, payload, user)
             return
@@ -41526,46 +41556,13 @@ def _pipeline_step_error(step) -> str | None:
     return _approval_automation_error(action)
 
 
-def _native_pipeline_plan(steps):
-    plans, results = [], []
-    for index, step in enumerate(steps, 1):
-        error = _pipeline_step_error(step)
-        if not error and step['workflow'] != 'SetPrismLoginTitlePe':
-            error = 'This action still requires the ZTF 1.x executor'
-        if not error:
-            try:
-                path = safe_config_path(step['configFile'], get_configs_dir())
-                if not path or not path.is_file() or path.stat().st_size > 131072:
-                    raise ValueError()
-                config = yaml.safe_load(path.read_text(encoding='utf-8'))
-                validate_pe_login_title_intent(config)
-                if set(config) - {'clusters', 'pe_credential', 'prism_login_title_verify_tls'}:
-                    raise ValueError()
-                credentials = prepare_pe_login_title_credentials(config, _pe_login_title_resolver(config))
-                if any(not target[-1] for target in credentials):
-                    raise ValueError()
-                plans.append(config)
-            except (ValueError, OSError, yaml.YAMLError, RecursionError):
-                error = 'Native login title requires title-only YAML, credential references and TLS verification'
-        results.append({'step': index, 'compatible': not error, 'reason': error})
-    return plans, results
-
-
-@app.route('/api/pipelines/compatibility', methods=['POST'])
-@require_role('admin')
-def pipeline_compatibility():
-    steps = (request.get_json(silent=True) or {}).get('steps')
-    if not isinstance(steps, list) or not 0 < len(steps) <= 100:
-        return jsonify({'error': 'Provide between 1 and 100 steps'}), 400
-    _, results = _native_pipeline_plan(steps)
-    return jsonify({'compatible': all(row['compatible'] for row in results), 'steps': results})
-
-
 def _pipeline_executor_error(data, previous='legacy'):
     if 'executor' not in data:
         return None
     selected = data['executor']
-    if selected not in ('legacy', 'native'):
+    if selected == 'native':
+        return 'Native pipeline execution is retired. Select ZTF 1.x.', 410
+    if selected != 'legacy':
         return 'Unknown pipeline executor', 400
     if selected != previous and getattr(request, 'current_user', {}).get('role') != 'admin':
         return 'Changing the pipeline executor requires an administrator', 403
@@ -41599,7 +41596,6 @@ def create_pipeline():
         'id':        str(uuid.uuid4()),
         'name':      name,
         'steps':     steps,
-        **({'executor': 'native'} if data.get('executor') == 'native' else {}),
         'createdAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
         'updatedAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
     }
@@ -41662,6 +41658,8 @@ def run_pipeline(pipeline_id: str):
     pipeline = next((p for p in _load_pipelines() if p['id'] == pipeline_id), None)
     if not pipeline:
         return jsonify({'error': 'Pipeline not found'}), 404
+    if pipeline.get('executor', 'legacy') != 'legacy':
+        return jsonify({'error': 'Review this pipeline and explicitly convert it to ZTF 1.x before running.'}), 409
     steps = pipeline.get('steps', [])
     if not steps:
         return jsonify({'error': 'Pipeline has no steps'}), 400
@@ -41674,18 +41672,8 @@ def run_pipeline(pipeline_id: str):
     ack_error = _validate_destructive_script_ack(script_ids, request.get_json(silent=True) or {})
     if ack_error:
         return jsonify({'error': ack_error}), 400
-    native = pipeline.get('executor') == 'native'
-    native_plans = []
-    if native:
-        if getattr(request, 'current_user', {}).get('role') != 'admin':
-            return jsonify({'error': 'Native pipelines require an administrator'}), 403
-        if _maintenance_active():
-            return jsonify({'error': 'Maintenance mode blocks pipeline execution'}), 503
-        native_plans, results = _native_pipeline_plan(steps)
-        if any(not result['compatible'] for result in results):
-            return jsonify({'error': 'Native compatibility check failed', 'steps': results}), 409
     pe_users_configs = {}
-    for s in ([] if native else steps):
+    for s in steps:
         if s['workflow'] in PIPELINE_SCRIPT_IDS or (s['workflow'] == 'config-cluster' and s.get('configFile')):
             path = safe_config_path(s['configFile'], get_configs_dir())
             if not path or not path.is_file():
@@ -41725,7 +41713,7 @@ def run_pipeline(pipeline_id: str):
     python_path  = settings['pythonPath']
     configs_dir  = get_configs_dir()
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
-    incompatible = None if native else _ztf_incompatible_error(ztf_path)
+    incompatible = _ztf_incompatible_error(ztf_path)
     if incompatible:
         body, status_code = incompatible
         return jsonify(body), status_code
@@ -41774,62 +41762,50 @@ def run_pipeline(pipeline_id: str):
             failure_evidence = False
             private_config = None
 
-            native_code = -1
             try:
-                if native:
-                    from pe_login_title import configure
-                    if _maintenance_active() or (_find_user(current_user) or {}).get('role') != 'admin':
-                        raise ValueError('Native execution is no longer authorized')
-                    config = native_plans[step_idx]
-                    messages = []
-                    configure(config, _pe_login_title_resolver(config), messages.append)
-                    native_code = 0
-                    for message in messages:
-                        yield from send('stdout', _redact_text(message))
-                else:
-                    if config_file in pe_users_configs:
-                        import tempfile
-                        # Execute the validated snapshot, not a config another user
-                        # could edit while an earlier pipeline step is running.
-                        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
-                            private_config = Path(snapshot.name)
-                            snapshot.write(pe_users_configs[config_file])
-                        cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow, '-f', str(private_config)]
-                    proc = subprocess.Popen(
-                        cmd_args, cwd=ztf_path,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                    )
+                if config_file in pe_users_configs:
+                    import tempfile
+                    # Execute the validated snapshot, not a config another user
+                    # could edit while an earlier pipeline step is running.
+                    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
+                        private_config = Path(snapshot.name)
+                        snapshot.write(pe_users_configs[config_file])
+                    cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow, '-f', str(private_config)]
+                proc = subprocess.Popen(
+                    cmd_args, cwd=ztf_path,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                )
 
-                    def _timeout_kill():
-                        if proc and proc.poll() is None:
-                            proc.kill()
+                def _timeout_kill():
+                    if proc and proc.poll() is None:
+                        proc.kill()
 
-                    kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
-                    kill_timer.start()
+                kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
+                kill_timer.start()
 
-                    combined: queue.Queue = queue.Queue()
+                combined: queue.Queue = queue.Queue()
 
-                    def _reader(stream, label):
-                        for line in stream:
-                            combined.put((label, line.rstrip()))
-                        combined.put(None)
+                def _reader(stream, label):
+                    for line in stream:
+                        combined.put((label, line.rstrip()))
+                    combined.put(None)
 
-                    t_out = threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True)
-                    t_err = threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True)
-                    t_out.start(); t_err.start()
+                t_out = threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True)
+                t_err = threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True)
+                t_out.start(); t_err.start()
 
-                    done = 0
-                    while done < 2:
-                        item = combined.get()
-                        if item is None:
-                            done += 1
-                        else:
-                            label, line = item
-                            failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
-                            yield from send(label, _redact_text(line) if is_script else line)
+                done = 0
+                while done < 2:
+                    item = combined.get()
+                    if item is None:
+                        done += 1
+                    else:
+                        label, line = item
+                        failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
+                        yield from send(label, _redact_text(line) if is_script else line)
 
-                    proc.wait()
-                    step_status = 'success' if proc.returncode == 0 and not failure_evidence else 'failed'
+                proc.wait()
+                step_status = 'success' if proc.returncode == 0 and not failure_evidence else 'failed'
 
             except GeneratorExit:
                 if proc and proc.poll() is None:
@@ -41838,7 +41814,7 @@ def run_pipeline(pipeline_id: str):
                 return
 
             except Exception as exc:
-                yield from send('stderr', ('Native login-title execution failed. Verify PE before retrying.' if native else f'Step {step_idx} error: {exc}'))
+                yield from send('stderr', f'Step {step_idx} error: {exc}')
                 step_status = 'failed'
 
             finally:
@@ -41852,14 +41828,14 @@ def run_pipeline(pipeline_id: str):
                 'workflow':   workflow,
                 'configFile': config_file,
                 'status':     step_status,
-                'returnCode': native_code if native else proc.returncode if proc else -1,
+                'returnCode': proc.returncode if proc else -1,
             })
 
             yield from send('step_complete', {
                 'step':       step_idx,
                 'workflow':   workflow,
                 'status':     step_status,
-                'returnCode': native_code if native else proc.returncode if proc else -1,
+                'returnCode': proc.returncode if proc else -1,
             })
 
             if step_status == 'failed':
@@ -43840,6 +43816,8 @@ def import_appliance_update():
     if not isinstance(manifest, dict):
         return jsonify({'error': 'manifest must be a JSON object'}), 400
     manifest = {**manifest, 'source': manifest.get('source') or 'offline'}
+    if _integrations_retired() and manifest.get('target') == 'nkp-framework':
+        return jsonify({'error': 'NKP framework updates are retired.'}), 410
     canonical = json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode('utf-8')
     manifest.setdefault('manifestSha256', hashlib.sha256(canonical).hexdigest())
     record, error = _clean_update_manifest(manifest)
@@ -43875,6 +43853,8 @@ def import_appliance_update_package():
         if error:
             return jsonify({'error': error}), 400
         assert manifest is not None and manifest_sha is not None
+        if _integrations_retired() and manifest.get('target') == 'nkp-framework':
+            return jsonify({'error': 'NKP framework updates are retired.'}), 410
         package_info, error = _extract_verified_update_artifacts(package_path, manifest, package_dir)
         if error:
             return jsonify({'error': error}), 400
@@ -43937,6 +43917,8 @@ def stage_appliance_update(update_id):
         return jsonify({'error': 'Update must be verified before staging'}), 400
     now = _now_iso()
     target = existing.get('target') or 'ztf-orchestrator'
+    if _integrations_retired() and target == 'nkp-framework':
+        return jsonify({'error': 'NKP framework updates are retired.'}), 410
     target_info = UPDATE_TARGETS.get(target, UPDATE_TARGETS['ztf-orchestrator'])
     if target == 'ztf-orchestrator' and existing.get('imageTarPath') and not Path(existing['imageTarPath']).is_file():
         return jsonify({'error': 'Staged container image tar was not found on disk'}), 400

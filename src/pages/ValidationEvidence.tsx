@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from '../router'
-import { AlertTriangle, Download, FileArchive, Loader, Plus, RefreshCw, ShieldCheck, Terminal, Trash2 } from 'lucide-react'
+import { AlertTriangle, Download, FileArchive, Loader, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { apiFetch, authHeaders } from '../utils/api'
 import { useStore } from '../store'
@@ -49,7 +49,7 @@ export default function ValidationEvidence() {
   const [profiles, setProfiles] = useState<NkpProfile[]>([])
   const [executions, setExecutions] = useState<Execution[]>([])
   const [configs, setConfigs] = useState<ConfigFile[]>([])
-  const [source, setSource] = useState<'nkp' | 'ztf-workflow'>('nkp')
+  const [source] = useState<'nkp' | 'ztf-workflow'>('ztf-workflow')
   const [selectedProfile, setSelectedProfile] = useState('')
   const [selectedExecution, setSelectedExecution] = useState('')
   const [selectedConfig, setSelectedConfig] = useState('')
@@ -216,25 +216,6 @@ export default function ValidationEvidence() {
 
           {error && <div className="mt-4 rounded-lg border border-red-500/30 bg-red-950/20 px-4 py-3 text-sm text-red-200">{error}</div>}
           {message && <div className="mt-4 rounded-lg border border-nutanix-teal/30 bg-nutanix-teal/10 px-4 py-3 text-sm text-nutanix-teal">{message}</div>}
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setSource('nkp')}
-              className={clsx('btn-secondary gap-1.5', source === 'nkp' && 'border-nutanix-blue text-gray-100')}
-            >
-              <ShieldCheck size={14} />
-              NKP Readiness
-            </button>
-            <button
-              type="button"
-              onClick={() => setSource('ztf-workflow')}
-              className={clsx('btn-secondary gap-1.5', source === 'ztf-workflow' && 'border-nutanix-blue text-gray-100')}
-            >
-              <Terminal size={14} />
-              ZTF UAT Pack
-            </button>
-          </div>
 
           {source === 'nkp' ? (
             <div className="mt-5 grid grid-cols-1 xl:grid-cols-[1fr_2fr] gap-4">

@@ -141,7 +141,7 @@ def test_appliance_status_and_ztf_compatibility(client, auth_headers):
     assert body['runtimes']['ztf2']['enabled'] is False
 
 
-def test_ztf2_runtime_availability_and_job_guards(client, auth_headers, isolated_data_dir):
+def test_ztf2_runtime_availability_and_job_guards(historical_integration_contract, client, auth_headers, isolated_data_dir):
     ztf2_dir = isolated_data_dir / 'ztf2-runtime'
     (ztf2_dir / 'ztf').mkdir(parents=True)
     (ztf2_dir / 'pyproject.toml').write_text('[project]\nname = "zerotouch-framework"\n')
@@ -183,7 +183,7 @@ def test_ztf2_runtime_availability_and_job_guards(client, auth_headers, isolated
     assert job['trace']['globalFile'] == 'global.yml'
 
 
-def test_ztf2_status_reports_configured_runtime(client, auth_headers, isolated_data_dir):
+def test_ztf2_status_reports_configured_runtime(historical_integration_contract, client, auth_headers, isolated_data_dir):
     ztf2_dir = isolated_data_dir / 'ztf2-runtime'
     (ztf2_dir / 'ztf').mkdir(parents=True)
     (ztf2_dir / 'pyproject.toml').write_text('[project]\nname = "zerotouch-framework"\n')
@@ -208,7 +208,7 @@ def test_ztf2_status_reports_configured_runtime(client, auth_headers, isolated_d
     assert body['command'] == 'ztf'
 
 
-def test_ztf2_jobs_reject_when_runtime_disabled(client, auth_headers):
+def test_ztf2_jobs_reject_when_runtime_disabled(historical_integration_contract, client, auth_headers):
     resp = client.post('/api/jobs', json={
         'framework': 'ztf2',
         'ztf2Action': 'plan',
@@ -534,7 +534,7 @@ def test_framework_update_import_verify_and_stage(client, auth_headers):
     assert body['request']['sourceRef'] == 'v1.5.2'
 
 
-def test_nkp_framework_update_accepts_safe_source_checkout_metadata(client, auth_headers):
+def test_nkp_framework_update_accepts_safe_source_checkout_metadata(historical_integration_contract, client, auth_headers):
     resp = client.post('/api/appliance/updates/import',
                        json={'manifest': {
                            'target': 'nkp-framework',
@@ -17660,7 +17660,7 @@ def test_operator_cannot_delete_job_queue_record(client, auth_headers):
     assert delete.status_code == 403
 
 
-def test_nkp_status_reports_configured_framework(client, auth_headers, tmp_path):
+def test_nkp_status_reports_configured_framework(historical_integration_contract, client, auth_headers, tmp_path):
     nkp_dir = tmp_path / 'nkp-zerotouch-framework'
     (nkp_dir / 'scripts').mkdir(parents=True)
     (nkp_dir / 'scripts' / 'zt.ps1').write_text('Write-Host nkp\n')
@@ -17679,7 +17679,7 @@ def test_nkp_status_reports_configured_framework(client, auth_headers, tmp_path)
     assert 'validate' in data['safePhases']
 
 
-def test_nkp_job_rejects_apply_and_unknown_phase(client, auth_headers):
+def test_nkp_job_rejects_apply_and_unknown_phase(historical_integration_contract, client, auth_headers):
     apply_resp = client.post('/api/nkp/jobs',
                              json={'phase': 'deploy', 'configFile': 'nkp.yaml', 'apply': True},
                              headers=auth_headers)
@@ -17693,7 +17693,7 @@ def test_nkp_job_rejects_apply_and_unknown_phase(client, auth_headers):
     assert 'not allowed' in phase_resp.get_json()['error']
 
 
-def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypatch):
+def test_nkp_job_submit_runs_safe_phase(historical_integration_contract, client, auth_headers, tmp_path, monkeypatch):
     import server
 
     nkp_dir = tmp_path / 'nkp-zerotouch-framework'
@@ -17741,7 +17741,7 @@ def test_nkp_job_submit_runs_safe_phase(client, auth_headers, tmp_path, monkeypa
     assert 'validate' in calls[0]['args']
 
 
-def test_nkp_job_records_trace_and_rejects_stale_profile_revision(client, auth_headers):
+def test_nkp_job_records_trace_and_rejects_stale_profile_revision(historical_integration_contract, client, auth_headers):
     import server
 
     server._job_manager.stop()
@@ -17787,7 +17787,7 @@ def test_nkp_job_records_trace_and_rejects_stale_profile_revision(client, auth_h
     assert 'cluster' in job['trace']['schemaMissing']
 
 
-def test_nkp_controlled_phase_requires_approval(client, auth_headers):
+def test_nkp_controlled_phase_requires_approval(historical_integration_contract, client, auth_headers):
     resp = client.post('/api/nkp/jobs',
                        json={
                            'phase': 'deploy',
@@ -17801,7 +17801,7 @@ def test_nkp_controlled_phase_requires_approval(client, auth_headers):
     assert 'requires' in data['error']
 
 
-def test_nkp_controlled_phase_accepts_approved_gate(client, auth_headers, tmp_path, monkeypatch):
+def test_nkp_controlled_phase_accepts_approved_gate(historical_integration_contract, client, auth_headers, tmp_path, monkeypatch):
     import server
 
     server._job_manager.stop()
@@ -17865,7 +17865,7 @@ def test_nkp_controlled_phase_accepts_approved_gate(client, auth_headers, tmp_pa
     assert job['taskIds'] == ['123e4567-e89b-12d3-a456-426614174000']
 
 
-def test_nkp_binary_register_list_default_and_delete(client, auth_headers, tmp_path):
+def test_nkp_binary_register_list_default_and_delete(historical_integration_contract, client, auth_headers, tmp_path):
     staged = tmp_path / 'nkp'
     staged.write_text('binary placeholder')
 
@@ -17901,7 +17901,7 @@ def test_nkp_binary_register_list_default_and_delete(client, auth_headers, tmp_p
     assert len(remaining) == 1
 
 
-def test_nkp_binary_upload_stores_checksum_and_file(client, auth_headers, isolated_data_dir):
+def test_nkp_binary_upload_stores_checksum_and_file(historical_integration_contract, client, auth_headers, isolated_data_dir):
     resp = client.post('/api/nkp/binaries/upload',
                        data={
                            'name': 'NKP Bundle',
@@ -17919,7 +17919,7 @@ def test_nkp_binary_upload_stores_checksum_and_file(client, auth_headers, isolat
     assert isolated_data_dir in Path(binary['path']).parents
 
 
-def test_nkp_binary_viewer_can_list_but_not_write(client, auth_headers):
+def test_nkp_binary_viewer_can_list_but_not_write(historical_integration_contract, client, auth_headers):
     _create_user(client, auth_headers, 'nkp-viewer', 'viewer')
     viewer_headers = _login(client, 'nkp-viewer')
 
@@ -17932,7 +17932,7 @@ def test_nkp_binary_viewer_can_list_but_not_write(client, auth_headers):
     assert create.status_code == 403
 
 
-def test_nkp_cli_compatibility_runs_registered_binary_checks(client, auth_headers, tmp_path, monkeypatch):
+def test_nkp_cli_compatibility_runs_registered_binary_checks(historical_integration_contract, client, auth_headers, tmp_path, monkeypatch):
     import server
 
     nkp_cli = tmp_path / 'nkp'
@@ -17956,7 +17956,7 @@ def test_nkp_cli_compatibility_runs_registered_binary_checks(client, auth_header
     assert {item['id'] for item in data['checks']} >= {'nkp_version', 'nutanix_cluster_create_help'}
 
 
-def test_nkp_cli_compatibility_blocks_missing_path(client, auth_headers):
+def test_nkp_cli_compatibility_blocks_missing_path(historical_integration_contract, client, auth_headers):
     resp = client.post('/api/nkp/compatibility', json={'path': '/not/a/real/nkp'}, headers=auth_headers)
     assert resp.status_code == 200
     data = resp.get_json()
@@ -17964,7 +17964,7 @@ def test_nkp_cli_compatibility_blocks_missing_path(client, auth_headers):
     assert data['summary']['failed'] == 1
 
 
-def test_nkp_cli_compatibility_viewer_forbidden(client, auth_headers):
+def test_nkp_cli_compatibility_viewer_forbidden(historical_integration_contract, client, auth_headers):
     _create_user(client, auth_headers, 'nkp-compat-viewer', 'viewer')
     viewer_headers = _login(client, 'nkp-compat-viewer')
 
@@ -18041,7 +18041,7 @@ def _valid_nkp_profile():
     }
 
 
-def test_nkp_template_packs_list_and_apply(client, auth_headers):
+def test_nkp_template_packs_list_and_apply(historical_integration_contract, client, auth_headers):
     listing = client.get('/api/nkp/templates', headers=auth_headers)
     assert listing.status_code == 200
     templates = listing.get_json()
@@ -18064,7 +18064,7 @@ def test_nkp_template_packs_list_and_apply(client, auth_headers):
     assert data['readiness']['score'] >= 80
 
 
-def test_nkp_template_specific_readiness_and_preview(client, auth_headers):
+def test_nkp_template_specific_readiness_and_preview(historical_integration_contract, client, auth_headers):
     profile = _valid_nkp_profile()
     profile['template'] = {
         'id': 'workload-cluster',
@@ -18091,7 +18091,7 @@ def test_nkp_template_specific_readiness_and_preview(client, auth_headers):
     assert checks['template_workload_management_ref']['status'] == 'pass'
 
 
-def test_nkp_airgapped_template_requires_registry_and_binary(client, auth_headers):
+def test_nkp_airgapped_template_requires_registry_and_binary(historical_integration_contract, client, auth_headers):
     profile = _valid_nkp_profile()
     profile['template'] = {
         'id': 'airgapped-local-registry',
@@ -18111,7 +18111,7 @@ def test_nkp_airgapped_template_requires_registry_and_binary(client, auth_header
     assert 'registry:' in resp.get_json()['content']
 
 
-def test_nkp_profile_preview_includes_proxy_registry_and_image_builder(client, auth_headers):
+def test_nkp_profile_preview_includes_proxy_registry_and_image_builder(historical_integration_contract, client, auth_headers):
     profile = _valid_nkp_profile()
     profile['template'] = {
         'id': 'airgapped-local-registry',
@@ -18156,7 +18156,7 @@ def test_nkp_profile_preview_includes_proxy_registry_and_image_builder(client, a
     assert checks['template_airgap_registry_ca']['status'] == 'pass'
 
 
-def test_nkp_examples_list_schema_validate_and_import(client, auth_headers, tmp_path):
+def test_nkp_examples_list_schema_validate_and_import(historical_integration_contract, client, auth_headers, tmp_path):
     nkp_dir = tmp_path / 'nkp-zerotouch-framework'
     examples = nkp_dir / 'configs' / 'environments'
     examples.mkdir(parents=True)
@@ -18218,7 +18218,7 @@ cluster:
     assert payload['generatedSchemaValidation']['status'] in {'pass', 'warn'}
 
 
-def test_nkp_template_apply_restricted_for_viewer(client, auth_headers):
+def test_nkp_template_apply_restricted_for_viewer(historical_integration_contract, client, auth_headers):
     _create_user(client, auth_headers, 'template-viewer', 'viewer')
     viewer_headers = _login(client, 'template-viewer')
 
@@ -18231,7 +18231,7 @@ def test_nkp_template_apply_restricted_for_viewer(client, auth_headers):
     assert apply_resp.status_code == 403
 
 
-def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, isolated_data_dir):
+def test_nkp_profile_create_validate_and_generate_config(historical_integration_contract, client, auth_headers, isolated_data_dir):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     assert create.status_code == 201
     profile = create.get_json()
@@ -18276,7 +18276,7 @@ def test_nkp_profile_create_validate_and_generate_config(client, auth_headers, i
     assert (isolated_data_dir / 'configs' / 'nkp-lab-management.yaml').exists()
 
 
-def test_nkp_profile_rejects_missing_required_fields(client, auth_headers):
+def test_nkp_profile_rejects_missing_required_fields(historical_integration_contract, client, auth_headers):
     resp = client.post('/api/nkp/profiles', json={'name': 'Incomplete'}, headers=auth_headers)
     assert resp.status_code == 400
     data = resp.get_json()
@@ -18284,7 +18284,7 @@ def test_nkp_profile_rejects_missing_required_fields(client, auth_headers):
     assert any('Cluster name' in item for item in data['validation'])
 
 
-def test_nkp_profile_generate_rejects_path_traversal(client, auth_headers):
+def test_nkp_profile_generate_rejects_path_traversal(historical_integration_contract, client, auth_headers):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     profile = create.get_json()
     resp = client.post(f"/api/nkp/profiles/{profile['id']}/generate",
@@ -18293,7 +18293,7 @@ def test_nkp_profile_generate_rejects_path_traversal(client, auth_headers):
     assert resp.status_code == 400
 
 
-def test_nkp_profile_readiness_reports_ready_with_warnings(client, auth_headers):
+def test_nkp_profile_readiness_reports_ready_with_warnings(historical_integration_contract, client, auth_headers):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     profile = create.get_json()
     resp = client.get(f"/api/nkp/profiles/{profile['id']}/readiness", headers=auth_headers)
@@ -18306,7 +18306,7 @@ def test_nkp_profile_readiness_reports_ready_with_warnings(client, auth_headers)
     assert 'generated_yaml' in check_ids
 
 
-def test_nkp_profile_readiness_blocks_duplicate_and_outside_ips(client, auth_headers):
+def test_nkp_profile_readiness_blocks_duplicate_and_outside_ips(historical_integration_contract, client, auth_headers):
     profile = _valid_nkp_profile()
     profile['network']['subnet'] = '10.42.10.0/24'
     profile['cluster']['vip'] = '10.99.10.50'
@@ -18321,7 +18321,7 @@ def test_nkp_profile_readiness_blocks_duplicate_and_outside_ips(client, auth_hea
     assert 'unique_ips' in failed
 
 
-def test_validation_evidence_create_list_download_delete(client, auth_headers):
+def test_validation_evidence_create_list_download_delete(historical_integration_contract, client, auth_headers):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     assert create.status_code == 201
     profile = create.get_json()
@@ -18468,7 +18468,7 @@ def test_validation_evidence_can_capture_execution_history_uat_pack(client, auth
     assert 'Configured Prism Central NTP' in record['outputExcerpt']
 
 
-def test_validation_evidence_recomputes_client_supplied_attestations(client, auth_headers):
+def test_validation_evidence_recomputes_client_supplied_attestations(historical_integration_contract, client, auth_headers):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     assert create.status_code == 201
     profile = create.get_json()
@@ -18493,7 +18493,7 @@ def test_validation_evidence_recomputes_client_supplied_attestations(client, aut
     assert record['status'] in {'ready', 'needs_review'}
 
 
-def test_validation_evidence_viewer_can_read_not_create_or_delete(client, auth_headers):
+def test_validation_evidence_viewer_can_read_not_create_or_delete(historical_integration_contract, client, auth_headers):
     create = client.post('/api/nkp/profiles', json=_valid_nkp_profile(), headers=auth_headers)
     profile = create.get_json()
     evidence = client.post('/api/validation-evidence',
@@ -18509,7 +18509,7 @@ def test_validation_evidence_viewer_can_read_not_create_or_delete(client, auth_h
     assert client.delete(f"/api/validation-evidence/{evidence['id']}", headers=viewer_headers).status_code == 403
 
 
-def test_nkp_job_rejects_invalid_yaml_before_queue(client, auth_headers):
+def test_nkp_job_rejects_invalid_yaml_before_queue(historical_integration_contract, client, auth_headers):
     resp = client.post('/api/nkp/jobs',
                        json={'phase': 'validate', 'configFile': 'bad.yaml', 'configContent': 'not: [valid'},
                        headers=auth_headers)
@@ -18711,7 +18711,7 @@ def test_database_backup_restore_creates_safety_backup_and_runs_pg_restore(clien
     assert 'secret' not in calls[1]['cmd']
 
 
-def test_maintenance_lock_blocks_execution_submissions(client, auth_headers):
+def test_maintenance_lock_blocks_execution_submissions(historical_integration_contract, client, auth_headers):
     import server
 
     assert server._enter_maintenance('database restore', 'test') is True

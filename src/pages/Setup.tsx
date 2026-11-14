@@ -34,11 +34,6 @@ const RUNTIMES: Array<{
     label: 'ZTF 1.x Legacy',
     description: 'Workflow and script catalog runtime',
   },
-  {
-    id: 'ztf2',
-    label: 'ZTF 2.x IaC',
-    description: 'Plan/apply runtime for input.yml and global.yml',
-  },
 ]
 
 export default function Setup() {
@@ -192,7 +187,7 @@ export default function Setup() {
     ]
 
   return (
-    <Layout title="Setup & Install" subtitle="Install and configure ZeroTouch Framework runtimes">
+    <Layout title="Setup & Install" subtitle="Install and configure the ZeroTouch Framework runtime">
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
         {RUNTIMES.map(item => (
           <button

@@ -4,7 +4,7 @@ import type { ElementType } from 'react'
 import {
   LayoutDashboard, Download, Settings, Workflow, Terminal,
   History, FileCode, Wrench, ChevronRight, Users, GitBranch, ScrollText,
-  FileSearch, Clock, Layers, ShieldCheck, ListChecks, Boxes, FileArchive, Archive, ShieldAlert, Wand2, Blocks, Compass, RotateCcw, Building2
+  FileSearch, Clock, Layers, ShieldCheck, ListChecks, FileArchive, Archive, ShieldAlert, Wand2, Compass, RotateCcw, Building2
 } from 'lucide-react'
 import { useStore } from '../store'
 import { APP_VERSION } from '../version'
@@ -49,13 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     { path: '/recovery/rehearsals', icon: RotateCcw, label: 'Rehearsals', roles: ALL_ROLES },
     { path: '/drift', icon: FileSearch, label: 'Drift Detection', roles: ALL_ROLES },
     { path: '/upgrade-advisor', icon: ShieldAlert, label: 'Upgrade Advisor', roles: ALL_ROLES },
-    { path: '/validation-evidence', icon: FileArchive, label: 'NKP Validation Evidence', roles: ALL_ROLES, badge: 'Preview' },
-  ] },
-  { label: 'Optional Integrations', collapsible: true, items: [
-    { path: '/nkp', icon: Boxes, label: 'NKP Framework', roles: ALL_ROLES, badge: 'Preview' },
-    { path: '/workflows-2x', icon: Blocks, label: 'Workflows 2.x', roles: OPERATORS, badge: 'Preview' },
-    { path: '/scripts-2x', icon: Blocks, label: 'Scripts 2.x', roles: OPERATORS, badge: 'Preview' },
-    { path: '/ztf2-iac', icon: Blocks, label: 'ZTF 2.x IaC', roles: OPERATORS, badge: 'Preview' },
+    { path: '/validation-evidence', icon: FileArchive, label: 'Validation Evidence', roles: ALL_ROLES },
   ] },
   { label: 'Administration', collapsible: true, items: [
     { path: '/setup', icon: Download, label: 'Setup & Install', roles: OPERATORS },
@@ -159,7 +153,7 @@ export default function Sidebar() {
         <div className="space-y-4 px-2">
           {visibleGroups.map(group => (
             <div key={group.label}>
-              {group.collapsible ? <button type="button" aria-expanded={Boolean(expanded[group.label])} aria-controls={`nav-${group.label.replace(/ /g, '-').toLowerCase()}`} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-gray-400 hover:bg-surface" title={!sidebarOpen ? group.label : undefined} onClick={() => { if (!sidebarOpen) setSidebarOpen(true); setExpanded(current => ({ ...current, [group.label]: !current[group.label] })) }}><span>{sidebarOpen ? group.label : group.label === 'Advanced Automation' ? <Terminal size={18} /> : group.label === 'Optional Integrations' ? <Boxes size={18} /> : <Settings size={18} />}</span>{sidebarOpen && <ChevronRight size={14} className={expanded[group.label] ? 'rotate-90' : ''} />}</button> : sidebarOpen ? (
+              {group.collapsible ? <button type="button" aria-expanded={Boolean(expanded[group.label])} aria-controls={`nav-${group.label.replace(/ /g, '-').toLowerCase()}`} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-gray-400 hover:bg-surface" title={!sidebarOpen ? group.label : undefined} onClick={() => { if (!sidebarOpen) setSidebarOpen(true); setExpanded(current => ({ ...current, [group.label]: !current[group.label] })) }}><span>{sidebarOpen ? group.label : group.label === 'Advanced Automation' ? <Terminal size={18} /> : <Settings size={18} />}</span>{sidebarOpen && <ChevronRight size={14} className={expanded[group.label] ? 'rotate-90' : ''} />}</button> : sidebarOpen ? (
                 <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-600">
                   {group.label}
                 </div>

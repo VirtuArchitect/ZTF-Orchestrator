@@ -234,17 +234,11 @@ export default function Dashboard() {
         : backupAgeDays !== null && backupAgeDays > 7
           ? `${backupAgeDays} days old`
           : 'OK')
-  const nkpInstalled = visibility?.deployment.nkpInstalled ?? systemChecks.some(check => check.name === 'NKP Framework' && check.value === 'found')
-  const nkpProfiles = visibility?.deployment.nkpProfiles ?? 0
-  const generatedNkpConfigs = visibility?.deployment.generatedNkpConfigs ?? 0
-  const nkpBinaries = visibility?.deployment.nkpBinaries ?? 0
-  const availableNkpBinaries = visibility?.deployment.availableNkpBinaries ?? 0
   const evidenceTotal = visibility?.evidence.total ?? 0
   const latestEvidenceStatus = visibility?.evidence.latestStatus ?? 'missing'
   const latestEvidenceAt = visibility?.evidence.latestAt ? new Date(visibility.evidence.latestAt) : null
   const evidenceNeedsAttention = (visibility?.evidence.blocked ?? 0) + (visibility?.evidence.needsReview ?? 0)
   const ztfWorkflowReady = ztfInstalled && healthIssueCount === 0
-  const nkpPlanningReady = nkpInstalled && nkpProfiles > 0 && availableNkpBinaries > 0
   const evidenceReady = evidenceTotal > 0 && latestEvidenceStatus === 'ready'
   const backupReady = backupWarning === 'OK'
   const readinessHeadline = !ztfInstalled
@@ -261,11 +255,11 @@ export default function Dashboard() {
     { label: 'Configure runtime paths', done: ztfInstalled, path: '/setup' },
     { label: 'Confirm storage backend', done: !storageIssue && storageBackend !== 'unknown', path: '/settings' },
     { label: 'Create latest database backup', done: backupReady || storageBackend !== 'postgres', path: '/settings' },
-    { label: 'Create or validate config', done: generatedNkpConfigs > 0 || executions.length > 0, path: generatedNkpConfigs > 0 ? '/configs' : '/nkp' },
+    { label: 'Create or validate config', done: executions.length > 0, path: '/configs' },
     { label: 'Request approval where required', done: pendingApprovals === 0, path: '/approvals' },
     { label: 'Run dry run', done: executions.some(item => item.workflow?.toLowerCase().includes('dry')), path: '/workflows' },
     { label: 'Submit job', done: jobs.length > 0 || executions.length > 0, path: '/jobs' },
-    { label: 'Export evidence (NKP Preview / ZTF UAT packs)', done: evidenceReady, path: '/validation-evidence' },
+    { label: 'Export validation evidence', done: evidenceReady, path: '/validation-evidence' },
   ]
 
   const stats = [
@@ -363,24 +357,12 @@ export default function Dashboard() {
         <DashboardMiniSection
           title="Readiness Layers"
           icon={Boxes}
-          path="/nkp"
+          path="/setup"
           items={[
             { label: 'Runtime', value: ztfWorkflowReady ? 'Ready' : ztfInstalled ? 'Warnings' : 'Missing', tone: ztfWorkflowReady ? 'good' : ztfInstalled ? 'warning' : 'bad', path: '/setup' },
             { label: 'ZTF workflows', value: ztfWorkflowReady ? 'Ready' : 'Check setup', tone: ztfWorkflowReady ? 'good' : 'warning', path: '/setup' },
-            { label: 'NKP planning', value: nkpPlanningReady ? 'Ready' : 'Incomplete', tone: nkpPlanningReady ? 'good' : 'warning', path: '/nkp#profiles' },
             { label: 'Evidence', value: evidenceReady ? 'Ready' : 'Missing', tone: evidenceReady ? 'good' : 'warning', path: '/validation-evidence' },
             { label: 'Backup/recovery', value: backupReady ? 'OK' : backupWarning, tone: backupReady ? 'good' : backupWarning === 'Admin only' || backupWarning === 'PostgreSQL not active' ? 'neutral' : 'warning', path: '/settings' },
-          ]}
-        />
-        <DashboardMiniSection
-          title="Deployment Inventory"
-          icon={FileArchive}
-          path="/nkp"
-          items={[
-            { label: 'NKP installed', value: nkpInstalled ? 'Yes' : 'No', tone: nkpInstalled ? 'good' : 'neutral', path: '/nkp' },
-            { label: 'Profiles', value: nkpProfiles, tone: nkpProfiles ? 'good' : 'warning', path: '/nkp#profiles' },
-            { label: 'Binaries', value: `${availableNkpBinaries}/${nkpBinaries}`, tone: availableNkpBinaries ? 'good' : nkpBinaries ? 'bad' : 'warning', path: '/nkp#binaries' },
-            { label: 'Generated configs', value: generatedNkpConfigs, tone: generatedNkpConfigs ? 'good' : 'neutral', path: '/configs' },
           ]}
         />
         <DashboardMiniSection
@@ -405,7 +387,7 @@ export default function Dashboard() {
           ]}
         />
         <DashboardMiniSection
-          title="NKP Validation Evidence · Preview"
+          title="Validation Evidence"
           icon={FileArchive}
           path="/validation-evidence"
           items={[
