@@ -41864,7 +41864,7 @@ def run_pipeline(pipeline_id: str):
             'timestamp':  ts,
             'user':       current_user,
             'pipelineId': pipeline_id,
-            'executor': 'native' if native else 'legacy',
+            'executor': 'legacy',
             'steps':      step_results,
         })
         write_json(HISTORY_FILE, history[:1000])
@@ -41879,7 +41879,7 @@ def run_pipeline(pipeline_id: str):
             'status':     overall_status,
             'steps':      step_results,
             'pipelineId': pipeline_id,
-            'executor': 'native' if native else 'legacy',
+            'executor': 'legacy',
         })
 
         # Webhook notification
