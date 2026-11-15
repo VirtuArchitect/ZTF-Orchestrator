@@ -24,10 +24,10 @@ export default defineConfig(({ mode }) => {
             'og:url': site + 'demo/',
             'og:title': 'ZTF-Orchestrator interactive demo',
             'og:description': 'Explore guided Nutanix deployment workflows with simulated data.',
-            'og:image': site + 'linkedin-demo-ad.png',
+            'og:image': site + 'linkedin-demo-landscape.png',
             'og:image:type': 'image/png',
-            'og:image:width': '1080',
-            'og:image:height': '1350',
+            'og:image:width': '1200',
+            'og:image:height': '627',
             'og:image:alt': 'Still stitching Nutanix deployment workflows together? Explore the ZTF-Orchestrator demo.',
           }
           return Object.entries(properties).map(([property, content]) => ({
