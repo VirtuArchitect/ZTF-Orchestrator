@@ -308,6 +308,8 @@ export default function ClusterCreateForm({
   const [operationBusy, setOperationBusy] = useState('')
   const [imageType, setImageType] = useState<'nos' | 'hypervisor' | 'phoenix'>('nos')
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [aosInventory, setAosInventory] = useState<{ host: string; packages: string[] } | null>(null)
+  const availableAosPackages = aosInventory?.host === pcIp ? aosInventory.packages : []
   const credentialOptions = Array.from(new Set([
     ...CREDENTIAL_KEYS, pcCred, cvmCred, hypervisorCred, clusterCred,
     ...clusters.flatMap(cluster => cluster.nodes.map(node => node.ipmiCredentialRef)),
@@ -448,6 +450,7 @@ export default function ClusterCreateForm({
     ))
 
   const runFoundationOperation = async (operation: 'validate' | 'images' | 'ipmi-test' | 'progress') => {
+    if (operation === 'images') setAosInventory(null)
     setOperationBusy(operation)
     setOperationMessage('')
     try {
@@ -459,11 +462,14 @@ export default function ClusterCreateForm({
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) throw new Error(data.error || (Array.isArray(data.errors) ? data.errors.join('; ') : 'Foundation operation failed'))
       if (operation === 'images') {
-        const aos = Array.isArray(data.inventory?.aos) ? data.inventory.aos.length : 0
+        const packages: string[] = Array.isArray(data.inventory?.aos)
+          ? data.inventory.aos.filter((item: unknown): item is string => typeof item === 'string' && Boolean(item.trim()))
+          : []
+        setAosInventory({ host: pcIp, packages: [...new Set(packages)] })
         const hypervisors = data.inventory?.hypervisors && typeof data.inventory.hypervisors === 'object'
           ? Object.values(data.inventory.hypervisors as Record<string, unknown[]>).reduce((count, items) => count + (Array.isArray(items) ? items.length : 0), 0)
           : 0
-        setOperationMessage(`Image inventory refreshed: ${aos} AOS packages, ${hypervisors} hypervisor images.`)
+        setOperationMessage(`Image inventory refreshed: ${new Set(packages).size} AOS packages, ${hypervisors} hypervisor images.`)
       } else if (operation === 'ipmi-test') {
         setOperationMessage(`IPMI credential test: ${data.passed} passed, ${data.failed} failed.`)
       } else if (operation === 'progress') {
@@ -657,8 +663,19 @@ export default function ClusterCreateForm({
           <p className="form-section-title">AOS / Hypervisor</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="label">AOS Package</label>
-              <input className="input" value={aosPackage} onChange={e => setAosPackage(e.target.value)} placeholder="AOS package name or path" />
+              <label className="label" htmlFor="foundation-vm-aos-package">AOS Package</label>
+              <input id="foundation-vm-aos-package" className="input" value={aosPackage} onChange={e => setAosPackage(e.target.value)} placeholder="AOS package name or path" />
+              {availableAosPackages.length > 0 && (
+                <select
+                  aria-label="Select an installed AOS package"
+                  className="input mt-2"
+                  value={availableAosPackages.includes(aosPackage) ? aosPackage : ''}
+                  onChange={e => setAosPackage(e.target.value)}
+                >
+                  <option value="" disabled>Select an installed AOS package</option>
+                  {availableAosPackages.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+              )}
             </div>
             <div>
               <label className="label">Hypervisor</label>

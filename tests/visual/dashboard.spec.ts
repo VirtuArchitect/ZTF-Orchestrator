@@ -1,9 +1,13 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { load } from 'js-yaml'
 
-test('Foundation VM ISO checksum survives import edit validation and export', async ({ page }) => {
+test('Foundation VM reuses installed AOS and preserves ISO checksum through validation and export', async ({ page }) => {
   await seedUiSession(page)
   let validationYaml = ''
+  const installedAos = 'nutanix_installer_package-release-ganges-7.5.1.8-stable-x86_64.tar.gz'
+  await page.route('**/api/foundation-vm/images', route =>
+    route.fulfill({ json: { inventory: { aos: [installedAos, 'older-aos.tar.gz'], hypervisors: { kvm: ['ahv.iso'] } } } }),
+  )
   await page.route('**/api/foundation-vm/validate', async route => {
     validationYaml = route.request().postDataJSON().configContent
     await route.fulfill({ json: { valid: true, errors: [] } })
@@ -16,14 +20,24 @@ test('Foundation VM ISO checksum survives import edit validation and export', as
     buffer: Buffer.from(`foundation_vm_ip: 192.0.2.10\nfoundation_vm_options: {}\ncommon_network_settings: {}\ncreate_clusters: []\naos_hypervisor_images:\n  hypervisor_type: AHV\n  hypervisor_iso: ahv.iso\n  hypervisor_checksum: ${importedChecksum}\n`),
   })
   await page.getByRole('button', { name: 'Configure', exact: true }).click()
+  await page.getByRole('button', { name: 'Refresh inventory' }).click()
+  const aosPicker = page.getByRole('combobox', { name: 'Select an installed AOS package' })
+  await aosPicker.selectOption(installedAos)
+  await expect(page.getByLabel('AOS Package', { exact: true })).toHaveValue(installedAos)
+  await page.getByRole('button', { name: 'Refresh inventory' }).click()
+  await expect(aosPicker).toHaveValue(installedAos)
   const checksum = page.getByLabel('AHV ISO Checksum', { exact: true })
   await expect(checksum).toHaveValue(importedChecksum)
   const updatedChecksum = 'b'.repeat(64)
   await checksum.fill(updatedChecksum)
   await page.getByRole('button', { name: 'Validate native payload' }).click()
   await expect.poll(() => validationYaml).toContain(updatedChecksum)
-  const config = load(validationYaml) as { aos_hypervisor_images: { hypervisor_checksum: string } }
-  expect(config.aos_hypervisor_images.hypervisor_checksum).toBe(updatedChecksum)
+  const config = load(validationYaml) as { aos_hypervisor_images: Record<string, string> }
+  expect(config.aos_hypervisor_images).toMatchObject({
+    aos_package: installedAos,
+    hypervisor_iso: 'ahv.iso',
+    hypervisor_checksum: updatedChecksum,
+  })
   await page.evaluate(() => {
     const original = URL.createObjectURL.bind(URL)
     URL.createObjectURL = value => {
@@ -38,7 +52,7 @@ test('Foundation VM ISO checksum survives import edit validation and export', as
   const download = await downloadPromise
   expect(download.suggestedFilename()).toBe('create_foundation_vm_cluster.yml')
   const downloadedYaml = await page.evaluate(() => (window as unknown as { checksumExport: Promise<string> }).checksumExport)
-  expect((load(downloadedYaml) as typeof config).aos_hypervisor_images.hypervisor_checksum).toBe(updatedChecksum)
+  expect((load(downloadedYaml) as typeof config).aos_hypervisor_images).toEqual(config.aos_hypervisor_images)
   await page.screenshot({ path: 'test-results/foundation-vm-checksum-desktop.png', fullPage: true })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: 'Close navigation', exact: true }).click({ position: { x: 350, y: 100 } })
