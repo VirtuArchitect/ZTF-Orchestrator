@@ -5,9 +5,21 @@ test('Foundation VM reuses installed AOS and preserves ISO checksum through vali
   await seedUiSession(page)
   let validationYaml = ''
   const installedAos = 'nutanix_installer_package-release-ganges-7.5.1.8-stable-x86_64.tar.gz'
-  await page.route('**/api/foundation-vm/images', route =>
-    route.fulfill({ json: { inventory: { aos: [installedAos, 'older-aos.tar.gz'], hypervisors: { kvm: ['ahv.iso'] } } } }),
-  )
+  let refreshCount = 0
+  await page.route('**/api/foundation-vm/images', route => {
+    refreshCount += 1
+    if (refreshCount === 1) {
+      return route.fulfill({ json: { inventory: { aos: [installedAos], hypervisors: { kvm: ['ahv.iso'] } } } })
+    }
+    const errors = ['enumerate_hypervisor_isos: HTTP 503']
+    if (refreshCount === 2) {
+      return route.fulfill({ status: 502, json: {
+        inventory: { aos: { data: { packages: [{ filename: installedAos }, { name: 'older-aos.tar.gz' }, installedAos] } } },
+        errors,
+      } })
+    }
+    return route.fulfill({ status: 502, json: { inventory: {}, errors: ['enumerate_nos_packages: HTTP 503', ...errors] } })
+  })
   await page.route('**/api/foundation-vm/validate', async route => {
     validationYaml = route.request().postDataJSON().configContent
     await route.fulfill({ json: { valid: true, errors: [] } })
@@ -26,6 +38,15 @@ test('Foundation VM reuses installed AOS and preserves ISO checksum through vali
   await expect(page.getByLabel('AOS Package', { exact: true })).toHaveValue(installedAos)
   await page.getByRole('button', { name: 'Refresh inventory' }).click()
   await expect(aosPicker).toHaveValue(installedAos)
+  await expect(aosPicker.locator('option')).toHaveCount(3)
+  await expect(page.getByText('Found 2 AOS packages. Hypervisor inventory unavailable')).toBeVisible()
+  await aosPicker.selectOption('older-aos.tar.gz')
+  await expect(page.getByLabel('AOS Package', { exact: true })).toHaveValue('older-aos.tar.gz')
+  await aosPicker.selectOption(installedAos)
+  await page.getByRole('button', { name: 'Refresh inventory' }).click()
+  await expect(page.getByText('enumerate_nos_packages: HTTP 503')).toBeVisible()
+  await expect(aosPicker).toHaveCount(0)
+  await expect(page.getByLabel('AOS Package', { exact: true })).toHaveValue(installedAos)
   const checksum = page.getByLabel('AHV ISO Checksum', { exact: true })
   await expect(checksum).toHaveValue(importedChecksum)
   const updatedChecksum = 'b'.repeat(64)
