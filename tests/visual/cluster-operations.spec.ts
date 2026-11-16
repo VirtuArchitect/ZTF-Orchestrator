@@ -273,3 +273,33 @@ for (const [kind, message] of [
     expect(writes).toEqual([])
   })
 }
+
+test('empty cluster records and open review items have distinct messages', async ({ page }) => {
+  const state = fixture()
+  state.clusters = []
+  const { writes } = await seed(page, 'admin', state)
+  await page.goto('/overview')
+  await expect(page.getByText('No managed clusters to check', { exact: true })).toBeVisible()
+  await expect(page.getByText(/No managed clusters have been added/)).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Persistent attention items' }).getByText('Job requires review')).toBeVisible()
+  await expect(page.getByText(/No attention items in the collected records/)).toHaveCount(0)
+  expect(writes).toEqual([])
+})
+
+test('terminal jobs show stages or historical fallback while active jobs retain progress', async ({ page }) => {
+  await seed(page)
+  const at = new Date().toISOString()
+  const base = { type: 'workflow', user: 'example-operator', createdAt: at, updatedAt: at }
+  const progress = { phase: 'Failed', percent: 100, estimated: true }
+  await page.route('**/api/jobs?limit=500', route => route.fulfill({ json: [
+    { ...base, id: 'new', workflow: 'new-failure', status: 'failed', lastRecordedStage: 'Preparing workflow configuration', progress },
+    { ...base, id: 'old', workflow: 'old-failure', status: 'failed', progress },
+    { ...base, id: 'active', workflow: 'running-workflow', status: 'running', progress: { phase: 'Running checks', percent: 35, estimated: true } },
+  ] }))
+  await page.goto('/jobs')
+  await expect(page.getByText('Last recorded stage: Preparing workflow configuration')).toBeVisible()
+  await expect(page.getByText(/Failure stage not recorded/)).toBeVisible()
+  await expect(page.getByRole('progressbar')).toHaveCount(1)
+  await page.getByRole('button', { name: /new-failure/ }).click()
+  await expect(page.getByRole('progressbar')).toHaveCount(1)
+})

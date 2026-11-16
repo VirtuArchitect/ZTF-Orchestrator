@@ -197,6 +197,7 @@ export interface ExecutionJob {
   finishedAt?: string
   returnCode?: number | null
   progress?: ExecutionProgress
+  lastRecordedStage?: string
   foundationStatus?: FoundationDeploymentStatus
   logs?: ExecutionJobLogEvent[]
   taskIds?: string[]
