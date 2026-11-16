@@ -285,6 +285,10 @@ Configure Cluster uses the installed ZTF native per-cluster schema for initial
 password changes, EULA, Pulse and optional cluster settings. See the
 [initial configuration guide](docs/cluster-initial-configuration.md).
 
+In the Foundation VM workflow, use **Refresh inventory** and select an installed
+AOS package before running Dry Run. Save or download the workflow configuration
+to reuse the selection.
+
 Foundation VM deployments include a persistent phase/node telemetry view in
 execution and saved jobs. Missing telemetry is shown as "Not reported", not
 assumed complete; verify the actual Foundation VM response mapping during UAT.
