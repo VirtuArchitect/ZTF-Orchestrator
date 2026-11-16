@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ArrowRight, Compass, Server, Settings, Activity, GitBranch, Save } from 'lucide-react'
 import { Link, Navigate, useParams } from '../router'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
-import { apiFetch } from '../utils/api'
 import { DEPLOYMENT_METHODS, DEPLOYMENT_STEPS, guideDraft, landingPage, saveGuideDraft, saveLandingPage } from '../startGuide'
 
 export function LandingPage() {
@@ -18,20 +17,7 @@ const choices = [
   { id: 'automation', title: 'Run Saved Automation', text: 'Open existing pipelines, workflows and schedules.', icon: GitBranch },
 ]
 
-function useGuideSystemStatus() {
-  const setSystemChecks = useStore(s => s.setSystemChecks)
-  useEffect(() => {
-    let active = true
-    apiFetch('/api/system/check').then(r => r.ok ? r.json() : null).then(value => {
-      if (active && value && Array.isArray(value.checks) && typeof value.ztfInstalled === 'boolean')
-        setSystemChecks(value.checks, value.ztfInstalled)
-    }).catch(() => { /* Keep the existing status when collection fails. */ })
-    return () => { active = false }
-  }, [setSystemChecks])
-}
-
 export default function StartHere() {
-  useGuideSystemStatus()
   const user = useStore(s => s.user)
   const username = user?.username || ''
   const [landing, setLanding] = useState(() => landingPage(username))
@@ -69,7 +55,6 @@ function GuideLinks({ items }: { items: Array<[string, string]> }) {
 }
 
 export function OperatorJourney() {
-  useGuideSystemStatus()
   const { journey } = useParams<{ journey: string }>()
   const user = useStore(s => s.user)
   const username = user?.username || ''

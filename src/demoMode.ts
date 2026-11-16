@@ -427,7 +427,7 @@ async function demoResponse(request: Request) {
   const path = url.pathname.replace(/^\/ZTF-Orchestrator(?=\/)/, '')
   const method = request.method.toUpperCase()
 
-  if (path === '/health') return json({ status: 'healthy', version: APP_VERSION, installed: DEMO_INSTALLED_BUILD, storage: 'demo' })
+  if (path === '/health') return json({ status: 'healthy', version: APP_VERSION, installed: DEMO_INSTALLED_BUILD, storage: 'demo', ztf: { installed: true } })
   if (!path.startsWith('/api/')) return null
 
   if (path === '/api/operations' && method === 'GET') return json({

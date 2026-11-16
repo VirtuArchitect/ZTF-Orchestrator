@@ -7,6 +7,7 @@ import {
   FileSearch, Clock, Layers, ShieldCheck, ListChecks, FileArchive, Archive, ShieldAlert, Wand2, Compass, RotateCcw, Building2
 } from 'lucide-react'
 import { useStore } from '../store'
+import { apiFetch } from '../utils/api'
 import { APP_VERSION } from '../version'
 import BrandLogo from './BrandLogo'
 import clsx from 'clsx'
@@ -72,6 +73,34 @@ export default function Sidebar() {
     markSidebarPreferenceInitialized,
     user,
   } = useStore()
+  const sessionToken = useStore(state => state.sessionToken)
+  const [frameworkCheckFailed, setFrameworkCheckFailed] = useState(false)
+  useEffect(() => {
+    if (!sessionToken || ztfInstalled !== null) return
+    const controller = new AbortController()
+    const timeout = setTimeout(() => {
+      setFrameworkCheckFailed(true)
+      controller.abort()
+    }, 10_000)
+    setFrameworkCheckFailed(false)
+    async function checkFramework() {
+      try {
+        // /health reports a confirmed missing runtime with HTTP 503.
+        const response = await apiFetch('/health', { signal: controller.signal })
+        if (!response.ok && response.status !== 503) throw new Error()
+        const data = await response.json()
+        if (typeof data?.ztf?.installed !== 'boolean') throw new Error()
+        if (!controller.signal.aborted && useStore.getState().ztfInstalled === null)
+          useStore.getState().setZtfInstalled(data.ztf.installed)
+      } catch {
+        if (!controller.signal.aborted) setFrameworkCheckFailed(true)
+      } finally {
+        clearTimeout(timeout)
+      }
+    }
+    void checkFramework()
+    return () => { clearTimeout(timeout); controller.abort() }
+  }, [sessionToken, ztfInstalled])
   const location = useLocation()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   useEffect(() => {
@@ -133,10 +162,12 @@ export default function Sidebar() {
       {/* Status indicator */}
       {sidebarOpen && (
         <div className="mx-3 mt-3 mb-1 px-3 py-2 rounded-lg bg-surface border border-border">
-          <div className="flex items-center gap-2">
-            <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', ztfInstalled ? 'bg-nutanix-teal' : 'bg-yellow-500')} />
+          <div role="status" className="flex items-center gap-2">
+            <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', ztfInstalled ? 'bg-nutanix-teal' : ztfInstalled === null && !frameworkCheckFailed ? 'bg-gray-500' : 'bg-yellow-500')} />
             <span className="text-xs text-gray-400 truncate">
-              {ztfInstalled ? 'Framework installed' : 'Framework not found'}
+              {ztfInstalled === null
+                ? frameworkCheckFailed ? 'Framework status unavailable' : 'Checking framework…'
+                : ztfInstalled ? 'Framework installed' : 'Framework not found'}
             </span>
           </div>
         </div>

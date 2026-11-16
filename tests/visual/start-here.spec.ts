@@ -166,3 +166,25 @@ test('capture start page and deployment guidance in both themes', async ({ page 
     await page.screenshot({ path: `test-results/deployment-guide-${theme}.png`, fullPage: true })
   }
 })
+
+for (const outcome of ['installed', 'missing', 'unavailable'] as const) {
+  test(`sidebar reports the framework check from initial load through ${outcome}`, async ({ page }) => {
+    await seed(page, 'viewer')
+    let release!: () => void
+    const gate = new Promise<void>(resolve => { release = resolve })
+    await page.route('**/health', async route => {
+      await gate
+      if (outcome === 'unavailable') return route.fulfill({ status: 503, body: 'Unavailable' })
+      return route.fulfill({ status: outcome === 'installed' ? 200 : 503, json: {
+        ztf: { installed: outcome === 'installed' },
+      } })
+    })
+    await page.goto('/jobs')
+    await page.getByRole('button', { name: 'Toggle navigation' }).click()
+    await expect(page.getByText('Checking framework…', { exact: true })).toBeVisible()
+    await expect(page.getByText('Framework not found', { exact: true })).toHaveCount(0)
+    release()
+    const expected = { installed: 'Framework installed', missing: 'Framework not found', unavailable: 'Framework status unavailable' }
+    await expect(page.getByText(expected[outcome], { exact: true })).toBeVisible()
+  })
+}

@@ -20,7 +20,8 @@ interface AppState {
 
   // System status
   systemChecks: SystemCheck[]
-  ztfInstalled: boolean
+  ztfInstalled: boolean | null
+  setZtfInstalled: (installed: boolean) => void
   setSystemChecks: (checks: SystemCheck[], installed: boolean) => void
 
   // Executions
@@ -115,7 +116,7 @@ export const useStore = create<AppState>()(
       sessionToken: '',
       user: null,
       setAuth: (token, user) => set({ sessionToken: token, user }),
-      clearAuth: () => set({ sessionToken: '', user: null }),
+      clearAuth: () => set({ sessionToken: '', user: null, systemChecks: [], ztfInstalled: null }),
 
       // Settings
       settings: {
@@ -149,7 +150,8 @@ export const useStore = create<AppState>()(
       setSettings: (s) => set(state => ({ settings: { ...state.settings, ...s } })),
 
       systemChecks: [],
-      ztfInstalled: false,
+      ztfInstalled: null,
+      setZtfInstalled: (installed) => set({ ztfInstalled: installed }),
       setSystemChecks: (checks, installed) => set({ systemChecks: checks, ztfInstalled: installed }),
 
       executions: [],
