@@ -103,8 +103,9 @@ def test_pipeline_run_not_found(client, auth_headers):
     assert resp.status_code == 404
 
 
-def test_pipeline_run_streams(client, auth_headers, monkeypatch):
-    """Pipeline /run returns an SSE stream."""
+@pytest.mark.parametrize('sync_fails', [False, True])
+def test_pipeline_run_streams(client, auth_headers, monkeypatch, sync_fails):
+    """Pipeline syncs saved credentials before invoking the legacy runner."""
     import subprocess, server
 
     class FakeProc:
@@ -115,15 +116,45 @@ def test_pipeline_run_streams(client, auth_headers, monkeypatch):
         def kill(self): pass
         def poll(self): return 0
 
-    monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
+    durable = server.get_global_config_path()
+    durable.parent.mkdir(parents=True, exist_ok=True)
+    durable.write_text('credentials: {pe_current: {username: test}}\n', encoding='utf-8')
+    runtime = server.get_legacy_global_config_path()
+    runtime.parent.mkdir(parents=True, exist_ok=True)
+    runtime.write_text('credentials: {pe_stale: {username: test}}\n', encoding='utf-8')
+
+    if sync_fails:
+        def deny_write(*args):
+            raise PermissionError('private filesystem detail')
+
+        monkeypatch.setattr(server, '_secure_write', deny_write)
+
+    launches = []
+
+    def start_legacy(*args, **kwargs):
+        launches.append(runtime.read_text(encoding='utf-8'))
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, 'Popen', start_legacy)
 
     pid = _create(client, auth_headers).get_json()['id']
     resp = client.post(f'/api/pipelines/{pid}/run', headers=auth_headers)
     assert resp.status_code == 200
     assert 'text/event-stream' in resp.content_type
+    events = [json.loads(line[6:]) for line in resp.data.decode().splitlines() if line.startswith('data: ')]
+    assert events[0]['type'] == 'pipeline_start'
+    assert events[-1]['type'] == 'pipeline_done'
+
     body = resp.data.decode()
-    assert 'pipeline_start' in body
-    assert 'pipeline_done' in body
+    assert 'pe_current' not in body
+    assert 'private filesystem detail' not in body
+    if sync_fails:
+        assert not launches
+        assert 'Could not sync saved global configuration' in body
+        assert events[-1]['data']['status'] == 'failed'
+    else:
+        assert launches == [server._normalize_global_config_content(durable.read_text(encoding='utf-8'))]
+        assert events[-1]['data']['status'] == 'success'
 
 
 def test_pipeline_run_empty_steps_rejected(client, auth_headers):

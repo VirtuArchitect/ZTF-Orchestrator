@@ -41763,6 +41763,11 @@ def run_pipeline(pipeline_id: str):
             private_config = None
 
             try:
+                if step_idx == 0:
+                    try:
+                        _sync_global_config_to_legacy()
+                    except (OSError, UnicodeError):
+                        raise RuntimeError('Could not sync saved global configuration to ZTF 1.x. Check appliance storage and file permissions.') from None
                 if config_file in pe_users_configs:
                     import tempfile
                     # Execute the validated snapshot, not a config another user
