@@ -77,11 +77,12 @@ export default function OperationsOverview({ jobs, driftRuns, pendingApprovals, 
     ...(needsReview ? [{ title: 'Recovery profiles need review', text: `${needsReview} saved baseline(s) require review.`, to: '/recovery', action: 'Review profiles' }] : []),
     ...(pendingApprovals ? [{ title: 'Approvals awaiting a decision', text: `${pendingApprovals} pending request(s).`, to: '/approvals', action: 'Review approvals' }] : []),
   ].slice(0, 4)
+  const noManagedClusters = !operations.error && operations.data?.clusters.length === 0
   const metrics = [
     { title: 'Managed clusters', value: operations.error ? null : operations.data?.clusters.length, icon: Server, to: '/clusters' },
     { title: 'Open review items', value: operations.error ? null : operations.data ? Object.values(operations.data.attention).filter(i => i.status !== 'resolved').length : null, icon: AlertTriangle, to: '/clusters' },
     { title: 'Running jobs', value: loading || unavailable ? null : runningJobs, icon: Activity, to: '/jobs' },
-    { title: 'Fresh PE Good readbacks', value: operations.error ? null : operations.data?.clusters.filter(c => freshObservation(c, operations.data || undefined) && c.observation?.status === 'good').length, icon: ShieldCheck, to: '/clusters' },
+    { title: noManagedClusters ? 'No managed clusters to check' : 'Fresh PE Good readbacks', value: noManagedClusters || operations.error ? null : operations.data?.clusters.filter(c => freshObservation(c, operations.data || undefined) && c.observation?.status === 'good').length, icon: ShieldCheck, to: '/clusters' },
   ]
   return <div className="space-y-5 mb-6" data-testid="operations-overview">
     <section aria-labelledby="operations-heading">
@@ -97,7 +98,7 @@ export default function OperationsOverview({ jobs, driftRuns, pendingApprovals, 
     </section>
     <div className="card grid grid-cols-2 xl:grid-cols-4 gap-5" aria-label="Recorded operations summary">
       {metrics.map(item => <Link key={item.title} to={item.to} className="flex items-center gap-4 rounded-md focus-visible:ring-2 focus-visible:ring-nutanix-blue">
-        <item.icon size={25} className="text-gray-400 shrink-0" /><div><p className="text-2xl font-semibold text-gray-100">{item.value ?? '—'}</p><p className="text-sm text-gray-400">{item.title}</p></div>
+        <item.icon size={25} className="text-gray-400 shrink-0" /><div>{item.title !== 'No managed clusters to check' && <p className="text-2xl font-semibold text-gray-100">{item.value ?? '—'}</p>}<p className="text-sm text-gray-400">{item.title}</p></div>
       </Link>)}
     </div>
     {error && <p role="status" className="text-sm text-yellow-400">{error}</p>}
@@ -108,7 +109,7 @@ export default function OperationsOverview({ jobs, driftRuns, pendingApprovals, 
         {loading ? <p className="text-sm text-gray-400">Collecting recorded operations…</p> : attention.length ? <ul className="divide-y divide-border">{attention.map(item => <li key={item.title} className="py-4 flex gap-3 items-start">
           <AlertTriangle size={18} className="text-yellow-400 mt-0.5 shrink-0" /><div className="flex-1 min-w-0"><p className="text-sm font-medium text-gray-200">{item.title}</p><p className="text-sm text-gray-400 mt-1 break-words">{item.text}</p></div>
           {item.to.startsWith('#') ? <a href={item.to} onClick={() => { const panel = document.getElementById('platform-details'); if (panel instanceof HTMLDetailsElement) panel.open = true }} className="text-sm text-nutanix-cyan shrink-0">{item.action}</a> : <Link to={item.to} className="text-sm text-nutanix-cyan shrink-0">{item.action}</Link>}
-        </li>)}</ul> : <p className="text-sm text-gray-400 py-4">{unavailable ? 'Attention records are unavailable; review the source pages.' : 'No attention items in the collected records. This is not a live cluster health assessment.'}</p>}
+        </li>)}</ul> : <p className="text-sm text-gray-400 py-4">{unavailable ? 'Some operational signals are unavailable. Review their source pages.' : 'No additional signals from platform checks, drift, recovery profiles, or approvals.'}</p>}
       </section>
       <section className="card" aria-labelledby="recovery-preparation-heading">
         <h2 id="recovery-preparation-heading" className="section-title">Recovery preparation</h2>

@@ -17513,6 +17513,7 @@ def test_failed_job_records_diagnostics_and_likely_fix(client, auth_headers, mon
     job = _wait_for_job(client, auth_headers, job_id)
 
     assert job['status'] == 'failed'
+    assert job['lastRecordedStage'] == 'Executing workflow'
     assert job['diagnostics']['category'] == 'credential_error'
     assert 'credential reference' in job['diagnostics']['likelyFix']
 

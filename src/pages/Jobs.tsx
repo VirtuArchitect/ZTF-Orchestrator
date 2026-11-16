@@ -226,10 +226,15 @@ export default function Jobs() {
                     <span>user: {job.user || 'unknown'}</span>
                     <span className="font-mono">id: {job.id}</span>
                   </div>
-                  {job.progress && (
+                  {isActive && job.progress && (
                     <div className="mt-3 max-w-xl">
                       <ProgressBar progress={job.progress} compact />
                     </div>
+                  )}
+                  {job.status === 'failed' && (
+                    <p className="mt-2 text-sm text-gray-400">
+                      {job.lastRecordedStage ? `Last recorded stage: ${job.lastRecordedStage}` : 'Failure stage not recorded. Open the job to review diagnostics and logs.'}
+                    </p>
                   )}
                 </button>
                 {canCancel && isActive && (
@@ -295,7 +300,7 @@ export default function Jobs() {
                       </div>
                     </div>
                   )}
-                  {job.progress && <ProgressBar progress={job.progress} />}
+                  {isActive && job.progress && <ProgressBar progress={job.progress} />}
                   {job.workflow === 'cluster-create-foundation-vm' && job.foundationStatus && <FoundationVmProgress snapshot={job.foundationStatus} active={ACTIVE_STATUSES.includes(job.status)} outcome={job.status} logs={job.logs} />}
                   {job.diagnostics && (
                     <div className="diagnostics-callout rounded-lg border px-3 py-3">

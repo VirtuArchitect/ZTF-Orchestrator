@@ -36428,6 +36428,10 @@ class ExecutionJobManager:
         job['updatedAt'] = self._now()
 
     def _finish_job(self, job: dict, status: str, return_code: int) -> None:
+        if status == 'failed' and job.get('status') == 'running':
+            progress = job.get('progress') or {}
+            if progress.get('phase'):
+                job['lastRecordedStage'] = progress['phase']
         now = self._now()
         job['status'] = status
         job['returnCode'] = return_code

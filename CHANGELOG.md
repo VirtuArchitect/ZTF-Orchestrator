@@ -12,6 +12,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Retire Native pipeline opt-in, NKP and ZTF 2.x console execution while preserving ZTF 1.x pipelines and recovery.
 
 ### Fixed
+- Clarify Overview attention and empty cluster states, and show the last recorded stage on failed jobs.
 - Sync saved global configuration before starting a ZTF 1.x pipeline so it uses the current credential references.
 - Keep workflow actions visible on narrow screens, retain imported generic workflow YAML, and validate Site Deploy and Management Prism Central inputs against the bundled framework.
 - Recovery profile creation and editing accept a dedicated Set Prism Login Title (PE) step after health verification. The editor identifies the failing pipeline step and shows why profile deletion is unavailable.
