@@ -13,6 +13,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - Select an existing AOS installer from refreshed Foundation VM inventory and include it in the cluster workflow configuration.
+- Show framework status as checking until the runtime responds, with a separate unavailable result for failed checks.
 - Clarify Overview attention and empty cluster states, and show the last recorded stage on failed jobs.
 - Sync saved global configuration before starting a ZTF 1.x pipeline so it uses the current credential references.
 - Keep workflow actions visible on narrow screens, retain imported generic workflow YAML, and validate Site Deploy and Management Prism Central inputs against the bundled framework.
