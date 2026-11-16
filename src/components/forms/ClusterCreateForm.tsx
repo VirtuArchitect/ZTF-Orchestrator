@@ -107,6 +107,15 @@ const LAG_TYPES = [
   ['dynamic', 'Dynamic LAG (LACP)'],
 ] as const
 
+function aosPackageNames(value: unknown): string[] {
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : []
+  if (Array.isArray(value)) return value.flatMap(aosPackageNames)
+  const record = asRecord(value)
+  const filename = typeof record.filename === 'string' ? record.filename : record.name
+  if (typeof filename === 'string' && filename.trim()) return [filename.trim()]
+  return Object.values(record).filter(item => item !== null && typeof item === 'object').flatMap(aosPackageNames)
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
@@ -460,16 +469,18 @@ export default function ClusterCreateForm({
         body: JSON.stringify({ configContent: latestYaml }),
       })
       const data = await resp.json().catch(() => ({}))
-      if (!resp.ok) throw new Error(data.error || (Array.isArray(data.errors) ? data.errors.join('; ') : 'Foundation operation failed'))
+      const errors = Array.isArray(data.errors) ? data.errors.join('; ') : ''
+      const partialAosInventory = operation === 'images' && resp.status === 502
+        && 'aos' in asRecord(data.inventory)
+      if (!resp.ok && !partialAosInventory) throw new Error(data.error || errors || 'Foundation operation failed')
       if (operation === 'images') {
-        const packages: string[] = Array.isArray(data.inventory?.aos)
-          ? data.inventory.aos.filter((item: unknown): item is string => typeof item === 'string' && Boolean(item.trim()))
-          : []
-        setAosInventory({ host: pcIp, packages: [...new Set(packages)] })
-        const hypervisors = data.inventory?.hypervisors && typeof data.inventory.hypervisors === 'object'
-          ? Object.values(data.inventory.hypervisors as Record<string, unknown[]>).reduce((count, items) => count + (Array.isArray(items) ? items.length : 0), 0)
-          : 0
-        setOperationMessage(`Image inventory refreshed: ${new Set(packages).size} AOS packages, ${hypervisors} hypervisor images.`)
+        const packages = [...new Set(aosPackageNames(data.inventory?.aos))]
+        setAosInventory({ host: pcIp, packages })
+        const hypervisors = Object.values(asRecord(data.inventory?.hypervisors))
+          .reduce<number>((count, items) => count + (Array.isArray(items) ? items.length : 0), 0)
+        setOperationMessage(partialAosInventory
+          ? `Found ${packages.length} AOS packages. Hypervisor inventory unavailable${errors ? `: ${errors}` : '.'}`
+          : `Image inventory refreshed: ${packages.length} AOS packages, ${hypervisors} hypervisor images.`)
       } else if (operation === 'ipmi-test') {
         setOperationMessage(`IPMI credential test: ${data.passed} passed, ${data.failed} failed.`)
       } else if (operation === 'progress') {
