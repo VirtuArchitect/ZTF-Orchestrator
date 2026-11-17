@@ -1,11 +1,11 @@
 {
   "title": "ZTF Orchestrator Full Console User Guide Videos",
-  "date": "13 November 2026",
+  "date": "17 November 2026",
   "sourceRevision": "8c7843ad7c9c5a2f8dc53fbf0fb823f2eb6e0a7b",
-  "parts": 17,
-  "durationSeconds": 2712.04,
-  "chapters": 97,
-  "narration": "HeyGen Joanna - Warm & Conversational across all 17 parts.",
+  "parts": 18,
+  "durationSeconds": 2801.77,
+  "chapters": 102,
+  "narration": "HeyGen Joanna - Warm & Conversational across all 18 parts.",
   "screens": "New simulated captures at 8c7843a; current existing generic screenshots; retained unchanged chapter illustrations preserve original provenance",
   "liveActionsExecuted": false,
   "listeningReview": "not_performed",
@@ -1039,6 +1039,53 @@
       "listeningReview": "not_performed",
       "updated": true,
       "sha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508"
+    },
+    {
+      "part": 17,
+      "title": "Production Ubuntu VM Disk Expansion",
+      "file": "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.mp4",
+      "publishedEntryAdded": "17 November 2026",
+      "duration": 89.72634920634921,
+      "sourceRevision": "f7b9d46",
+      "screens": "Nutanix documentation screenshots and simulated Ubuntu and guided update examples in light mode",
+      "narration": "HeyGen Joanna - Warm & Conversational",
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "Find the filesystem that needs space",
+          "start": 0,
+          "duration": 19.187
+        },
+        {
+          "chapter": 2,
+          "title": "Expand the existing disk in Prism",
+          "start": 19.187,
+          "duration": 22.943
+        },
+        {
+          "chapter": 3,
+          "title": "Extend and verify the filesystem in Ubuntu",
+          "start": 42.13,
+          "duration": 23.772
+        },
+        {
+          "chapter": 4,
+          "title": "Check guided update readiness",
+          "start": 65.902,
+          "duration": 15.524
+        },
+        {
+          "chapter": 5,
+          "title": "Recover from a resize failure",
+          "start": 81.426,
+          "duration": 8.300349
+        }
+      ],
+      "fullDecode": "passed",
+      "captions": 34,
+      "listeningReview": "not_performed",
+      "updated": true,
+      "sha256": "6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277"
     }
   ],
   "updatedNarratedChapters": 13,

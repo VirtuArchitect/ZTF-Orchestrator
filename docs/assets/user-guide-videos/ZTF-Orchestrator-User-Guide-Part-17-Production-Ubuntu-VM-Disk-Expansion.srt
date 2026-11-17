@@ -1,0 +1,135 @@
+1
+00:00:00,299 --> 00:00:03,627
+When a guided update reports insufficient space, start with
+
+2
+00:00:03,627 --> 00:00:04,941
+the location that failed.
+
+3
+00:00:05,077 --> 00:00:08,619
+In Appliance Operations, open Updates and review the storage
+
+4
+00:00:08,619 --> 00:00:09,293
+allowance.
+
+5
+00:00:09,472 --> 00:00:13,227
+In Ubuntu, use find mount to see which filesystem backs that
+
+6
+00:00:13,227 --> 00:00:13,788
+path.
+
+7
+00:00:13,854 --> 00:00:17,608
+If several paths share the root filesystem, growing root gives
+
+8
+00:00:17,608 --> 00:00:18,852
+them all more room.
+
+9
+00:00:19,187 --> 00:00:22,294
+First confirm a recoverable backup and an idle maintenance
+
+10
+00:00:22,302 --> 00:00:22,870
+window.
+
+11
+00:00:23,070 --> 00:00:26,099
+If the volume group already has enough free space, you can
+
+12
+00:00:26,099 --> 00:00:27,655
+skip the Prism resize.
+
+13
+00:00:27,903 --> 00:00:31,159
+Otherwise, open the production virtual machine in Prism.
+
+14
+00:00:31,231 --> 00:00:34,381
+Choose Update, then edit the existing disk.
+
+15
+00:00:34,517 --> 00:00:36,812
+In Size, enter the new total.
+
+16
+00:00:37,119 --> 00:00:40,874
+To add forty gibibytes to an eighty gibibyte disk, enter one
+
+17
+00:00:40,874 --> 00:00:41,811
+hundred and twenty.
+
+18
+00:00:42,130 --> 00:00:44,875
+Back in Ubuntu, check that the disk is larger.
+
+19
+00:00:44,947 --> 00:00:48,317
+If it contains a partition, preview the change with grow part
+
+20
+00:00:48,317 --> 00:00:49,610
+before applying it.
+
+21
+00:00:49,853 --> 00:00:54,333
+For L V M, resize the physical volume, check free space, then
+
+22
+00:00:54,333 --> 00:00:56,760
+extend the logical volume and filesystem.
+
+23
+00:00:56,985 --> 00:01:00,227
+For a standard partition, use the resize command that matches
+
+24
+00:01:00,227 --> 00:01:01,243
+your filesystem.
+
+25
+00:01:01,465 --> 00:01:04,401
+Check the mounted filesystem again and confirm that available
+
+26
+00:01:04,494 --> 00:01:05,538
+space increased.
+
+27
+00:01:05,902 --> 00:01:09,358
+Confirm the Orchestrator and PostgreSQL containers are healthy.
+
+28
+00:01:09,544 --> 00:01:13,803
+In Updates, select the imported package and click Check Readiness.
+
+29
+00:01:14,067 --> 00:01:17,045
+Compare available space with the required allowance on every
+
+30
+00:01:17,053 --> 00:01:17,600
+row.
+
+31
+00:01:17,736 --> 00:01:21,237
+Proceed once all rows pass and overall readiness passes.
+
+32
+00:01:21,426 --> 00:01:25,181
+If the resize causes a boot or filesystem problem, use the
+
+33
+00:01:25,181 --> 00:01:26,559
+pre-change backup.
+
+34
+00:01:26,717 --> 00:01:29,646
+Shrinking the expanded disk can truncate data.
