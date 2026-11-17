@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-async function seed(page: Page, role = 'admin', options: { blocker?: string; used?: boolean; linked?: boolean } = {}) {
+async function seed(page: Page, role = 'admin', options: { blocker?: string; used?: boolean; linked?: boolean; empty?: boolean } = {}) {
   await page.addInitScript(role => sessionStorage.setItem('ztf-ui-store', JSON.stringify({ state: {
     sessionToken: 'isolated-fixture', user: { username: 'recovery-reviewer', role }, sidebarOpen: false,
     sidebarPreferenceInitialized: true, settings: {},
@@ -10,7 +10,7 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
   const revision = { revision: 1, sha256: 'a'.repeat(64), deploymentConfigFile: 'deploy.yml', deploymentContent: 'foundation_vm_ip: foundation.example.com\n', clusterName: 'HCI-01', clusterVip: '192.0.2.20', targets: ['NODE1', 'NODE2', 'NODE3'], steps: [{ workflow: 'config-cluster', configFile: 'post.yml', configContent: 'clusters: {}\n', sha256: 'b'.repeat(64) }], pipelineName: 'Post deployment', approvedBy: 'reviewer', approvedAt: '2026-10-28T08:00:00Z' }
   const profile = { id: 'p1', name: 'HCI-01 Recovery', datacenterId: dc.id, kind: 'existing', revision: 1, reviewed: true, drifted: false, deploymentConfigFile: 'deploy.yml', pipelineId: 'pipe', revisions: [revision], updatedAt: '2026-11-05T08:00:00Z', archivedAt: '', archiveNotes: '', lifecycle: {} }
   const writes: string[] = []
-  const datacenters = [dc]
+  const datacenters = options.empty ? [] : [dc]
   let preparedRun: unknown = null
   let removed = false
   const lifecycle = () => ({canEdit: !profile.archivedAt && !options.blocker, canArchive: !profile.archivedAt && !options.blocker, canRestore: Boolean(profile.archivedAt) && !options.blocker, canDelete: !options.used && !options.blocker && !options.linked, runCount: options.used || options.blocker ? 1 : 0, linkedClusterCount: options.linked ? 1 : 0, blockers: options.blocker ? [{id:'blocking-run',status:options.blocker}] : [], editReason: options.blocker ? 'Open recovery run requires completion or reconciliation: blocking-run ('+options.blocker+')' : profile.archivedAt ? 'Restore this archived profile before editing.' : '', archiveReason: options.blocker ? 'Open recovery run requires completion or reconciliation.' : '', restoreReason:'', deleteReason: options.used || options.blocker ? 'Recovery run history is retained. Archive this profile instead.' : options.linked ? 'Managed-cluster records reference this profile.' : ''})
@@ -22,9 +22,17 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
     if (path === '/api/system/check') value = { checks: [], ztfInstalled: true }
     if (path === '/api/configs') value = [{ name: 'deploy.yml' }, { name: 'post.yml' }]
     if (path === '/api/pipelines') value = [{ id: 'pipe', name: 'Post deployment', steps: [] }]
-    if (path === '/api/recovery') value = { datacenters, profiles: removed ? [] : [profile], runs: [] }
+    if (path === '/api/recovery') value = { datacenters, profiles: removed || options.empty ? [] : [profile], runs: [] }
     if (path === '/api/recovery/datacenters') {
       const added = { ...request.postDataJSON(), id: 'dc2' }; datacenters.push(added); value = added
+    }
+    if (path === '/api/recovery/datacenters/dc2') {
+      const saved = { ...request.postDataJSON(), id: 'dc2' }; datacenters[0] = saved; value = saved
+    }
+    if (path === '/api/recovery/profiles' && options.empty) {
+      const body = request.postDataJSON()
+      expect(body).toMatchObject({ datacenterId: 'dc2', deploymentConfigFile: 'deploy.yml', pipelineId: 'pipe' })
+      value = { id: 'draft-profile', ...body }
     }
     if (path === '/api/recovery/profiles/p1') {
       if (request.method() === 'PUT') {
@@ -265,4 +273,46 @@ test('abandoned prepared run can close without any deployment request', async ({
   await close.click()
   await expect(dialog).toContainText('closed reconciled')
   expect(writes).toEqual(['/api/recovery/runs','/api/recovery/runs/run1/close-prepared'])
+})
+
+test('Start Here leads an administrator through first-time recovery setup without deployment', async ({ page }) => {
+  const writes = await seed(page, 'admin', { empty: true })
+  await page.goto('/start')
+  await page.getByRole('link', { name: /Recover Infrastructure/ }).click()
+  await expect(page).toHaveURL(/\/recovery$/)
+  const setup = page.getByRole('region', { name: 'Set up infrastructure recovery' })
+  await expect(setup.getByRole('heading', { level: 3 })).toHaveText([
+    'Add a datacenter', 'Review recovery prerequisites', 'Link the deployment YAML and pipeline',
+  ])
+  await expect(setup.getByRole('link', { name: 'Config Files' })).toHaveAttribute('href', '/configs')
+  await expect(setup.getByRole('link', { name: 'Pipelines' })).toHaveAttribute('href', '/pipelines')
+  await setup.getByRole('button', { name: 'Add Datacenter' }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Datacenter name').fill('Datacenter Beta')
+  await dialog.getByLabel('Foundation VM endpoint').fill('http://foundation-beta.example.com:8000')
+  await dialog.getByLabel('Recovery dependencies and runbook notes').fill('Approved runbook')
+  await dialog.getByRole('button', { name: 'Save Datacenter' }).click()
+
+  await setup.getByRole('button', { name: 'Review prerequisites for Datacenter Beta' }).click()
+  await dialog.getByLabel('Provisioning network').selectOption('reviewed')
+  await dialog.getByRole('button', { name: 'Save Datacenter' }).click()
+  await expect(page.getByText('1 / 5 prerequisites reviewed')).toBeVisible()
+
+  await setup.getByRole('button', { name: 'Link YAML and pipeline' }).click()
+  await expect(dialog.getByRole('combobox', { name: 'Datacenter', exact: true })).toHaveValue('dc2')
+  await dialog.getByLabel('Profile name').fill('HCI-02 Recovery')
+  await dialog.getByLabel('Foundation VM deployment YAML').selectOption('deploy.yml')
+  await dialog.getByLabel('Post-configuration pipeline').selectOption('pipe')
+  await dialog.getByRole('button', { name: 'Save Draft Revision' }).click()
+  await expect(dialog).toHaveCount(0)
+  expect(writes).toEqual(['/api/recovery/datacenters', '/api/recovery/datacenters/dc2', '/api/recovery/profiles'])
+})
+
+test('empty recovery setup is read-only for viewers', async ({ page }) => {
+  const writes = await seed(page, 'viewer', { empty: true })
+  await page.goto('/recovery')
+  const setup = page.getByRole('region', { name: 'Set up infrastructure recovery' })
+  await expect(setup.getByText(/An administrator can add datacenters/)).toBeVisible()
+  await expect(setup.getByRole('button')).toHaveCount(0)
+  expect(writes).toEqual([])
 })

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, Compass, Server, Settings, Activity, GitBranch, Save } from 'lucide-react'
+import { ArrowRight, Compass, Server, Settings, Activity, GitBranch, RotateCcw, Save } from 'lucide-react'
 import { Link, Navigate, useParams } from '../router'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
@@ -11,10 +11,11 @@ export function LandingPage() {
 }
 
 const choices = [
-  { id: 'deploy', title: 'Deploy a Cluster', text: 'Prepare and deploy a new AHV cluster.', icon: Server },
-  { id: 'configure', title: 'Configure an Existing Cluster', text: 'Configure credentials, EULA, Pulse, DNS, NTP, networking and storage.', icon: Settings },
-  { id: 'monitor', title: 'Monitor & Verify', text: 'Check drift, collect inventory and assess upgrade readiness.', icon: Activity },
-  { id: 'automation', title: 'Run Saved Automation', text: 'Open existing pipelines, workflows and schedules.', icon: GitBranch },
+  { to: '/start/deploy', title: 'Deploy a Cluster', text: 'Prepare and deploy a new AHV cluster.', icon: Server },
+  { to: '/start/configure', title: 'Configure an Existing Cluster', text: 'Configure credentials, EULA, Pulse, DNS, NTP, networking and storage.', icon: Settings },
+  { to: '/recovery', title: 'Recover Infrastructure', text: 'Prepare or resume a governed cluster rebuild.', icon: RotateCcw },
+  { to: '/start/monitor', title: 'Monitor & Verify', text: 'Check drift, collect inventory and assess upgrade readiness.', icon: Activity },
+  { to: '/start/automation', title: 'Run Saved Automation', text: 'Open existing pipelines, workflows and schedules.', icon: GitBranch },
 ]
 
 export default function StartHere() {
@@ -30,7 +31,7 @@ export default function StartHere() {
         <p className="text-gray-400 mt-2">Follow a guided path or open your saved automation. Each path uses the existing workflows, approvals and verification gates.</p>
       </section>
       <div className="grid md:grid-cols-2 gap-4">
-        {choices.map(c => <Link key={c.id} to={`/start/${c.id}`} className="card hover:border-nutanix-blue transition-colors group">
+        {choices.map(c => <Link key={c.to} to={c.to} className="card hover:border-nutanix-blue transition-colors group">
           <c.icon size={24} className="text-nutanix-cyan mb-4" />
           <h2 className="text-lg font-semibold text-gray-100 flex gap-3 items-center">{c.title}<ArrowRight size={18} /></h2>
           <p className="text-sm text-gray-400 mt-2">{c.text}</p>
@@ -61,7 +62,7 @@ export function OperatorJourney() {
   const canOperate = user?.role === 'admin' || user?.role === 'operator'
   const [draft, setDraft] = useState(() => guideDraft(username))
   const [notice, setNotice] = useState('')
-  const choice = choices.find(c => c.id === journey)
+  const choice = choices.find(c => c.to === `/start/${journey}`)
   if (!choice) return <Navigate to="/start" replace />
   const method = DEPLOYMENT_METHODS.find(m => m.id === draft.method) || DEPLOYMENT_METHODS[0]
   const workflowPath = `/workflows/${method.id}`

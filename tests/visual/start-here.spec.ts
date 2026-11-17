@@ -7,11 +7,11 @@ async function seed(page: Page, role = 'admin', username = 'guide-test') {
   await page.route('**/api/**', route => route.fulfill({ json: route.request().url().endsWith('/api/system/check') ? { checks: [], ztfInstalled: true } : [] }))
 }
 
-test('new users land on four choices and can persist a scoped landing preference', async ({ page, context }) => {
+test('new users land on the guided choices and can persist a scoped landing preference', async ({ page, context }) => {
   await seed(page)
   await page.goto('/')
   await expect(page).toHaveURL(/\/start$/)
-  for (const name of ['Deploy a Cluster', 'Configure an Existing Cluster', 'Monitor & Verify', 'Run Saved Automation'])
+  for (const name of ['Deploy a Cluster', 'Configure an Existing Cluster', 'Recover Infrastructure', 'Monitor & Verify', 'Run Saved Automation'])
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
   await page.getByRole('combobox', { name: 'My landing page' }).selectOption('/overview')
   await page.goto('/')
