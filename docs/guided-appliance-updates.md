@@ -20,6 +20,8 @@ appliance update evidence.
 
 [Illustrated Production Ubuntu VM Disk Expansion Guide (Word)](manuals/ZTF-Orchestrator-Production-Ubuntu-VM-Disk-Expansion-Guide.docx) covers disk sizing in Nutanix Prism, Ubuntu filesystem expansion, guided update readiness and rollback. The screenshots and terminal example use reference data.
 
+[Watch Part 17 · Production Ubuntu VM Disk Expansion](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17). The light-mode walkthrough shows the Prism disk editor, Ubuntu filesystem checks and guided update readiness using reference screens and sample data.
+
 ## One-time host installation
 
 Bundles built with `--include-host-service` contain `host-service/README.md`, the

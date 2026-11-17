@@ -1,5 +1,5 @@
-8728785d173367f7e04d3a5e2bd0505f24545654d221ee3e3f7e2ebf9381a98b  README.txt
-28fbdf94b7bafbe21f43d351c74dd696a2197d43850f8906cfc326390a3457ac  series-manifest.json
+b49d98e2b4d096b63b8273c79e5b0e01717b5c135d7a87dbf9791a89b277c6dc  README.txt
+4fe3e52d18bbe2085040da6c5dc2444a9531504880907b672c69f642e710966c  series-manifest.json
 5bd4e337b4b375c47587642067c0cb99b7a2e959347fc016c69b0cc69c22e040  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-chapters.txt
 41366d04f5adb63b0020d27e517281e424341b21946688dcc2c6f61e8fca50ab  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-poster.jpg
 2a54db15128ecb0a80f068083ed77877dd1955349ceb3c3550cad3fc045dec6b  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt
@@ -102,3 +102,9 @@ c3945a8efa587ab5a672696255af876e0e03fe5f90ad2e03e179f27a533af3c0  ZTF-Orchestrat
 d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508  ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4
 8bcbff874522292280ca004421b993b62136989a78fafeab18fc516a416fd0a8  ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.srt
 563ca4c78c0aa9ceb9cbcab79aacb1c1e87ae88d6e5c4186b6349d70401ceb34  ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.vtt
+552c45200f49b8339ee89a1f8525f4f16de8f67a579c74d01a7f1adbcce40c54  ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-chapters.txt
+c8af7edd9d1e024a39089446a826ed0a7b84a91b4ec0ffcdddd092c2bae54a7d  ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-poster.jpg
+3b51168ce69a506afea20d46f86e8207a3448501ab7232bbfa453c563fb52397  ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-transcript.txt
+6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277  ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.mp4
+febe4506b0616faa2699d064745887ba316d3ef877ff095db7ffb1df012c3cfe  ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.srt
+fdab5e609ba51af513074316ec0a6d04f257e85b587530e49b085810fbfc52c7  ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.vtt

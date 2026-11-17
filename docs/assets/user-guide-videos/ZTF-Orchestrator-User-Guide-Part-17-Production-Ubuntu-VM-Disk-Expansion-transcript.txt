@@ -1,0 +1,9 @@
+Production Ubuntu VM Disk Expansion
+
+When a guided update reports insufficient space, start with the location that failed. In Appliance Operations, open Updates and review the storage allowance. In Ubuntu, use find mount to see which filesystem backs that path. If several paths share the root filesystem, growing root gives them all more room.
+
+First confirm a recoverable backup and an idle maintenance window. If the volume group already has enough free space, you can skip the Prism resize. Otherwise, open the production virtual machine in Prism. Choose Update, then edit the existing disk. In Size, enter the new total. To add forty gibibytes to an eighty gibibyte disk, enter one hundred and twenty.
+
+Back in Ubuntu, check that the disk is larger. If it contains a partition, preview the change with grow part before applying it. For L V M, resize the physical volume, check free space, then extend the logical volume and filesystem. For a standard partition, use the resize command that matches your filesystem. Check the mounted filesystem again and confirm that available space increased.
+
+Confirm the Orchestrator and PostgreSQL containers are healthy. In Updates, select the imported package and click Check Readiness. Compare available space with the required allowance on every row. Proceed once all rows pass and overall readiness passes. If the resize causes a boot or filesystem problem, use the pre-change backup. Shrinking the expanded disk can truncate data.

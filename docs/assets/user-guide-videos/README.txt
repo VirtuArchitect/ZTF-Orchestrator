@@ -1,9 +1,9 @@
 ZTF ORCHESTRATOR USER GUIDE VIDEO SERIES
-Updated 10 November 2026
+Updated 17 November 2026
 
 Open the public player at https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/
 or play each MP4 directly.
-The MP4s are 1920 x 1080, 24 fps H.264 with AAC narration. Each has embedded
+The MP4s are 1920 x 1080, 24 or 30 fps H.264 with AAC narration. Each has embedded
 chapters and burned-in English captions. SRT and VTT files are supplied for
 editing/accessibility workflows; do not enable a second subtitle overlay on top
 of the already captioned video. Transcripts and chapter text are included.
@@ -16,8 +16,7 @@ See series-manifest.json for per-part and chapter provenance.
 Preview chapters describe current boundaries, not production certification.
 Workload restoration remains with the backup platform.
 
-Parts 00-14 use the original synthetic narrator. Part 15 uses the Joanna studio
-voice over light-mode console captures with simulated records. No real cluster deployment,
+The series uses the Joanna studio voice. Part 17 uses light-mode reference screens and sample data. No real cluster deployment,
 account creation, installer, update, recovery or application mutation was run.
 
 Verification: full H.264/AAC decode, image/frame-rate/stream identity, chapter
@@ -46,3 +45,4 @@ PARTS
 14. Native Foundation Baselines and Operating Boundaries (2:00)
 15. Disaster Recovery Start to Finish (2:24)
 16. AHV Appliance Deployment and SSH Setup (2:37)
+17. Production Ubuntu VM Disk Expansion (1:30)
