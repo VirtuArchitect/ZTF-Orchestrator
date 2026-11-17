@@ -1,6 +1,6 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 13 November 2026 | 17 videos | approximately 45 minutes**
+**v1.8.5-rc1 | 17 November 2026 | 18 videos | approximately 47 minutes**
 
 [Watch the full series, starting with 00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
 Use the player to select a part or jump to a chapter. Each video has burned-in
@@ -33,6 +33,7 @@ infrastructure recovery, monitoring and the boundaries of preview integrations.
 | 14 | Native Foundation Baselines and Operating Boundaries | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
 | 15 | [Disaster Recovery Start to Finish](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt) |
 | 16 | [AHV Appliance Deployment and SSH Setup](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-transcript.txt) |
+| 17 | [Production Ubuntu VM Disk Expansion](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-transcript.txt) |
 
 ## 10 November addition
 

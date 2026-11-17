@@ -1,0 +1,5 @@
+0:00  Find the filesystem that needs space
+0:19  Expand the existing disk in Prism
+0:42  Extend and verify the filesystem in Ubuntu
+1:05  Check guided update readiness
+1:21  Recover from a resize failure

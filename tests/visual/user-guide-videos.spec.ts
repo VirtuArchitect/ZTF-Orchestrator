@@ -7,13 +7,13 @@ for (const width of [1440, 390]) {
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
     await page.goto('tutorials/')
-    await expect(page.locator('#parts button')).toHaveCount(16)
+    await expect(page.locator('#parts button')).toHaveCount(18)
     await expect(page.locator('#parts button').first()).toHaveText('00. ZTF-Orchestrator Overview')
     await expect(page.locator('#title')).toContainText('ZTF-Orchestrator Overview')
     await expect.poll(() => page.locator('video').evaluate(video => video.videoWidth)).toBe(1920)
     await expect(page.locator('#chapters button')).toHaveCount(6)
     await page.locator('#chapters button').last().click()
-    await expect.poll(() => page.locator('video').evaluate(video => video.currentTime)).toBeGreaterThan(206)
+    await expect.poll(() => page.locator('video').evaluate(video => video.currentTime)).toBeGreaterThan(186)
     await page.locator('video').evaluate(video => video.pause())
     await expect(page.getByRole('link', { name: 'Transcript', exact: true })).toHaveAttribute('href', /media\/.*Part-00.*-transcript\.txt$/)
     await page.locator('#parts button').nth(11).click()
@@ -87,6 +87,24 @@ test('the recovery documentation deep link opens the full recovery walkthrough',
   await expect(page.locator('#chapters button')).toHaveCount(8)
   await page.getByRole('button', { name: /Accept the cluster for restore handoff/ }).click()
   await expect.poll(() => player.evaluate(video => video.currentTime)).toBeGreaterThan(120)
+  for (const link of await page.locator('#downloads a').all()) {
+    const response = await page.request.get(await link.evaluate(el => el.href), { headers: { Range: 'bytes=0-63' } })
+    expect(response.ok()).toBe(true)
+    await response.dispose()
+  }
+})
+
+test('the disk expansion deep link plays and seeks to readiness', async ({ page }) => {
+  test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires the assembled Pages demo')
+  await page.goto('tutorials/?part=17')
+  await expect(page.getByRole('heading', { name: 'Part 17 — Production Ubuntu VM Disk Expansion (1:30)' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '17. Production Ubuntu VM Disk Expansion' })).toHaveAttribute('aria-current', 'true')
+  const player = page.locator('video')
+  await expect.poll(() => player.evaluate(video => video.videoWidth)).toBe(1920)
+  await expect(page.locator('#chapters button')).toHaveCount(5)
+  await page.getByRole('button', { name: /Check guided update readiness/ }).click()
+  await expect.poll(() => player.evaluate(video => video.currentTime)).toBeGreaterThan(60)
+  await expect.poll(() => player.evaluate(video => video.paused)).toBe(false)
   for (const link of await page.locator('#downloads a').all()) {
     const response = await page.request.get(await link.evaluate(el => el.href), { headers: { Range: 'bytes=0-63' } })
     expect(response.ok()).toBe(true)
