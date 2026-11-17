@@ -58,6 +58,9 @@ and verification boundaries also apply to the illustrated appendix.
 
 ## Related procedures
 
+[Illustrated Production Ubuntu VM Disk Expansion Guide (Word)](ZTF-Orchestrator-Production-Ubuntu-VM-Disk-Expansion-Guide.docx) covers disk sizing in Nutanix Prism, Ubuntu filesystem expansion, guided update readiness and rollback. The screenshots and terminal example use reference data.
+
+
 [Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word)](ZTF-Orchestrator-UAT-Update-and-Verification-v1.8.5-rc1-c660955.docx) covers guided update readiness, Native opt-in,
 compatibility results, the offline step 08-only retry rehearsal, and rollback.
 Screenshots use simulated records.
