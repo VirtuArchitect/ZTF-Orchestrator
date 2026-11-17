@@ -6,6 +6,29 @@ import TagInput from './TagInput'
 import type { ConnectionProfile } from '../../types'
 import { apiFetch, authHeaders } from '../../utils/api'
 
+const foundationActions = [
+  { id: 'images', label: 'Refresh inventory', Icon: RefreshCw },
+  { id: 'validate', label: 'Validate native payload', Icon: ShieldCheck },
+  { id: 'ipmi-test', label: 'Test IPMI credentials', Icon: ShieldCheck },
+  { id: 'progress', label: 'Check progress', Icon: RefreshCw },
+] as const
+
+type FoundationAction = typeof foundationActions[number]['id']
+type FoundationStatus = 'Running' | 'Passed' | 'Failed' | 'Partial' | 'Reported'
+type FoundationResult = {
+  status: FoundationStatus
+  message?: string
+  nodes?: { address: string; passed: boolean; error?: string }[]
+}
+
+const foundationStatusStyles: Record<FoundationStatus, string> = {
+  Running: 'text-blue-600 dark:text-blue-300',
+  Passed: 'text-green-700 dark:text-green-300',
+  Failed: 'text-red-700 dark:text-red-300',
+  Partial: 'text-amber-700 dark:text-amber-300',
+  Reported: 'text-gray-500 dark:text-gray-300',
+}
+
 interface Node {
   blockSerial: string
   nodeSerial: string
@@ -315,6 +338,9 @@ export default function ClusterCreateForm({
   const [latestYaml, setLatestYaml] = useState('')
   const [operationMessage, setOperationMessage] = useState('')
   const [operationBusy, setOperationBusy] = useState('')
+  const [foundationResults, setFoundationResults] = useState<
+    Partial<Record<FoundationAction, FoundationResult & { yaml: string }>>
+  >({})
   const [imageType, setImageType] = useState<'nos' | 'hypervisor' | 'phoenix'>('nos')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [aosInventory, setAosInventory] = useState<{ host: string; packages: string[] } | null>(null)
@@ -458,10 +484,13 @@ export default function ClusterCreateForm({
       : c
     ))
 
-  const runFoundationOperation = async (operation: 'validate' | 'images' | 'ipmi-test' | 'progress') => {
+  const runFoundationOperation = async (operation: FoundationAction) => {
+    const recordResult = (result: FoundationResult) => {
+      setFoundationResults(previous => ({ ...previous, [operation]: { ...result, yaml: latestYaml } }))
+    }
     if (operation === 'images') setAosInventory(null)
     setOperationBusy(operation)
-    setOperationMessage('')
+    recordResult({ status: 'Running' })
     try {
       const resp = await apiFetch(`/api/foundation-vm/${operation}`, {
         method: 'POST',
@@ -470,26 +499,62 @@ export default function ClusterCreateForm({
       })
       const data = await resp.json().catch(() => ({}))
       const errors = Array.isArray(data.errors) ? data.errors.join('; ') : ''
+      if (operation === 'ipmi-test' && Array.isArray(data.results) && (resp.ok || resp.status === 502)) {
+        recordResult({
+          status: data.failed > 0 ? 'Failed' : data.passed > 0 ? 'Passed' : 'Reported',
+          message: data.results.length
+            ? `IPMI credential test: ${data.passed} passed, ${data.failed} failed.`
+            : 'No BMCs were tested.',
+          nodes: data.results.map((item: unknown) => {
+            const node = asRecord(item)
+            return {
+              address: String(node.ipmiIp || 'Unknown BMC'),
+              passed: node.ok === true,
+              error: typeof node.error === 'string' ? node.error : undefined,
+            }
+          }),
+        })
+        return
+      }
       const partialAosInventory = operation === 'images' && resp.status === 502
         && 'aos' in asRecord(data.inventory)
-      if (!resp.ok && !partialAosInventory) throw new Error(data.error || errors || 'Foundation operation failed')
+      if (!resp.ok && !partialAosInventory) {
+        throw new Error([data.error, errors].filter(Boolean).join(': ') || `Foundation operation failed (HTTP ${resp.status})`)
+      }
       if (operation === 'images') {
         const packages = [...new Set(aosPackageNames(data.inventory?.aos))]
         setAosInventory({ host: pcIp, packages })
         const hypervisors = Object.values(asRecord(data.inventory?.hypervisors))
           .reduce<number>((count, items) => count + (Array.isArray(items) ? items.length : 0), 0)
-        setOperationMessage(partialAosInventory
-          ? `Found ${packages.length} AOS packages. Hypervisor inventory unavailable${errors ? `: ${errors}` : '.'}`
-          : `Image inventory refreshed: ${packages.length} AOS packages, ${hypervisors} hypervisor images.`)
-      } else if (operation === 'ipmi-test') {
-        setOperationMessage(`IPMI credential test: ${data.passed} passed, ${data.failed} failed.`)
+        recordResult({
+          status: partialAosInventory ? 'Partial' : 'Passed',
+          message: partialAosInventory
+            ? `Found ${packages.length} AOS packages. Hypervisor inventory unavailable${errors ? `: ${errors}` : '.'}`
+            : `Image inventory refreshed: ${packages.length} AOS packages, ${hypervisors} hypervisor images.`,
+        })
       } else if (operation === 'progress') {
-        setOperationMessage(`Foundation status: ${data.detail || data.phase} (${data.percent || 0}%).`)
+        const progress = asRecord(data.progress)
+        const phase = String(progress.aggregate_status || progress.status || data.phase || 'Unknown')
+        const reportedPercent = progress.aggregate_percent_complete ?? progress.percent_complete
+        const hasPercent = (typeof reportedPercent === 'number' || typeof reportedPercent === 'string')
+          && String(reportedPercent).trim() !== '' && Number.isFinite(Number(reportedPercent))
+        const failed = /^(failed|failure|error|aborted|cancelled|canceled)$/i.test(phase.trim())
+        const complete = data.terminal === true && /^(complete|completed|success|succeeded)$/i.test(phase.trim())
+        recordResult({
+          status: failed ? 'Failed' : complete ? 'Passed' : 'Reported',
+          message: `Foundation phase: ${phase}. ${hasPercent ? `${Number(reportedPercent)}% reported.` : 'Percentage unavailable.'}`
+            + (typeof progress.message === 'string' && progress.message ? ` ${progress.message}` : ''),
+        })
+      } else if (operation === 'validate' && data.valid === true) {
+        recordResult({
+          status: 'Passed',
+          message: data.payloadSha256 ? `Native payload SHA-256: ${data.payloadSha256}` : 'Native payload validated.',
+        })
       } else {
-        setOperationMessage(`Validation passed. Native payload SHA-256: ${data.payloadSha256}`)
+        throw new Error('Foundation returned an unexpected response.')
       }
     } catch (error) {
-      setOperationMessage(error instanceof Error ? error.message : 'Foundation operation failed')
+      recordResult({ status: 'Failed', message: error instanceof Error ? error.message : 'Foundation operation failed' })
     } finally {
       setOperationBusy('')
     }
@@ -717,19 +782,40 @@ export default function ClusterCreateForm({
             </div>
           </div>
           <div className="mt-4 border-t border-border/60 pt-4 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => runFoundationOperation('images')} disabled={Boolean(operationBusy)} className="btn-secondary gap-1.5">
-                <RefreshCw size={14} className={operationBusy === 'images' ? 'animate-spin' : ''} /> Refresh inventory
-              </button>
-              <button type="button" onClick={() => runFoundationOperation('validate')} disabled={Boolean(operationBusy)} className="btn-secondary gap-1.5">
-                <ShieldCheck size={14} /> Validate native payload
-              </button>
-              <button type="button" onClick={() => runFoundationOperation('ipmi-test')} disabled={Boolean(operationBusy)} className="btn-secondary gap-1.5">
-                <ShieldCheck size={14} /> Test IPMI credentials
-              </button>
-              <button type="button" onClick={() => runFoundationOperation('progress')} disabled={Boolean(operationBusy)} className="btn-secondary gap-1.5">
-                <RefreshCw size={14} /> Check progress
-              </button>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {foundationActions.map(({ id, label, Icon }) => {
+                const saved = foundationResults[id]
+                const result = saved?.yaml === latestYaml ? saved : undefined
+                return (
+                  <div key={id} className="min-w-0 rounded-md border border-border p-2">
+                    <button type="button" onClick={() => runFoundationOperation(id)} disabled={Boolean(operationBusy)} className="btn-secondary w-full gap-1.5">
+                      <Icon size={14} className={operationBusy === id && Icon === RefreshCw ? 'animate-spin' : ''} /> {label}
+                    </button>
+                    <div role="status" aria-label={`${label} result`} className="mt-2 space-y-1 break-words text-xs">
+                      {result && (
+                        <>
+                          <p className={`font-semibold ${foundationStatusStyles[result.status]}`}>
+                            {result.status === 'Running' ? 'Running…' : result.status}
+                          </p>
+                          {result.message && <p>{result.message}</p>}
+                          {Boolean(result.nodes?.length) && (
+                            <ul className="space-y-1">
+                              {result.nodes?.map((node, index) => (
+                                <li key={`${node.address}-${index}`}>
+                                  {node.address} · <span className={foundationStatusStyles[node.passed ? 'Passed' : 'Failed']}>
+                                    {node.passed ? 'Passed' : 'Failed'}
+                                  </span>
+                                  {node.error && ` · ${node.error}`}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
             <div className="grid grid-cols-[10rem_minmax(0,1fr)_auto] gap-2 items-end">
               <div>
