@@ -1,6 +1,62 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { load } from 'js-yaml'
 
+test('Foundation actions retain their own results and show failed BMCs and reported imaging progress', async ({ page }) => {
+  await seedUiSession(page)
+  let finishInventory!: () => void
+  const pendingInventory = new Promise<void>(resolve => { finishInventory = resolve })
+  await page.route('**/api/foundation-vm/images', async route => {
+    await pendingInventory
+    await route.fulfill({ json: { inventory: { aos: ['aos.tar.gz'], hypervisors: { kvm: ['ahv.iso'] } } } })
+  })
+  await page.route('**/api/foundation-vm/validate', route => route.fulfill({
+    status: 400, json: { errors: ['Selected AOS package is missing'] },
+  }))
+  await page.route('**/api/foundation-vm/ipmi-test', route => route.fulfill({
+    status: 502, json: { passed: 1, failed: 1, results: [
+      { ipmiIp: '192.0.2.21', ok: true },
+      { ipmiIp: '192.0.2.22', ok: false, error: 'HTTP 401' },
+    ] },
+  }))
+  let status = 'imaging'
+  let percentage: number | undefined = 0
+  await page.route('**/api/foundation-vm/progress', route => route.fulfill({ json: {
+    phase: status, terminal: status !== 'imaging',
+    progress: { aggregate_status: status, aggregate_percent_complete: percentage },
+  } }))
+  await page.goto('/workflows/cluster-create-foundation-vm')
+  await page.getByRole('button', { name: 'Configure', exact: true }).click()
+  const result = (name: string) => page.getByRole('status', { name: name + ' result' })
+  const click = (name: string) => page.getByRole('button', { name, exact: true }).click()
+  await click('Refresh inventory')
+  await expect(result('Refresh inventory')).toHaveText('Running…')
+  finishInventory()
+  await expect(result('Refresh inventory')).toContainText('Passed')
+  await click('Validate native payload')
+  await expect(result('Validate native payload')).toContainText('Failed')
+  await expect(result('Validate native payload')).toContainText('Selected AOS package is missing')
+  await click('Test IPMI credentials')
+  await expect(result('Test IPMI credentials')).toContainText('1 passed, 1 failed')
+  await expect(result('Test IPMI credentials').getByRole('listitem')).toHaveText([
+    '192.0.2.21 · Passed', '192.0.2.22 · Failed · HTTP 401',
+  ])
+  await click('Check progress')
+  await expect(result('Check progress')).toContainText('Foundation phase: imaging. 0% reported.')
+  await expect(result('Check progress')).toContainText('Reported')
+  status = 'completed'
+  percentage = 100
+  await click('Check progress')
+  await expect(result('Check progress')).toContainText('Foundation phase: completed. 100% reported.')
+  await expect(result('Check progress')).toContainText('Passed')
+  status = 'failed'
+  percentage = undefined
+  await click('Check progress')
+  await expect(result('Check progress')).toContainText('Foundation phase: failed. Percentage unavailable.')
+  await expect(result('Check progress')).toContainText('Failed')
+  await expect(result('Refresh inventory')).toContainText('Passed')
+  await expect(result('Test IPMI credentials')).toContainText('1 passed, 1 failed')
+})
+
 test('Foundation VM reuses installed AOS and preserves ISO checksum through validation and export', async ({ page }) => {
   await seedUiSession(page)
   let validationYaml = ''

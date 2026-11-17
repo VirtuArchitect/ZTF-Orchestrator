@@ -12,6 +12,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Retire Native pipeline opt-in, NKP and ZTF 2.x console execution while preserving ZTF 1.x pipelines and recovery.
 
 ### Fixed
+- Show individual Foundation VM action results, BMC credential test outcomes, and the reported imaging phase and percentage.
 - List wrapped Foundation VM AOS inventory and retain those results when the hypervisor inventory lookup fails.
 - Select an existing AOS installer from refreshed Foundation VM inventory and include it in the cluster workflow configuration.
 - Show framework status as checking until the runtime responds, with a separate unavailable result for failed checks.
