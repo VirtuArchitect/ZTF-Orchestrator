@@ -1,6 +1,63 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { load } from 'js-yaml'
 
+test('Approvals navigation counts pending requests, refreshes after decisions and supports compact mode', async ({ page }) => {
+  await seedUiSession(page)
+  let requests = [
+    { id: 'pending-1', status: 'pending' }, { id: 'pending-2', status: 'pending' },
+    { id: 'approved', status: 'approved' }, { id: 'expired', status: 'expired' },
+  ]
+  await page.route('**/api/approvals?status=pending', route => route.fulfill({ json: requests }))
+  await page.goto('/overview')
+  const approvals = page.getByRole('link').filter({ hasText: 'Approvals' })
+  await expect(approvals.locator('[aria-live="polite"]')).toContainText('2 open approvals')
+  await expect(approvals.locator('[aria-live="polite"]')).toHaveAttribute('title', '2 open approvals')
+  requests = []
+  await page.evaluate(() => window.dispatchEvent(new Event('ztf-approvals-updated')))
+  await expect(approvals.locator('[aria-live="polite"]')).toContainText('0 open approvals')
+  await page.getByRole('button', { name: 'Use compact navigation', exact: true }).click()
+  await expect(page.getByRole('link', { name: '0 open approvals' }).locator('[aria-live="polite"]')).toContainText('0 open approvals')
+})
+
+test('Approvals navigation reports an unavailable count and refreshes when the Approvals page loads', async ({ page }) => {
+  await seedUiSession(page)
+  let available = false
+  await page.route('**/api/approvals?status=pending', route => available
+    ? route.fulfill({ json: [{ id: 'pending-1', status: 'pending' }] })
+    : route.fulfill({ status: 503, json: { error: 'Unavailable' } }))
+  await page.route('**/api/approvals', route => route.fulfill({ json: [] }))
+  await page.goto('/overview')
+  await expect(page.locator('[aria-live="polite"][title="Open approval count unavailable"]')).toContainText('?')
+  available = true
+  await page.getByRole('link').filter({ hasText: 'Approvals' }).click()
+  await expect(page.locator('[aria-live="polite"][title="1 open approvals"]')).toContainText('1 open approvals')
+})
+test('expanded jobs fetch saved output and retain it after a summary refresh', async ({ page }) => {
+  await seedUiSession(page)
+  const summary = { id: 'saved-failure', workflow: 'cluster-create-foundation-vm', status: 'failed',
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), user: 'example-operator' }
+  await page.route('**/api/jobs?*', route => route.fulfill({ json: [summary] }))
+  await page.route('**/api/jobs/saved-failure', route => route.fulfill({ json: {
+    ...summary, logs: [{ type: 'stderr', data: 'Saved Foundation request returned HTTP 503' }],
+  } }))
+  await page.goto('/jobs?job=saved-failure')
+  await expect(page.getByText('Saved Foundation request returned HTTP 503')).toBeVisible()
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click()
+  await expect(page.getByText('Saved Foundation request returned HTTP 503')).toBeVisible()
+  await expect(page.getByText('No log events recorded yet.')).toHaveCount(0)
+})
+
+test('unavailable job output is reported as unavailable instead of zero events', async ({ page }) => {
+  await seedUiSession(page)
+  await page.route('**/api/jobs?*', route => route.fulfill({ json: [{
+    id: 'missing-log', workflow: 'config-cluster', status: 'failed', user: 'example-operator',
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  }] }))
+  await page.route('**/api/jobs/missing-log', route => route.fulfill({ status: 503, json: { error: 'Unavailable' } }))
+  await page.goto('/jobs?job=missing-log')
+  await expect(page.getByRole('alert')).toContainText('Job log unavailable (HTTP 503)')
+  await expect(page.getByText('The job log could not be loaded.')).toBeVisible()
+})
 test('Foundation actions retain their own results and show failed BMCs and reported imaging progress', async ({ page }) => {
   await seedUiSession(page)
   let finishInventory!: () => void

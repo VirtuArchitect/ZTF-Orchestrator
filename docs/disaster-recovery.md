@@ -31,10 +31,16 @@ For a new recovery, choose **Review targets and readiness**. Review the
 datacenter prerequisites, exact nodes, Foundation YAML and pipeline snapshots.
 Mark the baseline reviewed if required, then select **Prepare Recovery**.
 The prepared run requires the existing deployment approval and destructive
-target confirmations before imaging can start.
+target confirmations before imaging can start. The count beside **Approvals**
+shows requests awaiting a decision and refreshes after approval changes. A
+question mark means the count could not be retrieved.
 
-The recovery guide shows Completed, Current, Blocked and Pending stages, plus
-the next available action. Bootstrap approval, fresh PE health evidence,
+The recovery guide leads with the current failure and next action. Expand
+**Recovery stages** or **Pipeline steps** when you need the full plan.
+Jobs / Queue loads the complete record and saved output when a job is expanded.
+A failed deployment alone does not establish whether Foundation began imaging.
+Inspect its saved error and Foundation session before choosing a continuation.
+The guide shows Completed, Current, Blocked and Pending stages. Bootstrap approval, fresh PE health evidence,
 configuration approvals and final acceptance use the existing run controls.
 Completed pipeline steps retain their job records.
 

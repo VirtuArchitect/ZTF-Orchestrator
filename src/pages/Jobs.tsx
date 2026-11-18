@@ -11,6 +11,7 @@ import type { ExecutionJob, ExecutionJobStatus, ExecutionProgress } from '../typ
 import { apiFetch } from '../utils/api'
 import { statusBadgeText } from '../utils/executionStatus'
 import clsx from 'clsx'
+import { httpFailure, pollReadOnly } from '../utils/readOnlyPolling'
 
 type JobFilter = 'all' | 'active' | 'queued' | 'running' | 'failed' | 'success' | 'cancelled' | 'interrupted'
 
@@ -43,6 +44,21 @@ export default function Jobs() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [restarting, setRestarting] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [jobDetail, setJobDetail] = useState<ExecutionJob | null>(null)
+  const [detailError, setDetailError] = useState('')
+
+  useEffect(() => {
+    setJobDetail(null); setDetailError('')
+    if (!expanded) return
+    return pollReadOnly(async signal => {
+      const response = await apiFetch(`/api/jobs/${encodeURIComponent(expanded)}`, { signal })
+      if (!response.ok) throw httpFailure(response, `Job log unavailable (HTTP ${response.status}).`)
+      const detail = await response.json() as ExecutionJob
+      if (detail.id !== expanded) throw new Error('Job log response was incomplete.')
+      return detail
+    }, detail => { setJobDetail(detail); setDetailError('') }, setDetailError, 5000)
+  }, [expanded])
+
 
   const canCancel = user?.role === 'admin' || user?.role === 'operator'
   const canDelete = user?.role === 'admin'
@@ -201,7 +217,9 @@ export default function Jobs() {
       )}
 
       <div className="space-y-2">
-        {filtered.map(job => {
+        {filtered.map(summary => {
+          const detailLoaded = expanded === summary.id && jobDetail?.id === summary.id
+          const job = detailLoaded ? jobDetail : summary
           const isActive = ACTIVE_STATUSES.includes(job.status)
           const logs = job.logs || []
           return (
@@ -258,11 +276,12 @@ export default function Jobs() {
 
               {expanded === job.id && (
                 <div className="border-t border-border px-5 py-4 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                  {detailError && <p role="alert" className="text-sm text-amber-500">{detailError} Displayed job details may be stale.</p>}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
                     <Detail label="Started" value={formatDate(job.startedAt)} />
                     <Detail label="Finished" value={formatDate(job.finishedAt)} />
                     <Detail label="Return Code" value={job.returnCode === null || job.returnCode === undefined ? 'pending' : String(job.returnCode)} />
-                    <Detail label="Log Events" value={String(logs.length)} />
+                    <Detail label="Log Events" value={detailLoaded ? String(logs.length) : detailError ? 'Unavailable' : 'Loading…'} />
                   </div>
                   {canDelete && job.workflow === 'cluster-create-foundation-vm' && RECOVERABLE_FOUNDATION_STATUSES.includes(job.status) && (
                     <div className="rounded-lg border border-yellow-700/40 bg-yellow-950/10 px-3 py-3">
@@ -363,8 +382,10 @@ export default function Jobs() {
                       <span className="text-xs text-gray-600">Auto-refreshes every 5 seconds</span>
                     </div>
                     <div className="rounded-lg border border-border bg-gray-950 max-h-96 overflow-auto p-3 font-mono text-xs">
-                      {logs.length === 0 ? (
-                        <p className="text-gray-600">No log events recorded yet.</p>
+                      {!detailLoaded && logs.length === 0 ? (
+                        <p className="text-gray-500">{detailError ? 'The job log could not be loaded.' : 'Loading saved job log…'}</p>
+                      ) : logs.length === 0 ? (
+                        <p className="text-gray-600">No saved log events were returned for this job.</p>
                       ) : (
                         logs.map((event, index) => (
                           <div key={`${job.id}-${index}`} className={clsx(
