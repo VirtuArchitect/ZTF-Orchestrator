@@ -9,6 +9,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Add a Recover Cluster entry with existing-run resumption, recovery stage status, completed pipeline jobs and guidance through reconciliation and step 08-only retry.
+
 - Retire Native pipeline opt-in, NKP and ZTF 2.x console execution while preserving ZTF 1.x pipelines and recovery.
 
 ### Fixed

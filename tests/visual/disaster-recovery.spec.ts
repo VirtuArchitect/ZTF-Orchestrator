@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-async function seed(page: Page, role = 'admin', options: { blocker?: string; used?: boolean; linked?: boolean; empty?: boolean } = {}) {
+async function seed(page: Page, role = 'admin', options: { blocker?: string; used?: boolean; linked?: boolean; empty?: boolean; recoveryStatus?: string } = {}) {
   await page.addInitScript(role => sessionStorage.setItem('ztf-ui-store', JSON.stringify({ state: {
     sessionToken: 'isolated-fixture', user: { username: 'recovery-reviewer', role }, sidebarOpen: false,
     sidebarPreferenceInitialized: true, settings: {},
@@ -11,7 +11,19 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
   const profile = { id: 'p1', name: 'HCI-01 Recovery', datacenterId: dc.id, kind: 'existing', revision: 1, reviewed: true, drifted: false, deploymentConfigFile: 'deploy.yml', pipelineId: 'pipe', revisions: [revision], updatedAt: '2026-11-05T08:00:00Z', archivedAt: '', archiveNotes: '', lifecycle: {} }
   const writes: string[] = []
   const datacenters = options.empty ? [] : [dc]
-  let preparedRun: unknown = null
+  if (options.recoveryStatus) revision.steps = Array.from({ length: 8 }, (_, index) => ({
+    workflow: 'config-cluster', configFile: index === 7 ? '08_register_pc.yml' : `0${index + 1}_settings.yml`,
+    configContent: 'clusters: {}\n', sha256: 'b'.repeat(64),
+  }))
+  const completed = options.recoveryStatus ? Array.from({ length: 7 }, (_, index) => ({ index, status: 'success', jobId: `completed-${index}` })) : []
+  let preparedRun = options.recoveryStatus ? {
+    id: 'run1', profileId: profile.id, profileName: profile.name, datacenterId: dc.id,
+    mode: 'recovery', status: options.recoveryStatus, revision: 1, clusterName: revision.clusterName,
+    clusterVip: revision.clusterVip, baselineSha256: revision.sha256, foundationEndpoint: dc.foundationEndpoint,
+    steps: completed, snapshot: revision, deploymentJobId: 'foundation-complete', currentJobId: 'registration-failed',
+    createdAt: '2026-11-05T08:00:00Z', updatedAt: '2026-11-05T08:00:00Z', canRetryRegistration: true,
+    reconciliation: { registrationAbsent: false },
+  } : null
   let removed = false
   const lifecycle = () => ({canEdit: !profile.archivedAt && !options.blocker, canArchive: !profile.archivedAt && !options.blocker, canRestore: Boolean(profile.archivedAt) && !options.blocker, canDelete: !options.used && !options.blocker && !options.linked, runCount: options.used || options.blocker ? 1 : 0, linkedClusterCount: options.linked ? 1 : 0, blockers: options.blocker ? [{id:'blocking-run',status:options.blocker}] : [], editReason: options.blocker ? 'Open recovery run requires completion or reconciliation: blocking-run ('+options.blocker+')' : profile.archivedAt ? 'Restore this archived profile before editing.' : '', archiveReason: options.blocker ? 'Open recovery run requires completion or reconciliation.' : '', restoreReason:'', deleteReason: options.used || options.blocker ? 'Recovery run history is retained. Archive this profile instead.' : options.linked ? 'Managed-cluster records reference this profile.' : ''})
   await page.route('**/api/**', async route => {
@@ -22,7 +34,7 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
     if (path === '/api/system/check') value = { checks: [], ztfInstalled: true }
     if (path === '/api/configs') value = [{ name: 'deploy.yml' }, { name: 'post.yml' }]
     if (path === '/api/pipelines') value = [{ id: 'pipe', name: 'Post deployment', steps: [] }]
-    if (path === '/api/recovery') value = { datacenters, profiles: removed || options.empty ? [] : [profile], runs: [] }
+    if (path === '/api/recovery') value = { datacenters, profiles: removed || options.empty ? [] : [profile], runs: preparedRun ? [preparedRun] : [] }
     if (path === '/api/recovery/datacenters') {
       const added = { ...request.postDataJSON(), id: 'dc2' }; datacenters.push(added); value = added
     }
@@ -44,10 +56,29 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
     if (path === '/api/recovery/profiles/p1/archive') {profile.archivedAt='2026-11-05T08:01:00Z';profile.archiveNotes=request.postDataJSON().notes;profile.updatedAt='2026-11-05T08:01:00Z';profile.lifecycle=lifecycle();value=profile}
     if (path === '/api/recovery/profiles/p1/restore') {profile.archivedAt='';profile.updatedAt='2026-11-05T08:02:00Z';profile.lifecycle=lifecycle();value=profile}
     if (path === '/api/recovery/runs') {
-      preparedRun = { id: 'run1', profileId: profile.id, profileName: profile.name, datacenterId: dc.id, mode: request.postDataJSON().mode, status: 'prepared', updatedAt:'2026-11-05T08:00:00Z', revision: 1, clusterName: revision.clusterName, clusterVip: revision.clusterVip, baselineSha256: revision.sha256, foundationEndpoint: dc.foundationEndpoint, steps: [], snapshot: revision }
+      preparedRun = { id: 'run1', profileId: profile.id, profileName: profile.name, datacenterId: dc.id, mode: request.postDataJSON().mode, status: 'prepared', deploymentJobId: '', currentJobId: '', createdAt: '2026-11-05T08:00:00Z', canRetryRegistration: false, reconciliation: { registrationAbsent: false }, updatedAt:'2026-11-05T08:00:00Z', revision: 1, clusterName: revision.clusterName, clusterVip: revision.clusterVip, baselineSha256: revision.sha256, foundationEndpoint: dc.foundationEndpoint, steps: [], snapshot: revision }
       value = preparedRun
     }
     if (path === '/api/recovery/runs/run1/close-prepared') { (preparedRun as {status:string}).status = 'closed_reconciled'; value = preparedRun }
+    if (path === '/api/recovery/runs/run1/reconcile' && preparedRun) {
+      expect(request.postDataJSON()).toMatchObject({ resumeConfiguration: true, registrationAbsent: true })
+      preparedRun.status = 'awaiting_health_verification'
+      preparedRun.reconciliation.registrationAbsent = true
+      value = preparedRun
+    }
+    if (path === '/api/recovery/runs/run1/health' && preparedRun) {
+      expect(request.postDataJSON()).toMatchObject({ clusterIdentity: 'HCI-01', membershipVerified: true, servicesHealthy: true })
+      preparedRun.status = 'ready_for_configuration'
+      value = preparedRun
+    }
+    if (path === '/api/recovery/runs/run1/configure' && preparedRun) {
+      expect(request.postDataJSON().retryRegistrationOnly).toBe(true)
+      expect(preparedRun.reconciliation.registrationAbsent).toBe(true)
+      expect(preparedRun.status).toBe('ready_for_configuration')
+      preparedRun.status = 'awaiting_acceptance'
+      preparedRun.steps = [...completed, { index: 7, status: 'success', jobId: 'retry-08-only' }]
+      value = preparedRun
+    }
     if (path === '/api/recovery/runs/run1/approval') value = { id: 'approval1' }
     if (path === '/api/recovery/runs/run1') {
       await new Promise(resolve => setTimeout(resolve, 200))
@@ -315,4 +346,94 @@ test('empty recovery setup is read-only for viewers', async ({ page }) => {
   await expect(setup.getByText(/An administrator can add datacenters/)).toBeVisible()
   await expect(setup.getByRole('button')).toHaveCount(0)
   expect(writes).toEqual([])
+})
+
+
+test('Recover Cluster reviews readiness and prepares through the existing deployment approval gate', async ({ page }) => {
+  const writes = await seed(page)
+  await page.goto('/recovery')
+  await page.getByRole('banner').getByRole('button', { name: 'Recover Cluster', exact: true }).click()
+  await page.getByLabel('Cluster recovery profile').selectOption('p1')
+  await page.getByRole('button', { name: 'Review targets and readiness' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Review recovery readiness and exact targets')
+  expect(writes).toEqual([])
+  await page.getByRole('button', { name: 'Prepare Recovery', exact: true }).click()
+  const guide = page.getByRole('region', { name: 'Recovery stage guide' })
+  await expect(guide.getByText('Review targets and approve', { exact: true }).locator('..')).toContainText('Current')
+  await expect(page.getByRole('button', { name: 'Deploy Reviewed Recovery' })).toBeDisabled()
+  expect(writes).toEqual(['/api/recovery/runs'])
+})
+
+test('Resume Recovery retains steps 01 through 07 and guides reconciliation, health and step 08 only', async ({ page }) => {
+  const writes = await seed(page, 'admin', { recoveryStatus: 'needs_reconciliation' })
+  await page.goto('/recovery')
+  await page.getByRole('button', { name: 'Resume Recovery', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Review targets and readiness' })).toHaveCount(0)
+  await page.getByRole('dialog').getByRole('button', { name: 'Resume Recovery', exact: true }).click()
+  const guide = page.getByRole('region', { name: 'Recovery stage guide' })
+  await expect(guide.getByText('08. 08_register_pc.yml').locator('..')).toContainText('Blocked')
+  await expect(guide.getByText('01. 01_settings.yml').locator('..')).toContainText('Completed')
+  await expect(page.getByRole('button', { name: 'Deploy Reviewed Recovery' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Retry step 08 only', exact: true })).toHaveCount(0)
+  expect(writes).toEqual([])
+  await page.getByRole('button', { name: 'Review reconciliation', exact: true }).click()
+  await page.getByLabel('Independent verification notes').fill('PE and PC reconciled, registration absent')
+  await page.getByLabel('Verification evidence reference').fill('mock/reconciliation')
+  await page.getByLabel('Foundation session has ended and actual target state is reconciled; active jobs have finished.').check()
+  await page.getByLabel('Prepare to resume remaining configuration after fresh health evidence.').check()
+  await expect(page.getByRole('button', { name: 'Record Reconciliation' })).toBeDisabled()
+  await page.getByLabel('I verified registration is absent in PE and PC.').check()
+  await page.getByRole('button', { name: 'Record Reconciliation' }).click()
+  await expect(page.getByRole('button', { name: 'Retry step 08 only', exact: true })).toHaveCount(0)
+  await page.getByLabel('Verified cluster identity').fill('HCI-01')
+  await page.getByLabel('Health readback notes').fill('Fresh mock health readback')
+  await page.getByLabel('Evidence reference', { exact: true }).fill('mock/fresh-health')
+  await page.getByLabel('Expected membership and cluster services are healthy.').check()
+  await page.getByRole('button', { name: 'Record Health Evidence' }).click()
+  await expect(guide.getByRole('button', { name: 'Review step 08 retry' })).toBeVisible()
+  await page.getByRole('button', { name: 'Retry step 08 only', exact: true }).click()
+  await expect(guide.getByText('08. 08_register_pc.yml').locator('..')).toContainText('Completed')
+  expect(writes).toEqual(['/api/recovery/runs/run1/reconcile', '/api/recovery/runs/run1/health', '/api/recovery/runs/run1/configure'])
+})
+
+test('viewer has recovery stage visibility without Recover Cluster or retry controls', async ({ page }) => {
+  const writes = await seed(page, 'viewer', { recoveryStatus: 'needs_reconciliation' })
+  await page.goto('/recovery/runs?run=run1')
+  await expect(page.getByRole('region', { name: 'Recovery stage guide' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Recover Cluster', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Review reconciliation', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Retry step 08 only', exact: true })).toHaveCount(0)
+  expect(writes).toEqual([])
+})
+
+
+test('newly discovered open run redirects guided preparation to Resume Recovery', async ({ page }) => {
+  const writes = await seed(page)
+  const response = page.waitForResponse(r => new URL(r.url()).pathname === '/api/recovery')
+  await page.goto('/recovery')
+  const overview = await (await response).json()
+  await page.getByRole('banner').getByRole('button', { name: 'Recover Cluster', exact: true }).click()
+  await page.getByLabel('Cluster recovery profile').selectOption('p1')
+  await page.getByRole('button', { name: 'Review targets and readiness' }).click()
+  await page.route('**/api/recovery', route => route.fulfill({ json: {
+    ...overview, runs: [{ id: 'other-run', profileId: 'p1', status: 'prepared', mode: 'recovery', revision: 1, steps: [] }],
+  } }))
+  await page.getByRole('button', { name: 'Prepare Recovery', exact: true }).click()
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Resume Recovery', exact: true })).toBeVisible()
+  expect(writes).toEqual([])
+})
+
+
+test('an interrupted bootstrap is blocked after completed Foundation imaging', async ({ page }) => {
+  await seed(page, 'admin', { recoveryStatus: 'needs_reconciliation' })
+  await page.goto('/recovery')
+  const overview = await page.evaluate(async () => (await fetch('/api/recovery')).json())
+  const run = { ...overview.runs[0], bootstrapStepCount: 2, steps: [], canRetryRegistration: false }
+  await page.route('**/api/recovery/runs/run1', route => route.fulfill({ json: run }))
+  await page.getByRole('button', { name: 'Resume Recovery', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Resume Recovery', exact: true }).click()
+  const guide = page.getByRole('region', { name: 'Recovery stage guide' })
+  await expect(guide.getByText('Foundation imaging', { exact: true }).locator('..')).toContainText('Completed')
+  await expect(guide.getByText('Initial-access bootstrap', { exact: true }).locator('..')).toContainText('Blocked')
+  await expect(page.getByRole('button', { name: 'Deploy Reviewed Recovery' })).toHaveCount(0)
 })
