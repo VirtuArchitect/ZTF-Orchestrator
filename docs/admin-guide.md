@@ -467,6 +467,10 @@ and audit requirements.
 
 Approvals provide the governance layer for controlled work.
 
+The navigation bubble shows the pending approval count. A blue `0` means no
+requests are pending. Pending requests use an amber count. While checking, the
+bubble shows `…`; `?` means the count is unavailable.
+
 Common approval use cases:
 
 | Approval target | Why it matters |

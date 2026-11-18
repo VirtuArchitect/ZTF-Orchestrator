@@ -16,6 +16,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Retire Native pipeline opt-in, NKP and ZTF 2.x console execution while preserving ZTF 1.x pipelines and recovery.
 
 ### Fixed
+- Keep the Approvals count visible as a blue bubble with a white zero when no requests are pending, in light, dark and compact navigation.
 - Load complete job logs when expanding Jobs / Queue records and show saved recovery failure details inline.
 - Put the next recovery action before collapsed stage and pipeline details, and hide configuration controls after early deployment failures.
 - Identify pipeline steps by their configuration filename in the running header, progress rail and log.

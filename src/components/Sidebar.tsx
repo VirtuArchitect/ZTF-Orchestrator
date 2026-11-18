@@ -227,11 +227,11 @@ export default function Sidebar() {
                     (!['/', '/recovery', '/start'].includes(item.path) && location.pathname.startsWith(`${item.path}/`))
                   const approvalBadge = item.path === '/approvals' && (
                     <span aria-live="polite" aria-atomic="true" title={approvalCountLabel} className={clsx(
-                      'rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none',
+                      'inline-flex min-h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none',
                       !sidebarOpen && 'absolute right-0 top-0',
                       openApprovals && openApprovals > 0
                         ? 'bg-amber-200 text-amber-950'
-                        : active ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                        : 'bg-blue-600 text-white'
                     )}><span aria-hidden="true">{approvalCountText}</span><span className="sr-only">{approvalCountLabel}</span></span>
                   )
                   return (
