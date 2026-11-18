@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FileCode, Plus, Trash2, Save, Download, Upload, RefreshCw, History, RotateCcw, Wand2 } from 'lucide-react'
 import Layout from '../components/Layout'
+import { useLocation } from '../router'
 import ScriptConfigWizard from '../components/ScriptConfigWizard'
 import { SCRIPTS } from '../data'
 import clsx from 'clsx'
@@ -20,6 +21,7 @@ interface Backup {
 }
 
 export default function ConfigFiles() {
+  const location = useLocation()
   const { organization, error: groupingError, ready, reload, assign } = useConfigOrganization()
   const [scope, setScope] = useState('all')
   const [search, setSearch] = useState('')
@@ -83,6 +85,11 @@ export default function ConfigFiles() {
     const bakResp = await apiFetch(`/api/configs/${encodeURIComponent(name)}/backups`)
     if (bakResp.ok) setBackups(await bakResp.json())
   }
+
+  useEffect(() => {
+    const file = new URLSearchParams(location.search).get('file')
+    if (file) void openFile(file)
+  }, [location.search])
 
   const restoreBackup = async (version: number) => {
     if (!selected || !confirm(`Restore version ${version}? The current file will be backed up first.`)) return

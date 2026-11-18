@@ -1,5 +1,6 @@
 import { useStore } from './store'
 import { APP_VERSION } from './version'
+import { fromYaml } from './utils/yaml'
 import { emptyOrganization, type CredentialOrganization } from './utils/credentialOrganization'
 
 let demoConfigOrganization = { version: 1, revision: 0, assignments: {} as Record<string, { groupId: string; purpose: string }> }
@@ -301,6 +302,11 @@ const configs: Record<string, string> = {
   'input.yml': 'domains:\n  lab:\n    data: {}\n    resources: {}\n    outputs: {}\n',
   'global.yml': 'vault_to_use: local\nip_allocation_method: static\nvaults:\n  local:\n    credentials:\n      pe_user:\n        username: admin\n        password: <demo-secret>\n',
 }
+
+
+const studioDemoTasks = [{"id": "ChangeDefaultAdminPasswordPe", "category": "Initial access", "action": "ChangeDefaultAdminPasswordPe", "keys": ["new_pe_admin_credential"]}, {"id": "AcceptEulaPe", "category": "EULA & Pulse", "action": "config-cluster", "keys": ["eula", "enable_pulse"]}, {"id": "UpdatePulsePe", "category": "EULA & Pulse", "action": "config-cluster", "keys": ["enable_pulse"]}, {"id": "AddNameServersPe", "category": "Networking", "action": "config-cluster", "keys": ["name_servers_list"]}, {"id": "AddNtpServersPe", "category": "Networking", "action": "config-cluster", "keys": ["ntp_servers_list"]}, {"id": "UpdateDsip", "category": "Networking", "action": "config-cluster", "keys": ["dsip"]}, {"id": "HaReservation", "category": "Availability", "action": "config-cluster", "keys": ["ha_reservation"]}, {"id": "RebuildCapacityReservation", "category": "Availability", "action": "config-cluster", "keys": ["enable_rebuild_reservation"]}, {"id": "CreateContainerPe", "category": "Storage", "action": "config-cluster", "keys": ["containers"]}, {"id": "SetPrismLoginTitlePe", "category": "Prism settings", "action": "SetPrismLoginTitlePe", "keys": ["prism_login_title"]}, {"id": "RegisterToPc", "category": "PC registration", "action": "config-cluster", "keys": []}]
+const studioDemoPipeline = {id: "demo-pipeline-001", name: "Post-deployment baseline (simulated)", steps: [{workflow: "config-cluster", configFile: "cluster-baseline-demo.yml"}], studioHash: "demo-0"}
+const demoHash = (content: string) => {let hash=2166136261; for (const char of content) hash=Math.imul(hash ^ char.charCodeAt(0),16777619); return `demo-${hash >>> 0}`}
 
 const upgradeDemoAssessments: Record<string, unknown>[] = []
 let upgradeDemoInventory: Record<string, unknown> | null = null
@@ -606,7 +612,7 @@ async function demoResponse(request: Request) {
     if (path.includes('/restore/')) return okAction('Config restore simulated.')
     if (method === 'DELETE') return okAction('Config delete simulated.')
     if (method === 'PUT' || method === 'POST') return okAction('Config save simulated.', { name })
-    return json({ name, content: configs[name] || '# Demo config placeholder\n' })
+    return json({ name, content: configs[name] || '# Demo config placeholder\n', sha256: demoHash(configs[name] || '') })
   }
   if (path === '/api/config-organization') {
     if (method === 'PUT') {
@@ -646,14 +652,38 @@ async function demoResponse(request: Request) {
       demo: true,
     }, { status: 202 })
   }
+  if (path === '/api/yaml-studio/context') return json({tasks: studioDemoTasks, groups: demoCredentialOrganization.groups, references: [{name: 'pe_user', groupId: ''}], pipelines: [studioDemoPipeline], referenceCheck: 'simulated_declaration_only'})
+  if (path === '/api/yaml-studio/handoff') {
+    const body = await requestJson(request)
+    const task = studioDemoTasks.find(t => t.id === body.taskId)
+    const filename = String(body.filename || '')
+    if (!task || !configs[filename] || body.contentHash !== demoHash(configs[filename]) || body.pipelineHash !== studioDemoPipeline.studioHash) return json({error: 'Simulated file or pipeline changed. Reload and review.'}, {status: 409})
+    if (studioDemoPipeline.steps.some(step => step.workflow === task.action && step.configFile === filename)) return json({error: 'Step already present.'}, {status: 409})
+    studioDemoPipeline.steps.push({workflow: task.action, configFile: filename}); studioDemoPipeline.studioHash = `demo-${studioDemoPipeline.steps.length}`
+    return json({executionStarted: false, stepCount: studioDemoPipeline.steps.length})
+  }
   if (path === '/api/yaml-studio/validate') {
     const body = await requestJson(request)
     const content = String(body.content || '')
     const errors = content.trim() ? [] : ['YAML content is required.']
+    if (body.taskId) {
+      let syntaxValid = true
+      let shapeValid = false
+      try { const parsed = fromYaml(content) as {clusters?: Record<string, {name?: string; pe_credential?: string}>}; const rows = Object.values(parsed?.clusters || {}); shapeValid = rows.length === 1 && !!rows[0].name && rows[0].pe_credential === 'pe_user' } catch { syntaxValid = false }
+      if (!syntaxValid || !shapeValid) errors.push('Simulated check: use one named cluster with the pe_user demo reference.')
+      return json({valid: !errors.length, syntaxValid, shapeValid, contentHash: demoHash(content), references: [{name: 'pe_user', status: shapeValid ? 'found' : 'not_found'}], errors, warnings: ['SIMULATION ONLY: sample shape checks; no backend task validation, authentication or live preflight.'], livePreflight: 'not_run'}, {status: errors.length ? 400 : 200})
+    }
     return json({ kind: String(body.kind || 'workflow-config'), valid: errors.length === 0, errors, warnings: ['Demo validation checks YAML shape only.'], rootType: content.trim().startsWith('-') ? 'list' : 'mapping' }, { status: errors.length ? 400 : 200 })
   }
   if (path === '/api/yaml-studio/save') {
     const body = await requestJson(request)
+    if (body.taskId) {
+      const filename = String(body.filename || ''), content = String(body.content || '')
+      if (body.expectedHash !== (configs[filename] ? demoHash(configs[filename]) : '')) return json({error: 'Demo file changed. Open for review.'}, {status: 409})
+      configs[filename] = content
+      demoConfigOrganization = {...demoConfigOrganization, revision: demoConfigOrganization.revision + 1, assignments: {...demoConfigOrganization.assignments, [filename]: {groupId: String(body.groupId || ''), purpose: 'Post-configuration'}}}
+      return json({filename, contentHash: demoHash(content), validation: {valid: true, syntaxValid: true, shapeValid: true, references: [{name: 'pe_user', status: 'found'}], errors: [], warnings: ['Saved in simulated browser memory only.']}})
+    }
     return json({ filename: String(body.filename || 'demo.yaml'), validation: { valid: true, errors: [], warnings: ['Saved in demo memory only.'] } })
   }
   if (path === '/api/yaml-studio/export') {
@@ -740,7 +770,7 @@ async function demoResponse(request: Request) {
     })
   }
   if (path.startsWith('/api/recovery/')) return json({ error: 'Recovery detail, changes and execution require a connected authorised backend. Demo records are illustrative only.' }, { status: 403 })
-  if (path === '/api/pipelines') return json([{ id: 'demo-pipeline-001', name: 'Post-deployment baseline (simulated)', steps: [{ workflow: 'config-cluster', configFile: 'cluster-baseline-demo.yml' }], createdAt: iso(800), updatedAt: iso(90) }])
+  if (path === '/api/pipelines') return json([{...studioDemoPipeline, createdAt: iso(800), updatedAt: iso(90)}])
   if (path.startsWith('/api/pipelines/')) return okAction('Pipeline action simulated.')
   if (path === '/api/parallel-runs') return json([])
   if (path.startsWith('/api/parallel-runs')) return okAction('Parallel run action simulated.')
