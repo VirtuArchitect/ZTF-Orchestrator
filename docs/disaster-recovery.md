@@ -20,6 +20,31 @@ of this new coordinator. No new runtime dependencies are required.
 The screenshot is from an isolated software smoke test with generic fixtures.
 It is not a production environment or evidence of a physical recovery run.
 
+## Recover Cluster and resume recovery
+
+Open **Disaster Recovery → Recover Cluster**, select a datacenter and cluster
+profile, then choose **Resume Recovery** if an open run is listed. Each run
+shows its mode, baseline revision, last update and completed step count. Resume
+opens the saved run and its immutable snapshot.
+
+For a new recovery, choose **Review targets and readiness**. Review the
+datacenter prerequisites, exact nodes, Foundation YAML and pipeline snapshots.
+Mark the baseline reviewed if required, then select **Prepare Recovery**.
+The prepared run requires the existing deployment approval and destructive
+target confirmations before imaging can start.
+
+The recovery guide shows Completed, Current, Blocked and Pending stages, plus
+the next available action. Bootstrap approval, fresh PE health evidence,
+configuration approvals and final acceptance use the existing run controls.
+Completed pipeline steps retain their job records.
+
+If step 08 PC registration failed after steps 01 through 07 succeeded, resume
+that run, reconcile PE and PC and confirm registration is absent. Record fresh
+PE health evidence, then use **Retry step 08 only** when the server reports it
+eligible. Required approval policy still applies. For steps requiring the
+approved direct-job path, use the exact downloaded YAML and link its successful
+job to the same recovery run.
+
 ## Video walkthrough
 
 [Watch Disaster Recovery Start to Finish (2:24)](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15).
