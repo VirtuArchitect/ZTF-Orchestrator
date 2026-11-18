@@ -1,14 +1,27 @@
 # AHV Uplink Migration
 
-Open **Configure → AHV Uplink Migration** as an administrator. This separate workflow changes physical uplink membership. Workload subnet moves and CVM backplane segmentation have their own procedures.
+Open **Configure → AHV Uplink Migration** as an administrator. The wizard changes physical uplink membership on one cluster of 3–16 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.
 
-1. Select a managed cluster or enter the exact cluster UUID and Prism Element endpoint. Supply a trusted Prism Central endpoint and separate saved references for PC and PE. Run **Discover cluster (read-only)**.
-2. Choose **Create a new virtual switch**, enter a name such as `vs1`, and review the bond mode and MTU. For an existing switch, select it from inventory. This first implementation supports one cluster of 3–16 healthy AHV hosts, active-backup switches, and destination MTU 1500 or 9000.
-3. Assign each physical NIC on `vs0` to stay on `br0` or move. Keep at least two operational uplinks on `br0` and ensure the destination has at least two per host after the change. Match actual ports and confirm cabling, VLANs, MTU, maintenance capacity and out-of-band access independently.
-4. Run **Read-only preflight**. PC and PE must agree on cluster and host identities. The wizard checks reported health, links, switch membership, and switch concurrency tokens. Review the before-and-after assignments and request approval from a different administrator.
-5. In a validated and explicitly enabled environment, the requester types the displayed confirmation and submits the approved plan. The job checks the plan against fresh inventory, releases the selected uplinks using a standard Prism task, verifies retained links, then creates or updates the destination and checks both switches on every host. **Jobs / Queue** retains Prism task IDs and readback results.
+## PE direct: no Prism Central required
 
-Live writes are disabled by default. The deployment owner can pass `ZTF_AHV_UPLINK_MIGRATION_ENABLED=true` to the application container after validating the Prism Networking/Cluster Management v4.2 contract and the complete rolling operation on representative test hardware. There is no quick mode or automatic replay. If a task fails, times out, or the application loses contact after submission, check Prism Tasks and reconcile both switches using the original memberships captured in the approved plan before attempting a new change. PE-reported health and NIC readback do not prove end-to-end VLAN or workload connectivity.
+1. Choose **PE direct — no Prism Central** (the default for a new draft). Select a managed cluster or enter its expected UUID, PE HTTPS endpoint on port 9440 and saved PE credential reference.
+2. Enter a saved **CVM credential reference** for the `nutanix` account and a JSON mapping of every CVM IPv4 address to its independently verified `SHA256:` SSH host-key fingerprint. No password is entered in the wizard. Verify fingerprints through an independently trusted console; do not treat an unverified key scan as proof of identity. CVM-to-local-AHV SSH trust must already work with strict host-key checking.
+3. Leave **Verify PE TLS certificate** selected for trusted HTTPS. For an approved deployment or recovery exception, uncheck it and enter a reason without passwords. HTTPS is still encrypted, but PE server identity is not authenticated. The setting and reason are part of the hashed plan, independent approval, audit events and job diagnostics. The exception affects this operation only, never global TLS or SSH trust. A new draft defaults to verification enabled.
+4. Run **Discover cluster (read-only)**. PE UUID, AHV membership and Good health must verify. Pinned CVM SSH reads the local AHV serial, management address and structured OVS inventory; it performs no network changes.
+5. Select **Create a new virtual switch** or a consistently existing destination. In PE-direct mode, `vs1` means the local OVS bridge `br1`; this path does not create a Prism Central distributed-switch object. Destinations are `vs1`/`br1` through `vs999`/`br999`, active-backup, MTU 1500 or 9000.
+6. For every host, choose the physical NICs that stay on `br0` and those that move. Keep at least two operational uplinks on `br0` and at least two at the destination. Independently check cabling, VLANs, MTU, capacity and out-of-band access. Run read-only preflight, review the exact keep/move assignments and transport exception, then request approval from a different administrator.
+7. When live application has been explicitly enabled in a validated environment, type the exact confirmation. Each host is processed sequentially using fixed `manage_ovs` commands: retain the approved `br0` bond, verify management connectivity and retained membership, create the destination bridge when needed, attach its uplinks, then verify both assignments and PE identity/health. A final all-host readback checks for drift. Requester and approver must remain administrators.
 
-- [Nutanix Networking SDK virtual switch operations](https://developers.nutanix.com/api/v1/sdk/namespaces/main/networking/versions/v4.2/languages/python/ntnx_networking_py_client.api.virtual_switches_api.html)
-- [Nutanix guidance on networking for existing AHV nodes](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Security-Guide%3Aportal-full-page-view-html)
+A failed or uncertain SSH action stops processing. Completed hosts remain recorded in **Jobs / Queue**; no later host is changed and no write is automatically retried or rolled back. Independently reconcile the actual bridges and Foundation/PE state before requesting a new plan. Cancellation cannot undo an accepted remote operation. Preserve the original assignments and access the host console if management connectivity is lost.
+
+## Existing Prism Central path
+
+Select **Prism Central managed** to retain the existing trusted PC/PE v4.2 flow. It requires separate saved PC and PE credential references, agreeing identities, revision tokens and standard Prism task verification. Existing saved plans remain on their original transport; no automatic conversion occurs.
+
+## Validation and enablement
+
+Live writes are disabled by default. The deployment owner may set `ZTF_AHV_UPLINK_MIGRATION_ENABLED=true` only after validating the selected transport and the complete rolling operation on representative AOS/AHV hardware. PE-direct mode reuses the installed ZTF SSH interpreter and Paramiko; no runtime dependency is added. Missing runtime support, unverified host keys, unsupported inventory, partial destination bridges and unhealthy hosts block execution. Mocked tests do not establish hardware compatibility or end-to-end VLAN/workload connectivity. VS0 MTU and recovery health collection keep their existing transport rules.
+
+- [Nutanix PE v2 API reference](https://www.nutanix.dev/api_reference/apis/prism_v2.html)
+- [Nutanix cluster-local networking guidance](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Security-Guide%3Aportal-full-page-view-html)
+- [Nutanix Networking v4.2 virtual switch API](https://developers.nutanix.com/api/v1/sdk/namespaces/main/networking/versions/v4.2/languages/python/ntnx_networking_py_client.api.virtual_switches_api.html)

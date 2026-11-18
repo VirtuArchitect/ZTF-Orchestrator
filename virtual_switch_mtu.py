@@ -28,6 +28,8 @@ def connection(intent):
             or intent['fabricReviewed'] is not True or not isinstance(intent['rollbackJobId'], str)
             or (intent['rollbackJobId'] and not re.fullmatch(r'[A-Za-z0-9-]{1,80}', intent['rollbackJobId']))):
         raise uplink.MigrationError('Review the network and recovery prerequisites before running preflight.')
+    if uplink.pe_direct.direct(intent['connection']):
+        raise uplink.MigrationError('This MTU workflow requires the reviewed Prism Central connection.')
     return uplink.connection(intent['connection'])
 
 

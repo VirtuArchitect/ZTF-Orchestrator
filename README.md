@@ -298,6 +298,8 @@ three container definitions per cluster, verifies replacements and discovers the
 numeric-suffix default container for independently approved cleanup. VDisk blockers
 stop cleanup; validation is simulated and no live cleanup is implied.
 
+New source also offers **PE-direct** connection modes for [AHV uplink migration](docs/ahv-uplink-migration.md) (pinned CVM SSH) and [DARE](docs/dare-workflow.md) (PE v2 with existing Local KMS), without Prism Central. TLS verification is enabled by default; an explicit per-run exception requires a reason, audit trail and exact-plan independent approval. SSH host-key checks remain mandatory. Live writes stay disabled until representative hardware validation.
+
 The [DARE wizard](docs/dare-workflow.md) provides administrator-only discovery,
 read-only preflight and independent approval for cluster-wide software encryption
 with Native KMS (Local). Live enablement is off by default and requires lab
