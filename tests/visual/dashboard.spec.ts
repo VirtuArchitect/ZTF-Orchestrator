@@ -1,23 +1,38 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { load } from 'js-yaml'
 
-test('Approvals navigation counts pending requests, refreshes after decisions and supports compact mode', async ({ page }) => {
-  await seedUiSession(page)
-  let requests = [
-    { id: 'pending-1', status: 'pending' }, { id: 'pending-2', status: 'pending' },
-    { id: 'approved', status: 'approved' }, { id: 'expired', status: 'expired' },
-  ]
-  await page.route('**/api/approvals?status=pending', route => route.fulfill({ json: requests }))
-  await page.goto('/overview')
-  const approvals = page.getByRole('link').filter({ hasText: 'Approvals' })
-  await expect(approvals.locator('[aria-live="polite"]')).toContainText('2 open approvals')
-  await expect(approvals.locator('[aria-live="polite"]')).toHaveAttribute('title', '2 open approvals')
-  requests = []
-  await page.evaluate(() => window.dispatchEvent(new Event('ztf-approvals-updated')))
-  await expect(approvals.locator('[aria-live="polite"]')).toContainText('0 open approvals')
-  await page.getByRole('button', { name: 'Use compact navigation', exact: true }).click()
-  await expect(page.getByRole('link', { name: '0 open approvals' }).locator('[aria-live="polite"]')).toContainText('0 open approvals')
-})
+for (const theme of ['light', 'dark']) {
+  test(`Approvals navigation counts remain readable in ${theme} theme and compact mode`, async ({ page }) => {
+    await seedUiSession(page)
+    await page.addInitScript(theme => window.localStorage.setItem('ztf-theme-mode', theme), theme)
+    let requests = [
+      { id: 'pending-1', status: 'pending' }, { id: 'pending-2', status: 'pending' },
+      { id: 'approved', status: 'approved' }, { id: 'expired', status: 'expired' },
+    ]
+    await page.route('**/api/approvals?status=pending', route => route.fulfill({ json: requests }))
+    await page.goto('/overview')
+    const approvals = page.getByRole('link').filter({ hasText: 'Approvals' })
+    await expect(approvals.locator('[aria-live="polite"]')).toContainText('2 open approvals')
+    await expect(approvals.locator('[aria-live="polite"]')).toHaveAttribute('title', '2 open approvals')
+    requests = []
+    await page.evaluate(() => window.dispatchEvent(new Event('ztf-approvals-updated')))
+    await expect(approvals.locator('[aria-live="polite"]')).toContainText('0 open approvals')
+    const assertZeroBadge = async (badge: Locator) => {
+      await expect(badge.locator('[aria-hidden="true"]')).toHaveText('0')
+      await expect(badge).toHaveCSS('background-color', 'rgb(37, 99, 235)')
+      await expect(badge).toHaveCSS('color', 'rgb(255, 255, 255)')
+      await expect(badge).toHaveCSS('min-width', '20px')
+      await expect(badge).toHaveCSS('min-height', '20px')
+    }
+    await assertZeroBadge(approvals.locator('[aria-live="polite"]'))
+    await page.screenshot({ path: `test-results/approvals-zero-${theme}.png` })
+    await approvals.click()
+    await assertZeroBadge(approvals.locator('[aria-live="polite"]'))
+    await page.getByRole('button', { name: 'Use compact navigation', exact: true }).click()
+    await expect(page.getByRole('link', { name: '0 open approvals' }).locator('[aria-live="polite"]')).toContainText('0 open approvals')
+    await assertZeroBadge(page.getByRole('link', { name: '0 open approvals' }).locator('[aria-live="polite"]'))
+  })
+}
 
 test('Approvals navigation reports an unavailable count and refreshes when the Approvals page loads', async ({ page }) => {
   await seedUiSession(page)

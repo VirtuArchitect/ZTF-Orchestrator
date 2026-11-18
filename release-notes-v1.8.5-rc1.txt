@@ -1,3 +1,6 @@
+UNRELEASED SOURCE FIX (not part of existing RC assets)
+The Approvals navigation count displays a blue bubble with a white zero when no requests are pending, including light, dark and compact navigation. Pending requests retain their amber count.
+
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)
 Adds the guarded VS0 MTU workflow with read-only preflight, approval, verification and rollback. Workflow actions remain visible on mobile, imported generic YAML stays in the editor, and Site Deploy and Management Prism Central preflight validate the expected framework input shape.
 
