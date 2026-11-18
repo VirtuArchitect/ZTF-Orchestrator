@@ -62,6 +62,16 @@ complete. Use the existing configuration download/import and Config Files paths
 for actual configuration files. Storage failures are reported rather than shown
 as successful saves.
 
+For Foundation VM, **Test IPMI credentials** performs a direct Redfish HTTPS read
+from Orchestrator to each BMC. Network failures, timeouts and unavailable Redfish
+resources appear as **Unverified**. Authentication or access failures appear as
+**Failed**. Foundation VM uses its own network path, so this result alone does
+not establish whether Foundation can access the BMCs.
+
+During a pipeline run, the progress header, step rail and log identify each
+step by its configuration filename and retain the workflow type. This
+distinguishes repeated Configure Cluster steps with different settings.
+
 ## Configure and verify
 
 The post-configuration path explains credential preparation, conditional password

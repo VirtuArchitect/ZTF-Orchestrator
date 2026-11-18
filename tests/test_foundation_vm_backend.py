@@ -386,3 +386,36 @@ def test_upload_route_is_admin_gated_and_removes_staging_file(client, auth_heade
     assert observed['filename'] == 'aos.tar.gz'
     assert observed['installerType'] == 'nos'
     assert not Path(observed['path']).exists()
+
+
+@pytest.mark.parametrize('failure,expected', [
+    (OSError(101, 'Network is unreachable'), 'unverified'),
+    (TimeoutError('timed out'), 'unverified'),
+    (backend.urllib.error.HTTPError('https://bmc/redfish/v1/Managers', 401, 'Unauthorized', {}, None), 'failed'),
+    (backend.urllib.error.HTTPError('https://bmc/redfish/v1/Managers', 404, 'Not Found', {}, None), 'unverified'),
+])
+def test_ipmi_direct_probe_distinguishes_authentication_and_reachability(monkeypatch, failure, expected):
+    def probe(request, **kwargs):
+        assert request.full_url.endswith('/redfish/v1/Managers')
+        raise failure
+
+    monkeypatch.setattr(backend.urllib.request, 'urlopen', probe)
+    results = backend.test_ipmi_credentials(_config(), _resolver)
+    assert len(results) == 3
+    assert all(result['status'] == expected and not result['ok'] for result in results)
+    assert 'password' not in json.dumps(results)
+
+
+def test_ipmi_route_reports_test_source_and_unverified_count(client, auth_headers, monkeypatch):
+    import server
+
+    monkeypatch.setattr(server, '_foundation_vm_test_ipmi_credentials', lambda *_args: [
+        {'ipmiIp': '192.0.2.21', 'ok': False, 'status': 'unverified', 'error': 'Network is unreachable'},
+        {'ipmiIp': '192.0.2.22', 'ok': False, 'status': 'failed', 'error': 'HTTP 401'},
+    ])
+    response = client.post('/api/foundation-vm/ipmi-test', json={'configContent': _yaml()}, headers=auth_headers)
+    assert response.status_code == 502
+    result = response.get_json()
+    assert result['source'] == 'orchestrator'
+    assert result['protocol'] == 'Redfish HTTPS'
+    assert result['passed'] == 0 and result['failed'] == 2 and result['unverified'] == 1

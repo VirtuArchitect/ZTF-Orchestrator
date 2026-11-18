@@ -475,7 +475,7 @@ def test_ipmi_credentials(config: dict, resolver: CredentialResolver) -> list[di
             ref = str(node.get('ipmi_credential_ref') or '').strip()
             username, password, error = resolver(ref)
             if error:
-                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': False, 'error': error})
+                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': False, 'status': 'failed', 'error': error})
                 continue
             token = base64.b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
             request = urllib.request.Request(
@@ -486,11 +486,11 @@ def test_ipmi_credentials(config: dict, resolver: CredentialResolver) -> list[di
             try:
                 with urllib.request.urlopen(request, timeout=10, context=ssl._create_unverified_context()) as response:  # nosec B310 - configured BMC endpoint.
                     response.read(4096)
-                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': True, 'latencyMs': round((time.monotonic() - started) * 1000)})
+                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': True, 'status': 'passed', 'latencyMs': round((time.monotonic() - started) * 1000)})
             except urllib.error.HTTPError as exc:
-                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': False, 'error': f'HTTP {exc.code}'})
+                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': False, 'status': 'failed' if exc.code in {401, 403} else 'unverified', 'error': f'HTTP {exc.code}'})
             except (urllib.error.URLError, OSError, TimeoutError) as exc:
-                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': False, 'error': str(getattr(exc, 'reason', exc))})
+                results.append({'ipmiIp': address, 'credentialRef': ref, 'ok': False, 'status': 'unverified', 'error': str(getattr(exc, 'reason', exc))})
     return results
 
 

@@ -14,17 +14,18 @@ const foundationActions = [
 ] as const
 
 type FoundationAction = typeof foundationActions[number]['id']
-type FoundationStatus = 'Running' | 'Passed' | 'Failed' | 'Partial' | 'Reported'
+type FoundationStatus = 'Running' | 'Passed' | 'Failed' | 'Partial' | 'Reported' | 'Unverified'
 type FoundationResult = {
   status: FoundationStatus
   message?: string
-  nodes?: { address: string; passed: boolean; error?: string }[]
+  nodes?: { address: string; status: 'Passed' | 'Failed' | 'Unverified'; error?: string }[]
 }
 
 const foundationStatusStyles: Record<FoundationStatus, string> = {
   Running: 'text-blue-600 dark:text-blue-300',
   Passed: 'text-green-700 dark:text-green-300',
   Failed: 'text-red-700 dark:text-red-300',
+  Unverified: 'text-amber-700 dark:text-amber-300',
   Partial: 'text-amber-700 dark:text-amber-300',
   Reported: 'text-gray-500 dark:text-gray-300',
 }
@@ -500,19 +501,25 @@ export default function ClusterCreateForm({
       const data = await resp.json().catch(() => ({}))
       const errors = Array.isArray(data.errors) ? data.errors.join('; ') : ''
       if (operation === 'ipmi-test' && Array.isArray(data.results) && (resp.ok || resp.status === 502)) {
+        const nodes = data.results.map((item: unknown) => {
+          const node = asRecord(item)
+          const status: 'Passed' | 'Failed' | 'Unverified' = node.ok === true
+            ? 'Passed' : node.status === 'unverified' ? 'Unverified' : 'Failed'
+          return {
+            address: String(node.ipmiIp || 'Unknown BMC'),
+            status,
+            error: typeof node.error === 'string' ? node.error : undefined,
+          }
+        })
+        const passed = nodes.filter((node: { status: string }) => node.status === 'Passed').length
+        const failed = nodes.filter((node: { status: string }) => node.status === 'Failed').length
+        const unverified = nodes.length - passed - failed
         recordResult({
-          status: data.failed > 0 ? 'Failed' : data.passed > 0 ? 'Passed' : 'Reported',
-          message: data.results.length
-            ? `IPMI credential test: ${data.passed} passed, ${data.failed} failed.`
+          status: failed ? 'Failed' : unverified ? 'Unverified' : passed ? 'Passed' : 'Reported',
+          message: nodes.length
+            ? `IPMI credential test: ${passed} passed, ${failed} failed${unverified ? `, ${unverified} unverified` : ''}. Direct Redfish read from Orchestrator. Foundation VM uses its own network path.`
             : 'No BMCs were tested.',
-          nodes: data.results.map((item: unknown) => {
-            const node = asRecord(item)
-            return {
-              address: String(node.ipmiIp || 'Unknown BMC'),
-              passed: node.ok === true,
-              error: typeof node.error === 'string' ? node.error : undefined,
-            }
-          }),
+          nodes,
         })
         return
       }
@@ -782,6 +789,10 @@ export default function ClusterCreateForm({
             </div>
           </div>
           <div className="mt-4 border-t border-border/60 pt-4 space-y-3">
+            <p className="text-xs text-gray-400">
+              Test IPMI credentials reads each BMC directly from Orchestrator over Redfish HTTPS.
+              A network or Redfish error leaves credentials unverified. Foundation VM may have a different network path to these BMCs.
+            </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {foundationActions.map(({ id, label, Icon }) => {
                 const saved = foundationResults[id]
@@ -802,8 +813,8 @@ export default function ClusterCreateForm({
                             <ul className="space-y-1">
                               {result.nodes?.map((node, index) => (
                                 <li key={`${node.address}-${index}`}>
-                                  {node.address} · <span className={foundationStatusStyles[node.passed ? 'Passed' : 'Failed']}>
-                                    {node.passed ? 'Passed' : 'Failed'}
+                                  {node.address} · <span className={foundationStatusStyles[node.status]}>
+                                    {node.status}
                                   </span>
                                   {node.error && ` · ${node.error}`}
                                 </li>

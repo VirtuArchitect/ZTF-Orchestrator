@@ -41983,6 +41983,10 @@ def foundation_vm_ipmi_test():
         'passed': passed,
         'failed': len(results) - passed,
         'results': results,
+        'unverified': sum(1 for item in results if item.get('status') == 'unverified'),
+        'source': 'orchestrator',
+        'protocol': 'Redfish HTTPS',
+        'scope': 'Direct BMC read from Orchestrator; Foundation VM reachability is independent.',
     }), 200 if passed == len(results) else 502
 
 

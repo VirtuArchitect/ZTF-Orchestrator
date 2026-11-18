@@ -75,7 +75,7 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
               setStepResults(prev => prev.map((r, i) =>
                 i === data.step ? { ...r, status: 'running' } : r
               ))
-              appendLog('system', `─── Step ${data.step + 1}/${pipeline.steps.length}: ${data.workflow} ───`)
+              appendLog('system', `─── Step ${data.step + 1}/${pipeline.steps.length}: ${data.configFile || pipeline.steps[data.step]?.configFile || actionName(data.workflow)} (${actionName(data.workflow)}) ───`)
             } else if (type === 'step_complete') {
               setStepResults(prev => prev.map((r, i) =>
                 i === data.step ? { ...r, status: data.status, returnCode: data.returnCode } : r
@@ -114,7 +114,7 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
             <div>
               <h3 className="font-semibold text-gray-100">{pipeline.name}</h3>
               <p className="text-xs text-gray-500">
-                {status === 'running' ? `Step ${activeStep + 1} of ${pipeline.steps.length}` :
+                {status === 'running' ? `Step ${activeStep + 1} of ${pipeline.steps.length} · ${pipeline.steps[activeStep]?.configFile || actionName(pipeline.steps[activeStep]?.workflow || '')}` :
                  status === 'success' ? 'Pipeline completed successfully' :
                  'Pipeline failed — subsequent steps skipped'}
               </p>
@@ -149,7 +149,10 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
                   {result?.status !== 'success' && result?.status !== 'failed' &&
                    result?.status !== 'skipped' && !isActive &&
                    <Clock size={12} />}
-                  <span title={`Action ID: ${step.workflow}`}>{actionName(step.workflow)}</span>
+                  <span title={`Action ID: ${step.workflow}`} className="max-w-xs whitespace-normal break-words">
+                    <span className="block">{step.configFile || actionName(step.workflow)}</span>
+                    {step.configFile && <span className="block text-xs opacity-75">{actionName(step.workflow)}</span>}
+                  </span>
                 </div>
                 {i < pipeline.steps.length - 1 && (
                   <div className={clsx(
