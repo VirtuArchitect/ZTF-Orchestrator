@@ -63,6 +63,8 @@ def save(server, data):
         with FILE_LOCK:
             if server._maintenance_active():
                 return jsonify({'error': 'Appliance maintenance is active.'}), 409
+            if not isinstance(data, dict) or not isinstance(data.get('groupId', ''), str) or type(data.get('groupRevision')) is not int:
+                return jsonify({'error': 'Use a saved group ID and an integer grouping revision.'}), 400
             validation = validate_request(server, data)
             if not validation['valid']:
                 return jsonify({'error': 'Resolve the authoring checks before saving.', 'validation': validation}), 400

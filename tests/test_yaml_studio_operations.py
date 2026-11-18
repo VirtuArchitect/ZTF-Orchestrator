@@ -134,3 +134,12 @@ def test_current_approval_policy_blocks_handoff(client,auth_headers,setup_studio
  assert response.status_code==400
  assert 'approval' in response.get_json()['error']
  assert len(server._load_pipelines()[0]['steps'])==8
+
+
+@pytest.mark.parametrize('invalid_group', [None, False, 0, [], {}])
+def test_malformed_group_does_not_write_file_or_corrupt_labels(client, auth_headers, setup_studio, invalid_group):
+ server, _ = setup_studio
+ response = save_request(client, auth_headers, groupId=invalid_group)
+ assert response.status_code == 400
+ assert not (server.get_configs_dir() / 'new-ntp.yml').exists()
+ assert client.get('/api/config-organization', headers=auth_headers).status_code == 200
