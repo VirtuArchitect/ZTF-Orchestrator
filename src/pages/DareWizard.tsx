@@ -4,6 +4,7 @@ import { operationsRequest, type Operations } from '../components/ClusterOperati
 import { Link } from '../router'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
+import PeDirectConnection, { initialPeConnection, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
 
 const base = '/api/dare'
 const steps = ['Select cluster', 'Choose key manager', 'Preflight', 'Review & approve', 'Enable & verify']
@@ -19,13 +20,13 @@ const checks = {
   irreversible: 'I understand that software encryption cannot be disabled after enablement.',
 }
 
-type Connection = { pc_endpoint: string; pc_credential: string; pe_endpoint: string; pe_credential: string; cluster_uuid: string }
+type Connection = ClusterConnection
 type Cluster = { name: string; uuid: string; aosVersion: string; hostSerials: string[] }
 type Observation = { cluster: Cluster; state: 'unconfigured' | 'already_configured'; lastKeyBackupAt: string | null }
 type Plan = Observation & { content: string; sha256: string }
 type Job = { status: string; diagnostics?: { encryptionState?: string; lastKeyBackupAt?: string | null; evidence?: string; likelyFix?: string } }
 type Pending = { plan: Plan; reference: string; approval: string; jobId?: string }
-const emptyConnection: Connection = { pc_endpoint: '', pc_credential: '', pe_endpoint: '', pe_credential: '', cluster_uuid: '' }
+const emptyConnection: Connection = { ...initialPeConnection }
 
 async function request<T>(url: string, body?: object): Promise<T> {
   const response = await apiFetch(url, body ? { method: 'POST', body: JSON.stringify(body) } : {})
@@ -108,6 +109,7 @@ export default function DareWizard() {
   }
 
   function startAgain() {
+    setConnection({ ...emptyConnection })
     setPending(null)
     setPlan(null)
     setObservation(null)
@@ -120,11 +122,6 @@ export default function DareWizard() {
     setStep(0)
   }
 
-  const fields: [keyof Connection, string][] = [
-    ['pc_endpoint', 'Prism Central HTTPS endpoint'], ['pc_credential', 'PC credential reference'],
-    ['pe_endpoint', 'Prism Element HTTPS endpoint'], ['pe_credential', 'PE credential reference'],
-    ['cluster_uuid', 'Expected cluster UUID'],
-  ]
   const expectedConfirmation = plan ? 'ENCRYPT ' + plan.cluster.uuid : ''
   const keyBackup = job?.diagnostics?.lastKeyBackupAt || plan?.lastKeyBackupAt
 
@@ -140,7 +137,7 @@ export default function DareWizard() {
       <section className="card space-y-5">
         <h2 className="text-lg font-semibold">{step === 3 ? "Review encryption plan" : steps[step]}</h2>
         {step === 0 && <>
-          <p>Confirm the target through both Prism Central and Prism Element using trusted HTTPS.</p>
+          <p>Use Prism Element directly for cluster-local configuration, or keep the Prism Central managed path.</p>
           <label className="block text-sm">Managed cluster (optional)
             <select className="input mt-1 w-full" defaultValue="" onChange={event => {
               const cluster = clusters.find(item => item.id === event.target.value)
@@ -151,11 +148,11 @@ export default function DareWizard() {
               {clusters.map(cluster => <option value={cluster.id} key={cluster.id}>{cluster.name}</option>)}
             </select>
           </label>
-          <div className="grid gap-4 sm:grid-cols-2">{fields.map(([field, label]) => <label className="block text-sm" key={field}>{label}
-            <input className="input mt-1 w-full" value={connection[field]} onChange={event => setConnection({ ...connection, [field]: event.target.value })} />
-          </label>)}</div>
-          <button className="btn-primary" disabled={busy || Object.values(connection).some(value => !value.trim())}
-            onClick={() => void act(async () => { setObservation(await request<Observation>(base + '/discover', connection)); setStep(1) })}>Discover cluster (read-only)</button>
+          <PeDirectConnection value={connection} disabled={busy} onChange={patch => {
+            setConnection(current => ({ ...current, ...patch })); setObservation(null); setPlan(null); setPending(null); setReview({})
+          }} />
+          <button className="btn-primary" disabled={busy || !connectionReady(connection)}
+            onClick={() => void act(async () => { setObservation(await request<Observation>(base + '/discover', connectionPayload(connection))); setStep(1) })}>Discover cluster (read-only)</button>
         </>}
         {step === 1 && observation && <>
           <p>{observation.cluster.name} · AOS {observation.cluster.aosVersion} · {observation.cluster.hostSerials.length} AHV hosts</p>
@@ -180,9 +177,10 @@ export default function DareWizard() {
           <p className="text-sm">Keep keys and recovery secrets in your approved secure store.</p>
           <div className="flex flex-wrap gap-2"><button className="btn-secondary" disabled={busy} onClick={() => setStep(1)}>Back</button>
             <button className="btn-primary" disabled={busy || !reference.trim() || Object.keys(checks).some(check => !review[check as keyof typeof checks])}
-              onClick={() => void act(async () => { setPlan(await request<Plan>(base + '/preflight', { connection, review, recoveryReference: reference.trim() })); setStep(3) })}>Run read-only preflight</button></div>
+              onClick={() => void act(async () => { setPlan(await request<Plan>(base + '/preflight', { connection: connectionPayload(connection), review, recoveryReference: reference.trim() })); setStep(3) })}>Run read-only preflight</button></div>
         </>}
         {step === 3 && plan && <>
+          <p className="text-sm">{transportSummary(plan.content, connection)}</p>
           <p className="text-sm">Verify the target and key recovery arrangements before requesting approval.</p>
           <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm font-semibold">Software encryption cannot be disabled after enablement.</p>
           <div className="grid gap-4 md:grid-cols-2">

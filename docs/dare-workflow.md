@@ -1,20 +1,26 @@
 # Enable Data-at-Rest Encryption (DARE)
 
-Open **Configure → Enable Data-at-Rest Encryption (DARE)** as an administrator. The wizard covers cluster-wide software encryption on a Prism Central-managed AHV cluster using Native KMS (Local). Software encryption cannot be disabled after enablement. Use the release-specific Nutanix guidance to confirm support, licensing and key recovery for your hardware and versions.
+Open **Configure → Enable Data-at-Rest Encryption (DARE)** as an administrator. The wizard enables cluster-wide software encryption with Native KMS (Local). **Software encryption cannot be disabled after enablement.** Confirm licensing, release-specific hardware support and key recovery arrangements independently.
 
-## Plan and verify
+## PE direct: no Prism Central required
 
-1. **Select cluster.** Enter the expected cluster UUID, the PE and PC HTTPS endpoints and their credential references. A managed cluster can prefill the PE fields. Both endpoints require trusted TLS. Discovery checks that PC and PE agree on identity and AHV host membership, PE reports Good health, and the encryption API returns a supported state.
-2. **Choose key manager.** The wizard uses Native KMS (Local). It requires at least three healthy hosts and complete inventory. External KMS, self-encrypting drives and existing encryption migrations have separate procedures.
-3. **Run read-only preflight.** Verify licensing and Native KMS prerequisites independently. Read the current settings in Prism and check for in-flight encryption tasks. Record the key backup and recovery plan and its owner. Enter a change-ticket or runbook ID. Keep passwords, passphrases and key material in the approved secure store.
-4. **Review & approve.** Check the cluster UUID, host serials, encryption configuration and SHA-256. A different administrator must approve the exact plan in **Approvals**. If Prism already reports the requested configuration, the wizard shows that state without submitting another change. Unsupported API responses, ambiguous state and missing revision tokens block execution.
-5. **Enable & verify.** The requester types the displayed confirmation. The worker rechecks approval, identity, health, host membership and the encryption revision before submitting a single conditional update through Prism Central. Track the task in **Jobs / Queue**. The worker verifies the accepted configuration after Prism reports task success.
+1. Choose **PE direct — no Prism Central** (the default for a new draft). Select a managed cluster or enter its expected UUID, PE HTTPS endpoint on port 9440 and saved PE credential reference. No PC endpoint or PC credential is needed.
+2. Keep **Verify PE TLS certificate** selected for trusted HTTPS. For an approved deployment/recovery exception, uncheck it and enter a reason without passwords. Encryption of the HTTPS connection remains, but PE identity is not authenticated by its certificate. The explicit exception and reason are bound to the exact plan and independent approval, recorded in audit events and retained in job diagnostics. They do not change global TLS, other workflows or SSH trust. A new draft defaults to verification enabled.
+3. Run **Discover cluster (read-only)**. The adapter uses PE v2 cluster/host inventory and encryption/key-manager readbacks. UUID, complete membership of 3–16 healthy AHV hosts, Good cluster health, software-encryption readiness and a supported state must verify. PE must already report **LKM**. Existing external/PC key managers, drive encryption and ambiguous or partially configured states require a separate procedure; this wizard never converts them.
+4. Confirm licensing, local key-manager prerequisites, the absence of another encryption operation, irreversibility and a key-backup/recovery owner. Enter a change ticket or runbook reference. Run read-only preflight and review the target, host serials, mode, TLS exception and plan SHA-256. Request approval from a different administrator. Passwords and key material remain in the approved secure store.
+5. With live enablement explicitly permitted, type the exact `ENCRYPT <cluster UUID>` confirmation. The worker rechecks approval, administrator roles, PE identity, health, membership and encryption state immediately before submitting **one** PE v2 enable request with cluster scope. It then reads back configuration and identity. No PC or SSH connection is used for PE-direct DARE.
+6. Follow the Prism key-backup procedure and monitor background encryption. Job success means that PE reports cluster-wide software encryption with LKM; it does not establish key recoverability or complete workload acceptance. Container readback is reported separately from configuration. An already-configured cluster is not enabled again.
 
-## Live enablement and follow-up
+## Existing Prism Central path
 
-Live changes default to off. Validate the installed PC and AOS versions on an approved lab cluster before setting `ZTF_DARE_ENABLE_MUTATION=true` in the Orchestrator application container's environment. For Docker Compose, use a site-managed override for that container and confirm it is included in the effective Compose configuration. The feature flag permits a submission only after the normal administrator, approval and verification checks.
+Choose **Prism Central managed** to retain the existing verified PC/PE path and saved plans. It requires trusted PC/PE HTTPS, agreeing identities/membership, supported v4.3 encryption APIs and revision tokens. It submits a conditional PC update and verifies the task and configuration. PE v2 has no equivalent revision token in this operation; PE-direct mode uses a fresh pre-submission readback instead. Coordinate exclusive ownership of the change window.
 
-Verify background encryption and complete the secure key backup using the Prism procedure. A successful job verifies the configured encryption mode. The API readback used here does not report background completion or prove that the keys are recoverable. If the task or readback is interrupted, reconcile in Prism Tasks and check the encryption state before initiating a new request. The wizard performs no automatic retry or rollback of enablement.
+## Enablement, interruption and rollback
 
+Live changes default to off. Validate the installed AOS/API contract and licensing on representative approved lab hardware before setting `ZTF_DARE_ENABLE_MUTATION=true` in a site-managed Compose override. The flag permits submission only after normal approval and verification; it does not enable encryption by itself.
+
+If submission, cancellation or readback is uncertain, inspect PE encryption state and tasks before any new request. The workflow never automatically retries or rolls back encryption. Rolling back the Orchestrator container does not disable DARE. Preserve key backups outside the appliance and verify the approved recovery procedure.
+
+- [Nutanix PE v2 API reference](https://www.nutanix.dev/api_reference/apis/prism_v2.html)
 - [Nutanix AOS Security Guide](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Security-Guide%3Aportal-full-page-view-html)
 - [Nutanix Cluster Management v4.3 encryption API](https://developers.nutanix.com/api/v1/sdk/namespaces/main/clustermgmt/versions/v4.3/languages/python/ntnx_clustermgmt_py_client.api.encryption_api.html)

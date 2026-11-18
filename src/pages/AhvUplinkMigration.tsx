@@ -4,11 +4,12 @@ import { operationsRequest, type Operations } from '../components/ClusterOperati
 import { Link } from '../router'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
+import PeDirectConnection, { initialPeConnection, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
 
 const base = '/api/ahv-uplink-migration'
 const steps = ['Select cluster', 'Assign uplinks', 'Preflight', 'Review & approve', 'Apply & verify']
 
-type Connection = { pc_endpoint: string; pc_credential: string; pe_endpoint: string; pe_credential: string; cluster_uuid: string }
+type Connection = ClusterConnection
 type Destination = { mode: 'create' | 'existing'; name: string; bondMode: string; mtu: number }
 type Nic = { name: string; up: boolean; mac: string; switchPort: string; switchDevice: string; restricted: boolean }
 type Inventory = { clusterName: string; source: { config: { clusters: { hosts: { extId: string; hostNics: string[] }[] }[] } };
@@ -20,7 +21,7 @@ type Draft = { connection: Connection; destination: Destination; inventory: Inve
   plan: Plan | null; approval: string; jobId: string; step: number }
 
 const initial: Draft = {
-  connection: { pc_endpoint: '', pc_credential: '', pe_endpoint: '', pe_credential: '', cluster_uuid: '' },
+  connection: { ...initialPeConnection },
   destination: { mode: 'create', name: 'vs1', bondMode: 'ACTIVE_BACKUP', mtu: 1500 },
   inventory: null, move: {}, reviewed: false, plan: null, approval: '', jobId: '', step: 0,
 }
@@ -157,13 +158,10 @@ export default function AhvUplinkMigration() {
               </select>
             </label>
             <label className="block">Source switch<input className="input mt-1" readOnly value="br0 (vs0)" /></label>
-            {([['pc_endpoint', 'Prism Central HTTPS endpoint'], ['pc_credential', 'PC credential reference'],
-              ['pe_endpoint', 'Prism Element HTTPS endpoint'], ['pe_credential', 'PE credential reference'], ['cluster_uuid', 'Cluster UUID']] as const)
-              .map(([key, label]) => <label className="block" key={key}>{label}<input className="input mt-1" value={connection[key]} disabled={busy}
-                autoComplete="off" onChange={e => updateConnection({ [key]: e.target.value })} /></label>)}
+            <PeDirectConnection value={connection} onChange={updateConnection} disabled={busy} cvm />
           </div>
-          <button className="btn-secondary" disabled={busy || Object.values(connection).some(value => !value.trim())} onClick={() => void act(async () => {
-            const observed = await request<Inventory>(base + '/discover', connection)
+          <button className="btn-secondary" disabled={busy || !connectionReady(connection, true)} onClick={() => void act(async () => {
+            const observed = await request<Inventory>(base + '/discover', connectionPayload(connection, true))
             update({ inventory: observed, move: Object.fromEntries(observed.hosts.map(host => [host.id, []])), reviewed: false })
           })}>Discover cluster (read-only)</button>
           {inventory && <p className="text-sm">{inventory.clusterName} · {inventory.hosts.length} hosts discovered</p>}
@@ -222,16 +220,18 @@ export default function AhvUplinkMigration() {
         </>}
         {step === 2 && <>
           <h2 className="section-title">Read-only preflight</h2>
-          <p>Check PC and PE identity, host health, switch membership and link state. Confirm the physical fabric separately.</p>
+          <p>Check cluster identity, host health, switch membership and link state. Confirm the physical fabric separately.</p>
+          <p className="text-sm">{transportSummary(plan?.content, connection)}</p>
           <label className="flex items-start gap-3"><input type="checkbox" checked={reviewed} disabled={busy} onChange={e => update({ reviewed: e.target.checked })} />
             I verified physical cabling, VLANs, MTU, maintenance capacity and out-of-band access for every host.</label>
           <button className="btn-primary" disabled={busy || !reviewed} onClick={() => void act(async () => {
-            const result = await request<Plan>(base + '/preflight', { connection, target: destination, move, fabricReviewed: reviewed })
+            const result = await request<Plan>(base + '/preflight', { connection: connectionPayload(connection, true), target: destination, move, fabricReviewed: reviewed })
             setDraft(value => ({ ...value, plan: result, step: 3 }))
           })}>Run read-only preflight</button>
         </>}
         {step === 3 && plan && <>
           <h2 className="section-title">Review and approve the migration</h2>
+          <p className="text-sm">{transportSummary(plan.content, connection)}</p>
           <p>{plan.clusterName} · {destination.mode === 'create' ? 'Create' : 'Update'} {destination.name} · Active-backup · MTU {destination.mtu}</p>
           <AssignmentReview rows={plan.assignments} />
           <p className="text-xs break-all">Plan SHA-256 {plan.sha256}</p>

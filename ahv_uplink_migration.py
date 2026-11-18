@@ -12,6 +12,7 @@ import urllib.request
 import uuid
 
 import pc_unregistration as prism
+import pe_direct
 from cluster_storage_standard import Client as PeClient
 
 WORKFLOW = 'ahv-uplink-migration'
@@ -42,6 +43,8 @@ def fingerprint(value):
 
 
 def connection(value):
+    if pe_direct.direct(value):
+        return pe_direct.connection(value)
     fields = {'pc_endpoint', 'pc_credential', 'pe_endpoint', 'pe_credential', 'cluster_uuid'}
     if not isinstance(value, dict) or set(value) != fields:
         raise MigrationError('Provide Prism Central and Prism Element connections and the AHV cluster UUID.')
@@ -150,6 +153,9 @@ class PcClient(prism.Client):
 
 
 def clients(config, resolver):
+    if pe_direct.direct(config):
+        from pe_direct_uplink import Controller
+        return Controller(config, resolver), pe_direct.Client(config, pe_direct.credential(config, resolver))
     def credential(prefix):
         try:
             username, password = resolver(config[prefix + '_credential'])
@@ -199,6 +205,8 @@ def switch_config(value, cluster_id, expected_hosts):
 
 
 def collect(config, pc, pe, destination=None, *, include_nic_mtu=False):
+    if pe_direct.direct(config):
+        return pc.collect(pe, destination)
     cluster_id = config['cluster_uuid']
     path = CLUSTERS + '/' + cluster_id
     cluster, _, _ = pc.exchange('GET', path)
@@ -283,6 +291,8 @@ def collect(config, pc, pe, destination=None, *, include_nic_mtu=False):
 
 def preflight(value, pc, pe):
     intent = draft(value)
+    if pe_direct.direct(intent['connection']):
+        return pc.preflight(intent, pe)
     destination = intent['target']
     observed = collect(intent['connection'], pc, pe, destination)
     source = observed['source']['config']
@@ -399,6 +409,8 @@ def verify(snapshot, observed, final, emit, report):
 
 
 def execute(snapshot, pc, pe, emit, authorize, cancelled, report=lambda rows: None, sleep=time.sleep):
+    if pe_direct.direct(snapshot['intent']['connection']):
+        return pc.execute(snapshot, pe, emit, authorize, cancelled, report)
     if cancelled():
         raise MigrationError('Cancelled before applying the plan.')
     intent = snapshot['intent']

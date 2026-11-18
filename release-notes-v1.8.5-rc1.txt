@@ -1,3 +1,6 @@
+UNRELEASED SOURCE ADDITION (not part of existing RC assets)
+PE-direct uplink migration uses pinned CVM SSH and sequential host verification; PE-direct DARE uses PE v2 with existing Local KMS. Optional per-run TLS exceptions require a reason and independent exact-plan approval and are audited. Existing PC transports, pipelines and recovery remain unchanged. Live writes default to off; mocked validation does not establish hardware compatibility. See docs/ahv-uplink-migration.md and docs/dare-workflow.md.
+
 UNRELEASED SOURCE FIX (not part of existing RC assets)
 The Approvals navigation count displays a blue bubble with a white zero when no requests are pending, including light, dark and compact navigation. Pending requests retain their amber count.
 

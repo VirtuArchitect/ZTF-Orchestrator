@@ -5,6 +5,8 @@ import os
 import re
 import threading
 import time
+import pe_direct
+import pe_direct_dare
 
 from ahv_uplink_migration import clients, connection, member, wait_task
 from pc_unregistration import cluster_uuid
@@ -112,6 +114,8 @@ def encryption_state(identity, pc):
 
 def inspect(target, resolver):
     target = connection(target)
+    if pe_direct.direct(target):
+        return pe_direct_dare.inspect(target, resolver)
     pc, pe = clients(target, resolver)
     cluster = cluster_details(target, pc, pe)
     state = encryption_state(cluster['uuid'], pc)
@@ -120,6 +124,8 @@ def inspect(target, resolver):
 
 def preflight(data, resolver):
     planned = intent(data)
+    if pe_direct.direct(planned['connection']):
+        return pe_direct_dare.preflight(planned, resolver, DESIRED)
     target = planned['connection']
     pc, pe = clients(target, resolver)
     cluster = cluster_details(target, pc, pe)
@@ -144,6 +150,8 @@ def parse_plan(content):
 
 
 def execute(plan, resolver, authorize, cancelled, emit, sleep=time.sleep):
+    if pe_direct.direct(plan['intent']['connection']):
+        return pe_direct_dare.execute(plan, resolver, authorize, cancelled, emit, sleep)
     if cancelled():
         raise DareError('Cancelled before encryption enablement.')
     target = plan['intent']['connection']

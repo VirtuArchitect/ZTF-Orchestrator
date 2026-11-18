@@ -39,6 +39,7 @@ import credential_rotation as rotation
 import appliance_updates as guided_updates
 import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
+import pe_direct
 import virtual_switch_mtu as switch_mtu
 import dare_workflow as dare
 import post_deployment
@@ -34956,11 +34957,13 @@ class ExecutionJobManager:
                         approval = _check_ahv_uplink_approval(payload, user, workflow)
                         if approval.get('jobId') != job_id:
                             raise uplink_migration.MigrationError('Approval is not bound to this execution job.')
-                        if workflow is switch_mtu and any((_find_user(name) or {}).get('role') != 'admin'
+                        if (workflow is switch_mtu or pe_direct.direct(plan['intent']['connection'])) and any((_find_user(name) or {}).get('role') != 'admin'
                                 for name in (user, approval['decidedBy'])):
                             raise uplink_migration.MigrationError('The requester and approver must remain administrators.')
 
                 authorize()
+                _audit_pe_transport(plan['intent']['connection'], workflow.WORKFLOW, 'execute', user, job_id)
+                diagnostics.update(_pe_transport_diagnostics(plan['intent']['connection']))
                 pc, pe = uplink_migration.clients(plan['intent']['connection'], _pe_login_title_resolver({}))
                 def report(rows):
                     for row in rows:
@@ -35013,8 +35016,13 @@ class ExecutionJobManager:
                         approval = _check_dare_approval(payload, user)
                         if approval.get('jobId') != job_id:
                             raise dare.DareError('Approval is not bound to this job.')
+                        if pe_direct.direct(plan['intent']['connection']) and any(
+                                (_find_user(name) or {}).get('role') != 'admin' for name in (user, approval['decidedBy'])):
+                            raise dare.DareError('The requester and approver must remain administrators.')
 
                 authorize()
+                _audit_pe_transport(plan['intent']['connection'], dare.WORKFLOW, 'execute', user, job_id)
+                diagnostics.update(_pe_transport_diagnostics(plan['intent']['connection']))
                 diagnostics.update(dare.execute(plan, _pe_login_title_resolver({}), authorize, cancelled,
                                                 lambda line: self._emit(job_id, 'stdout', line)))
                 status = 'success'
@@ -42408,6 +42416,31 @@ _DARE_TARGET_ERRORS = (dare.DareError, uplink_migration.MigrationError, unregist
                        storage_standard.StorageError)
 
 
+def _audit_pe_transport(config, workflow, operation, actor, job_id=''):
+    if pe_direct.direct(config):
+        config = pe_direct.connection(config)
+        if config['verify_tls'] is False:
+            log.warning('pe_tls_verification_bypassed', extra={
+                'action': 'pe_tls_verification_bypassed', 'user': actor, 'workflow': workflow,
+                'operation': operation, 'jobId': job_id, 'clusterUuid': config['cluster_uuid'],
+                'endpoint': config['pe_endpoint'], 'verifyTls': False, 'reason': config['tls_bypass_reason'],
+            })
+
+
+def _pe_transport_diagnostics(config):
+    if not pe_direct.direct(config):
+        return {}
+    return {'connectionMode': 'pe-direct', 'verifyTls': config['verify_tls'],
+            'tlsBypassReason': config['tls_bypass_reason']}
+
+
+def _pe_transport_review(config):
+    if not pe_direct.direct(config):
+        return ' PC-managed connection with verified HTTPS.'
+    return (' PE-direct connection. TLS verification ' + ('enabled.' if config['verify_tls'] else
+            'BYPASSED for this run. Reason: ' + config['tls_bypass_reason']))
+
+
 def _check_dare_approval(payload, actor):
     approval = _approval_manager.get_approval(str(payload.get('approvalId') or ''))
     content = payload.get('configContent')
@@ -42435,8 +42468,12 @@ def dare_operation(action):
     data = request.get_json(silent=True)
     try:
         if action == 'discover':
+            target = uplink_migration.connection(data)
+            _audit_pe_transport(target, dare.WORKFLOW, action, request.current_user['username'])
             return jsonify(dare.inspect(data, _pe_login_title_resolver({})))
         if action == 'preflight':
+            target = uplink_migration.connection((data or {}).get('connection'))
+            _audit_pe_transport(target, dare.WORKFLOW, action, request.current_user['username'])
             plan = dare.preflight(data, _pe_login_title_resolver({}))
             return jsonify({'content': uplink_migration.canonical(plan), 'sha256': uplink_migration.fingerprint(plan),
                             'cluster': plan['cluster'], 'state': plan['encryption']['state'],
@@ -42457,13 +42494,14 @@ def dare_operation(action):
             raise dare.DareError('Use the canonical preflight output.')
         _require_engines()
         actor = request.current_user['username']
+        _audit_pe_transport(plan['intent']['connection'], dare.WORKFLOW, action, actor)
         if action == 'approval':
             if dare.preflight(plan['intent'], _pe_login_title_resolver({})) != plan:
                 return jsonify({'error': 'Target state changed. Run preflight again.'}), 409
             if plan['encryption']['state'] != 'unconfigured':
                 return jsonify({'error': 'The requested configuration is already present. No approval is required.'}), 409
             approval = _approval_manager.create_request(dare.WORKFLOW, dare.FILENAME, content, actor,
-                notes='Irreversible cluster-wide software encryption using Native KMS (Local). Review the exact target and key recovery arrangements.')
+                notes='Irreversible cluster-wide software encryption using Native KMS (Local). Review the exact target and key recovery arrangements.' + _pe_transport_review(plan['intent']['connection']))
             return jsonify({'id': approval['id']}), 201
         expected = 'ENCRYPT ' + plan['intent']['connection']['cluster_uuid']
         if data['confirmation'] != expected or plan['encryption'].get('state') != 'unconfigured':
@@ -42515,6 +42553,7 @@ def ahv_uplink_capabilities():
 def discover_ahv_uplinks():
     try:
         config = uplink_migration.connection(request.get_json(silent=True))
+        _audit_pe_transport(config, uplink_migration.WORKFLOW, 'discover', request.current_user['username'])
         pc, pe = uplink_migration.clients(config, _pe_login_title_resolver({}))
         return jsonify(uplink_migration.collect(config, pc, pe))
     except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
@@ -42525,6 +42564,7 @@ def discover_ahv_uplinks():
 
 def _fresh_ahv_uplink_plan(intent):
     config = uplink_migration.draft(intent)['connection']
+    _audit_pe_transport(config, uplink_migration.WORKFLOW, 'preflight', request.current_user['username'])
     pc, pe = uplink_migration.clients(config, _pe_login_title_resolver({}))
     return uplink_migration.preflight(intent, pc, pe)
 
@@ -42566,7 +42606,7 @@ def approve_ahv_uplink_plan():
     _require_engines()
     approval = _approval_manager.create_request(uplink_migration.WORKFLOW, uplink_migration.FILENAME,
         data['content'], request.current_user['username'],
-        notes='Review source and destination switch settings and the exact keep/move assignments for every host.')
+        notes='Review source and destination switch settings and the exact keep/move assignments for every host.' + _pe_transport_review(plan['intent']['connection']))
     return jsonify({'id': approval['id']}), 201
 
 
@@ -42586,6 +42626,7 @@ def apply_ahv_uplink_plan():
     actor = request.current_user['username']
     try:
         plan = uplink_migration.load_plan(data['content'])
+        _audit_pe_transport(plan['intent']['connection'], uplink_migration.WORKFLOW, 'apply', actor)
         expected = 'APPLY UPLINKS ' + plan['intent']['connection']['cluster_uuid']
         if data['confirmation'] != expected:
             raise uplink_migration.MigrationError(f'Type exactly: {expected}')

@@ -6,7 +6,8 @@ const hosts = ['AHV-01', 'AHV-02', 'AHV-03'].map((name, index) => ({
 }))
 const base = '/api/ahv-uplink-migration'
 
-test('assigns physical NICs per host and submits only the exact approved plan', async ({ page }) => {
+for (const mode of ['pc', 'pe-direct'] as const) {
+test(mode + ' - assigns physical NICs per host and submits only the exact approved plan', async ({ page }) => {
   let approved = false
   const requests: { path: string; data: Record<string, unknown> }[] = []
   await page.addInitScript(() => {
@@ -24,11 +25,21 @@ test('assigns physical NICs per host and submits only the exact approved plan', 
       id: 'cluster-1', expectedUuid: cluster, name: 'LAB-AHV-01', peEndpoint: 'https://pe.example.com:9440', peCredential: 'pe_ref',
     }] } })
     if (path === base) return route.fulfill({ json: { applyEnabled: true } })
-    if (path === base + '/discover') return route.fulfill({ json: {
+    if (path === base + '/discover') {
+      const body = route.request().postDataJSON()
+      if (mode === 'pe-direct') {
+        expect(body.mode).toBe('pe-direct')
+        expect(body.verify_tls).toBe(false)
+        expect(body.tls_bypass_reason).toBe('CHG-123 fresh cluster')
+        expect(body).not.toHaveProperty('pc_endpoint')
+        expect(body).not.toHaveProperty('pc_credential')
+      }
+      return route.fulfill({ json: {
       clusterName: 'LAB-AHV-01', switches: [], hosts, source: { config: { clusters: [{
         hosts: hosts.map(host => ({ extId: host.id, hostNics: host.nics.map(nic => nic.name) })),
       }] } },
     } })
+    }
     if (path === base + '/preflight') return route.fulfill({ json: {
       content: 'exact-plan', sha256: 'a'.repeat(64), clusterName: 'LAB-AHV-01',
       assignments: hosts.map(host => ({ hostId: host.id, host: host.name, keep: ['eth0', 'eth1'], move: ['eth2', 'eth3'], destination: ['eth2', 'eth3'] })),
@@ -46,8 +57,20 @@ test('assigns physical NICs per host and submits only the exact approved plan', 
   await expect(page.getByRole('radio', { name: 'Create a new virtual switch' })).toBeChecked()
   await expect(page.getByLabel('Switch name')).toHaveValue('vs1')
   await page.getByLabel('Target cluster').selectOption('cluster-1')
+  if (mode === 'pc') {
+  await page.getByLabel('Connection mode').selectOption('pc')
   await page.getByLabel('Prism Central HTTPS endpoint').fill('https://pc.example.com:9440')
   await page.getByLabel('PC credential reference').fill('pc_ref')
+  } else {
+    await expect(page.getByLabel('Prism Central HTTPS endpoint')).toHaveCount(0)
+    await expect(page.getByLabel('Verify PE TLS certificate')).toBeChecked()
+    await page.getByLabel('CVM credential reference').fill('cvm_ref')
+    await page.getByLabel('CVM SSH host keys by IP as JSON').fill(JSON.stringify(Object.fromEntries(
+      ['192.0.2.21', '192.0.2.22', '192.0.2.23'].map(ip => [ip, 'SHA256:' + 'A'.repeat(43)]))))
+    await page.getByLabel('Verify PE TLS certificate').uncheck()
+    await expect(page.getByRole('button', { name: 'Discover cluster (read-only)' })).toBeDisabled()
+    await page.getByLabel('TLS bypass reason').fill('CHG-123 fresh cluster')
+  }
   await page.getByRole('button', { name: 'Discover cluster (read-only)' }).click()
   await page.screenshot({ path: 'test-results/ahv-uplink-destination.png', fullPage: true })
   await page.getByRole('button', { name: 'Continue to uplink assignment' }).click()
@@ -65,6 +88,7 @@ test('assigns physical NICs per host and submits only the exact approved plan', 
   await expect(page.getByRole('button', { name: 'Run read-only preflight' })).toBeDisabled()
   await page.getByRole('checkbox', { name: /I verified physical cabling/ }).check()
   await page.getByRole('button', { name: 'Run read-only preflight' }).click()
+  if (mode === 'pe-direct') await expect(page.getByText(/PE direct.*TLS verification bypassed for this run.*CHG-123 fresh cluster/)).toBeVisible()
   await page.getByRole('button', { name: 'Request independent approval' }).click()
   await expect(page.getByRole('button', { name: 'Continue to apply' })).toBeDisabled()
   approved = true
@@ -79,3 +103,5 @@ test('assigns physical NICs per host and submits only the exact approved plan', 
   expect(requests.filter(request => request.path === base + '/apply')).toEqual([{ path: base + '/apply',
     data: { content: 'exact-plan', approvalId: 'approval-1', confirmation: `APPLY UPLINKS ${cluster}` } }])
 })
+
+}
