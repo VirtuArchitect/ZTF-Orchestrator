@@ -57,6 +57,43 @@ test('Foundation actions retain their own results and show failed BMCs and repor
   await expect(result('Test IPMI credentials')).toContainText('1 passed, 1 failed')
 })
 
+test('BMCs unreachable from Orchestrator are unverified and pipeline steps use configuration filenames', async ({ page }) => {
+  await seedUiSession(page)
+  await page.route('**/api/foundation-vm/ipmi-test', route => route.fulfill({
+    status: 502, json: { passed: 0, failed: 1, unverified: 1, source: 'orchestrator', results: [
+      { ipmiIp: '192.0.2.22', ok: false, status: 'unverified', error: 'Network is unreachable' },
+    ] },
+  }))
+  await page.goto('/workflows/cluster-create-foundation-vm')
+  await page.getByRole('button', { name: 'Configure', exact: true }).click()
+  await page.getByRole('button', { name: 'Test IPMI credentials', exact: true }).click()
+  const result = page.getByRole('status', { name: 'Test IPMI credentials result' })
+  await expect(result).toContainText('0 passed, 0 failed, 1 unverified')
+  await expect(result.getByRole('listitem')).toHaveText('192.0.2.22 · Unverified · Network is unreachable')
+  await expect(result).toContainText('Direct Redfish read from Orchestrator')
+  const steps = [
+    { workflow: 'config-cluster', configFile: '01_eula_pulse.yml' },
+    { workflow: 'config-cluster', configFile: '02_ha_settings.yml' },
+  ]
+  await page.route('**/api/pipelines', route => route.fulfill({ json: [
+    { id: 'repeated-config', name: 'Cluster setup', steps },
+  ] }))
+  await page.route('**/api/pipelines/repeated-config/run', route => route.fulfill({
+    contentType: 'text/event-stream',
+    body: [
+      { type: 'step_start', data: { step: 0, ...steps[0] } },
+      { type: 'step_complete', data: { step: 0, status: 'success', returnCode: 0 } },
+      { type: 'step_start', data: { step: 1, ...steps[1] } },
+    ].map(event => 'data: ' + JSON.stringify(event) + '\n\n').join(''),
+  }))
+  await page.goto('/pipelines')
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(page.getByText('Step 2 of 2 · 02_ha_settings.yml', { exact: true })).toBeVisible()
+  await expect(page.getByText('01_eula_pulse.yml', { exact: true }).last()).toBeVisible()
+  await expect(page.getByText('02_ha_settings.yml', { exact: true }).last()).toBeVisible()
+  await expect(page.getByText(/Step 2\/2: 02_ha_settings.yml/)).toBeVisible()
+})
+
 test('Foundation VM reuses installed AOS and preserves ISO checksum through validation and export', async ({ page }) => {
   await seedUiSession(page)
   let validationYaml = ''
