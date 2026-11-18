@@ -40,6 +40,7 @@ import appliance_updates as guided_updates
 import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
 import pe_direct
+import yaml_studio_routes as studio_routes
 import virtual_switch_mtu as switch_mtu
 import dare_workflow as dare
 import post_deployment
@@ -38700,10 +38701,12 @@ def get_config(name):
     path = safe_config_path(name, configs_dir)
     if path is None or not path.exists():
         return jsonify({'error': 'Not found'}), 404
-    return jsonify({'name': path.name, 'content': path.read_text()})
+    content = path.read_text(encoding='utf-8')
+    return jsonify({'name': path.name, 'content': content, 'sha256': studio_routes.ops.digest(content)})
 
 @app.route('/api/configs/<name>', methods=['POST'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.FILE_LOCK)
 def save_config(name):
     configs_dir = get_configs_dir()
     path = safe_config_path(name, configs_dir)
@@ -38722,6 +38725,7 @@ def save_config(name):
 
 @app.route('/api/configs/<name>', methods=['DELETE'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.FILE_LOCK)
 def delete_config(name):
     configs_dir = get_configs_dir()
     path = safe_config_path(name, configs_dir)
@@ -38735,15 +38739,24 @@ def delete_config(name):
 @app.route('/api/yaml-studio/validate', methods=['POST'])
 @require_role('admin', 'operator', 'viewer')
 def yaml_studio_validate():
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
+    if isinstance(data, dict) and 'taskId' in data:
+        try:
+            value = studio_routes.validate_request(sys.modules[__name__], data)
+            return jsonify(value), 200 if value.get('valid') else 400
+        except (ValueError, TypeError, AttributeError, OSError, yaml.YAMLError):
+            return jsonify({'error': 'Credential reference metadata is unavailable.'}), 503
     validation = _yaml_studio_validate_content(data.get('kind', 'workflow-config'), data.get('content', ''))
     return jsonify(validation), 200 if validation.get('valid') else 400
 
 
 @app.route('/api/yaml-studio/save', methods=['POST'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.FILE_LOCK)
 def yaml_studio_save():
     data = request.json or {}
+    if isinstance(data, dict) and 'taskId' in data:
+        return studio_routes.save(sys.modules[__name__], data)
     filename = str(data.get('filename') or 'generated.yaml').strip()
     if not filename.lower().endswith(('.yaml', '.yml')):
         filename = f'{filename}.yaml'
@@ -41408,6 +41421,7 @@ def list_config_backups(name):
 
 @app.route('/api/configs/<name>/restore/<int:version>', methods=['POST'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.FILE_LOCK)
 def restore_config_backup(name, version):
     configs_dir = get_configs_dir()
     path = safe_config_path(name, configs_dir)
@@ -41589,6 +41603,7 @@ def list_pipelines():
 
 @app.route('/api/pipelines', methods=['POST'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.PIPELINE_LOCK)
 def create_pipeline():
     data  = request.json or {}
     executor_error = _pipeline_executor_error(data)
@@ -41628,6 +41643,7 @@ def get_pipeline(pipeline_id: str):
 
 @app.route('/api/pipelines/<pipeline_id>', methods=['PUT'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.PIPELINE_LOCK)
 def update_pipeline(pipeline_id: str):
     data      = request.json or {}
     pipelines = _load_pipelines()
@@ -41656,6 +41672,7 @@ def update_pipeline(pipeline_id: str):
 
 @app.route('/api/pipelines/<pipeline_id>', methods=['DELETE'])
 @require_role('admin', 'operator')
+@studio_routes.guard(studio_routes.PIPELINE_LOCK)
 def delete_pipeline(pipeline_id: str):
     pipelines = _load_pipelines()
     pipelines = [p for p in pipelines if p['id'] != pipeline_id]
@@ -41666,6 +41683,7 @@ def delete_pipeline(pipeline_id: str):
 @app.route('/api/pipelines/<pipeline_id>/run', methods=['POST'])
 @require_role('admin', 'operator')
 @limiter.limit('5 per minute')
+@studio_routes.guard(studio_routes.PIPELINE_LOCK)
 def run_pipeline(pipeline_id: str):
     pipeline = next((p for p in _load_pipelines() if p['id'] == pipeline_id), None)
     if not pipeline:
@@ -45041,6 +45059,8 @@ _operations_service = OperationsService({
         'action': action, 'user': actor, 'operationRecordId': identity}),
 }, _job_manager._lock)
 register_operations_routes(app, _operations_service, require_role, limiter)
+
+studio_routes.register_routes(app, require_role, sys.modules[__name__])
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 

@@ -273,31 +273,43 @@ Admin guidance:
 
 ## YAML Studio
 
-YAML Studio is the guided authoring workspace for creating and validating YAML
-without executing infrastructure actions.
+YAML Studio prepares configuration without executing infrastructure actions.
 
-Modes:
+1. Choose a datacenter and cluster group, or enter a manual target. Groups are
+   organizational labels. A matching managed cluster can prefill its PE address
+   and reference; review those values before saving.
+2. Choose a task from the library: initial admin access, EULA/Pulse, DNS/NTP,
+   DSIP, HA, rebuild reservation, storage, Prism title or PE registration to PC.
+   Specialist AHV uplink and DARE operations open their existing governed wizards.
+3. Complete the guided fields and review the generated YAML. Boolean and policy
+   choices require explicit input. Advanced YAML uses the edited document as the
+   source of truth. Switching back requires confirmation before replacing edits.
+4. Validate syntax, task shape and declared credential references. These checks
+   do not authenticate credentials, contact PE/PC or establish live readiness.
+   Live preflight remains **Not run**. Password values are not fetched by the
+   operational Studio. Keep credentials in Global Config.
+5. Save a task-specific filename. The selected group labels the file in Config
+   Files. Existing files must be opened for review before overwrite; changes made
+   in another session require reloading. Export drafts before leaving the page:
+   task drafts are retained only in page memory.
+6. Select an existing ZTF 1.x pipeline and review every existing step plus the
+   proposed append. Confirm **Append saved step** to change the future pipeline
+   definition only. Duplicate or stale handoffs are rejected. If the current
+   approval policy requires direct-job execution, Studio explains the block and
+   leaves that policy unchanged. Open Workflows to use its approval path.
 
-| Mode | Purpose | Use case |
-|---|---|---|
-| Native Foundation Deploy | Draft controlled-UAT native Foundation deployment intent. | Prepare Dell iDRAC controlled-UAT plans and review guardrails. |
-| Cluster Create | Generate ZTF 1.x Foundation Central cluster creation config. | Build a repeatable cluster creation or rebuild input. |
-| Global Config | Generate starter shared configuration. | Bootstrap credentials, vault, and IPAM metadata. |
-| ZTF 2.x IaC | Generate preview `input.yml` for the domains model. | Prepare desired-state plan input before approval-bound apply. |
-| Blank YAML | Start from a clean editor with validation support. | Import or author custom reviewed YAML. |
+Handoff does not submit jobs, request or consume approvals, change existing steps,
+convert executors, or modify recovery run snapshots and completed work. The
+step-08-only recovery retry remains in the existing recovery flow. Viewers can
+prepare, validate and export drafts; only administrators/operators can save and
+hand off configurations.
 
-Key actions:
-
-| Action | Result |
-|---|---|
-| Generate YAML | Creates YAML from wizard fields. |
-| Revalidate | Checks parser and shape expectations through the backend. |
-| Save to ZTF | Writes the YAML into the config library. |
-| Download | Exports YAML and validation metadata. |
-
-YAML Studio is intentionally non-mutating. It does not run ZTF, NKP, Prism,
-Foundation Central, or provider operations. Execution happens only through the
-governed execution pages and durable job queue.
+**Additional authoring tools** retains the existing full script generators,
+cluster baseline editor, Foundation Central cluster YAML, Global Config and
+upgrade-rule authoring. Retired integration templates are not offered. Existing
+validation/save/export API callers without a task ID retain their prior behavior.
+The public demo simulates authoring and browser-memory handoff only; its checks
+are labeled as simulated and are not live validation.
 
 ## Workflows 1.x
 

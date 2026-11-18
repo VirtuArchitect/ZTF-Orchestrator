@@ -10,6 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Add operational YAML Studio with datacenter/cluster context, guided task fields, explicit policy choices, task-specific authoring checks and reviewed append-only pipeline handoff. Preserve execution approval policies, existing steps and recovery snapshots.
 - Add PE-direct AHV uplink migration through pinned CVM SSH and PE-direct DARE with Local KMS, with per-run approval-bound TLS exceptions, audit records and fresh verification. Existing PC paths, ZTF 1.x pipelines and recovery gates remain available; live writes stay disabled by default.
 - Show the current pending approval count beside Approvals in expanded and compact navigation, with refresh after approval changes.
 - Add a Recover Cluster entry with existing-run resumption, recovery stage status, completed pipeline jobs and guidance through reconciliation and step 08-only retry.

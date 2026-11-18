@@ -25,6 +25,11 @@ infrastructure recovery through governed ZeroTouch Framework workflows.
 |---|---|---|
 | Build AHV clusters and run setup pipelines. | Review jobs, approvals, health, and drift. | Review baselines and rehearse cluster rebuilds. |
 
+YAML Studio now supports datacenter/cluster selection, guided configuration,
+explicit authoring validation and reviewed pipeline handoff. It saves configuration
+without executing it; existing approvals and recovery progress remain unchanged.
+See the [YAML Studio operator steps](docs/admin-guide.md#yaml-studio).
+
 ## Appliance Downloads
 
 The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)
