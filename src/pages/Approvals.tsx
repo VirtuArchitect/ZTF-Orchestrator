@@ -73,7 +73,10 @@ export default function Approvals() {
   const load = async () => {
     setLoading(true)
     const r = await apiFetch('/api/approvals', { headers: { Authorization: `Bearer ${sessionToken}` } })
-    if (r.ok) setApprovals(await r.json())
+    if (r.ok) {
+      setApprovals(await r.json())
+      window.dispatchEvent(new Event('ztf-approvals-updated'))
+    }
     setLoading(false)
   }
 

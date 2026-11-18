@@ -7,6 +7,8 @@ import {
   FileSearch, Clock, Layers, ShieldCheck, ListChecks, FileArchive, Archive, ShieldAlert, Wand2, Compass, RotateCcw, Building2
 } from 'lucide-react'
 import { useStore } from '../store'
+import { httpFailure, pollReadOnly } from '../utils/readOnlyPolling'
+import type { ApprovalRequest } from '../types'
 import { apiFetch } from '../utils/api'
 import { APP_VERSION } from '../version'
 import BrandLogo from './BrandLogo'
@@ -75,6 +77,33 @@ export default function Sidebar() {
   } = useStore()
   const sessionToken = useStore(state => state.sessionToken)
   const [frameworkCheckFailed, setFrameworkCheckFailed] = useState(false)
+  const [openApprovals, setOpenApprovals] = useState<number | null>(null)
+  const [approvalCountUnavailable, setApprovalCountUnavailable] = useState(false)
+  const [approvalRefresh, setApprovalRefresh] = useState(0)
+
+  useEffect(() => {
+    const refresh = () => setApprovalRefresh(value => value + 1)
+    window.addEventListener('ztf-approvals-updated', refresh)
+    return () => window.removeEventListener('ztf-approvals-updated', refresh)
+  }, [])
+
+  useEffect(() => {
+    setOpenApprovals(null); setApprovalCountUnavailable(false)
+    if (!sessionToken) return
+    return pollReadOnly(async signal => {
+      const response = await apiFetch('/api/approvals?status=pending', { signal })
+      if (!response.ok) throw httpFailure(response, 'Approval count unavailable')
+      const approvals = await response.json() as ApprovalRequest[]
+      if (!Array.isArray(approvals)) throw new Error('Approval count unavailable')
+      return approvals.filter(item => item?.status === 'pending').length
+    }, count => { setOpenApprovals(count); setApprovalCountUnavailable(false) },
+    () => { setOpenApprovals(null); setApprovalCountUnavailable(true) }, 30_000)
+  }, [sessionToken, approvalRefresh])
+
+  const approvalCountLabel = approvalCountUnavailable ? 'Open approval count unavailable'
+    : openApprovals === null ? 'Checking open approvals' : `${openApprovals} open approvals`
+  const approvalCountText = approvalCountUnavailable ? '?' : openApprovals === null ? '…' : String(openApprovals)
+
   useEffect(() => {
     if (!sessionToken || ztfInstalled !== null) return
     const controller = new AbortController()
@@ -196,6 +225,15 @@ export default function Sidebar() {
                   const active = location.pathname === item.path ||
                     (item.path === '/start/configure' && location.pathname === '/configure/dare') ||
                     (!['/', '/recovery', '/start'].includes(item.path) && location.pathname.startsWith(`${item.path}/`))
+                  const approvalBadge = item.path === '/approvals' && (
+                    <span aria-live="polite" aria-atomic="true" title={approvalCountLabel} className={clsx(
+                      'rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none',
+                      !sidebarOpen && 'absolute right-0 top-0',
+                      openApprovals && openApprovals > 0
+                        ? 'bg-amber-200 text-amber-950'
+                        : active ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                    )}><span aria-hidden="true">{approvalCountText}</span><span className="sr-only">{approvalCountLabel}</span></span>
+                  )
                   return (
                     <Link
                       key={item.path}
@@ -204,17 +242,19 @@ export default function Sidebar() {
                         if (window.innerWidth < 768 && sidebarOpen) toggleSidebar()
                       }}
                       className={clsx(
-                        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group',
+                        'relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm group',
                         active
                           ? 'bg-nutanix-blue text-white'
                           : 'text-gray-400 hover:text-gray-200 hover:bg-surface'
                       )}
-                      title={!sidebarOpen ? `${item.label}${item.badge ? ` (${item.badge})` : ''}` : undefined}
+                      title={!sidebarOpen ? `${item.label}${item.path === '/approvals' ? ` · ${approvalCountLabel}` : item.badge ? ` (${item.badge})` : ''}` : undefined}
                     >
                       <item.icon size={18} className="flex-shrink-0" />
+                      {!sidebarOpen && approvalBadge}
                       {sidebarOpen && (
                         <>
                           <span className={clsx('flex-1 font-medium', item.path === '/validation-evidence' ? 'min-w-0' : 'truncate')}>{item.label}</span>
+                          {approvalBadge}
                           {item.badge && (
                             <span className={clsx(
                               'rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',

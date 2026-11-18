@@ -10,11 +10,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Show the current pending approval count beside Approvals in expanded and compact navigation, with refresh after approval changes.
 - Add a Recover Cluster entry with existing-run resumption, recovery stage status, completed pipeline jobs and guidance through reconciliation and step 08-only retry.
 
 - Retire Native pipeline opt-in, NKP and ZTF 2.x console execution while preserving ZTF 1.x pipelines and recovery.
 
 ### Fixed
+- Load complete job logs when expanding Jobs / Queue records and show saved recovery failure details inline.
+- Put the next recovery action before collapsed stage and pipeline details, and hide configuration controls after early deployment failures.
 - Identify pipeline steps by their configuration filename in the running header, progress rail and log.
 - Distinguish unverified BMC credentials caused by direct Orchestrator connectivity or Redfish errors from authentication failures, and identify the test source.
 - Show individual Foundation VM action results, BMC credential test outcomes, and the reported imaging phase and percentage.
