@@ -89,4 +89,3 @@ class Lab:
                     nic['mtu'] = command['mtu']
             switch.update(ports=command['ports'], bond=command['bond'], bondMode='active-backup', mtu=command['mtu'])
         return {'ok': True}
-
