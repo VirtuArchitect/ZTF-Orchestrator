@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.mark.parametrize("relative", [
     "docs/assets/guide/v1.8.5-rc1",
+    "docs/assets/guide/2026-11-19",
     "docs/assets/recovery-profile-management",
     "docs/assets/pe-health-reporting",
     "docs/assets/readme/v1.8.5-rc1",
@@ -39,3 +40,14 @@ def test_manual_index_download_hashes():
         assert match
         path = folder / f"ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.{extension}"
         assert hashlib.sha256(path.read_bytes()).hexdigest() == match.group(1)
+
+
+def test_current_light_manual_capture_provenance():
+    folder = ROOT / 'docs/assets/guide/2026-11-19'
+    manifest = json.loads((folder / 'capture-manifest.json').read_text(encoding='utf-8'))
+    assert manifest['simulated'] is True and manifest['lightMode'] is True
+    assert manifest['liveActionsExecuted'] is False
+    assert {entry['file'] for entry in manifest['screens']} == {p.name for p in folder.glob('*.jpg')}
+    for entry in manifest['screens']:
+        assert Path(entry['file']).name == entry['file']
+        assert hashlib.sha256((folder / entry['file']).read_bytes()).hexdigest() == entry['sha256']

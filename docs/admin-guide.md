@@ -1,15 +1,8 @@
 # ZTF-Orchestrator Admin Guide
 
-See [current documented build and update details](current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+Reviewed 19 November 2026 against application `f33c9ed` and README revision `27d28a2`. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
-Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
-
-Documentation reviewed on 2 November 2026 against merged application revision
-`a3c9c79832efe4552cab5b208d5fbe49936dcbf8`. The [illustrated PDF manual](manuals/README.md)
-preserves the supplied administrator/user guide format and contains refreshed,
-simulated screenshots. See [current screenshot provenance](assets/guide/v1.8.5-rc1/README.md).
-Session management, PE login-title customization, credential/config grouping and
-update-stage indicators are included in consolidated bundle `v1.8.5-rc1-636f191`. The prerelease remains separate from v1.8.4 Latest stable.
+ZTF 1.x remains the pipeline executor. Native opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; live writes default to off. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
 The [revision 3 cluster deployment process](cluster-deployment-process.md)
 provides the diagram, text equivalent and acceptance gates. The PDF manual
@@ -31,14 +24,14 @@ backup planning, and operational signoff.
 The new [Disaster Recovery section](disaster-recovery.md) groups saved Foundation
 VM rebuild baselines and post-configuration pipelines by datacenter. It adds
 versioned profiles, governed execution, explicit health/acceptance evidence and
-rehearsal records. The refreshed 147-page illustrated PDF includes Disaster Recovery,
+rehearsal records. The refreshed 156-page illustrated PDF includes Disaster Recovery,
 the approved bootstrap-before-health sequence, current navigation and guided
 appliance updates. The linked procedures describe their validation boundaries.
 The separate [illustrated recovery setup guide](disaster-recovery-setup.md),
 reviewed against `a3c9c79` on 2 November 2026, adds datacenter creation,
 Foundation VM/pipeline linking and baseline review without deployment. Its
 generic simulated screenshots and PDF/Word editions remain a focused setup supplement.
-The [15-part video series](user-guide-videos.md) includes an introductory overview.
+The [User Guide Videos](user-guide-videos.md) series includes an introductory overview.
 
 ZTF-Orchestrator provides a browser-based control plane for preparing,
 validating, executing, and auditing Nutanix automation work. It complements the
@@ -49,8 +42,8 @@ them.
 |---|---|
 | ZTF-Orchestrator | Admin console, RBAC, configuration authoring, approvals, schedules, queues, evidence, audit, and governance records. |
 | ZeroTouch Framework 1.x | Legacy workflow and script execution engine for allowlisted Nutanix operations. |
-| ZeroTouch Framework 2.x | Separate IaC plan/apply lane for governed desired-state changes. |
-| NKP ZeroTouch Framework | Optional guided preparation lane for Nutanix Kubernetes Platform profiles and safe phases. |
+| Retained ZeroTouch Framework 2.x | Historical runtime/records only; new console execution is retired. |
+| Retained NKP integration | Historical artifacts/records only; new console setup/execution is retired. |
 | Prism Central, Prism Element, Foundation Central, FCA, NKP, and provider APIs | Target systems that perform infrastructure actions when approved and supported. |
 
 Administrative responsibilities include:

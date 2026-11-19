@@ -1,0 +1,34 @@
+{
+  "reviewed": "2026-11-19",
+  "reviewedDisplay": "19 November 2026",
+  "applicationSource": "f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2",
+  "repositoryReview": "27d28a2f2fcc086dbb40a5228294143b5be00af0",
+  "pdfPages": 156,
+  "inlineImages": 83,
+  "tables": 54,
+  "sectionGeometryEmu": [
+    [
+      7772400,
+      10058400,
+      864235,
+      621665,
+      630555,
+      658495
+    ],
+    [
+      10058400,
+      7772400,
+      502920,
+      502920,
+      630555,
+      658495
+    ]
+  ],
+  "simulatedScreenshots": true,
+  "liveActionsExecuted": false,
+  "exporter": "Microsoft Word 16; fields and linked contents refreshed",
+  "files": {
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "7248b94b98a42bdad2ae51ab4848b57151da64219dab569af6a96e846ab1429b",
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "f737f6041a860394b32af6aee11b2d8a1b2c2e635d5dbebd86a59ce76929c013"
+  }
+}

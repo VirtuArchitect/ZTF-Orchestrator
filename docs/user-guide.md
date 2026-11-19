@@ -2,14 +2,9 @@
 
 The [console retirement procedure](console-retirement.md) describes current ZTF 1.x operation and historical integration access.
 
-See [current documented build and update details](current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+Reviewed 19 November 2026 against application `f33c9ed` and README revision `27d28a2`. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
-Current candidate: **v1.8.5-rc1**, reviewed against merged application revision
-`a3c9c79` on 2 November 2026. v1.8.4 remains Latest stable. Download the
-[illustrated PDF manual](manuals/README.md) or begin with [Start Here](start-here.md).
-Session management, PE login-title customization, credential/config grouping and
-update-stage indicators are included in consolidated bundle `v1.8.5-rc1-636f191`.
-All [current screen examples](assets/guide/v1.8.5-rc1/README.md) are simulated.
+ZTF 1.x remains the pipeline executor. Native opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; live writes default to off. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
 For Disaster Recovery, use the updated manual and the focused
 [illustrated recovery setup guide](disaster-recovery-setup.md), reviewed against
@@ -29,10 +24,10 @@ major features, and the operational purpose of each screen.
 
 ZTF-Orchestrator is an internal operations console for preparing, validating,
 executing, and auditing Nutanix ZeroTouch Framework 1.x workflows/scripts,
-separate governed ZTF 2.x IaC plan/apply jobs, and guarded NKP preparation
-phases. It is the control plane and evidence layer. ZeroTouch Framework, NKP
-ZeroTouch Framework, Prism Central, Prism Element, Foundation VM, Foundation Central and standalone FCA remain
-the systems that perform the underlying infrastructure work.
+with historical ZTF 2.x/NKP records retained for inspection. It is the control plane
+and evidence layer. Supported ZTF 1.x runtimes, guarded specialist adapters,
+Prism Central, Prism Element, Foundation VM, Foundation Central and standalone FCA
+perform the underlying infrastructure work where the selected workflow supports them.
 
 The static demo uses simulated data. Treat it as a product tour, not as proof
 that a deployment has validated live infrastructure.

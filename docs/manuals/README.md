@@ -1,69 +1,45 @@
 # Administrator and User Guide
 
-For the newer source-only managed-cluster workspace, attention register and
-explicit PE observations, use the [cluster operations addendum](../cluster-operations.md).
-The dated PDF/Word editions below have not been regenerated for that addition;
-their screenshots and appliance package provenance remain unchanged.
+[Open or download the illustrated PDF guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Editable Word guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
 
-[Open or download the illustrated PDF guide](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf)
+The maintained **156-page** guide was reviewed **19 November 2026** against application source `f33c9ed` and repository/README revision `27d28a2`. **v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable.** Existing download filenames and links are unchanged.
 
-The primary published guide is a searchable 147-page PDF with searchable text,
-a linked table of contents and the revision 3 landscape process-flow appendix.
-The [editable Word source](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
-is retained for maintenance.
+The Word and searchable PDF retain the original typography, navy table headers, portrait pages, margins, headers/footers and revision 3 landscape process appendix. The linked contents and page fields were refreshed in Word. All 156 exported pages were rendered and checked; 83 inline illustrations and 54 tables remain in the source.
 
-Reviewed **2 November 2026** against merged application revision
-`a3c9c79832efe4552cab5b208d5fbe49936dcbf8`. The manual covers the
-**v1.8.5-rc1 prerelease**; **v1.8.4 remains Latest stable**.
-It preserves the supplied guide's original portrait pages, typography, tables,
-headers and footers. A landscape appendix adds the revision 3 process overview
-and two enlarged stage views. The body includes current Disaster Recovery and
-guided-update procedures, bootstrap/health ordering and navigation. Its 79 inline
-illustrations include refreshed current console captures from the
-[current simulated screenshot gallery](../assets/guide/v1.8.5-rc1/README.md),
-including repeated dashboard/pipeline examples. They are not live target evidence.
+## Current operating coverage
 
-This revision includes the streamlined console, Disaster Recovery bootstrap and
-health gates, guided appliance updates, host-service installation, conservative
-backup/cleanup and rollback guidance. It retains Start Here and the deployment/post-configuration handoff,
-Docker build identity, safe PE local-user diagnostics, independent user/role
-verification, the effective appliance Compose trust configuration and update
-space planning. It retains detailed installation, workflow/script, pipeline,
-Upgrade Advisor, live drift, backup, recovery and governance instructions.
-The updated source documentation adds administrator-only session visibility,
-five-minute recent activity, 30-second interaction reporting with stale reports
-discarded after 60 seconds, confirmed UUID revocation/audit, and additive
-PostgreSQL migration/rollback guidance. These additions are included in consolidated appliance bundle
-`v1.8.5-rc1-636f191`; older immutable bundles remain unchanged.
-Users, Sessions, revocation and Foundation VM guidance use fresh generic simulated
-captures. Video Part 11 predates the panel and remains unchanged. Foundation VM
-is labelled Implemented; mutation and approval gates remain in place.
-No unfinished deployment-engine work is included.
+- YAML Studio: datacenter/cluster context, guided configuration, Advanced YAML, authoring validation and reviewed pipeline handoff. Validation and handoff start no target execution.
+- ZTF 1.x workflow/script pipelines, credential synchronization, credential and Config Files grouping, exact saved-step naming, job logs and reported failure stages.
+- Recover Infrastructure, Recover Cluster and Resume Recovery; profile revisions/archive/guarded deletion; retained approvals and completed work; final step 08-only registration retry after reconciliation and fresh health evidence.
+- Managed cluster records, owned attention reviews, collection errors, expired evidence and clock mismatch; deliberate verified-HTTPS PE collection.
+- PE-direct AHV uplink migration/new virtual switches through pinned CVM SSH, and DARE with existing Local KMS. Per-run TLS exceptions remain reasoned, audited and independently approved. Live writes default to off pending target-version validation; DARE cannot be undone by appliance rollback.
+- Foundation image inventory and four-button feedback, per-node IPMI test source/results, actual Foundation telemetry, sessions/revocation, blue zero Approvals count and guided appliance update/backup/rollback.
+- Static-IP-first appliance access, console provisioning, Netplan permissions and the web-admin retrieval/reset handoff to the detailed deployment quick guide.
 
-The manual now includes datacenter/cluster credential and configuration groups,
-scoped workflow/pipeline file selection, **Set Prism Login Title (PE)** and green
-completed update stages. Consolidated bundle **v1.8.5-rc1-636f191** includes those
-application changes; this documentation refresh does not alter that ZIP. See the
-[current build inventory](../current-status.md). Dated detailed recovery and
-update walkthrough figures retain their stated historical provenance; the general
-console figures and update-progress example were freshly captured.
+Native pipeline opt-in, NKP and ZTF 2.x console execution are **retired**. Historical jobs, approvals, baked runtimes and dated illustrations remain for interpretation/retention; they do not provide a current execution option. See [console retirement](../console-retirement.md).
 
-PDF SHA256: `2bc3b8b1f75ae808526da4c3c65a0ea968a1ee7dabe02cb69f08921a50cb4ca1`.
+## Screenshots and release boundaries
 
-Editable source SHA256: `932d2dcb14e7f4f823e38cb54f4931bc1ba5908d0073306d8d49717b4c501350`.
+[Current light-mode captures](../assets/guide/2026-11-19/README.md) use generic simulated records. Earlier detailed recovery/update images and process diagrams retain their original provenance and are identified as historical. Fixed demo timestamps can display clock warnings; screenshots are not live health or hardware evidence.
 
-[Revision 3 deployment process](../cluster-deployment-process.md) provides
-the full-resolution PNG, editable SVG and accessible text sequence. Its approval
-and verification boundaries also apply to the illustrated appendix.
+The example consolidated build is `v1.8.5-rc1-f33c9ed`. Obtain its exact trusted ZIP and checksum from the release maintainer; this is not a claim that a commit-specific bundle is a public release asset. This manual update changes no installed runtime or immutable ZIP. See [current source/package evidence](../current-status.md).
+
+PDF SHA256: `f737f6041a860394b32af6aee11b2d8a1b2c2e635d5dbebd86a59ce76929c013`.
+
+Editable source SHA256: `7248b94b98a42bdad2ae51ab4848b57151da64219dab569af6a96e846ab1429b`.
+
+[Publication manifest](administrator-user-guide-publication.json) records source revisions, page count, layout geometry and download checksums.
+
+[Revision 3 deployment process](../cluster-deployment-process.md) provides the full-resolution PNG, editable SVG and accessible text sequence retained in the appendix.
 
 ## Related procedures
 
 [Illustrated Production Ubuntu VM Disk Expansion Guide (Word)](ZTF-Orchestrator-Production-Ubuntu-VM-Disk-Expansion-Guide.docx) covers disk sizing in Nutanix Prism, Ubuntu filesystem expansion, guided update readiness and rollback. The screenshots and terminal example use reference data.
 
 
-[Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word)](ZTF-Orchestrator-UAT-Update-and-Verification-v1.8.5-rc1-c660955.docx) covers guided update readiness, Native opt-in,
+[Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word)](ZTF-Orchestrator-UAT-Update-and-Verification-v1.8.5-rc1-c660955.docx) is a historical build-specific guide covering guided update readiness, former Native opt-in,
 compatibility results, the offline step 08-only retry rehearsal, and rollback.
-Screenshots use simulated records.
+Screenshots use simulated records. Native opt-in is retired in the current console; use the current manual for supported ZTF 1.x operation.
 
 - [AHV Appliance Deployment Quick Guide (PDF)](ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) covers QCOW2 deployment, SSH key generation and `ztfadmin` provisioning before first boot, management addressing, SSH and sudo verification, and the initial web admin sign-in.
 
