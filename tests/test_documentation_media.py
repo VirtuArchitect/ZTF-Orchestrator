@@ -15,9 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_public_entry_pages_link_the_current_manual_downloads():
     folder = ROOT / 'docs/manuals'
     manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
-    prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/manuals/'
-    expected = {kind: prefix + f'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.{suffix}'
-                for kind, suffix in [('pdf', 'pdf'), ('word', 'docx')]}
+    expected = {kind: row['url'] for kind, row in manifest['releaseDownloads']['files'].items()}
 
     class ManualLinks(HTMLParser):
         def __init__(self):
@@ -35,10 +33,37 @@ def test_public_entry_pages_link_the_current_manual_downloads():
         assert parser.links == expected
     readme = (ROOT / 'README.md').read_text(encoding='utf-8')
     links = re.findall(r'\[[^\]]*\]\(([^)]+)\)', readme)
-    for url in expected.values():
-        name = url.rsplit('/', 1)[1]
-        assert 'docs/manuals/' + name in links
-        assert hashlib.sha256((folder / name).read_bytes()).hexdigest() == manifest['files'][name]
+    assert set(expected.values()) <= set(links)
+
+
+def test_manual_release_assets_match_maintained_documents_and_checksums():
+    folder = ROOT / 'docs/manuals'
+    manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
+    release = manifest['releaseDownloads']
+    prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/' + release['releaseTag'] + '/'
+    assert release['releaseTag'] == 'v1.8.5-rc1'
+    assert re.fullmatch(r'[a-f0-9]{40}', release['sourceRevision'])
+    expected_sums = {}
+    assert set(release['files']) == {'pdf', 'word'}
+    for row in release['files'].values():
+        assert Path(row['source']).name == row['source']
+        assert Path(row['asset']).name == row['asset']
+        assert row['asset'] == row['source'].rsplit('.', 1)[0] + '-' + release['published'] + '.' + row['source'].rsplit('.', 1)[1]
+        assert row['url'] == prefix + row['asset']
+        data = (folder / row['source']).read_bytes()
+        assert len(data) == row['bytes']
+        assert hashlib.sha256(data).hexdigest() == row['sha256'] == manifest['files'][row['source']]
+        expected_sums[row['asset']] = row['sha256']
+        assert row['url'] in (folder / 'README.md').read_text(encoding='utf-8')
+    checksums = release['checksums']
+    assert Path(checksums['asset']).name == checksums['asset']
+    assert checksums['url'] == prefix + checksums['asset']
+    payload = (folder / checksums['asset']).read_bytes()
+    assert len(payload) == checksums['bytes']
+    assert hashlib.sha256(payload).hexdigest() == checksums['sha256']
+    actual_sums = {name: digest for digest, name in
+                   (line.split('  ', 1) for line in payload.decode('ascii').splitlines())}
+    assert actual_sums == expected_sums
 
 
 def test_complete_video_zip_release_links_match_the_current_media_snapshot():

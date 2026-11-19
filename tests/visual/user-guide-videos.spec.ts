@@ -5,7 +5,7 @@ for (const width of [1440, 390]) {
   test(`landing and video pages link the current PDF and Word manual at ${width}px`, async ({ page }) => {
     test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
     await page.setViewportSize({ width, height: 1000 })
-    const prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.'
+    const prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.'
     for (const route of ['./', 'tutorials/']) {
       await page.goto(route)
       for (const [kind, suffix] of [['pdf', 'pdf'], ['word', 'docx']]) {
