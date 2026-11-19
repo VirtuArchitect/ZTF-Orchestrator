@@ -2,6 +2,7 @@
 
 
 ### Documentation
+- Align the README with the refreshed light project site, current ZTF 1.x execution, YAML Studio, recovery and PE-direct workflow boundaries; retain dated screenshots as historical references.
 - Refresh the light project site with the reviewed f33c9ed console status, YAML Studio, governed recovery, PE-direct configuration and current operator links. Distinguish source, immutable packages and simulated demo evidence.
 All notable changes to ZTF-Orchestrator are documented here.
 

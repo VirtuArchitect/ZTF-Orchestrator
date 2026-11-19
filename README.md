@@ -1,316 +1,297 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
-See [console integration retirement](docs/console-retirement.md) for supported pipeline execution and access to historical records.
-
 ![ZTF-Orchestrator banner with three teal-linked server clusters on a pale background](docs/assets/readme-hero/ztf-orchestrator-banner-light.webp)
 
-Deploy and configure Nutanix clusters, manage day-to-day operations, and rehearse
-infrastructure recovery through governed ZeroTouch Framework workflows.
+Prepare cluster configuration, run governed ZTF 1.x pipelines, and recover
+Nutanix infrastructure from reviewed profiles through one web console.
 
-**[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)** ·
-**[Project Site](https://virtuarchitect.github.io/ZTF-Orchestrator/)** ·
-**[Quick Start](docs/start-here.md)** ·
-**[Download](#appliance-downloads)** ·
+**[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)** |
+**[Project Site](https://virtuarchitect.github.io/ZTF-Orchestrator/)** |
+**[Quick Start](docs/start-here.md)** |
+**[Download](#appliance-downloads)** |
 **[Documentation](#deployment-guides)**
 
-[Stable v1.8.4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4) ·
-[Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) ·
-[Current appliance build](docs/current-status.md)
+[Stable v1.8.4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4) |
+[Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) |
+[Current source and appliance status](docs/current-status.md)
 
 [![ZTF-Orchestrator Overview in light mode showing deployment, configuration, recovery, and monitoring shortcuts with simulated cluster data](docs/assets/readme-hero/interactive-demo-overview-light.png)](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)
 
-*The Overview screen captured from the interactive demo. All displayed records are simulated.*
+*Light-mode Overview captured from the interactive demo. All displayed records
+are simulated; screenshots and videos do not establish hardware validation.*
 
-| [Deploy Clusters](docs/start-here.md#deploy-a-cluster) | [Operate & Govern](docs/cluster-operations.md) | [Prepare for Recovery](docs/disaster-recovery.md) |
+## Current Repository Status
+
+Reviewed **19 November 2026** against application source
+[`f33c9ed`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2).
+The corresponding consolidated appliance build is `v1.8.5-rc1-f33c9ed`.
+Source changes, container images, offline update ZIPs and QCOW2 appliances are
+separate deliverables. Check the exact package version and checksum with your
+release maintainer; older packages are immutable.
+
+`v1.8.5-rc1` is the current prerelease. The latest stable release remains v1.8.4.
+GitHub's **Latest** label refers to the stable release. Use the
+[release-document website](https://virtuarchitect.github.io/ZTF-Orchestrator/releases/)
+and [repository release directory](docs/releases/README.md) for versioned notes.
+
+**ZTF 1.x remains the pipeline executor.** Native opt-in, NKP and ZTF 2.x console
+setup/execution are retired. Existing Native pipeline definitions remain visible
+and require administrator review and explicit conversion before execution.
+Historical jobs, approvals, saved records and recovery snapshots are retained.
+Retirement does not remove baked runtime dependencies or stored data; see
+[console integration retirement](docs/console-retirement.md).
+
+## What ZTF-Orchestrator Does
+
+ZTF-Orchestrator adds guided inputs, reviewable YAML, approvals, durable job logs,
+verification and recovery coordination around
+[ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework) automation.
+It is an independent community project, not affiliated with or supported by
+Nutanix. Production use requires environment-specific validation and sign-off.
+
+| Capability | Current operator experience | Guide |
 |---|---|---|
-| Build AHV clusters and run setup pipelines. | Review jobs, approvals, health, and drift. | Review baselines and rehearse cluster rebuilds. |
+| Deploy clusters | Foundation VM / Foundation Central configuration, image inventory, target review and governed deployment jobs | [Deploy a cluster](docs/start-here.md#deploy-a-cluster) |
+| Author configuration | YAML Studio with datacenter/cluster context, task library, guided forms, explicit authoring checks and reviewed pipeline handoff | [YAML Studio](docs/admin-guide.md#yaml-studio) |
+| Run post-configuration | Sequential ZTF 1.x workflows/scripts with step names, saved configuration and failure gates | [Pipelines](docs/user-guide.md) |
+| Recover infrastructure | Recover Cluster / Resume Recovery, versioned profiles, stage status and preserved completed work | [Disaster Recovery](docs/disaster-recovery.md) |
+| Operate and govern | Managed clusters, owned review items, approvals, sessions, durable job logs and audit history | [Cluster operations](docs/cluster-operations.md) |
+| Verify and maintain | PE collection diagnostics, evidence age, drift, Upgrade Advisor and guided offline appliance updates | [Health reporting](docs/pe-health-reporting.md) / [Updates](docs/guided-appliance-updates.md) |
 
-YAML Studio now supports datacenter/cluster selection, guided configuration,
-explicit authoring validation and reviewed pipeline handoff. It saves configuration
-without executing it; existing approvals and recovery progress remain unchanged.
-See the [YAML Studio operator steps](docs/admin-guide.md#yaml-studio).
+### Configuration and credentials
 
-## Appliance Downloads
+Organize credentials and Config Files by datacenter, cluster and shared service.
+Existing reference keys and selected-vault lookup remain unchanged. Groups are
+organizational labels, not access boundaries or automatic target/credential mappings.
+See [credential groups](docs/credential-groups.md) and
+[Config Files groups](docs/config-file-groups.md).
 
-The controlled-UAT [CVM & Dell iDRAC Password Rotation workflow](docs/credential-rotation.md)
-adds guarded CVM SSH and iDRAC password changes with replacement-login checks.
-Nutanix host IPMI credential synchronization remains a required manual follow-up.
+YAML Studio checks syntax, workflow shape and declared credential references.
+Reference presence does not prove authentication; authoring validation does not
+run live preflight. Saving or handing off a file starts no job. Execution and
+approval remain in the existing workflow and pipeline paths.
 
-Download versioned ZTF-Orchestrator appliance artifacts from the
-[Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C).
+### Specialist configuration
 
-ZTF-Orchestrator turns ZeroTouch Framework and NKP deployment preparation into
-an internal operations console: teams can define connection settings, generate
-workflow, baseline, or NKP profile YAML through YAML Studio, register NKP
-binaries, check CLI compatibility, submit execution jobs, capture validation
-evidence, track output, detect drift, schedule repeatable tasks, request
-approvals, and review audit history without every operator working directly in
-Git, YAML, and CLI commands.
+| Workflow | Connection and operating boundary |
+|---|---|
+| [AHV Uplink Migration](docs/ahv-uplink-migration.md) | PE-direct discovery and pinned CVM SSH; per-host NIC keep/move assignments, optional new bridge, read-only preflight, independent approval and sequential verification |
+| [Enable DARE](docs/dare-workflow.md) | PE-direct v2 APIs with an existing Local KMS; no PC required, read-only discovery/preflight, independent approval and encryption-state verification |
+| [VS0 MTU](docs/change-virtual-switch-mtu.md) | Per-host preflight, approval and verification; follow the workflow's own transport and rollback rules |
+| [Cluster Storage Standard](docs/cluster-storage-standard.md) | Reviewed container creation and dependency-gated default-container cleanup |
+| [CVM / iDRAC credential rotation](docs/credential-rotation.md) | Guarded password changes with replacement-login checks; host IPMI credential synchronization remains a manual follow-up |
+| [Unregister PE from PC](docs/unregister-pe-from-pc.md) | Exact-identity review, independent approval and PC-side verification; PE-side cleanup remains separate |
 
-## What Problem Does This Solve?
+Uplink migration and DARE **live writes default to off** pending validation on
+representative hardware and API versions. Their PE-direct paths support a
+reasoned, audited, per-run TLS exception bound to independent approval. TLS
+verification defaults to on, and SSH host-key verification remains required.
+Other workflows retain their own trust policies.
 
-ZeroTouch Framework is powerful automation, but operational teams often need
-more than a CLI invocation and a YAML file. They need guided inputs, reviewable
-configuration, approval gates, durable job logs, failure context, evidence
-capture, and a clear boundary between simulated, lab, controlled UAT, and
-production validation.
+**DARE enablement is irreversible.** Validate licensing, key-manager prerequisites
+and key recovery independently. Rolling back the Orchestrator cannot disable
+encryption. Mocked tests do not establish hardware or workload compatibility.
 
-ZTF-Orchestrator adds that operations layer. It helps teams make Nutanix
-automation easier to run, easier to govern, and easier to trust without hiding
-the generated YAML or bypassing the underlying ZeroTouch Framework execution
-model. Native Foundation Dell iDRAC work now has a guarded controlled-UAT
-adapter path for lab validation; broad production support still requires
-environment-specific evidence and signoff.
+## Core Operator Workflow
+
+1. Start with **Start Here** and choose Deploy, Configure, Recover Infrastructure
+   or Monitor & Verify.
+2. Prepare saved credential references and organize Config Files for the target.
+3. Author/import YAML and validate it. Review exact targets and settings; run
+   read-only preflight where available.
+4. Save the configuration and review its pipeline handoff or workflow action.
+5. Obtain the required approval and confirmation before execution.
+6. Follow **Jobs / Queue** for the actual pipeline step, reported Foundation
+   phase/percentage, failed stage and persisted output. Missing telemetry remains
+   unreported; job success is not a cluster-health claim.
+7. Verify the requested result, preserve evidence and complete the handoff.
+
+Administrators can review signed-in users, total sessions, last activity and
+expiry under **Administration > Users > Sessions** and revoke individual
+sessions with audit logging. Unexpired sessions alone do not prove current use.
+See [session management](docs/session-management.md).
 
 ## Disaster Recovery Preparation and Rehearsal
 
-> Backups preserve what you need to recover. Our focus is preparing and
-> rehearsing how to rebuild the infrastructure you recover onto.
+> Backups preserve what you need to recover. Recovery profiles coordinate
+> rebuilding the infrastructure you recover onto.
 
-ZTF-Orchestrator can help teams prepare, rehearse, and coordinate rebuilding
-Nutanix infrastructure from reviewed baselines after incident containment and
-recovery authorization. Supported imaging, cluster creation, configuration,
-and validation paths provide building blocks for an infrastructure rebuild;
-backup and application teams retain ownership of workload restoration.
+Use **Disaster Recovery > Recover Cluster** to select a reviewed profile, or
+**Resume Recovery** to continue an existing run without repeating completed work.
+Profiles link a Foundation VM deployment YAML and a post-configuration pipeline.
 
-The **Operations → Disaster Recovery** section now provides datacenters, versioned
-cluster recovery profiles, governed Foundation VM rebuild runs, sequential
-post-configuration jobs and rehearsal history. Independent health evidence and
-final acceptance remain explicit gates. It does not establish that compromised
-systems are clean, perform forensic investigation, or restore backup data.
-Physical recovery validation and measured recovery times remain environment-specific.
+The governed sequence remains:
 
-Start with [Disaster Recovery setup and operation](docs/disaster-recovery.md).
-See also the [Infrastructure Recovery Guide](docs/infrastructure-recovery.md) and
-[Recovery Rehearsal Checklist](docs/recovery-rehearsal-checklist.md).
+1. Review datacenter prerequisites, profile revision and exact physical targets.
+2. Approve re-foundation and monitor the deployment job.
+3. Complete the approved initial-access bootstrap when required.
+4. Record fresh PE identity, membership and health evidence.
+5. Run the remaining configuration steps, verify and accept the rebuilt cluster.
+6. Hand off workload restoration to the backup/application team.
 
-## At A Glance
+If an eligible final **step 08 (PE-to-PC registration)** fails, reconcile PE/PC
+state and provide fresh health evidence before an explicit step 08-only retry.
+Completed steps 01-07 and existing approval records remain intact. This is not
+a general replay or automatic retry after an uncertain registration response.
 
-| Question | Answer |
+Both recovery and rehearsal can overwrite selected nodes. Cancellation does not
+undo an accepted remote operation. VM/data restoration, incident containment,
+forensics and final workload acceptance remain separate responsibilities.
+
+[Recovery setup](docs/disaster-recovery-setup.md) |
+[Recovery profile maintenance](docs/recovery-profile-management.md) |
+[Recovery rehearsal checklist](docs/recovery-rehearsal-checklist.md) |
+[Part 15: start-to-finish recovery](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15)
+
+## Appliance Downloads
+
+Use versioned artifacts from the matching GitHub Release, Actions run or durable
+artifact store. The
+[Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C)
+is an additional distribution location; verify the artifact's version and checksum.
+
+| Artifact | Purpose |
 |---|---|
-| What is it? | A small-team operations console for guided ZeroTouch Framework 1.x workflows and safe NKP deployment preparation. |
-| Who runs it? | Internal platform, infrastructure, or field engineering teams working with Nutanix automation. |
-| What does it execute? | Allowlisted ZTF 1.x workflows/scripts, constrained NKP safe phases, and Native Foundation intents through governed jobs. Dell iDRAC Redfish deployment remains controlled-UAT only and requires explicit runtime adapter enablement. |
-| Where does state live? | Local JSON files for simple/manual installs, PostgreSQL for Docker and appliance deployments. |
-| Can I preview it? | Yes. Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/) or review the [demo and simulator guide](docs/demo/README.md). Demo data is simulated and is not live infrastructure validation. |
-| What is out of scope? | Internet exposure without a reverse proxy, uncontrolled destructive NKP actions, and ungated ZTF 2.x apply/destroy operations. |
+| QCOW2 appliance | Deploy a new Ubuntu VM on AHV; use the matching Standard, Airgap or Minimal build metadata |
+| Offline update ZIP | Update an existing compatible appliance through the guided host service |
+| Docker image / image tar | Versioned container runtime; a loaded image is not an applied update |
+| Checksums and manifest | Verify package integrity and exact source/image identity |
 
-## Demo
+### Guided appliance update
 
-Open the [static UI demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)
-to preview ZTF-Orchestrator with simulated dashboard, workflow, job, drift,
-YAML Studio, appliance, and governance data. The demo is a static GitHub Pages
-build and does not connect to Prism Central, Prism Element, Foundation Central,
-or NKP targets.
+Open **Administration > Appliance Ops > Updates**. Review storage, upload the
+complete ZIP, check readiness, approve the exact version, then back up, install
+and verify. The host service requires explicit one-time installation; importing
+a package does not execute its installer. The application has no Docker socket.
 
-For scope and evidence boundaries, see the
+Retain the latest verified database/data backup pair, rollback image and
+configuration. Verify the running image, `/health` identity and preserved records
+after cutover. Follow [guided appliance updates](docs/guided-appliance-updates.md)
+and [Docker build identity](docs/docker-build-identity.md).
+
+## Installation and First Login
+
+| Environment | Start here |
+|---|---|
+| New AHV appliance, including air-gapped sites | [AHV Appliance Deployment Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) and [Part 16](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16) |
+| Existing Ubuntu VM / team server | [Installation guide](docs/installation-guide.md) and [appliance kit](appliance/README.md) |
+| Local Docker trial | Compose with PostgreSQL; commands below |
+| Manual / Windows / Linux / macOS | [Installation guide](docs/installation-guide.md) |
+| Offline runtime and updates | [Air-gapped installation](docs/installation-guide.md) and [guided updates](docs/guided-appliance-updates.md) |
+
+For a new appliance, provision `ztfadmin` and an SSH public key **before first
+boot**. At a site without DHCP, use the VM console to set and verify the static
+IP before trying SSH. Follow the Quick Guide for Netplan permissions, sudo
+verification and retrieval or reset of the separate web-console admin password.
+
+For a fresh local Docker checkout:
+
+```bash
+git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git
+cd ZTF-Orchestrator
+cp .env.example .env
+# Edit .env and set a unique POSTGRES_PASSWORD before first start.
+docker compose up -d
+docker compose logs -f ztf-orchestrator
+```
+
+Open **http://127.0.0.1:15001** for the default Compose deployment. The application
+listens on port 5001 inside the container. Store the generated first-run web
+password securely and manage accounts under **Administration > Users**. For an
+existing deployment, use its pinned Compose profile and reviewed update procedure;
+do not replace its `.env` with the example.
+
+If initial credentials are unavailable, follow the deployment guide's trusted
+maintenance/reset procedure. Preserve accounts and the active storage backend;
+deleting `users.json` is not a PostgreSQL password-reset procedure.
+
+## Runtime and Architecture
+
+The ZTF 1.x launcher uses `python main.py --workflow ...` / `--script ...` and
+pins the bundled framework to **v1.5.2**. ZTF 2.x is not a compatible replacement
+for that CLI. Retained integration code or baked runtimes do not re-enable
+retired console execution. Built-in specialist adapters have separate documented
+preflight, approval and enablement gates.
+
+<details>
+<summary>Retained integration runtime and historical records</summary>
+
+The former **Scripts 2.x** surface submitted `ztf2:plan` jobs for actions such as
+**Create Security Groups**. These console actions are now retired. Default
+images still retain the ZTF 2.x `v2.0.0` checkout at
+`/opt/zerotouch-framework-2x` and CLI at `/opt/ztf2-python/bin/ztf` for inspection
+and rollback compatibility. Retained files are not an available execution lane;
+data/runtime removal is a separate reviewed phase.
+
+</details>
+
+```text
+Browser: React, TypeScript, Tailwind CSS
+    | REST API + Server-Sent Events
+Flask: authentication, roles, validation, approval and audit
+    |-- YAML Studio, config library, pipelines, recovery coordination
+    |-- PostgreSQL documents, sessions and audit (Docker/appliance)
+    |-- JSON file backend (simple/manual installations)
+    `-- Durable jobs -> ZTF 1.x workflows/scripts or guarded specialist adapters
+                           -> Foundation / Prism / approved CVM SSH targets
+```
+
+Docker/appliance builds include the framework runtime and dependencies. Updating
+baked frameworks requires a reviewed image rebuild; an in-app reinstall is not
+an update of a git checkout. See [Docker build identity](docs/docker-build-identity.md),
+[PostgreSQL backend](docs/postgresql-backend.md), [.env.example](.env.example) and
+the [architecture index](docs/architecture/README.md).
+
+Native Foundation engine planning and controlled-UAT research remain separately
+scoped in the [engine roadmap](docs/foundation-engine-roadmap.md); they are not
+a claim of a generally available replacement deployment engine.
+
+## Security and Validation
+
+Deploy on a trusted internal network. Compose binds to loopback by default;
+team access requires a reviewed reverse proxy, TLS and firewall configuration.
+Session authentication, roles, workflow/script allowlists, safe YAML parsing,
+path checks, approval binding and audit logging protect execution paths.
+Do not publish credentials, private keys or unredacted target logs.
+
+CI runs backend tests with coverage, Python dependency auditing, TypeScript/build
+checks and the production frontend dependency audit before protected merges.
+Main-branch CI also builds and smoke-tests the container. Mocked tests, local
+Docker checks, reported operational use and target hardware acceptance are
+separate evidence categories. This is not vendor certification or a third-party
+penetration-test attestation.
+
+For procedures and evidence requirements, use the
+[runbook index and control matrix](docs/runbooks/README.md),
+[governance index](docs/governance/README.md), [UAT index](docs/uat/README.md),
+[testing index](docs/testing/README.md) and
 [demo and simulator guide](docs/demo/README.md).
+See [SECURITY.md](SECURITY.md), the
+[security assessment](docs/security/SECURITY_ASSESSMENT.md),
+[reverse-proxy guide](docs/nginx-tls.md) and [systemd guide](docs/systemd.md).
 
-## Release and Validation Notes
+## Demo and User Guide Videos
 
-Recovery profile maintenance now includes [revision-based editing, archive/restore and guarded unused-profile deletion](docs/recovery-profile-management.md), preserving deployment history and existing approval gates.
+Explore the [interactive demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)
+with simulated configuration, jobs, approvals, recovery and monitoring data.
+It never connects to infrastructure or executes cluster changes.
 
-[PE health reporting](docs/pe-health-reporting.md) distinguishes expired evidence, failed collections and clock mismatches while retaining verified, read-only collection. Updated source also explains specific certificate trust/SAN, credential and connectivity failures at the cluster or host collection stage.
+Start with [00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00),
+then choose the relevant chapter from [User Guide Videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
+[Part 15](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15)
+covers profile-based recovery; [Part 16](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16)
+covers appliance deployment and SSH setup; [Part 17](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17)
+covers Ubuntu disk expansion. Dated videos may show historical navigation or
+retired integrations; use current operator guides for execution scope.
+See [video transcripts and captions](docs/user-guide-videos.md).
 
-See [current documented build and update details](docs/current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+<details>
+<summary>Historical light-mode screenshot gallery (2 November 2026)</summary>
 
-**Used successfully to deploy production AHV HCI clusters, with post-configuration
-through pipelines.**
-
-`v1.8.5-rc1` is the current prerelease. This release designation is separate from
-the project's successful production deployment use; `v1.8.4` remains the Latest
-stable release.
-
-Start with **Start Here** to deploy a cluster, configure an existing cluster,
-monitor and verify, or open saved automation. The guided deployment journey links
-to existing workflows and post-configuration pipelines while preserving approvals
-and verification gates. The dashboard remains available as **Overview**.
-See [Start Here and deployment guidance](docs/start-here.md).
-
-Overview now focuses on Deploy, Configure, Recover and Monitor, with recorded
-operations and recovery preparation. Existing tools remain available through
-collapsible navigation groups and dashboard details; no integration is removed.
-See the [streamlined console guide](docs/streamlined-console.md).
-
-Administrators can plan an AHV default virtual switch MTU change from
-**Advanced Automation → Scripts → Change Virtual Switch MTU**. The workflow
-includes per-host preflight and verification, with live writes disabled by
-default. See the [VS0 MTU operator guide](docs/change-virtual-switch-mtu.md).
-
-The latest source adds a [cluster-focused operational workspace](docs/cluster-operations.md):
-administrator-managed cluster records, persistent owned review items, explicit
-read-only PE identity/membership/health observations and timestamped stale-data
-warnings. Job success never becomes a cluster-health claim. Existing execution,
-approval and recovery gates remain unchanged; previously published bundles do
-not acquire this feature automatically.
-
-Latest source also adds an administrator-only [Unregister PE from PC wizard](docs/unregister-pe-from-pc.md), with exact-identity review, mandatory approval and PC-side verification. This is not yet a live-validated appliance release; PE-side cleanup remains separate.
-
-Upgrade Advisor supports [audited, temporary PE/PC TLS exceptions](docs/upgrade-advisor-tls.md)
-for administrator inventory collection; verification remains enabled by default.
-
-**Monitor & Verify** opens drift checks, inventory/upgrade readiness and execution
-history. **NKP Validation Evidence (Preview)** remains under Advanced Automation;
-its original route, saved evidence and ZTF UAT pack exports are retained. Preview
-evidence does not establish AHV cluster or PE/PC operational readiness.
-
-Updated source builds provide [guided appliance updates](docs/guided-appliance-updates.md)
-under Appliance Ops → Updates: upload a ZIP, check space, review cleanup, approve
-the version, install and verify. A one-time host-service installation is required;
-the application does not receive Docker access. The existing CLI procedure remains.
-
-Updated source builds organise local credential definitions by datacenter,
-cluster and shared service in **Global Config > Credentials**. Existing reference
-keys and runtime vault lookup remain unchanged; grouping metadata is stored
-separately. See [credential groups](docs/credential-groups.md) and [configuration-file grouping](docs/config-file-groups.md). Guided appliance
-update stages distinguish completed (green), active, pending and failed work.
-
-For infrastructure rebuild preparation, open **Operations → Disaster Recovery**
-to group cluster baselines and post-configuration pipelines by datacenter.
-See [Disaster Recovery setup and operation](docs/disaster-recovery.md).
-Use the [illustrated datacenter and recovery profile setup guide](docs/disaster-recovery-setup.md)
-to link Foundation VM configurations and post-deployment pipelines without
-deploying. It includes generic simulated screenshots and PDF/Word downloads.
-Updated source builds run an approved password/EULA/Pulse bootstrap before the
-PE health gate, then collect strict read-only PE identity, membership and reported
-health evidence before remaining configuration. See the
-[recovery execution sequence](docs/disaster-recovery.md#rebuild-or-rehearse).
-
-Download the refreshed [Administrator and User Guide in PDF](docs/manuals/README.md)
-with current simulated screenshots and operational procedures for deployment,
-post-configuration, PE account verification, certificate trust and appliance
-updates. Documentation was reviewed against merged application revision
-`a3c9c79` on 2 November 2026. The current consolidated application bundle is
-`v1.8.5-rc1-636f191`; historical bundles and release documents remain unchanged.
-
-The [revision 3 cluster deployment process](docs/cluster-deployment-process.md)
-shows the ten stages from design to operational acceptance, with approval,
-password-authentication, post-configuration and verification gates. It is also
-included in the PDF guide as a landscape appendix with enlarged stage views.
-
-Local Compose rebuilds use a versioned image and pass the release/build identity
-into Docker. A build guard rejects stale version overrides that disagree with
-the source release. See [Docker build identity](docs/docker-build-identity.md)
-before rebuilding or replacing a locally pinned image.
-
-Updated source builds report safe, stage-specific Create Local Users (PE)
-failures, distinguishing credential resolution, TLS trust/identity, network,
-HTTP access, account creation, role assignment and verification errors.
-See [PE local-user diagnostics](docs/pe-local-users.md#failure-diagnostics).
-
-Updated source builds also provide **Set Prism Login Title (PE)** as a standalone
-script and pipeline step, with title-only Configure Cluster compatibility,
-credential checks and fresh read-back verification. See the
-[PE login-title guide](docs/pe-login-title.md) for usage and the legacy API
-compatibility boundary. Importing YAML into an older appliance is insufficient.
-
-Updated source builds fail registration jobs when `Register_to_PC` reports
-`CAN'T VERIFY` or `FAIL`, even with exit code zero, and show redacted verification
-exception details from the bundled runtime.
-Updated source builds also require fresh replacement-admin authentication, skip
-unrequested password changes, and verify requested storage-container properties.
-See [PE post-configuration verification](docs/pe-post-configuration-verification.md).
-
-[![Current candidate: v1.8.5-rc1](https://img.shields.io/badge/current_candidate-v1.8.5--rc1-blue)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1)
-[![Stable: v1.8.4](https://img.shields.io/badge/stable-v1.8.4-green)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4)
-
-Download the [v1.8.5-rc1 prerelease and update bundle](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1).
-See the [RC validation checklist](docs/releases/v1.8.5-rc1-readiness.md),
-[release notes](release-notes-v1.8.5-rc1.txt), and
-[installation checklist](install-checklist-v1.8.5-rc1.md).
-The latest stable release remains v1.8.4 until the final release gates pass.
-GitHub's **Latest** label and `/releases/latest` link refer to that stable release,
-not the current release candidate. See the [release-document website](https://virtuarchitect.github.io/ZTF-Orchestrator/releases/)
-or [repository release directory](docs/releases/README.md)
-for current downloads and archived version-specific instructions.
-
-Read-only [live Prism Element drift monitoring](docs/live-pe-drift-monitoring.md)
-collects DNS, NTP and Pulse settings on every scheduled run. Drift schedules have
-explicit edit controls; live API compatibility requires environment-specific UAT.
-New source builds distinguish certificate trust, hostname/IP SAN mismatch and
-network failures with sanitized guidance; failed reads remain **Unknown** and
-TLS verification remains mandatory. See [connection diagnostics](docs/live-pe-drift-monitoring.md#connection-diagnostics).
-
-**New to ZTF-Orchestrator?** Watch [00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/) and the complete 15-part user-guide series. The narrated videos cover deployment, post-configuration, Disaster Recovery, monitoring, updates and specialist/preview features. All console examples are simulated; preview features retain their stated boundaries. See the [video guide and transcripts](docs/user-guide-videos.md).
-
-Current screenshots, refreshed on 2 November 2026, show the v1.8.5-rc1 frontend with simulated demo data, not
-live infrastructure or proof of completed UAT. [Screenshot provenance](docs/assets/readme/v1.8.5-rc1/README.md).
-
-<p>
-  <a href="https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough"><strong>Watch the v1.8.5-rc1 simulated controlled-UAT candidate demo (90 seconds)</strong></a>
-  &nbsp;|&nbsp;
-  <a href="https://virtuarchitect.github.io/ZTF-Orchestrator/demo/"><strong>Try the static demo</strong></a>
-  &nbsp;|&nbsp;
-  <a href="docs/demo/README.md">Demo and simulator guide</a>
-  &nbsp;|&nbsp;
-  <a href="docs/production-readiness-boundary.md">Validation boundary</a>
-</p>
-
-[![v1.8.5-rc1 simulated controlled-UAT candidate demo, 90 seconds](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural-poster.jpg)](https://www.johngoulden.de/projects/ztf-orchestrator.html#candidate-walkthrough)
-
-**Earlier candidate walkthrough (historical navigation):** this narrated v1.8.5-rc1 screen tour
-uses simulated data, with normal-rate neural narration and English captions.
-It does not connect to or operate live infrastructure and is not proof of
-completed UAT or production readiness. **v1.8.4 remains the latest stable release.**
-
-[Direct MP4](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural.mp4) | [English captions](https://www.johngoulden.de/assets/ztf-orchestrator-v1.8.5-rc1-simulated-candidate-demo-90s-natural.vtt)
-
-The [earlier-version video](https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/docs/assets/video/ztf-orchestrator-product-demo-90s-pro.mp4) and visual tour
-remain historical illustrations; they have not been relabelled as RC captures.
-Current candidate screens are shown below.
-
-A web-based installer and configuration orchestrator for the
-[Nutanix ZeroTouch Framework](https://github.com/nutanixdev/zerotouch-framework)
-and guided
-[Nutanix Kubernetes Platform](https://www.nutanix.com/products/cloud-native/kubernetes-platform)
-automation via the optional
-[NKP ZeroTouch Framework](https://github.com/VirtuArchitect/nkp-zerotouch-framework)
-integration.
-
-> ZTF-Orchestrator is an independent community operations layer for Nutanix
-> automation workflows. It is not affiliated with or supported by Nutanix, and
-> production use requires environment-specific validation.
-
-Classic Foundation responses use a grouped node
-imaging/configuration phase and explicit cluster status; separate AHV/AOS
-milestones are only shown when reported. Terminal job outcomes supply the
-overall execution result without fabricating missing phase history.
-
-Prism Element initial password changes are available in Scripts and ordered
-pipelines as **Change Default Admin Password (PE)**. See the
-[password-change procedure](docs/pe-admin-password-change.md) for credential
-references, confirmation, and post-change verification requirements.
-
-Updated source builds also expose **Create Local Users (PE)** in Scripts and
-pipelines, with an eight-user example, separate credential references, verified
-HTTPS and admin-role verification. Existing passwords are not reset. See the
-[PE local-user guide](docs/pe-local-users.md); PE API compatibility remains a UAT gate.
-
-Configure Cluster uses the installed ZTF native per-cluster schema for initial
-password changes, EULA, Pulse and optional cluster settings. See the
-[initial configuration guide](docs/cluster-initial-configuration.md).
-
-In the Foundation VM workflow, use **Refresh inventory** and select an installed
-AOS package before running Dry Run. Save or download the workflow configuration
-to reuse the selection.
-
-Foundation VM deployments include a persistent phase/node telemetry view in
-execution and saved jobs. Missing telemetry is shown as "Not reported", not
-assumed complete; verify the actual Foundation VM response mapping during UAT.
-
-The [Cluster Storage Standard workflow](docs/cluster-storage-standard.md) accepts
-three container definitions per cluster, verifies replacements and discovers the
-numeric-suffix default container for independently approved cleanup. VDisk blockers
-stop cleanup; validation is simulated and no live cleanup is implied.
-
-New source also offers **PE-direct** connection modes for [AHV uplink migration](docs/ahv-uplink-migration.md) (pinned CVM SSH) and [DARE](docs/dare-workflow.md) (PE v2 with existing Local KMS), without Prism Central. TLS verification is enabled by default; an explicit per-run exception requires a reason, audit trail and exact-plan independent approval. SSH host-key checks remain mandatory. Live writes stay disabled until representative hardware validation.
-
-The [DARE wizard](docs/dare-workflow.md) provides administrator-only discovery,
-read-only preflight and independent approval for cluster-wide software encryption
-with Native KMS (Local). Live enablement is off by default and requires lab
-validation on the target Prism versions.
-
-## Product Screenshots
+These captures predate the latest YAML Studio and console retirement changes.
+They retain their original provenance and illustrate historical navigation,
+including retired integrations. The main Overview image above is also a
+simulated demo capture, not live validation.
 
 | Dashboard | YAML Studio |
 |---|---|
@@ -328,1064 +309,52 @@ validation on the target Prism versions.
 |---|---|
 | ![v1.8.5-rc1 Upgrade Advisor, simulated](docs/assets/readme/v1.8.5-rc1/upgrade-advisor.png) | ![v1.8.5-rc1 workflow catalog, simulated](docs/assets/readme/v1.8.5-rc1/workflow-catalog.png) |
 
-## How It Works
+[Screenshot provenance](docs/assets/readme/v1.8.5-rc1/README.md)
 
-```text
-Browser UI
-  React 18, TypeScript, Tailwind CSS
-  Dashboard, workflows, scripts, jobs, approvals, NKP profiles, evidence
-        |
-        | REST API, Server-Sent Events, bearer session token
-        v
-Flask application
-  Auth/RBAC, validation, allowlists, audit logging, config management
-        |
-        +--> Storage
-        |     File-backed JSON for local/manual use
-        |     PostgreSQL documents, sessions, audit events, and backups for Docker/appliance use
-        |
-        +--> Durable job queue and background workers
-        |     Persisted logs, cancellation, estimated progress, execution history
-        |
-        +--> Approval gates, schedules, pipelines, drift checks, validation evidence
-        |
-        +--> Execution adapters
-              ZTF 1.x: python main.py --workflow/--script ...
-              NKP: allowlisted safe phases via nkp-zerotouch-framework
-                    |
-                    v
-              Nutanix infrastructure
-              Prism Central, Prism Element, Foundation Central, registries, NKP targets
-```
+</details>
 
-ZTF-Orchestrator is the control plane and evidence layer. ZeroTouch Framework
-and the NKP framework remain the automation engines that interact with Nutanix
-systems.
+## Development
 
-## Core Operator Workflow
-
-1. Configure the ZTF path, Python runtime, config directory, NKP path, and
-   connection defaults.
-2. Generate, import, or edit workflow YAML, global configuration, NKP deployment
-   profiles, or imported examples.
-3. Validate inputs, compatibility, readiness, and generated YAML before
-   execution.
-4. Request and approve controlled work when the selected workflow or NKP phase
-   requires governance.
-5. Submit the workflow, script queue, pipeline, schedule, parallel run, or NKP
-   safe phase as a durable job.
-6. Watch persisted logs, progress estimates, task IDs, execution history, audit
-   events, and downloadable validation evidence.
-
-## Choose An Install Path
-
-| Goal | Recommended path |
-|---|---|
-| Quick local trial on Linux or macOS | One-command installer |
-| Quick local trial on Windows | PowerShell installer |
-| Small-team server with durable state | Docker Compose with PostgreSQL |
-| AHV/VM-based appliance | Appliance kit |
-| Existing air-gapped environment | Internal Git/PyPI mirrors plus the air-gapped guidance |
-| Frontend or backend development | Manual install plus Vite development mode |
-
-## ZeroTouch Framework Compatibility
-
-ZTF-Orchestrator's workflow and script launcher targets the legacy
-ZeroTouch Framework 1.x CLI (`python main.py --workflow ...` and
-`python main.py --script ...`). The default legacy install, Docker, appliance,
-and container publishing paths therefore pin the ZTF 1.x runtime to
-**v1.5.2**.
-
-`nutanixdev/zerotouch-framework` v2.0.0 is a ground-up rewrite with a new
-`ztf plan/apply/refresh/destroy` command model. Upstream v2.0.0 does not yet
-port the Foundation Central imaging workflows, Prism Element v2 script family,
-pod workflows, Calm/NCM workflows, NDB workflow, or legacy NKE/Karbon flows that
-this Orchestrator release exposes. If a ZTF 2.x checkout is configured,
-ZTF-Orchestrator reports it as incompatible and blocks legacy workflow/script
-execution instead of launching it through the wrong CLI.
-
-ZTF 2.x support is implemented as a separate IaC/plan-apply lane, not as a
-drop-in replacement for the current workflow catalog. Admins enable the runtime
-from **Settings > Runtime** by configuring the ZTF 2.x checkout, CLI command,
-and project directory. Operators then use **ZTF 2.x IaC**, **Workflows 2.x**,
-or **Scripts 2.x** for governed `plan` submissions. `apply` and `destroy`
-remain approval-bound from the ZTF 2.x IaC path and require a successful source
-plan job plus an approved request bound to the plan ID, input hash, global
-hash, and state path.
-
-## Engineering Quality
-
-This project follows a production-grade quality bar. Changes are expected to
-include relevant tests, smoke-test evidence, and security review when sensitive
-code is touched. CI checks should pass before merge.
-
-Quality gates include:
-
-- Unit, integration, or end-to-end tests as appropriate.
-- Linting and type checks where supported.
-- Build verification.
-- Manual or automated smoke testing for changed workflows.
-- Security review for auth, user data, permissions, file handling,
-  dependencies, and external input.
-
-## Security and Validation
-
-Every pull request to `main` runs CI with backend tests, frontend build checks,
-Python dependency auditing through `pip-audit`, and frontend dependency auditing
-through `npm audit --audit-level=high`. Merges to `main` also run the Docker
-image build and container health smoke test.
-
-The repository includes a baseline security assessment covering authentication,
-RBAC, storage, execution controls, dependency posture, and deployment hardening.
-That assessment is a repository-level review, not a third-party penetration
-test or production assurance certification. Environment-specific UAT remains
-required before representing any deployment as production validated.
-
-## Operational Governance
-
-Operator controlled/UAT-ready deployments should use the
-[runbook index and control matrix](docs/runbooks/README.md), the
-[architecture index](docs/architecture/README.md), the
-[governance index](docs/governance/README.md), the
-[UAT index](docs/uat/README.md), and the
-[testing index](docs/testing/README.md). These documents define the minimum
-procedures, approvals, backups, disaster recovery, failed-job recovery,
-emergency stop, and evidence capture expected before treating a deployment as
-governed UAT rather than a local lab or simulator proof.
-
-## Why It Exists
-
-ZeroTouch Framework is powerful automation. ZTF-Orchestrator makes that power
-easier to consume in day-to-day operations by adding:
-
-- Guided configuration instead of hand-written YAML for common workflows.
-- YAML Studio for generating, validating, saving, and exporting ZTF-compatible
-  Nutanix YAML before any approval-gated execution path.
-- Appliance operations for AHV artifact archive tracking, first-boot checks,
-  NKP readiness review, ZTF compatibility mode visibility, and air-gapped
-  appliance update package handling.
-- Post-cluster baseline wizards that turn operator checklists into guarded
-  plans for Prism Element, AHV/CVM security, monitoring, certificates, network,
-  and hardware baselines without embedding site-specific values.
-- Planning-only native Foundation deployment intents for heterogeneous
-  multi-site cluster design across HCI, compute-only, storage-only, and mixed
-  topologies, including read-only image source, node imaging plan, cluster
-  formation plan, post-create validation plan, network, secret reference,
-  secret resolution plan, secret-store binding review, discovery contract, and discovery reconciliation manifests,
-  execution graph planning for site waves, cluster waves, dependencies, deployment-type
-  actions, provider preflight, and per-cluster evidence packs plus provider adapter scaffolds,
-  adapter readiness, secret-store provider contract review, secret lease
-  execution review, secret audit persistence review, deployment policy review, execution admission review,
-  execution adapter contract review, execution request review, execution request
-  persistence admission review, resume checkpoint
-  manifests, dry-run execution ledgers, execution permit review, execution lock
-  plans, execution audit plan review, execution retention plan review, recovery
-  plan review, restart/resume review, backup/restore review, runner readiness
-  review, mutating enablement review, execution submission review, execution
-  submission persistence admission review, queue persistence review,
-  queue persistence admission review, job persistence admission review, mutating adapter binding
-  review, controlled UAT lane selection review, controlled UAT lane persistence
-  admission review, controlled UAT hardware reservation review, controlled UAT
-  reservation persistence admission review, controlled UAT entry issuance review,
-  controlled UAT entry persistence admission review, controlled UAT start
-  readiness review, controlled UAT start persistence admission review,
-  controlled UAT runner admission review, controlled UAT runner persistence
-  admission review, controlled UAT execution authorization review, execution
-  authorization persistence admission review,
-  UAT evidence acceptance review,
-  controlled UAT entry review, controlled UAT scope review, controlled UAT
-  runbook review, controlled UAT security review, controlled UAT operations
-  review, controlled UAT signoff review, job state planning, durable read-only
-  review jobs, adapter promotion review, UAT checklist, and adapter UAT
-  rehearsal generation, adapter activation review,
-  adapter enablement registry review, adapter allow-list review, adapter load
-  plan review, adapter package provenance review, adapter SBOM review, adapter
-  runtime isolation review, adapter runtime admission review, adapter execution
-  preflight review, adapter target connectivity review, adapter credential
-  handoff review, adapter command invocation review, redacted review packet
-  export, adapter output evidence review, retained evidence export review,
-  Validation Evidence capture, and approval binding review.
-- Installed Build visibility so patched releases and appliance updates can be
-  identified by version tag, source ref, commit, image tag, and update package.
-- Durable job execution instead of browser-bound terminal sessions.
-- PostgreSQL-backed operational state for Docker deployments.
-- RBAC, approvals, audit logs, and validation status for governance.
-- Drift checks, schedules, pipelines, and parallel execution for repeatability.
-
-It complements Prism Central and Foundation Central today. The native Foundation
-engine roadmap defines a controlled path for ZTF-Orchestrator to own
-heterogeneous deployment planning and, after UAT, selected execution adapters.
-See [Native Foundation Engine Roadmap](docs/foundation-engine-roadmap.md).
-
----
-
-## Requirements
-
-| Requirement | Version | Notes |
-|---|---|---|
-| Python | **3.10+** | 3.10, 3.11, and 3.12 are all supported |
-| pip | any | Bundled with Python 3.10+ |
-| git | any | Required to clone both repos |
-| Node.js | 18+ | Development mode only - not needed to run the tool |
-
-> **Windows users:** `python` and `python3` both work depending on your installation.
-> Always use a virtual environment (see below) to avoid polluting your system Python.
-
-> **Port note (Windows):** Hyper-V reserves ports 4940–5039. If the server fails to
-> start on the default port 5001, set `$env:ZTF_PORT = "8080"` before starting.
-
-<img width="1719" height="1224" alt="image" src="https://github.com/user-attachments/assets/8ace42c2-0820-42c9-9a8f-eb79391f7440" />
-
-
-
-
-
-
-
-
-
-Dashboard view with operational readiness, queue pressure, governance,
-schedule, storage, and backup posture panels.
-
-
----
-
-## Installation
-
-For a detailed step-by-step guide covering every supported installation option,
-including Docker, appliance, Kubernetes starters, manual installs, and
-air-gapped deployment, see
-[Installation Guide](docs/installation-guide.md).
-
-For a first AHV appliance deployment, use the [Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) and watch
-[Part 16 — AHV Appliance Deployment and SSH Setup](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16).
-
-### Option A: One-Command (Linux / macOS) - Recommended
+Use the Python/runtime requirements in the [installation guide](docs/installation-guide.md)
+and a Node.js version compatible with the locked Vite toolchain for frontend
+work. Node.js is not required to run the pre-built application.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/install.sh | bash
-```
-
-With custom options:
-
-```bash
-ZTF_PORT=8080 ZTF_INSTALL_DIR=/opt/ztf ZTF_REF=v1.5.2 bash install.sh
-```
-
-The script automatically:
-1. Checks Python 3.10+, pip, and git are present
-2. Clones ZTF-Orchestrator into `~/ztf/ZTF-Orchestrator`
-3. Clones ZeroTouch Framework `v1.5.2` into `~/ztf/zerotouch-framework`
-4. Creates a shared Python virtual environment
-5. Installs all dependencies for both components
-6. Starts ZTF-Orchestrator (admin credentials printed on first run)
-
-### Option B: One-Command (Windows PowerShell) - Recommended
-
-```powershell
-iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/VirtuArchitect/ZTF-Orchestrator/main/install.ps1'))
-```
-
-With a custom port:
-
-```powershell
-$env:ZTF_PORT = "8080"; .\install.ps1
-```
-
-To override the pinned legacy framework ref for testing:
-
-```powershell
-$env:ZTF_REF = "v1.5.2"; .\install.ps1
-```
-
-### Option C: Docker
-
-```bash
-git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git
-cd ZTF-Orchestrator
-cp .env.example .env
-# Edit .env and set a unique POSTGRES_PASSWORD before first start.
-docker compose up -d
-docker compose logs -f   # admin password printed here on first run
-```
-
-Open **http://localhost:15001** for the Docker Compose deployment. The app
-still listens on `5001` inside the container; change `ZTF_HOST_PORT` in `.env`
-if your workstation needs a different host port.
-
-For one-off Windows PowerShell testing, the PostgreSQL password and database URL
-must use the same password:
-
-```powershell
-$env:POSTGRES_PASSWORD="use-a-unique-value"
-$env:ZTF_DATABASE_URL="postgresql://ztf:use-a-unique-value@postgres:5432/ztf_orchestrator"
-docker compose up -d --build
-```
-
-For repeatable starts, put those values in `.env` instead of setting them only
-for the current PowerShell session.
-
-ZTF is cloned and installed inside the image at build time - no separate volume mount required.
-PostgreSQL is started by default and stores users, sessions, execution history,
-approvals, schedules, drift results, execution jobs, and audit events. Workflow
-and script runs are submitted as durable jobs, then processed by background
-workers so execution is no longer tied to an open browser request.
-
-For simple file-backed testing without PostgreSQL:
-
-```bash
-docker compose -f docker-compose.file.yml up -d --build
-```
-
-See [PostgreSQL Backend](docs/postgresql-backend.md) for storage-mode details.
-See [Validation Status](docs/validation-status.md) for what has been locally
-validated and what still requires infrastructure UAT.
-See [Prism Central Simulator](docs/prism-central-simulator.md) for local
-Prism-shaped smoke testing without Nutanix hardware.
-See [NKP v2.17 Alignment](docs/nkp-v217-alignment.md) for a traceability matrix
-between the NKP guide, the NKP framework, and the current ZTF-Orchestrator
-integration.
-See [Security Assessment](docs/security/SECURITY_ASSESSMENT.md) for the latest
-repository-level security review and current hardening recommendations.
-
-Starter Kubernetes manifests are available in [k8s](k8s/).
-
-### Option D: Appliance Deployment
-
-For AHV or VM-based deployments, use the reproducible appliance kit in
-[appliance](appliance/). The kit is designed for a small Linux VM running Docker
-Compose, PostgreSQL, and the published ZTF-Orchestrator container image.
-
-The repository does not store QCOW2 or OVA binaries. Large appliance images are
-published as GitHub Actions artifacts or stored in an internal artifact
-repository because GitHub Release assets have a 2 GiB per-file limit. GitHub
-Releases should contain update packages, checksums, manifests, and release
-metadata; full QCOW2 images should be downloaded from the matching Actions run
-or durable internal artifact storage.
-The repo contains:
-
-- a GHCR container publishing workflow;
-- an appliance Compose file that pulls `ghcr.io/virtuarchitect/ztf-orchestrator`;
-- first-boot scripts that generate local secrets on the VM;
-- a systemd unit for appliance lifecycle;
-- cloud-init examples;
-- a reference Packer template for AHV-importable QCOW2 builds.
-
-Quick start on a fresh Linux VM:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y git curl ca-certificates
-git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source
-sudo bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
-```
-
-See [Appliance Kit](appliance/README.md) for AHV sizing, first-boot behavior,
-version pinning, and QCOW2 build guidance.
-
-### Option E: Manual
-
-**Step 1: Clone the repository**
-
-```bash
-git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git
-cd ZTF-Orchestrator
-```
-
-**Step 2: Create a virtual environment**
-
-```powershell
-# Windows (PowerShell)
-python -m venv venv
-venv\Scripts\activate
-```
-
-```bash
-# Linux / macOS
-python3 -m venv venv
-source venv/bin/activate
-```
-
-**Step 3: Install Python dependencies**
-
-```bash
-pip install -r requirements.txt
-```
-
-**Step 4: Start the server**
-
-```bash
-python server.py
-```
-
-Open **http://localhost:5001** — the admin password is printed to the terminal on first run.
-
-The pre-built frontend is served directly by Flask from `dist/`.
-**No Node.js, no `npm install`, no build step required to run the tool.**
-
----
-
-## First Login
-
-The sign-in page presents ZTF-Orchestrator in a single responsive light panel,
-with password visibility controls and a documentation link. Its appearance does
-not change your saved dashboard theme. For access to an existing installation,
-contact your administrator; first-start setup instructions are below.
-
-On the **very first start**, the server creates a default admin account and
-prints the credentials to the terminal:
-
-```
-============================================================
-  First run — default admin account created
-  Username: admin
-  Password: a3f8c2e1d94b7...
-  Change this immediately via Settings > Users.
-============================================================
-```
-
-1. Copy the password from the terminal output
-2. Open **http://localhost:5001** in your browser
-3. Sign in with **username: `admin`** and the printed password
-4. Navigate to **Settings → Users** to create your own account or change the password
-
-### Missed the password?
-
-Delete `users.json` and restart — credentials are printed again on next start:
-
-```powershell
-# Windows (PowerShell)
-Remove-Item "$env:USERPROFILE\.ztf-ui\users.json"
-python server.py
-```
-
-```bash
-# Linux / macOS
-rm ~/.ztf-ui/users.json
-python server.py
-```
-
----
-
-## Features
-
-### Dashboard
-System health overview, recent execution history, quick-action buttons, and
-operational visibility panels. Polls every 30 seconds and includes a manual
-**Refresh** button. Compact sections show deployment readiness, queue pressure,
-governance attention, schedule state, and storage/backup posture:
-ZTF/NKP readiness, NKP deployment profile count, generated NKP configs, queued /
-running / failed / long-running jobs, pending approvals, drifted checks, unknown
-baselines, enabled schedules, next schedule run, last failed schedule, storage
-backend, latest database backup, and backup warnings.
-
-### Setup & Install
-Runtime-aware ZTF installation for **ZTF 1.x Legacy** and **ZTF 2.x IaC**.
-Admins select the runtime lane, run prerequisite checks, then install or update
-the matching checkout from GitHub or an internal mirror. ZTF 2.x installs into a
-separate path and CLI runtime so it does not overwrite the legacy workflow
-runtime. Requires `git` to be on the system PATH.
-
-### Global Config
-Visual editor for `global.yml` — vault type (Local/CyberArk), IPAM method
-(Static/Infoblox), live YAML preview with download.
-
-### YAML Studio
-Guided workbench for authoring, validating, saving, and exporting
-ZTF-compatible Nutanix YAML before execution. YAML Studio now starts from
-operator templates, shows YAML syntax status, credential-reference resolution,
-workflow runnability, and adapter readiness, and keeps field guidance plus the
-runtime command preview beside the editor.
-
-Templates cover Native Foundation Deploy, Cluster Create, Global Config, ZTF
-2.x IaC preview, and blank YAML. Workflow YAML can also be generated from the
-guarded script configuration schema catalogue. Generated YAML can be validated
-server-side, saved into Config Files with the existing backup behavior, or
-exported as a ZIP bundle with validation metadata. YAML Studio does not execute
-workflows or mutate Nutanix infrastructure. Execution remains behind the
-existing workflow, approval, and confirmation paths.
-
-### Workflows 1.x
-
-Each workflow detail page can generate YAML from guided fields, import an
-existing YAML/JSON config for that workflow, preview the active config, download
-it, dry-run it, and submit it through the governed ZTF 1.x execution path.
-
-### Workflows 2.x
-
-ZTF 2.x workflow templates generate `input.yml` plus `global.yml`; **Run Plan**
-submits a `ztf2:plan` job and records plan evidence for later approval-bound
-apply/destroy.
-
-Initial Workflows 2.x templates:
-
-| Workflow | Category |
-|---|---|
-| ZTF 2.x Prism Category | Prism Central |
-| ZTF 2.x Project | Prism Central |
-| ZTF 2.x Subnet Intent | Configuration |
-| ZTF 2.x Image Registration | Workloads |
-| ZTF 2.x VM Deployment | Workloads |
-| ZTF 2.x Security Groups | Configuration |
-| ZTF 2.x Protection Policy | Prism Central |
-| ZTF 2.x Recovery Plan | Prism Central |
-
-These are starter IaC templates and should be validated against the installed
-ZTF 2.x resource schema before live apply.
-
-| Workflow | Category |
-|---|---|
-| Cluster Create | Infrastructure |
-| Imaging Only | Infrastructure |
-| Pod Imaging | Pod Operations |
-| Site Deploy | Infrastructure |
-| Configure Cluster | Configuration |
-| Post-Foundation Baseline | Configuration |
-| PE Monitoring Baseline | Configuration |
-| AHV Security Hardening | Configuration |
-| PE Network Baseline | Configuration |
-| PE Certificate Baseline | Configuration |
-| Hardware OOB Baseline | Configuration |
-| Deploy Prism Central | Prism Central |
-| Configure Prism Central | Prism Central |
-| Pod Config | Pod Operations |
-| Deploy Management PC | Pod Operations |
-| Configure Management PC | Pod Operations |
-| Calm VM Workloads | Workloads |
-| Edge AI Workload | Workloads |
-| NDB Deploy | Services |
-| LCM Update | Lifecycle Management |
-
-Each workflow has form-based configuration, live YAML preview, and one-click
-execution with real-time terminal output. Post-cluster baseline workflows classify
-controls as `apply`, `evidence`, `manual`, or `blocked`; only verified mappings
-execute scripts, while manual and blocked controls are recorded without mutating
-infrastructure.
-
-### Scripts 1.x
-75 ZTF atomic scripts across 12 categories. Searchable and individually executable
-through the legacy ZTF 1.x script launcher. **Multi-script composition:** click
-to add scripts to an ordered queue, reorder with up/down arrows, then run all as
-a single ZTF invocation (`--script A,B,C`).
-
-### Scripts 2.x
-ZTF 2.x converted actions generate `input.yml` plus `global.yml` and submit
-governed `ztf2:plan` jobs. The first action set covers safe declarative
-patterns from the legacy script catalog: category, project, subnet, image, VM,
-security group, protection policy, and recovery plan intents. Imperative PE,
-CVM, Foundation, delete, and power actions remain in Scripts 1.x until a
-verified ZTF 2.x resource contract exists.
-
-| Action | Legacy mapping |
-|---|---|
-| Create Category (PC) | `CreateCategoryPc` |
-| Create Project (PC) | New ZTF 2.x declarative action |
-| Create Subnets (PC) | `CreateSubnetsPc` |
-| Upload Image (PC) | `PcImageUpload` |
-| Create VMs (PC) | `CreateVmsPc` |
-| Create Security Groups (PC) | `CreateAddressGroups`, `CreateServiceGroups` |
-| Create Protection Policy (PC) | `CreateProtectionPolicy` |
-| Create Recovery Plan (PC) | `CreateRecoveryPlan` |
-
-### Config File Manager
-Create, edit, delete YAML/JSON config files. The last 5 versions of each file
-are automatically backed up before any overwrite. A **History** button shows all
-backup versions with timestamps and sizes; each version has a **Restore** action.
-
-### Pipelines
-Chain workflows into named, sequential pipelines. Each step is a workflow + config
-file pair. Steps execute one at a time — a step only starts if the previous step
-succeeded. Failed steps halt the pipeline and remaining steps are marked skipped.
-A live step-progress rail shows pending / running / success / failed / skipped status.
-Pipeline runs are recorded in Execution History with full step results.
-
-### Scheduled Executions
-Automate workflow runs using standard 5-field cron expressions (UTC). Create
-named schedules with per-schedule YAML config. Schedules survive restarts and
-fire automatically via APScheduler. Toggle enable/disable, run immediately
-with **Run Now**, and review last-run status per schedule. Scheduled runs are
-recorded in Execution History and fire webhook notifications.
-
-### Parallel Execution
-Run the same workflow against up to 10 sites simultaneously using a
-`ThreadPoolExecutor` engine. Each site supplies its own YAML config; output
-is captured per site. Overall status is `success`, `partial`, or `failed`.
-Results are stored and browseable with per-site expandable terminal output.
-
-### Approval Gates
-Operators submit approval requests — specifying workflow, YAML config, and
-notes — before executing sensitive operations. Admins approve or reject with
-an optional decision note. Requests auto-expire after 24 hours. A pending
-count badge on the sidebar signals outstanding requests to admins.
-
-v1.5.2+ adds configurable mandatory approval policies in **Settings >
-Governance**. High-impact workflows such as Foundation Central imaging,
-cluster-create, Prism Central deployment/configuration, cluster configuration,
-NDB, and LCM update require a matching approved request ID before direct
-execution. Schedules, pipelines, and parallel runs reject workflows that are
-currently marked approval-mandatory until those automation surfaces have their
-own approval binding.
-
-### Drift Detection
-Compare a saved ZTF config file against the last successful applied config or a
-pasted current-state JSON/YAML snapshot. Results are classified as **Matched**,
-**Changed**, **Missing**, **Unexpected**, or **Unknown** and stored in drift
-history for later review.
-
-### Upgrade Advisor
-Read-only Nutanix pre-upgrade risk assessment with bounded PE inventory reads,
-PC HTTPS product-header detection, saved assessment snapshots and actionable
-readiness findings. Collection errors and missing versions remain explicit;
-LCM/NCC/firmware checks remain manual and live target validation is required.
-Operators enter current and
-target component versions, mark supporting evidence such as LCM prechecks,
-release-note review, compatibility review, Prism Central context, and dark-site
-bundle review, then receive evidence-backed findings classified as **Blocked**,
-**Warning**, **Review**, **Unknown**, or **Clear**. Curated source packs let
-operators import customer-owned KB summaries, release-note findings, support-case
-notes, lab findings, or internal standards as additional rules. Results can be
-exported as a JSON/Markdown evidence bundle. The implementation does not execute
-LCM updates or mutate clusters. See
-[`docs/nutanix-upgrade-risk-advisor.md`](docs/nutanix-upgrade-risk-advisor.md).
-
-### Execution History
-Last 1,000 execution records — workflow name, status, duration, user, timestamp.
-**Re-run:** expand any row to re-run the workflow or script immediately using the
-original stored config — no form re-entry required.
-
-### Jobs / Queue
-View durable execution jobs created by workflow and script submissions. The page
-shows active, queued, running, failed, cancelled, and interrupted job counts,
-phase-based estimated progress, persisted job logs, worker timestamps, return
-codes, and cancellation controls for queued or running jobs. Admins can delete
-terminal queue records after review; queued and running records must be
-cancelled or completed before deletion. Progress percentages are orchestration
-estimates based on queue state, process launch, and observable ZTF output. When
-ZTF or NKP output includes Nutanix task UUIDs, the job captures and displays
-those task IDs for follow-up in Prism Central or Prism Element.
-Native Foundation review jobs use the same durable job surface to generate
-read-only plan, evidence, runner-readiness, backup/restore, mutating-gate,
-submission-gate, queue-persistence, queue-persistence admission,
-adapter-binding, UAT lane-selection, UAT lane persistence admission,
-hardware reservation, and reservation
-persistence admission, entry issuance, and entry persistence admission
-logs without contacting hardware, Foundation, Prism Element, providers, or
-secret stores.
-
-### NKP Framework
-Optional integration with
-[`VirtuArchitect/nkp-zerotouch-framework`](https://github.com/VirtuArchitect/nkp-zerotouch-framework)
-for Nutanix Kubernetes Platform automation. The first integration exposes
-install/update, framework status, and safe phases only: `validate`, `prepare`,
-`generate`, `registry`, `deploy`, `verify`, `kubeconfig`, `secrets`, `backup`,
-`runs`, and `ci`. Apply, registry push, upgrade, and destroy actions remain
-blocked server-side. Controlled NKP phases (`prepare`, `generate`, `registry`,
-and `deploy`) require an approved Approval Gate request before they can be
-queued. NKP phase output is submitted through Jobs / Queue so logs, estimated
-progress, detected task IDs, history, and cancellation follow the same
-operational model as ZTF jobs.
-
-The NKP page also includes a Deployment Profile Builder. Operators can define
-the NKP binary/source details, Prism Central endpoint, credential references,
-cluster type/version/VIP, DNS/NTP/gateway/subnet information, VLAN/domain
-settings, and node inventory with host/CVM/IPMI addresses. Saved profiles can be
-validated and rendered into NKP example-style YAML in the existing Config Files
-area, then used by the safe-phase launcher. The generated YAML is intentionally
-transparent and editable so teams can align it with the exact NKP ZeroTouch
-schema they adopt.
-
-Saved NKP profiles are versioned. Each create, update, and restore action writes
-an append-only profile revision entry with the operator, timestamp, revision
-number, and full profile snapshot. Restoring an older profile creates a new
-revision rather than rewriting history. When an NKP safe-phase job is submitted
-from a saved profile, the queue record stores trace metadata including profile
-ID, profile name, profile revision, template, generated config file, approval ID,
-and schema validation status. If a stale profile revision is submitted, the API
-rejects it and asks the operator to refresh before launching.
-
-NKP Deployment Template Packs provide guided starting points for common
-deployment patterns: **Management Cluster**, **Workload Cluster**, and
-**Air-Gapped / Local Registry**. Each pack includes profile defaults, required
-fields, optional fields, and a preflight checklist. Applying a template prepares
-an editable profile draft; operators still review, fill in site-specific values,
-check readiness, and save before generating YAML or submitting approval-gated
-phases.
-
-Template metadata is stored with the profile and included in generated YAML.
-The preview action lets operators inspect template-specific YAML before saving
-or writing a config file. Readiness checks also adapt to the selected pack:
-management clusters warn when undersized, workload clusters require a
-management-cluster reference, and air-gapped profiles require a local registry
-and staged NKP binary path.
-
-The NKP page also discovers installed examples from `configs/environments` in
-the configured NKP framework path. ZTF-Orchestrator infers the expected YAML
-shape from those examples, validates previews against that shape, and can import
-an example into an editable deployment profile. This keeps generated YAML
-aligned with the NKP framework installed on the appliance instead of relying on
-a static, guessed schema.
-
-The NKP Binary Manager lets operators register NKP binaries or bundles already
-staged on the Orchestrator host, upload smaller bundles into the Orchestrator
-data directory, record version/source/checksum/default metadata, and apply a
-managed binary path directly to a deployment profile. Large production bundles
-are best staged on the VM/appliance and registered by path rather than uploaded
-through the browser.
-
-Deployment readiness validation scores each NKP profile before execution. The
-readiness check verifies required fields, Prism Central endpoint format,
-optional API reachability, subnet membership, duplicate IPs, VLAN range, NKP
-binary/source path hints, and generated YAML syntax. Profiles are marked
-**ready**, **needs attention**, or **blocked** with pass/warning/fail details.
-Pasted NKP YAML is parsed before a safe-phase job is queued.
-
-### Validation Evidence
-Timestamped evidence records for NKP deployment readiness and generic ZTF
-workflow UAT. Admins and operators can create an evidence run from a saved NKP
-profile, completed workflow/script execution, or saved YAML/JSON config; viewers
-can read and download existing records. NKP bundles capture readiness scoring,
-generated YAML, schema validation, optional NKP CLI compatibility output, notes,
-and linked approval/job/task references where available. ZTF workflow UAT
-bundles capture the workflow or script name, config filename, server-computed
-config SHA-256, YAML/JSON parse result, approval/job/task references, redacted
-execution output when linked to a job, notes, and a Markdown summary. Downloads
-are ZIP bundles intended for change records, customer UAT, and handover packs.
-
-### Installed Build Traceability
-Settings > About shows the exact Installed Build for the running deployment.
-The value includes the base version tag plus source ref, commit, container image,
-and update package metadata when available. Use this field, not only the footer
-version, when confirming which patch or appliance update is installed.
-
-Use
-[`docs/sanitized-uat-evidence-record.md`](docs/sanitized-uat-evidence-record.md)
-as the narrative pattern for sanitized non-NKP workflow evidence.
-Foundation Central cluster-create and imaging validation is tracked separately in
-[`docs/foundation-central-validation.md`](docs/foundation-central-validation.md).
-PostgreSQL backup/restore UAT drills should follow
-[`docs/postgresql-backup-restore-drill.md`](docs/postgresql-backup-restore-drill.md).
-ZTF 2.x support is intentionally separated into the
-[`docs/ztf-2x-plan-apply-roadmap.md`](docs/ztf-2x-plan-apply-roadmap.md)
-plan/apply roadmap.
-
-### Audit Log
-Structured log viewer (admin only). Displays the last 200 entries from
-`ztf-orchestrator.log` — timestamp, level badge, message, user, IP, and status.
-Filter by level (ALL / INFO / WARNING / ERROR) or free-text search. Expandable
-rows show all additional structured fields.
-
-### Users
-Admin-only user management: create accounts, assign roles, reset passwords.
-Three roles are available:
-
-| Role | Permissions |
-|---|---|
-| **admin** | Full access — settings, global config, user management, execution |
-| **operator** | Execute workflows, manage config files, read executions |
-| **viewer** | Read-only — configs, executions, system check |
-
-
-Open **Administration > Users > Sessions** as an administrator to review
-server-side unexpired sign-ins, signed-in users, total sessions and recently
-active users. Recently active means sign-in or an explicit reported trusted
-interaction in a visible console tab within five minutes; background polling
-does not count. Reports are throttled to once per 30 seconds per mounted console
-activity reporter, and never extend expiry. Unexpired sessions do not prove a
-browser is open. Legacy activity can be **Not tracked**.
-
-Use **Revoke** to confirm removal of one sign-in using its safe session UUID;
-revoking **This session** signs you out. Revocation is audited. In-flight requests
-may finish and durable jobs continue. See [Session management](docs/session-management.md)
-for the procedure, API, PostgreSQL migration and rollback boundaries.
-
-### Settings
-ZTF path, Python executable, config directory. Write access is admin-only.
-**Storage:** view active backend, database location, retention windows, and
-create/download admin-only PostgreSQL logical backups. Admins can also restore
-a backup from Settings after a guarded confirmation flow; the app creates a
-safety backup first and recommends a service restart after restore.
-**Notifications:** set a Webhook URL to receive a `POST` on every workflow or
-script completion (payload: `workflow`, `status`, `returnCode`, `user`,
-`timestamp`, `executionId`).
-
----
-
-## Security Model
-
-> **Designed for single-operator or small-team use on a trusted internal network.**
-> Not designed for internet exposure without a TLS reverse proxy and additional hardening.
-
-### Authentication
-All API endpoints require a valid session token obtained via `POST /api/auth/login`.
-Passwords are bcrypt-hashed. Session tokens expire after 8 hours.
-
-### Security controls
-- bcrypt password hashing (cost factor 12)
-- Session tokens (64-char hex, 8-hour TTL, invalidated on logout)
-- Rate limiting: 10/min on login, 10/min on execute, 2/min on install
-- All subprocess calls use argument lists — no `shell=True`
-- Workflow and script IDs validated against an allowlist before execution
-- Path traversal protection on all config file operations
-- YAML `safe_load` validation before accepting any config content
-- `Content-Security-Policy`, `X-Frame-Options`, `Permissions-Policy` headers
-- Docker Compose publishes the application to `127.0.0.1:15001` by default
-
-### Deployment boundary
-
-| Context | Status |
-|---|---|
-| Local workstation, single user | Supported |
-| Team server, internal network | Supported — add nginx + TLS in front |
-| Internet-exposed | Not supported — requires TLS reverse proxy and firewall rules |
-
-For vulnerability reporting and baseline security guidance, see
-[SECURITY.md](SECURITY.md). For the latest repository-level assessment, see
-[docs/security/SECURITY_ASSESSMENT.md](docs/security/SECURITY_ASSESSMENT.md).
-
----
-
-## Architecture
-
-```text
-Browser (React 18, TypeScript, Tailwind CSS)
-    |
-    | REST API + Server-Sent Events
-    | Authorization: Bearer <session-token>
-    v
-Flask server (server.py, default 127.0.0.1:5001 for manual runs)
-    |
-    +-- Auth, RBAC, security headers, rate limits, audit logging
-    +-- Config files, YAML validation, drift checks, approvals, schedules
-    +-- NKP profiles, binary registry, readiness checks, validation evidence
-    |
-    +-- Storage backend
-    |     File mode: JSON documents under ZTF_DATA_DIR
-    |     PostgreSQL mode: documents, sessions, audit events, backups
-    |
-    +-- Durable execution jobs
-          Worker threads launch subprocesses with argument lists only
-          No shell invocation; workflow/script/phase allowlists are enforced
-          Logs, status, return code, task IDs, and history are persisted
-          |
-          +-- ZeroTouch Framework 1.x
-          |     python main.py --workflow X -f config.yml
-          |     python main.py --script A,B,C -f config.yml
-          |
-          +-- NKP ZeroTouch Framework
-                Safe phases only; controlled phases require approval
-                |
-                v
-          Nutanix infrastructure
-          Prism Central, Prism Element, Foundation Central, registries, NKP targets
-```
-
----
-
-## Environment Variables
-
-Manual/file-backed defaults work out of the box. PostgreSQL-backed Docker
-deployments require `POSTGRES_PASSWORD` in `.env` before first start. Override
-other settings via environment variables or a `.env` file (see `.env.example`).
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `ZTF_DATA_DIR` | `~/.ztf-ui` | Persistent data directory |
-| `ZTF_PATH` | `~/zerotouch-framework` | ZTF installation path |
-| `ZTF2_PATH` | `/opt/zerotouch-framework-2x` in Docker/appliance | Optional ZTF 2.x checkout path used by the separate IaC lane |
-| `ZTF2_COMMAND` | `/opt/ztf2-python/bin/ztf` in Docker/appliance | ZTF 2.x CLI command used for plan/apply jobs |
-| `ZTF_NKP_PATH` | `~/nkp-zerotouch-framework` | Optional NKP ZeroTouch Framework path |
-| `ZTF_PYTHON` | current Python | Python executable for running ZTF |
-| `ZTF_REF` | `v1.5.2` | ZeroTouch Framework 1.x branch/tag used by Docker and installer paths. Current legacy workflows require ZTF 1.x. |
-| `ZTF_PORT` | `5001` | Flask listen port |
-| `ZTF_HOST_PORT` | `15001` | Host-side Docker Compose port mapped to container port `5001` |
-| `ZTF_HOST_BIND` | `127.0.0.1` | Host-side Docker Compose bind address |
-| `ZTF_PUBLIC_URL` | empty | Optional URL shown in the startup banner; Docker Compose sets this to the host URL |
-| `ZTF_BIND_HOST` | `127.0.0.1` | Flask bind address for manual runs. Docker sets `0.0.0.0` inside the container. |
-| `ZTF_EXEC_TIMEOUT` | `3600` | Max workflow execution time (seconds) |
-| `ZTF_EXEC_WORKERS` | `1` | Background execution worker count |
-| `ZTF_BACKUP_TIMEOUT` | `300` | Max PostgreSQL backup runtime (seconds) |
-| `ZTF_NKP_BINARY_MAX_UPLOAD` | `536870912` | Max NKP binary upload size in bytes |
-| `ZTF_TOKEN_TTL` | `28800` | Session token lifetime (seconds, default 8 h) |
-| `ZTF_LOG_LEVEL` | `INFO` | Log level: DEBUG, INFO, WARNING, ERROR |
-| `ZTF_CONFIG_BACKUPS` | `5` | Config file backup versions to retain |
-| `ZTF_WEBHOOK_ALLOWED_HOSTS` | empty | Optional comma-separated webhook hostname allowlist |
-| `ZTF_WEBHOOK_ALLOW_INSECURE` | `false` | Lab-only option to allow HTTP webhooks |
-
----
-
-## Docker
-
-```bash
-# Build and start (first-run admin password printed to logs)
-cp .env.example .env
-# Edit .env and set a unique POSTGRES_PASSWORD.
-docker compose up -d
-docker compose logs -f
-
-# Stop
-docker compose down
-```
-
-ZTF 1.x and ZTF 2.x are cloned and baked into the image at build time — no
-separate volume mount or manual ZTF installation required for either default
-runtime. Use build args to pin specific ZTF versions or point to an internal
-mirror:
-
-```bash
-ZTF_REPO_URL=https://gitea.internal/ztf.git ZTF_REF=v1.5.2 ZTF2_REPO_URL=https://gitea.internal/ztf.git ZTF2_REF=v2.0.0 docker compose up -d
-```
-
-| Build arg | Default | Purpose |
-|---|---|---|
-| `ZTF_REPO_URL` | GitHub URL | Git URL to clone ZTF 1.x from during image build |
-| `ZTF_REF` | `v1.5.2` | Git branch or tag to check out for the legacy ZTF 1.x runtime |
-| `ZTF2_REPO_URL` | GitHub URL | Git URL to clone ZTF 2.x from during image build |
-| `ZTF2_REF` | `v2.0.0` | Git branch or tag to check out for the ZTF 2.x IaC runtime |
-| `ZTF2_BAKE` | `true` | Bake the ZTF 2.x runtime into the image; set `false` only for mirror/offline troubleshooting builds |
-
-Docker Compose publishes the container on `127.0.0.1:15001` by default and
-keeps the application listening on port `5001` inside the container. Override
-`ZTF_HOST_PORT` in `.env` if your workstation requires a different host port.
-Place nginx in front for TLS when exposing the service to a team network.
-
-In Docker and appliance images, the bundled ZeroTouch Framework directories are
-not git checkouts. The in-app Setup page can reinstall Python dependencies, but
-it cannot `git pull` those baked copies. To update a bundled framework, rebuild
-the image with the desired `ZTF_REF` or `ZTF2_REF`, or point Settings > Runtime
-at a separate reviewed checkout.
-
-The image also installs pinned ZeroTouch Framework runtime dependencies in
-dedicated virtual environments: `/opt/ztf-python` for ZTF 1.x and
-`/opt/ztf2-python` for ZTF 2.x. If workflow execution fails with a missing
-module such as `rainbow_logging_handler`, rebuild or update the container image
-so the baked framework and its Python dependencies are refreshed together.
-
----
-
-## Data Storage
-
-All persistent data is stored in `ZTF_DATA_DIR` (default `~/.ztf-ui/` on Linux/macOS,
-`C:\Users\<you>\.ztf-ui\` on Windows). The directory is created with 0700 permissions;
-all files within use 0600.
-
-| Path | Contents |
-|---|---|
-| `users.json` | User accounts with bcrypt-hashed passwords |
-| `settings.json` | ZTF path, Python path, config directory, webhook URL |
-| `history.json` | Last 1,000 execution records |
-| `pipelines.json` | Named pipeline definitions |
-| `schedules.json` | Scheduled execution definitions |
-| `parallel_runs.json` | Parallel multi-site run results (last 100) |
-| `approvals.json` | Approval request records (last 200) |
-| `validation_evidence.json` | Timestamped NKP and ZTF workflow validation evidence and export metadata |
-| `ztf-orchestrator.log` | Structured JSON application log (Audit Log source) |
-| `configs/` | User-generated YAML/JSON workflow config files |
-| `configs/*.yml.bak.N` | Automatic backups — last 5 versions per file |
-
-PostgreSQL logical backups created from Settings are stored in
-`backups/postgres/*.dump`.
-
-`global.yml` is written to `<ZTF_PATH>/config/global.yml`.
-
----
-
-## Air-Gapped Deployment
-
-Both ZTF and ZTF-Orchestrator can run with no internet access.
-
-**Key points:**
-- `dist/` is pre-built and committed — `npm install` is not needed at runtime
-- ZTF includes `calm-whl/` bundled wheels — PyPI access is not needed for Calm DSL
-- Set `ZTF_PATH` to a pre-cloned local copy of zerotouch-framework
-- For the in-app Setup page, set the repository URL to your internal Git mirror
-  and add that URL to `ALLOWED_REPOS` in `server.py`
-- For Docker air-gap, build the image with `ZTF_REPO_URL` pointing to your mirror
-- Use a local PyPI mirror (devpi / Artifactory) for pip installs
-
----
-
-## Development Mode
-
-Use this mode when modifying frontend TypeScript/React code.
-Requires Node.js 18+.
-
-Run both servers simultaneously in **separate terminals**:
-
-```bash
-# Terminal 1 — Flask API (port 5001)
-source venv/bin/activate   # or venv\Scripts\activate on Windows
-python server.py
-
-# Terminal 2 — Vite dev server with hot reload (port 5173)
-npm install
-npm run dev
-```
-
-Open **http://localhost:5173**
-
-Vite proxies all `/api` and `/health` requests to Flask on port 5001.
-
-> **Note:** `http://localhost:5001` serves the pre-built app (no hot reload).
-> `http://localhost:5173` serves the live dev version.
-
----
-
-## Development Reference
-
-```bash
-# Activate virtual environment first
-source venv/bin/activate        # Linux/macOS
-venv\Scripts\activate           # Windows
-
-# Run tests
-pytest tests/ -v --cov=server --cov-report=term-missing
-
-# Vulnerability scan
-pip install pip-audit
-pip-audit -r requirements.txt
-npm audit
-
-# TypeScript type check
-npx tsc --noEmit
-
-# Build frontend (outputs to dist/)
+python -m pytest tests/test_release_integrity.py -q
+python -m pytest -q
+npm ci
 npm run build
+npm run build:demo
+npm run smoke:visual
+git diff --check
 ```
 
----
-
-## Maintainer
-
-ZTF-Orchestrator is developed and maintained by **ZTF-Orchestrator maintainers**.
-
----
+Frontend development uses `npm run dev` (port 5173) alongside `python server.py`
+(manual API port 5001). The Vite proxy forwards API and health requests to Flask.
+Follow [TESTING_GUIDE.md](TESTING_GUIDE.md), [SECURITY_REVIEW.md](SECURITY_REVIEW.md)
+and [repository instructions](AGENTS.md).
 
 ## Deployment Guides
 
-| Guide | Description |
+| Guide | Purpose |
 |---|---|
-| [docs/session-management.md](docs/session-management.md) | Administrator session counts, activity, safe revocation, persistence and rollback |
-| [docs/installation-guide.md](docs/installation-guide.md) | Step-by-step installation guide for one-command, Docker, appliance, manual, Kubernetes, and air-gapped deployments |
-| [docs/admin-guide.md](docs/admin-guide.md) | Administrator guide covering features, use cases, operating boundaries, governance, DR rebuild scenarios, and support procedures |
-| [docs/infrastructure-recovery.md](docs/infrastructure-recovery.md) | Infrastructure rebuild preparation, capability boundaries, and recovery acceptance gates |
-| [docs/recovery-rehearsal-checklist.md](docs/recovery-rehearsal-checklist.md) | Recovery drill prerequisites, failure exercises, evidence, and RTO/RPO measurements |
-| [docs/architecture/README.md](docs/architecture/README.md) | Architecture index, security boundary, data flow, and deployment boundaries |
-| [docs/demo/README.md](docs/demo/README.md) | Demo and simulator boundary for local proof versus target evidence |
-| [docs/governance/README.md](docs/governance/README.md) | Production-readiness boundary, DR, supportability, limitations, and evidence mapping |
-| [docs/runbooks/README.md](docs/runbooks/README.md) | Operator runbook index, control matrix, and standard runbook template |
-| [docs/testing/README.md](docs/testing/README.md) | Testing matrix and regression guard documentation |
-| [docs/uat/README.md](docs/uat/README.md) | UAT plan, cases, evidence, and results index |
-| [docs/operator-controlled-uat-readiness.md](docs/operator-controlled-uat-readiness.md) | Definition and exit criteria for operator controlled/UAT-ready deployments |
-| [docs/uat-evidence-checklist.md](docs/uat-evidence-checklist.md) | Evidence checklist for controlled UAT scenarios, approvals, jobs, and recovery |
-| [docs/production-readiness-boundary.md](docs/production-readiness-boundary.md) | Boundary between local, lab, controlled UAT, and production validation claims |
-| [docs/appliance-update-manager.md](docs/appliance-update-manager.md) | Connected and air-gapped Appliance Update Manager workflow, including offline update packages |
-| [docs/archive/README.md](docs/archive/README.md) | Historical validation and audit evidence retained for traceability only |
-| [docs/nkp-v217-alignment.md](docs/nkp-v217-alignment.md) | Truthful NKP v2.17 alignment matrix, supported areas, partial areas, and UAT gaps |
-| [docs/nginx-tls.md](docs/nginx-tls.md) | nginx reverse proxy with TLS 1.2+, HSTS, SSE-safe settings, BSI alignment |
-| [docs/systemd.md](docs/systemd.md) | systemd service unit with hardening, resource limits, journald logging |
+| [Start Here](docs/start-here.md) | Choose deployment, configuration, recovery or monitoring |
+| [Current source and package status](docs/current-status.md) | Release channels, exact build identity and historical package boundaries |
+| [Installation](docs/installation-guide.md) | Docker, appliance, manual and offline procedures |
+| [AHV Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) | Static IP before SSH, key provisioning, sudo and web admin access |
+| [Administrator guide](docs/admin-guide.md) | Console configuration and operation |
+| [User guide](docs/user-guide.md) | Workflows, scripts, pipelines and saved configuration |
+| [Infrastructure recovery](docs/infrastructure-recovery.md) | Rebuild preparation and acceptance boundaries |
+| [Recovery setup](docs/disaster-recovery-setup.md) | Datacenters, prerequisites, deployment YAML and pipeline linkage |
+| [PE health reporting](docs/pe-health-reporting.md) | Certificate/SAN, credential and connectivity errors; evidence expiry and clocks |
+| [Live PE drift monitoring](docs/live-pe-drift-monitoring.md) | Read-only collection, scheduling and trust requirements |
+| [Upgrade Advisor](docs/nutanix-upgrade-risk-advisor.md) | Evidence-backed readiness assessment; no cluster updates |
+| [Session management](docs/session-management.md) | Administrator session inventory, activity and revocation |
+| [Console retirement](docs/console-retirement.md) | Supported execution and retained historical records |
+| [Manual downloads](docs/manuals/README.md) | PDF and editable guide sources with provenance |
 
----
+## Maintainer and Changelog
 
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+Developed and maintained by **ZTF-Orchestrator maintainers**.
+See [CHANGELOG.md](CHANGELOG.md) for version history and
+[release notes](release-notes-v1.8.5-rc1.txt) for the candidate's release record.
