@@ -1,6 +1,19 @@
 import { expect, test } from '@playwright/test'
 import { inflateSync } from 'node:zlib'
 
+test('landing and video pages expose the same complete-series release download', async ({ page }) => {
+  test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
+  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip'
+  const url = `https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/${asset}`
+  for (const route of ['', 'tutorials/']) {
+    await page.goto(route || './')
+    await expect(page.locator('#series-zip-download')).toBeVisible()
+    await expect(page.locator('#series-zip-download')).toHaveAttribute('href', url)
+    await expect(page.locator('#series-zip-checksum')).toHaveAttribute('href', url + '.sha256')
+    await expect(page.locator('#series-zip-download')).toContainText('23')
+  }
+})
+
 for (const width of [1440, 390]) {
   test(`video guide opens Overview 00 and seeks chapters at ${width}px`, async ({ page }) => {
     test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires the assembled Pages demo')

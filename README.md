@@ -286,7 +286,13 @@ covers profile-based recovery; [Part 16](https://virtuarchitect.github.io/ZTF-Or
 covers appliance deployment and SSH setup; [Part 17](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17)
 covers Ubuntu disk expansion. The refreshed 23-part series uses light-mode examples, Joanna studio narration
 and English captions, including YAML Studio, PE-direct uplink/DARE and specialist
-configuration. Parts 16 and 17 retain their current recordings.
+configuration. Corrected visuals retain the existing Joanna audio, English captions
+and chapter timing.
+
+[Download the complete corrected 23-part video ZIP (84 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip)
+| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256). Includes the offline player, transcripts,
+English SRT/VTT captions and chapter files. Extract the ZIP, then open `index.html`.
+
 See [video transcripts and captions](docs/user-guide-videos.md).
 
 <details>

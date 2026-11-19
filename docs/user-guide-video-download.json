@@ -1,0 +1,21 @@
+{
+  "title": "Complete corrected 23-part User Guide Videos",
+  "date": "19 November 2026",
+  "kind": "documentation-media",
+  "releaseTag": "v1.8.5-rc1",
+  "asset": "ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip",
+  "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip",
+  "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256",
+  "bytes": 87958550,
+  "sha256": "12edd4e5f02c861971848a2d26595a123067df28743cccaa3b1c1e918b3cbaf2",
+  "sourceRevision": "e3f2cfce9df874a59a2ca965b3f42e669f2f26ba",
+  "mediaChecksumsSha256": "11cbfee2d11b709844caf125eb91ed7bc60951b9a61397610143310be3a5f52b",
+  "parts": 23,
+  "chapters": 120,
+  "captions": [
+    "burned-in English",
+    "SRT",
+    "VTT"
+  ],
+  "offlinePlayer": true
+}
