@@ -87,7 +87,7 @@ jobs:
           sudo apt-get install --no-install-recommends -y ffmpeg fonts-dejavu-core
           python -m pip install pytest
       - name: Check caption changes inside a held image
-        run: python -m pytest tests/test_tutorial_caption_rendering.py -q
+        run: python -m pytest --noconftest tests/test_tutorial_caption_rendering.py -q
 
   # -- Docker -----------------------------------------------------------------
   docker:
