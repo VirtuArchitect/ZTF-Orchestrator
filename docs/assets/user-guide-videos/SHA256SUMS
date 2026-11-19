@@ -1,6 +1,7 @@
-1205d58f39bd9d03f934b7b7a51e1eb673970eb94fb24883c861754197bed6f1  caption-render-audit.json
-2dca018ab6c395420b0bb34d67c68984dd87069e8918b53c73f49ba50825b69d  README.txt
-23fe9ed113d24155398818e7b02811138b2955bef39e4cfaef972307948fd09e  series-manifest.json
+d48c875e87d2209ff843ed1090b6fb3e1f53d6d92283c6a5cac0b0266d7d1e0f  caption-render-audit.json
+3deabb82e239b135849c2e8538e7d7f2236d3f826f87c6ba2bfe14f14d7845cb  part06-visual-correction.json
+d99f8650c551c6cf42d49d435c7978ae6f589d85e2cd1985308c01f2a073b1cb  README.txt
+1ee65440cc437f058893b073c8dc7577564438f88387962f9882fbb8685fa73c  series-manifest.json
 79708f948547663c29650ee8f07f56a59ec6d0ca4664c380ac041866d3b750a3  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-chapters.txt
 f4d8d0b66da812068cc337cbc73af676cdbdc18502a44b0517985fadf03acf4c  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-poster.jpg
 c1c79a2fecbbc32e02df66a7644a1d57514a3e8a4044e32f778a329d90d97a09  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt
@@ -38,9 +39,9 @@ ebc269ca6a2b7d07da94b2dc8b8953824e041602944226626c7738659898805f  ZTF-Orchestrat
 be0b4768a01a45cb2795533b209e25fb7e95359f0aa13495e59d9a7a7bff76e7  ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.srt
 caca6561327dd2d60f9e98ea8a00d067d67229d0fa3e8c6a5f4bb65c9a424632  ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.vtt
 97527647985193d2c938346ef574eb7426462e6d94c54ba11c2031f81a03366e  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-chapters.txt
-ff6ab3d8ccedfc747beb36f57b8faa049648c3cf423a8f46f4d12c544bf9db58  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-poster.jpg
+52f97bf91a42e883b8ab8d7b8ffbf7d6dfff2e0aeba6848f9a92338b4504595f  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-poster.jpg
 bc491bd028de152c0dc844fb428b63279b93016b7f5b8af03cfa70f3d29b1822  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-transcript.txt
-5e1b594969bb5450f817fbdadad2f1fb94688fef97164bb1fccf837717674be7  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4
+0be9a84c7843a82eb9686360cbfc8c33cfc485346283c9c8be6bcb76165a002f  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4
 572c6ba34737bf1d985560f36284d2f1665fc1de23b934f2d908f2f204839016  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.srt
 10ec9bdcff78d9818cbafb346aa3fea3e91b5b8a136c3c93033fa758b736f7d1  ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.vtt
 ab01348d3c7b3716087947e07369d233292083196c0811aca3fa50593026d725  ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-chapters.txt

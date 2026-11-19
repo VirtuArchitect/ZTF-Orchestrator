@@ -1,0 +1,164 @@
+{
+  "part": 6,
+  "file": "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4",
+  "beforeSha256": "5e1b594969bb5450f817fbdadad2f1fb94688fef97164bb1fccf837717674be7",
+  "sha256": "0be9a84c7843a82eb9686360cbfc8c33cfc485346283c9c8be6bcb76165a002f",
+  "route": "/appliance",
+  "tab": "Updates",
+  "heading": "Guided Appliance Update",
+  "lightMode": true,
+  "liveActionsExecuted": false,
+  "allApiRequestsIntercepted": true,
+  "narrationChanged": false,
+  "audioUnchanged": true,
+  "chaptersUnchanged": true,
+  "audioPayloadSha256": "03315ea0ced12a884b9d8be091ee742e8ffe0fe7cbd4623c8de6ed8d979081ee",
+  "decodedAudioSha256": "fdc036f1a997dc582a79c52df0c3726ed7ec2c3312cf439f55e6b1d0e94a37f8",
+  "audioPacketTimingSha256": "443c954b6d14a14dca766df4c520561823b776408d813155533db389a62a658b",
+  "captionSamples": 35,
+  "failedCaptionSamples": 0,
+  "fullDecode": "passed",
+  "reviewedFrameSeconds": [
+    3,
+    21,
+    40,
+    59,
+    65,
+    77,
+    87,
+    92
+  ],
+  "chapters": [
+    {
+      "title": "Prepare the maintenance window",
+      "start": 0
+    },
+    {
+      "title": "Check storage before import",
+      "start": 19.44
+    },
+    {
+      "title": "Import and review readiness",
+      "start": 38.764
+    },
+    {
+      "title": "Approve the exact install",
+      "start": 56.872
+    },
+    {
+      "title": "Verify and roll back deliberately",
+      "start": 74.402
+    }
+  ],
+  "visualTimeline": [
+    {
+      "start": 0,
+      "source": "updates-start",
+      "chapter": 0,
+      "sentence": 0
+    },
+    {
+      "start": 6.784,
+      "source": "identity-diagram",
+      "chapter": 0,
+      "sentence": 1
+    },
+    {
+      "start": 11.008,
+      "source": "updates-start",
+      "chapter": 0,
+      "sentence": 2
+    },
+    {
+      "start": 13.424,
+      "source": "backup-diagram",
+      "chapter": 0,
+      "sentence": 3
+    },
+    {
+      "start": 19.44,
+      "source": "storage-review",
+      "chapter": 1,
+      "sentence": 0
+    },
+    {
+      "start": 23.707,
+      "source": "storage-diagram",
+      "chapter": 1,
+      "sentence": 1
+    },
+    {
+      "start": 26.583,
+      "source": "storage-review",
+      "chapter": 1,
+      "sentence": 2
+    },
+    {
+      "start": 30.765,
+      "source": "storage-review",
+      "chapter": 1,
+      "sentence": 3
+    },
+    {
+      "start": 38.764,
+      "source": "readiness",
+      "chapter": 2,
+      "sentence": 0
+    },
+    {
+      "start": 45.078,
+      "source": "readiness",
+      "chapter": 2,
+      "sentence": 1
+    },
+    {
+      "start": 51.795,
+      "source": "host-bootstrap",
+      "chapter": 2,
+      "sentence": 2
+    },
+    {
+      "start": 56.872,
+      "source": "exact-approval",
+      "chapter": 3,
+      "sentence": 0
+    },
+    {
+      "start": 61.395,
+      "source": "install-progress",
+      "chapter": 3,
+      "sentence": 1
+    },
+    {
+      "start": 62.733,
+      "source": "install-progress",
+      "chapter": 3,
+      "sentence": 2
+    },
+    {
+      "start": 68.536,
+      "source": "reconnect-diagram",
+      "chapter": 3,
+      "sentence": 3
+    },
+    {
+      "start": 74.402,
+      "source": "verified-complete",
+      "chapter": 4,
+      "sentence": 0
+    },
+    {
+      "start": 83.776,
+      "source": "rollback",
+      "chapter": 4,
+      "sentence": 1
+    },
+    {
+      "start": 91.03,
+      "source": "rollback-scope-diagram",
+      "chapter": 4,
+      "sentence": 2
+    }
+  ],
+  "rollbackScope": "Application image only; database/data restore is a separate procedure; target-side changes are not undone."
+}

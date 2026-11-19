@@ -368,7 +368,7 @@
       "updated": true,
       "retained": false,
       "duration": 95.33,
-      "sha256": "5e1b594969bb5450f817fbdadad2f1fb94688fef97164bb1fccf837717674be7",
+      "sha256": "0be9a84c7843a82eb9686360cbfc8c33cfc485346283c9c8be6bcb76165a002f",
       "chapters": [
         {
           "title": "Prepare the maintenance window",
@@ -414,7 +414,8 @@
       "decodedAudioSha256": "fdc036f1a997dc582a79c52df0c3726ed7ec2c3312cf439f55e6b1d0e94a37f8",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "visualSource": "Appliance Ops / Updates with intercepted example responses"
     },
     {
       "part": 7,
@@ -1271,5 +1272,14 @@
     "samplesChecked": 926,
     "failedSamples": 0,
     "narrationRegenerated": false
+  },
+  "part06VisualCorrection": {
+    "reviewed": "19 November 2026",
+    "sourceRevision": "c348494698ba899fd03b14e44f723b06b439bf7c",
+    "route": "/appliance",
+    "tab": "Updates",
+    "narrationChanged": false,
+    "otherRecordings": "unchanged",
+    "report": "part06-visual-correction.json"
   }
 }

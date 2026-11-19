@@ -114,3 +114,19 @@ existing audio source; render to a new output file. Do not add another caption
 layer over an already captioned video. The FFmpeg CI regression test holds one
 image while two captions appear, change and clear, and checks audio preservation.
 This is a media-authoring tool; it adds no appliance runtime dependency.
+
+## Part 06 visual correction — 19 November 2026
+
+[Guided Appliance Updates and Rollback](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=06)
+now shows **Appliance Ops → Updates**, replacing the incorrect Setup & Install
+framework imagery. It demonstrates storage review, imported ZIP readiness, exact
+version approval, completed/current stages, running-image verification and the
+previous-image rollback controls. Rollback restores the application image;
+database/data recovery is separate and target-side changes are not undone.
+
+The actual light-mode interface uses intercepted example responses. No appliance
+update or rollback was executed. Existing Joanna narration, English caption
+wording, chapter timings and the Part 06 URL remain unchanged. All 26 caption
+cues and nine speech-gap samples passed decoded-frame checks. The
+[visual correction record](assets/user-guide-videos/part06-visual-correction.json)
+records scene provenance and unchanged audio/chapters. Other recordings are unchanged.
