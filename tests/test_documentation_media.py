@@ -11,6 +11,29 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_part06_visuals_follow_appliance_updates_and_preserve_narration():
+    media = ROOT / 'docs/assets/user-guide-videos'
+    report = json.loads((media / 'part06-visual-correction.json').read_text(encoding='utf-8'))
+    manifest = json.loads((media / 'series-manifest.json').read_text(encoding='utf-8'))
+    recording = next(row for row in manifest['verification'] if row['part'] == 6)
+    assert report['sha256'] == recording['sha256']
+    assert report['beforeSha256'] != report['sha256']
+    assert report['route'] == '/appliance' and report['tab'] == 'Updates'
+    assert report['allApiRequestsIntercepted'] and not report['liveActionsExecuted']
+    assert not report['narrationChanged'] and report['audioUnchanged'] and report['chaptersUnchanged']
+    assert report['chapters'] == recording['chapters']
+    assert report['audioPayloadSha256'] == recording['audioPayloadSha256']
+    assert report['decodedAudioSha256'] == recording['decodedAudioSha256']
+    assert report['captionSamples'] == 35 and report['failedCaptionSamples'] == 0
+    scenes = report['visualTimeline']
+    assert {scene['chapter'] for scene in scenes} == set(range(5))
+    assert {'updates-start', 'storage-review', 'readiness', 'exact-approval',
+            'install-progress', 'verified-complete', 'rollback'} <= {scene['source'] for scene in scenes}
+    assert not {'setup', 'jobs'} & {scene['source'] for scene in scenes}
+    assert [scene['start'] for scene in scenes] == sorted(scene['start'] for scene in scenes)
+    assert 'database/data restore is a separate procedure' in report['rollbackScope']
+
+
 def test_caption_render_audit_covers_every_video_and_preserves_audio():
     media = ROOT / 'docs/assets/user-guide-videos'
     report = json.loads((media / 'caption-render-audit.json').read_text(encoding='utf-8'))

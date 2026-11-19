@@ -1,3 +1,6 @@
+DOCUMENTATION VISUAL CORRECTION (existing appliance assets unchanged)
+Part 06 now shows guided appliance updates and rollback in Appliance Ops / Updates, replacing framework installation imagery. Joanna audio, English captions and chapter timing are unchanged. UI responses are illustrative fixtures; no appliance operation was executed.
+
 DOCUMENTATION MEDIA REPAIR (existing appliance assets unchanged)
 Repair burned-in caption timing in 20 User Guide Videos without changing their narration, audio or chapters. Parts 02, 16 and 17 remain unchanged. A dedicated FFmpeg CI check covers caption updates and clearing inside a held image.
 

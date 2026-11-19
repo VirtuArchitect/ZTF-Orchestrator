@@ -296,7 +296,7 @@
       "part": 6,
       "file": "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4",
       "beforeSha256": "2e8067fe804d351aa464c4c83a8ddb7a202ab23988314a2e3e1e6653c78518fb",
-      "sha256": "5e1b594969bb5450f817fbdadad2f1fb94688fef97164bb1fccf837717674be7",
+      "sha256": "0be9a84c7843a82eb9686360cbfc8c33cfc485346283c9c8be6bcb76165a002f",
       "captionCues": 26,
       "gapSamples": 9,
       "samplesChecked": 35,
@@ -333,7 +333,8 @@
       "decodedAudioSha256": "fdc036f1a997dc582a79c52df0c3726ed7ec2c3312cf439f55e6b1d0e94a37f8",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "subsequentVisualCorrection": "part06-visual-correction.json"
     },
     {
       "part": 7,
