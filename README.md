@@ -8,8 +8,9 @@ Nutanix infrastructure from reviewed profiles through one web console.
 **[Try the Demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)** |
 **[Project Site](https://virtuarchitect.github.io/ZTF-Orchestrator/)** |
 **[Quick Start](docs/start-here.md)** |
-**[Download](#appliance-downloads)** |
-**[Documentation](#deployment-guides)**
+**[Download Centre](https://www.johngoulden.de/ztf/downloads.html)** |
+**[Task-Based Documentation](https://www.johngoulden.de/ztf/documentation.html)** |
+**[Video Tutorials](https://www.johngoulden.de/ztf/tutorials.html)**
 
 [Stable v1.8.4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4) |
 [Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) |
@@ -145,6 +146,10 @@ forensics and final workload acceptance remain separate responsibilities.
 
 ## Appliance Downloads
 
+Start at the [download centre](https://www.johngoulden.de/ztf/downloads.html)
+for full appliance image locations, stable updates, controlled-UAT candidate
+packages, matching checksums and installation guidance.
+
 Use versioned artifacts from the matching GitHub Release, Actions run or durable
 artifact store. The
 [Google Drive appliance folder](https://drive.google.com/drive/folders/1c-W8vFsLkbkz6Z4C9HEVPyEnZ1EWZs2C)
@@ -272,6 +277,10 @@ See [SECURITY.md](SECURITY.md), the
 
 ## Demo and User Guide Videos
 
+Browse [video tutorials by task](https://www.johngoulden.de/ztf/tutorials.html)
+for the 23-part operator series, with direct player links, transcripts, captions
+and offline downloads.
+
 Explore the [interactive demo](https://virtuarchitect.github.io/ZTF-Orchestrator/demo/)
 with simulated configuration, jobs, approvals, recovery and monitoring data.
 It never connects to infrastructure or executes cluster changes.
@@ -345,6 +354,10 @@ Follow [TESTING_GUIDE.md](TESTING_GUIDE.md), [SECURITY_REVIEW.md](SECURITY_REVIE
 and [repository instructions](AGENTS.md).
 
 ## Deployment Guides
+
+Use the [task-based documentation](https://www.johngoulden.de/ztf/documentation.html)
+to find installation, deployment, configuration, monitoring, maintenance,
+recovery and administration procedures alongside matching tutorials.
 
 | Guide | Purpose |
 |---|---|
