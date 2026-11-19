@@ -127,44 +127,53 @@
       "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
       "updated": true,
       "retained": false,
-      "duration": 98.21000000000001,
-      "sha256": "d15fee0f005799eea799e313083a1a0e95deca0119437f76dea7ae494f08d6b6",
+      "duration": 154.75,
       "chapters": [
         {
-          "title": "Select Foundation VM",
+          "title": "Choose by deployment service",
           "start": 0
         },
         {
-          "title": "Select available media",
-          "start": 18.662
+          "title": "Use a classic Foundation VM",
+          "start": 15.955
         },
         {
-          "title": "Read each button result",
-          "start": 39.105
+          "title": "Use Foundation Central",
+          "start": 52.015
         },
         {
-          "title": "Validate and approve",
-          "start": 59.859
+          "title": "Use a standalone FCA",
+          "start": 79.388
         },
         {
-          "title": "Monitor actual progress",
-          "start": 78.113
+          "title": "Validate the selected path",
+          "start": 105.511
+        },
+        {
+          "title": "Verify and continue configuration",
+          "start": 121.851
+        },
+        {
+          "title": "Choose a broader workflow when needed",
+          "start": 138.167
         }
       ],
-      "captions": 25,
-      "narration": "Joanna - Warm & Conversational",
-      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
-      "speed": 1.0,
+      "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
       "listeningReview": "not_performed",
+      "sha256": "c32c51625b6da481c0ff47253f761be59f515e9c174d3f31cf3e0cc1d09447a2",
       "fullDecode": "passed",
       "dimensions": [
         1920,
         1080
       ],
       "fps": 24,
-      "integratedLufs": -16.46,
-      "truePeakDb": -1.32,
-      "embeddedChapters": 5
+      "integratedLufs": -16.52,
+      "truePeakDb": -1.05,
+      "embeddedChapters": 7,
+      "title": "Create Cluster Workflows and Deployment Use Cases",
+      "scriptSha256": "f6108f8ff58cad52e5ded1b245dcaf9e4dd52ac61e565b0b9e3101c669bdd00a",
+      "narration": "Joanna - Warm & Conversational",
+      "captionRendering": "CFR 24 fps before ASS rasterization; encoded cue samples checked"
     },
     {
       "part": 3,
@@ -1003,6 +1012,13 @@
       "embeddedChapters": 5
     }
   ],
-  "durationSeconds": 2309.91,
-  "chapters": 111
+  "durationSeconds": 2366.45,
+  "chapters": 113,
+  "part02Refresh": {
+    "reviewed": "19 November 2026",
+    "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
+    "scope": "All three Create Cluster workflows and their use cases",
+    "otherRecordings": "unchanged",
+    "listeningReview": "not_performed"
+  }
 }

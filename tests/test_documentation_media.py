@@ -110,3 +110,24 @@ def test_current_operator_documentation_local_link_targets_exist():
                 missing.append(f'{name}: {target}')
     assert checked > 0, 'No local documentation links were checked'
     assert not missing, 'Missing documentation targets:\n' + '\n'.join(missing)
+
+
+def test_part_02_compares_all_create_cluster_workflows():
+    page = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
+    catalogue, _ = json.JSONDecoder().raw_decode(page.split('const videos=', 1)[1])
+    part = catalogue[2]
+    assert part['title'] == 'Create Cluster Workflows and Deployment Use Cases'
+    titles = {chapter['title'] for chapter in part['chapters']}
+    assert {'Use a classic Foundation VM', 'Use Foundation Central',
+            'Use a standalone FCA', 'Validate the selected path'} <= titles
+    assert part['file'] == 'ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4'
+    transcript = (ROOT / 'docs/assets/user-guide-videos' /
+                  part['file'].replace('.mp4', '-transcript.txt')).read_text(encoding='utf-8')
+    for text in ['Foundation Central associated with Prism Central',
+                 'separate Foundation Central Appliance', 'matching YAML schema',
+                 'Site Deploy', 'Imaging Only']:
+        assert text in transcript
+    for filename in ['docs/start-here.md', 'docs/user-guide-videos.md']:
+        guide = (ROOT / filename).read_text(encoding='utf-8')
+        assert all(name in guide for name in ['Cluster Create (Foundation VM)',
+                   'Cluster Create (Standalone FCA)', 'Foundation Central associated with Prism Central'])

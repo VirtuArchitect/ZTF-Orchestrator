@@ -1,6 +1,6 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 19 November 2026 | 23 videos | approximately 38½ minutes**
+**v1.8.5-rc1 | 19 November 2026 | 23 videos | approximately 39½ minutes**
 
 [Watch the refreshed series](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00).
 The light-mode player provides Joanna studio narration, burned-in English captions,
@@ -13,7 +13,7 @@ transcript, use Back to return to the same part and timestamp, paused.
 |---|---|---|
 | 00 | [ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt) |
 | 01 | [Overview, Managed Clusters and Needs Attention](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=01) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-transcript.txt) |
-| 02 | [Deploy a Cluster with Foundation VM](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=02) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt) |
+| 02 | [Create Cluster Workflows and Deployment Use Cases](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=02) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt) |
 | 03 | [Eight-Step Post-Configuration Pipeline](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=03) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt) |
 | 04 | [Recover Cluster and Resume Recovery](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=04) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-transcript.txt) |
 | 05 | [PE Health, Drift and Collection Diagnostics](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=05) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt) |
@@ -34,6 +34,27 @@ transcript, use Back to return to the same part and timestamp, paused.
 | 20 | [VS0 MTU Change and Approved Rollback](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=20) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback-transcript.txt) |
 | 21 | [Cluster Storage Standard](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=21) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-transcript.txt) |
 | 22 | [Unregister Prism Element from Prism Central](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=22) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central-transcript.txt) |
+
+## Choose the deployment workflow
+
+Choose the workflow that matches the deployment service available at the site:
+
+| Workflow | When to use it | Required deployment service |
+|---|---|---|
+| **Cluster Create (Foundation VM)** | Image physical nodes and form an AHV cluster using a classic Foundation VM. Useful for a local or remote site with its own Foundation VM and for approved cluster rebuilds. | Reachable Foundation 5.x service, approved images and Foundation-to-node access. Prism Central is not the imaging service for this path. |
+| **Cluster Create** | Use the existing ZTF 1.x Foundation Central path when nodes and images are managed through Foundation Central associated with Prism Central. | Configured Foundation Central endpoint, credentials and eligible discovered nodes. |
+| **Cluster Create (Standalone FCA)** | Use a separately deployed Foundation Central Appliance and its Lifecycle APIs instead of the classic Foundation VM or PC-associated Foundation Central path. | Compatible standalone FCA Lifecycle API and inventory; guarded execution and explicit acknowledgement. Validate the actual appliance, hardware and software combination. |
+
+These workflows use different services and configuration schemas; their YAML is
+not interchangeable. Node discovery, image readiness, approvals and verification
+must be checked in the selected path. **Site Deploy** / **Site Deploy (Standalone
+FCA)** are broader site/multiple-cluster workflows; **Imaging Only** prepares nodes
+without forming a cluster.
+
+Part 02 follows one four-node example through all three Create Cluster choices,
+explaining which service each uses, its prerequisites and its operational use
+case. Use the [deployment guidance](start-here.md#deploy-a-cluster) to choose the
+matching workflow and YAML schema before following its procedure.
 
 ## Current refresh
 

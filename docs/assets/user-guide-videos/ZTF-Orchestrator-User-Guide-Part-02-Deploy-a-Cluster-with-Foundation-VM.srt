@@ -1,99 +1,173 @@
 1
-00:00:00,256 --> 00:00:04,877
-Choose Deploy, then Foundation VM for a classic Foundation deployment.
+00:00:00,299 --> 00:00:03,277
+You need to build a four-node AHV cluster.
 
 2
-00:00:05,077 --> 00:00:08,995
-Enter the actual Foundation endpoint, not a future host or cluster
+00:00:03,627 --> 00:00:06,200
+Which Create Cluster workflow should you choose?
 
 3
-00:00:09,131 --> 00:00:13,300
-address. Confirm that Foundation can reach the physical management, host
+00:00:06,443 --> 00:00:09,036
+Start with the deployment service available at the site.
 
 4
-00:00:13,436 --> 00:00:15,753
-and controller virtual machine networks.
+00:00:09,129 --> 00:00:13,523
+ZTF-Orchestrator offers three paths to the same goal, but each uses
 
 5
-00:00:15,996 --> 00:00:18,313
-Keep its session separate from other deployments.
+00:00:13,523 --> 00:00:15,592
+a different service and configuration.
 
 6
-00:00:18,662 --> 00:00:23,219
-Refresh image inventory and select the exact approved AOS package already
+00:00:15,955 --> 00:00:20,563
+Choose Cluster Create, Foundation VM, when you have a classic Foundation VM
 
 7
-00:00:23,227 --> 00:00:27,579
-present. Typing a filename or choosing a local upload file does not stage
+00:00:20,563 --> 00:00:22,292
+that can reach the physical nodes.
 
 8
-00:00:27,579 --> 00:00:31,976
-it. If upload is required, wait for its result and refresh inventory.
+00:00:22,501 --> 00:00:26,461
+This suits a local build, a remote site with its own Foundation VM,
 
 9
-00:00:32,123 --> 00:00:36,253
-Supply the real hypervisor checksum and review every node identity,
+00:00:26,469 --> 00:00:28,573
+or an approved cluster rebuild.
 
 10
-00:00:36,475 --> 00:00:38,780
-address and saved credential reference.
+00:00:28,773 --> 00:00:33,159
+Review the node addresses and credential references, then select the approved
+images
 
 11
-00:00:39,105 --> 00:00:43,620
-Refresh inventory, Validate native payload, Test IPMI credentials
+00:00:33,295 --> 00:00:35,300
+already in Foundation inventory.
 
 12
-00:00:43,671 --> 00:00:46,948
-and Check progress have separate running and result feedback.
+00:00:35,443 --> 00:00:40,086
+Refresh inventory, validate the payload, test IPMI credentials and check
 
 13
-00:00:47,084 --> 00:00:50,200
-Review each outcome rather than assuming the click passed.
+00:00:40,094 --> 00:00:44,310
+progress. The IPMI test uses the Orchestrator's network path;
 
 14
-00:00:50,473 --> 00:00:54,390
-The IPMI panel reports per-node results and the test source.
+00:00:44,361 --> 00:00:48,734
+a failed direct test does not prove Foundation cannot reach the nodes.
 
 15
-00:00:54,611 --> 00:00:58,700
-A direct Orchestrator routing failure does not prove Foundation cannot reach
+00:00:48,943 --> 00:00:51,737
+Follow Foundation's reported phase and percentage.
 
 16
-00:00:58,708 --> 00:01:03,080
-the controller. Dry Run checks the reviewed intent without submitting imaging.
+00:00:52,015 --> 00:00:56,530
+Now keep the same four-node requirement, but use Foundation Central associated
 
 17
-00:01:03,288 --> 00:01:07,802
-Resolve schema, credential-reference, image and connectivity blockers.
+00:00:56,538 --> 00:01:00,506
+with Prism Central. Choose the workflow named Cluster Create.
 
 18
-00:01:07,981 --> 00:01:11,674
-Have the required approver review the exact destructive scope.
+00:01:00,693 --> 00:01:04,867
+It uses the existing ZTF one point x execution path.
 
 19
-00:01:11,841 --> 00:01:14,329
-Imaging selected nodes can overwrite them;
+00:01:05,088 --> 00:01:09,432
+Configure the Foundation Central endpoint and credentials, then review eligible
 
 20
-00:01:14,359 --> 00:01:17,664
-do not submit a new job just because the browser lost contact.
+00:01:09,440 --> 00:01:11,745
+discovered nodes and the approved images.
 
 21
-00:01:18,113 --> 00:01:22,457
-During an approved deployment, follow the existing job and actual Foundation
+00:01:12,018 --> 00:01:16,029
+This is the appropriate choice when your deployment service and node inventory are
 
 22
-00:01:22,508 --> 00:01:26,723
-phase and percentage. Missing telemetry remains Not reported.
+00:01:16,029 --> 00:01:19,118
+already managed through that Foundation Central environment.
 
 23
-00:01:26,880 --> 00:01:29,581
-Check progress does not itself start imaging.
+00:01:19,388 --> 00:01:23,689
+If your deployment service is a separate Foundation Central Appliance, choose Cluster
 
 24
-00:01:29,781 --> 00:01:34,040
-Reconcile an interrupted session before another submission, then verify cluster
+00:01:23,740 --> 00:01:26,100
+Create, Standalone FCA.
 
 25
-00:01:34,091 --> 00:01:38,120
-membership, versions and services before handing off configuration.
+00:01:26,428 --> 00:01:29,485
+This path uses the appliance's Lifecycle APIs.
+
+26
+00:01:29,699 --> 00:01:34,000
+Check the actual API version, inventory and hardware compatibility before
+
+27
+00:01:34,051 --> 00:01:38,480
+proceeding. Submission remains guarded and requires the explicit execution
+
+28
+00:01:38,488 --> 00:01:42,815
+acknowledgement. A workflow being available does not establish compatibility
+
+29
+00:01:42,865 --> 00:01:45,147
+with every appliance or hardware version.
+
+30
+00:01:45,511 --> 00:01:48,468
+For each path, use its matching YAML schema.
+
+31
+00:01:48,625 --> 00:01:51,529
+Do not swap configuration files between services.
+
+32
+00:01:51,803 --> 00:01:55,848
+Run the checks available in that workflow, review the exact physical targets
+
+33
+00:01:55,899 --> 00:01:58,494
+and obtain the required approval before imaging.
+
+34
+00:01:58,715 --> 00:02:01,416
+Imaging can overwrite existing installations.
+
+35
+00:02:01,851 --> 00:02:06,515
+Monitor the submitted job and inspect the real outcome before retrying a failure.
+
+36
+00:02:06,629 --> 00:02:11,144
+After cluster formation, verify Prism Element and continue with the reviewed
+
+37
+00:02:11,152 --> 00:02:12,988
+post-configuration pipeline.
+
+38
+00:02:13,175 --> 00:02:17,832
+Prism Central registration, when needed, is a separate configuration step.
+
+39
+00:02:18,167 --> 00:02:22,733
+For a broader site or multiple-cluster deployment, review Site Deploy or Site
+
+40
+00:02:22,733 --> 00:02:25,071
+Deploy, Standalone FCA.
+
+41
+00:02:25,293 --> 00:02:28,216
+Imaging Only prepares nodes without forming a cluster.
+
+42
+00:02:28,424 --> 00:02:33,024
+For our four-node example, choose the Create Cluster workflow that matches the
+service
+
+43
+00:02:33,075 --> 00:02:34,640
+you actually operate.

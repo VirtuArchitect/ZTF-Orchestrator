@@ -2,6 +2,7 @@
 
 
 ### Documentation
+- Expand User Guide Video Part 02 and deployment guidance to compare all three Create Cluster services, their use cases, matching configuration schemas, validation and post-configuration handoff; retain the existing Part 02 URL and filename.
 - Publish the refreshed 23-part light-mode User Guide Videos with Joanna narration, English captions, updated YAML Studio/recovery coverage and five specialist configuration chapters; preserve existing part links and current Parts 16–17.
 - Refresh the formatted Administrator and User Guide Word/PDF with current light-mode console captures, YAML Studio, governed recovery, PE diagnostics and PE-direct configuration boundaries; retain stable download links and historical provenance.
 - Align the README with the refreshed light project site, current ZTF 1.x execution, YAML Studio, recovery and PE-direct workflow boundaries; retain dated screenshots as historical references.

@@ -1,6 +1,6 @@
 # Start Here and cluster deployment guidance
 
-See [current documented build and update details](current-status.md) for the consolidated `v1.8.5-rc1-636f191` appliance update.
+See [current documented build and update details](current-status.md) for the current source and consolidated appliance status.
 
 Current candidate: **v1.8.5-rc1**. This is navigation around existing execution
 paths; it does not add a deployment backend or broaden hardware support.
@@ -11,14 +11,16 @@ the full design-to-acceptance sequence, including post-configuration gates.
 ## Choose an outcome
 
 After signing in, users without a landing preference open **Start Here**.
-The four choices are Deploy a Cluster, Configure an Existing Cluster,
-Monitor & Verify, and Run Saved Automation. The existing dashboard is available
+The choices are Deploy a Cluster, Configure an Existing Cluster, Recover
+Infrastructure, Monitor & Verify, and Run Saved Automation. The existing dashboard is available
 as **Overview** at `/overview`. Choose **My landing page** on Start Here to
 prefer Overview. The preference is scoped to the signed-in username and browser;
 it does not move to another browser or appliance automatically.
 
-Scripts, YAML Studio and ZTF 2.x IaC remain directly accessible under
-**Advanced Automation**. Existing bookmarks and role restrictions remain in place.
+Scripts and YAML Studio remain accessible under **Advanced Automation**.
+Native opt-in, NKP and ZTF 2.x console setup/execution are retired; retained
+records do not establish an available execution path. See
+[console integration retirement](console-retirement.md).
 
 ## Foundation VM status label
 
@@ -32,6 +34,20 @@ release candidate or expand vendor support.
 ![Deployment guidance showing Foundation VM Implemented with simulated data](assets/guide/v1.8.5-rc1/deployment-guide.png)
 
 ## Deploy a cluster
+
+Choose the workflow that matches the deployment service available at the site:
+
+| Workflow | When to use it | Required deployment service |
+|---|---|---|
+| **Cluster Create (Foundation VM)** | Image physical nodes and form an AHV cluster using a classic Foundation VM. Useful for a local or remote site with its own Foundation VM and for approved cluster rebuilds. | Reachable Foundation 5.x service, approved images and Foundation-to-node access. Prism Central is not the imaging service for this path. |
+| **Cluster Create** | Use the existing ZTF 1.x Foundation Central path when nodes and images are managed through Foundation Central associated with Prism Central. | Configured Foundation Central endpoint, credentials and eligible discovered nodes. |
+| **Cluster Create (Standalone FCA)** | Use a separately deployed Foundation Central Appliance and its Lifecycle APIs instead of the classic Foundation VM or PC-associated Foundation Central path. | Compatible standalone FCA Lifecycle API and inventory; guarded execution and explicit acknowledgement. Validate the actual appliance, hardware and software combination. |
+
+These workflows use different services and configuration schemas; their YAML is
+not interchangeable. Node discovery, image readiness, approvals and verification
+must be checked in the selected path. **Site Deploy** / **Site Deploy (Standalone
+FCA)** are broader site/multiple-cluster workflows; **Imaging Only** prepares nodes
+without forming a cluster.
 
 1. Open **Start Here → Deploy a Cluster**. Choose Foundation VM, Foundation
    Central or Standalone FCA. Read the prerequisites and implementation status.

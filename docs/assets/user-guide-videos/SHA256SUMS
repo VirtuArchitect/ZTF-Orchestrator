@@ -1,5 +1,5 @@
-5b10a0409a55fb9f91238b5a90fd440ab19598fd05ef5386ad7b9eef738fedfb  README.txt
-b90d6ddd7a228a0daa790b35df0b47a9a019d4de2fe502faedb9829ca024a109  series-manifest.json
+b52cdba8a00c8981a99bf9dbf9be6d141bdc7648958060891a2e4014f6fc7922  README.txt
+e87f19e533829b22ffa06825d24bfa3dd3aa49f9e4cb0cabb7ef606183d9fd67  series-manifest.json
 79708f948547663c29650ee8f07f56a59ec6d0ca4664c380ac041866d3b750a3  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-chapters.txt
 f4d8d0b66da812068cc337cbc73af676cdbdc18502a44b0517985fadf03acf4c  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-poster.jpg
 c1c79a2fecbbc32e02df66a7644a1d57514a3e8a4044e32f778a329d90d97a09  ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt
@@ -12,12 +12,12 @@ f797b0794074c3bc17666f9711ed4a34b7e2e6e05cb14763f50f513862e185b6  ZTF-Orchestrat
 1f9a040f7a507524595bd8dea72f7e45fb682e48c5f930c58ed1951d5b22808c  ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4
 0a30af6ac4257d1e8d892ec9602208b0444de893dfa3f3b3dfb33573a1172478  ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.srt
 58b8ccdb660c494b92e975a1cfbef20cc11e9af81a822a9a237124fdd336757a  ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.vtt
-8e17a156694993bb4260396c33f8710de1dbf48b3745439a867de77828f39cec  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-chapters.txt
+07335c2f8a130069356301e573f8ad3ff75e11cbe57edf5c58ea7d261669bc6f  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-chapters.txt
 9a83b57533c1399c80e31bd1098665eeddf1cc4be6706761721a32df8ba352a8  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-poster.jpg
-3a341ce527b58ddb3e1a4b0c3decc2eb7d50a7ac8e5ca50a0624a924e28885cf  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt
-d15fee0f005799eea799e313083a1a0e95deca0119437f76dea7ae494f08d6b6  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4
-c6f344ac919ca927f0c105a4ad26902e7d3e63a6fe3eb45af0722532d26262af  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.srt
-92e092c47b4fbc0e36866138da7546573073b95758673a1ccbf0fa76354b15ee  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.vtt
+3598d65413737730c552576864cf7d642867133d0f2f7e2ef3d169bfee1c72b7  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt
+c32c51625b6da481c0ff47253f761be59f515e9c174d3f31cf3e0cc1d09447a2  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4
+79b94e93162671087d12a310267b33461bf2c4daffefc3be6ee54686c7f48d75  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.srt
+4f909b4351d71c9a86da081818c60bd160ee76800970db8e900c87de78a18801  ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.vtt
 adc8b061e284b3f12898e6530c94e3a34e455da04426014b6e391b12e3ee6836  ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-chapters.txt
 1a664b9ac8beb5df9804c3ff023b3320c87b67ef0a68aa97bed61f8efe742dfb  ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-poster.jpg
 f43ef7691cc078e52c1a6c7937e7c41b5e7d3a5638f7c16acec6edc82240d574  ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt

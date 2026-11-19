@@ -1,5 +1,7 @@
-00:00:00.000 Select Foundation VM
-00:00:18.662 Select available media
-00:00:39.105 Read each button result
-00:00:59.859 Validate and approve
-00:01:18.113 Monitor actual progress
+00:00:00.000 Choose by deployment service
+00:00:15.955 Use a classic Foundation VM
+00:00:52.015 Use Foundation Central
+00:01:19.388 Use a standalone FCA
+00:01:45.511 Validate the selected path
+00:02:01.851 Verify and continue configuration
+00:02:18.167 Choose a broader workflow when needed
