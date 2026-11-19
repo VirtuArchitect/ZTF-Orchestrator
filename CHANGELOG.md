@@ -2,6 +2,7 @@
 
 
 ### Documentation
+- Audit the remaining 22 tutorials for visual/narration alignment; correct unrelated controls, recovery branches, specialist plans, Netplan trial timing and disk-size examples while preserving Joanna audio, English caption sources, chapters and stable links.
 - Correct Part 06 visuals to show Appliance Ops / Updates, storage readiness, exact-version approval, stage progress, image verification and rollback; preserve Joanna audio, captions, chapter timing and existing links.
 - Repair missing/stale burned-in captions in 20 User Guide Videos by applying subtitles after frame expansion; preserve audio and chapter timing, audit every cue and speech gap, and add a real FFmpeg caption-render regression check.
 - Expand User Guide Video Part 02 and deployment guidance to compare all three Create Cluster services, their use cases, matching configuration schemas, validation and post-configuration handoff; retain the existing Part 02 URL and filename.
