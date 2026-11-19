@@ -34,7 +34,7 @@ Credential and config groups are organizational labels, not access boundaries or
 
 ## Apply the historical 636f191 offline bundle
 
-[Update ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ztf-update-v1.8.5-rc1-636f191.zip) Â· [SHA-256 sidecar](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ztf-update-v1.8.5-rc1-636f191.zip.sha256)
+[Update ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ztf-update-v1.8.5-rc1-636f191.zip) · [SHA-256 sidecar](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ztf-update-v1.8.5-rc1-636f191.zip.sha256)
 
 ZIP SHA-256: `6824c285cef93852f42bdfcc2b0d0651be9605dde018bb3e41fc6a53c2ff4ccf`.
 
