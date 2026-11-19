@@ -12,6 +12,35 @@ from html.parser import HTMLParser
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_public_entry_pages_link_the_current_manual_downloads():
+    folder = ROOT / 'docs/manuals'
+    manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
+    prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/manuals/'
+    expected = {kind: prefix + f'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.{suffix}'
+                for kind, suffix in [('pdf', 'pdf'), ('word', 'docx')]}
+
+    class ManualLinks(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.links = {}
+
+        def handle_starttag(self, tag, attrs):
+            attributes = dict(attrs)
+            if tag == 'a' and attributes.get('id', '').startswith('admin-guide-'):
+                self.links[attributes['id'].removeprefix('admin-guide-')] = attributes.get('href')
+
+    for name in ['docs/pages/project/index.html', 'public/tutorials/index.html']:
+        parser = ManualLinks()
+        parser.feed((ROOT / name).read_text(encoding='utf-8'))
+        assert parser.links == expected
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    links = re.findall(r'\[[^\]]*\]\(([^)]+)\)', readme)
+    for url in expected.values():
+        name = url.rsplit('/', 1)[1]
+        assert 'docs/manuals/' + name in links
+        assert hashlib.sha256((folder / name).read_bytes()).hexdigest() == manifest['files'][name]
+
+
 def test_complete_video_zip_release_links_match_the_current_media_snapshot():
     download = json.loads((ROOT / 'docs/user-guide-video-download.json').read_text(encoding='utf-8'))
     media = ROOT / 'docs/assets/user-guide-videos'

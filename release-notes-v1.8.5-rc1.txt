@@ -1,3 +1,6 @@
+DOCUMENTATION GUIDE ACCESS (existing appliance assets unchanged)
+The README, light landing page and User Guide Videos page now link the updated Administrator and User Guide in PDF and Word formats. Existing document filenames, video links and appliance assets are unchanged.
+
 DOCUMENTATION MANUAL LINKS (existing appliance assets unchanged)
 The Administrator and User Guide Word/PDF now link every corrected tutorial and the complete video ZIP plus checksum. The 156-page layout, illustrations, tables and existing download filenames are preserved. No installed runtime or previously published appliance bundle changes.
 
