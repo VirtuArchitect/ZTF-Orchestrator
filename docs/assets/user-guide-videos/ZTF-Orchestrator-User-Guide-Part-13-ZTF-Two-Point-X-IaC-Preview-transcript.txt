@@ -1,18 +1,9 @@
-Part 13 - ZTF Two Point X IaC Preview
+Current pipelines run through ZTF one point x. Native pipeline opt-in, NKP and ZTF two point x console execution are retired. This replaces the former two point x preview lesson. Retiring a launch path is different from deleting old jobs, configuration or recovery records.
 
-Simulated console illustrations. Synthetic narration.
+An existing Native pipeline can remain visible but blocked. An administrator must review every action and its YAML before explicitly converting it. Do not change an executor label and assume every old action is compatible. Keep the original definition and evidence available for comparison.
 
-Use the separate preview runtime
-The two point x integration is a separate desired-state plan and apply model. Configure its own checkout path, executable and reference. Keep Workflows and Scripts one point x on their compatible legacy runtime. Runtime recognition only identifies a layout. It does not prove that a target provider, resource schema or mutation is supported for your environment.
+Existing recovery runs retain the captured snapshot, approvals and completed work. Do not rewrite their history to match a newer profile. Continue through the supported run controls and its evidence requirements. The final step zero eight retry remains conditional on actual eligibility, reconciliation and fresh health.
 
-Generate intent from preview workflows
-Open Workflows two point x under Optional Integrations and select the intended starter. Review the input document, editable global configuration and unique state filename. Match the installed resource schema and target scope. A template selection is not approval. Keep state and reviewed inputs associated so later guarded actions cannot silently target a different plan or environment.
+An older image can still contain NKP or two point x files. Their presence supports inspection and rollback compatibility; it does not re-enable the retired console operations. Removing those dependencies or stored records is a separate reviewed phase.
 
-Understand converted script actions
-Scripts two point x contains converted intent starters. They do not execute as the legacy main script command. Generate the input and review the corresponding plan in the separate runtime. P E-only, controller, Foundation and other unmapped legacy actions remain in Scripts one point x. Do not infer feature parity from similar names across both catalogues.
-
-Review the governed plan result
-Submit the plan through the preview workspace and inspect its durable job and retained evidence. Confirm the target, resource changes, state and supported provider behavior. Resolve schema errors and unknowns before considering apply. A successful plan does not itself perform or authorize the target change. Preserve the exact source and input used to produce it.
-
-Keep apply and destroy separately governed
-Apply and destroy remain distinct approval-bound actions where the guarded lane is enabled. Review the exact request and use an authorized environment with a recovery path. Do not bypass approval or use legacy launchers as a workaround. Independently read back the target result. Preview status and passing software tests do not establish vendor support or compatibility for every resource.
+Compare the installed build with the current guide and package metadata before relying on a feature. A source merge or a downloaded ZIP does not update an appliance. Use the guided update process when needed, then verify supported workflows and retained state before operational use.

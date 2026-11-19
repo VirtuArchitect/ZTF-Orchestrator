@@ -1,142 +1,79 @@
 WEBVTT
 
-00:00:00.256 --> 00:00:04.181
-Guided updates require the restricted Linux host update service and matching
+00:00:00.299 --> 00:00:04.651
+For an appliance update, first check the installed build and the exact trusted
 
-00:00:04.267 --> 00:00:05.312
-application mounts.
+00:00:04.651 --> 00:00:06.584
+package supplied by the maintainer.
 
-00:00:05.547 --> 00:00:09.301
-Install the checksummed host kit once during an idle maintenance window,
+00:00:06.784 --> 00:00:10.808
+A source commit, update ZIP and running image are different states.
 
-00:00:09.600 --> 00:00:11.646
-then activate the matching application image.
+00:00:11.008 --> 00:00:13.339
+Finish or reconcile active automation.
 
-00:00:11.857 --> 00:00:15.782
-An enabled and active host service alone does not prove that the container
+00:00:13.424 --> 00:00:17.896
+Keep a verified database and data backup pair, the previous application image
 
-00:00:15.910 --> 00:00:16.764
-has been updated.
+00:00:17.989 --> 00:00:19.162
+and a recovery method.
 
-00:00:17.105 --> 00:00:20.945
-Windows Docker Desktop retains its reviewed manual update procedure.
+00:00:19.440 --> 00:00:23.614
+Open Appliance Ops, Updates, and Review Storage Before Upload.
 
-00:00:21.201 --> 00:00:23.810
-The web application does not need the Docker socket.
+00:00:23.707 --> 00:00:26.374
+Several locations may share the same filesystem.
 
-00:00:24.165 --> 00:00:28.410
-Open Appliance Operations, Updates, and Review Storage Before Upload.
+00:00:26.583 --> 00:00:30.522
+Keep enough space for the package, image load and backup allowance.
 
-00:00:28.645 --> 00:00:32.122
-Check the capacity allowance and review eligible cleanup candidates.
+00:00:30.765 --> 00:00:33.978
+Use reviewed cleanup or the disk expansion guide if needed;
 
-00:00:32.399 --> 00:00:35.461
-Remove only specifically reviewed obsolete artifacts.
+00:00:34.135 --> 00:00:38.387
+do not delete Docker volumes or the only verified backup to force readiness.
 
-00:00:35.791 --> 00:00:40.463
-Keep the selected package, retained rollback material and protected backups.
+00:00:38.764 --> 00:00:43.158
+Upload the complete offline ZIP and verify it, then select the imported
 
-00:00:40.741 --> 00:00:42.612
-Nothing is automatically pruned.
+00:00:43.158 --> 00:00:44.900
+package and Check Readiness.
 
-00:00:42.906 --> 00:00:46.703
-Storage review cannot approve an installation, and a fixed amount of free
+00:00:45.078 --> 00:00:47.396
+Import validates and stages content;
 
-00:00:46.788 --> 00:00:50.372
-space is not a guarantee that backup and image expansion will fit.
+00:00:47.510 --> 00:00:51.714
+it does not activate the image or execute a bundled host installer.
 
-00:00:50.799 --> 00:00:54.468
-Obtain the complete trusted offline ZIP and verify its independently
+00:00:51.795 --> 00:00:55.883
+If the host service is absent, follow the separate reviewed bootstrap instructions
 
-00:00:54.596 --> 00:00:55.693
-published checksum.
+00:00:56.019 --> 00:01:00.278
+first. After readiness passes, review and enter the exact version
 
-00:00:55.937 --> 00:01:00.033
-Upload and verify the ZIP, then select its imported package and check
+00:01:00.328 --> 00:01:02.461
+confirmation. Submit once.
 
-00:01:00.118 --> 00:01:00.801
-readiness.
+00:01:02.733 --> 00:01:06.957
+Completed stages are green, the current stage is distinct, and failures
 
-00:01:01.228 --> 00:01:06.220
-The service checks image identity, protocol, Compose and database access,
+00:01:06.957 --> 00:01:11.522
+identify their stage. If the browser loses contact, recover the existing
 
-00:01:06.561 --> 00:01:08.169
-storage and active work.
+00:01:11.522 --> 00:01:14.053
+operation rather than starting another installation.
 
-00:01:08.454 --> 00:01:11.931
-Resolve every blocker and obtain a fresh readiness plan.
+00:01:14.402 --> 00:01:18.541
+Verify the running image and health build identity, then check retained
 
-00:01:12.251 --> 00:01:16.006
-Importing a package does not run its host installer or replace the running
+00:01:18.541 --> 00:01:22.714
+credentials, configurations, pipelines, approvals and recovery
 
-00:01:16.134 --> 00:01:16.781
-application.
+00:01:22.765 --> 00:01:27.054
+progress. If rollback is required, use the recorded previous image
 
-00:01:17.306 --> 00:01:22.767
-Review the version and interruption notice, then type the exact I N S T A L
+00:01:27.190 --> 00:01:30.851
+and matching verified backup pair through the documented recovery path.
 
-00:01:22.853 --> 00:01:24.090
-L phrase shown.
-
-00:01:24.474 --> 00:01:28.101
-The plan expires after fifteen minutes and is bound to that operation.
-
-00:01:28.442 --> 00:01:30.586
-Select Back Up and Install once.
-
-00:01:30.937 --> 00:01:34.991
-The guided service stops the application, verifies the backup pair and
-
-00:01:35.033 --> 00:01:38.617
-recreates the application while PostgreSQL remains running.
-
-00:01:39.001 --> 00:01:42.927
-Reconnect after interruption and inspect the retained operation rather than
-
-00:01:42.969 --> 00:01:43.745
-submitting again.
-
-00:01:44.100 --> 00:01:48.324
-Review the completed operation report and verify the exact running image,
-
-00:01:48.623 --> 00:01:52.196
-source commit, application health and database readiness.
-
-00:01:52.654 --> 00:01:56.708
-The general release label may still say version one point eight point five
-
-00:01:56.793 --> 00:02:00.546
-release candidate one; the build identity distinguishes patches.
-
-00:02:00.886 --> 00:02:05.964
-Check saved configurations, credentials, pipelines, schedules and recovery
-
-00:02:06.177 --> 00:02:08.204
-profiles before resuming automation.
-
-00:02:08.524 --> 00:02:11.602
-Keep the receipts and download the sanitized operation report.
-
-00:02:12.126 --> 00:02:15.966
-If the console is reachable, the previous-image recovery control requires
-
-00:02:16.009 --> 00:02:19.977
-independent database compatibility confirmation and its exact rollback
-
-00:02:20.062 --> 00:02:20.671
-phrase.
-
-00:02:21.024 --> 00:02:25.718
-It restores the retained application image, not the database, data, host
-
-00:02:25.931 --> 00:02:28.768
-settings or changes made to Nutanix targets.
-
-00:02:29.131 --> 00:02:32.471
-Use authorized host recovery when the console is unavailable.
-
-00:02:32.868 --> 00:02:37.390
-Connected discovery is metadata-only: unattended downloads and automatic
-
-00:02:37.433 --> 00:02:39.385
-installation are not enabled.
+00:01:31.030 --> 00:01:35.236
+Appliance rollback does not undo target changes such as enabled encryption.

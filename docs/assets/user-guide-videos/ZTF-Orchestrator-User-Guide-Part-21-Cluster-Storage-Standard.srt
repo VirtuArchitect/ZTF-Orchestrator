@@ -1,0 +1,103 @@
+1
+00:00:00,256 --> 00:00:03,533
+Open the Cluster Storage Standard workflow after deployment.
+
+2
+00:00:03,712 --> 00:00:08,099
+It runs separately and is not inserted automatically into a recovery pipeline.
+
+3
+00:00:08,149 --> 00:00:12,536
+Supply exactly three distinct replacement-container names and the settings intended
+
+4
+00:00:12,587 --> 00:00:16,470
+for this cluster. Use a saved PE credential reference and trusted
+
+5
+00:00:16,470 --> 00:00:19,761
+HTTPS; never put its password in YAML.
+
+6
+00:00:19,925 --> 00:00:22,419
+Select Discover default, read-only.
+
+7
+00:00:22,624 --> 00:00:26,670
+Review the cluster UUID and the exact default-container name
+
+8
+00:00:26,720 --> 00:00:29,784
+and UUID captured into the configuration.
+
+9
+00:00:29,963 --> 00:00:31,760
+The numeric suffix matters.
+
+10
+00:00:31,952 --> 00:00:36,603
+Multiple candidates, unsupported inventories or an unexpected default name block
+
+11
+00:00:36,603 --> 00:00:40,406
+review; the workflow does not guess which container can be removed.
+
+12
+00:00:40,656 --> 00:00:45,073
+Review the replacements, settings and dependencies before requesting approval.
+
+13
+00:00:45,239 --> 00:00:49,477
+A different administrator must approve the exact YAML and filename.
+
+14
+00:00:49,549 --> 00:00:52,271
+Editing the file invalidates that approval.
+
+15
+00:00:52,407 --> 00:00:55,791
+The operator confirmation binds submission to the reviewed cluster;
+
+16
+00:00:55,863 --> 00:00:58,965
+a browser disconnect is not a reason to submit again.
+
+17
+00:00:59,262 --> 00:01:03,870
+The worker verifies existing replacements before creating missing ones, then reads
+
+18
+00:01:03,870 --> 00:01:07,297
+back all three and checks the explicitly requested properties.
+
+19
+00:01:07,540 --> 00:01:11,296
+Existing mismatches fail rather than being silently rewritten.
+
+20
+00:01:11,485 --> 00:01:15,871
+Only the exact reviewed default is considered for cleanup, and dependencies must
+
+21
+00:01:15,879 --> 00:01:17,351
+pass the conservative checks.
+
+22
+00:01:17,543 --> 00:01:21,845
+Retain the job and inspect actual storage state if creation, verification
+
+23
+00:01:22,109 --> 00:01:26,558
+or cleanup fails. A familiar name does not prove a container is empty
+
+24
+00:01:26,609 --> 00:01:30,953
+or disposable. Complete the documented storage and workload acceptance before
+
+25
+00:01:31,046 --> 00:01:32,916
+using the result operationally.
+
+26
+00:01:33,222 --> 00:01:36,742
+This walkthrough uses simulated inventory and deletes nothing.

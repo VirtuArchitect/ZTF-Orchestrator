@@ -1,5 +1,5 @@
-00:00:00.000 Distinguish the Native Foundation lane
-00:00:21.266 Read probes and review counts accurately
-00:00:46.869 Review the post-foundation baseline mappings
-00:01:14.345 Handle hardware and certificate controls explicitly
-00:01:39.270 Operate within the demonstrated scope
+00:00:00.000 Ask what actually ran
+00:00:17.311 Review the intended target
+00:00:34.631 Choose the established deployment
+00:00:51.799 Verify beyond a probe
+00:01:10.142 Keep evidence bounded

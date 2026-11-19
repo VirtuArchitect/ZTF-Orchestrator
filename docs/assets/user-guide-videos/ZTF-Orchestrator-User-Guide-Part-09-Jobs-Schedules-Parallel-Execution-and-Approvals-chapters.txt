@@ -1,5 +1,5 @@
-00:00:00.000 Follow durable jobs and their evidence
-00:00:21.936 Review the exact approval request
-00:00:47.838 Create a schedule only after a successful manual test
-00:01:11.811 Understand the parallel execution boundary
-00:01:38.529 Handle interruption without replaying writes
+00:00:00.000 Follow the exact pipeline step
+00:00:21.913 Recognize missing evidence
+00:00:40.656 Read the approval count
+00:00:58.444 Schedule supported work
+00:01:15.806 Handle interruption

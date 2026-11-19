@@ -1,6 +1,5 @@
-00:00:00.000 What ZTF-Orchestrator is
-00:00:31.654 How the components work together
-00:01:06.701 From physical nodes to a configured cluster
-00:01:42.393 Preparing infrastructure recovery
-00:02:16.547 Monitoring and governing operations
-00:03:06.376 Scope, maturity and where to start
+00:00:00.000 Follow one cluster
+00:00:20.247 Understand the components
+00:00:42.649 Prepare before execution
+00:01:00.111 Recover and verify
+00:01:19.391 Know the current boundary

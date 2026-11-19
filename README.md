@@ -281,8 +281,9 @@ then choose the relevant chapter from [User Guide Videos](https://virtuarchitect
 [Part 15](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15)
 covers profile-based recovery; [Part 16](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16)
 covers appliance deployment and SSH setup; [Part 17](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17)
-covers Ubuntu disk expansion. Dated videos may show historical navigation or
-retired integrations; use current operator guides for execution scope.
+covers Ubuntu disk expansion. The refreshed 23-part series uses light-mode examples, Joanna studio narration
+and English captions, including YAML Studio, PE-direct uplink/DARE and specialist
+configuration. Parts 16 and 17 retain their current recordings.
 See [video transcripts and captions](docs/user-guide-videos.md).
 
 <details>

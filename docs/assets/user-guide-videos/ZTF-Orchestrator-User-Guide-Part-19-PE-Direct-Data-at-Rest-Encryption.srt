@@ -1,0 +1,107 @@
+1
+00:00:00,256 --> 00:00:03,853
+Under Configure, open Enable Data-at-Rest Encryption.
+
+2
+00:00:04,096 --> 00:00:08,619
+Choose PE direct and enter the expected cluster UUID, PE
+
+3
+00:00:08,619 --> 00:00:11,126
+endpoint and saved credential reference.
+
+4
+00:00:11,261 --> 00:00:14,944
+This path uses Prism Element and an existing Local KMS;
+
+5
+00:00:14,973 --> 00:00:18,058
+it does not require Prism Central or SSH.
+
+6
+00:00:18,216 --> 00:00:20,910
+It is not an external key-manager conversion tool.
+
+7
+00:00:21,160 --> 00:00:23,293
+Keep certificate verification enabled.
+
+8
+00:00:23,437 --> 00:00:27,696
+A permitted temporary exception needs an explicit reason, independent approval
+
+9
+00:00:27,832 --> 00:00:31,642
+and an audit record. HTTPS remains encrypted,
+
+10
+00:00:31,714 --> 00:00:35,930
+but bypassing certificate verification removes that certificate-based identity
+
+11
+00:00:35,938 --> 00:00:40,347
+check. The exception applies to this operation and does not change global trust
+
+12
+00:00:40,440 --> 00:00:43,731
+or other workflows. Run read-only discovery.
+
+13
+00:00:43,923 --> 00:00:48,566
+Verify cluster identity, complete healthy membership, supported software-encryption
+
+14
+00:00:48,660 --> 00:00:51,126
+state and the reported Local KMS.
+
+15
+00:00:51,347 --> 00:00:55,870
+Review licensing, platform support, other encryption tasks and key-backup
+
+16
+00:00:55,870 --> 00:01:00,314
+ownership. Missing, partial or unsupported states block the operation
+
+17
+00:01:00,493 --> 00:01:02,533
+rather than being converted automatically.
+
+18
+00:01:02,925 --> 00:01:06,160
+Software encryption cannot be disabled after enablement.
+
+19
+00:01:06,381 --> 00:01:10,283
+Review the exact plan and obtain approval from a different administrator.
+
+20
+00:01:10,532 --> 00:01:14,372
+Live writes default to off until the installed version and hardware have been
+
+21
+00:01:14,372 --> 00:01:18,588
+validated. In an enabled environment, the exact confirmation
+
+22
+00:01:18,724 --> 00:01:23,032
+precedes fresh identity, health and state checks and one request.
+
+23
+00:01:23,436 --> 00:01:27,788
+PE configuration readback and background encryption monitoring are separate from
+
+24
+00:01:27,788 --> 00:01:29,636
+proof that keys can be recovered.
+
+25
+00:01:29,879 --> 00:01:33,339
+Preserve and verify key backups outside the appliance.
+
+26
+00:01:33,530 --> 00:01:38,173
+If submission or verification is uncertain, inspect actual PE state before
+
+27
+00:01:38,266 --> 00:01:42,857
+another request. Rolling back the Orchestrator does not turn encryption off.

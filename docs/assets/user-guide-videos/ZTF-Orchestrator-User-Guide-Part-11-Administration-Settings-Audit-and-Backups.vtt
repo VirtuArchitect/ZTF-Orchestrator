@@ -1,157 +1,76 @@
 WEBVTT
 
-00:00:00.256 --> 00:00:04.523
-Setup and Install checks prerequisites and the configured framework paths.
+00:00:00.256 --> 00:00:04.685
+In Administration, Setup and Install, verify the compatible ZTF
 
-00:00:04.821 --> 00:00:09.151
-Use the compatible legacy runtime for Workflows and Scripts one point x.
+00:00:04.693 --> 00:00:09.216
+one point x runtime. Framework status starts as Checking framework while
 
-00:00:09.427 --> 00:00:13.309
-Keep the separate two point x runtime and command for its preview plan and
+00:00:09.216 --> 00:00:13.833
+detection runs. Installed framework files do not prove cluster health.
 
-00:00:13.395 --> 00:00:14.227
-apply surface.
+00:00:13.901 --> 00:00:18.159
+Retained NKP or two point x binaries do not make their retired
 
-00:00:14.589 --> 00:00:17.981
-A detected path is not proof of provider compatibility.
+00:00:18.167 --> 00:00:19.838
+console execution available.
 
-00:00:18.429 --> 00:00:22.501
-Verify the relevant non-mutating command before allowing operational work.
+00:00:20.258 --> 00:00:23.365
+Open Users, then Sessions as an administrator.
 
-00:00:22.880 --> 00:00:27.488
-Administrators create named console users with administrator, operator or
+00:00:23.586 --> 00:00:27.938
+Three signed-in users and five sessions can represent several sign-ins by
 
-00:00:27.530 --> 00:00:28.384
-viewer roles.
+00:00:27.938 --> 00:00:32.299
+the same account. Recently active means recorded interaction within five
 
-00:00:28.725 --> 00:00:32.224
-These are Orchestrator accounts, separate from local P E accounts.
+00:00:32.350 --> 00:00:36.523
+minutes; an unexpired session is not proof that a person is currently using
 
-00:00:32.480 --> 00:00:35.983
-Provision initial access securely and review execution permissions.
+00:00:36.531 --> 00:00:40.832
+the console. Review username, sign-in role and time, last
 
-00:00:36.418 --> 00:00:39.746
-Users now includes the administrator-only Sessions panel.
+00:00:40.840 --> 00:00:45.266
+activity and expiry. Passive polling does not itself prove activity,
 
-00:00:40.045 --> 00:00:43.629
-Signed-in users and total sessions are different counts because a user can
+00:00:45.380 --> 00:00:48.039
+and activity does not extend expiry.
 
-00:00:43.672 --> 00:00:44.994
-have multiple sign-ins.
+00:00:48.239 --> 00:00:52.676
+To revoke one session, review its identifier and confirmation, then
 
-00:00:45.293 --> 00:00:48.712
-Recently active means recorded interaction within five minutes.
+00:00:52.676 --> 00:00:54.170
+inspect the audit record.
 
-00:00:49.059 --> 00:00:54.179
-Polling and an idle open tab do not count as activity or extend expiry.
+00:00:54.400 --> 00:00:57.905
+Do not confuse revocation with deleting the user account.
 
-00:00:54.478 --> 00:00:56.682
-Older sessions can show Not tracked.
+00:00:58.240 --> 00:01:02.080
+Back up configuration and the matching database and application data through
 
-00:00:56.995 --> 00:01:02.670
-Inspect the user, role, sign-in time, expiry and activity before revoking an
+00:01:02.080 --> 00:01:04.035
+the approved maintenance procedure.
 
-00:01:02.712 --> 00:01:03.739
-individual session.
+00:01:04.256 --> 00:01:06.709
+Keep verified copies outside the appliance.
 
-00:01:04.041 --> 00:01:07.881
-Confirm the selected revocation; revoking your current session signs you
+00:01:06.874 --> 00:01:11.389
+Preserve credentials, pipelines, approval records and recovery progress
 
-00:01:07.924 --> 00:01:08.350
-out.
+00:01:11.567 --> 00:01:15.883
+together. Do not use unrelated backup halves as a restore pair.
 
-00:01:08.649 --> 00:01:11.977
-In-flight requests may finish and durable jobs continue.
+00:01:16.217 --> 00:01:20.868
+For support, record the running image and health build identity, relevant job
 
-00:01:12.275 --> 00:01:16.081
-Session revocation is audited and does not cancel infrastructure work.
+00:01:20.868 --> 00:01:23.377
+identifiers and safe audit evidence.
 
-00:01:16.523 --> 00:01:22.070
-Settings contains runtime paths, connection profiles, governance, storage,
+00:01:23.769 --> 00:01:26.821
+A downloaded update is not an installed update.
 
-00:01:22.283 --> 00:01:24.544
-notifications and build identity.
+00:01:27.031 --> 00:01:31.596
+Keep passwords, private keys and customer details out of screenshots and exported
 
-00:01:24.886 --> 00:01:27.267
-Review a profile before using its defaults.
-
-00:01:27.643 --> 00:01:31.483
-A connection test has a specific scope and does not create target accounts
-
-00:01:31.611 --> 00:01:33.680
-or prove every A P I permission.
-
-00:01:34.043 --> 00:01:37.681
-Preserve effective trust mounts and runtime settings during updates.
-
-00:01:38.035 --> 00:01:41.619
-Review exact approval policy before enabling a sensitive lane.
-
-00:01:42.046 --> 00:01:45.751
-Use the established backup procedure for the actual storage backend.
-
-00:01:46.086 --> 00:01:51.248
-Preserve credentials, configurations, managed cluster records, persistent
-
-00:01:51.334 --> 00:01:55.366
-review items, recovery history and required host settings.
-
-00:01:55.728 --> 00:01:59.134
-Retain database and data recovery materials independently.
-
-00:01:59.547 --> 00:02:03.173
-Operational appliance signals now show reported application health,
-
-00:02:03.387 --> 00:02:07.739
-backup-record age, update-service availability and build identity.
-
-00:02:08.080 --> 00:02:09.925
-These help decide what to inspect.
-
-00:02:10.233 --> 00:02:14.500
-A recent backup record is not proof that a restore works, and reported build
-
-00:02:14.628 --> 00:02:17.586
-identity should be checked against the running image during support.
-
-00:02:18.126 --> 00:02:21.318
-Test backup readability and rehearse restoration safely.
-
-00:02:21.608 --> 00:02:25.213
-Application-image rollback is separate from database restoration.
-
-00:02:25.533 --> 00:02:29.032
-Restoring Orchestrator state does not reverse changes already made on
-
-00:02:29.075 --> 00:02:30.205
-Nutanix targets.
-
-00:02:30.483 --> 00:02:34.343
-Use the actual backend recovery procedure and retain the matching evidence.
-
-00:02:34.895 --> 00:02:40.399
-Audit Log helps trace authentication, authorization, configuration, jobs and
-
-00:02:40.442 --> 00:02:41.508
-governance actions.
-
-00:02:41.978 --> 00:02:45.903
-Correlate the record with a timestamp, exact installed build and job
-
-00:02:46.031 --> 00:02:46.766
-identifier.
-
-00:02:47.032 --> 00:02:51.043
-Settings About and the running image distinguish patch builds; the footer
-
-00:02:51.086 --> 00:02:52.515
-release alone may not.
-
-00:02:52.835 --> 00:02:55.428
-Export only sanitized support evidence.
-
-00:02:55.846 --> 00:02:59.899
-Keep passwords, session tokens, private keys and secret-bearing
-
-00:03:00.027 --> 00:03:02.278
-configuration out of public reports.
+00:01:31.596 --> 00:01:36.184
+diagnostics. Use the current written guide for the version-specific procedure.

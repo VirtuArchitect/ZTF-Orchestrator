@@ -1,0 +1,5 @@
+00:00:00.000 Choose the correct action
+00:00:22.284 Prepare the physical path
+00:00:41.886 Preflight and approve
+00:01:02.957 Verify the actual result
+00:01:21.700 Roll back with fresh approval

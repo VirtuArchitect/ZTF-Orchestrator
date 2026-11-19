@@ -1,0 +1,9 @@
+Open Advanced Automation, Scripts, Change Virtual Switch MTU as an administrator. This standalone action targets the default V S zero, or B R zero, on the supported healthy cluster. Unlike the PE-direct uplink wizard, this workflow uses trusted PE and Prism Central connections and the supported PC networking API.
+
+Review the intended cluster UUID, saved credentials, active-backup bond and physical network support for jumbo frames. Confirm maintenance capacity and out-of-band access. The reviewed change raises the physical uplink MTU from fifteen hundred to nine thousand while preserving the existing bond and uplinks.
+
+Run read-only preflight and inspect every host and physical uplink. Missing or inconsistent readback blocks application. Have another administrator approve the exact plan, then use the cluster-bound confirmation only in a separately validated environment. Live writes default to off; this demonstration performs no MTU changes.
+
+Follow the Prism task and per-host readback in Jobs and Queue. Keep controller virtual machine interface MTU at fifteen hundred as documented. Verify end-to-end traffic on the intended VLANs separately. A successful task alone does not prove that the physical switching path carries jumbo frames correctly.
+
+Reconcile the original Prism task first. Enter the settled change job identifier and review the recorded original MTU against current identity and settings. Request fresh rollback approval and confirmation. If telemetry is unavailable, use the site console recovery procedure; the workflow does not automatically reverse an uncertain write.

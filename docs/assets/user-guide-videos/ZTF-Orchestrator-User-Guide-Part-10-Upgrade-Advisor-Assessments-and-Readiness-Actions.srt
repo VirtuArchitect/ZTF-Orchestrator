@@ -1,167 +1,101 @@
 1
-00:00:00,299 --> 00:00:04,032
-Use Upgrade Advisor to identify evidence needed before an upgrade.
+00:00:00,256 --> 00:00:04,216
+Upgrade Advisor is a read-only risk assessment, not an upgrade
 
 2
-00:00:04,267 --> 00:00:08,640
-Enter the cluster context and reviewed P E and optional P C connections.
+00:00:04,224 --> 00:00:08,312
+executor. For Cluster A, enter the intended current and target
 
 3
-00:00:09,003 --> 00:00:11,345
-Establish verified certificate trust first.
+00:00:08,363 --> 00:00:12,707
+versions. Use saved PE and optional PC credential references
 
 4
-00:00:11,598 --> 00:00:15,864
-The advisor does not execute upgrades or certify a supported upgrade path.
+00:00:12,800 --> 00:00:14,536
+for the supported inventory reads.
 
 5
-00:00:16,291 --> 00:00:21,411
-Verify T L S certificate is enabled separately for P E and P C inventory
+00:00:14,582 --> 00:00:17,319
+Keep certificate verification selected by default.
 
 6
-00:00:21,496 --> 00:00:22,080
-collection.
+00:00:17,483 --> 00:00:21,656
+The PE and PC inventory controls have separate request-scoped TLS
 
 7
-00:00:22,450 --> 00:00:26,077
-Administrators can use an explicitly scoped temporary exception where
+00:00:21,665 --> 00:00:26,064
+settings. An administrator can make a deliberate temporary exception where
+permitted.
 
 8
-00:00:26,120 --> 00:00:26,866
-authorized.
+00:00:26,298 --> 00:00:30,471
+The exception is audited and retained with collection results, and verification
 
 9
-00:00:27,144 --> 00:00:31,282
-It resets after collection, is audited, and is preserved as a qualification
+00:00:30,564 --> 00:00:34,908
+resets afterward. It does not change recovery health, drift or other
 
 10
-00:00:31,538 --> 00:00:33,862
-in saved inventory and assessment reports.
+00:00:34,916 --> 00:00:36,423
+workflows' trust settings.
 
 11
-00:00:34,329 --> 00:00:36,441
-Review that qualification with the findings.
+00:00:36,686 --> 00:00:40,497
+Review what the collection actually returned and what remains Unknown.
 
 12
-00:00:36,675 --> 00:00:40,899
-An exception weakens identity assurance for that collection; it is not a
+00:00:40,654 --> 00:00:43,249
+A failed read is not a version value.
 
 13
-00:00:40,942 --> 00:00:43,478
-trust repair or a general workflow setting.
+00:00:43,427 --> 00:00:47,174
+NCC, LCM prechecks, firmware, Foundation
 
 14
-00:00:43,837 --> 00:00:47,592
-Other workflows, drift checks and recovery keep their own certificate
+00:00:47,352 --> 00:00:51,002
+and compatibility evidence are not all collected automatically.
 
 15
-00:00:47,635 --> 00:00:48,246
-policies.
+00:00:51,169 --> 00:00:55,179
+Supply missing information through the appropriate independent procedure and
+retain
 
 16
-00:00:48,702 --> 00:00:52,584
-Collect fresh inventory and inspect the timestamp, returned fields and
+00:00:55,179 --> 00:00:58,542
+its source. Run the assessment and open each finding.
 
 17
-00:00:52,627 --> 00:00:53,623
-collection errors.
+00:00:58,763 --> 00:01:02,851
+Check its source, affected version or feature, severity and recommended
 
 18
-00:00:53,936 --> 00:00:59,226
-P E cluster and host reads can supply A O S and homogeneous A H V versions.
+00:01:02,902 --> 00:01:07,227
+action. A saved declaration that release notes or compatibility were
 
 19
-00:00:59,568 --> 00:01:03,536
-P C product-header detection is limited context, not an authenticated
+00:01:07,227 --> 00:01:10,035
+reviewed is not an automatic vendor check.
 
 20
-00:01:03,664 --> 00:01:04,474
-permission test.
+00:01:10,213 --> 00:01:14,522
+Resolve the finding through its documented evidence, not by changing a label to look
 
 21
-00:01:04,645 --> 00:01:07,405
-Other components can remain manual or unknown.
+00:01:14,522 --> 00:01:18,380
+ready. Save the assessment snapshot with its inputs, collection
 
 22
-00:01:07,691 --> 00:01:10,692
-Do not replace missing values with guessed versions.
+00:01:18,644 --> 00:01:20,407
+provenance and findings.
 
 23
-00:01:11,062 --> 00:01:14,429
-Enter the intended target versions and environment signals.
+00:01:20,649 --> 00:01:23,649
+Reassess when the target or evidence changes.
 
 24
-00:01:14,681 --> 00:01:19,631
-Review release notes, compatibility, lifecycle prechecks and any dark-site
+00:01:23,935 --> 00:01:28,481
+Use the result alongside the vendor upgrade process and site change approval.
 
 25
-00:01:19,716 --> 00:01:22,425
-bundle requirements using the actual vendor material.
-
-26
-00:01:22,788 --> 00:01:25,249
-Mark evidence complete only when it was reviewed.
-
-27
-00:01:25,492 --> 00:01:29,204
-Curated rule packs contribute explicit guardrails and sources.
-
-28
-00:01:29,588 --> 00:01:33,385
-They are not an automatic scrape of every support article or private defect
-
-29
-00:01:33,470 --> 00:01:33,840
-record.
-
-30
-00:01:34,323 --> 00:01:38,163
-Run the assessment and review each blocker, warning, review item and
-
-31
-00:01:38,206 --> 00:01:38,940
-unknown.
-
-32
-00:01:39,289 --> 00:01:43,129
-Read the guidance, source and missing evidence rather than looking only at
-
-33
-00:01:43,172 --> 00:01:44,260
-an overall score.
-
-34
-00:01:44,537 --> 00:01:47,726
-Assign the necessary follow-up and collect its real evidence.
-
-35
-00:01:48,141 --> 00:01:52,365
-A clear result remains limited to the reviewed inputs and rules; it does not
-
-36
-00:01:52,408 --> 00:01:56,014
-replace actual lifecycle checks or authorize change execution.
-
-37
-00:01:56,486 --> 00:02:00,283
-Save the reviewed assessment with its owner and context, then export the
-
-38
-00:02:00,326 --> 00:02:01,819
-evidence bundle if required.
-
-39
-00:02:02,161 --> 00:02:04,998
-The snapshot preserves the assessed inputs and findings.
-
-40
-00:02:05,275 --> 00:02:09,313
-Collecting newer inventory later does not rewrite that saved assessment.
-
-41
-00:02:09,638 --> 00:02:13,264
-Compare a new snapshot when conditions change and retain the relevant
-
-42
-00:02:13,350 --> 00:02:17,188
-version with the change record and final vendor precheck results.
+00:01:28,692 --> 00:01:32,996
+It does not certify every hardware combination or submit an upgrade.

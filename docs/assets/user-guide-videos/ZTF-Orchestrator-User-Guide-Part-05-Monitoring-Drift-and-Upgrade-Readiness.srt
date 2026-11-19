@@ -1,247 +1,107 @@
 1
-00:00:00,299 --> 00:00:04,864
-Begin with the actual P E endpoint and a credential reference authorized for
+00:00:00,299 --> 00:00:04,579
+Cluster A has a saved record, but that record is not a live health check.
 
 2
-00:00:04,907 --> 00:00:06,165
-the necessary reads.
+00:00:04,693 --> 00:00:09,379
+Review the PE endpoint, expected UUID, complete node baseline
 
 3
-00:00:06,528 --> 00:00:08,552
-Add P C context when needed.
+00:00:09,429 --> 00:00:10,829
+and credential reference.
 
 4
-00:00:08,742 --> 00:00:12,539
-Establish persistent certificate trust in the appliance and preserve the
+00:00:10,965 --> 00:00:13,354
+Select Collect PE health deliberately.
 
 5
-00:00:12,582 --> 00:00:14,779
-trust mount across container replacement.
+00:00:13,582 --> 00:00:18,147
+The operational-health collector requires trusted HTTPS and does not
 
 6
-00:00:15,099 --> 00:00:18,138
-The certificate must match the endpoint name or address.
+00:00:18,147 --> 00:00:20,614
+offer the specialist wizards' TLS exception.
 
 7
-00:00:18,584 --> 00:00:23,662
-Upgrade Advisor now offers separate Verify T L S certificate controls for P
+00:00:20,835 --> 00:00:24,163
+If collection fails, read the specific diagnostic.
 
 8
-00:00:23,832 --> 00:00:27,715
-E and P C inventory collection, enabled by default.
+00:00:24,307 --> 00:00:28,117
+Untrusted issuer and certificate address mismatch have different fixes.
 
 9
-00:00:28,099 --> 00:00:31,982
-A temporary exception is administrator-only, applies to that inventory
+00:00:28,189 --> 00:00:32,832
+An unresolved reference differs from HTTP four zero one authentication rejection
 
 10
-00:00:32,067 --> 00:00:34,038
-collection and resets afterward.
+00:00:33,053 --> 00:00:35,339
+or four zero three access denial.
 
 11
-00:00:34,302 --> 00:00:37,843
-The exception is audited and remains visible in saved inventory and
+00:00:35,508 --> 00:00:39,689
+DNS, timeout, refused connection and routing errors describe
 
 12
-00:00:37,886 --> 00:00:38,910
-assessment reports.
+00:00:39,689 --> 00:00:43,421
+transport failures. None of these alone proves an unhealthy cluster.
 
 13
-00:00:39,422 --> 00:00:42,920
-Keep verification enabled for normal operation and correct the trust
+00:00:43,785 --> 00:00:46,796
+A completed observation expires after fifteen minutes.
 
 14
-00:00:43,006 --> 00:00:43,550
-problem.
+00:00:47,049 --> 00:00:51,479
+Evidence age uses the appliance timestamps, while browser clock skew produces
 
 15
-00:00:43,923 --> 00:00:48,148
-This scoped inventory exception does not change drift, recovery or other
+00:00:51,487 --> 00:00:55,839
+a separate warning. A workstation timezone display is not itself proof
 
 16
-00:00:48,276 --> 00:00:49,705
-workflow trust policies.
+00:00:55,839 --> 00:00:59,960
+of clock drift. Correct invalid or future timestamps and time
 
 17
-00:00:50,068 --> 00:00:53,985
-Workstation connectivity alone does not establish access from the appliance.
+00:00:59,960 --> 00:01:02,284
+synchronization before relying on the result.
 
 18
-00:00:54,482 --> 00:00:57,725
-Open Upgrade Advisor and collect fresh inventory from the reviewed
+00:01:02,733 --> 00:01:07,120
+Use Live Prism Element drift to compare the supported settings against an approved
 
 19
-00:00:57,810 --> 00:00:58,429
-connections.
+00:01:07,128 --> 00:01:10,879
+baseline. Test the comparison manually before scheduling it.
 
 20
-00:00:58,834 --> 00:01:02,162
-Inspect discovered versions and fields that remain unknown.
+00:01:11,037 --> 00:01:15,018
+Keep a failed collection distinct from a real configuration difference.
 
 21
-00:01:02,418 --> 00:01:06,599
-Enter the intended target versions and supporting evidence, then run the
+00:01:15,261 --> 00:01:19,655
+A schedule needs the same valid credentials, reachability and trust as
 
 22
-00:01:06,642 --> 00:01:07,310
-assessment.
+00:01:19,655 --> 00:01:23,157
+the manual check. Refresh only reloads saved records;
 
 23
-00:01:07,595 --> 00:01:11,456
-Review blockers, warnings, unknowns and readiness actions.
+00:01:23,165 --> 00:01:25,056
+it does not collect Prism data.
 
 24
-00:01:11,904 --> 00:01:14,891
-Save an immutable assessment snapshot for the change record.
+00:01:25,256 --> 00:01:29,237
+Review timestamps, source and the individual checks before acceptance.
 
 25
-00:01:15,232 --> 00:01:19,029
-This read-only advisor does not run an upgrade or replace vendor
+00:01:29,394 --> 00:01:33,610
+A PE Good readback is not a full NCC, resilience, application
 
 26
-00:01:19,072 --> 00:01:21,082
-compatibility and lifecycle checks.
+00:01:33,789 --> 00:01:35,661
+or recovery acceptance test.
 
 27
-00:01:21,431 --> 00:01:27,532
-Save a desired configuration for D N S, N T P and Pulse with the correct
-
-28
-00:01:27,703 --> 00:01:29,282
-cluster and credential reference.
-
-29
-00:01:29,538 --> 00:01:33,805
-In Drift Detection select that file and Live Prism Element as the source,
-
-30
-00:01:34,061 --> 00:01:35,286
-then run a manual check.
-
-31
-00:01:35,531 --> 00:01:38,368
-Every live scheduled run collects fresh settings.
-
-32
-00:01:38,688 --> 00:01:41,248
-Stored-snapshot comparisons are a separate mode.
-
-33
-00:01:41,462 --> 00:01:45,226
-An unknown collection result must not be counted as a healthy match.
-
-34
-00:01:45,671 --> 00:01:49,682
-Add or edit the Automation entry, choose the correct file, source and
-
-35
-00:01:49,725 --> 00:01:53,543
-baseline, and review the five-field U T C cron expression.
-
-36
-00:01:53,863 --> 00:01:56,522
-Save it enabled only after the manual check works.
-
-37
-00:01:56,834 --> 00:02:00,311
-Inspect the next actual scheduled result and its timestamp.
-
-38
-00:02:00,588 --> 00:02:02,231
-Pause schedules for maintenance.
-
-39
-00:02:02,508 --> 00:02:06,007
-Editing or enabling an entry is not proof that a scheduled read has
-
-40
-00:02:06,050 --> 00:02:07,150
-completed successfully.
-
-41
-00:02:07,474 --> 00:02:10,930
-A certificate trust failure requires the approved issuing chain or
-
-42
-00:02:11,015 --> 00:02:12,572
-appropriate trust configuration.
-
-43
-00:02:12,850 --> 00:02:18,055
-An I P or subject-alternative-name mismatch requires a matching endpoint or
-
-44
-00:02:18,098 --> 00:02:18,899
-certificate.
-
-45
-00:02:19,232 --> 00:02:23,456
-A network failure requires routing, firewall, name-resolution or
-
-46
-00:02:23,499 --> 00:02:26,080
-target-service investigation from the appliance.
-
-47
-00:02:26,485 --> 00:02:29,776
-These failures remain unknown, not drifted or matched.
-
-48
-00:02:30,122 --> 00:02:34,474
-Do not disable verification or change the desired baseline just to obtain a
-
-49
-00:02:34,516 --> 00:02:35,242
-green result.
-
-50
-00:02:35,754 --> 00:02:39,807
-Monitor and Verify links to Drift Detection, inventory and upgrade
-
-51
-00:02:39,892 --> 00:02:42,799
-readiness, and Execution History and Logs.
-
-52
-00:02:43,060 --> 00:02:47,711
-Overview and Clusters now add explicit managed records and P E observations.
-
-53
-00:02:48,180 --> 00:02:50,627
-These are separate evidence sources with different scopes.
-
-54
-00:02:51,082 --> 00:02:54,184
-A P E observation becomes stale after fifteen minutes.
-
-55
-00:02:54,556 --> 00:02:59,206
-Overview Refresh reads saved records; Collect P E health, read-only,
-
-56
-00:02:59,420 --> 00:03:01,361
-explicitly contacts the target.
-
-57
-00:03:01,681 --> 00:03:06,289
-Review identity, full expected membership and reported health, then use the
-
-58
-00:03:06,332 --> 00:03:08,613
-appropriate independent acceptance checks.
-
-59
-00:03:08,911 --> 00:03:13,007
-N K P Validation Evidence remains under Advanced Automation with a Preview
-
-60
-00:03:13,220 --> 00:03:14,991
-badge and its retained sources.
-
-61
-00:03:15,397 --> 00:03:20,090
-A specialist evidence pack, successful job or fresh P E Good result cannot
-
-62
-00:03:20,389 --> 00:03:23,459
-independently declare a cluster ready for workloads.
+00:01:35,843 --> 00:01:40,151
+Close historical attention reviews deliberately after investigating their source.

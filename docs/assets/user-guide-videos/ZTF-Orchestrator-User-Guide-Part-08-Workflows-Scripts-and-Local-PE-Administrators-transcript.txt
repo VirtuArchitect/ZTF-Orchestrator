@@ -1,21 +1,9 @@
-Part 08 - Workflows Scripts and Local PE Administrators
-Updated 4 November 2026. Simulated console examples; synthetic narration.
+Choose a supported ZTF one point x workflow or script and its matching configuration. A filename alone does not select the action. For example, a PC registration file is not a storage-standard configuration. Retired Native, NKP and two point x execution routes do not provide an alternative launcher.
 
-Choose a workflow for the required backend
-Expand Advanced Automation and open Workflows. Read the description and select the service actually available. Integrated Foundation Central, standalone F C A and classic Foundation V M use different contracts. Import or complete the matching form and review its generated configuration. Do not assume that a similarly named action has the same credentials or execution semantics.
+For Cluster A, verify the actual target and purpose of every credential reference. Group labels make the list easier to navigate but never substitute the correct account. Save changed values to ZTF. A reference being present is different from the target accepting its username and password.
 
-Use scripts for focused actions
-Open Scripts for a specific allowlisted action. Use its parameter wizard and installed schema, then review the generated input. A script sequence and a workflow are different launch modes. Supply the required saved file and inspect verification after execution.
+When changing administrative access, review the exact scope and confirmation. Verify replacement authentication before later configuration stages use it. Do not automatically replay a failed password-change step: a request can succeed remotely even when the following verification fails.
 
-Set Prism Login Title for P E is now available as a focused script or pipeline action, with title-only Configure Cluster support. Review the exact title and cluster, select the correct vault credential reference and retain certificate verification.
+Set Prism Login Title changes the PE login-screen title, not the cluster, controller virtual machine or hypervisor name. Local administrator scripts need independent user and role verification. Keep version-specific prerequisites and approval policy with the selected action rather than assuming every script shares the same contract.
 
-The action compares the existing setting, applies a change only when needed, and requires a fresh readback to verify the requested title. Legacy U I A P I compatibility still needs validation against the target A O S version. A saved title or subprocess success alone does not prove the target displays it.
-
-Create named local PE administrators
-For local P E users choose Create Local Users for P E. Each requested username needs its own matching credential reference. Select the intended role set explicitly and respect the installed schema. Run Dry Run before submission. After creation, independently confirm that each account is enabled and has both Cluster Admin and User Admin when those are the approved roles.
-
-Read a stage-specific failure
-Inspect the stage and safe category when local user creation fails. Credential resolution, certificate trust, identity mismatch, network access, creation, role assignment and verification are separate failure points. Check whether any accounts or roles were already created. Correct the actual cause and rerun only through the supported process. Do not paste passwords or raw authentication headers into a support request.
-
-Treat credential rotation as a sensitive operation
-The C V M and Dell i D R A C rotation workflow has a separate support boundary and exact confirmations. Verify each C V M host-key fingerprint independently, establish the required access and keep an out-of-band recovery path. Review any manual follow-up, including host I P M I credential synchronization. A dry run or approval does not prove that live rotation is validated for your firmware and release.
+Read the saved job output, reported stage and safe diagnostic. Distinguish credential resolution, rejected authentication, permissions, transport and response validation. Reconcile the actual target state before requesting another approved attempt. A successful process exit alone is not complete operational acceptance.

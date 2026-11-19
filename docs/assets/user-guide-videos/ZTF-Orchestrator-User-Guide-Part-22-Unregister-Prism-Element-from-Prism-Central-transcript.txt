@@ -1,0 +1,9 @@
+Open Unregister PE from PC under Workflows, or its matching Scripts action. Enter the PC endpoint, saved PC credential reference and exact PE cluster UUID. Generating YAML does not contact a target. This administrator-only action has its own guarded job path and is not a general pipeline or scheduled step.
+
+Use Look up target, read-only. This requires strict certificate verification and supported PC APIs; it has no TLS bypass. Review the expected PC UUID and PE name from inventory. Missing, ambiguous or mismatched identities block removal instead of choosing a similar cluster.
+
+Check the version-specific unregistration procedure and dependencies such as replication, networking, application management and self-service configuration. The lookup does not certify those relationships. Record the dependency acknowledgement and have another administrator approve the exact YAML and filename.
+
+Only after validation and exact confirmation does the worker recheck identities, require the vendor dry-run task to succeed and submit one unregister request. An uncertain submission or cancellation can leave remote work running. Inspect and reconcile PC state before requesting a further attempt.
+
+Review the PC task and inventory result against the original UUID. PC-side success does not establish that every PE-side cleanup or application dependency is complete. Follow the documented PE cleanup handoff and site acceptance procedure. Keep the original job and approval as the audit record.

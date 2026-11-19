@@ -1,6 +1,5 @@
-00:00:00.000 Choose your starting point
-00:00:22.147 Read the operations overview
-00:00:59.156 Investigate persistent review items
-00:01:38.682 Manage cluster records and fresh observations
-00:02:34.163 Find the specialist tools
-00:03:03.339 Start safely and follow the evidence
+00:00:00.000 Choose the next action
+00:00:22.432 Understand an empty list
+00:00:42.415 Read health evidence
+00:01:02.066 Address the cause
+00:01:18.377 Close a review deliberately

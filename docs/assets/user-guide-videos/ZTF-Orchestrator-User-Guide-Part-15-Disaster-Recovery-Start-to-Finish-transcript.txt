@@ -1,23 +1,11 @@
-Recover an existing AHV cluster
-An existing AHV cluster needs a rebuild. In this simulated recovery, we’ll use a recovery profile to take one cluster from its saved build plan to workload restore handoff.
+Recovering Cluster A begins with a trusted Orchestrator, approved images and reviewed configuration. This is a simulated walkthrough, not an actual rebuild. Add or select the recovery datacenter, review prerequisites, and link one Foundation VM YAML with the intended post-configuration pipeline.
 
-Prepare the deployment and pipeline
-Before creating the profile, verify the approved node serials, network settings, and image checksums. Save the Foundation VM deployment file and a post-configuration pipeline for the same cluster. Open Disaster Recovery, add the datacenter, and record the Foundation VM endpoint and dependency reviews.
+Create the recovery profile and inspect its revision, exact nodes, image selections, credentials and ordered pipeline. Mark the baseline reviewed through the existing controls. An edited profile creates a new draft; an existing run keeps its original snapshot. No physical deployment happens while preparing these records.
 
-Create and review the recovery profile
-Choose Create Recovery Profile and select Existing cluster to rebuild. Link the saved deployment file and pipeline, then save the draft. Open Review Profile, check the target nodes, cluster address and captured steps, and select Mark Baseline Reviewed. If the source changes, capture and review a new revision.
+Choose Recover Cluster. If an open run exists, select Resume Recovery and inspect its current stage. For a new run, review targets and readiness, prepare recovery and obtain the deployment approval. Confirm the destructive scope before imaging. Submit once and monitor the existing Foundation job.
 
-Approve and deploy the reviewed recovery
-Select Prepare Recovery. Request deployment approval and have a second administrator approve the exact run in Approvals. Back in the recovery run, enter both confirmation phrases and acknowledge the imaging risk. Select Deploy Reviewed Recovery, then follow the linked Foundation job until imaging and cluster formation succeed.
+After imaging, complete the approved initial-access bootstrap and verify the replacement account. Provide the required fresh PE identity, membership and health evidence before remaining configuration. Resolve collection errors or use the documented independent evidence procedure. A certificate failure must not silently become a healthy result.
 
-Restore administrative access
-After Foundation succeeds, run initial access bootstrap if the captured pipeline includes eligible first steps. Use separate approvals where required, then run the approved password and EULA or Pulse actions. Verify the replacement credential before broader configuration.
+In this example, steps zero one through zero seven succeed and only PC registration fails. Reconcile PE and PC and confirm registration is absent. Record fresh health evidence, then use the eligible step zero eight-only retry. Show one new registration submission, unchanged earlier jobs and no new imaging.
 
-Verify the rebuilt cluster in Prism Element
-Select Collect PE Health Readbacks. Confirm the expected cluster identity, complete host membership, and health reported by Prism Element. Resolve any certificate or access error, then collect again. Start the remaining pipeline within fifteen minutes of fresh evidence.
-
-Run the remaining pipeline steps
-Select Run Remaining Pipeline Steps. Watch the saved DNS, time, network and storage settings run in order. Each completed step has a linked job. If a step fails, reconcile actual state and resume unfinished work after fresh health evidence. If policy requires a separate approval, run the approved step directly and link its successful job.
-
-Accept the cluster for restore handoff
-Read back the requested settings and check current cluster health. Enter verification notes and an evidence reference, then select Accept for Restore Handoff. The backup team now has the rebuilt cluster and the recovery evidence it needs to begin restoring workloads.
+Review completed configuration, infrastructure health and the recorded acceptance evidence. Hand workload restoration to your backup platform and verify it separately. Preserve run history and approvals; do not treat the simulated success shown here as a production recovery certification.

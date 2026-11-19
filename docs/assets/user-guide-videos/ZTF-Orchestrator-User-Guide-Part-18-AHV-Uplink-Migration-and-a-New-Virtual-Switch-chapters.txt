@@ -1,0 +1,5 @@
+00:00:00.000 Choose the PE-direct connection
+00:00:23.715 Review the trust policy
+00:00:45.380 Assign each host deliberately
+00:01:08.285 Approve the exact plan
+00:01:28.381 Verify one host at a time

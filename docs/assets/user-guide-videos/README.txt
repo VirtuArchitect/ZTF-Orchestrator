@@ -1,48 +1,14 @@
-ZTF ORCHESTRATOR USER GUIDE VIDEO SERIES
-Updated 17 November 2026
+ZTF-Orchestrator User Guide Videos - 19 November 2026
 
-Open the public player at https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/
-or play each MP4 directly.
-The MP4s are 1920 x 1080, 24 or 30 fps H.264 with AAC narration. Each has embedded
-chapters and burned-in English captions. SRT and VTT files are supplied for
-editing/accessibility workflows; do not enable a second subtitle overlay on top
-of the already captioned video. Transcripts and chapter text are included.
+Watch all 23 parts at https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/.
+MP4: H.264/AAC, 1920 x 1080. New videos are 24 fps; retained Part 17 preserves its original 30 fps. New narration is the approved Joanna voice at natural speed.
+English captions are burned in; transcripts, SRT/VTT and chapter markers are included.
+Parts 16 and 17 retain their current recordings and original files.
+Parts 12 and 13 now teach shared evidence and supported execution. Legacy filenames preserve existing links; they do not provide current NKP/2.x launch instructions.
 
-The console illustrations use generic simulated records, not live deployments.
-Parts 00, 01, 04, 05, 06, 07, 08, 10 and 11 use updated chapters based on 8c7843a.
-Unchanged chapters retain their original provenance, including general console
-illustrations from ea9dcf0 and detailed recovery illustrations from 416a480.
-See series-manifest.json for per-part and chapter provenance.
-Preview chapters describe current boundaries, not production certification.
-Workload restoration remains with the backup platform.
+Reviewed against the refreshed 156-page manual, repository 63fb536 and application f33c9ed.
+All new console captures and graphic examples use synthetic/generic data. Some schematic outcomes illustrate the documented sequence; they are not live job or target verification.
+PE-direct uplink/DARE retain their approval, verification and disabled-by-default write gates. VS0 MTU and unregistration keep their own PC/trust requirements.
+No live cluster or appliance was changed. All MP4s and companion files are served together on GitHub Pages.
 
-The series uses the Joanna studio voice. Part 17 uses light-mode reference screens and sample data. No real cluster deployment,
-account creation, installer, update, recovery or application mutation was run.
-
-Verification: full H.264/AAC decode, image/frame-rate/stream identity, chapter
-count and duration, caption boundaries, measured audio levels and encoded visual
-samples from every chapter. Audible pronunciation/listening review was not
-performed. Review technical names and speech before external publication.
-
-The series is based on v1.8.5-rc1 source ea9dcf0. It does not change the installed
-release, publish to a video platform, or modify the repository.
-
-PARTS
-00. ZTF-Orchestrator Overview (3:43)
-01. Dashboard Overview (3:26)
-02. Deploy a Cluster with Foundation VM (2:38)
-03. Post Deployment Configuration Pipelines (2:34)
-04. Disaster Recovery and Cluster Rebuilds (3:11)
-05. Monitoring Drift and Upgrade Readiness (3:24)
-06. Guided Appliance Updates and Rollback (2:40)
-07. Credentials Config Files and YAML Studio (2:44)
-08. Workflows Scripts and Local PE Administrators (2:31)
-09. Jobs Schedules Parallel Execution and Approvals (2:03)
-10. Upgrade Advisor Assessments and Readiness Actions (2:17)
-11. Administration Settings Audit and Backups (3:02)
-12. NKP Framework and Validation Evidence Preview (2:01)
-13. ZTF Two Point X IaC Preview (1:56)
-14. Native Foundation Baselines and Operating Boundaries (2:00)
-15. Disaster Recovery Start to Finish (2:24)
-16. AHV Appliance Deployment and SSH Setup (2:37)
-17. Production Ubuntu VM Disk Expansion (1:30)
+Technical decoding, timing, frame and integrity checks are recorded in verification-report.json. A complete human listening/pronunciation review has not been performed.

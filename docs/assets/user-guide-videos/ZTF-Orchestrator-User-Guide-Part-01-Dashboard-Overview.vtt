@@ -1,193 +1,82 @@
 WEBVTT
 
-00:00:00.299 --> 00:00:03.584
-If you want to deploy a cluster, start with Deploy a Cluster.
+00:00:00.256 --> 00:00:04.536
+For Cluster A, begin at Start Here and choose the outcome you need.
 
-00:00:03.925 --> 00:00:06.165
-You do not need to search through script names.
+00:00:04.736 --> 00:00:08.992
+Recover Infrastructure opens recovery preparation or an existing run.
 
-00:00:06.528 --> 00:00:11.221
-Start Here offers four choices: deploy, configure an existing cluster,
+00:00:09.082 --> 00:00:13.426
+Overview brings together managed cluster records, running jobs, fresh
 
-00:00:11.520 --> 00:00:14.722
-monitor and verify, or run saved automation.
+00:00:13.434 --> 00:00:16.391
+PE Good readbacks and open review items.
 
-00:00:15.064 --> 00:00:18.670
-This series follows the current console with simulated examples.
+00:00:16.719 --> 00:00:18.567
+These numbers describe different things;
 
-00:00:18.904 --> 00:00:21.834
-It does not execute changes against a real environment.
+00:00:18.639 --> 00:00:22.128
+one green indicator cannot establish overall readiness.
 
-00:00:22.147 --> 00:00:24.720
-Open Overview for the daily operations view.
+00:00:22.432 --> 00:00:26.797
+An empty managed-cluster list means no explicit record has been registered.
 
-00:00:25.031 --> 00:00:29.127
-The four action cards open deployment, configuration, infrastructure
+00:00:26.912 --> 00:00:31.512
+It does not prove that your YAML, deployed infrastructure or recovery
 
-00:00:29.170 --> 00:00:30.620
-recovery and monitoring.
+00:00:31.562 --> 00:00:36.263
+profiles are missing. Add a reviewed record with its intended endpoint, identity
 
-00:00:30.919 --> 00:00:32.810
-These links do not execute work.
+00:00:36.399 --> 00:00:40.837
+and node baseline, or use Config Files for saved configurations that are not
 
-00:00:33.180 --> 00:00:37.746
-The summary now shows Managed clusters, Open review items, Running jobs and
+00:00:40.837 --> 00:00:43.666
+registered clusters. Open the cluster detail.
 
-00:00:37.788 --> 00:00:39.419
-Fresh P E Good readbacks.
+00:00:43.866 --> 00:00:46.616
+Review the last PE collection and its age.
 
-00:00:39.471 --> 00:00:43.055
-Managed cluster counts come from explicitly registered records.
+00:00:46.780 --> 00:00:48.969
+Refresh reloads saved observations;
 
-00:00:43.396 --> 00:00:47.194
-They are not automatic discovery, and recovery profile counts remain a
+00:00:49.084 --> 00:00:51.188
+it does not contact Prism.
 
-00:00:47.236 --> 00:00:48.019
-separate concept.
+00:00:51.388 --> 00:00:54.516
+Collection failed means a read could not be completed.
 
-00:00:48.474 --> 00:00:51.319
-Read the timestamp and evidence below each record.
+00:00:54.716 --> 00:00:59.364
+Expired evidence means a recorded result is outside its fifteen-minute window.
 
-00:00:51.690 --> 00:00:54.506
-Refresh reloads saved operational records.
+00:00:59.591 --> 00:01:01.759
+A clock warning is reported separately.
 
-00:00:54.847 --> 00:00:58.730
-Merely opening or refreshing this page never contacts Prism Element.
+00:01:02.066 --> 00:01:06.674
+Review the specific cause, such as certificate trust, an address missing from
 
-00:00:59.156 --> 00:01:03.508
-Needs attention retains observed failed or interrupted jobs and P E
+00:01:06.674 --> 00:01:10.378
+the certificate, unresolved credentials or connectivity.
 
-00:01:03.551 --> 00:01:04.584
-observation issues.
+00:01:10.642 --> 00:01:13.072
+Correct that cause before collecting again.
 
-00:01:04.934 --> 00:01:08.454
-Open the original job or review the cluster before deciding what to do.
+00:01:13.300 --> 00:01:17.260
+Do not call the cluster unhealthy merely because the collector could not authenticate
 
-00:01:08.689 --> 00:01:12.173
-A newer successful job does not erase an earlier failure record.
+00:01:17.268 --> 00:01:21.889
+or connect. In Needs attention, open the original cluster or job,
 
-00:01:12.657 --> 00:01:16.923
-Choose Update review, assign an owner, and record useful reconciliation
+00:01:22.004 --> 00:01:23.633
+then use Update review.
 
-00:01:17.137 --> 00:01:18.425
-notes without secrets.
+00:01:23.869 --> 00:01:28.107
+Assign an owner, acknowledge with notes or explicitly resolve the item.
 
-00:01:18.732 --> 00:01:21.249
-Acknowledge the item while follow-up is in progress.
+00:01:28.221 --> 00:01:30.261
+Acknowledgement does not resolve it.
 
-00:01:21.633 --> 00:01:25.032
-Choose Resolved after review only after checking the actual outcome.
+00:01:30.355 --> 00:01:34.920
+Resolution preserves the original evidence, and a later failed observation can
 
-00:01:25.260 --> 00:01:28.366
-Acknowledgement and resolution update the review record.
-
-00:01:28.784 --> 00:01:33.050
-They do not fix the target, approve execution, change recovery gates or
-
-00:01:33.093 --> 00:01:34.053
-replay a job.
-
-00:01:34.330 --> 00:01:38.426
-A new failed P E readback can reopen a resolved observation item.
-
-00:01:38.682 --> 00:01:42.234
-Open Clusters to add or edit an explicit managed record.
-
-00:01:42.542 --> 00:01:46.980
-Link its saved configuration files, pipeline and recovery profile, then
-
-00:01:47.065 --> 00:01:50.948
-enter the expected cluster identity, complete node baseline and credential
-
-00:01:51.161 --> 00:01:51.859
-reference.
-
-00:01:52.215 --> 00:01:56.737
-Importing expected membership from Foundation Y A M L does not discover the
-
-00:01:56.780 --> 00:01:57.591
-actual target.
-
-00:01:58.017 --> 00:02:01.858
-Stale observation means the stored P E evidence is older than fifteen
-
-00:02:01.943 --> 00:02:04.319
-minutes or is unavailable as fresh evidence.
-
-00:02:04.689 --> 00:02:07.441
-It does not by itself mean the cluster is unhealthy.
-
-00:02:07.761 --> 00:02:12.326
-Select Review for the cluster, then Collect P E health, read-only, to
-
-00:02:12.369 --> 00:02:13.358
-request new evidence.
-
-00:02:13.886 --> 00:02:18.920
-Collection requires expected U U I D, node baseline, a credential reference
-
-00:02:19.133 --> 00:02:21.395
-and trusted H T T P S.
-
-00:02:21.694 --> 00:02:23.955
-Missing or failed evidence stays unknown.
-
-00:02:24.254 --> 00:02:28.520
-P E reported health is narrower than N C C, resilience testing and
-
-00:02:28.563 --> 00:02:29.870
-application acceptance.
-
-00:02:30.152 --> 00:02:33.736
-Existing recovery profiles remain listed separately on Clusters.
-
-00:02:34.163 --> 00:02:37.192
-The streamlined sidebar keeps ordinary tasks visible.
-
-00:02:37.448 --> 00:02:41.971
-Expand Advanced Automation for workflows, scripts, configuration files,
-
-00:02:42.184 --> 00:02:44.156
-schedules and execution history.
-
-00:02:44.507 --> 00:02:47.942
-Optional Integrations contains the preview integration paths.
-
-00:02:48.134 --> 00:02:52.400
-Administration contains setup, credentials, appliance operations and
-
-00:02:52.443 --> 00:02:53.168
-settings.
-
-00:02:53.510 --> 00:02:57.435
-N K P Validation Evidence carries a Preview badge and retains its specialist
-
-00:02:57.520 --> 00:02:58.062
-sources.
-
-00:02:58.433 --> 00:03:01.803
-Use execution history and target readbacks for ordinary cluster
-
-00:03:01.974 --> 00:03:02.714
-verification.
-
-00:03:03.339 --> 00:03:07.051
-For a normal task, choose the correct workflow, review the saved
-
-00:03:07.179 --> 00:03:11.958
-configuration, run the available dry run, obtain any required approval, and
-
-00:03:12.001 --> 00:03:12.880
-submit once.
-
-00:03:13.206 --> 00:03:15.318
-Follow its record in Jobs and Queue.
-
-00:03:15.552 --> 00:03:17.771
-Investigate failures before retrying.
-
-00:03:18.112 --> 00:03:21.718
-You can retain Start Here or Overview as your browser landing preference.
-
-00:03:21.952 --> 00:03:25.903
-Part two follows cluster deployment through the Foundation V M workflow.
+00:01:34.920 --> 00:01:36.223
+reopen the item.
