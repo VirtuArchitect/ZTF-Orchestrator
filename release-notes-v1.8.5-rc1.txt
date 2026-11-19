@@ -1,3 +1,6 @@
+DOCUMENTATION RELEASE ASSETS (existing appliance assets unchanged)
+The updated Administrator and User Guide is published as dated PDF and Word release assets with SHA-256 checksums. Public entry pages and the manual index now use direct release downloads. Document bytes, formatting, release channel and previously published runtime assets are unchanged.
+
 DOCUMENTATION GUIDE ACCESS (existing appliance assets unchanged)
 The README, light landing page and User Guide Videos page now link the updated Administrator and User Guide in PDF and Word formats. Existing document filenames, video links and appliance assets are unchanged.
 
