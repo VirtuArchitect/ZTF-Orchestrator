@@ -40,7 +40,7 @@
       "updated": true,
       "retained": false,
       "duration": 99.78999999999999,
-      "sha256": "5cc7fb5cd5a0790bb3d9da20841dd7dfd2149f740d47e9eb2b18bb2b6ba997a1",
+      "sha256": "e314278cff732f95e0dae6d8412fdcea1e2d7c841e8d1340dea3a5748124e20f",
       "chapters": [
         {
           "title": "Follow one cluster",
@@ -76,7 +76,17 @@
       "fps": 24,
       "integratedLufs": -16.51,
       "truePeakDb": -1.4,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 29,
+        "gapSamples": 9,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "a6dda835d76c5e9577d83ab1cc786aa539158339f752f9623a62eaec75e9b5db",
+      "decodedAudioSha256": "10320363d257e17fd6d0fd87f8fca8ba0387bc6d1d9d4a8db57683eae7d065b0",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 1,
@@ -84,7 +94,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.33,
-      "sha256": "1f9a040f7a507524595bd8dea72f7e45fb682e48c5f930c58ed1951d5b22808c",
+      "sha256": "82f989039c5292070fecb6281f7560a5b62e8467d4408fdec5d38811c59d1fda",
       "chapters": [
         {
           "title": "Choose the next action",
@@ -120,7 +130,17 @@
       "fps": 24,
       "integratedLufs": -16.36,
       "truePeakDb": -1.39,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 27,
+        "gapSamples": 12,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "a8c3f0321990019ed80ba904d798df8ade72f1b9e261f21bd9e29d7c1d71f9dd",
+      "decodedAudioSha256": "858ae4bcf94c1e8f0e740d1e7f9b917bb50c9fdfab253b32bb98b14fa8c4da5f",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 2,
@@ -173,7 +193,12 @@
       "title": "Create Cluster Workflows and Deployment Use Cases",
       "scriptSha256": "f6108f8ff58cad52e5ded1b245dcaf9e4dd52ac61e565b0b9e3101c669bdd00a",
       "narration": "Joanna - Warm & Conversational",
-      "captionRendering": "CFR 24 fps before ASS rasterization; encoded cue samples checked"
+      "captionRendering": "CFR 24 fps before ASS rasterization; encoded cue samples checked",
+      "captionRasterAudit": {
+        "cueSamples": 43,
+        "gapSamples": 22,
+        "failedSamples": 0
+      }
     },
     {
       "part": 3,
@@ -181,7 +206,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.46000000000001,
-      "sha256": "49f1d3fcceee47f99c43915d0207abc021de846eb3723b5eca9bf748456ca7d9",
+      "sha256": "d8c7de0e9b4dc1269868d1f70a22cc4e8b97bdd4d2261d4669154c3276c85002",
       "chapters": [
         {
           "title": "Separate the configuration files",
@@ -217,7 +242,17 @@
       "fps": 24,
       "integratedLufs": -16.5,
       "truePeakDb": -1.46,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 28,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "dd8d89e9aaf7ec94b33d148d253dbf3480ade04f81df2ffcc3045c61c557fe0c",
+      "decodedAudioSha256": "00ddc5f551713618ae0b31edabc8a60784f572f43dea0a3ae481a847e6a04c8f",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 4,
@@ -225,7 +260,7 @@
       "updated": true,
       "retained": false,
       "duration": 103.33,
-      "sha256": "e1c5b043bd44aa57c2a3a4cd8849b61b503d794297dcdccb3a5b87f456cf8fbc",
+      "sha256": "a1e0351cb028fed1173009fc7036c76db1e9feb2347957a0a60622e525101f61",
       "chapters": [
         {
           "title": "Start with the recovery action",
@@ -261,7 +296,17 @@
       "fps": 24,
       "integratedLufs": -16.57,
       "truePeakDb": -0.31,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 27,
+        "gapSamples": 8,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "881be001dc9ba11b15abc85bf24e33f03b2d4d5b88903cc1b3cfdd5144ccbcb9",
+      "decodedAudioSha256": "1ab672dd0694e24fd77a4648522537cab72c87e5b4b2ff23c1bbe780fef3060a",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 5,
@@ -269,7 +314,7 @@
       "updated": true,
       "retained": false,
       "duration": 100.17,
-      "sha256": "01d082570e6cae03d00b40f1846414b2faeb8bc357ea2e87b826d88463ec2a13",
+      "sha256": "54d2f536c2af506aef02fe169ea957a14561133b4c9d0fc8866489e18a50abcb",
       "chapters": [
         {
           "title": "Collect for the intended cluster",
@@ -305,7 +350,17 @@
       "fps": 24,
       "integratedLufs": -16.64,
       "truePeakDb": -1.21,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 27,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "600db4a5d39d1901ea8d687dc0b65b026cd1ffc4e29772e493485c77941bb216",
+      "decodedAudioSha256": "5ca3ee02a21dd25f29a11b8f218e35f137c147a0ecfd34bb956a74b4b28b8a51",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 6,
@@ -313,7 +368,7 @@
       "updated": true,
       "retained": false,
       "duration": 95.33,
-      "sha256": "2e8067fe804d351aa464c4c83a8ddb7a202ab23988314a2e3e1e6653c78518fb",
+      "sha256": "5e1b594969bb5450f817fbdadad2f1fb94688fef97164bb1fccf837717674be7",
       "chapters": [
         {
           "title": "Prepare the maintenance window",
@@ -349,7 +404,17 @@
       "fps": 24,
       "integratedLufs": -16.32,
       "truePeakDb": -1.39,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 26,
+        "gapSamples": 9,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "03315ea0ced12a884b9d8be091ee742e8ffe0fe7cbd4623c8de6ed8d979081ee",
+      "decodedAudioSha256": "fdc036f1a997dc582a79c52df0c3726ed7ec2c3312cf439f55e6b1d0e94a37f8",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 7,
@@ -357,7 +422,7 @@
       "updated": true,
       "retained": false,
       "duration": 97.21000000000001,
-      "sha256": "8dbbd83e2272eec1aaa7174c0cc6144262e8a4b2c0d28bfc97a59c37be76ada2",
+      "sha256": "3c88532a1ad2f3dfe6c3086da471e24908592e451c3f24290bd6818510513132",
       "chapters": [
         {
           "title": "Organize one cluster",
@@ -393,7 +458,17 @@
       "fps": 24,
       "integratedLufs": -16.42,
       "truePeakDb": -1.4,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 27,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "79df8f24bc4bd3559dc5cfc97fbdf0ebb46981f5ae9275a026b6fa5ca5a72fba",
+      "decodedAudioSha256": "52faadb3f69bcae237434e3ef15b586ec7595e29dd3d4a9b0e8ced34a956bb69",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 8,
@@ -401,7 +476,7 @@
       "updated": true,
       "retained": false,
       "duration": 95.63,
-      "sha256": "fb5092d0070fd16b5464455061851bb9e0f091b00c02f1094ab82bb7a50dd2d6",
+      "sha256": "20951bb9094b1d4f74bc2257e7e79ceaabb499aed165910022ff4f62b3e87ec0",
       "chapters": [
         {
           "title": "Match action to intent",
@@ -437,7 +512,17 @@
       "fps": 24,
       "integratedLufs": -16.32,
       "truePeakDb": -1.23,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 24,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "23a3a915f460761fd93dbd41fa36c3180dcad49379d9fe7538fd0cdae10d3680",
+      "decodedAudioSha256": "f6275d189c684a2bb9eb80e3c9f96af9bd56d5b8432c94eb2ae42da1aa1b66ad",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 9,
@@ -445,7 +530,7 @@
       "updated": true,
       "retained": false,
       "duration": 94.53999999999999,
-      "sha256": "5ee587b8f02ff61eabdbbf8cbc8a798d848639e82deb0f98002afeb07e59b2f4",
+      "sha256": "8133197c0e4274d9a2ef9d3df0c917ff170dcd88de4aa1d167f19340275f383a",
       "chapters": [
         {
           "title": "Follow the exact pipeline step",
@@ -481,7 +566,17 @@
       "fps": 24,
       "integratedLufs": -16.36,
       "truePeakDb": -1.38,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 25,
+        "gapSamples": 9,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "f9b72c047eec9d34e042f8deac7cb06f830f845e19fe1e46e98e34e464a60cb0",
+      "decodedAudioSha256": "74fcb8c80cb3215915077185ca5d1b8b16fd99c6c49a118fa8d778a61aafec70",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 10,
@@ -489,7 +584,7 @@
       "updated": true,
       "retained": false,
       "duration": 93.08,
-      "sha256": "8c2e9c69fd076108e2c1297d3676b2fa6b2833b8d8e58d865beb96617429101a",
+      "sha256": "d36c2221a043a4e83e44ac42a58a6c049117f3a7f4d774dac92dc6d2fe5c1a77",
       "chapters": [
         {
           "title": "Define the assessment",
@@ -525,7 +620,17 @@
       "fps": 24,
       "integratedLufs": -16.31,
       "truePeakDb": -1.22,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 25,
+        "gapSamples": 8,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "ad0607112db4668e0f073d4a2d7c91d3224dd37f54f030b8fa8edbb3d19089ab",
+      "decodedAudioSha256": "08838a07b2fa12e31cfe3c552c1a88106bd81adcf88db6488adb6266fbfe26e9",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 11,
@@ -533,7 +638,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.28999999999999,
-      "sha256": "f4798bc1d5a839a35e7e575e28be40f28d66abc2bb0820d7c1d2a84deabaed40",
+      "sha256": "f9e005c9f0d9262973cd0d7e35f235899a7475afe2be5456ed36526b7a9f0849",
       "chapters": [
         {
           "title": "Check the supported runtime",
@@ -569,7 +674,17 @@
       "fps": 24,
       "integratedLufs": -16.34,
       "truePeakDb": -1.35,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 25,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "136e9437c0b00a2cef3f6dbd57cfa493d85166a6391615ca712b59587e965b45",
+      "decodedAudioSha256": "f9bd6a8705dc32400d00286dc63f8fd54d8723c6f88a396413375139422eda07",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 12,
@@ -577,7 +692,7 @@
       "updated": true,
       "retained": false,
       "duration": 91.0,
-      "sha256": "b55dd487f86741628b25142e962b56cd7445cd0ac3c234beba0e16d2eb8549b6",
+      "sha256": "02f0ecf2f3bed084a1d8a057a0c65c7a492c2a36e8c250f13253594ab3a1ccb8",
       "chapters": [
         {
           "title": "Use the current evidence page",
@@ -613,7 +728,17 @@
       "fps": 24,
       "integratedLufs": -16.63,
       "truePeakDb": -1.37,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 24,
+        "gapSamples": 8,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "7761167056ae97e3c147fbd59b607b25f8de635fa47172565f00ef0b76b34593",
+      "decodedAudioSha256": "c4e48587d7553f4d14e04683ccd65a30b9f063b8cd30157364450e11f1f13bc6",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 13,
@@ -621,7 +746,7 @@
       "updated": true,
       "retained": false,
       "duration": 89.42,
-      "sha256": "18691b686ebfe5aeb47e0ca0d1a25cf6ecfeaee62fc5cf673d0f26226f5b2ec4",
+      "sha256": "20adfcf9ae909c1288ef2bbbbc8d9bc01a5c6d2168bf69275eab4b8182ca4674",
       "chapters": [
         {
           "title": "Identify the supported path",
@@ -657,7 +782,17 @@
       "fps": 24,
       "integratedLufs": -16.34,
       "truePeakDb": -1.28,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 23,
+        "gapSamples": 12,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "0743c0fbe76721cc011de9d5b6a5f1bafe398a20e275e394e93f04b9f0b5a37b",
+      "decodedAudioSha256": "005a9222d1dfeb9fd06b96a08da2f22ef38ffbc09a6ad3ad2515bfdde3d64c40",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 14,
@@ -665,7 +800,7 @@
       "updated": true,
       "retained": false,
       "duration": 87.53999999999999,
-      "sha256": "b44a6f1687d2555814fee61e7df3690b48f4bac033e2e35c65e1c902da6eace8",
+      "sha256": "09ffabc114053177cd3fc5f2e087b5c61c0b63a9cd4b9ca3abf8d3ec1c93fab6",
       "chapters": [
         {
           "title": "Ask what actually ran",
@@ -701,7 +836,17 @@
       "fps": 24,
       "integratedLufs": -16.39,
       "truePeakDb": -1.34,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 24,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "6fc42127210ddb14ea3dbfb2d07563c423f8551f0a1d23077508b024b879091c",
+      "decodedAudioSha256": "c0be0fc5102c23e7b9e8d3dfdcb307f36a55cbe54e0bace6a4681096d0fa4ac6",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 15,
@@ -709,7 +854,7 @@
       "updated": true,
       "retained": false,
       "duration": 117.5,
-      "sha256": "b4c862661b3b5a3a311896bd135888bee4a9a22b625f8001663c903e4108a251",
+      "sha256": "cf10eedae0bbd607891f8840afadb5e6216c42b1acd90b509dfad0689c2469a6",
       "chapters": [
         {
           "title": "Prepare the example",
@@ -749,7 +894,17 @@
       "fps": 24,
       "integratedLufs": -16.47,
       "truePeakDb": -1.45,
-      "embeddedChapters": 6
+      "embeddedChapters": 6,
+      "captionRasterAudit": {
+        "cueSamples": 34,
+        "gapSamples": 13,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "246cdfe4e8789df81f8cda4bc21017d58e59a94496db2983968a4bdb15c6fb88",
+      "decodedAudioSha256": "0a40a1ef0a74d3ed5ce8e8b4c51fa9c74ad21e1183a2880294ec3db226f60597",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 16,
@@ -769,7 +924,12 @@
       "fps": 24,
       "integratedLufs": -16.5,
       "truePeakDb": -1.25,
-      "embeddedChapters": 0
+      "embeddedChapters": 0,
+      "captionRasterAudit": {
+        "cueSamples": 48,
+        "gapSamples": 35,
+        "failedSamples": 0
+      }
     },
     {
       "part": 17,
@@ -789,7 +949,12 @@
       "fps": 30,
       "integratedLufs": -18.12,
       "truePeakDb": -0.18,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 34,
+        "gapSamples": 13,
+        "failedSamples": 0
+      }
     },
     {
       "part": 18,
@@ -797,7 +962,7 @@
       "updated": true,
       "retained": false,
       "duration": 109.21000000000001,
-      "sha256": "540d2e5d4937862842be37f174f3ba021c2dfae89dea102bd1b11e643a2058fa",
+      "sha256": "e8445f659ab91d9dd4b15c63204b902d9ba9cef5c3a17870c7125bccd3cb49f7",
       "chapters": [
         {
           "title": "Choose the PE-direct connection",
@@ -833,7 +998,17 @@
       "fps": 24,
       "integratedLufs": -16.18,
       "truePeakDb": -1.4,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 28,
+        "gapSamples": 12,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "d3348152d85d7d8a16e9c42d5481599c21a57e0e377953bdb2759ec84c513681",
+      "decodedAudioSha256": "6b0b948b4b0cb468fa3cfe2eb98df40b21ed1cbea136e1c9d369c031eb5520ad",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 19,
@@ -841,7 +1016,7 @@
       "updated": true,
       "retained": false,
       "duration": 102.96000000000001,
-      "sha256": "f5280c52dcc69f8cd6d9b8c8d29c07215ad753a0775b05122e2c1144c52e9ce2",
+      "sha256": "79ed6e19e3c99bc8b5d281db12c5efc8cad1850c4158cb03cb231ca74165e3c3",
       "chapters": [
         {
           "title": "Open the local path",
@@ -877,7 +1052,17 @@
       "fps": 24,
       "integratedLufs": -16.41,
       "truePeakDb": -1.36,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 27,
+        "gapSamples": 11,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "4fda4cfb7abbdfad536b6e5546306b4661d537e35560b7e0899674da84d26683",
+      "decodedAudioSha256": "855ff31b8cae22c0d3da664d207b141175b6c3ba697bdffc956b08258d4f50e6",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 20,
@@ -885,7 +1070,7 @@
       "updated": true,
       "retained": false,
       "duration": 102.67,
-      "sha256": "600d376df5842324bbd20ba2d8e6a321bbee14a0efb48b5786fd8df440ecc725",
+      "sha256": "ca65439780c844865d83c2f0a11132d83e43150dda77b3fe3805983136cac846",
       "chapters": [
         {
           "title": "Choose the correct action",
@@ -921,7 +1106,17 @@
       "fps": 24,
       "integratedLufs": -16.37,
       "truePeakDb": -1.34,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 27,
+        "gapSamples": 11,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "c7f89bb445c721d0ea45e2e6ea34da9e10c94d4b92b37705f801e62b3d9fcc48",
+      "decodedAudioSha256": "55773efbf9e42710a4404a697e6be3514651f071991b5cced9fec171178528c9",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 21,
@@ -929,7 +1124,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.83,
-      "sha256": "92038370725a37c0277ff3a7b3be33724513d1b1829fb74345ebf89732085336",
+      "sha256": "e112377d49655f942128f2a242e831e0f3f6107e7910135ae5e9b65dd053e082",
       "chapters": [
         {
           "title": "Define this cluster's storage",
@@ -965,7 +1160,17 @@
       "fps": 24,
       "integratedLufs": -16.33,
       "truePeakDb": -1.44,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 26,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "ce2422fd1b4f0766992b0deae5a4bbe224c4c0a22ae9d87ffcbd77dba7ed26c0",
+      "decodedAudioSha256": "ceebcb7924f2838565323df3ab934e5b44b9e3652d54d0fdd5881610fdc361b9",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     },
     {
       "part": 22,
@@ -973,7 +1178,7 @@
       "updated": true,
       "retained": false,
       "duration": 99.38,
-      "sha256": "a2e759dffbd58c147c5c7b695b4cc13763e5706792933645b03f57d5a3ce6f4e",
+      "sha256": "659a3f77834215c6ccdcd0fdea206d6beec3e8f487ea7fc2285e43bea7ac3712",
       "chapters": [
         {
           "title": "Prepare the removal intent",
@@ -1009,7 +1214,17 @@
       "fps": 24,
       "integratedLufs": -16.25,
       "truePeakDb": -1.4,
-      "embeddedChapters": 5
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "cueSamples": 26,
+        "gapSamples": 10,
+        "failedSamples": 0
+      },
+      "audioPayloadSha256": "96d5f6e9d2b771677dff466d72d61156c572f03ed910a1153900378033310106",
+      "decodedAudioSha256": "880cbbe90343c651032176626ec9977745cdf7d470e93e184fd3753a28431467",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "captionRendering": "24 fps expansion before ASS rasterization"
     }
   ],
   "durationSeconds": 2366.45,
@@ -1020,5 +1235,41 @@
     "scope": "All three Create Cluster workflows and their use cases",
     "otherRecordings": "unchanged",
     "listeningReview": "not_performed"
+  },
+  "captionRepair": {
+    "reviewed": "19 November 2026",
+    "remainingVideosChecked": 22,
+    "repairedParts": [
+      0,
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      18,
+      19,
+      20,
+      21,
+      22
+    ],
+    "unchangedParts": [
+      2,
+      16,
+      17
+    ],
+    "captionCueSamples": 654,
+    "speechGapSamples": 272,
+    "samplesChecked": 926,
+    "failedSamples": 0,
+    "narrationRegenerated": false
   }
 }

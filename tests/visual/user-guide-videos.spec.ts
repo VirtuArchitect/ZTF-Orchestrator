@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { inflateSync } from 'node:zlib'
 
 for (const width of [1440, 390]) {
   test(`video guide opens Overview 00 and seeks chapters at ${width}px`, async ({ page }) => {
@@ -150,4 +151,56 @@ test('Part 02 keeps its URL and explains the three deployment services', async (
     await expect.poll(() => player.evaluate(v => v.currentTime)).toBeGreaterThan(10)
   }
   await expect(page.getByRole('link', { name: 'Download MP4', exact: true })).toHaveAttribute('href', /Part-02-Deploy-a-Cluster-with-Foundation-VM\.mp4$/)
+})
+
+type CaptionSample = {
+  time: number; region: [number, number, number, number];
+  ink: 'light' | 'dark'; threshold: number; referenceMaskZlib: string;
+}
+
+test.describe('Burned-in caption pixels', () => {
+  let records: { part: number; browserSamples: CaptionSample[] }[] = []
+  test.beforeAll(async ({ request }) => {
+    if (process.env.ZTF_TEST_STATIC_DEMO !== '1') return
+    const response = await request.get('tutorials/media/caption-render-audit.json')
+    expect(response.ok()).toBe(true)
+    records = (await response.json()).records
+  })
+  for (let part = 0; part < 23; part++) {
+    test(`part ${part} displays the expected changing caption text`, async ({ page }) => {
+      test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
+      await page.goto(`tutorials/?part=${String(part).padStart(2, '0')}`)
+      const player = page.locator('video')
+      await expect.poll(() => player.evaluate(v => v.videoWidth)).toBe(1920)
+      for (const sample of records.find(r => r.part === part)!.browserSamples) {
+        const expected = inflateSync(Buffer.from(sample.referenceMaskZlib, 'base64'))
+        const actual = await player.evaluate(async (video, cue) => {
+          video.pause()
+          await new Promise<void>(resolve => {
+            video.requestVideoFrameCallback(() => resolve())
+            video.currentTime = cue.time
+          })
+          const [x, y, width, height] = cue.region
+          const canvas = document.createElement('canvas')
+          canvas.width = width; canvas.height = height
+          const context = canvas.getContext('2d')!
+          context.drawImage(video, x, y, width, height, 0, 0, width, height)
+          const pixels = context.getImageData(0, 0, width, height).data
+          const mask = []
+          for (let i = 0; i < pixels.length; i += 4) {
+            const gray = .299 * pixels[i] + .587 * pixels[i + 1] + .114 * pixels[i + 2]
+            mask.push(cue.ink === 'dark' ? Number(gray < cue.threshold) : Number(gray > cue.threshold))
+          }
+          return mask
+        }, sample)
+        expect(actual.length).toBe(expected.length)
+        let common = 0, referenceInk = 0, actualInk = 0
+        for (let i = 0; i < actual.length; i++) {
+          referenceInk += expected[i]; actualInk += actual[i]
+          common += expected[i] && actual[i] ? 1 : 0
+        }
+        expect(2 * common / (referenceInk + actualInk)).toBeGreaterThan(.78)
+      }
+    })
+  }
 })

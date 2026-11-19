@@ -93,3 +93,24 @@ All 23 MP4s and their companions are served together on Pages, including Part 15
 and source provenance. Media remains excluded from Docker by the docs exclusion.
 See [current status](current-status.md), [Disaster Recovery](disaster-recovery.md)
 and [guided updates](guided-appliance-updates.md) for operational procedures.
+
+## Caption rendering repair — 19 November 2026
+
+The encoded-caption audit found missing or stale captions in Parts 00–01,
+03–15 and 18–22. Those 20 picture tracks were rebuilt from their clean source
+image timelines, expanding to 24 fps **before** evaluating ASS subtitle events.
+Existing AAC audio, decoded audio, narration, subtitle wording, chapter times
+and stable filenames are preserved. Parts 02, 16 and 17 passed and remain unchanged.
+
+The [caption audit report](assets/user-guide-videos/caption-render-audit.json)
+records comparison results at every cue midpoint and qualifying speech gap.
+Each encoded crop is compared with its independent subtitle reference rather
+than relying on a valid SRT file or a successful decoder exit code.
+
+For future still-image tutorial edits, use the
+[caption-aware renderer](../scripts/render_captioned_still_timeline.py).
+Feed it the reviewed clean image concat timeline, its ASS captions and the
+existing audio source; render to a new output file. Do not add another caption
+layer over an already captioned video. The FFmpeg CI regression test holds one
+image while two captions appear, change and clear, and checks audio preservation.
+This is a media-authoring tool; it adds no appliance runtime dependency.

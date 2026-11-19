@@ -1,3 +1,6 @@
+DOCUMENTATION MEDIA REPAIR (existing appliance assets unchanged)
+Repair burned-in caption timing in 20 User Guide Videos without changing their narration, audio or chapters. Parts 02, 16 and 17 remain unchanged. A dedicated FFmpeg CI check covers caption updates and clearing inside a held image.
+
 DOCUMENTATION REFRESH (existing appliance assets unchanged)
 User Guide Video Part 02 now explains all three Create Cluster workflows and their service-specific use cases, with matching deployment guidance, Joanna narration and English captions.
 
