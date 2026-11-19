@@ -1,0 +1,82 @@
+WEBVTT
+
+00:00:00.256 --> 00:00:04.856
+Open Advanced Automation, Scripts, Change Virtual Switch MTU
+
+00:00:04.864 --> 00:00:09.336
+as an administrator. This standalone action targets the default V S
+
+00:00:09.344 --> 00:00:13.128
+zero, or B R zero, on the supported healthy cluster.
+
+00:00:13.258 --> 00:00:17.815
+Unlike the PE-direct uplink wizard, this workflow uses trusted PE
+
+00:00:17.866 --> 00:00:21.990
+and Prism Central connections and the supported PC networking API.
+
+00:00:22.284 --> 00:00:26.265
+Review the intended cluster UUID, saved credentials,
+
+00:00:26.337 --> 00:00:30.084
+active-backup bond and physical network support for jumbo frames.
+
+00:00:30.263 --> 00:00:33.336
+Confirm maintenance capacity and out-of-band access.
+
+00:00:33.609 --> 00:00:37.697
+The reviewed change raises the physical uplink MTU from fifteen hundred
+
+00:00:37.790 --> 00:00:41.523
+to nine thousand while preserving the existing bond and uplinks.
+
+00:00:41.886 --> 00:00:46.069
+Run read-only preflight and inspect every host and physical uplink.
+
+00:00:46.257 --> 00:00:49.364
+Missing or inconsistent readback blocks application.
+
+00:00:49.713 --> 00:00:54.100
+Have another administrator approve the exact plan, then use the cluster-bound
+
+00:00:54.108 --> 00:00:57.629
+confirmation only in a separately validated environment.
+
+00:00:57.752 --> 00:00:59.664
+Live writes default to off;
+
+00:00:59.800 --> 00:01:02.537
+this demonstration performs no MTU changes.
+
+00:01:02.957 --> 00:01:06.640
+Follow the Prism task and per-host readback in Jobs and Queue.
+
+00:01:06.840 --> 00:01:10.808
+Keep controller virtual machine interface MTU at fifteen hundred as
+
+00:01:10.808 --> 00:01:14.908
+documented. Verify end-to-end traffic on the intended VLANs
+
+00:01:14.916 --> 00:01:19.516
+separately. A successful task alone does not prove that the physical switching path
+
+00:01:19.524 --> 00:01:21.393
+carries jumbo frames correctly.
+
+00:01:21.700 --> 00:01:24.428
+Reconcile the original Prism task first.
+
+00:01:24.655 --> 00:01:28.615
+Enter the settled change job identifier and review the recorded original
+
+00:01:28.751 --> 00:01:31.602
+MTU against current identity and settings.
+
+00:01:31.695 --> 00:01:34.748
+Request fresh rollback approval and confirmation.
+
+00:01:34.958 --> 00:01:39.046
+If telemetry is unavailable, use the site console recovery procedure;
+
+00:01:39.097 --> 00:01:42.578
+the workflow does not automatically reverse an uncertain write.

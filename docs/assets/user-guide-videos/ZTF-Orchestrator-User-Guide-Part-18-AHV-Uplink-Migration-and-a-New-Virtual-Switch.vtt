@@ -1,0 +1,85 @@
+WEBVTT
+
+00:00:00.256 --> 00:00:04.651
+Under Configure, open AHV Uplink Migration and choose PE
+
+00:00:04.651 --> 00:00:08.013
+direct. Prism Central is not required for this path.
+
+00:00:08.149 --> 00:00:12.493
+Enter the expected cluster UUID, PE endpoint and saved
+
+00:00:12.501 --> 00:00:17.179
+PE credential. Provide the CVM credential reference and independently verified
+
+00:00:17.400 --> 00:00:20.592
+SSH host-key fingerprints for every CVM.
+
+00:00:20.771 --> 00:00:23.465
+Keep the required CVM-to-host trust intact.
+
+00:00:23.715 --> 00:00:26.489
+Certificate verification is enabled by default.
+
+00:00:26.677 --> 00:00:30.679
+If a permitted per-run exception is needed, enter its reason and review
+
+00:00:30.773 --> 00:00:35.458
+the risk: HTTPS remains encrypted, but the certificate no longer
+
+00:00:35.466 --> 00:00:37.556
+authenticates the PE endpoint.
+
+00:00:37.742 --> 00:00:41.788
+The exception is included in the plan, independent approval and audit.
+
+00:00:41.881 --> 00:00:45.045
+It never bypasses SSH host-key checks.
+
+00:00:45.380 --> 00:00:50.022
+Run read-only discovery and verify identity, complete membership, health
+
+00:00:50.116 --> 00:00:54.686
+and inventory. Choose Create a new virtual switch, such as V S one,
+
+00:00:54.694 --> 00:00:57.097
+or a consistent existing destination.
+
+00:00:57.297 --> 00:01:02.015
+In PE-direct mode, V S one maps to local bridge B R one.
+
+00:01:02.226 --> 00:01:06.570
+For every host, retain at least two operational uplinks on B R zero
+
+00:01:06.621 --> 00:01:08.035
+and two at the destination.
+
+00:01:08.285 --> 00:01:12.722
+Review cabling, VLANs, MTU, capacity and console
+
+00:01:12.722 --> 00:01:17.139
+access. Run read-only preflight and have a different administrator approve
+
+00:01:17.139 --> 00:01:18.667
+the exact assignments.
+
+00:01:18.845 --> 00:01:23.499
+Live writes default to disabled pending representative hardware validation.
+
+00:01:23.730 --> 00:01:28.074
+A passed draft or mock test is not approval to enable production writes.
+
+00:01:28.381 --> 00:01:32.896
+When separately validated and enabled, the approved worker processes hosts
+
+00:01:32.946 --> 00:01:37.469
+sequentially and verifies retained management connectivity and both assignments.
+
+00:01:37.656 --> 00:01:41.104
+A failed or uncertain action stops later hosts.
+
+00:01:41.283 --> 00:01:45.421
+Keep completed work recorded and reconcile the actual bridges before a new
+
+00:01:45.421 --> 00:01:49.122
+plan; there is no automatic retry or rollback.

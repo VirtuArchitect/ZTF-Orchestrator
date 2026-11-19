@@ -1,6 +1,5 @@
-00:00:00.000 Prepare trusted PE and PC connections
-00:00:54.482 Collect inventory and save an assessment
-00:01:21.431 Configure a live PE drift comparison
-00:01:45.671 Save and test the drift schedule
-00:02:07.474 Interpret collection failures accurately
-00:02:35.754 Review cluster evidence and execution history
+00:00:00.000 Collect for the intended cluster
+00:00:20.835 Interpret a failed read
+00:00:43.785 Keep time separate
+00:01:02.733 Compare configured settings
+00:01:20.989 Accept the right evidence

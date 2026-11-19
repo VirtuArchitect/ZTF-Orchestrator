@@ -1,171 +1,135 @@
 1
-00:00:00,256 --> 00:00:03,115
-An existing AHV cluster needs a rebuild.
+00:00:00,299 --> 00:00:04,557
+Recovering Cluster A begins with a trusted Orchestrator, approved images
 
 2
-00:00:03,456 --> 00:00:07,296
-In this simulated recovery, we’ll use a recovery profile to take
+00:00:04,736 --> 00:00:06,627
+and reviewed configuration.
 
 3
-00:00:07,339 --> 00:00:11,190
-one cluster from its saved build plan to workload restore handoff.
+00:00:06,997 --> 00:00:10,228
+This is a simulated walkthrough, not an actual rebuild.
 
 4
-00:00:11,470 --> 00:00:14,158
-Before creating the profile, verify the approved
+00:00:10,274 --> 00:00:14,746
+Add or select the recovery datacenter, review prerequisites, and link
 
 5
-00:00:14,286 --> 00:00:17,891
-node serials, network settings, and image checksums.
+00:00:14,754 --> 00:00:19,419
+one Foundation VM YAML with the intended post-configuration pipeline.
 
 6
-00:00:18,211 --> 00:00:20,558
-Save the Foundation VM deployment file and
+00:00:19,683 --> 00:00:24,283
+Create the recovery profile and inspect its revision, exact nodes, image
 
 7
-00:00:20,601 --> 00:00:23,105
-a post-configuration pipeline for the same cluster.
+00:00:24,377 --> 00:00:27,590
+selections, credentials and ordered pipeline.
 
 8
-00:00:23,433 --> 00:00:26,463
-Open Disaster Recovery, add the datacenter, and record
+00:00:27,790 --> 00:00:30,632
+Mark the baseline reviewed through the existing controls.
 
 9
-00:00:26,676 --> 00:00:29,634
-the Foundation VM endpoint and dependency reviews.
+00:00:30,803 --> 00:00:33,184
+An edited profile creates a new draft;
 
 10
-00:00:30,089 --> 00:00:34,262
-Choose Create Recovery Profile and select Existing cluster to rebuild.
+00:00:33,235 --> 00:00:36,192
+an existing run keeps its original snapshot.
 
 11
-00:00:34,553 --> 00:00:38,457
-Link the saved deployment file and pipeline, then save the draft.
+00:00:36,392 --> 00:00:39,442
+No physical deployment happens while preparing these records.
 
 12
-00:00:38,862 --> 00:00:42,361
-Open Review Profile, check the target nodes, cluster address
+00:00:39,720 --> 00:00:41,150
+Choose Recover Cluster.
 
 13
-00:00:42,532 --> 00:00:45,913
-and captured steps, and select Mark Baseline Reviewed.
+00:00:41,358 --> 00:00:45,488
+If an open run exists, select Resume Recovery and inspect its current
 
 14
-00:00:46,180 --> 00:00:49,408
-If the source changes, capture and review a new revision.
+00:00:45,496 --> 00:00:50,182
+stage. For a new run, review targets and readiness, prepare recovery
 
 15
-00:00:49,892 --> 00:00:51,406
-Select Prepare Recovery.
+00:00:50,318 --> 00:00:52,208
+and obtain the deployment approval.
 
 16
-00:00:51,684 --> 00:00:53,732
-Request deployment approval and have a second
+00:00:52,408 --> 00:00:54,992
+Confirm the destructive scope before imaging.
 
 17
-00:00:53,902 --> 00:00:56,751
-administrator approve the exact run in Approvals.
+00:00:55,159 --> 00:00:58,380
+Submit once and monitor the existing Foundation job.
 
 18
-00:00:57,040 --> 00:00:59,131
-Back in the recovery run, enter both
+00:00:58,573 --> 00:01:03,045
+After imaging, complete the approved initial-access bootstrap and verify
 
 19
-00:00:59,216 --> 00:01:02,331
-confirmation phrases and acknowledge the imaging risk.
+00:01:03,138 --> 00:01:04,404
+the replacement account.
 
 20
-00:01:02,629 --> 00:01:05,787
-Select Deploy Reviewed Recovery, then follow the linked
+00:01:04,619 --> 00:01:08,920
+Provide the required fresh PE identity, membership and health evidence before
 
 21
-00:01:05,872 --> 00:01:09,247
-Foundation job until imaging and cluster formation succeed.
+00:01:09,099 --> 00:01:10,478
+remaining configuration.
 
 22
-00:01:09,596 --> 00:01:13,350
-After Foundation succeeds, run initial access bootstrap if
+00:01:10,720 --> 00:01:15,051
+Resolve collection errors or use the documented independent evidence procedure.
 
 23
-00:01:13,393 --> 00:01:16,316
-the captured pipeline includes eligible first steps.
+00:01:15,173 --> 00:01:18,650
+A certificate failure must not silently become a healthy result.
 
 24
-00:01:16,635 --> 00:01:19,494
-Use separate approvals where required, then run the
+00:01:18,928 --> 00:01:23,059
+In this example, steps zero one through zero seven succeed
 
 25
-00:01:19,537 --> 00:01:22,362
-approved password and EULA or Pulse actions.
+00:01:23,109 --> 00:01:25,555
+and only PC registration fails.
 
 26
-00:01:22,797 --> 00:01:25,827
-Verify the replacement credential before broader configuration.
+00:01:25,712 --> 00:01:29,701
+Reconcile PE and PC and confirm registration is absent.
 
 27
-00:01:26,253 --> 00:01:28,643
-Select Collect PE Health Readbacks.
+00:01:29,865 --> 00:01:34,081
+Record fresh health evidence, then use the eligible step zero eight-only
 
 28
-00:01:28,899 --> 00:01:31,757
-Confirm the expected cluster identity, complete host
+00:01:34,132 --> 00:01:38,518
+retry. Show one new registration submission, unchanged earlier
 
 29
-00:01:31,885 --> 00:01:34,671
-membership, and health reported by Prism Element.
+00:01:38,569 --> 00:01:40,246
+jobs and no new imaging.
 
 30
-00:01:34,981 --> 00:01:38,757
-Resolve any certificate or access error, then collect again.
+00:01:40,594 --> 00:01:44,810
+Review completed configuration, infrastructure health and the recorded acceptance
 
 31
-00:01:38,992 --> 00:01:42,477
-Start the remaining pipeline within fifteen minutes of fresh evidence.
+00:01:44,818 --> 00:01:49,298
+evidence. Hand workload restoration to your backup platform and verify it
 
 32
-00:01:42,960 --> 00:01:45,295
-Select Run Remaining Pipeline Steps.
+00:01:49,298 --> 00:01:52,349
+separately. Preserve run history and approvals;
 
 33
-00:01:45,625 --> 00:01:50,553
-Watch the saved DNS, time, network and storage settings run in order.
+00:01:52,485 --> 00:01:56,104
+do not treat the simulated success shown here as a production recovery
 
 34
-00:01:50,873 --> 00:01:53,070
-Each completed step has a linked job.
-
-35
-00:01:53,305 --> 00:01:56,377
-If a step fails, reconcile actual state and
-
-36
-00:01:56,420 --> 00:01:59,180
-resume unfinished work after fresh health evidence.
-
-37
-00:01:59,550 --> 00:02:02,366
-If policy requires a separate approval, run the
-
-38
-00:02:02,409 --> 00:02:05,524
-approved step directly and link its successful job.
-
-39
-00:02:05,951 --> 00:02:09,442
-Read back the requested settings and check current cluster health.
-
-40
-00:02:09,691 --> 00:02:12,635
-Enter verification notes and an evidence reference,
-
-41
-00:02:12,934 --> 00:02:15,728
-then select Accept for Restore Handoff.
-
-42
-00:02:16,134 --> 00:02:18,651
-The backup team now has the rebuilt cluster and
-
-43
-00:02:18,694 --> 00:02:21,878
-the recovery evidence it needs to begin restoring workloads.
+00:01:56,197 --> 00:01:57,380
+certification.

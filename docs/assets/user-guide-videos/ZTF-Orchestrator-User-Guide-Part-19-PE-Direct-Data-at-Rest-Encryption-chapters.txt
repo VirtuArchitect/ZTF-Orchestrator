@@ -1,0 +1,5 @@
+00:00:00.000 Open the local path
+00:00:21.160 Understand trust and identity
+00:00:41.848 Check readiness and ownership
+00:01:02.925 Approve an irreversible change
+00:01:23.436 Verify and retain keys

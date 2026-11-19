@@ -2,6 +2,7 @@
 
 
 ### Documentation
+- Publish the refreshed 23-part light-mode User Guide Videos with Joanna narration, English captions, updated YAML Studio/recovery coverage and five specialist configuration chapters; preserve existing part links and current Parts 16–17.
 - Refresh the formatted Administrator and User Guide Word/PDF with current light-mode console captures, YAML Studio, governed recovery, PE diagnostics and PE-direct configuration boundaries; retain stable download links and historical provenance.
 - Align the README with the refreshed light project site, current ZTF 1.x execution, YAML Studio, recovery and PE-direct workflow boundaries; retain dated screenshots as historical references.
 - Refresh the light project site with the reviewed f33c9ed console status, YAML Studio, governed recovery, PE-direct configuration and current operator links. Distinguish source, immutable packages and simulated demo evidence.

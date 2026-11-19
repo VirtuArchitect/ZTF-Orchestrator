@@ -1,18 +1,9 @@
-Part 12 - NKP Framework and Validation Evidence Preview
+Validation Evidence remains available under Advanced Automation. It supports ZTF evidence packs and retained historical downloads. It is not the former NKP execution workspace and it is not a general live health dashboard. This revised lesson replaces the earlier NKP preview instructions.
 
-Simulated console illustrations. Synthetic narration.
+For Cluster A, select the supported workflow or saved configuration source relevant to your review. Inspect the source file, job reference and collection time. A package assembled from a saved configuration demonstrates what was supplied; it does not prove the infrastructure applied every value.
 
-Recognize the preview integration scope
-Open Optional Integrations, N K P Framework. This is a preview workspace for the configured N K P ZeroTouch framework, profiles, binaries, schema and guarded phases. A ready profile or generated document is not a completed Kubernetes deployment. Review the exact installed integration, available commands and environment requirements before planning any target mutation.
+Open the evidence details and distinguish simulated data, declarations and actual recorded readbacks. Preserve the original result and its source. A historical record keeps the meaning and limitations it had when created; it is not upgraded into current acceptance by opening it in a newer console.
 
-Prepare profiles and verify the schema
-Use the profile and schema views to prepare the intended management or workload-cluster inputs. Review networking, registry, binaries and the selected framework revision. Keep saved profiles and credential references protected. A template is an operational starter, not a guarantee that its generated values satisfy every environment or current provider schema. Resolve unknown or blocked findings before proceeding.
+New NKP setup, profile execution and NKP-specific evidence creation are retired. Earlier videos may show controls that no longer provide a supported launch path. Retain historical records under the agreed retention policy and use the retirement guide for authorized inspection.
 
-Inspect readiness and binaries
-Review the N K P readiness view and the binary or bundle inventory required by the chosen path. For an isolated site, verify actual artifacts, registry access and network dependencies. A checklist score can record preparation and evidence; it does not prove Kubernetes workloads are running. Confirm the real command versions and target-side results separately.
-
-Use only the permitted guarded phases
-Inspect the available phase, command preview and approval policy before submission. Schema, validation, parsing, generation, registry or plan-related actions have different scopes. A phase name alone does not establish that a full provisioning lifecycle is implemented and verified. Follow the returned blockers and supported installed behavior. Do not turn off safeguards to make an unavailable phase execute.
-
-Keep NKP evidence separate from AHV readiness
-Find N K P Validation Evidence under Advanced Automation with its Preview badge. Select the correct evidence source and profile, including the retained Z T F U A T packs where appropriate. Record the actual scope, review findings and export a sanitized pack. This workspace is not a general A H V cluster-health monitor and does not replace independent operational acceptance.
+For present PE health, use the explicit cluster collection and its trust requirements. For recovery, use the evidence required by that saved run. For application restoration, complete the backup platform's acceptance process. Keep each evidence type attached to the question it can actually answer.

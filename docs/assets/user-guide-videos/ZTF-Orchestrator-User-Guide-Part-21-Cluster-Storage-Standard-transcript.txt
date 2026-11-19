@@ -1,0 +1,9 @@
+Open the Cluster Storage Standard workflow after deployment. It runs separately and is not inserted automatically into a recovery pipeline. Supply exactly three distinct replacement-container names and the settings intended for this cluster. Use a saved PE credential reference and trusted HTTPS; never put its password in YAML.
+
+Select Discover default, read-only. Review the cluster UUID and the exact default-container name and UUID captured into the configuration. The numeric suffix matters. Multiple candidates, unsupported inventories or an unexpected default name block review; the workflow does not guess which container can be removed.
+
+Review the replacements, settings and dependencies before requesting approval. A different administrator must approve the exact YAML and filename. Editing the file invalidates that approval. The operator confirmation binds submission to the reviewed cluster; a browser disconnect is not a reason to submit again.
+
+The worker verifies existing replacements before creating missing ones, then reads back all three and checks the explicitly requested properties. Existing mismatches fail rather than being silently rewritten. Only the exact reviewed default is considered for cleanup, and dependencies must pass the conservative checks.
+
+Retain the job and inspect actual storage state if creation, verification or cleanup fails. A familiar name does not prove a container is empty or disposable. Complete the documented storage and workload acceptance before using the result operationally. This walkthrough uses simulated inventory and deletes nothing.

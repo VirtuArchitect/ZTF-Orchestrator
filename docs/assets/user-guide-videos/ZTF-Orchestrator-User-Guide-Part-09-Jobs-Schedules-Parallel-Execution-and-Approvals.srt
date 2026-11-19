@@ -1,147 +1,100 @@
 1
-00:00:00,256 --> 00:00:03,669
-Jobs and Queue is the primary view while durable work runs.
+00:00:00,256 --> 00:00:04,131
+In Jobs and Queue, open the existing record for Cluster A.
 
 2
-00:00:03,968 --> 00:00:09,344
-Filter the status, expand the record and read timestamps, diagnostics, logs
+00:00:04,267 --> 00:00:08,440
+A pipeline with several Configure actions now identifies each saved
 
 3
-00:00:09,429 --> 00:00:10,851
-and the linked configuration.
+00:00:08,448 --> 00:00:12,877
+configuration step. Review its reported stage, timestamps, return
 
 4
-00:00:11,122 --> 00:00:15,111
-A verification failure can matter even when the subprocess returned zero.
+00:00:13,056 --> 00:00:15,855
+code, persisted output and diagnostics.
 
 5
-00:00:15,474 --> 00:00:18,162
-Preserve terminal evidence before retention cleanup.
+00:00:15,897 --> 00:00:20,454
+A failed job shows the last reported or failed stage rather than a misleading
 
 6
-00:00:18,418 --> 00:00:21,439
-Removing a queue record does not undo a target operation.
+00:00:20,505 --> 00:00:24,977
+completed estimate. If no log events or node telemetry were recorded,
 
 7
-00:00:21,936 --> 00:00:26,544
-Open Approvals and inspect the request, exact input, target and requester
+00:00:25,156 --> 00:00:27,065
+that means evidence is unavailable.
 
 8
-00:00:26,586 --> 00:00:27,056
-notes.
+00:00:27,326 --> 00:00:31,201
+It does not prove that Foundation never started or that a later stage
 
 9
-00:00:27,354 --> 00:00:30,547
-Follow the required reviewer separation and expiry rules.
+00:00:31,209 --> 00:00:34,998
+completed. Use the retained error and the actual target session
 
 10
-00:00:30,880 --> 00:00:34,720
-Approve only the intended change; a deployment approval does not
+00:00:35,134 --> 00:00:37,153
+to reconcile uncertain state.
 
 11
-00:00:34,848 --> 00:00:37,003
-automatically approve later configuration.
+00:00:37,353 --> 00:00:40,366
+Do not infer success from an aggregate percentage alone.
 
 12
-00:00:37,323 --> 00:00:40,642
-If the configuration changes, obtain its matching approval.
+00:00:40,656 --> 00:00:45,298
+The Approvals badge shows an amber pending count or a blue zero when none are
+pending.
 
 13
-00:00:40,975 --> 00:00:45,327
-Historical approval records support audit, but do not establish that the
+00:00:45,477 --> 00:00:47,645
+An unavailable count is not zero.
 
 14
-00:00:45,369 --> 00:00:47,415
-requested operation ran successfully.
+00:00:47,781 --> 00:00:52,251
+Open the request and compare its target, exact intent and expiry.
 
 15
-00:00:47,838 --> 00:00:51,678
-Choose a repeatable action with a supported scheduled path, supply its
+00:00:52,428 --> 00:00:55,620
+Sensitive specialist actions require another administrator;
 
 16
-00:00:51,721 --> 00:00:55,817
-reviewed input and enter the five-field U T C cron expression.
+00:00:55,714 --> 00:00:58,138
+a changed plan needs renewed approval.
 
 17
-00:00:56,158 --> 00:01:00,062
-Test manually, then enable and verify an actual scheduled run.
+00:00:58,444 --> 00:01:01,948
+Test supported automation manually before creating a schedule.
 
 18
-00:01:00,340 --> 00:01:01,542
-Pause for maintenance.
+00:01:02,054 --> 00:01:06,441
+Parallel execution is appropriate only where the action and independent targets
 
 19
-00:01:01,892 --> 00:01:05,987
-Mandatory-approval workflows may be rejected by automation surfaces without
+00:01:06,449 --> 00:01:11,092
+support it. It is not a shortcut for concurrent imaging sessions on one Foundation
 
 20
-00:01:06,201 --> 00:01:08,014
-an appropriate approval binding.
+00:01:11,185 --> 00:01:15,491
+VM or for specialist actions that require their own guarded job path.
 
 21
-00:01:08,334 --> 00:01:11,427
-Do not assume missed runs are replayed after downtime.
+00:01:15,806 --> 00:01:19,531
+A cancellation request cannot undo an accepted remote command.
 
 22
-00:01:11,811 --> 00:01:15,651
-Parallel Exec submits the same supported legacy workflow for multiple
+00:01:19,816 --> 00:01:23,435
+Keep the original job and inspect the target before another submission.
 
 23
-00:01:15,950 --> 00:01:17,337
-labelled site inputs.
+00:01:23,656 --> 00:01:27,433
+Recovery continuation preserves successful steps and approvals.
 
 24
-00:01:17,657 --> 00:01:22,308
-Check isolation of targets, credentials, addresses, images and services
+00:01:27,641 --> 00:01:32,071
+Use its eligible pending-step path rather than restarting the entire pipeline
 
 25
-00:01:22,564 --> 00:01:23,172
-first.
-
-26
-00:01:23,524 --> 00:01:27,364
-This screen is not proof that classic Foundation V M can run overlapping
-
-27
-00:01:27,449 --> 00:01:28,196
-sessions.
-
-28
-00:01:28,558 --> 00:01:32,797
-Use separately supported deployment paths and coordinate resource ownership.
-
-29
-00:01:33,068 --> 00:01:36,908
-Inspect every site result because an aggregate success indicator can hide
-
-30
-00:01:37,036 --> 00:01:38,046
-partial outcomes.
-
-31
-00:01:38,529 --> 00:01:42,284
-A cancellation request or process interruption does not guarantee that an
-
-32
-00:01:42,327 --> 00:01:44,002
-external operation stopped.
-
-33
-00:01:44,312 --> 00:01:48,024
-Inspect Foundation or Prism and reconcile actual state.
-
-34
-00:01:48,365 --> 00:01:50,925
-Keep successful steps and uncertainty recorded.
-
-35
-00:01:51,224 --> 00:01:55,350
-For recovery, use its reconciliation and next-step linking controls.
-
-36
-00:01:55,679 --> 00:02:00,159
-Never repeat destructive imaging or an uncertain password change simply to
-
-37
-00:02:00,202 --> 00:02:02,541
-produce a cleaner execution history.
+00:01:32,079 --> 00:01:34,457
+to repair a final registration failure.

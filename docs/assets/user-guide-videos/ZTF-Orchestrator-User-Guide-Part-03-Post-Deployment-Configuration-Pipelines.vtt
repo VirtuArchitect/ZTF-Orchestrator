@@ -1,151 +1,86 @@
 WEBVTT
 
-00:00:00.256 --> 00:00:03.413
-Start with reviewed cluster-specific configuration files.
+00:00:00.256 --> 00:00:03.128
+Build one reviewed pipeline for Cluster A.
 
-00:00:03.755 --> 00:00:07.723
-Give them clear ordered names and keep the same cluster identity throughout.
+00:00:03.413 --> 00:00:08.056
+Keep each configuration file focused on its named task and confirm the same
+intended
 
-00:00:07.979 --> 00:00:11.557
-Each pipeline step pairs an action with its saved configuration.
+00:00:08.107 --> 00:00:09.659
+cluster in every file.
 
-00:00:11.807 --> 00:00:15.647
-Keep passwords in separate credential references rather than in the files.
+00:00:09.777 --> 00:00:14.250
+Datacenter and cluster labels help you find files, but they do not select
 
-00:00:15.988 --> 00:00:18.356
-Saving a pipeline does not execute it.
+00:00:14.258 --> 00:00:16.946
+a target or map its credentials automatically.
 
-00:00:18.591 --> 00:00:22.388
-Review every file against the installed framework schema before adding it to
+00:00:17.271 --> 00:00:21.914
+Use the established sequence: zero one, administrator password when required;
 
-00:00:22.431 --> 00:00:23.076
-the sequence.
+00:00:22.092 --> 00:00:24.452
+zero two, EULA and Pulse;
 
-00:00:23.515 --> 00:00:27.099
-Place a required initial administrator password change first.
+00:00:24.610 --> 00:00:27.183
+zero three, data services IP;
 
-00:00:27.440 --> 00:00:31.024
-Use the current credential to authorize it and a separate reference for the
+00:00:27.340 --> 00:00:29.572
+zero four, high availability;
 
-00:00:31.067 --> 00:00:32.143
-replacement credential.
+00:00:29.772 --> 00:00:32.068
+zero five, rebuild reservation;
 
-00:00:32.494 --> 00:00:36.163
-Verification must establish a fresh authenticated session with the new
+00:00:32.204 --> 00:00:34.464
+zero six, storage container;
 
-00:00:36.206 --> 00:00:36.931
-password.
+00:00:34.606 --> 00:00:36.987
+zero seven, Prism login title;
 
-00:00:37.188 --> 00:00:39.684
-Later files must use that replacement reference.
+00:00:37.038 --> 00:00:40.884
+and zero eight, register Prism Element to Prism Central.
 
-00:00:40.004 --> 00:00:44.174
-Leave password-change settings unused in later steps so they skip cleanly.
+00:00:41.134 --> 00:00:45.691
+After changing an administrator password, verify the replacement login before later
 
-00:00:44.461 --> 00:00:48.173
-Never repeat a completed password change simply because a subsequent step
+00:00:45.742 --> 00:00:47.835
+stages use its credential reference.
 
-00:00:48.301 --> 00:00:48.756
-failed.
+00:00:48.024 --> 00:00:51.344
+Do not repeat the initial password change in later files.
 
-00:00:49.240 --> 00:00:53.251
-Use a narrowly reviewed configuration for EULA acceptance and the approved
+00:00:51.566 --> 00:00:55.078
+Saving changed credentials to ZTF persists their values;
 
-00:00:53.421 --> 00:00:54.268
-Pulse setting.
+00:00:55.150 --> 00:00:59.750
+pipeline submission synchronizes the saved global configuration into the execution
 
-00:00:54.602 --> 00:00:59.615
-Add the required D N S and N T P settings according to the installed schema.
+00:00:59.800 --> 00:01:04.138
+runtime. ZTF one point x remains the supported executor.
 
-00:00:59.935 --> 00:01:03.477
-Check that later steps can authenticate and reach the cluster after the
+00:01:04.253 --> 00:01:08.255
+Check each selected action against its configuration file and obtain the required
 
-00:01:03.519 --> 00:01:04.832
-initial access changes.
+00:01:08.306 --> 00:01:11.595
+approvals. A failed stage stops later work.
 
-00:01:05.250 --> 00:01:08.962
-Legal acceptance and telemetry settings are explicit organizational
+00:01:11.828 --> 00:01:16.172
+The running label identifies the configuration step, so several Configure actions
 
-00:01:09.175 --> 00:01:12.716
-decisions; do not treat either as an automatic default for every
+00:01:16.393 --> 00:01:17.793
+can still be distinguished.
 
-00:01:12.930 --> 00:01:13.548
-environment.
+00:01:18.014 --> 00:01:22.366
+If only step zero eight fails during an eligible recovery, resume that
 
-00:01:13.931 --> 00:01:18.283
-Add supported virtual-machine networks, storage containers and any approved
+00:01:22.366 --> 00:01:26.820
+recovery run. Reconcile PE and PC, confirm registration is
 
-00:01:18.411 --> 00:01:19.883
-high-availability settings.
+00:01:26.820 --> 00:01:31.293
+absent, and provide fresh health evidence before the registration-only retry.
 
-00:01:20.160 --> 00:01:25.140
-Review naming, V LANs, replication and capacity choices against the design.
+00:01:31.471 --> 00:01:35.525
+Successful steps zero one through zero seven stay recorded and are not
 
-00:01:25.554 --> 00:01:29.650
-Verify the actual returned properties after creation, not only whether a
-
-00:01:29.693 --> 00:01:31.122
-container name exists.
-
-00:01:31.570 --> 00:01:35.111
-Additional local administrators use their own credential references and
-
-00:01:35.154 --> 00:01:36.168
-explicit roles.
-
-00:01:36.500 --> 00:01:40.297
-Check that every optional action is supported by the selected workflow and
-
-00:01:40.340 --> 00:01:41.164
-target release.
-
-00:01:41.790 --> 00:01:46.014
-Open Pipelines, create a descriptive name and add the saved actions in their
-
-00:01:46.100 --> 00:01:46.910
-approved order.
-
-00:01:47.209 --> 00:01:49.458
-Select the exact file for each step.
-
-00:01:49.701 --> 00:01:53.499
-Review the password transition, targets and required approvals before
-
-00:01:53.712 --> 00:01:54.267
-saving.
-
-00:01:54.608 --> 00:01:56.144
-Steps execute sequentially.
-
-00:01:56.443 --> 00:02:00.379
-A failure stops later work; it does not roll back earlier changes.
-
-00:02:00.817 --> 00:02:04.913
-Approval-mandatory steps may require direct approved execution rather than
-
-00:02:04.956 --> 00:02:06.492
-unattended pipeline chaining.
-
-00:02:06.919 --> 00:02:11.015
-After execution, inspect every step and independently read back the
-
-00:02:11.057 --> 00:02:12.175
-requested settings.
-
-00:02:12.483 --> 00:02:16.323
-Verify new account access and both requested administrator roles.
-
-00:02:16.664 --> 00:02:21.144
-Before Prism Central registration, check its connectivity and trust, then
-
-00:02:21.229 --> 00:02:23.843
-confirm cluster identity and inventory there.
-
-00:02:24.109 --> 00:02:28.504
-If a step failed, reconcile the partial state and rerun only the pending
-
-00:02:28.675 --> 00:02:30.403
-action through a supported path.
-
-00:02:30.723 --> 00:02:34.299
-Preserve the successful jobs and final acceptance evidence.
+00:01:35.525 --> 00:01:36.349
+replayed.

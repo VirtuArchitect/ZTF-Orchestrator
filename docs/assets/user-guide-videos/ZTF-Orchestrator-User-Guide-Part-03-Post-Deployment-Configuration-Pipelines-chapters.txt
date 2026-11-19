@@ -1,6 +1,5 @@
-00:00:00.000 Prepare one configuration sequence per cluster
-00:00:23.515 Handle the administrator password transition
-00:00:49.240 Apply the core cluster settings
-00:01:13.931 Configure networks, storage and optional controls
-00:01:41.790 Create and review the pipeline
-00:02:06.919 Verify the completed cluster configuration
+00:00:00.000 Separate the configuration files
+00:00:17.271 Keep the eight steps in order
+00:00:41.134 Handle credentials once
+00:01:00.754 Review and run
+00:01:18.014 Recover only eligible work

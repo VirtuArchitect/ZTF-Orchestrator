@@ -1,21 +1,9 @@
-Part 3 - Post Deployment Configuration Pipelines
+Build one reviewed pipeline for Cluster A. Keep each configuration file focused on its named task and confirm the same intended cluster in every file. Datacenter and cluster labels help you find files, but they do not select a target or map its credentials automatically.
 
-Simulated console illustrations. Synthetic narration.
+Use the established sequence: zero one, administrator password when required; zero two, EULA and Pulse; zero three, data services IP; zero four, high availability; zero five, rebuild reservation; zero six, storage container; zero seven, Prism login title; and zero eight, register Prism Element to Prism Central.
 
-Prepare one configuration sequence per cluster
-Start with reviewed cluster-specific configuration files. Give them clear ordered names and keep the same cluster identity throughout. Each pipeline step pairs an action with its saved configuration. Keep passwords in separate credential references rather than in the files. Saving a pipeline does not execute it. Review every file against the installed framework schema before adding it to the sequence.
+After changing an administrator password, verify the replacement login before later stages use its credential reference. Do not repeat the initial password change in later files. Saving changed credentials to ZTF persists their values; pipeline submission synchronizes the saved global configuration into the execution runtime.
 
-Handle the administrator password transition
-Place a required initial administrator password change first. Use the current credential to authorize it and a separate reference for the replacement credential. Verification must establish a fresh authenticated session with the new password. Later files must use that replacement reference. Leave password-change settings unused in later steps so they skip cleanly. Never repeat a completed password change simply because a subsequent step failed.
+ZTF one point x remains the supported executor. Check each selected action against its configuration file and obtain the required approvals. A failed stage stops later work. The running label identifies the configuration step, so several Configure actions can still be distinguished.
 
-Apply the core cluster settings
-Use a narrowly reviewed configuration for EULA acceptance and the approved Pulse setting. Add the required D N S and N T P settings according to the installed schema. Check that later steps can authenticate and reach the cluster after the initial access changes. Legal acceptance and telemetry settings are explicit organizational decisions; do not treat either as an automatic default for every environment.
-
-Configure networks, storage and optional controls
-Add supported virtual-machine networks, storage containers and any approved high-availability settings. Review naming, V LANs, replication and capacity choices against the design. Verify the actual returned properties after creation, not only whether a container name exists. Additional local administrators use their own credential references and explicit roles. Check that every optional action is supported by the selected workflow and target release.
-
-Create and review the pipeline
-Open Pipelines, create a descriptive name and add the saved actions in their approved order. Select the exact file for each step. Review the password transition, targets and required approvals before saving. Steps execute sequentially. A failure stops later work; it does not roll back earlier changes. Approval-mandatory steps may require direct approved execution rather than unattended pipeline chaining.
-
-Verify the completed cluster configuration
-After execution, inspect every step and independently read back the requested settings. Verify new account access and both requested administrator roles. Before Prism Central registration, check its connectivity and trust, then confirm cluster identity and inventory there. If a step failed, reconcile the partial state and rerun only the pending action through a supported path. Preserve the successful jobs and final acceptance evidence.
+If only step zero eight fails during an eligible recovery, resume that recovery run. Reconcile PE and PC, confirm registration is absent, and provide fresh health evidence before the registration-only retry. Successful steps zero one through zero seven stay recorded and are not replayed.

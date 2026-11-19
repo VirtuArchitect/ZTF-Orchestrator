@@ -1,18 +1,9 @@
-Part 9 - Jobs Schedules Parallel Execution and Approvals
+In Jobs and Queue, open the existing record for Cluster A. A pipeline with several Configure actions now identifies each saved configuration step. Review its reported stage, timestamps, return code, persisted output and diagnostics. A failed job shows the last reported or failed stage rather than a misleading completed estimate.
 
-Simulated console illustrations. Synthetic narration.
+If no log events or node telemetry were recorded, that means evidence is unavailable. It does not prove that Foundation never started or that a later stage completed. Use the retained error and the actual target session to reconcile uncertain state. Do not infer success from an aggregate percentage alone.
 
-Follow durable jobs and their evidence
-Jobs and Queue is the primary view while durable work runs. Filter the status, expand the record and read timestamps, diagnostics, logs and the linked configuration. A verification failure can matter even when the subprocess returned zero. Preserve terminal evidence before retention cleanup. Removing a queue record does not undo a target operation.
+The Approvals badge shows an amber pending count or a blue zero when none are pending. An unavailable count is not zero. Open the request and compare its target, exact intent and expiry. Sensitive specialist actions require another administrator; a changed plan needs renewed approval.
 
-Review the exact approval request
-Open Approvals and inspect the request, exact input, target and requester notes. Follow the required reviewer separation and expiry rules. Approve only the intended change; a deployment approval does not automatically approve later configuration. If the configuration changes, obtain its matching approval. Historical approval records support audit, but do not establish that the requested operation ran successfully.
+Test supported automation manually before creating a schedule. Parallel execution is appropriate only where the action and independent targets support it. It is not a shortcut for concurrent imaging sessions on one Foundation VM or for specialist actions that require their own guarded job path.
 
-Create a schedule only after a successful manual test
-Choose a repeatable action with a supported scheduled path, supply its reviewed input and enter the five-field U T C cron expression. Test manually, then enable and verify an actual scheduled run. Pause for maintenance. Mandatory-approval workflows may be rejected by automation surfaces without an appropriate approval binding. Do not assume missed runs are replayed after downtime.
-
-Understand the parallel execution boundary
-Parallel Exec submits the same supported legacy workflow for multiple labelled site inputs. Check isolation of targets, credentials, addresses, images and services first. This screen is not proof that classic Foundation V M can run overlapping sessions. Use separately supported deployment paths and coordinate resource ownership. Inspect every site result because an aggregate success indicator can hide partial outcomes.
-
-Handle interruption without replaying writes
-A cancellation request or process interruption does not guarantee that an external operation stopped. Inspect Foundation or Prism and reconcile actual state. Keep successful steps and uncertainty recorded. For recovery, use its reconciliation and next-step linking controls. Never repeat destructive imaging or an uncertain password change simply to produce a cleaner execution history.
+A cancellation request cannot undo an accepted remote command. Keep the original job and inspect the target before another submission. Recovery continuation preserves successful steps and approvals. Use its eligible pending-step path rather than restarting the entire pipeline to repair a final registration failure.

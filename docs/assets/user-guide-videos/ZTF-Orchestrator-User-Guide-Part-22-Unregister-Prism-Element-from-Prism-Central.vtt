@@ -1,0 +1,80 @@
+WEBVTT
+
+00:00:00.213 --> 00:00:04.736
+Open Unregister PE from PC under Workflows, or its matching Scripts
+
+00:00:04.736 --> 00:00:08.909
+action. Enter the PC endpoint, saved PC credential reference
+
+00:00:08.960 --> 00:00:11.448
+and exact PE cluster UUID.
+
+00:00:11.648 --> 00:00:14.875
+Generating YAML does not contact a target.
+
+00:00:15.046 --> 00:00:19.560
+This administrator-only action has its own guarded job path and is not a general
+
+00:00:19.611 --> 00:00:21.552
+pipeline or scheduled step.
+
+00:00:21.830 --> 00:00:24.296
+Use Look up target, read-only.
+
+00:00:24.518 --> 00:00:28.904
+This requires strict certificate verification and supported PC APIs;
+
+00:00:28.955 --> 00:00:33.651
+it has no TLS bypass. Review the expected PC UUID
+
+00:00:33.830 --> 00:00:35.891
+and PE name from inventory.
+
+00:00:36.091 --> 00:00:40.265
+Missing, ambiguous or mismatched identities block removal instead
+
+00:00:40.315 --> 00:00:41.735
+of choosing a similar cluster.
+
+00:00:41.995 --> 00:00:46.219
+Check the version-specific unregistration procedure and dependencies such as
+
+00:00:46.219 --> 00:00:50.478
+replication, networking, application management and self-service
+
+00:00:50.528 --> 00:00:54.416
+configuration. The lookup does not certify those relationships.
+
+00:00:54.564 --> 00:00:58.780
+Record the dependency acknowledgement and have another administrator approve
+the exact
+
+00:00:58.831 --> 00:01:03.546
+YAML and filename. Only after validation and exact confirmation
+
+00:01:03.725 --> 00:01:07.898
+does the worker recheck identities, require the vendor dry-run task
+
+00:01:07.949 --> 00:01:11.013
+to succeed and submit one unregister request.
+
+00:01:11.191 --> 00:01:15.223
+An uncertain submission or cancellation can leave remote work running.
+
+00:01:15.387 --> 00:01:19.703
+Inspect and reconcile PC state before requesting a further attempt.
+
+00:01:20.038 --> 00:01:24.566
+Review the PC task and inventory result against the original UUID.
+
+00:01:24.758 --> 00:01:29.025
+PC-side success does not establish that every PE-side cleanup
+
+00:01:29.025 --> 00:01:31.128
+or application dependency is complete.
+
+00:01:31.329 --> 00:01:36.014
+Follow the documented PE cleanup handoff and site acceptance procedure.
+
+00:01:36.235 --> 00:01:39.274
+Keep the original job and approval as the audit record.

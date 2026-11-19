@@ -1,6 +1,5 @@
-00:00:00.000 Install the Linux host service once
-00:00:24.165 Review storage before uploading
-00:00:50.799 Import and check the exact package
-00:01:17.306 Approve and monitor one installation
-00:01:44.100 Verify the installed build and saved state
-00:02:12.126 Use rollback within its actual boundaries
+00:00:00.000 Prepare the maintenance window
+00:00:19.440 Check storage before import
+00:00:38.764 Import and review readiness
+00:00:56.872 Approve the exact install
+00:01:14.402 Verify and roll back deliberately

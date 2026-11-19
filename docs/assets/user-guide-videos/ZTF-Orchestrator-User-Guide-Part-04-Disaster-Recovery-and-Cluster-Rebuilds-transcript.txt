@@ -1,24 +1,9 @@
-Part 04 - Disaster Recovery and Cluster Rebuilds
-Updated 4 November 2026. Simulated console examples; synthetic narration.
+Open Recover Infrastructure from Start Here, or Recover Cluster in Disaster Recovery. Choose the intended datacenter and profile. If an open recovery exists, select Resume Recovery. This opens its saved snapshot and completed work instead of preparing another deployment.
 
-Prepare the datacenter and recovery profile
-Open Disaster Recovery from Operations. Add or review the datacenter, its Foundation endpoint and dependency reviews. Link a complete Foundation V M configuration and the cluster post-configuration pipeline to a recovery profile. Use existing cluster to rebuild for re-foundation. Recovery reconstructs infrastructure. Restoring virtual machines and applications remains the responsibility of your backup and recovery platform.
+For a new recovery, review prerequisites, the Foundation YAML, exact physical nodes and the linked post-configuration pipeline. Profile edits create a new draft revision; they do not rewrite existing run snapshots. Review that revision before preparing the run. Archive preserves history; deletion is limited to unused, unlinked profiles.
 
-Review revisions and approve imaging
-Review Profile shows the captured deployment and pipeline snapshots. Check the exact cluster name, address, physical node serials, images, networks and every configuration step. The status is calculated from the latest revision and its source files.
+The recovery view leads with its current stage, any failure and the next required action. Expand stages or pipeline steps when you need detail. Deployment still needs the existing approval and exact destructive confirmation. This film shows a simulation, not a live rebuild.
 
-Baseline changed means a source file, pipeline or datacenter Foundation endpoint no longer matches the reviewed snapshot. To adopt the intended current settings, choose Capture New Revision, save the draft, inspect its targets, enter Baseline review notes and select Mark Baseline Reviewed. Marking the old snapshot reviewed does not clear a continuing mismatch.
+After Foundation completes, restore initial administrative access through the approved bootstrap. Verify replacement authentication before later work. Then collect or record the required fresh PE identity, membership and health evidence. A failed certificate check is a collection problem; use the documented trusted or independent evidence path rather than bypassing the recovery gate.
 
-Capture New Revision is the current profile editing path and retains earlier revisions. The current interface has no profile delete action. Baseline review does not image hardware. Prepare a run only after review, then obtain the separate exact-content deployment approval and destructive confirmations. Deployed rehearsals also make real changes.
-
-Submit once and monitor the existing run
-Enter the required cluster and Foundation confirmation phrases, acknowledge the imaging scope, and deploy once. Follow the linked job and Foundation session. A non-JSON response or H T T P four twenty-nine can be a transport or rate-limit issue while imaging continues. Inspect the existing job and target state before retrying. Stop Orchestration does not prove that Foundation has stopped.
-
-Complete initial access bootstrap first
-After confirmed deployment success, use the initial access bootstrap when the captured pipeline begins with eligible password and EULA or Pulse settings. Obtain each required exact-content approval and acknowledge the cluster. Run only the permitted narrow bootstrap prefix. This removes the need to log in manually just to change the initial password before health collection. Broader cluster configuration still waits for verification.
-
-Collect fresh health evidence
-Collect P E Health Readbacks using the reviewed post-bootstrap credential and verified certificate trust. Check cluster identity, complete expected membership and explicitly reported health. Missing fields, authentication failures or network errors remain unknown. If automatic evidence is unavailable, independently verify P E and record the manual attestation with its evidence reference. Begin remaining configuration within fifteen minutes of fresh evidence.
-
-Resume pending work and hand off restoration
-Run the remaining eligible steps from the captured snapshots. If a step fails, reconcile actual state and continue only the unfinished work. Where approval policy requires a direct job, run the exact approved snapshot and link its successful job to the pending step. Do not repeat successful imaging or password changes. Finish with independent acceptance and an explicit handoff to the backup platform for workload restoration.
+For failure or uncertainty, inspect the existing job and actual Foundation or Prism state. Record reconciliation before continuation. Completed configuration remains completed. An eligible step zero eight registration retry requires confirmed absent registration and fresh health. Final infrastructure acceptance precedes workload restoration through the backup platform.

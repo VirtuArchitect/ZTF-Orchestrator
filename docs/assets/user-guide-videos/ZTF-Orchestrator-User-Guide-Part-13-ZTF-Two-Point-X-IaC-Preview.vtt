@@ -1,109 +1,71 @@
 WEBVTT
 
-00:00:00.341 --> 00:00:04.053
-The two point x integration is a separate desired-state plan and apply
+00:00:00.256 --> 00:00:03.427
+Current pipelines run through ZTF one point x.
 
-00:00:04.139 --> 00:00:04.608
-model.
+00:00:03.627 --> 00:00:07.936
+Native pipeline opt-in, NKP and ZTF two point x console
 
-00:00:04.907 --> 00:00:08.427
-Configure its own checkout path, executable and reference.
+00:00:07.936 --> 00:00:09.507
+execution are retired.
 
-00:00:08.747 --> 00:00:13.073
-Keep Workflows and Scripts one point x on their compatible legacy runtime.
+00:00:09.728 --> 00:00:12.531
+This replaces the former two point x preview lesson.
 
-00:00:13.262 --> 00:00:16.142
-Runtime recognition only identifies a layout.
+00:00:12.577 --> 00:00:16.494
+Retiring a launch path is different from deleting old jobs, configuration
 
-00:00:16.376 --> 00:00:20.600
-It does not prove that a target provider, resource schema or mutation is
+00:00:16.758 --> 00:00:20.718
+or recovery records. An existing Native pipeline can remain visible
 
-00:00:20.643 --> 00:00:22.088
-supported for your environment.
+00:00:20.811 --> 00:00:25.371
+but blocked. An administrator must review every action and its YAML before
 
-00:00:22.505 --> 00:00:26.472
-Open Workflows two point x under Optional Integrations and select the
+00:00:25.422 --> 00:00:27.078
+explicitly converting it.
 
-00:00:26.515 --> 00:00:27.646
-intended starter.
+00:00:27.257 --> 00:00:31.579
+Do not change an executor label and assume every old action is compatible.
 
-00:00:27.923 --> 00:00:31.976
-Review the input document, editable global configuration and unique state
+00:00:31.822 --> 00:00:35.403
+Keep the original definition and evidence available for comparison.
 
-00:00:32.062 --> 00:00:32.766
-filename.
+00:00:35.721 --> 00:00:40.372
+Existing recovery runs retain the captured snapshot, approvals and completed
 
-00:00:33.043 --> 00:00:35.780
-Match the installed resource schema and target scope.
+00:00:40.372 --> 00:00:44.481
+work. Do not rewrite their history to match a newer profile.
 
-00:00:35.958 --> 00:00:38.347
-A template selection is not approval.
+00:00:44.681 --> 00:00:48.586
+Continue through the supported run controls and its evidence requirements.
 
-00:00:38.688 --> 00:00:43.040
-Keep state and reviewed inputs associated so later guarded actions cannot
+00:00:48.838 --> 00:00:53.459
+The final step zero eight retry remains conditional on actual eligibility,
 
-00:00:43.211 --> 00:00:45.899
-silently target a different plan or environment.
+00:00:53.574 --> 00:00:55.713
+reconciliation and fresh health.
 
-00:00:46.326 --> 00:00:49.726
-Scripts two point x contains converted intent starters.
+00:00:56.049 --> 00:01:00.318
+An older image can still contain NKP or two point x files.
 
-00:00:50.096 --> 00:00:53.040
-They do not execute as the legacy main script command.
+00:01:00.592 --> 00:01:03.891
+Their presence supports inspection and rollback compatibility;
 
-00:00:53.424 --> 00:00:56.710
-Generate the input and review the corresponding plan in the separate
+00:01:03.963 --> 00:01:07.027
+it does not re-enable the retired console operations.
 
-00:00:56.752 --> 00:00:57.499
-runtime.
+00:01:07.248 --> 00:01:11.429
+Removing those dependencies or stored records is a separate reviewed phase.
 
-00:00:57.819 --> 00:01:02.982
-P E-only, controller, Foundation and other unmapped legacy actions remain in
+00:01:11.751 --> 00:01:16.393
+Compare the installed build with the current guide and package metadata before
+relying
 
-00:01:03.024 --> 00:01:04.542
-Scripts one point x.
+00:01:16.401 --> 00:01:20.702
+on a feature. A source merge or a downloaded ZIP does not
 
-00:01:04.865 --> 00:01:08.862
-Do not infer feature parity from similar names across both catalogues.
+00:01:20.710 --> 00:01:25.071
+update an appliance. Use the guided update process when needed, then
 
-00:01:09.260 --> 00:01:12.886
-Submit the plan through the preview workspace and inspect its durable job
-
-00:01:13.057 --> 00:01:14.179
-and retained evidence.
-
-00:01:14.619 --> 00:01:19.483
-Confirm the target, resource changes, state and supported provider behavior.
-
-00:01:19.739 --> 00:01:23.131
-Resolve schema errors and unknowns before considering apply.
-
-00:01:23.408 --> 00:01:27.769
-A successful plan does not itself perform or authorize the target change.
-
-00:01:28.119 --> 00:01:31.290
-Preserve the exact source and input used to produce it.
-
-00:01:31.575 --> 00:01:35.585
-Apply and destroy remain distinct approval-bound actions where the guarded
-
-00:01:35.671 --> 00:01:36.695
-lane is enabled.
-
-00:01:36.908 --> 00:01:40.620
-Review the exact request and use an authorized environment with a recovery
-
-00:01:40.833 --> 00:01:41.420
-path.
-
-00:01:41.793 --> 00:01:45.611
-Do not bypass approval or use legacy launchers as a workaround.
-
-00:01:45.889 --> 00:01:48.299
-Independently read back the target result.
-
-00:01:48.747 --> 00:01:53.270
-Preview status and passing software tests do not establish vendor support or
-
-00:01:53.313 --> 00:01:55.508
-compatibility for every resource.
+00:01:25.079 --> 00:01:29.333
+verify supported workflows and retained state before operational use.

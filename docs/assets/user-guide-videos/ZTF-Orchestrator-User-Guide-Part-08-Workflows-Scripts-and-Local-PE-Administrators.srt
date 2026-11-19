@@ -1,167 +1,95 @@
 1
-00:00:00,256 --> 00:00:03,221
-Expand Advanced Automation and open Workflows.
+00:00:00,256 --> 00:00:04,693
+Choose a supported ZTF one point x workflow or script and its matching
 
 2
-00:00:03,541 --> 00:00:06,699
-Read the description and select the service actually available.
+00:00:04,693 --> 00:00:08,568
+configuration. A filename alone does not select the action.
 
 3
-00:00:07,083 --> 00:00:12,032
-Integrated Foundation Central, standalone F C A and classic Foundation V M
+00:00:08,789 --> 00:00:13,490
+For example, a PC registration file is not a storage-standard configuration.
 
 4
-00:00:12,245 --> 00:00:13,436
-use different contracts.
+00:00:13,641 --> 00:00:18,078
+Retired Native, NKP and two point x execution routes do not
 
 5
-00:00:13,645 --> 00:00:17,698
-Import or complete the matching form and review its generated configuration.
+00:00:18,078 --> 00:00:19,791
+provide an alternative launcher.
 
 6
-00:00:18,125 --> 00:00:21,751
-Do not assume that a similarly named action has the same credentials or
+00:00:20,041 --> 00:00:24,556
+For Cluster A, verify the actual target and purpose of every credential
 
 7
-00:00:21,837 --> 00:00:23,074
-execution semantics.
+00:00:24,649 --> 00:00:29,160
+reference. Group labels make the list easier to navigate but never substitute
 
 8
-00:00:23,415 --> 00:00:26,024
-Open Scripts for a specific allowlisted action.
+00:00:29,160 --> 00:00:32,971
+the correct account. Save changed values to ZTF.
 
 9
-00:00:26,328 --> 00:00:30,296
-Use its parameter wizard and installed schema, then review the generated
+00:00:33,171 --> 00:00:36,883
+A reference being present is different from the target accepting its username
 
 10
-00:00:30,381 --> 00:00:31,021
-input.
+00:00:36,883 --> 00:00:41,247
+and password. When changing administrative access, review the exact
 
 11
-00:00:31,277 --> 00:00:34,712
-A script sequence and a workflow are different launch modes.
+00:00:41,297 --> 00:00:42,783
+scope and confirmation.
 
 12
-00:00:35,032 --> 00:00:39,178
-Supply the required saved file and inspect verification after execution.
+00:00:43,047 --> 00:00:47,383
+Verify replacement authentication before later configuration stages use it.
 
 13
-00:00:39,619 --> 00:00:44,013
-Set Prism Login Title for P E is now available as a focused script or
+00:00:47,510 --> 00:00:52,118
+Do not automatically replay a failed password-change step: a request can
 
 14
-00:00:44,056 --> 00:00:47,635
-pipeline action, with title-only Configure Cluster support.
+00:00:52,118 --> 00:00:55,462
+succeed remotely even when the following verification fails.
 
 15
-00:00:48,057 --> 00:00:51,726
-Review the exact title and cluster, select the correct vault credential
+00:00:55,816 --> 00:01:00,041
+Set Prism Login Title changes the PE login-screen title, not
 
 16
-00:00:51,939 --> 00:00:54,423
-reference and retain certificate verification.
+00:01:00,041 --> 00:01:03,617
+the cluster, controller virtual machine or hypervisor name.
 
 17
-00:00:54,954 --> 00:00:59,008
-The action compares the existing setting, applies a change only when needed,
+00:01:03,795 --> 00:01:07,789
+Local administrator scripts need independent user and role verification.
 
 18
-00:00:59,221 --> 00:01:02,592
-and requires a fresh readback to verify the requested title.
+00:01:08,043 --> 00:01:11,790
+Keep version-specific prerequisites and approval policy with the selected action
 
 19
-00:01:03,018 --> 00:01:07,882
-Legacy U I A P I compatibility still needs validation against the target A O
+00:01:11,969 --> 00:01:14,876
+rather than assuming every script shares the same contract.
 
 20
-00:01:08,010 --> 00:01:08,724
-S version.
+00:01:15,211 --> 00:01:19,630
+Read the saved job output, reported stage and safe diagnostic.
 
 21
-00:01:09,096 --> 00:01:13,747
-A saved title or subprocess success alone does not prove the target displays
+00:01:19,798 --> 00:01:24,035
+Distinguish credential resolution, rejected authentication, permissions,
 
 22
-00:01:13,832 --> 00:01:14,117
-it.
+00:01:24,107 --> 00:01:26,190
+transport and response validation.
 
 23
-00:01:14,515 --> 00:01:18,184
-For local P E users choose Create Local Users for P E.
+00:01:26,411 --> 00:01:30,830
+Reconcile the actual target state before requesting another approved attempt.
 
 24
-00:01:18,355 --> 00:01:21,880
-Each requested username needs its own matching credential reference.
-
-25
-00:01:22,163 --> 00:01:26,707
-Select the intended role set explicitly and respect the installed schema.
-
-26
-00:01:27,027 --> 00:01:28,918
-Run Dry Run before submission.
-
-27
-00:01:29,273 --> 00:01:33,753
-After creation, independently confirm that each account is enabled and has
-
-28
-00:01:33,796 --> 00:01:37,707
-both Cluster Admin and User Admin when those are the approved roles.
-
-29
-00:01:38,276 --> 00:01:42,231
-Inspect the stage and safe category when local user creation fails.
-
-30
-00:01:42,603 --> 00:01:47,445
-Credential resolution, certificate trust, identity mismatch, network access,
-
-31
-00:01:47,808 --> 00:01:52,096
-creation, role assignment and verification are separate failure points.
-
-32
-00:01:52,416 --> 00:01:55,348
-Check whether any accounts or roles were already created.
-
-33
-00:01:55,719 --> 00:01:59,644
-Correct the actual cause and rerun only through the supported process.
-
-34
-00:02:00,028 --> 00:02:04,278
-Do not paste passwords or raw authentication headers into a support request.
-
-35
-00:02:04,841 --> 00:02:09,151
-The C V M and Dell i D R A C rotation workflow has a separate support
-
-36
-00:02:09,364 --> 00:02:11,305
-boundary and exact confirmations.
-
-37
-00:02:11,668 --> 00:02:16,404
-Verify each C V M host-key fingerprint independently, establish the required
-
-38
-00:02:16,532 --> 00:02:19,223
-access and keep an out-of-band recovery path.
-
-39
-00:02:19,568 --> 00:02:23,280
-Review any manual follow-up, including host I P M I credential
-
-40
-00:02:23,493 --> 00:02:24,368
-synchronization.
-
-41
-00:02:24,688 --> 00:02:28,955
-A dry run or approval does not prove that live rotation is validated for
-
-42
-00:02:28,997 --> 00:02:30,435
-your firmware and release.
+00:01:31,041 --> 00:01:35,515
+A successful process exit alone is not complete operational acceptance.

@@ -51,17 +51,9 @@ jobs:
         run: |
           source=docs/assets/user-guide-videos
           output=dist-demo/tutorials/media
-          # Part 15 streams from the commit-pinned repository asset to keep the Pages upload smaller.
-          PART_15_MP4=ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4
           (cd "$source" && sha256sum -c SHA256SUMS)
           mkdir -p "$output"
-          for asset in "$source"/*; do
-            case "${asset##*/}" in
-              "$PART_15_MP4"|SHA256SUMS) continue ;;
-            esac
-            cp "$asset" "$output/"
-          done
-          awk -v video="$PART_15_MP4" '$2 != video' "$source/SHA256SUMS" > "$output/SHA256SUMS"
+          cp "$source"/* "$output/"
           (cd "$output" && sha256sum -c SHA256SUMS)
 
       - name: Record published source identity

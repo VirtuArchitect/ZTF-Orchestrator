@@ -1,84 +1,74 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 17 November 2026 | 18 videos | approximately 47 minutes**
+**v1.8.5-rc1 | 19 November 2026 | 23 videos | approximately 38½ minutes**
 
-[Watch the full series, starting with 00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
-Use the player to select a part or jump to a chapter. Each video has burned-in
-English captions, Joanna studio narration, an MP4 download, transcript, SRT/VTT captions and chapter markers.
-After opening a transcript from the player, use the browser's Back button to
-return to the same part and timestamp. The video stays paused.
-
-The overview explains the operations console, saved YAML, credential references,
-execution runtimes and Foundation handoff. It introduces deployment, post-configuration,
-infrastructure recovery, monitoring and the boundaries of preview integrations.
+[Watch the refreshed series](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00).
+The light-mode player provides Joanna studio narration, burned-in English captions,
+MP4 downloads, transcripts, SRT/VTT captions and seekable chapters. After opening a
+transcript, use Back to return to the same part and timestamp, paused.
 
 ## Parts
 
 | Part | Topic | Transcript |
 |---|---|---|
-| 00 | ZTF-Orchestrator Overview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt) |
-| 01 | Dashboard Overview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-transcript.txt) |
-| 02 | Deploy a Cluster with Foundation VM | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt) |
-| 03 | Post Deployment Configuration Pipelines | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt) |
-| 04 | Disaster Recovery and Cluster Rebuilds | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-transcript.txt) |
-| 05 | Monitoring Drift and Upgrade Readiness | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt) |
-| 06 | Guided Appliance Updates and Rollback | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-transcript.txt) |
-| 07 | Credentials Config Files and YAML Studio | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-transcript.txt) |
-| 08 | Workflows Scripts and Local PE Administrators | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-transcript.txt) |
-| 09 | Jobs Schedules Parallel Execution and Approvals | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals-transcript.txt) |
-| 10 | Upgrade Advisor Assessments and Readiness Actions | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions-transcript.txt) |
-| 11 | Administration Settings Audit and Backups | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups-transcript.txt) |
-| 12 | NKP Framework and Validation Evidence Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-transcript.txt) |
-| 13 | ZTF Two Point X IaC Preview | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt) |
-| 14 | Native Foundation Baselines and Operating Boundaries | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
+| 00 | [ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt) |
+| 01 | [Overview, Managed Clusters and Needs Attention](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=01) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-transcript.txt) |
+| 02 | [Deploy a Cluster with Foundation VM](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=02) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt) |
+| 03 | [Eight-Step Post-Configuration Pipeline](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=03) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt) |
+| 04 | [Recover Cluster and Resume Recovery](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=04) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-transcript.txt) |
+| 05 | [PE Health, Drift and Collection Diagnostics](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=05) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt) |
+| 06 | [Guided Appliance Updates and Rollback](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=06) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-transcript.txt) |
+| 07 | [Credential Groups, Config Files and Operational YAML Studio](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=07) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-transcript.txt) |
+| 08 | [ZTF 1.x Workflows, Scripts and Credential Changes](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=08) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-transcript.txt) |
+| 09 | [Jobs, Schedules, Parallel Execution and Approvals](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=09) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals-transcript.txt) |
+| 10 | [Upgrade Advisor and Readiness Evidence](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=10) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions-transcript.txt) |
+| 11 | [Administration, Sessions, Audit and Backups](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=11) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups-transcript.txt) |
+| 12 | [Shared Validation Evidence and Historical Records](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=12) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-transcript.txt) |
+| 13 | [Supported Execution and Retired Integrations](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=13) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt) |
+| 14 | [Foundation Planning and Operating Boundaries](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=14) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt) |
 | 15 | [Disaster Recovery Start to Finish](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt) |
 | 16 | [AHV Appliance Deployment and SSH Setup](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-transcript.txt) |
 | 17 | [Production Ubuntu VM Disk Expansion](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-transcript.txt) |
+| 18 | [AHV Uplink Migration and a New Virtual Switch](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=18) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch-transcript.txt) |
+| 19 | [PE-Direct Data-at-Rest Encryption](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=19) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption-transcript.txt) |
+| 20 | [VS0 MTU Change and Approved Rollback](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=20) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback-transcript.txt) |
+| 21 | [Cluster Storage Standard](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=21) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-transcript.txt) |
+| 22 | [Unregister Prism Element from Prism Central](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=22) | [Read](assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central-transcript.txt) |
 
-## 10 November addition
+## Current refresh
 
-Part 15 follows one simulated AHV cluster from creating a recovery profile
-through approved Foundation imaging, initial access, Prism Element health
-checks, post-configuration and workload restore handoff. It also shows how to
-reconcile a failed pipeline step. The light-mode walkthrough uses the Joanna
-studio voice and console captures from source `28e9f71`.
+Twenty-one revised/new recordings align with the refreshed 156-page
+[Administrator and User Guide](manuals/README.md), repository `63fb536` and
+application source `f33c9ed`. Parts 16 and 17 retain their current static-IP-first
+appliance deployment and Ubuntu disk-expansion recordings unchanged.
 
-## 4 November refresh
+Coverage includes operational YAML Studio, credential and Config Files groups,
+Foundation feedback, Recover Cluster / Resume Recovery, preserved completed work,
+step 08-only recovery retry, PE health diagnostics, sessions and approvals.
+Parts 18–22 add PE-direct AHV uplink migration, PE-direct DARE, PC-managed VS0 MTU,
+Cluster Storage Standard and Prism unregistration. Each retains its documented
+trust, approval, validation and hardware-validation boundaries.
 
-Parts 00, 01, 04, 05, 06, 07, 08, 10 and 11 were revised against source
-`8c7843a`. The refresh covers managed clusters, PE evidence freshness, recovery
-baseline review, guided-update progress, credential and configuration groups,
-PE login-title configuration, Upgrade Advisor TLS controls and administrator
-sessions. The other six parts retain their original recordings.
+Parts 12 and 13 now explain shared evidence and supported execution/retired
+integrations. Their legacy filenames preserve existing links; they do not teach
+current NKP or ZTF 2.x launch paths. ZTF 1.x remains the pipeline executor.
 
 ## Evidence and maintenance boundaries
 
-The updated chapters use simulated captures and generic documentation fixtures.
-Unchanged illustrations retain their original capture baselines, including
-`ea9dcf0` and detailed recovery illustrations from `416a480`. Screens are not live cluster,
-recovery or host-update evidence. No infrastructure actions were executed for these videos.
-The synthetic voice is not a clone of a user. Technical decoding, caption timing,
-chapter counts, final visual samples and player navigation were checked. A listening
-review of pronunciation has not been performed.
+Console captures use simulated generic records. Explanatory graphics illustrate
+sequences rather than actual job or target verification. No live infrastructure
+changes were executed. Workload restoration remains with the backup platform.
+Videos do not establish hardware validation or change installed appliances.
 
-NKP and ZTF 2.x retain Preview labels and their documented execution limits. Restoring
-VMs/application data remains with the backup platform. The prerelease designation
-is separate from the established paths' successful production use; v1.8.4 remains
-Latest stable. The videos do not update an installed appliance or an immutable bundle.
+Technical decoding, caption alignment, chapter timing, encoded visual samples and
+player navigation were checked. A complete human listening/pronunciation review
+has not been performed. New recordings are 1080p/24 fps H.264/AAC; retained Part 17
+preserves its original 30 fps. Captions are burned in; an additional subtitle layer
+may duplicate them.
 
-Media checksums are in [SHA256SUMS](assets/user-guide-videos/SHA256SUMS).
-The Pages workflow copies the tutorial media from `docs/assets`. Part 15 streams
-its MP4 from a commit-pinned GitHub repository URL. Its poster, transcript,
-captions and chapter list are served by Pages. The repository checksum list
-covers all media. The Pages copy covers the files hosted on Pages. The media
-is excluded from Docker by the existing docs exclusion.
-See the [current manual](manuals/README.md), [static demo guide](demo/README.md),
-[Disaster Recovery procedure](disaster-recovery.md) and [guided updates](guided-appliance-updates.md).
-
-## Changes after the recorded videos
-
-The 4 November refresh reflects the 3 November source baseline, not every change in
-later consolidated updates. Part 09 retains its original configuration-selection
-illustration, and Part 04 predates recovery profile archive and deletion controls.
-Use [current build status](current-status.md) and the written procedures for later
-changes. The standalone demo and long-form recovery tutorial are separate.
+All 23 MP4s and their companions are served together on Pages, including Part 15.
+[SHA256SUMS](assets/user-guide-videos/SHA256SUMS) and the
+[series manifest](assets/user-guide-videos/series-manifest.json) record integrity
+and source provenance. Media remains excluded from Docker by the docs exclusion.
+See [current status](current-status.md), [Disaster Recovery](disaster-recovery.md)
+and [guided updates](guided-appliance-updates.md) for operational procedures.
