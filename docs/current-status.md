@@ -12,6 +12,8 @@ Application source reviewed at [`f33c9ed`](https://github.com/VirtuArchitect/ZTF
 
 Required checks on PR #202 passed. Separate local Docker verification of the exact image passed 128 targeted tests and 64 network-isolated container tests, including the mocked step 08-only retry. Browser authoring checks and record-preservation checks passed. These results do not establish live hardware compatibility or production recovery acceptance.
 
+The [Administrator and User Guide](manuals/README.md) is now a 156-page Word/PDF edition reviewed on 19 November 2026 against this source baseline and the refreshed README. It preserves the original layout and labels unchanged older illustrations as historical.
+
 ## Historical published package baseline — 2 November 2026
 
 Reviewed 2 November 2026 against merged application source `a3c9c79832efe4552cab5b208d5fbe49936dcbf8` (PR #149). The historical consolidated offline appliance bundle was **v1.8.5-rc1-636f191**, built from commit `636f19177a913e6b1c21d1c13703000dd1e08a38`; its source tree matches that merge. v1.8.5-rc1 remains a prerelease and v1.8.4 remains Latest stable.
@@ -48,7 +50,7 @@ ZIP SHA-256: `6824c285cef93852f42bdfcc2b0d0651be9605dde018bb3e41fc6a53c2ff4ccf`.
 
 Required PR checks passed: 1,142 tests passed, 2 skipped and 81.39% coverage, with frontend build/audit successful. Package/host-service checksums, exact Docker archive tags, isolated image health/API and package import were verified. Local Docker cutover was healthy with persistent configuration hashes and records preserved. A target Linux appliance activation and recovery rehearsal remain separate operator verification.
 
-The [PDF manual and editable source](manuals/README.md) retain their existing design. [Current screenshots](assets/guide/v1.8.5-rc1/README.md) use generic simulated data. Dated evidence, archived release documents and existing videos retain their original provenance; a documentation refresh neither modifies earlier ZIPs nor turns simulated media into live validation.
+The [PDF manual and editable source](manuals/README.md) retain their existing design. [Current light-mode screenshots](assets/guide/2026-11-19/README.md) use generic simulated data. Dated evidence, archived release documents and existing videos retain their original provenance; a documentation refresh neither modifies earlier ZIPs nor turns simulated media into live validation.
 
 ## Newer source capability
 

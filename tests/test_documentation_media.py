@@ -2,6 +2,8 @@
 import hashlib
 import json
 import re
+from zipfile import ZipFile
+from xml.etree import ElementTree
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,10 +56,33 @@ def test_training_media_integrity_and_pages_packaging():
 def test_published_manual_checksums_match_current_reference():
     folder = ROOT / 'docs/manuals'
     index = (folder / 'README.md').read_text(encoding='utf-8')
+    manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
     for suffix in ['pdf', 'docx']:
         path = folder / f'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.{suffix}'
-        assert hashlib.sha256(path.read_bytes()).hexdigest() in index
-    assert '147-page' in index and '2 November 2026' in index
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert digest == manifest['files'][path.name]
+        assert digest in index
+    assert f"{manifest['pdfPages']}-page" in index
+    assert manifest['reviewedDisplay'] in index
+    assert manifest['simulatedScreenshots'] is True
+    assert manifest['liveActionsExecuted'] is False
+    assert len(manifest['applicationSource']) == len(manifest['repositoryReview']) == 40
+    path = folder / 'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx'
+    with ZipFile(path) as archive:
+        root = ElementTree.fromstring(archive.read('word/document.xml'))
+    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+          'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'}
+    assert len(root.findall('.//w:tbl', ns)) == manifest['tables']
+    assert len(root.findall('.//wp:inline', ns)) == manifest['inlineImages']
+    geometry = []
+    def attr(element, key):
+        return int(element.attrib['{' + ns['w'] + '}' + key]) * 635
+    for section in root.findall('.//w:sectPr', ns):
+        size = section.find('w:pgSz', ns)
+        margin = section.find('w:pgMar', ns)
+        geometry.append([attr(size, 'w'), attr(size, 'h')] +
+                        [attr(margin, edge) for edge in ['top', 'bottom', 'left', 'right']])
+    assert geometry == manifest['sectionGeometryEmu']
 
 
 

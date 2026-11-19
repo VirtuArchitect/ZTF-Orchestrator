@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-19",
+  "repositoryReview": "27d28a2f2fcc086dbb40a5228294143b5be00af0",
+  "applicationSource": "f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2",
+  "simulated": true,
+  "lightMode": true,
+  "liveActionsExecuted": false,
+  "viewport": {
+    "width": 1600,
+    "height": 1050
+  },
+  "source": "https://virtuarchitect.github.io/ZTF-Orchestrator/demo/",
+  "screens": [
+    {
+      "file": "start-here.jpg",
+      "route": "start",
+      "sha256": "ecdc604a70143d97cfe2c1c790ae47bd790a500b6c78f7646b983080ca743aca",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "dashboard.jpg",
+      "route": "overview",
+      "sha256": "3e5e2e83b3db574c1d22025a67b3e9b41b4a2f57529a92da452670240805c933",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "post-configuration.jpg",
+      "route": "start/configure",
+      "sha256": "c8abd710172db6ffc1db53ae9598627122f608412a4ada7d2c16816d85c273ed",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "jobs.jpg",
+      "route": "jobs",
+      "sha256": "80a416489f6ade9c06e912002791e4ad050480ca8f904b0160aa874b1f98da1c",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "global-config.jpg",
+      "route": "global-config",
+      "sha256": "0d0d72f22256edf595e719d9132712a4d108539b21b14f2a38b448eb11b5b336",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "configs.jpg",
+      "route": "configs",
+      "sha256": "b4688c47338090bccf210c3875d9cdd6d3901c4a7bea9fa67e0aec214fd34b17",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "pipelines.jpg",
+      "route": "pipelines",
+      "sha256": "9da00fbfd2b8ae3db1222565f79ffb8dee4f907c3a6f75fcab938c38ad8a2d1a",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "disaster-recovery.jpg",
+      "route": "recovery",
+      "sha256": "a8f2080a93a1ae412ff65d5992d915804ded268d41f6618b8a399fc5091608a9",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "credential-groups.jpg",
+      "route": "global-config",
+      "sha256": "322a60a1a8147dec4d151e1efa9006127ee0a2eb8c48c6dc79394fb445af3d3e",
+      "interaction": "Saved fictional grouping in static demo only"
+    },
+    {
+      "file": "yaml-studio.jpg",
+      "route": "yaml-studio",
+      "sha256": "f56db85b919a70287027e243130e70bc41fb7b940d565b9ecc2bc9038b6f9d09",
+      "interaction": "Validate fictional draft; no save or execution"
+    },
+    {
+      "file": "dare.jpg",
+      "route": "configure/dare",
+      "sha256": "3994f5110f9aa75339a20095a820295bc6107eaa9c5640dc9ba5d7352048ca7f",
+      "interaction": "Fictional PE-direct draft; no discovery or enablement"
+    },
+    {
+      "file": "ahv-uplink.jpg",
+      "route": "configure/ahv-uplink-migration",
+      "sha256": "ac416e01e69c80b15535b3acdafc99e7dcfafe0e1d10aa11ec8677ba29246b19",
+      "interaction": "Fictional PE-direct draft; no discovery or mutation"
+    },
+    {
+      "file": "ahv-uplink-switch.jpg",
+      "route": "configure/ahv-uplink-migration",
+      "sha256": "fb6d66e7a7fd69308809452757c2f7fdd19dbf7603bff12cdcbeeef4c77af1df",
+      "interaction": "Create vs1 selected; draft only"
+    },
+    {
+      "file": "approvals.jpg",
+      "route": "approvals",
+      "sha256": "135d4c4207febee426fd8e297f1594ab12b82283a425ef0420ffc91107038512",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "clusters.jpg",
+      "route": "clusters",
+      "sha256": "01fa205dd7f38b5321a95eabb09b0e0c04ab4bc6fbfc89697785e92e40d8e51d",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "setup.jpg",
+      "route": "setup",
+      "sha256": "2b9b73d52a5cf9ce806aaa7510b6fc174c82e575bf1aec4531ee68505729bbea",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "workflows.jpg",
+      "route": "workflows",
+      "sha256": "210ff3239435ad7bf3624e7a200e83260ec586f11fd1ed8aa18ae44cc8f3355d",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "validation-evidence.jpg",
+      "route": "validation-evidence",
+      "sha256": "836b529c3e9ee42a3fcb9a89d0e5fd2e604461aaef168a6ffdc6b1fac190afab",
+      "interaction": "Navigation or draft review only"
+    },
+    {
+      "file": "recover-cluster.jpg",
+      "route": "recovery",
+      "sha256": "dc8c9e2e4b6df6b54028480e796b7c57e6608cf14787da32c4d734cc20a8fdf3",
+      "interaction": "Opened chooser and selected synthetic profile; no run created"
+    },
+    {
+      "file": "sessions.jpg",
+      "route": "users",
+      "sha256": "45b73f70fd0d10ea5611c5ad9a80ee8187b6a96ee076f7775b42dc22c57e9dea",
+      "interaction": "Read-only refresh of synthetic sessions"
+    },
+    {
+      "file": "upgrade-advisor.jpg",
+      "route": "upgrade-advisor",
+      "sha256": "0d9275c13165315e8c643a8e6b76d044e8814b00c0eacb3dacaf6bcd6cd9d67b",
+      "interaction": "Navigation or draft review only"
+    }
+  ]
+}
