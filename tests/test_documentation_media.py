@@ -2,11 +2,39 @@
 import hashlib
 import json
 import re
+import base64
+import zlib
 from zipfile import ZipFile
 from xml.etree import ElementTree
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_caption_render_audit_covers_every_video_and_preserves_audio():
+    media = ROOT / 'docs/assets/user-guide-videos'
+    report = json.loads((media / 'caption-render-audit.json').read_text(encoding='utf-8'))
+    assert report['remainingVideosChecked'] == 22 and report['controlPart'] == 2
+    assert report['repairedParts'] == [0, 1] + list(range(3, 16)) + list(range(18, 23))
+    assert report['unchangedParts'] == [2, 16, 17]
+    assert report['samplesChecked'] == report['captionCueSamples'] + report['speechGapSamples'] == 926
+    assert report['failedSamples'] == 0 and report['narrationRegenerated'] is False
+    assert [r['part'] for r in report['records']] == list(range(23))
+    for record in report['records']:
+        assert hashlib.sha256((media / record['file']).read_bytes()).hexdigest() == record['sha256']
+        assert record['failedSamples'] == 0
+        if record['changed']:
+            assert record['beforeSha256'] != record['sha256']
+            assert record['audioUnchanged'] and record['chaptersUnchanged']
+            assert len(record['audioPayloadSha256']) == len(record['decodedAudioSha256']) == 64
+        else:
+            assert record['beforeSha256'] == record['sha256']
+        assert len(record['browserSamples']) == 2
+        for sample in record['browserSamples']:
+            x, y, width, height = sample['region']
+            assert 0 <= x < x + width <= 1920 and 0 <= y < y + height <= 1080
+            mask = zlib.decompress(base64.b64decode(sample['referenceMaskZlib']))
+            assert len(mask) == width * height and set(mask) <= {0, 1}
 
 
 def test_training_media_integrity_and_pages_packaging():

@@ -14,3 +14,5 @@ No live cluster or appliance was changed. All MP4s and companion files are serve
 Technical decoding, timing, frame and integrity checks are recorded in verification-report.json. A complete human listening/pronunciation review has not been performed.
 
 Part 02 now compares all three Create Cluster workflows, their matching services and use cases, validation, approval and post-configuration handoff. Its original filename is retained for stable links. Other recordings are unchanged.
+
+Caption repair: 20 picture tracks rebuilt with 24 fps expansion before ASS evaluation. Existing audio and chapter times are unchanged. Parts 02, 16 and 17 passed and are unchanged. All 654 cue midpoints and 272 speech-gap samples passed decoded-frame comparison. See caption-render-audit.json.
