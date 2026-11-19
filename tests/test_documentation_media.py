@@ -210,6 +210,27 @@ def test_published_manual_checksums_match_current_reference():
 
 
 
+def test_manual_links_every_corrected_tutorial_and_complete_download():
+    folder = ROOT / 'docs/manuals'
+    download = json.loads((ROOT / 'docs/user-guide-video-download.json').read_text(encoding='utf-8'))
+    with ZipFile(folder / 'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx') as archive:
+        document = ElementTree.fromstring(archive.read('word/document.xml'))
+        relationships = ElementTree.fromstring(archive.read('word/_rels/document.xml.rels'))
+    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+    relationship_id = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'
+    used_ids = {link.get(relationship_id) for link in document.findall('.//w:hyperlink', ns)}
+    targets = {row.get('Target') for row in relationships
+               if row.get('Id') in used_ids and row.get('TargetMode') == 'External'
+               and row.get('Type', '').endswith('/hyperlink')}
+    expected = {f'https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part={part:02d}'
+                for part in range(download['parts'])}
+    expected.update([download['url'], download['checksumUrl']])
+    assert len(expected) == 25 and expected <= targets
+    text = ''.join(document.itertext())
+    assert 'predates the Sessions panel' not in text
+    assert 'complete corrected video ZIP' in text
+
+
 def test_current_operator_documentation_local_link_targets_exist():
     """Check local file/image targets; external URLs and fragments are out of scope."""
     documents = (
