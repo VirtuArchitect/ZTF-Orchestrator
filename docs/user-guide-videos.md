@@ -7,6 +7,11 @@ The light-mode player provides Joanna studio narration, burned-in English captio
 MP4 downloads, transcripts, SRT/VTT captions and seekable chapters. After opening a
 transcript, use Back to return to the same part and timestamp, paused.
 
+[Download all 23 corrected videos (ZIP, 84 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip) |
+[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256).
+Includes an offline player, transcripts, English SRT/VTT captions and chapter files.
+Extract the ZIP completely, then open `index.html`.
+
 ## Parts
 
 | Part | Topic | Transcript |

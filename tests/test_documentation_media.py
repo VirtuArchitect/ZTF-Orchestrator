@@ -7,8 +7,45 @@ import zlib
 from zipfile import ZipFile
 from xml.etree import ElementTree
 from pathlib import Path
+from html.parser import HTMLParser
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_complete_video_zip_release_links_match_the_current_media_snapshot():
+    download = json.loads((ROOT / 'docs/user-guide-video-download.json').read_text(encoding='utf-8'))
+    media = ROOT / 'docs/assets/user-guide-videos'
+    manifest = json.loads((media / 'series-manifest.json').read_text(encoding='utf-8'))
+    assert download['kind'] == 'documentation-media'
+    assert download['parts'] == manifest['parts'] == 23
+    assert download['chapters'] == manifest['chapters']
+    assert Path(download['asset']).name == download['asset'] and download['asset'].endswith('.zip')
+    assert download['url'] == (
+        'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/'
+        + download['releaseTag'] + '/' + download['asset']
+    )
+    assert download['checksumUrl'] == download['url'] + '.sha256'
+    assert re.fullmatch(r'[a-f0-9]{64}', download['sha256'])
+    assert download['bytes'] > 0 and download['offlinePlayer']
+    assert hashlib.sha256((media / 'SHA256SUMS').read_bytes()).hexdigest() == download['mediaChecksumsSha256']
+
+    class DownloadLinks(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.links = {}
+
+        def handle_starttag(self, tag, attrs):
+            attributes = dict(attrs)
+            if tag == 'a' and attributes.get('id', '').startswith('series-zip-'):
+                self.links[attributes['id']] = attributes.get('href')
+
+    for filename in ['public/tutorials/index.html', 'docs/pages/project/index.html']:
+        parser = DownloadLinks()
+        parser.feed((ROOT / filename).read_text(encoding='utf-8'))
+        assert parser.links == {'series-zip-download': download['url'], 'series-zip-checksum': download['checksumUrl']}
+    for filename in ['README.md', 'docs/user-guide-videos.md']:
+        targets = re.findall(r'\[[^\]]*\]\(([^)]+)\)', (ROOT / filename).read_text(encoding='utf-8'))
+        assert download['url'] in targets and download['checksumUrl'] in targets
 
 
 def test_part06_visuals_follow_appliance_updates_and_preserve_narration():

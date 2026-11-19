@@ -2,6 +2,7 @@
 
 
 ### Documentation
+- Publish the verified complete 23-part video ZIP and checksum as release assets; link the offline player, transcripts, English captions and chapters from the video page, README and light landing page.
 - Audit the remaining 22 tutorials for visual/narration alignment; correct unrelated controls, recovery branches, specialist plans, Netplan trial timing and disk-size examples while preserving Joanna audio, English caption sources, chapters and stable links.
 - Correct Part 06 visuals to show Appliance Ops / Updates, storage readiness, exact-version approval, stage progress, image verification and rollback; preserve Joanna audio, captions, chapter timing and existing links.
 - Repair missing/stale burned-in captions in 20 User Guide Videos by applying subtitles after frame expansion; preserve audio and chapter timing, audit every cue and speech gap, and add a real FFmpeg caption-render regression check.

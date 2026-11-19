@@ -1,3 +1,6 @@
+DOCUMENTATION DOWNLOAD (existing appliance assets unchanged)
+The complete corrected 23-part User Guide Videos are available as a dated ZIP and SHA-256 release asset, linked from the video player, README and landing page. Includes the offline player, transcripts, English SRT/VTT captions and chapter files.
+
 DOCUMENTATION VISUAL-TOPIC AUDIT (existing appliance assets unchanged)
 The remaining 22 tutorials now use topic-matched light-mode controls and illustrations. Existing Joanna audio, English captions and chapter timing are preserved; Part 06 remains unchanged. Simulated captures execute no infrastructure changes. See docs/user-guide-videos.md and the per-part visual audit.
 
