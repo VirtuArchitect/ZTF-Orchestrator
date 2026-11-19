@@ -1,5 +1,8 @@
 # Changelog
 
+
+### Documentation
+- Refresh the light project site with the reviewed f33c9ed console status, YAML Studio, governed recovery, PE-direct configuration and current operator links. Distinguish source, immutable packages and simulated demo evidence.
 All notable changes to ZTF-Orchestrator are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).

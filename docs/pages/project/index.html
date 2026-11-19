@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f8f9">
-  <meta name="description" content="Explore ZTF-Orchestrator, a web console for governed Nutanix cluster deployment, operations, and infrastructure recovery rehearsals.">
+  <meta name="description" content="Explore ZTF-Orchestrator, a web console for ZTF 1.x pipelines, guided YAML configuration, Nutanix deployment, and governed infrastructure recovery.">
   <title>ZTF-Orchestrator | Nutanix Infrastructure Operations</title>
   <link rel="canonical" href="https://virtuarchitect.github.io/ZTF-Orchestrator/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://virtuarchitect.github.io/ZTF-Orchestrator/">
   <meta property="og:title" content="ZTF-Orchestrator | Nutanix Infrastructure Operations">
-  <meta property="og:description" content="Deploy Nutanix clusters, govern operations, and rehearse infrastructure recovery from one web console.">
+  <meta property="og:description" content="Prepare configuration in YAML Studio, run governed ZTF 1.x pipelines, and rebuild Nutanix infrastructure with recovery profiles.">
   <meta property="og:image" content="https://virtuarchitect.github.io/ZTF-Orchestrator/social-preview.png?v=light">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1280">
@@ -30,6 +30,7 @@
         ZTF-Orchestrator
       </a>
       <nav aria-label="Main navigation">
+        <a href="#status">Current status</a>
         <a href="#capabilities">Capabilities</a>
         <a href="#demo">Demo</a>
         <a href="#resources">Resources</a>
@@ -44,16 +45,32 @@
         <div class="hero-copy">
           <p class="eyebrow">Nutanix infrastructure operations</p>
           <h1 id="hero-title">ZTF-Orchestrator</h1>
-          <p class="hero-intro">Deploy clusters, govern day-to-day operations, and rehearse infrastructure recovery from one web console.</p>
+          <p class="hero-intro">Prepare cluster configuration, run governed ZTF 1.x pipelines, and recover infrastructure from reviewed profiles.</p>
           <div class="actions">
             <a class="button primary" href="./demo/">Try the interactive demo <span aria-hidden="true">↗</span></a>
             <a class="button secondary" href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/start-here.md">Quick Start</a>
           </div>
           <div class="release-links" aria-label="Release channels">
-            <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/latest">Stable release</a>
+            <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/latest">Stable v1.8.4</a>
             <a href="./releases/">Release notes and downloads</a>
+            <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1">v1.8.5-rc1 prerelease</a>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="status-section" id="status" aria-labelledby="status-title">
+      <div class="wrap status-grid">
+        <div>
+          <p class="eyebrow">Repository status · <time datetime="2026-11-19">19 November 2026</time></p>
+          <h2 id="status-title">Current console, clear release channels</h2>
+          <p>Latest reviewed application source: <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2"><code>f33c9ed</code></a>. YAML Studio now brings cluster context, guided forms, authoring checks and reviewed pipeline handoff into one workspace.</p>
+        </div>
+        <aside class="status-note" aria-label="Release and execution scope">
+          <p><strong>v1.8.5-rc1 is the current prerelease.</strong> v1.8.4 remains the latest stable release. Source updates and versioned appliance packages are separate; check the exact package version before updating.</p>
+          <p><strong>ZTF 1.x remains the pipeline executor.</strong> Native opt-in, NKP and ZTF 2.x console execution are retired. Historical records and existing recovery snapshots are retained.</p>
+          <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/current-status.md">Build status and update guidance <span aria-hidden="true">↗</span></a>
+        </aside>
       </div>
     </section>
 
@@ -64,22 +81,41 @@
         <article>
           <span class="step" aria-hidden="true">01</span>
           <h3>Deploy clusters</h3>
-          <p>Prepare Foundation configurations, review the deployment plan, and run post-configuration pipelines.</p>
+          <p>Prepare Foundation VM or Foundation Central deployment configurations. Review image inventory, credentials and targets before approved imaging and cluster creation.</p>
           <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/start-here.md#deploy-a-cluster">Deployment guide <span aria-hidden="true">↗</span></a>
         </article>
         <article>
           <span class="step" aria-hidden="true">02</span>
           <h3>Operate and govern</h3>
-          <p>Review approvals and job history, collect Prism Element health evidence, and monitor configuration drift.</p>
+          <p>Review approvals, session activity and durable job logs. See the actual pipeline step and failed stage, explicit PE collection errors and evidence age.</p>
           <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/cluster-operations.md">Operations guide <span aria-hidden="true">↗</span></a>
         </article>
         <article>
           <span class="step" aria-hidden="true">03</span>
           <h3>Prepare for recovery</h3>
-          <p>Review cluster baselines and rehearse infrastructure rebuilds with approved configuration and verification steps.</p>
+          <p>Use Recover Cluster or Resume Recovery with versioned profiles, clear stage status and preserved completed work. A step 08-only PC registration retry requires reconciliation and fresh health evidence.</p>
           <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/disaster-recovery.md">Recovery guide <span aria-hidden="true">↗</span></a>
         </article>
+        <article>
+          <span class="step" aria-hidden="true">04</span>
+          <h3>Author configuration in YAML Studio</h3>
+          <p>Select a datacenter, cluster and task. Review generated YAML, validate syntax, workflow shape and credential references, then save and review a pipeline handoff. Authoring never starts a job.</p>
+          <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/admin-guide.md#yaml-studio">YAML Studio operator guide <span aria-hidden="true">↗</span></a>
+        </article>
+        <article>
+          <span class="step" aria-hidden="true">05</span>
+          <h3>Plan PE-direct configuration</h3>
+          <p>AHV Uplink Migration supports per-host NIC assignments through pinned CVM SSH. DARE supports PE-direct enablement with an existing Local KMS. Both preserve independent approval and verification; live writes default to off pending environment validation.</p>
+          <div class="card-links"><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/ahv-uplink-migration.md">Uplink migration guide <span aria-hidden="true">↗</span></a><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/dare-workflow.md">DARE guide <span aria-hidden="true">↗</span></a></div>
+        </article>
+        <article>
+          <span class="step" aria-hidden="true">06</span>
+          <h3>Maintain the appliance</h3>
+          <p>Review storage, import an offline update ZIP, check readiness and approve the exact version. Follow backup, install and verification stages, retaining a verified backup pair and rollback image.</p>
+          <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/guided-appliance-updates.md">Guided appliance updates <span aria-hidden="true">↗</span></a>
+        </article>
       </div>
+      <p class="capability-note">Credential and Config Files groups organize saved references; they do not select credentials automatically or create access boundaries. PE-direct TLS exceptions are per-run, reasoned, independently approved and audited. Uplink SSH host-key verification remains required. Enabling DARE is irreversible; appliance rollback does not disable encryption.</p>
     </section>
 
     <section class="console-section" id="demo" aria-labelledby="demo-title">
@@ -87,12 +123,12 @@
         <div class="console-copy">
           <p class="eyebrow">Interactive demo</p>
           <h2 id="demo-title">Explore the operations console</h2>
-          <p>Open Overview to see deployment, configuration, recovery, and monitoring in one place. Then explore jobs, approvals, or the guided setup.</p>
+          <p>Explore Start Here, Overview, YAML Studio, recovery, jobs and approvals with simulated data. The public demo never connects to infrastructure or executes cluster changes.</p>
           <a class="button primary" href="./demo/">Open the demo <span aria-hidden="true">↗</span></a>
         </div>
         <figure>
           <img src="demo-overview-light.png" width="1600" height="1050" loading="lazy" alt="ZTF-Orchestrator Overview in light mode with shortcuts for deployment, configuration, recovery and monitoring, plus a simulated managed cluster record">
-          <figcaption>Overview captured from the interactive demo. The console displays simulated records.</figcaption>
+          <figcaption>Light-mode Overview captured from the interactive demo. All records are simulated; demo and video examples do not establish hardware validation.</figcaption>
         </figure>
       </div>
     </section>
@@ -100,13 +136,19 @@
     <section class="wrap resources" id="resources" aria-labelledby="resources-title">
       <div>
         <p class="eyebrow">Resources</p>
-        <h2 id="resources-title">Plan your first deployment</h2>
+        <h2 id="resources-title">Deploy, configure and recover</h2>
+        <p class="resource-intro">Start with appliance access and networking, organize credentials and configuration, then review a pipeline or recovery profile before execution.</p>
       </div>
       <div class="resource-links">
         <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/installation-guide.md">Installation guide <span aria-hidden="true">↗</span></a>
         <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf">AHV Appliance Deployment Quick Guide (PDF) <span aria-hidden="true">↗</span></a>
         <a href="./tutorials/?part=16">Part 16 — AHV Appliance Deployment and SSH Setup <span aria-hidden="true">↗</span></a>
         <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/admin-guide.md">Administrator guide <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/credential-groups.md">Credential groups <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/config-file-groups.md">Config Files groups <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/disaster-recovery.md">Recover Cluster and resume recovery <span aria-hidden="true">↗</span></a>
+        <a href="./tutorials/?part=15">Part 15 — Disaster Recovery, start to finish <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/pe-health-reporting.md">PE health evidence and collection diagnostics <span aria-hidden="true">↗</span></a>
         <a href="./tutorials/">Video walkthroughs <span aria-hidden="true">↗</span></a>
         <a href="./releases/">Release documentation <span aria-hidden="true">↗</span></a>
       </div>

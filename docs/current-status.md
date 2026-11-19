@@ -1,6 +1,20 @@
 # Current documentation and appliance build
 
-Reviewed 2 November 2026 against merged application source `a3c9c79832efe4552cab5b208d5fbe49936dcbf8` (PR #149). The current consolidated offline appliance bundle is **v1.8.5-rc1-636f191**, built from commit `636f19177a913e6b1c21d1c13703000dd1e08a38`; its source tree matches that merge. v1.8.5-rc1 remains a prerelease and v1.8.4 remains Latest stable.
+## Current source review — 19 November 2026
+
+Application source reviewed at [`f33c9ed`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2) (PR #202). v1.8.5-rc1 remains the current prerelease; v1.8.4 remains Latest stable. The corresponding consolidated appliance build is `v1.8.5-rc1-f33c9ed`. This source review does not assert that the matching ZIP is a public GitHub Release asset; obtain the exact versioned package and checksum from your release maintainer. Earlier ZIPs are immutable.
+
+- [YAML Studio](admin-guide.md#yaml-studio): datacenter/cluster context, guided forms, explicit authoring validation and reviewed pipeline handoff. Saving and handoff start no execution.
+- [Supported execution](console-retirement.md): ZTF 1.x pipelines remain available; Native opt-in, NKP and ZTF 2.x console execution are retired, with historical records retained.
+- [Recover Cluster and Resume Recovery](disaster-recovery.md): clear stages, preserved completed work and approvals, and step 08-only registration retry after reconciliation and fresh health evidence.
+- [PE-direct uplink migration](ahv-uplink-migration.md) and [DARE](dare-workflow.md): no PC required for these transports; per-run TLS exceptions are audited and independently approved. Uplink SSH host keys remain verified. Live writes default to off pending environment validation. DARE enablement cannot be undone by rolling back the appliance.
+- [Health diagnostics](pe-health-reporting.md), [sessions](session-management.md), [credential groups](credential-groups.md), [Config Files groups](config-file-groups.md), detailed job stages and [guided updates](guided-appliance-updates.md) remain part of the console.
+
+Required checks on PR #202 passed. Separate local Docker verification of the exact image passed 128 targeted tests and 64 network-isolated container tests, including the mocked step 08-only retry. Browser authoring checks and record-preservation checks passed. These results do not establish live hardware compatibility or production recovery acceptance.
+
+## Historical published package baseline — 2 November 2026
+
+Reviewed 2 November 2026 against merged application source `a3c9c79832efe4552cab5b208d5fbe49936dcbf8` (PR #149). The historical consolidated offline appliance bundle was **v1.8.5-rc1-636f191**, built from commit `636f19177a913e6b1c21d1c13703000dd1e08a38`; its source tree matches that merge. v1.8.5-rc1 remains a prerelease and v1.8.4 remains Latest stable.
 
 Operators have reported more than 20 successful AHV cluster deployments, including more than 10 production clusters, with pipeline post-configuration. This reported operational use is distinct from repository test evidence and does not certify every workflow, hardware combination or preview integration.
 
@@ -18,7 +32,7 @@ Operators have reported more than 20 successful AHV cluster deployments, includi
 
 Credential and config groups are organizational labels, not access boundaries or automatic target/credential mappings. Their catalogue is separate from Disaster Recovery datacenter/profile records. Creating either type of group does not create the other.
 
-## Apply the consolidated offline bundle
+## Apply the historical 636f191 offline bundle
 
 [Update ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ztf-update-v1.8.5-rc1-636f191.zip) · [SHA-256 sidecar](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ztf-update-v1.8.5-rc1-636f191.zip.sha256)
 

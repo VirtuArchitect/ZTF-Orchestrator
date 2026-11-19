@@ -65,7 +65,7 @@ nav a { color: var(--muted); text-decoration: none; }
 .secondary:hover { border-color: var(--link); }
 .release-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; margin-top: 1.2rem; font-size: 0.88rem; }
 
-.capabilities, .resources, .console-section { padding-block: clamp(3.5rem, 7vw, 6.25rem); }
+.status-section, .capabilities, .resources, .console-section { padding-block: clamp(3.5rem, 7vw, 6.25rem); }
 .capability-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; margin-top: 2rem; }
 .capability-grid article { display: flex; flex-direction: column; align-items: start; gap: 0.75rem; padding: 1.5rem; background: var(--subtle); border: 1px solid var(--line); border-radius: 0.65rem; }
 .step { color: var(--teal); font: 0.8rem ui-monospace, monospace; letter-spacing: 0.1em; }
@@ -104,3 +104,14 @@ figcaption { margin-top: 0.75rem; font-size: 0.86rem; }
   .hero h1 { font-size: clamp(1.75rem, 8vw, 3rem); }
   .capability-grid, .resources { grid-template-columns: 1fr; }
 }
+
+.status-section { background: var(--subtle); border-bottom: 1px solid var(--line); }
+.status-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; align-items: start; }
+.status-grid h2 { font-size: clamp(1.7rem, 3vw, 2.35rem); }
+.status-grid p:not(.eyebrow) { margin-top: 1rem; color: var(--muted); }
+.status-note { padding: 1.4rem; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 0.5rem; }
+.status-note p:first-child { margin-top: 0; }
+.status-note a { display: inline-block; margin-top: 1rem; }
+.card-links { display: grid; gap: 0.5rem; margin-top: auto; }
+.capability-note, .resource-intro { margin-top: 1.5rem; color: var(--muted); }
+@media (max-width: 56rem) { .status-grid { grid-template-columns: 1fr; } }
