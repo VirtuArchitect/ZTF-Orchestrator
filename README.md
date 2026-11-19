@@ -365,6 +365,7 @@ recovery and administration procedures alongside matching tutorials.
 | [Current source and package status](docs/current-status.md) | Release channels, exact build identity and historical package boundaries |
 | [Installation](docs/installation-guide.md) | Docker, appliance, manual and offline procedures |
 | [AHV Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) | Static IP before SSH, key provisioning, sudo and web admin access |
+| Administrator and User Guide — [PDF](docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx) | Updated 156-page illustrated manual, with links to all 23 corrected videos and the complete offline video ZIP |
 | [Administrator guide](docs/admin-guide.md) | Console configuration and operation |
 | [User guide](docs/user-guide.md) | Workflows, scripts, pipelines and saved configuration |
 | [Infrastructure recovery](docs/infrastructure-recovery.md) | Rebuild preparation and acceptance boundaries |

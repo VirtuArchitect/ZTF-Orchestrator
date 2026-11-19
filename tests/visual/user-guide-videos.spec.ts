@@ -1,6 +1,25 @@
 import { expect, test } from '@playwright/test'
 import { inflateSync } from 'node:zlib'
 
+for (const width of [1440, 390]) {
+  test(`landing and video pages link the current PDF and Word manual at ${width}px`, async ({ page }) => {
+    test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
+    await page.setViewportSize({ width, height: 1000 })
+    const prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.'
+    for (const route of ['./', 'tutorials/']) {
+      await page.goto(route)
+      for (const [kind, suffix] of [['pdf', 'pdf'], ['word', 'docx']]) {
+        const link = page.locator(`#admin-guide-${kind}`)
+        await link.scrollIntoViewIfNeeded()
+        await expect(link).toBeVisible()
+        await expect(link).toHaveAttribute('href', prefix + suffix)
+        await expect(link).toContainText(kind === 'pdf' ? /PDF/ : /Word/)
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+    }
+  })
+}
+
 test('landing and video pages expose the same complete-series release download', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
   const asset = 'ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip'
