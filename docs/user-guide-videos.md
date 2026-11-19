@@ -61,7 +61,7 @@ matching workflow and YAML schema before following its procedure.
 Twenty-one revised/new recordings align with the refreshed 156-page
 [Administrator and User Guide](manuals/README.md), repository `63fb536` and
 application source `f33c9ed`. Parts 16 and 17 retain their current static-IP-first
-appliance deployment and Ubuntu disk-expansion recordings unchanged.
+appliance deployment and Ubuntu disk-expansion narration unchanged. Their later picture corrections are documented below.
 
 Coverage includes operational YAML Studio, credential and Config Files groups,
 Foundation feedback, Recover Cluster / Resume Recovery, preserved completed work,
@@ -83,8 +83,8 @@ Videos do not establish hardware validation or change installed appliances.
 
 Technical decoding, caption alignment, chapter timing, encoded visual samples and
 player navigation were checked. A complete human listening/pronunciation review
-has not been performed. New recordings are 1080p/24 fps H.264/AAC; retained Part 17
-preserves its original 30 fps. Captions are burned in; an additional subtitle layer
+has not been performed. The series remains 1080p H.264/AAC: Part 17
+preserves its original 30 fps; the other parts use 24 fps. Captions are burned in; an additional subtitle layer
 may duplicate them.
 
 All 23 MP4s and their companions are served together on Pages, including Part 15.
@@ -130,3 +130,50 @@ wording, chapter timings and the Part 06 URL remain unchanged. All 26 caption
 cues and nine speech-gap samples passed decoded-frame checks. The
 [visual correction record](assets/user-guide-videos/part06-visual-correction.json)
 records scene provenance and unchanged audio/chapters. Other recordings are unchanged.
+
+## Visual-topic audit — 19 November 2026
+
+After correcting Part 06, all remaining **22 videos** were checked against their
+chapter narration and aligned sentence text: **115 chapters and 434 semantic
+visual states**. Mismatched controls, example states and explanatory graphics
+were corrected in all 22 picture tracks. Part 06 remains byte-for-byte unchanged.
+
+Existing Joanna AAC audio, decoded audio, packet timing, English SRT/VTT and
+transcript wording, embedded chapter metadata and player chapter links are
+preserved. All **891 caption/gap samples** in the revised tracks passed decoded
+frame checks. Corrections received a second visual review; this is not a complete
+independent listening review or a semantic inspection of every animation frame.
+
+[Per-part visual audit and preservation record](assets/user-guide-videos/visual-topic-audit.json)
+
+| Part | Corrected visual coverage |
+| --- | --- |
+| 00 | Separate authoring/save from separately approved execution; no job starts when saving. |
+| 01 | Show a genuinely empty managed-cluster list and the selected cluster health detail. |
+| 02 | Show the submitted deployment job when monitoring an outcome, retaining all three Create Cluster use cases. |
+| 03 | Show an existing failed-registration recovery with reconciliation and fresh health before retrying only step 08. |
+| 04 | Separate new recovery from resume; show current-run stages, approved bootstrap and post-bootstrap health. |
+| 05 | Show Drift Detection for configuration comparison instead of Upgrade Advisor. |
+| 07 | Distinguish Save grouping from Save to ZTF and show the reviewed YAML-to-pipeline handoff. |
+| 08 | Show the appropriate Scripts actions for local-user creation and password changes. |
+| 09 | Show expanded job evidence, current Approvals counts, actual schedule/parallel forms and interruption boundaries. |
+| 10 | Show assessment-specific inventory, TLS exception, unknown values, finding provenance and saved snapshot evidence. |
+| 11 | Show supported runtime status, sessions, actual Storage backup/restore controls and installed-build support evidence. |
+| 12 | Show evidence source selection, provenance, retained historical NKP records and separate acceptance requirements. |
+| 13 | Distinguish supported ZTF 1.x execution, retired definitions, saved recovery snapshots and installed-image identity. |
+| 14 | Show Foundation-specific job evidence, target intent, deployment selection and the boundary of validation probes. |
+| 15 | Separate new imaging, resume, bootstrap/health, conditional step 08-only retry and external workload-restore handoff. |
+| 16 | Keep successful Netplan trial acceptance separate from failure timeout and restore commands. |
+| 17 | Show an insufficient-space example initially and the same illustrative 120-GiB value in the resize field. |
+| 18 | Show PE-direct discovery, new-switch selection, exact assignments, preflight and sequential host verification. |
+| 19 | Show PE-direct Local KMS readiness, DARE-specific approval, irreversible enablement and separate key-backup evidence. |
+| 20 | Show the actual MTU workflow, host/uplink preflight, PC requirements, verification boundaries and a fresh rollback plan. |
+| 21 | Show the storage workflow, one consistent exact default-container identity, independent approval and verification before cleanup. |
+| 22 | Show unregister intent, strict-trust identity lookup, dependency review, one guarded submission and separate PE cleanup. |
+
+The screenshots use the actual light-mode interface with intercepted example
+responses. Diagrams are labelled illustrations. New recovery, resume, and the
+conditional step 08-only retry are distinct examples. Specialist approval and
+verification scenes refer to their own workflow. No live cluster, appliance
+update, approval decision or restore was executed. These videos do not establish
+hardware validation or production certification.

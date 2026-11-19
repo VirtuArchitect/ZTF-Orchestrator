@@ -27,6 +27,8 @@
     13,
     14,
     15,
+    16,
+    17,
     18,
     19,
     20,
@@ -40,7 +42,7 @@
       "updated": true,
       "retained": false,
       "duration": 99.78999999999999,
-      "sha256": "e314278cff732f95e0dae6d8412fdcea1e2d7c841e8d1340dea3a5748124e20f",
+      "sha256": "d7db1e9a57fe38021238cc5b04fa2896c6f53989f6da10536f54548ed49d5714",
       "chapters": [
         {
           "title": "Follow one cluster",
@@ -86,7 +88,9 @@
       "decodedAudioSha256": "10320363d257e17fd6d0fd87f8fca8ba0387bc6d1d9d4a8db57683eae7d065b0",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 1,
@@ -94,7 +98,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.33,
-      "sha256": "82f989039c5292070fecb6281f7560a5b62e8467d4408fdec5d38811c59d1fda",
+      "sha256": "89ca562645305a9aa896094ff7124f31bafdcaf86177b32dca932610f3256964",
       "chapters": [
         {
           "title": "Choose the next action",
@@ -140,7 +144,9 @@
       "decodedAudioSha256": "858ae4bcf94c1e8f0e740d1e7f9b917bb50c9fdfab253b32bb98b14fa8c4da5f",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 2,
@@ -180,7 +186,7 @@
       ],
       "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
       "listeningReview": "not_performed",
-      "sha256": "c32c51625b6da481c0ff47253f761be59f515e9c174d3f31cf3e0cc1d09447a2",
+      "sha256": "3f3d4985f1cde4f4b2a13b01313a7a98187b7df47bf4a7fc3a3e4439cb9a0c5a",
       "fullDecode": "passed",
       "dimensions": [
         1920,
@@ -198,7 +204,13 @@
         "cueSamples": 43,
         "gapSamples": 22,
         "failedSamples": 0
-      }
+      },
+      "retainedAudio": true,
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "audioPayloadSha256": "7f0dc4d667d8e9209ac7552a0822efaae1a3d725b4461886a5819b44d2b77a9e",
+      "decodedAudioSha256": "55e3b732422f92a185eb59ef33e918a0120befecd1da7c34aa8390dc72db3a66"
     },
     {
       "part": 3,
@@ -206,7 +218,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.46000000000001,
-      "sha256": "d8c7de0e9b4dc1269868d1f70a22cc4e8b97bdd4d2261d4669154c3276c85002",
+      "sha256": "ea54eda8fccd0d6617ec97ef16ee7e73b4496e1c5770c966e1df1c032239b134",
       "chapters": [
         {
           "title": "Separate the configuration files",
@@ -252,7 +264,9 @@
       "decodedAudioSha256": "00ddc5f551713618ae0b31edabc8a60784f572f43dea0a3ae481a847e6a04c8f",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 4,
@@ -260,7 +274,7 @@
       "updated": true,
       "retained": false,
       "duration": 103.33,
-      "sha256": "a1e0351cb028fed1173009fc7036c76db1e9feb2347957a0a60622e525101f61",
+      "sha256": "7c5d731a1f6001b9e262d7076c831dfd0dd1182f25c3d7e537b3c0c60bbcba9c",
       "chapters": [
         {
           "title": "Start with the recovery action",
@@ -306,7 +320,9 @@
       "decodedAudioSha256": "1ab672dd0694e24fd77a4648522537cab72c87e5b4b2ff23c1bbe780fef3060a",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 5,
@@ -314,7 +330,7 @@
       "updated": true,
       "retained": false,
       "duration": 100.17,
-      "sha256": "54d2f536c2af506aef02fe169ea957a14561133b4c9d0fc8866489e18a50abcb",
+      "sha256": "50cf9b2934509ffae6d24a605892809ff2844edce1350459b5a2c13ed83b008b",
       "chapters": [
         {
           "title": "Collect for the intended cluster",
@@ -360,7 +376,9 @@
       "decodedAudioSha256": "5ca3ee02a21dd25f29a11b8f218e35f137c147a0ecfd34bb956a74b4b28b8a51",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 6,
@@ -423,7 +441,7 @@
       "updated": true,
       "retained": false,
       "duration": 97.21000000000001,
-      "sha256": "3c88532a1ad2f3dfe6c3086da471e24908592e451c3f24290bd6818510513132",
+      "sha256": "d4e19bb25e7c53b34ae82d1740376b06f2bc7c06e814ad62b22c60777fdff4b7",
       "chapters": [
         {
           "title": "Organize one cluster",
@@ -469,7 +487,9 @@
       "decodedAudioSha256": "52faadb3f69bcae237434e3ef15b586ec7595e29dd3d4a9b0e8ced34a956bb69",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 8,
@@ -477,7 +497,7 @@
       "updated": true,
       "retained": false,
       "duration": 95.63,
-      "sha256": "20951bb9094b1d4f74bc2257e7e79ceaabb499aed165910022ff4f62b3e87ec0",
+      "sha256": "3d40d321ec5f698f936e9a96c6a3e2b16ae4a4e769c87262680258413c5e7346",
       "chapters": [
         {
           "title": "Match action to intent",
@@ -523,7 +543,9 @@
       "decodedAudioSha256": "f6275d189c684a2bb9eb80e3c9f96af9bd56d5b8432c94eb2ae42da1aa1b66ad",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 9,
@@ -531,7 +553,7 @@
       "updated": true,
       "retained": false,
       "duration": 94.53999999999999,
-      "sha256": "8133197c0e4274d9a2ef9d3df0c917ff170dcd88de4aa1d167f19340275f383a",
+      "sha256": "86aadbc9ca3b716b7b5c3a38b1da36de5c48fb6accd50fbe26010730c166d2b5",
       "chapters": [
         {
           "title": "Follow the exact pipeline step",
@@ -577,7 +599,9 @@
       "decodedAudioSha256": "74fcb8c80cb3215915077185ca5d1b8b16fd99c6c49a118fa8d778a61aafec70",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 10,
@@ -585,7 +609,7 @@
       "updated": true,
       "retained": false,
       "duration": 93.08,
-      "sha256": "d36c2221a043a4e83e44ac42a58a6c049117f3a7f4d774dac92dc6d2fe5c1a77",
+      "sha256": "ab4d0a68a7206b60617dd19fc9652c8a38214c7620ea00a73769f35474017da7",
       "chapters": [
         {
           "title": "Define the assessment",
@@ -631,7 +655,9 @@
       "decodedAudioSha256": "08838a07b2fa12e31cfe3c552c1a88106bd81adcf88db6488adb6266fbfe26e9",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 11,
@@ -639,7 +665,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.28999999999999,
-      "sha256": "f9e005c9f0d9262973cd0d7e35f235899a7475afe2be5456ed36526b7a9f0849",
+      "sha256": "ea61d00cf0cfd28a1964357975f10f66248112eda260967f00fa7de1c6312982",
       "chapters": [
         {
           "title": "Check the supported runtime",
@@ -685,7 +711,9 @@
       "decodedAudioSha256": "f9bd6a8705dc32400d00286dc63f8fd54d8723c6f88a396413375139422eda07",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 12,
@@ -693,7 +721,7 @@
       "updated": true,
       "retained": false,
       "duration": 91.0,
-      "sha256": "02f0ecf2f3bed084a1d8a057a0c65c7a492c2a36e8c250f13253594ab3a1ccb8",
+      "sha256": "787f53b98c2e731a3ad27e3d97296baa593014d153874000900c3360fe9eb1b8",
       "chapters": [
         {
           "title": "Use the current evidence page",
@@ -739,7 +767,9 @@
       "decodedAudioSha256": "c4e48587d7553f4d14e04683ccd65a30b9f063b8cd30157364450e11f1f13bc6",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 13,
@@ -747,7 +777,7 @@
       "updated": true,
       "retained": false,
       "duration": 89.42,
-      "sha256": "20adfcf9ae909c1288ef2bbbbc8d9bc01a5c6d2168bf69275eab4b8182ca4674",
+      "sha256": "b1d340e0772d4f1e59a34e9a4af54a8691f20778f381b9a8ff6579b93649f1d4",
       "chapters": [
         {
           "title": "Identify the supported path",
@@ -793,7 +823,9 @@
       "decodedAudioSha256": "005a9222d1dfeb9fd06b96a08da2f22ef38ffbc09a6ad3ad2515bfdde3d64c40",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 14,
@@ -801,7 +833,7 @@
       "updated": true,
       "retained": false,
       "duration": 87.53999999999999,
-      "sha256": "09ffabc114053177cd3fc5f2e087b5c61c0b63a9cd4b9ca3abf8d3ec1c93fab6",
+      "sha256": "9928aae7989be5e90e0a231148d099c6179ff4538c20276fdf7e1094efbf9a45",
       "chapters": [
         {
           "title": "Ask what actually ran",
@@ -847,7 +879,9 @@
       "decodedAudioSha256": "c0be0fc5102c23e7b9e8d3dfdcb307f36a55cbe54e0bace6a4681096d0fa4ac6",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 15,
@@ -855,7 +889,7 @@
       "updated": true,
       "retained": false,
       "duration": 117.5,
-      "sha256": "cf10eedae0bbd607891f8840afadb5e6216c42b1acd90b509dfad0689c2469a6",
+      "sha256": "e54a7123d61dd645a983fbe045195595089142b4da4a7c293adbd507572462ea",
       "chapters": [
         {
           "title": "Prepare the example",
@@ -905,15 +939,17 @@
       "decodedAudioSha256": "0a40a1ef0a74d3ed5ce8e8b4c51fa9c74ad21e1183a2880294ec3db226f60597",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 16,
       "file": "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4",
-      "updated": false,
-      "retained": true,
+      "updated": true,
+      "retained": false,
       "sourceSha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508",
-      "sha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508",
+      "sha256": "98d4863ab5a93a81abd788933062bfe65c942b33947d38121bb76e8ae0e7964c",
       "duration": 157.3,
       "narration": "Joanna - Warm & Conversational",
       "listeningReview": "not_performed",
@@ -930,15 +966,51 @@
         "cueSamples": 48,
         "gapSamples": 35,
         "failedSamples": 0
-      }
+      },
+      "retainedAudio": true,
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "audioPayloadSha256": "352e3a81bfbfab18b8ee91a11c1a0834a28bce783b0bdcfb9d06dfd5c28e2dd6",
+      "decodedAudioSha256": "bb6bb2d2aa46131ea447a1420936ff59c73e8df9141540699ed9e5720139c6ca",
+      "chapters": [
+        {
+          "title": "Prepare the appliance",
+          "start": 0
+        },
+        {
+          "title": "Prepare access before boot",
+          "start": 12.25
+        },
+        {
+          "title": "Set the IP before SSH",
+          "start": 41.625
+        },
+        {
+          "title": "Secure and test Netplan",
+          "start": 63.041666666666664
+        },
+        {
+          "title": "Verify SSH and sudo",
+          "start": 87.75
+        },
+        {
+          "title": "Retrieve or reset the web password",
+          "start": 114.83333333333333
+        },
+        {
+          "title": "Sign in and verify",
+          "start": 141.41666666666666
+        }
+      ]
     },
     {
       "part": 17,
       "file": "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.mp4",
-      "updated": false,
-      "retained": true,
+      "updated": true,
+      "retained": false,
       "sourceSha256": "6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277",
-      "sha256": "6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277",
+      "sha256": "b75b38e9b26e43e0b35e7220c70f39c668bb281dc1fc64da8cffbb43ad7af58c",
       "duration": 89.73,
       "narration": "Joanna - Warm & Conversational",
       "listeningReview": "not_performed",
@@ -955,7 +1027,35 @@
         "cueSamples": 34,
         "gapSamples": 13,
         "failedSamples": 0
-      }
+      },
+      "retainedAudio": true,
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "audioPayloadSha256": "c7b1dcc3c29e04e36bb93ec99180dfe4c03620d6ad7128c5e28107f3c2c56d28",
+      "decodedAudioSha256": "6360936f3e2ad031b85f243d1a100dd2046d40721cfe5b9e53cc2fd957493b8e",
+      "chapters": [
+        {
+          "title": "Find the filesystem that needs space",
+          "start": 0
+        },
+        {
+          "title": "Expand the existing disk in Prism",
+          "start": 19.187
+        },
+        {
+          "title": "Extend and verify the filesystem in Ubuntu",
+          "start": 42.13
+        },
+        {
+          "title": "Check guided update readiness",
+          "start": 65.902
+        },
+        {
+          "title": "Recover from a resize failure",
+          "start": 81.426
+        }
+      ]
     },
     {
       "part": 18,
@@ -963,7 +1063,7 @@
       "updated": true,
       "retained": false,
       "duration": 109.21000000000001,
-      "sha256": "e8445f659ab91d9dd4b15c63204b902d9ba9cef5c3a17870c7125bccd3cb49f7",
+      "sha256": "0837cdcaf02871056deba22dffad64e0fddc361222797ecd5c65192913cbb8e1",
       "chapters": [
         {
           "title": "Choose the PE-direct connection",
@@ -1009,7 +1109,9 @@
       "decodedAudioSha256": "6b0b948b4b0cb468fa3cfe2eb98df40b21ed1cbea136e1c9d369c031eb5520ad",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 19,
@@ -1017,7 +1119,7 @@
       "updated": true,
       "retained": false,
       "duration": 102.96000000000001,
-      "sha256": "79ed6e19e3c99bc8b5d281db12c5efc8cad1850c4158cb03cb231ca74165e3c3",
+      "sha256": "c26ed82216baa784c809275134df7fa020b1fb6442c781fee043ca7351834b7b",
       "chapters": [
         {
           "title": "Open the local path",
@@ -1063,7 +1165,9 @@
       "decodedAudioSha256": "855ff31b8cae22c0d3da664d207b141175b6c3ba697bdffc956b08258d4f50e6",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 20,
@@ -1071,7 +1175,7 @@
       "updated": true,
       "retained": false,
       "duration": 102.67,
-      "sha256": "ca65439780c844865d83c2f0a11132d83e43150dda77b3fe3805983136cac846",
+      "sha256": "48872543d1e2b25771422f7c15f9ec01ef3d80d74e3f1d9092837b194a2731ae",
       "chapters": [
         {
           "title": "Choose the correct action",
@@ -1117,7 +1221,9 @@
       "decodedAudioSha256": "55773efbf9e42710a4404a697e6be3514651f071991b5cced9fec171178528c9",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 21,
@@ -1125,7 +1231,7 @@
       "updated": true,
       "retained": false,
       "duration": 96.83,
-      "sha256": "e112377d49655f942128f2a242e831e0f3f6107e7910135ae5e9b65dd053e082",
+      "sha256": "7f5549fb6a153948158fd3069d038ede59d7c5316ff1950133ce740474af5294",
       "chapters": [
         {
           "title": "Define this cluster's storage",
@@ -1171,7 +1277,9 @@
       "decodedAudioSha256": "ceebcb7924f2838565323df3ab934e5b44b9e3652d54d0fdd5881610fdc361b9",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     },
     {
       "part": 22,
@@ -1179,7 +1287,7 @@
       "updated": true,
       "retained": false,
       "duration": 99.38,
-      "sha256": "659a3f77834215c6ccdcd0fdea206d6beec3e8f487ea7fc2285e43bea7ac3712",
+      "sha256": "bbfb02589b3117cb1f490bc4b1c98f83d181904ba461b4670888fc84aa219b09",
       "chapters": [
         {
           "title": "Prepare the removal intent",
@@ -1225,11 +1333,13 @@
       "decodedAudioSha256": "880cbbe90343c651032176626ec9977745cdf7d470e93e184fd3753a28431467",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization"
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json"
     }
   ],
   "durationSeconds": 2366.45,
-  "chapters": 113,
+  "chapters": 120,
   "part02Refresh": {
     "reviewed": "19 November 2026",
     "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
@@ -1281,5 +1391,60 @@
     "narrationChanged": false,
     "otherRecordings": "unchanged",
     "report": "part06-visual-correction.json"
+  },
+  "visualTopicReview": {
+    "date": "19 November 2026",
+    "sourceRevision": "381ca3ffb0766a10dba2daa239ac042d0c532230",
+    "reviewedParts": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ],
+    "correctedParts": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ],
+    "unchangedControlPart": 6,
+    "narrationRegenerated": false,
+    "report": "visual-topic-audit.json"
   }
 }

@@ -47,17 +47,52 @@ def test_caption_render_audit_covers_every_video_and_preserves_audio():
         assert hashlib.sha256((media / record['file']).read_bytes()).hexdigest() == record['sha256']
         assert record['failedSamples'] == 0
         if record['changed']:
-            assert record['beforeSha256'] != record['sha256']
+            assert record['beforeSha256'] != record.get('captionAuditSha256', record['sha256'])
             assert record['audioUnchanged'] and record['chaptersUnchanged']
             assert len(record['audioPayloadSha256']) == len(record['decodedAudioSha256']) == 64
         else:
-            assert record['beforeSha256'] == record['sha256']
+            # This verdict describes the earlier caption-only audit. Later
+            # picture corrections retain its snapshot and update the file hash.
+            assert record['beforeSha256'] == record.get('captionAuditSha256', record['sha256'])
         assert len(record['browserSamples']) == 2
         for sample in record['browserSamples']:
             x, y, width, height = sample['region']
             assert 0 <= x < x + width <= 1920 and 0 <= y < y + height <= 1080
             mask = zlib.decompress(base64.b64decode(sample['referenceMaskZlib']))
             assert len(mask) == width * height and set(mask) <= {0, 1}
+
+
+def test_visual_topic_audit_preserves_all_audio_captions_and_chapter_links():
+    media = ROOT / 'docs/assets/user-guide-videos'
+    report = json.loads((media / 'visual-topic-audit.json').read_text(encoding='utf-8'))
+    manifest = json.loads((media / 'series-manifest.json').read_text(encoding='utf-8'))
+    expected = sorted(set(range(manifest['parts'])) - {6})
+    assert report['reviewedParts'] == report['correctedParts'] == expected
+    assert [row['part'] for row in report['records']] == expected
+    assert report['lightMode'] and not report['narrationRegenerated'] and not report['liveActionsExecuted']
+    assert report['captionSamplesChecked'] == sum(row['captionSamples'] for row in report['records']) == 891
+    assert report['failedCaptionSamples'] == 0
+    assert report['chaptersReviewed'] == sum(row['chaptersReviewed'] for row in report['records']) == 115
+    assert report['visualStatesReviewed'] == sum(row['visualStatesReviewed'] for row in report['records']) == 434
+    assert report['findingsAddressed'] == sum(len(row['issues']) for row in report['records'])
+    control = manifest['verification'][report['controlPart']]
+    assert control['sha256'] == report['controlSha256']
+    for row in report['records']:
+        recording = manifest['verification'][row['part']]
+        assert row['sha256'] == recording['sha256'] != row['beforeSha256']
+        assert hashlib.sha256((media / row['poster']).read_bytes()).hexdigest() == row['posterSha256']
+        assert row['audioUnchanged'] and row['chaptersUnchanged'] and row['fullDecode'] == 'passed'
+        assert row['audioPayloadSha256'] == recording['audioPayloadSha256']
+        assert row['decodedAudioSha256'] == recording['decodedAudioSha256']
+        assert len(row['audioPacketTimingSha256']) == len(row['chapterMetadataSha256']) == 64
+        assert row['failedCaptionSamples'] == 0 and row['issues']
+        assert all(issue['status'] == 'corrected' for issue in row['issues'])
+        assert len(row['companionSha256']) == 4
+        for name, expected_hash in row['companionSha256'].items():
+            assert Path(name).name == name
+            assert hashlib.sha256((media / name).read_bytes()).hexdigest() == expected_hash
+    page = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
+    assert 'media/visual-topic-audit.json' in page
 
 
 def test_training_media_integrity_and_pages_packaging():
@@ -75,6 +110,7 @@ def test_training_media_integrity_and_pages_packaging():
     assert 'ZTF-Orchestrator Overview' in page and 'media/' in page
     catalogue, _ = json.JSONDecoder().raw_decode(page.split('const videos=', 1)[1])
     assert len(catalogue) == len(manifest['verification']) == manifest['parts']
+    assert manifest['chapters'] == sum(len(entry['chapters']) for entry in catalogue)
     assert [entry['part'] for entry in catalogue] == list(range(manifest['parts']))
     assert {entry['file'] for entry in catalogue} == {path.name for path in media.glob('*.mp4')}
     for entry, recording in zip(catalogue, manifest['verification']):
@@ -94,8 +130,8 @@ def test_training_media_integrity_and_pages_packaging():
     assert 'cp "$source"/* "$output/"' in workflow
     assert manifest['parts'] == 23
     assert manifest['lightMode'] is True
-    assert manifest['updatedParts'] == list(range(16)) + list(range(18, 23))
-    assert [entry['part'] for entry in manifest['verification'] if entry['retained']] == [16, 17]
+    assert manifest['updatedParts'] == list(range(23))
+    assert not any(entry['retained'] for entry in manifest['verification'])
     assert '23-part series' in page and '19 November 2026' in page
     assert 'Shared Validation Evidence and Historical Records' in page
     assert 'Supported Execution and Retired Integrations' in page

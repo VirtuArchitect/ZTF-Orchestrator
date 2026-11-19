@@ -43,7 +43,7 @@
       "part": 0,
       "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
       "beforeSha256": "5cc7fb5cd5a0790bb3d9da20841dd7dfd2149f740d47e9eb2b18bb2b6ba997a1",
-      "sha256": "e314278cff732f95e0dae6d8412fdcea1e2d7c841e8d1340dea3a5748124e20f",
+      "sha256": "d7db1e9a57fe38021238cc5b04fa2896c6f53989f6da10536f54548ed49d5714",
       "captionCues": 29,
       "gapSamples": 9,
       "samplesChecked": 38,
@@ -80,13 +80,15 @@
       "decodedAudioSha256": "10320363d257e17fd6d0fd87f8fca8ba0387bc6d1d9d4a8db57683eae7d065b0",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "e314278cff732f95e0dae6d8412fdcea1e2d7c841e8d1340dea3a5748124e20f",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 1,
       "file": "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4",
       "beforeSha256": "1f9a040f7a507524595bd8dea72f7e45fb682e48c5f930c58ed1951d5b22808c",
-      "sha256": "82f989039c5292070fecb6281f7560a5b62e8467d4408fdec5d38811c59d1fda",
+      "sha256": "89ca562645305a9aa896094ff7124f31bafdcaf86177b32dca932610f3256964",
       "captionCues": 27,
       "gapSamples": 12,
       "samplesChecked": 39,
@@ -123,13 +125,15 @@
       "decodedAudioSha256": "858ae4bcf94c1e8f0e740d1e7f9b917bb50c9fdfab253b32bb98b14fa8c4da5f",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "82f989039c5292070fecb6281f7560a5b62e8467d4408fdec5d38811c59d1fda",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 2,
       "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
       "beforeSha256": "c32c51625b6da481c0ff47253f761be59f515e9c174d3f31cf3e0cc1d09447a2",
-      "sha256": "c32c51625b6da481c0ff47253f761be59f515e9c174d3f31cf3e0cc1d09447a2",
+      "sha256": "3f3d4985f1cde4f4b2a13b01313a7a98187b7df47bf4a7fc3a3e4439cb9a0c5a",
       "captionCues": 43,
       "gapSamples": 22,
       "samplesChecked": 65,
@@ -161,13 +165,19 @@
           "threshold": 190,
           "referenceMaskZlib": "eNrtnNGW2yAMRDX//9M9PW13bTQjCcdu05y5T/HGAQzXGATeCGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhhjjDHGGGOMMcYYY4wxxhjzKQD9X379Fe9e8DcqCX5V101lvJYMLdbnNccp4+OBagJucus3/vDkpRxyeGe/f5bRft/W4t0p/ED7faH/Bh73e8nijf3+qgT7fU+LT/3G+WCnXHUuh2/xTNVgzWJe8H/gd9jvO9Icdq2P+/1arz35MbRE9vvTx9+X/MZ9fr84KJn5Hfbbftf2/fyw1v0Nfr865h78HPbbfrdfa7/PHfsywj/NRoe1dp67rpOEw/E6h8A0i68E0nhtKTaWpxaWMoJlQ+YTyKO7dYq+Vuby6CTe63kLlmRSxZDyLMPWdOqaAHXknGwt2RLOaspIIyLLMWv/V/0+S3CW4TtcgRDTWeF3cowaLb7snxCsuCmNMvU/l176re/DFOXOWS7WkNim6urT6Wu9sPKIivk+VfqdWoPdI2V4Y1LGnH7Uh7NHw9qg+Yp4UOvrFH5eOTz5HQA+57TcWKxpQJOUT4iqYaFa8VCgbFXwwqWSHX6sLygll+ua+32q+u/KRG6bthpyS7OgV5ai9RuLH30ZWfogkRLINZuyAz9NKI/9kvIQND43ur0w6aL6XvOK3/K3xFnIRM/J01tQzmSI36KMEKFyJSJ9xrZ+q56IDKx0XTaP7VkZ67aiiuFlv2Xdd8KWflefon5gPON36kaKSSvS9CREV8cCrcUcfolaob0py6dJeXexgtYtoMtJ2kClNSojj95xaSbRhwt+y/K/4DdqQ2VtbvqNLpjR+Q3QOqv8FpM1MZET+bSXLxOs/I7W0a6cI78LdYv00T3zx4sjp16rcOov+Q0UfuMFv9XwbeJ3HCdLym/2LC+zlE295hOqqkpRcJPf2PEbe35Dpc9HIpsR1mWaf83v6ZWKIIyOCZIow0t+Bw+cpdR1qliqidhGom/Kb2i/We+f0xy4c9VvqAffrX7rUCwLnvCw0ON+45LfIFqpgf5dfgetobnfuOA3LvgN7XeOfz/hNx+yDv2Ofb+lIHf7jRv9jq7/jhhOtOXF7MW/5ex1smxwGDIMxwNLhc785vmoANzTfofuv/Ho+KTdKjJcFj2FeteD1/3Glt+x7Xfs+50DZxt+L5+auVJqvMH4m+dTBgamc7c2KMJv52f9jspv5n/sruDv+41n/caW39j1O7LfmPmdl3+6WFczO2KK0Xzmft8SHxRL2nVYfR4/GcQHr+1lbf3GwO9x/LvZ/YQ2Hj0JBlVLMXVGe+Oqk9VRLrHqiGERCj5+RfIZ+l2tnaBYVqXtRJuqbxvoGGZbRnF3XO/A5R6j0m8M/c4vH6guiy4AsgqusliWSNKab7c6TMoo5gfQK2vUb/VAAl1t0Lc1er8R/Yf8Dcr3RorU6Fov6OsmuowkWfWT/V2i8i216oEOtu1ETfbV25GgO6rWrUt8/43OIu/J4Tu2Qqa+4XdUE3vtvtpf1fpd7HhTCaZNVGTTEq/WCH2ZIfZm0f1VbRmjjRST7B/zezWv3ykptlOwKhPbZ6sX7uptjvR+4SHW4YumrOnL9YBqSsv2hVbDO7U3EPVGU4j9H/p9frKhtUxWnDwrY/C7R+f/dv+2wfxnWCBjvY2x38ZYb2PstzE3/HsoV4P5YL9dC8YYY4wxxhhjjDHGGGOMMcYYY4wxxhjzQfwA8NcNOA=="
         }
-      ]
+      ],
+      "captionAuditSha256": "c32c51625b6da481c0ff47253f761be59f515e9c174d3f31cf3e0cc1d09447a2",
+      "subsequentVisualCorrection": "visual-topic-audit.json",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "audioPayloadSha256": "7f0dc4d667d8e9209ac7552a0822efaae1a3d725b4461886a5819b44d2b77a9e",
+      "decodedAudioSha256": "55e3b732422f92a185eb59ef33e918a0120befecd1da7c34aa8390dc72db3a66"
     },
     {
       "part": 3,
       "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
       "beforeSha256": "49f1d3fcceee47f99c43915d0207abc021de846eb3723b5eca9bf748456ca7d9",
-      "sha256": "d8c7de0e9b4dc1269868d1f70a22cc4e8b97bdd4d2261d4669154c3276c85002",
+      "sha256": "ea54eda8fccd0d6617ec97ef16ee7e73b4496e1c5770c966e1df1c032239b134",
       "captionCues": 28,
       "gapSamples": 10,
       "samplesChecked": 38,
@@ -204,13 +214,15 @@
       "decodedAudioSha256": "00ddc5f551713618ae0b31edabc8a60784f572f43dea0a3ae481a847e6a04c8f",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "d8c7de0e9b4dc1269868d1f70a22cc4e8b97bdd4d2261d4669154c3276c85002",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 4,
       "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
       "beforeSha256": "e1c5b043bd44aa57c2a3a4cd8849b61b503d794297dcdccb3a5b87f456cf8fbc",
-      "sha256": "a1e0351cb028fed1173009fc7036c76db1e9feb2347957a0a60622e525101f61",
+      "sha256": "7c5d731a1f6001b9e262d7076c831dfd0dd1182f25c3d7e537b3c0c60bbcba9c",
       "captionCues": 27,
       "gapSamples": 8,
       "samplesChecked": 35,
@@ -247,13 +259,15 @@
       "decodedAudioSha256": "1ab672dd0694e24fd77a4648522537cab72c87e5b4b2ff23c1bbe780fef3060a",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "a1e0351cb028fed1173009fc7036c76db1e9feb2347957a0a60622e525101f61",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 5,
       "file": "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.mp4",
       "beforeSha256": "01d082570e6cae03d00b40f1846414b2faeb8bc357ea2e87b826d88463ec2a13",
-      "sha256": "54d2f536c2af506aef02fe169ea957a14561133b4c9d0fc8866489e18a50abcb",
+      "sha256": "50cf9b2934509ffae6d24a605892809ff2844edce1350459b5a2c13ed83b008b",
       "captionCues": 27,
       "gapSamples": 10,
       "samplesChecked": 37,
@@ -290,7 +304,9 @@
       "decodedAudioSha256": "5ca3ee02a21dd25f29a11b8f218e35f137c147a0ecfd34bb956a74b4b28b8a51",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "54d2f536c2af506aef02fe169ea957a14561133b4c9d0fc8866489e18a50abcb",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 6,
@@ -340,7 +356,7 @@
       "part": 7,
       "file": "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4",
       "beforeSha256": "8dbbd83e2272eec1aaa7174c0cc6144262e8a4b2c0d28bfc97a59c37be76ada2",
-      "sha256": "3c88532a1ad2f3dfe6c3086da471e24908592e451c3f24290bd6818510513132",
+      "sha256": "d4e19bb25e7c53b34ae82d1740376b06f2bc7c06e814ad62b22c60777fdff4b7",
       "captionCues": 27,
       "gapSamples": 10,
       "samplesChecked": 37,
@@ -377,13 +393,15 @@
       "decodedAudioSha256": "52faadb3f69bcae237434e3ef15b586ec7595e29dd3d4a9b0e8ced34a956bb69",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "3c88532a1ad2f3dfe6c3086da471e24908592e451c3f24290bd6818510513132",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 8,
       "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
       "beforeSha256": "fb5092d0070fd16b5464455061851bb9e0f091b00c02f1094ab82bb7a50dd2d6",
-      "sha256": "20951bb9094b1d4f74bc2257e7e79ceaabb499aed165910022ff4f62b3e87ec0",
+      "sha256": "3d40d321ec5f698f936e9a96c6a3e2b16ae4a4e769c87262680258413c5e7346",
       "captionCues": 24,
       "gapSamples": 10,
       "samplesChecked": 34,
@@ -420,13 +438,15 @@
       "decodedAudioSha256": "f6275d189c684a2bb9eb80e3c9f96af9bd56d5b8432c94eb2ae42da1aa1b66ad",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "20951bb9094b1d4f74bc2257e7e79ceaabb499aed165910022ff4f62b3e87ec0",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 9,
       "file": "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.mp4",
       "beforeSha256": "5ee587b8f02ff61eabdbbf8cbc8a798d848639e82deb0f98002afeb07e59b2f4",
-      "sha256": "8133197c0e4274d9a2ef9d3df0c917ff170dcd88de4aa1d167f19340275f383a",
+      "sha256": "86aadbc9ca3b716b7b5c3a38b1da36de5c48fb6accd50fbe26010730c166d2b5",
       "captionCues": 25,
       "gapSamples": 9,
       "samplesChecked": 34,
@@ -463,13 +483,15 @@
       "decodedAudioSha256": "74fcb8c80cb3215915077185ca5d1b8b16fd99c6c49a118fa8d778a61aafec70",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "8133197c0e4274d9a2ef9d3df0c917ff170dcd88de4aa1d167f19340275f383a",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 10,
       "file": "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4",
       "beforeSha256": "8c2e9c69fd076108e2c1297d3676b2fa6b2833b8d8e58d865beb96617429101a",
-      "sha256": "d36c2221a043a4e83e44ac42a58a6c049117f3a7f4d774dac92dc6d2fe5c1a77",
+      "sha256": "ab4d0a68a7206b60617dd19fc9652c8a38214c7620ea00a73769f35474017da7",
       "captionCues": 25,
       "gapSamples": 8,
       "samplesChecked": 33,
@@ -506,13 +528,15 @@
       "decodedAudioSha256": "08838a07b2fa12e31cfe3c552c1a88106bd81adcf88db6488adb6266fbfe26e9",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "d36c2221a043a4e83e44ac42a58a6c049117f3a7f4d774dac92dc6d2fe5c1a77",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 11,
       "file": "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4",
       "beforeSha256": "f4798bc1d5a839a35e7e575e28be40f28d66abc2bb0820d7c1d2a84deabaed40",
-      "sha256": "f9e005c9f0d9262973cd0d7e35f235899a7475afe2be5456ed36526b7a9f0849",
+      "sha256": "ea61d00cf0cfd28a1964357975f10f66248112eda260967f00fa7de1c6312982",
       "captionCues": 25,
       "gapSamples": 10,
       "samplesChecked": 35,
@@ -549,13 +573,15 @@
       "decodedAudioSha256": "f9bd6a8705dc32400d00286dc63f8fd54d8723c6f88a396413375139422eda07",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "f9e005c9f0d9262973cd0d7e35f235899a7475afe2be5456ed36526b7a9f0849",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 12,
       "file": "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.mp4",
       "beforeSha256": "b55dd487f86741628b25142e962b56cd7445cd0ac3c234beba0e16d2eb8549b6",
-      "sha256": "02f0ecf2f3bed084a1d8a057a0c65c7a492c2a36e8c250f13253594ab3a1ccb8",
+      "sha256": "787f53b98c2e731a3ad27e3d97296baa593014d153874000900c3360fe9eb1b8",
       "captionCues": 24,
       "gapSamples": 8,
       "samplesChecked": 32,
@@ -592,13 +618,15 @@
       "decodedAudioSha256": "c4e48587d7553f4d14e04683ccd65a30b9f063b8cd30157364450e11f1f13bc6",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "02f0ecf2f3bed084a1d8a057a0c65c7a492c2a36e8c250f13253594ab3a1ccb8",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 13,
       "file": "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.mp4",
       "beforeSha256": "18691b686ebfe5aeb47e0ca0d1a25cf6ecfeaee62fc5cf673d0f26226f5b2ec4",
-      "sha256": "20adfcf9ae909c1288ef2bbbbc8d9bc01a5c6d2168bf69275eab4b8182ca4674",
+      "sha256": "b1d340e0772d4f1e59a34e9a4af54a8691f20778f381b9a8ff6579b93649f1d4",
       "captionCues": 23,
       "gapSamples": 12,
       "samplesChecked": 35,
@@ -635,13 +663,15 @@
       "decodedAudioSha256": "005a9222d1dfeb9fd06b96a08da2f22ef38ffbc09a6ad3ad2515bfdde3d64c40",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "20adfcf9ae909c1288ef2bbbbc8d9bc01a5c6d2168bf69275eab4b8182ca4674",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 14,
       "file": "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4",
       "beforeSha256": "b44a6f1687d2555814fee61e7df3690b48f4bac033e2e35c65e1c902da6eace8",
-      "sha256": "09ffabc114053177cd3fc5f2e087b5c61c0b63a9cd4b9ca3abf8d3ec1c93fab6",
+      "sha256": "9928aae7989be5e90e0a231148d099c6179ff4538c20276fdf7e1094efbf9a45",
       "captionCues": 24,
       "gapSamples": 10,
       "samplesChecked": 34,
@@ -678,13 +708,15 @@
       "decodedAudioSha256": "c0be0fc5102c23e7b9e8d3dfdcb307f36a55cbe54e0bace6a4681096d0fa4ac6",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "09ffabc114053177cd3fc5f2e087b5c61c0b63a9cd4b9ca3abf8d3ec1c93fab6",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 15,
       "file": "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4",
       "beforeSha256": "b4c862661b3b5a3a311896bd135888bee4a9a22b625f8001663c903e4108a251",
-      "sha256": "cf10eedae0bbd607891f8840afadb5e6216c42b1acd90b509dfad0689c2469a6",
+      "sha256": "e54a7123d61dd645a983fbe045195595089142b4da4a7c293adbd507572462ea",
       "captionCues": 34,
       "gapSamples": 13,
       "samplesChecked": 47,
@@ -721,13 +753,15 @@
       "decodedAudioSha256": "0a40a1ef0a74d3ed5ce8e8b4c51fa9c74ad21e1183a2880294ec3db226f60597",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "cf10eedae0bbd607891f8840afadb5e6216c42b1acd90b509dfad0689c2469a6",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 16,
       "file": "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4",
       "beforeSha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508",
-      "sha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508",
+      "sha256": "98d4863ab5a93a81abd788933062bfe65c942b33947d38121bb76e8ae0e7964c",
       "captionCues": 48,
       "gapSamples": 35,
       "samplesChecked": 83,
@@ -759,13 +793,19 @@
           "threshold": 140,
           "referenceMaskZlib": "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"
         }
-      ]
+      ],
+      "captionAuditSha256": "d9b13d1e07070485fba9ca03f36a40818cb6d9dfb4973d204ed77c620a57b508",
+      "subsequentVisualCorrection": "visual-topic-audit.json",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "audioPayloadSha256": "352e3a81bfbfab18b8ee91a11c1a0834a28bce783b0bdcfb9d06dfd5c28e2dd6",
+      "decodedAudioSha256": "bb6bb2d2aa46131ea447a1420936ff59c73e8df9141540699ed9e5720139c6ca"
     },
     {
       "part": 17,
       "file": "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.mp4",
       "beforeSha256": "6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277",
-      "sha256": "6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277",
+      "sha256": "b75b38e9b26e43e0b35e7220c70f39c668bb281dc1fc64da8cffbb43ad7af58c",
       "captionCues": 34,
       "gapSamples": 13,
       "samplesChecked": 47,
@@ -797,13 +837,19 @@
           "threshold": 190,
           "referenceMaskZlib": "eNrt3dFuozAQBVDm/396pa52E/DMACZpU3HOQ9WmxHatyrfAmEY8LADQiYRZAeB8hJgQACYSxGwAMBEg5gKAiQAxEwBMBIh5AGAiQMwCADMBYhIAmMgPcwDATICYAgDkBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcD8R7zr4UwY9vDeuNh2fMg8A98qP663MtxBfmiblB8AH50f8YH7sDEp+APRL4PfnR1xu5WQLcWbld/4BcC4Ivi0/XnnV6lBbETODkB8A8kN+AMgP+QEgP+QHwC8Nj3iUsf77uFkS8yrX1WvJIavi2Ocvki7TVorRHBt02WH+2vrb2f3zalbkByA//q6Xw1qbLL7DGUD5pki+X+TH0MrTaE4OuuswaSLtOR/cOCvyA3D96uuz/yv+5vpMtogPuyVWC/ijbDaSRg+0ko3m2KC7DusfoMmPKHpYqh2IAHfLj6frOdUn40WeaF7KbxW0b3m+plS21w6667C5uxHb3CgnIUlKgJvnR7WUjsttcpNgb992mx9JK8NoDg6667C7O17nx+aIZLQA6q/WC+VefuS3vM/mR9JKMpqDg351fgyTEPIDYDc/yoUyO9dIaqrSCqbuD/rX5Uecu34VUebHZhI2dVl+hQD5kZ1/RERagpWv/FGs9nmBU9fKpfyoO0zzY6jm7SdBfgB8S36Mxbpvzo+uw7z+an24/AB44fWr4m37+ZGcBbw3P9oOuwKy/etX6b5Cv0KA/LieH+ltiOVsfiwX82M5lx+L/AD4gfzYq786lh8vrL+SHwCfVL974J8sRZ8fcXb/x9X8iHP5Efv1u8lmR/kByI/iVvRufuzsPz+YH32k/GR+9Bvbn5/UAnC3Ryg2pbBR/xFeH7E6hXgULXULe9Q3v4uK4LZorOwwDcDN4WWybB/S9Xh+otMQ4LbP4D28leLQEdnzd4e37LTS5kc76K7Dqn73+fD6+bvbJ/wu8gO4fYA0K3b+kNmdI4Z//zHu2Ntppc+PZTf08g6Xav9g+9yr8UeMTXCIDwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4FcKUwCA/ABAfgDwyfkhQACYiQ/5AcBUfggQAGbiQ4AAMBUfAgSAqfgQIABMxYcAAWAqPiQIAOduffwBoMUHJw=="
         }
-      ]
+      ],
+      "captionAuditSha256": "6bb3cf00581f1f17a780d07ceae0798a60378e59edf706609e98ff5551359277",
+      "subsequentVisualCorrection": "visual-topic-audit.json",
+      "audioUnchanged": true,
+      "chaptersUnchanged": true,
+      "audioPayloadSha256": "c7b1dcc3c29e04e36bb93ec99180dfe4c03620d6ad7128c5e28107f3c2c56d28",
+      "decodedAudioSha256": "6360936f3e2ad031b85f243d1a100dd2046d40721cfe5b9e53cc2fd957493b8e"
     },
     {
       "part": 18,
       "file": "ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch.mp4",
       "beforeSha256": "540d2e5d4937862842be37f174f3ba021c2dfae89dea102bd1b11e643a2058fa",
-      "sha256": "e8445f659ab91d9dd4b15c63204b902d9ba9cef5c3a17870c7125bccd3cb49f7",
+      "sha256": "0837cdcaf02871056deba22dffad64e0fddc361222797ecd5c65192913cbb8e1",
       "captionCues": 28,
       "gapSamples": 12,
       "samplesChecked": 40,
@@ -840,13 +886,15 @@
       "decodedAudioSha256": "6b0b948b4b0cb468fa3cfe2eb98df40b21ed1cbea136e1c9d369c031eb5520ad",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "e8445f659ab91d9dd4b15c63204b902d9ba9cef5c3a17870c7125bccd3cb49f7",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 19,
       "file": "ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption.mp4",
       "beforeSha256": "f5280c52dcc69f8cd6d9b8c8d29c07215ad753a0775b05122e2c1144c52e9ce2",
-      "sha256": "79ed6e19e3c99bc8b5d281db12c5efc8cad1850c4158cb03cb231ca74165e3c3",
+      "sha256": "c26ed82216baa784c809275134df7fa020b1fb6442c781fee043ca7351834b7b",
       "captionCues": 27,
       "gapSamples": 11,
       "samplesChecked": 38,
@@ -883,13 +931,15 @@
       "decodedAudioSha256": "855ff31b8cae22c0d3da664d207b141175b6c3ba697bdffc956b08258d4f50e6",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "79ed6e19e3c99bc8b5d281db12c5efc8cad1850c4158cb03cb231ca74165e3c3",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 20,
       "file": "ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback.mp4",
       "beforeSha256": "600d376df5842324bbd20ba2d8e6a321bbee14a0efb48b5786fd8df440ecc725",
-      "sha256": "ca65439780c844865d83c2f0a11132d83e43150dda77b3fe3805983136cac846",
+      "sha256": "48872543d1e2b25771422f7c15f9ec01ef3d80d74e3f1d9092837b194a2731ae",
       "captionCues": 27,
       "gapSamples": 11,
       "samplesChecked": 38,
@@ -926,13 +976,15 @@
       "decodedAudioSha256": "55773efbf9e42710a4404a697e6be3514651f071991b5cced9fec171178528c9",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "ca65439780c844865d83c2f0a11132d83e43150dda77b3fe3805983136cac846",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 21,
       "file": "ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard.mp4",
       "beforeSha256": "92038370725a37c0277ff3a7b3be33724513d1b1829fb74345ebf89732085336",
-      "sha256": "e112377d49655f942128f2a242e831e0f3f6107e7910135ae5e9b65dd053e082",
+      "sha256": "7f5549fb6a153948158fd3069d038ede59d7c5316ff1950133ce740474af5294",
       "captionCues": 26,
       "gapSamples": 10,
       "samplesChecked": 36,
@@ -969,13 +1021,15 @@
       "decodedAudioSha256": "ceebcb7924f2838565323df3ab934e5b44b9e3652d54d0fdd5881610fdc361b9",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "e112377d49655f942128f2a242e831e0f3f6107e7910135ae5e9b65dd053e082",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     },
     {
       "part": 22,
       "file": "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central.mp4",
       "beforeSha256": "a2e759dffbd58c147c5c7b695b4cc13763e5706792933645b03f57d5a3ce6f4e",
-      "sha256": "659a3f77834215c6ccdcd0fdea206d6beec3e8f487ea7fc2285e43bea7ac3712",
+      "sha256": "bbfb02589b3117cb1f490bc4b1c98f83d181904ba461b4670888fc84aa219b09",
       "captionCues": 26,
       "gapSamples": 10,
       "samplesChecked": 36,
@@ -1012,7 +1066,9 @@
       "decodedAudioSha256": "880cbbe90343c651032176626ec9977745cdf7d470e93e184fd3753a28431467",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
-      "fullDecode": "passed"
+      "fullDecode": "passed",
+      "captionAuditSha256": "659a3f77834215c6ccdcd0fdea206d6beec3e8f487ea7fc2285e43bea7ac3712",
+      "subsequentVisualCorrection": "visual-topic-audit.json"
     }
   ]
 }
