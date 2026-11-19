@@ -6,6 +6,8 @@ The maintained **156-page** guide was reviewed **19 November 2026** against appl
 
 The Word and searchable PDF retain the original typography, navy table headers, portrait pages, margins, headers/footers and revision 3 landscape process appendix. The linked contents and page fields were refreshed in Word. All 156 exported pages were rendered and checked; 83 inline illustrations and 54 tables remain in the source.
 
+The training references on page 77 now link all [23 corrected videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256). The ZIP includes transcripts, English captions and chapter files. This narrow link refresh was checked against repository revision `fa962ba`: all 156 PDF pages were compared, with the other 155 pages pixel-identical. The original guide review provenance remains unchanged.
+
 ## Current operating coverage
 
 - YAML Studio: datacenter/cluster context, guided configuration, Advanced YAML, authoring validation and reviewed pipeline handoff. Validation and handoff start no target execution.
@@ -24,9 +26,9 @@ Native pipeline opt-in, NKP and ZTF 2.x console execution are **retired**. Histo
 
 The example consolidated build is `v1.8.5-rc1-f33c9ed`. Obtain its exact trusted ZIP and checksum from the release maintainer; this is not a claim that a commit-specific bundle is a public release asset. This manual update changes no installed runtime or immutable ZIP. See [current source/package evidence](../current-status.md).
 
-PDF SHA256: `f737f6041a860394b32af6aee11b2d8a1b2c2e635d5dbebd86a59ce76929c013`.
+PDF SHA256: `6a0d0ef25d2d9f148f8b79d616aa88df09c9ba311dc85cca7925ac59c84d0017`.
 
-Editable source SHA256: `7248b94b98a42bdad2ae51ab4848b57151da64219dab569af6a96e846ab1429b`.
+Editable source SHA256: `3469ef49a02b26d28bdaf2da2016660990a5620b1d684b417fafa16aad4396e3`.
 
 [Publication manifest](administrator-user-guide-publication.json) records source revisions, page count, layout geometry and download checksums.
 

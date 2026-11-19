@@ -26,9 +26,23 @@
   ],
   "simulatedScreenshots": true,
   "liveActionsExecuted": false,
-  "exporter": "Microsoft Word 16; fields and linked contents refreshed",
+  "exporter": "Microsoft Word 16; read-only PDF export; existing fields and linked contents preserved",
   "files": {
-    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "7248b94b98a42bdad2ae51ab4848b57151da64219dab569af6a96e846ab1429b",
-    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "f737f6041a860394b32af6aee11b2d8a1b2c2e635d5dbebd86a59ce76929c013"
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "3469ef49a02b26d28bdaf2da2016660990a5620b1d684b417fafa16aad4396e3",
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "6a0d0ef25d2d9f148f8b79d616aa88df09c9ba311dc85cca7925ac59c84d0017"
+  },
+  "videoLinkUpdate": {
+    "reviewed": "2026-11-19",
+    "repositorySource": "fa962ba88ca9c31ac2e994d270b4aac22b63b8ee",
+    "parts": 23,
+    "page": 77,
+    "externalTargets": 25,
+    "pixelComparedPages": 156,
+    "pixelChangedPages": [
+      77
+    ],
+    "unchangedPackageParts": 101,
+    "scope": "Corrected tutorial links, complete offline ZIP and checksum; obsolete Part 11 note removed",
+    "liveActionsExecuted": false
   }
 }
