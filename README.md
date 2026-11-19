@@ -278,6 +278,9 @@ It never connects to infrastructure or executes cluster changes.
 
 Start with [00. ZTF-Orchestrator Overview](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00),
 then choose the relevant chapter from [User Guide Videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/).
+[Part 02](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=02)
+compares Foundation VM, PC-associated Foundation Central and Standalone FCA
+Create Cluster workflows and explains when to use each.
 [Part 15](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15)
 covers profile-based recovery; [Part 16](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=16)
 covers appliance deployment and SSH setup; [Part 17](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=17)

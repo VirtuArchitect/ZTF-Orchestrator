@@ -1,4 +1,7 @@
 DOCUMENTATION REFRESH (existing appliance assets unchanged)
+User Guide Video Part 02 now explains all three Create Cluster workflows and their service-specific use cases, with matching deployment guidance, Joanna narration and English captions.
+
+DOCUMENTATION REFRESH (existing appliance assets unchanged)
 The 23-part User Guide Videos now match the refreshed manual with light-mode illustrations, Joanna narration and English captions. Parts 16 and 17 retain their current recordings. No live infrastructure validation is implied.
 
 UNRELEASED SOURCE ADDITION (not part of existing RC assets)

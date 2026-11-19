@@ -12,3 +12,5 @@ PE-direct uplink/DARE retain their approval, verification and disabled-by-defaul
 No live cluster or appliance was changed. All MP4s and companion files are served together on GitHub Pages.
 
 Technical decoding, timing, frame and integrity checks are recorded in verification-report.json. A complete human listening/pronunciation review has not been performed.
+
+Part 02 now compares all three Create Cluster workflows, their matching services and use cases, validation, approval and post-configuration handoff. Its original filename is retained for stable links. Other recordings are unchanged.

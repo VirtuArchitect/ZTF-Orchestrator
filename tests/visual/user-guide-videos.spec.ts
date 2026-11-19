@@ -136,3 +136,18 @@ for (let part = 0; part < 23; part++) {
     }
   })
 }
+
+
+test('Part 02 keeps its URL and explains the three deployment services', async ({ page }) => {
+  test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
+  await page.goto('tutorials/?part=02')
+  await expect(page.locator('#title')).toContainText('Create Cluster Workflows and Deployment Use Cases')
+  await expect(page.locator('#chapters button')).toHaveCount(7)
+  const player = page.locator('video')
+  for (const title of ['Use a classic Foundation VM', 'Use Foundation Central', 'Use a standalone FCA']) {
+    await page.getByRole('button', { name: new RegExp(title) }).click()
+    await expect.poll(() => player.evaluate(v => v.readyState >= 2 && !v.paused && !v.seeking)).toBe(true)
+    await expect.poll(() => player.evaluate(v => v.currentTime)).toBeGreaterThan(10)
+  }
+  await expect(page.getByRole('link', { name: 'Download MP4', exact: true })).toHaveAttribute('href', /Part-02-Deploy-a-Cluster-with-Foundation-VM\.mp4$/)
+})
