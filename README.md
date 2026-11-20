@@ -81,6 +81,7 @@ approval remain in the existing workflow and pipeline paths.
 | [VS0 MTU](docs/change-virtual-switch-mtu.md) | Per-host preflight, approval and verification; follow the workflow's own transport and rollback rules |
 | [Cluster Storage Standard](docs/cluster-storage-standard.md) | Reviewed container creation and dependency-gated default-container cleanup |
 | [CVM / iDRAC credential rotation](docs/credential-rotation.md) | Guarded password changes with replacement-login checks; host IPMI credential synchronization remains a manual follow-up |
+| [Initial Host & CVM Password Setup](docs/initial-host-cvm-password-setup.md) | Optional pipeline action after the existing PE admin password step; pinned SSH, observed version/membership checks, exact approval, per-target verification and controlled resume. Live writes default off pending lab validation |
 | [Unregister PE from PC](docs/unregister-pe-from-pc.md) | Exact-identity review, independent approval and PC-side verification; PE-side cleanup remains separate |
 
 Uplink migration and DARE **live writes default to off** pending validation on

@@ -23,6 +23,8 @@ yarn-debug.log*
 yarn-error.log*
 playwright-report
 test-results
+.frontend-build-*
+.dr-password-*
 release-artifacts
 output
 outputs

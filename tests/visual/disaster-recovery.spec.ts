@@ -1,5 +1,149 @@
 import { expect, test, type Page } from '@playwright/test'
 
+const passwordWorkflow = 'initial-host-cvm-password-setup'
+const passwordConfirmation = 'SET INITIAL HOST AND CVM PASSWORDS'
+
+async function seedPasswordRecovery(page: Page, role = 'admin', status = 'ready_for_configuration') {
+  await seed(page, role)
+  const content = 'cluster_name: HCI-01\nhost_key_evidence: mock/console\ncvms: []\nhosts: []\n'
+  const run = { id: 'password-dr', profileName: 'HCI-01 Recovery', mode: 'recovery', status,
+    revision: 1, clusterName: 'HCI-01', clusterVip: '192.0.2.20', foundationEndpoint: 'http://foundation.example.com:8000',
+    baselineSha256: 'a'.repeat(64), deploymentJobId: 'foundation-complete', currentJobId: 'pe-complete', bootstrapStepCount: 1,
+    canRetryRegistration: false, steps: [{ index: 0, status: 'success', jobId: 'pe-complete' }],
+    snapshot: { targets: ['NODE1'], deploymentContent: 'create_clusters: []', steps: [
+      { workflow: 'config-cluster', configFile: 'pe.yml', configContent: 'clusters: {}', sha256: 'b'.repeat(64) },
+      { workflow: passwordWorkflow, configFile: 'reviewed-passwords.yml', configContent: content, sha256: 'c'.repeat(64) },
+      { workflow: 'config-cluster', configFile: 'settings.yml', configContent: 'clusters: {}', sha256: 'd'.repeat(64) },
+    ] }, events: [] }
+  await page.route('**/api/recovery**', route => route.fulfill({ json: new URL(route.request().url()).pathname === '/api/recovery'
+    ? { datacenters: [], profiles: [], runs: [run] } : run }))
+  await page.route('**/api/jobs/pe-complete', route => route.fulfill({ json: {
+    id: 'pe-complete', status: 'success', diagnostics: { initialPasswordRunId: 'password-journal-123' },
+  } }))
+  return { run, content }
+}
+
+test('DR password approval requests bind the exact saved snapshot and require separate confirmation', async ({ page }, testInfo) => {
+  const { content } = await seedPasswordRecovery(page)
+  const requests: unknown[] = []
+  await page.route('**/api/approvals', async route => {
+    requests.push(route.request().postDataJSON())
+    await route.fulfill({ json: { id: 'password-approval-id', status: 'pending' } })
+  })
+  await page.goto('/recovery/runs?run=password-dr')
+  const panel = page.getByRole('region', { name: 'Initial Host and CVM password approval' })
+  await expect(panel).toBeVisible()
+  await panel.getByText('Review exact password setup snapshot', { exact: true }).click()
+  await expect(panel.locator('pre')).toHaveText(content)
+  await expect(panel).toContainText('Deployment and PE bootstrap approvals do not authorize')
+  await panel.getByRole('button', { name: 'Request Password Setup Approval' }).click()
+  await expect(panel.getByLabel('Independent password setup approval ID')).toHaveValue('password-approval-id')
+  await expect(panel.getByRole('status')).toContainText('A different administrator must approve')
+  expect(requests).toEqual([{ workflow: passwordWorkflow, configFile: 'reviewed-passwords.yml',
+    configContent: content, notes: 'Initial Host & CVM password setup for recovery password-dr' }])
+  await expect(panel.getByLabel(`Password setup confirmation: ${passwordConfirmation}`)).toHaveValue('')
+  await expect(page.getByText('Password setup journal run ID: password-journal-123', { exact: true })).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('dr-password-approval.png'), fullPage: true })
+})
+
+test('DR password approval failures hide upstream response content', async ({ page }) => {
+  await seedPasswordRecovery(page)
+  await page.route('**/api/approvals', route => route.fulfill({ status: 403, contentType: 'text/html', body: 'private-upstream-marker' }))
+  await page.goto('/recovery/runs?run=password-dr')
+  const panel = page.getByRole('region', { name: 'Initial Host and CVM password approval' })
+  await panel.getByRole('button', { name: 'Request Password Setup Approval' }).click()
+  await expect(panel.getByRole('alert')).toContainText('HTTP 403')
+  await expect(panel).not.toContainText('private-upstream-marker')
+  await expect(panel.getByLabel('Independent password setup approval ID')).toHaveValue('')
+})
+
+test('DR parent configure request forwards only the selected password approval and confirmation', async ({ page }) => {
+  const { run } = await seedPasswordRecovery(page)
+  const requests: Record<string, unknown>[] = []
+  await page.route('**/api/recovery/runs/password-dr/configure', async route => {
+    requests.push(route.request().postDataJSON())
+    const index = run.steps.length
+    run.steps.push({ index, status: 'success', jobId: `mock-completed-${index}` })
+    if (run.steps.length === run.snapshot.steps.length) run.status = 'awaiting_acceptance'
+    await route.fulfill({ json: run })
+  })
+  await page.goto('/recovery/runs?run=password-dr')
+  const start = page.getByRole('button', { name: 'Run Remaining Pipeline Steps', exact: true })
+  const selection = page.getByLabel('Recovery configuration step', { exact: true })
+  const panel = page.getByRole('region', { name: 'Initial Host and CVM password approval' })
+  await expect(selection).toHaveValue('1')
+  await expect(start).toBeDisabled()
+  await expect(page.getByLabel(/^PE script confirmation:/)).toHaveCount(0)
+  await panel.getByLabel('Independent password setup approval ID').fill('approved-exact-password-snapshot')
+  await panel.getByLabel(`Password setup confirmation: ${passwordConfirmation}`).fill(passwordConfirmation + ' ')
+  await expect(start).toBeDisabled()
+  await panel.getByLabel(`Password setup confirmation: ${passwordConfirmation}`).fill(passwordConfirmation)
+  await expect(start).toBeEnabled()
+
+  // Selecting a different snapshot cannot submit or retain password permission.
+  await selection.selectOption('2')
+  await expect(panel).toHaveCount(0)
+  await expect(start).toBeDisabled()
+  await selection.selectOption('1')
+  await expect(panel.getByLabel('Independent password setup approval ID')).toHaveValue('')
+  await expect(start).toBeDisabled()
+  await panel.getByLabel('Independent password setup approval ID').fill('approved-exact-password-snapshot')
+  await panel.getByLabel(`Password setup confirmation: ${passwordConfirmation}`).fill(passwordConfirmation)
+  await start.click()
+  await expect.poll(() => requests.length).toBe(1)
+  expect(requests[0]).toEqual({ riskAcknowledged: true, destructiveConfirmation: '', retryRegistrationOnly: false,
+    passwordSetupApprovalId: 'approved-exact-password-snapshot', passwordSetupConfirmation: passwordConfirmation })
+  await expect(page.getByText('Step 2 succeeded · job mock-completed-1', { exact: true })).toBeVisible()
+
+  // Completed password permission is omitted from the next ordinary configure POST.
+  await selection.selectOption('2')
+  await expect(start).toBeEnabled()
+  await start.click()
+  await expect.poll(() => requests.length).toBe(2)
+  expect(requests[1]).toEqual({ riskAcknowledged: true, destructiveConfirmation: '', retryRegistrationOnly: false })
+  expect(run.steps[0]).toEqual({ index: 0, status: 'success', jobId: 'pe-complete' })
+})
+
+test('DR viewers cannot enter password execution approval fields', async ({ page }) => {
+  await seedPasswordRecovery(page, 'viewer')
+  await page.goto('/recovery/runs?run=password-dr')
+  await expect(page.getByRole('region', { name: 'Recovery stage guide' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Request Password Setup Approval' })).toHaveCount(0)
+  await expect(page.getByLabel('Independent password setup approval ID')).toHaveCount(0)
+})
+
+test('DR failed health runs cannot enter password execution approval fields', async ({ page }) => {
+  await seedPasswordRecovery(page, 'admin', 'awaiting_health_verification')
+  await page.goto('/recovery/runs?run=password-dr')
+  await expect(page.getByRole('region', { name: 'Recovery stage guide' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Request Password Setup Approval' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Run Remaining Pipeline Steps' })).toHaveCount(0)
+})
+
+test('DR password optional fields apply only to the selected pending password action', async ({ page }) => {
+  const { run } = await seedPasswordRecovery(page)
+  await page.goto('/recovery/runs?run=password-dr')
+  const result = await page.evaluate(async ({ run, passwordConfirmation }) => {
+    const path = '/src/components/RecoveryRunGuide.tsx'
+    const { recoveryPasswordSetupFields, recoveryPasswordSetupReady } = await import(path)
+    const fields = { passwordSetupApprovalId: ' independent-approval ', passwordSetupConfirmation: passwordConfirmation }
+    return {
+      selected: recoveryPasswordSetupFields(run, 1, fields),
+      completed: recoveryPasswordSetupFields(run, 0, fields),
+      other: recoveryPasswordSetupFields(run, 2, fields),
+      failedHealth: recoveryPasswordSetupFields({ ...run, status: 'awaiting_health_verification' }, 1, fields),
+      ready: recoveryPasswordSetupReady(run, 1, fields),
+      missingApproval: recoveryPasswordSetupReady(run, 1, { ...fields, passwordSetupApprovalId: '' }),
+      incorrectConfirmation: recoveryPasswordSetupReady(run, 1, { ...fields, passwordSetupConfirmation: passwordConfirmation + ' ' }),
+      wrongSelection: recoveryPasswordSetupReady(run, 2, fields),
+      healthNotReady: recoveryPasswordSetupReady({ ...run, status: 'awaiting_health_verification' }, 1, fields),
+    }
+  }, { run, passwordConfirmation })
+  expect(result).toEqual({ selected: { passwordSetupApprovalId: 'independent-approval', passwordSetupConfirmation: passwordConfirmation },
+    completed: {}, other: {}, failedHealth: {}, ready: true, missingApproval: false,
+    incorrectConfirmation: false, wrongSelection: false, healthNotReady: false })
+})
+
 async function seed(page: Page, role = 'admin', options: { blocker?: string; used?: boolean; linked?: boolean; empty?: boolean; recoveryStatus?: string } = {}) {
   await page.addInitScript(role => sessionStorage.setItem('ztf-ui-store', JSON.stringify({ state: {
     sessionToken: 'isolated-fixture', user: { username: 'recovery-reviewer', role }, sidebarOpen: false,
@@ -73,6 +217,8 @@ async function seed(page: Page, role = 'admin', options: { blocker?: string; use
     }
     if (path === '/api/recovery/runs/run1/configure' && preparedRun) {
       expect(request.postDataJSON().retryRegistrationOnly).toBe(true)
+      expect(request.postDataJSON()).not.toHaveProperty('passwordSetupApprovalId')
+      expect(request.postDataJSON()).not.toHaveProperty('passwordSetupConfirmation')
       expect(preparedRun.reconciliation.registrationAbsent).toBe(true)
       expect(preparedRun.status).toBe('ready_for_configuration')
       preparedRun.status = 'awaiting_acceptance'

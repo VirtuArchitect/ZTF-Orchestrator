@@ -3,7 +3,7 @@ import { ArrowRight, Compass, Server, Settings, Activity, GitBranch, RotateCcw, 
 import { Link, Navigate, useParams } from '../router'
 import Layout from '../components/Layout'
 import { useStore } from '../store'
-import { DEPLOYMENT_METHODS, DEPLOYMENT_STEPS, guideDraft, landingPage, saveGuideDraft, saveLandingPage } from '../startGuide'
+import { CONFIGURATION_SEQUENCE, DEPLOYMENT_METHODS, DEPLOYMENT_STEPS, guideDraft, landingPage, saveGuideDraft, saveLandingPage } from '../startGuide'
 
 export function LandingPage() {
   const username = useStore(s => s.user?.username || '')
@@ -116,13 +116,9 @@ export function OperatorJourney() {
       </> : journey === 'configure' ? <section className="card">
         <h2 className="text-xl font-semibold text-gray-100">Build your post-configuration pipeline</h2>
         <ol className="list-decimal pl-5 space-y-3 text-sm text-gray-400 mt-4">
-          <li>Confirm PE health and review the selected workflow’s connection requirements. Prepare this cluster’s administrator credential references.</li>
-          <li>Change the PE administrator password only when required. Verify the new login before subsequent stages use it.</li>
-          <li>Prepare Configure Cluster configurations for EULA acceptance, approved Pulse setting, DNS and NTP.</li>
-          <li>Add supported VM networks and storage containers. Review optional HA and local administrator stages separately.</li>
-          <li>Save each reviewed configuration in Config Files, then choose its matching action and file in Pipelines. Saving does not execute it.</li>
-          <li>Run Dry Run where available, obtain exact-intent approvals, and verify authentication and requested properties between sensitive stages.</li>
-          <li>Record final verification evidence. Configuration completion and deployed infrastructure do not by themselves establish operational readiness.</li>
+          {CONFIGURATION_SEQUENCE.map(step => <li key={step.id}>{step.text}
+            {step.individualAction && canOperate && <div className="mt-3 space-y-2"><Link to={`/workflows/${step.individualAction.id}`} className="btn-secondary">{step.individualAction.name}</Link><p className="text-xs text-amber-300">Individual action after PE admin-password setup. Review actual observed versions and SSH identity. Live writes default off pending lab validation. Existing pipelines are never changed automatically.</p></div>}
+          </li>)}
         </ol>
         <GuideLinks items={[...(canOperate ? [['/workflows/config-cluster', 'Configure Cluster'], ['/scripts', 'Password and local-user scripts']] as Array<[string, string]> : []), ...(user?.role === 'admin' ? [['/configure/post-deployment', 'Post-deployment checks'], ['/configure/ahv-uplink-migration', 'AHV Uplink Migration'], ['/configure/dare', 'Enable Data-at-Rest Encryption (DARE)']] as Array<[string, string]> : []), ['/configs', 'Saved configurations'], ['/pipelines', 'Open pipelines'], ['/executions', 'Execution History & Logs']]} />
       </section> : journey === 'monitor' ? <section className="card">

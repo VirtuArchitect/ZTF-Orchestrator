@@ -26,6 +26,9 @@ import { validateClusterConfig } from '../utils/clusterConfig'
 import CalmWorkloadsForm from '../components/forms/CalmWorkloadsForm'
 import NDBForm from '../components/forms/NDBForm'
 import GenericWorkflowForm from '../components/forms/GenericWorkflowForm'
+import { useInitialPasswordSetupCapability } from '../components/useInitialPasswordSetupCapability'
+import InitialPasswordSetupForm from '../components/forms/InitialPasswordSetupForm'
+import { PASSWORD_SETUP_WORKFLOW, PASSWORD_SETUP_CONFIRMATION, validatePasswordSetup } from '../utils/initialPasswordSetup'
 import CredentialRotationForm from '../components/forms/CredentialRotationForm'
 import NativeFoundationDeployForm from '../components/forms/NativeFoundationDeployForm'
 import PostFoundationWorkflowForm from '../components/forms/PostFoundationWorkflowForm'
@@ -152,6 +155,7 @@ function formatDate(value?: string | null): string {
 }
 
 function validateWorkflowImport(workflowId: string, parsed: unknown): string | null {
+  if (workflowId === PASSWORD_SETUP_WORKFLOW) return validatePasswordSetup(parsed) ? null : 'Invalid reference-only initial host/CVM password setup schema.'
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     return 'Imported config must be a YAML or JSON object.'
   }
@@ -175,6 +179,7 @@ export default function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const workflow = WORKFLOWS.find(w => w.id === id)
   const workflowId = workflow?.id || ''
+  const passwordCapability = useInitialPasswordSetupCapability(workflowId === PASSWORD_SETUP_WORKFLOW)
   const isZtf2Workflow = workflow?.runtimeMode === 'ztf2'
   const isNativeFoundationWorkflow = workflowId === 'native-foundation-deploy'
   const isFoundationVmWorkflow = workflowId === 'cluster-create-foundation-vm'
@@ -185,6 +190,9 @@ export default function WorkflowDetail() {
 
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Configure')
   const [yamlContent, setYamlContent] = useState('')
+  const [passwordSetupFile, setPasswordSetupFile] = useState<{ workflowId: string; name: string } | null>(null)
+  const configFilename = workflowId === PASSWORD_SETUP_WORKFLOW && passwordSetupFile?.workflowId === workflowId
+    ? passwordSetupFile.name : workflow?.configFile || ''
   const [importedConfig, setImportedConfig] = useState<{ workflowId: string; parsed: unknown } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -269,25 +277,26 @@ export default function WorkflowDetail() {
   }
 
   const Icon = ICON_MAP[workflow.icon] || Server
-  const approvalRequired = workflow.id === 'cvm-idrac-password-rotation' || Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
+  const approvalRequired = workflow.id === PASSWORD_SETUP_WORKFLOW || workflow.id === 'cvm-idrac-password-rotation' || Boolean(settings.approvalRequiredWorkflows?.includes(workflow.id))
   const nativeFoundationDellAdapter = nativeFoundationProviderAdapters?.providerAdapters?.find(adapter => adapter.providerId === 'dell_idrac_redfish')
   const nativeFoundationDeploymentEnabled = Boolean(isNativeFoundationWorkflow && nativeFoundationDellAdapter?.fullDeploymentReady)
   const handleYamlGenerated = useCallback((yaml: string) => {
     setYamlContent(yaml)
+    if (workflowId === PASSWORD_SETUP_WORKFLOW) setApprovalId('')
     setNativeFoundationEvidenceId('')
-  }, [])
+  }, [workflowId])
 
   const download = () => {
     if (!yamlContent) return
     const blob = new Blob([yamlContent], { type: 'text/yaml' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = workflow.configFile; a.click()
+    a.href = url; a.download = configFilename; a.click()
     URL.revokeObjectURL(url)
   }
 
   const startExecution = (dryRun: boolean) => {
-    if (!yamlContent) return
+    if (!yamlContent || (!dryRun && approvalRequired && !approvalId.trim()) || (!dryRun && workflowId === PASSWORD_SETUP_WORKFLOW && !passwordCapability.liveEnabled)) return
     if (isZtf2Workflow) {
       setShowZtf2Plan(true)
       return
@@ -296,6 +305,10 @@ export default function WorkflowDetail() {
     const extraParams: Record<string, string> = {}
     if (!dryRun && approvalId.trim()) {
       extraParams.approvalId = approvalId.trim()
+    }
+    if (!dryRun && workflow.id === PASSWORD_SETUP_WORKFLOW) {
+      if (window.prompt(`This changes host and CVM passwords. Live writes default off pending lab validation. Type exactly: ${PASSWORD_SETUP_CONFIRMATION}`) !== PASSWORD_SETUP_CONFIRMATION) return
+      extraParams.destructiveConfirmation = PASSWORD_SETUP_CONFIRMATION
     }
     if (!dryRun && workflow.id === 'cvm-idrac-password-rotation') {
       const expected = 'ROTATE CVM AND IDRAC PASSWORDS'
@@ -3199,7 +3212,12 @@ export default function WorkflowDetail() {
     }
   }
 
+  const invalidatePasswordImport = () => {
+    if (workflow.id !== PASSWORD_SETUP_WORKFLOW) return
+    setYamlContent(''); setApprovalId(''); setImportedConfig({ workflowId: workflow.id, parsed: null })
+  }
   const importConfigText = async (name: string, text: string) => {
+    invalidatePasswordImport()
     if (new TextEncoder().encode(text).length > MAX_IMPORT_BYTES) {
       setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' }); return
     }
@@ -3209,6 +3227,7 @@ export default function WorkflowDetail() {
       const parsed = fromYaml(trimmed)
       const validationError = validateWorkflowImport(workflow.id, parsed)
       if (validationError) { setImportMessage({ type: 'error', text: validationError }); return }
+      if (workflow.id === PASSWORD_SETUP_WORKFLOW) setPasswordSetupFile({ workflowId: workflow.id, name })
       setYamlContent(trimmed.endsWith('\n') ? trimmed : `${trimmed}\n`)
       setNativeFoundationEvidenceId('')
       setImportedConfig({ workflowId: workflow.id, parsed })
@@ -3222,9 +3241,9 @@ export default function WorkflowDetail() {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
-    if (file.size > MAX_IMPORT_BYTES) { setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' }); return }
+    if (file.size > MAX_IMPORT_BYTES) { invalidatePasswordImport(); setImportMessage({ type: 'error', text: 'Config import is limited to 1 MB.' }); return }
     try { await importConfigText(file.name, await file.text()) }
-    catch { setImportMessage({ type: 'error', text: 'Unable to read the config file.' }) }
+    catch { invalidatePasswordImport(); setImportMessage({ type: 'error', text: 'Unable to read the config file.' }) }
   }
 
   const renderForm = () => {
@@ -3240,6 +3259,7 @@ export default function WorkflowDetail() {
       return <Ztf2WorkflowForm workflow={workflow} {...props} onArtifactsChange={setZtf2Artifacts} />
     }
     switch (workflow.id) {
+      case PASSWORD_SETUP_WORKFLOW: return <InitialPasswordSetupForm {...props} liveEnabled={passwordCapability.liveEnabled} capabilityLoaded={passwordCapability.loaded} />
       case 'cvm-idrac-password-rotation': return <CredentialRotationForm {...props} />
       case 'cluster-create': return <ClusterCreateForm {...props} />
       case 'cluster-create-standalone-fca': return <ClusterCreateForm {...props} forcedFoundationCentralTarget="standalone_fca" />
@@ -3322,8 +3342,16 @@ export default function WorkflowDetail() {
             <Upload size={14} />
             Import Config
           </button>
-          {yamlContent && (
-            <button onClick={download} className="btn-secondary gap-1.5">
+          {workflowId === PASSWORD_SETUP_WORKFLOW && <button
+            onClick={() => setActiveTab('YAML Preview')}
+            disabled={!yamlContent}
+            title={!yamlContent ? 'Complete the required fields or import a valid configuration first' : 'Show validated YAML; no approval or cluster connection required'}
+            className="btn-secondary gap-1.5"
+          >Generate YAML</button>}
+          {(yamlContent || workflowId === PASSWORD_SETUP_WORKFLOW) && (
+            <button onClick={download} disabled={!yamlContent}
+              title={!yamlContent ? 'Complete the required fields or import a valid configuration to download YAML' : 'Download the reviewed configuration as YAML'}
+              className="btn-secondary gap-1.5">
               <Download size={14} />
               Download Config
             </button>
@@ -3341,7 +3369,7 @@ export default function WorkflowDetail() {
           )}
           <button
             onClick={() => startExecution(false)}
-            disabled={!yamlContent || (isNativeFoundationWorkflow && !nativeFoundationDeploymentEnabled) || (approvalRequired && !approvalId.trim())}
+            disabled={!yamlContent || (workflowId === PASSWORD_SETUP_WORKFLOW && !passwordCapability.liveEnabled) || (isNativeFoundationWorkflow && !nativeFoundationDeploymentEnabled) || (approvalRequired && !approvalId.trim())}
             className="btn-success gap-1.5"
             title={
               !yamlContent
@@ -4802,10 +4830,12 @@ export default function WorkflowDetail() {
         ))}
       </div>
 
-      {activeTab === 'Configure' && renderForm()}
+      {workflowId === PASSWORD_SETUP_WORKFLOW
+        ? <div hidden={activeTab !== 'Configure'}>{renderForm()}</div>
+        : activeTab === 'Configure' && renderForm()}
       {activeTab === 'YAML Preview' && (
         yamlContent
-          ? <YamlPreview content={yamlContent} filename={workflow.configFile} />
+          ? <YamlPreview content={yamlContent} filename={configFilename} />
           : (
             <div className="card text-center py-12 text-gray-500">
               <p>Fill out the Configuration form to see the generated YAML</p>
@@ -4816,6 +4846,8 @@ export default function WorkflowDetail() {
       {approvalRequired && (
         <ApprovalSelector
           workflowId={workflow.id}
+          configContent={workflow.id === PASSWORD_SETUP_WORKFLOW ? yamlContent : undefined}
+          configFile={workflow.id === PASSWORD_SETUP_WORKFLOW ? configFilename : undefined}
           value={approvalId}
           onChange={setApprovalId}
         />
@@ -4826,7 +4858,7 @@ export default function WorkflowDetail() {
           onClose={() => setShowExecution(false)}
           workflow={workflow.id}
           configContent={yamlContent}
-          configFile={workflow.configFile}
+          configFile={configFilename}
           extraParams={runExtraParams}
           dryRun={isDryRun}
         />
@@ -4976,26 +5008,49 @@ export function Ztf2WorkflowPlanModal({
 
 function ApprovalSelector({
   workflowId,
+  configContent,
+  configFile,
   value,
   onChange,
 }: {
   workflowId: string
+  configContent?: string
+  configFile?: string
   value: string
   onChange: (value: string) => void
 }) {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([])
   const [loading, setLoading] = useState(false)
+  const [requesting, setRequesting] = useState(false)
+  const [requestMessage, setRequestMessage] = useState('')
+
+  useEffect(() => { setRequestMessage('') }, [configFile, configContent])
+  const requestApproval = async () => {
+    if (workflowId !== PASSWORD_SETUP_WORKFLOW || !configContent || !configFile || requesting) return
+    setRequesting(true); setRequestMessage('')
+    try {
+      const response = await apiFetch('/api/approvals', {
+        method: 'POST',
+        body: JSON.stringify({ workflow: workflowId, configFile, configContent }),
+      })
+      if (!response.ok) throw new Error()
+      setRequestMessage('Approval requested for this filename and exact YAML. A different administrator must review it in Approvals; this does not authorize execution.')
+      window.dispatchEvent(new Event('ztf-approvals-updated'))
+    } catch { setRequestMessage('Approval request failed. No approval or execution is assumed.') }
+    finally { setRequesting(false) }
+  }
 
   const approvedWorkflowApprovals = useMemo(() => {
     const now = Date.now()
     return approvals
       .filter(approval => {
         if (approval.workflow !== workflowId || approval.status !== 'approved') return false
+        if (workflowId === PASSWORD_SETUP_WORKFLOW && (!configContent || !configFile || approval.configContent !== configContent || approval.configFile !== configFile)) return false
         const expiresAt = Date.parse(approval.expiresAt || '')
-        return Number.isNaN(expiresAt) || expiresAt > now
+        return workflowId === PASSWORD_SETUP_WORKFLOW ? Number.isFinite(expiresAt) && expiresAt > now : Number.isNaN(expiresAt) || expiresAt > now
       })
       .sort((a, b) => Date.parse(b.decidedAt || b.requestedAt || '') - Date.parse(a.decidedAt || a.requestedAt || ''))
-  }, [approvals, workflowId])
+  }, [approvals, workflowId, configContent, configFile])
   const selectedApproval = approvedWorkflowApprovals.find(approval => approval.id === value)
 
   useEffect(() => {
@@ -5020,6 +5075,13 @@ function ApprovalSelector({
 
   return (
     <div className="mt-6 card border-amber-700/30 bg-amber-900/5">
+      {workflowId === PASSWORD_SETUP_WORKFLOW && <div className="mb-4 space-y-2">
+        <p className="text-sm text-amber-300">Always required for live password changes: independent approval for this exact filename and YAML, even when optional approvals are off in Settings → Governance. Generate YAML, Download Config and Dry Run do not require approval.</p>
+        <p className="text-sm break-all">Reviewed configuration filename: <span className="font-mono">{configFile}</span></p>
+        <button className="btn-secondary" disabled={!configContent || !configFile || requesting} onClick={() => void requestApproval()}>{requesting ? 'Requesting approval…' : 'Request approval for this configuration'}</button>
+        <Link to="/approvals" className="text-sm text-nutanix-cyan ml-3">Review approvals</Link>
+        {requestMessage && <p role="status" className="text-sm text-amber-300">{requestMessage}</p>}
+      </div>}
       <label className="label">Approved Request</label>
       <select
         value={value}

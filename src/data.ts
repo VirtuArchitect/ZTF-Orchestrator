@@ -2,6 +2,12 @@ import type { WorkflowDef, ScriptDef, Ztf2ScriptDef } from './types'
 
 export const WORKFLOWS: WorkflowDef[] = [
   {
+    id: 'initial-host-cvm-password-setup', name: 'Initial Host & CVM Password Setup',
+    category: 'Configuration', icon: 'KeyRound', configFile: 'initial-host-cvm-password-setup.yml',
+    description: 'Prepare initial AHV account and cluster CVM password setup using credential references',
+    details: 'Live writes default off pending lab validation. Requires actual observed AOS >= 7.5.1.8 and AHV >= 11.0.1.3-23, pinned SSH identity, trusted-key evidence, exact-YAML approval and typed confirmation. No PC or TLS prerequisite. Recovery requires server reconciliation and fresh approval.',
+  },
+  {
     id: 'cluster-storage-standard', name: 'Cluster Storage Standard', category: 'Configuration', icon: 'Database',
     description: 'Create three cluster-specific containers and clean up the discovered default container',
     configFile: 'cluster-storage-standard.yml',
