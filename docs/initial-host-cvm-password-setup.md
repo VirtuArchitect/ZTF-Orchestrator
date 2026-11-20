@@ -13,6 +13,10 @@ every later release has been hardware-validated.
 
 ## Availability and validation boundary
 
+Active-run ownership uses canonical IP addresses, including equivalent IPv6 and
+IPv4-mapped spellings. An unreadable recovery journal blocks new work until
+storage is repaired; it is never treated as an empty history.
+
 Open **Configure → Initial Host & CVM Password Setup**, or select the same action
 in the pipeline editor. This is a built-in governed action inside the existing
 ZTF 1.x pipeline path; it does not reinstate the retired Native executor.

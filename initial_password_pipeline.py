@@ -73,11 +73,23 @@ def prepare(server, pipeline, data, actor, role, binding_id):
                 'steps': deepcopy(pipeline['steps']), 'configHashes': digests}
     resume_id = str(data.get('passwordSetupResumeRunId') or '')
     with LOCK:
-        addresses = {node['address'] for group in ('cvms', 'hosts') for node in config[group]}
         # Guard the earlier PE bootstrap too, before the SSH rotation lock applies.
-        addresses.update(str(address) for address in clusters)
-        if any(active.get('pipelineId') == pipeline['id'] or addresses.intersection(active.get('addresses', set()))
-               for active in ACTIVE.values()):
+        addresses = service._resource_addresses(
+            [node['address'] for group in ('cvms', 'hosts') for node in config[group]] + list(clusters))
+        owners = []
+        try:
+            for active in ACTIVE.values():
+                if not isinstance(active, dict) or any(
+                        not isinstance(active.get(field), str) or not active[field].strip()
+                        for field in ('bindingId', 'pipelineId')):
+                    raise ValueError()
+                owned = service._resource_addresses(active.get('addresses'))
+                if not owned:
+                    raise ValueError()
+                owners.append((active['pipelineId'], owned))
+        except (TypeError, ValueError):
+            raise ValueError('Active password pipeline ownership is invalid; reconcile active runs before starting work') from None
+        if any(owner == pipeline['id'] or addresses.intersection(owned) for owner, owned in owners):
             raise ValueError('A password pipeline for these targets is already active')
         run = service.get_run(resume_id) if resume_id else None
         if resume_id:

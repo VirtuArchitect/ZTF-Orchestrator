@@ -1,7 +1,9 @@
 """Offline facade/API boundary checks; never use real SSH or vault secrets."""
 import copy
+from contextlib import nullcontext
 import datetime as dt
 import json
+import threading
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -10,6 +12,7 @@ import pytest
 import yaml
 
 import initial_password_routes as routes
+from storage_backend import FileStorage, PostgresStorage
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +44,7 @@ def facade(tmp_path, monkeypatch):
         job = {'id': str(len(jobs) + 1), 'status': 'queued', 'payload': copy.deepcopy(payload)}
         jobs[job['id']] = job
         return copy.deepcopy(job)
-    manager = SimpleNamespace(submit=Mock(side_effect=submit), get_job=lambda jid: jobs.get(jid),
+    manager = SimpleNamespace(_lock=threading.RLock(), submit=Mock(side_effect=submit), get_job=lambda jid: jobs.get(jid),
                               _stop=False, _emit=Mock(), _set_diagnostics=Mock(), _complete=Mock())
     def link(aid, jid):
         approval['jobId'] = jid
@@ -276,6 +279,198 @@ def test_invalid_resource_errors_are_sanitized(facade):
     with pytest.raises(ValueError) as exc:
         facade.service.new_run(facade.payload, 'alice', resource_addresses=['secret-marker'])
     assert 'secret-marker' not in str(exc.value)
+
+
+@pytest.mark.parametrize('content', [b'{', b'null', b'{}', b'[{}]', b'\xff'])
+@pytest.mark.parametrize('operation', ['admission', 'save'])
+def test_existing_corrupt_file_journal_blocks_admission_and_save(facade, content, operation):
+    run = facade.service.new_run(facade.payload, 'alice')
+    backend = FileStorage(facade.server.CONFIG_DIR)
+    facade.server._storage = backend
+    facade.server.read_json = backend.read_json
+    facade.server.write_json = Mock(wraps=backend.write_json)
+    path = facade.service._path
+    path.write_bytes(content)
+    with pytest.raises(ValueError):
+        if operation == 'admission':
+            facade.service.new_run(facade.payload, 'alice')
+        else:
+            facade.service.save_run(run)
+    assert path.read_bytes() == content
+    facade.server.write_json.assert_not_called()
+
+
+def test_missing_file_journal_can_initialize_and_retain_history(facade):
+    backend = FileStorage(facade.server.CONFIG_DIR)
+    facade.server._storage = backend
+    facade.server.read_json = backend.read_json
+    facade.server.write_json = backend.write_json
+    first = facade.service.new_run(facade.payload, 'alice')
+    second = facade.service.new_run(facade.payload, 'alice')
+    assert [run['id'] for run in facade.service.list_runs()] == [first['id'], second['id']]
+
+
+def test_unreadable_file_journal_blocks_reads_without_leaking_error(facade, monkeypatch):
+    from pathlib import Path
+    backend = FileStorage(facade.server.CONFIG_DIR)
+    facade.server._storage = backend
+    facade.server.read_json = backend.read_json
+    facade.server.write_json = Mock()
+    path = facade.service._path
+    path.write_text('[]', encoding='utf-8')
+    read = Path.read_text
+    def deny(journal, *args, **kwargs):
+        if journal == path:
+            raise PermissionError('secret-marker')
+        return read(journal, *args, **kwargs)
+    monkeypatch.setattr(Path, 'read_text', deny)
+    for operation in (facade.service.list_runs, lambda: facade.service.get_run('missing'),
+                      lambda: facade.service.new_run(facade.payload, 'alice')):
+        with pytest.raises(ValueError) as exc:
+            operation()
+        assert 'secret-marker' not in str(exc.value)
+    facade.server.write_json.assert_not_called()
+
+
+@pytest.mark.parametrize('stored', [None, {}, [{}], {'targets': []}])
+def test_existing_invalid_postgres_document_is_not_missing(facade, stored):
+    run = facade.service.new_run(facade.payload, 'alice')
+    # Use the real Postgres document reader against a fake connection; no DB I/O.
+    backend = object.__new__(PostgresStorage)
+    connection = SimpleNamespace(execute=Mock(return_value=SimpleNamespace(fetchone=lambda: {'data': stored})))
+    backend._connect = lambda: nullcontext(connection)
+    facade.server._storage = backend
+    facade.server.read_json = backend.read_json
+    facade.server.write_json = Mock()
+    with pytest.raises(ValueError):
+        facade.service.validate_new_targets(intent())
+    with pytest.raises(ValueError, match='journal is unreadable'):
+        facade.service.save_run(run)
+    facade.server.write_json.assert_not_called()
+
+
+@pytest.mark.parametrize('exists', [False, True])
+def test_postgres_missing_or_valid_empty_document_allows_admission(facade, exists):
+    backend = object.__new__(PostgresStorage)
+    connection = SimpleNamespace(execute=Mock(return_value=SimpleNamespace(
+        fetchone=lambda: {'data': []} if exists else None)))
+    backend._connect = lambda: nullcontext(connection)
+    facade.server._storage = backend
+    facade.server.read_json = backend.read_json
+    facade.service.validate_new_targets(intent())
+
+
+@pytest.mark.parametrize('operation', ['submit', 'resume', 'reconcile'])
+def test_dr_dispatch_and_standalone_use_bounded_consistent_lock_order(facade, monkeypatch, operation):
+    monkeypatch.setenv('ZTF_ALLOW_INITIAL_PASSWORD_SETUP', 'true')
+    run = facade.service.new_run(facade.payload, 'alice')
+    dr_ready, contender_waiting = threading.Event(), threading.Event()
+    failures, results = [], []
+    real_lock = threading.RLock()
+    class QueueLock:
+        def __enter__(self):
+            if threading.current_thread().name == 'password-contender':
+                contender_waiting.set()
+            real_lock.acquire()
+            return self
+        def __exit__(self, *args):
+            real_lock.release()
+    facade.manager._lock = QueueLock()
+    submit = facade.manager.submit.side_effect
+    get_job = facade.manager.get_job
+    def queue_submit(*args):
+        with facade.manager._lock:
+            return submit(*args)
+    def queue_get_job(*args):
+        with facade.manager._lock:
+            return get_job(*args)
+    facade.manager.submit.side_effect = queue_submit
+    facade.manager.get_job = queue_get_job
+    monkeypatch.setattr(routes.core, 'reconcile', Mock(return_value=(False, None)))
+    app = Flask(__name__)
+    def dr_dispatch():
+        try:
+            with facade.manager._lock:
+                dr_ready.set()
+                assert contender_waiting.wait(2), 'Standalone request did not reach queue admission'
+                # A bounded probe makes the old inversion fail without leaving
+                # deadlocked threads or global locks behind in the test process.
+                available = routes.LOCK.acquire(timeout=.5)
+                assert available, 'Helper lock held while waiting for DR job-manager lock'
+                routes.LOCK.release()
+                with app.app_context():
+                    _, code = facade.service.submit({**facade.payload, 'dryRun': True}, 'alice', 'admin')
+                    assert code == 202
+                results.append('dr-complete')
+        except Exception as exc:
+            failures.append(str(exc))
+    def contender():
+        try:
+            assert dr_ready.wait(2)
+            with app.app_context():
+                if operation == 'submit':
+                    _, code = facade.service.submit({**facade.payload, 'dryRun': True}, 'alice', 'admin')
+                    assert code == 202
+                elif operation == 'resume':
+                    _, code = facade.service.resume(run['id'], facade.payload, 'alice')
+                    assert code == 202
+                else:
+                    with pytest.raises(ValueError):
+                        facade.service.reconcile_run(run['id'], {
+                            'selection': 'current', 'targetKeys': ['host:192.0.2.20:root'],
+                            'notes': 'Checked', 'evidence': 'ticket-1'}, 'alice')
+            results.append('standalone-complete')
+        except Exception as exc:
+            failures.append(str(exc))
+    workers = [threading.Thread(target=dr_dispatch, daemon=True),
+               threading.Thread(target=contender, name='password-contender', daemon=True)]
+    for worker in workers:
+        worker.start()
+    for worker in workers:
+        worker.join(3)
+    assert not any(worker.is_alive() for worker in workers), 'Lock-order regression left a blocked request'
+    assert not failures
+    assert sorted(results) == ['dr-complete', 'standalone-complete']
+
+
+def test_reconciliation_releases_queue_lock_before_readonly_core_checks(facade, monkeypatch):
+    run = facade.service.new_run(facade.payload, 'alice')
+    acquired = []
+    def reconcile(*args):
+        def probe():
+            available = facade.manager._lock.acquire(timeout=.5)
+            acquired.append(available)
+            if available:
+                facade.manager._lock.release()
+        worker = threading.Thread(target=probe, daemon=True)
+        worker.start()
+        worker.join(1)
+        assert acquired == [True], 'Queue locked during SSH reconciliation'
+        return False, None
+    monkeypatch.setattr(routes.core, 'reconcile', reconcile)
+    with pytest.raises(ValueError):
+        facade.service.reconcile_run(run['id'], {'selection': 'current', 'targetKeys': ['x'],
+                                                'notes': 'Checked', 'evidence': 'ticket-1'}, 'alice')
+    assert acquired == [True]
+
+
+def test_worker_cancellation_callbacks_run_outside_journal_lock(facade, monkeypatch):
+    run = facade.service.new_run(facade.payload, 'alice')
+    monkeypatch.setattr(routes.core, 'execute', Mock(return_value=(True, state('pending'))))
+    def cancelled():
+        acquired = []
+        def probe():
+            available = routes.LOCK.acquire(timeout=.5)
+            acquired.append(available)
+            if available:
+                routes.LOCK.release()
+        worker = threading.Thread(target=probe, daemon=True)
+        worker.start()
+        worker.join(1)
+        assert acquired == [True], 'Cancellation callback invoked under helper lock'
+        with facade.manager._lock:
+            return False
+    assert facade.service.execute_run(run, {**facade.payload, 'dryRun': True}, 'alice', Mock(), cancelled)
 
 
 def test_submit_dry_run_durable_and_safe(facade):

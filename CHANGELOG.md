@@ -23,6 +23,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Block equivalent IP spellings from overlapping password pipelines, fail closed on unreadable recovery journals, and align submission/recovery lock ordering.
+
 - Add Generate YAML and preserve password-setup form values across preview navigation; label its independent approval as always required in Governance and explain which preparation actions need no approval.
 
 - Keep Download Config visible in Initial Host & CVM Password Setup, disabled with guidance until valid YAML is available; preserve reviewed filenames when downloading.

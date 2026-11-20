@@ -4,8 +4,10 @@ Route authorization and maintenance decorators belong to the server. No target
 requests occur here except through the explicitly invoked core service.
 """
 import copy
+from contextlib import ExitStack
 import datetime as dt
 import ipaddress
+import json
 import os
 import threading
 import time
@@ -20,6 +22,14 @@ import initial_password_setup as core
 LOCK = threading.RLock()
 ACTIVE = {'queued', 'running', 'cancelling'}
 ERROR = 'Initial password setup request could not be validated'
+
+
+class _MissingJournal:
+    def __deepcopy__(self, memo):
+        return self
+
+
+MISSING_JOURNAL = _MissingJournal()
 
 
 class PasswordSetupService:
@@ -123,11 +133,48 @@ class PasswordSetupService:
     def _path(self):
         return self.S.CONFIG_DIR / 'initial-password-setup-runs.json'
 
+    def _read_runs(self):
+        """Only an absent document is empty; unreadable history blocks writes."""
+        try:
+            if getattr(getattr(self.S, '_storage', None), 'name', None) == 'file':
+                try:
+                    runs = json.loads(self._path.read_text(encoding='utf-8'))
+                except FileNotFoundError:
+                    runs = []
+            else:
+                # Postgres returns this default only for a missing row. A stored
+                # JSON null or malformed document must never look like absence.
+                runs = self.S.read_json(self._path, MISSING_JOURNAL)
+                if runs is MISSING_JOURNAL:
+                    runs = []
+            if not isinstance(runs, list):
+                raise ValueError()
+            ids = set()
+            for run in runs:
+                if (not isinstance(run, dict) or not isinstance(run.get('id'), str)
+                        or not run['id'] or run['id'] in ids
+                        or not isinstance(run.get('configContent'), str)
+                        or not isinstance(run.get('configFile'), str) or 'state' not in run):
+                    raise ValueError()
+                ids.add(run['id'])
+                state = run['state']
+                if state is not None and (
+                        not isinstance(state, dict) or not isinstance(state.get('targets'), list)
+                        or any(not isinstance(t, dict) or t.get('status') not in core.STATUSES
+                               for t in state['targets'])):
+                    raise ValueError()
+                attempts = run.get('pipelineAttempts', {})
+                if not isinstance(attempts, dict) or any(
+                        not isinstance(k, str) or not k.isdecimal()
+                        or v not in ('pending', 'completed', 'change_attempted') for k, v in attempts.items()):
+                    raise ValueError()
+            return runs
+        except Exception:
+            raise ValueError('Initial password journal is unreadable; restore or repair storage before execution') from None
+
     def list_runs(self):
         with LOCK:
-            runs = copy.deepcopy(self.S.read_json(self._path, []))
-        if not isinstance(runs, list):
-            raise ValueError(ERROR)
+            runs = copy.deepcopy(self._read_runs())
         for run in runs:
             run['targets'] = copy.deepcopy((run.get('state') or {}).get('targets', []))
             if (any(t.get('status') == 'change_attempted' for t in run['targets'])
@@ -143,11 +190,11 @@ class PasswordSetupService:
 
     def get_run(self, run_id):
         with LOCK:
-            return next((copy.deepcopy(r) for r in self.S.read_json(self._path, []) if r.get('id') == run_id), None)
+            return next((copy.deepcopy(r) for r in self._read_runs() if r.get('id') == run_id), None)
 
     def save_run(self, run):
         with LOCK:
-            runs = self.S.read_json(self._path, [])
+            runs = self._read_runs()
             value = copy.deepcopy(run)
             value.pop('targets', None)
             value['updatedAt'] = self._now()
@@ -203,9 +250,7 @@ class PasswordSetupService:
                 incoming = self._target_pairs(config)
                 incoming_ips = {address for address, _pin in incoming}
                 resources = self._resource_addresses(resource_addresses) | incoming_ips
-                runs = self.S.read_json(self._path, [])
-                if not isinstance(runs, list):
-                    raise ValueError()
+                runs = self._read_runs()
                 for previous in runs:
                     if exclude_run_id and previous.get('id') == exclude_run_id:
                         continue
@@ -255,7 +300,9 @@ class PasswordSetupService:
 
     def submit(self, data, actor, role, stream=False):
         try:
-            with LOCK:
+            # DR dispatch already holds the reentrant job-manager lock. Always
+            # take it first so a standalone submission cannot invert that order.
+            with self.S._job_manager._lock, LOCK:
                 if role != 'admin' or not self._admin(actor):
                     raise ValueError(ERROR)
                 payload = self._payload(data)
@@ -313,13 +360,14 @@ class PasswordSetupService:
             credentials = core.resolve_credentials(config, self.S._lookup_credential_ref)
             ok, state = core.execute(config, credentials, self.S.get_settings()['pythonPath'], emit,
                                      cancelled=stopped, dry_run=dry, state=run.get('state'), checkpoint=checkpoint)
+            was_stopped = stopped()  # callbacks may acquire the job-manager lock
             with LOCK:
                 fresh = self.get_run(run['id'])
                 if state is not None:
                     fresh['state'] = state
                 uncertain = any(t.get('status') == 'change_attempted' for t in (fresh.get('state') or {}).get('targets', []))
                 fresh['status'] = ('needs_reconciliation' if uncertain else
-                                   'cancelled' if stopped() else 'success' if ok else 'failed')
+                                   'cancelled' if was_stopped else 'success' if ok else 'failed')
                 self.save_run(fresh)
             return bool(ok and not stopped() and not uncertain)
         except Exception:
@@ -370,10 +418,9 @@ class PasswordSetupService:
             finally:
                 manager._complete(job_id, status, code)
 
-    def _inactive(self, run):
+    def _inactive(self, run, job):
         if not run:
             raise ValueError(ERROR)
-        job = self.S._job_manager.get_job(run.get('jobId', ''))
         if job and job.get('status') in ACTIVE:
             raise ValueError('Initial password job is still active')
         active = getattr(self.S, '_INITIAL_PASSWORD_ACTIVE_PIPELINES', set())
@@ -419,9 +466,14 @@ class PasswordSetupService:
         try:
             if not acquired or not self._admin(actor) or not isinstance(data, dict):
                 raise ValueError(ERROR)
-            with LOCK:
-                run = self.get_run(run_id)
-                self._inactive(run)
+            with ExitStack() as journal:
+                # Acquire in DR order, then release the queue lock before SSH.
+                # Retain the journal lock so admission cannot race reconciliation.
+                with self.S._job_manager._lock:
+                    journal.enter_context(LOCK)
+                    run = self.get_run(run_id)
+                    job = self.S._job_manager.get_job(run.get('jobId', '')) if run else None
+                    self._inactive(run, job)
                 config = self.parse(run)
                 for field in ('notes', 'evidence'):
                     if not isinstance(data.get(field), str) or not data[field].strip() or len(data[field]) > 4096:
@@ -456,9 +508,10 @@ class PasswordSetupService:
 
     def resume(self, run_id, data, actor):
         try:
-            with LOCK:
+            with self.S._job_manager._lock, LOCK:
                 run = self.get_run(run_id)
-                self._inactive(run)
+                job = self.S._job_manager.get_job(run.get('jobId', '')) if run else None
+                self._inactive(run, job)
                 if run.get('pipelineId') or not self._admin(actor) or not isinstance(data, dict):
                     raise ValueError(ERROR)
                 if any(field in data and data[field] != run[field] for field in ('configContent', 'configFile')):

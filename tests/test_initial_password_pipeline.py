@@ -499,7 +499,7 @@ def test_config_snapshot_is_per_run_and_blocked_until_verified_completion(harnes
     assert (h.configs / 'later.yml').read_bytes().decode() == h.texts['later.yml']
 
 
-def concurrency_candidate(h, conflict, resume):
+def concurrency_candidate(h, conflict, resume, addresses=None):
     """Keep only the selected collision; same-pipeline case has disjoint IPs."""
     config = intent()
     config['cvms'][0]['address'] = '192.0.2.110'
@@ -515,6 +515,10 @@ def concurrency_candidate(h, conflict, resume):
         pe = '192.0.2.30'
     elif conflict == 'cross-role':
         config['cvms'][0]['address'] = '192.0.2.20'
+    if addresses:
+        config['cvms'][0]['address'] = addresses.get('cvm', config['cvms'][0]['address'])
+        config['hosts'][0]['address'] = addresses.get('host', config['hosts'][0]['address'])
+        pe = addresses.get('pe', pe)
     content = yaml.safe_dump(config)
     (h.configs / 'initial.yml').write_bytes(content.encode())
     (h.configs / 'pe.yml').write_bytes(yaml.safe_dump({'clusters': {pe: {
@@ -605,3 +609,77 @@ def test_simultaneous_fresh_admission_reserves_only_one_journal(harness, monkeyp
     create.assert_called_once()
     reserve.assert_called_once()
     assert len(adapter.ACTIVE) == 1 and not h.launches and not h.core.called
+
+
+@pytest.mark.parametrize('resume', [False, True], ids=['fresh', 'resume'])
+@pytest.mark.parametrize('family', ['ipv4-mapped', 'expanded-ipv6'])
+@pytest.mark.parametrize('resource', ['cvm', 'host', 'pe'])
+@pytest.mark.parametrize('alias_side', ['incoming', 'stored'])
+def test_active_ownership_rejects_canonical_aliases_before_pe(
+        harness, monkeypatch, resume, family, resource, alias_side):
+    h = harness
+    baseline = {'cvm': '192.0.2.10', 'host': '192.0.2.20', 'pe': '192.0.2.30'}
+    if family == 'expanded-ipv6':
+        baseline = {'cvm': '2001:db8::10', 'host': '2001:db8::20', 'pe': '2001:db8::30'}
+    concurrency_candidate(h, 'same-pipeline', False, addresses=baseline)
+    active = prepare(h)
+    canonical = baseline[resource]
+    alias = ('::ffff:' + canonical if family == 'ipv4-mapped' else
+             {'cvm': '2001:0db8:0000:0000:0000:0000:0000:0010',
+              'host': '2001:0db8:0000:0000:0000:0000:0000:0020',
+              'pe': '2001:0db8:0000:0000:0000:0000:0000:0030'}[resource])
+    if alias_side == 'stored':
+        # Simulate a pre-fix in-memory owner: comparison must normalize it too.
+        owned = adapter.ACTIVE[active['runId']]['addresses']
+        owned.remove(canonical)
+        owned.add(alias)
+    concurrency_candidate(h, 'disjoint', resume,
+                          addresses={resource: alias if alias_side == 'incoming' else canonical})
+    before_store, before_active = copy.deepcopy(h.store), copy.deepcopy(adapter.ACTIVE)
+    create, reserve = Mock(wraps=h.service.new_run), Mock(wraps=h.service.reserve_approval)
+    monkeypatch.setattr(h.service, 'new_run', create)
+    monkeypatch.setattr(h.service, 'reserve_approval', reserve)
+    response = h.client.post('/api/pipelines/' + h.pipeline['id'] + '/run', json=h.data)
+    assert response.status_code == 403 and 'already active' in response.get_json()['error']
+    create.assert_not_called()
+    reserve.assert_not_called()
+    assert h.store == before_store and adapter.ACTIVE == before_active
+    assert not h.launches and not h.core.called and not h.sync.called
+
+
+@pytest.mark.parametrize('resume', [False, True], ids=['fresh', 'resume'])
+@pytest.mark.parametrize('invalid', [
+    'legacy-binding-secret-marker', None, {},
+    {'bindingId': 'binding', 'pipelineId': 'old', 'addresses': None},
+    {'bindingId': 'binding', 'pipelineId': 'old', 'addresses': set()},
+    {'bindingId': 'binding', 'pipelineId': 'old', 'addresses': {'not-an-ip-secret-marker'}},
+    {'bindingId': 'binding', 'pipelineId': 'old', 'addresses': {'fe80::1%eth0'}},
+    {'bindingId': 'binding', 'pipelineId': 'old', 'addresses': {'192.0.2.10': 'unexpected'}},
+    {'bindingId': 'binding', 'pipelineId': None, 'addresses': {'192.0.2.10'}},
+    {'bindingId': [], 'pipelineId': 'old', 'addresses': {'192.0.2.10'}},
+])
+def test_invalid_stored_ownership_fails_closed_before_journal_or_pe(harness, monkeypatch, resume, invalid):
+    h = harness
+    active = prepare(h)
+    concurrency_candidate(h, 'disjoint', resume)
+    adapter.ACTIVE[active['runId']] = copy.deepcopy(invalid)
+    before_store, before_active = copy.deepcopy(h.store), copy.deepcopy(adapter.ACTIVE)
+    create, reserve = Mock(wraps=h.service.new_run), Mock(wraps=h.service.reserve_approval)
+    monkeypatch.setattr(h.service, 'new_run', create)
+    monkeypatch.setattr(h.service, 'reserve_approval', reserve)
+    response = h.client.post('/api/pipelines/' + h.pipeline['id'] + '/run', json=h.data)
+    assert response.status_code == 403 and 'ownership is invalid' in response.get_json()['error']
+    assert 'secret-marker' not in response.get_data(as_text=True)
+    create.assert_not_called()
+    reserve.assert_not_called()
+    assert h.store == before_store and adapter.ACTIVE == before_active
+    assert not h.launches and not h.core.called and not h.sync.called
+
+
+def test_new_active_ownership_is_stored_canonically(harness):
+    h = harness
+    concurrency_candidate(h, 'same-pipeline', False, addresses={
+        'cvm': '::ffff:192.0.2.10', 'host': '2001:0db8:0:0:0:0:0:20', 'pe': '::ffff:192.0.2.30'})
+    context = prepare(h)
+    assert adapter.ACTIVE[context['runId']]['addresses'] == {'192.0.2.10', '2001:db8::20', '192.0.2.30'}
+    assert h.service.get_run(context['runId'])['resourceAddresses'] == ['192.0.2.10', '192.0.2.30', '2001:db8::20']
