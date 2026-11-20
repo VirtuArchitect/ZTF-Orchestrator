@@ -582,7 +582,7 @@ def test_server_active_alias_and_service_journal_key_guard(harness, monkeypatch)
     with pytest.raises(ValueError, match='pipeline is still active'):
         h.service._inactive(run, None)
     adapter.release(context)
-    h.service._inactive(run)
+    h.service._inactive(run, None)
 
 
 def test_simultaneous_fresh_admission_reserves_only_one_journal(harness, monkeypatch):
