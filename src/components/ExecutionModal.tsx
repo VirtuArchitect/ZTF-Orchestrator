@@ -4,6 +4,7 @@ import Terminal from './Terminal'
 import NativeFoundationProgress from './NativeFoundationProgress'
 import FoundationVmProgress from './FoundationVmProgress'
 import { useStore } from '../store'
+import { PASSWORD_SETUP_WORKFLOW } from '../utils/initialPasswordSetup'
 import { apiFetch } from '../utils/api'
 import { terminalStatusLabel, terminalSuccessProgress } from '../utils/executionStatus'
 import type { ExecutionProgress, FoundationDeploymentStatus } from '../types'
@@ -19,6 +20,7 @@ interface ExecutionModalProps {
 
 export default function ExecutionModal({ onClose, workflow, configContent, configFile, extraParams, dryRun }: ExecutionModalProps) {
   const { runningExecution, startExecution, appendLog, finishExecution, addExecution } = useStore()
+  const passwordSetupStarted = useRef(false)
   const evtSourceRef = useRef<EventSource | null>(null)
   const showNativeFoundationProgress = workflow === 'native-foundation-deploy' && !dryRun
   const [foundationStatus, setFoundationStatus] = useState<FoundationDeploymentStatus>()
@@ -125,6 +127,9 @@ export default function ExecutionModal({ onClose, workflow, configContent, confi
   }
 
   useEffect(() => {
+    // StrictMode replays effects in development; never submit this credential mutation twice.
+    if (workflow === PASSWORD_SETUP_WORKFLOW && passwordSetupStarted.current) return
+    passwordSetupStarted.current = true
     execute()
     return () => {
       evtSourceRef.current?.close()

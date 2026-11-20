@@ -47,3 +47,15 @@ export function workflowPrerequisite(id: string, category: string) {
     || (category === 'Infrastructure' ? 'Review hardware compatibility, image sources, target nodes, addressing and imaging approvals.'
       : 'Prepare the matching configuration, credential references, certificate trust and required approvals. Review the workflow details and supported controls.')
 }
+
+// Guidance only: never append to or rewrite saved pipelines.
+export const CONFIGURATION_SEQUENCE = [
+  { id: 'connection_review', text: 'Confirm PE health and review the selected workflow’s connection requirements. Prepare this cluster’s administrator credential references.' },
+  { id: 'initial_config_admin_pwd', text: 'Change the PE administrator password only when required. Verify the new login before subsequent stages use it.',
+    individualAction: { id: 'initial-host-cvm-password-setup', name: 'Initial Host & CVM Password Setup' } },
+  { id: 'cluster_baseline', text: 'Prepare Configure Cluster configurations for EULA acceptance, approved Pulse setting, DNS and NTP.' },
+  { id: 'networks_storage', text: 'Add supported VM networks and storage containers. Review optional HA and local administrator stages separately.' },
+  { id: 'save_reviewed_configs', text: 'Save each reviewed configuration in Config Files, then choose its matching action and file in Pipelines. Saving does not execute it.' },
+  { id: 'approve_verify', text: 'Run Dry Run where available, obtain exact-intent approvals, and verify authentication and requested properties between sensitive stages.' },
+  { id: 'final_verification', text: 'Record final verification evidence. Configuration completion and deployed infrastructure do not by themselves establish operational readiness.' },
+]

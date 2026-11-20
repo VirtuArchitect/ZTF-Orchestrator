@@ -1,3 +1,8 @@
+UNRELEASED SOURCE ADDITION (not part of existing appliance assets)
+Generate YAML opens the validated password-setup preview while preserving form values; Governance accurately displays independent approval as always required for live password changes. Preparation and read-only checks require no approval.
+Download Config remains visible in Initial Host & CVM Password Setup, with completion guidance while disabled and reviewed filenames retained when YAML is downloaded.
+Initial Host & CVM Password Setup is an optional governed pipeline action after the existing PE admin password step. Pinned SSH, observed AOS 7.5.1.8 / AHV 11.0.1.3-23 minimums, exact independent approval and durable verification/reconciliation preserve completed work. Existing eight-step pipelines and registration-only recovery remain unchanged. Live writes default off pending target-version lab validation. See docs/initial-host-cvm-password-setup.md.
+
 DOCUMENTATION RELEASE ASSETS (existing appliance assets unchanged)
 The updated Administrator and User Guide is published as dated PDF and Word release assets with SHA-256 checksums. Public entry pages and the manual index now use direct release downloads. Document bytes, formatting, release channel and previously published runtime assets are unchanged.
 

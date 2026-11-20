@@ -19,11 +19,15 @@ from urllib.parse import urlsplit
 import yaml
 from flask import jsonify, request
 
+from initial_password_setup import (
+    WORKFLOW as PASSWORD_SETUP, CONFIRMATION as PASSWORD_SETUP_CONFIRMATION,
+    validate_intent as validate_initial_password_setup,
+)
 from pe_login_title import LoginTitleError, SCRIPT_ID as PE_LOGIN_TITLE, validate_intent as validate_pe_login_title
 
 
 WORKFLOW = 'cluster-create-foundation-vm'
-POST_ACTIONS = {'config-cluster', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', PE_LOGIN_TITLE}
+POST_ACTIONS = {'config-cluster', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', PE_LOGIN_TITLE, PASSWORD_SETUP}
 ACTIVE = {'submitting', 'deploying', 'awaiting_health_verification', 'ready_for_configuration',
           'awaiting_bootstrap', 'bootstrapping', 'configuring', 'awaiting_acceptance', 'needs_reconciliation', 'stopping'}
 PROFILE_BLOCKING = ACTIVE | {'prepared'}
@@ -162,6 +166,23 @@ def bootstrap_count(snapshot):
             password_seen = True
         count += 1
     return count
+
+
+def validate_password_setup(config, cluster):
+    """Bind reference-only intent to the rebuilt Foundation membership.
+
+    The dedicated dispatcher must additionally validate host-key evidence,
+    supported versions, live identity, credential references and journal state.
+    """
+    if validate_initial_password_setup(config):
+        raise RecoveryError('Password setup requires valid reference-only intent, pinned keys and host-key evidence')
+    if config['cluster_name'] != cluster['cluster_name']:
+        raise RecoveryError('Password setup must name the recovery cluster')
+    for collection, address_key in (('cvms', 'cvm_ip'), ('hosts', 'host_ip')):
+        addresses = [pe_host(row['address']) for row in config[collection]]
+        expected = [pe_host(required(node.get(address_key), f'Foundation {address_key}')) for node in cluster['nodes_list']]
+        if sorted(addresses) != sorted(expected):
+            raise RecoveryError(f'Password setup must match exact Foundation {collection} membership')
 
 
 class RecoveryService:
@@ -429,18 +450,26 @@ class RecoveryService:
                     raise RecoveryError(
                         f'Pipeline step {index} ({step.get("workflow")}) is unsupported. Recovery post-configuration supports '
                         'Configure Cluster, Change Default Admin Password (PE), Create Local Users (PE), '
-                        'and Set Prism Login Title (PE).'
+                        'Set Prism Login Title (PE), and Initial Host/CVM Password Setup.'
                     )
                 try:
                     file = required(step.get('configFile'), 'Pipeline config file')
                     text = self.s['config'](file)
                     parsed = reference_only(text)
-                    targets = parsed.get('clusters')
-                    if not isinstance(targets, dict) or len(targets) != 1 or pe_host(next(iter(targets))) != pe_host(cluster['cluster_vip']):
-                        raise RecoveryError('Every pipeline file must target only the recovery cluster VIP')
-                    target = next(iter(targets.values()))
-                    if not isinstance(target, dict) or target.get('name') != cluster['cluster_name']:
-                        raise RecoveryError('Every pipeline file must name the recovery cluster')
+                    if step['workflow'] == PASSWORD_SETUP:
+                        validate_password_setup(parsed, cluster)
+                        if (any(s['workflow'] == PASSWORD_SETUP for s in steps) or not steps
+                                or bootstrap_count({'steps': steps}) != len(steps)
+                                or not bootstrap_step(steps[-1])
+                                or not next(iter(reference_only(steps[-1]['configContent'])['clusters'].values())).get('new_pe_admin_credential')):
+                            raise RecoveryError('Password setup must occur once, immediately after initial PE admin bootstrap')
+                    else:
+                        targets = parsed.get('clusters')
+                        if not isinstance(targets, dict) or len(targets) != 1 or pe_host(next(iter(targets))) != pe_host(cluster['cluster_vip']):
+                            raise RecoveryError('Every pipeline file must target only the recovery cluster VIP')
+                        target = next(iter(targets.values()))
+                        if not isinstance(target, dict) or target.get('name') != cluster['cluster_name']:
+                            raise RecoveryError('Every pipeline file must name the recovery cluster')
                     if step['workflow'] == PE_LOGIN_TITLE:
                         validate_pe_login_title(parsed)
                 except RecoveryError as error:
@@ -649,6 +678,8 @@ class RecoveryService:
 
     @staticmethod
     def step_file(run, index):
+        if run['snapshot']['steps'][index]['workflow'] == PASSWORD_SETUP:
+            return run['snapshot']['steps'][index]['configFile']
         return f'dr-{run["id"]}-step-{index+1}.yml'
 
     def bootstrap_approval(self, identity, actor, data, authorization):
@@ -777,23 +808,37 @@ class RecoveryService:
             ):
                 raise RecoveryError('Step 08 retry requires reconciliation confirming registration is absent', 409)
             for step in run['snapshot']['steps'][len(run['steps']):]:
+                if step['workflow'] == PASSWORD_SETUP:
+                    self.password_setup_approval(run, step, data)
+                    continue
                 error = self.s['step_error'](step)
                 if error:
                     raise RecoveryError(f'Use the existing approved direct-job path for this step: {error}', 403)
-            scripts = list(dict.fromkeys(x['workflow'] for x in run['snapshot']['steps'][len(run['steps']):] if x['workflow'] != 'config-cluster'))
+            scripts = list(dict.fromkeys(x['workflow'] for x in run['snapshot']['steps'][len(run['steps']):] if x['workflow'] not in {'config-cluster', PASSWORD_SETUP}))
             if scripts and (data.get('riskAcknowledged') is not True or data.get('destructiveConfirmation') != f'RUN {",".join(scripts)}'):
                 raise RecoveryError(f'PE administration confirmation must exactly match RUN {",".join(scripts)}', 403)
             run['status'] = 'configuring'
             self.event(run, 'Starting sequential configuration using immutable reviewed snapshots', actor)
             self.save(state)
             # Authorization exists only in this thread's memory, never in stored records.
-            thread = threading.Thread(target=self._configure, args=(identity, actor, authorization), daemon=True)
+            password_setup = {key: data.get(key) for key in ('passwordSetupApprovalId', 'passwordSetupConfirmation')}
+            thread = threading.Thread(target=self._configure, args=(identity, actor, authorization),
+                                      kwargs={'password_setup': password_setup}, daemon=True)
             self.threads.append(thread)
             thread.start()
             self.audit('configuration_started', actor, identity)
             return self.public(run, True)
 
-    def _configure(self, identity, actor, authorization, bootstrap=False):
+    def password_setup_approval(self, run, step, data):
+        approval = required(data.get('passwordSetupApprovalId'), 'Independent password setup approval')
+        if approval == run.get('approvalId') or approval in run.get('bootstrapApprovalIds', {}).values():
+            raise RecoveryError('Password setup requires an independent approval', 403)
+        if data.get('passwordSetupConfirmation') != PASSWORD_SETUP_CONFIRMATION:
+            raise RecoveryError(f'Password setup confirmation must exactly match {PASSWORD_SETUP_CONFIRMATION}', 403)
+        self.s['verify_step_approval'](approval, step, step['configFile'])
+        return approval
+
+    def _configure(self, identity, actor, authorization, bootstrap=False, password_setup=None):
         try:
             while not self.stop_event.is_set():
                 with self.lock:
@@ -817,17 +862,23 @@ class RecoveryService:
                     step = run['snapshot']['steps'][index]
                     error = self.s['step_error'](step)
                     approval = run.get('bootstrapApprovalIds', {}).get(str(index)) if bootstrap else None
+                    if step['workflow'] == PASSWORD_SETUP:
+                        self.check_health(run)
+                        approval = self.password_setup_approval(run, step, password_setup or {})
                     if error and not approval:
                         raise RecoveryError('Approval policy changed; use the approved direct-job path', 403)
                     if bootstrap and not bootstrap_step(step):
                         raise RecoveryError('Only password, EULA and Pulse settings are allowed before health verification')
-                    if approval:
+                    if approval and step['workflow'] != PASSWORD_SETUP:
                         self.s['verify_step_approval'](approval, step, self.step_file(run, index))
                     action = step['workflow']
                     payload = {'configContent': step['configContent'], 'configFile': self.step_file(run, index)}
                     if approval:
                         payload['approvalId'] = approval
-                    payload.update({'workflow': action} if action == 'config-cluster' else
+                    if action == PASSWORD_SETUP:
+                        payload.update(workflow=action, destructiveConfirmation=password_setup['passwordSetupConfirmation'])
+                    else:
+                        payload.update({'workflow': action} if action == 'config-cluster' else
                                    {'script': action, 'riskAcknowledged': True, 'destructiveConfirmation': f'RUN {action}'})
                     job = self.s['submit'](payload, authorization, identity)
                     run['currentJobId'] = job['id']
@@ -880,6 +931,15 @@ class RecoveryService:
                 raise RecoveryError('A successful matching execution job is required')
             if payload.get('configContent') != step['configContent']:
                 raise RecoveryError('Direct job YAML does not match this immutable recovery step', 409)
+            if step['workflow'] == PASSWORD_SETUP and (
+                    payload.get('workflow') != PASSWORD_SETUP or payload.get('script')
+                    or payload.get('configFile') != step['configFile']
+                    or payload.get('destructiveConfirmation') != PASSWORD_SETUP_CONFIRMATION
+                    or not payload.get('approvalId') or payload['approvalId'] == run.get('approvalId')
+                    or payload['approvalId'] in run.get('bootstrapApprovalIds', {}).values()):
+                raise RecoveryError('Password setup requires an independently approved dedicated workflow job', 403)
+            if step['workflow'] == PASSWORD_SETUP:
+                self.check_health(run)
             if self.s['step_error'](step) and not payload.get('approvalId'):
                 raise RecoveryError('This step requires an existing approved direct job', 403)
             try:
@@ -933,7 +993,7 @@ class RecoveryService:
                 if not deployment or deployment.get('status') != 'success':
                     raise RecoveryError('Only a successfully deployed cluster can resume remaining configuration', 409)
                 pending = run['snapshot']['steps'][len(run['steps']):]
-                if any(x['workflow'] == 'ChangeDefaultAdminPasswordPe' or
+                if any(x['workflow'] in {'ChangeDefaultAdminPasswordPe', PASSWORD_SETUP} or
                        any(c.get('new_pe_admin_credential') for c in reference_only(x['configContent']).get('clusters', {}).values())
                        for x in pending):
                     raise RecoveryError('An uncertain password-change request cannot be replayed; reconcile credentials through the existing direct workflow', 409)

@@ -7,6 +7,7 @@ import Layout from '../components/Layout'
 import PipelineModal from '../components/PipelineModal'
 import { apiFetch } from '../utils/api'
 import { WORKFLOWS, SCRIPTS } from '../data'
+import { PASSWORD_SETUP_WORKFLOW } from '../utils/initialPasswordSetup'
 import { actionName } from '../startGuide'
 import type { Pipeline, PipelineStep } from '../types'
 import { useStore } from '../store'
@@ -16,6 +17,8 @@ import { ScopedConfigPicker } from '../components/ConfigScope'
 type ConfigFile = { name: string }
 
 export default function Pipelines() {
+  const requiredApprovals = useStore(s => s.settings.approvalRequiredWorkflows || [])
+  const selectableWorkflows = WORKFLOWS.filter(w => w.id === PASSWORD_SETUP_WORKFLOW || (w.id !== 'cvm-idrac-password-rotation' && !requiredApprovals.includes(w.id)))
   const admin = useStore(s => s.user?.role === 'admin')
   const [pipelines,   setPipelines]   = useState<Pipeline[]>([])
   const [configs,     setConfigs]     = useState<ConfigFile[]>([])
@@ -49,7 +52,7 @@ export default function Pipelines() {
   // ── Step helpers ─────────────────────────────────────────────────────────────
 
   const addStep = () =>
-    setFormSteps(prev => [...prev, { workflow: WORKFLOWS[0].id, configFile: '' }])
+    setFormSteps(prev => [...prev, { workflow: selectableWorkflows[0]?.id || '', configFile: '' }])
 
   const removeStep = (i: number) =>
     setFormSteps(prev => prev.filter((_, idx) => idx !== i))
@@ -72,7 +75,7 @@ export default function Pipelines() {
   const openCreate = () => {
     setEditId(null)
     setFormName('')
-    setFormSteps([{ workflow: WORKFLOWS[0].id, configFile: '' }])
+    setFormSteps([{ workflow: selectableWorkflows[0]?.id || '', configFile: '' }])
     setConvert(false)
     setCreating(true)
     setError('')
@@ -194,7 +197,7 @@ export default function Pipelines() {
                       value={step.workflow}
                       onChange={e => updateStep(i, 'workflow', e.target.value)}
                     >
-                      {WORKFLOWS.map(w => (
+                      {selectableWorkflows.map(w => (
                         <option key={w.id} value={w.id}>{w.name}</option>
                       ))}
                       {SCRIPTS.filter(s => ['ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', 'SetPrismLoginTitlePe'].includes(s.id)).map(s => (

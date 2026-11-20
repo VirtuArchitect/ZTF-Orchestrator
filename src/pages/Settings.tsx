@@ -11,6 +11,7 @@ import { apiFetch } from '../utils/api'
 import { toYaml } from '../utils/yaml'
 import { APP_VERSION } from '../version'
 import { WORKFLOWS } from '../data'
+import { PASSWORD_SETUP_WORKFLOW } from '../utils/initialPasswordSetup'
 import type { ConnectionProfile, Settings as AppSettings } from '../types'
 import clsx from 'clsx'
 
@@ -1213,7 +1214,8 @@ export default function Settings() {
           <Section title="Approval Policies" subtitle="Mandatory workflow approvals" icon={ShieldCheck}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {WORKFLOWS.map(workflow => {
-                const checked = Boolean(form.approvalRequiredWorkflows?.includes(workflow.id))
+                  const mandatory = workflow.id === PASSWORD_SETUP_WORKFLOW
+                  const checked = mandatory || Boolean(form.approvalRequiredWorkflows?.includes(workflow.id))
                 return (
                   <label
                     key={workflow.id}
@@ -1225,13 +1227,14 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={checked}
-                      disabled={!isAdmin}
+                        disabled={!isAdmin || mandatory}
                       onChange={() => toggleApprovalWorkflow(workflow.id)}
                       className="mt-1"
                     />
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-gray-100">{workflow.name}</span>
                       <span className="block text-xs text-gray-500">{workflow.category} / {workflow.id}</span>
+                        {mandatory && <span className="block text-xs text-amber-300">Always required for live password changes. YAML generation, downloads and Dry Run do not require approval.</span>}
                     </span>
                   </label>
                 )

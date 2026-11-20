@@ -36,6 +36,9 @@ from typing import Generator
 import bcrypt
 import yaml
 import credential_rotation as rotation
+import initial_password_setup as initial_passwords
+import initial_password_routes
+import initial_password_pipeline
 import appliance_updates as guided_updates
 import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
@@ -3133,6 +3136,7 @@ POST_FOUNDATION_EXECUTABLE_OPERATIONS = {
 }
 
 ALLOWED_WORKFLOWS = {
+    initial_passwords.WORKFLOW,
     storage_standard.WORKFLOW,
     unregistration.WORKFLOW,
     rotation.WORKFLOW,
@@ -3148,6 +3152,7 @@ ALLOWED_WORKFLOWS = {
 } | POST_FOUNDATION_WORKFLOWS
 
 DEFAULT_APPROVAL_REQUIRED_WORKFLOWS = {
+    initial_passwords.WORKFLOW,
     storage_standard.WORKFLOW,
     unregistration.WORKFLOW,
     rotation.WORKFLOW,
@@ -3329,7 +3334,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
     if workflow in post_deployment.WORKFLOWS:
         return True
-    if workflow in {rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW}:
+    if workflow in {initial_passwords.WORKFLOW, rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -35162,6 +35167,9 @@ class ExecutionJobManager:
         if payload.get('workflow') == rotation.WORKFLOW:
             self._run_rotation_job(job_id, payload, user)
             return
+        if payload.get('workflow') == initial_passwords.WORKFLOW:
+            _initial_password_service().run_job(self, job_id, payload, user)
+            return
         if payload.get('framework') == 'native-foundation':
             self._run_native_foundation_review_job(job_id, payload, user)
             return
@@ -41577,6 +41585,11 @@ def _pipeline_step_error(step) -> str | None:
     action = step.get('workflow')
     if not isinstance(action, str) or action not in ALLOWED_WORKFLOWS | PIPELINE_SCRIPT_IDS:
         return 'Unknown workflow or pipeline script'
+    if action == initial_passwords.WORKFLOW:
+        if not isinstance(step.get('configFile'), str) or not step['configFile'].strip():
+            return 'Initial password setup requires a saved reference-only configuration file'
+        # This action has its own exact-intent approval path in run_pipeline.
+        return None
     if action in PIPELINE_SCRIPT_IDS and (not isinstance(step.get('configFile'), str) or not step['configFile'].strip()):
         return 'PE administration script requires a saved configuration file'
     return _approval_automation_error(action)
@@ -41749,15 +41762,24 @@ def run_pipeline(pipeline_id: str):
         return jsonify(body), status_code
 
     import time as _tm
-    pipeline_run_id = str(int(_tm.time() * 1000))
+    pipeline_run_id = (str(uuid.uuid4()) if any(s['workflow'] == initial_passwords.WORKFLOW for s in steps)
+                       else str(int(_tm.time() * 1000)))
+    password_context = None
+    try:
+        password_context = initial_password_pipeline.prepare(
+            sys.modules[__name__], pipeline, request.get_json(silent=True) or {}, current_user,
+            getattr(request, 'current_user', {}).get('role', ''), pipeline_run_id)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 403
 
-    def generate() -> Generator[str, None, None]:
+    def generate_steps() -> Generator[str, None, None]:
 
         def send(t: str, d):
             yield f"data: {json.dumps({'type': t, 'data': d, 'pipelineRunId': pipeline_run_id})}\n\n"
 
         step_results: list[dict] = []
         overall_status = 'success'
+        global_config_synced = False
 
         yield from send('pipeline_start', {
             'pipelineName': pipeline['name'],
@@ -41767,6 +41789,14 @@ def run_pipeline(pipeline_id: str):
         for step_idx, step in enumerate(steps):
             workflow    = step['workflow']
             config_file = step.get('configFile', '')
+
+            if initial_password_pipeline.is_preserved(password_context, step_idx):
+                preserved = {'step': step_idx, 'workflow': workflow, 'configFile': config_file,
+                             'status': 'success', 'returnCode': 0, 'preserved': True}
+                step_results.append(preserved)
+                yield from send('stdout', f'[PRESERVED] {config_file or workflow}: completed work was not repeated.')
+                yield from send('step_complete', preserved)
+                continue
 
             yield from send('step_start', {
                 'step':       step_idx,
@@ -41791,57 +41821,71 @@ def run_pipeline(pipeline_id: str):
             step_status = 'success'
             failure_evidence = False
             private_config = None
+            special_code = -1
 
             try:
-                if step_idx == 0:
-                    try:
-                        _sync_global_config_to_legacy()
-                    except (OSError, UnicodeError):
-                        raise RuntimeError('Could not sync saved global configuration to ZTF 1.x. Check appliance storage and file permissions.') from None
-                if config_file in pe_users_configs:
-                    import tempfile
-                    # Execute the validated snapshot, not a config another user
-                    # could edit while an earlier pipeline step is running.
-                    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
-                        private_config = Path(snapshot.name)
-                        snapshot.write(pe_users_configs[config_file])
-                    cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow, '-f', str(private_config)]
-                proc = subprocess.Popen(
-                    cmd_args, cwd=ztf_path,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                )
+                if workflow == initial_passwords.WORKFLOW:
+                    special_ok = False
+                    yield from send('stdout', '[RUN] Initial Host & CVM password setup; journal ' + password_context['runId'])
+                    for event_type, event_data in initial_password_pipeline.stream_step(password_context):
+                        if event_type == 'password_setup_result':
+                            special_ok = event_data['ok']
+                        else:
+                            yield from send(event_type, event_data)
+                    step_status = 'success' if special_ok else 'failed'
+                    special_code = 0 if special_ok else -1
+                else:
+                    if step_idx == 0 or (password_context and not global_config_synced):
+                        try:
+                            _sync_global_config_to_legacy()
+                            global_config_synced = True
+                        except (OSError, UnicodeError):
+                            raise RuntimeError('Could not sync saved global configuration to ZTF 1.x. Check appliance storage and file permissions.') from None
+                    password_snapshot = initial_password_pipeline.config_snapshot(password_context, step, step_idx)
+                    if password_snapshot is not None or config_file in pe_users_configs:
+                        import tempfile
+                        # Execute the validated snapshot, not a config another user
+                        # could edit while an earlier pipeline step is running.
+                        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', suffix='.yml', delete=False) as snapshot:
+                            private_config = Path(snapshot.name)
+                            snapshot.write(password_snapshot if password_snapshot is not None else pe_users_configs[config_file])
+                        cmd_args = [python_path, _ztf_main_arg(ztf_path), '--script' if is_script else '--workflow', workflow, '-f', str(private_config)]
+                    initial_password_pipeline.attempted(password_context, step_idx)
+                    proc = subprocess.Popen(
+                        cmd_args, cwd=ztf_path,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                    )
 
-                def _timeout_kill():
-                    if proc and proc.poll() is None:
-                        proc.kill()
+                    def _timeout_kill():
+                        if proc and proc.poll() is None:
+                            proc.kill()
 
-                kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
-                kill_timer.start()
+                    kill_timer = threading.Timer(EXEC_TIMEOUT, _timeout_kill)
+                    kill_timer.start()
 
-                combined: queue.Queue = queue.Queue()
+                    combined: queue.Queue = queue.Queue()
 
-                def _reader(stream, label):
-                    for line in stream:
-                        combined.put((label, line.rstrip()))
-                    combined.put(None)
+                    def _reader(stream, label):
+                        for line in stream:
+                            combined.put((label, line.rstrip()))
+                        combined.put(None)
 
-                t_out = threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True)
-                t_err = threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True)
-                t_out.start(); t_err.start()
+                    t_out = threading.Thread(target=_reader, args=(proc.stdout, 'stdout'), daemon=True)
+                    t_err = threading.Thread(target=_reader, args=(proc.stderr, 'stderr'), daemon=True)
+                    t_out.start(); t_err.start()
 
-                done = 0
-                while done < 2:
-                    item = combined.get()
-                    if item is None:
-                        done += 1
-                    else:
-                        label, line = item
-                        failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
-                        yield from send(label, _redact_text(line) if is_script else line)
+                    done = 0
+                    while done < 2:
+                        item = combined.get()
+                        if item is None:
+                            done += 1
+                        else:
+                            label, line = item
+                            failure_evidence = failure_evidence or bool(_ztf_output_failure_evidence(line))
+                            yield from send(label, _redact_text(line) if is_script else line)
 
-                proc.wait()
-                step_status = 'success' if proc.returncode == 0 and not failure_evidence else 'failed'
-
+                    proc.wait()
+                    step_status = 'success' if proc.returncode == 0 and not failure_evidence else 'failed'
             except GeneratorExit:
                 if proc and proc.poll() is None:
                     proc.kill()
@@ -41849,7 +41893,7 @@ def run_pipeline(pipeline_id: str):
                 return
 
             except Exception as exc:
-                yield from send('stderr', f'Step {step_idx} error: {exc}')
+                yield from send('stderr', 'Pipeline stopped; inspect the saved password run before retrying.' if password_context else f'Step {step_idx} error: {exc}')
                 step_status = 'failed'
 
             finally:
@@ -41858,19 +41902,27 @@ def run_pipeline(pipeline_id: str):
                 if private_config:
                     private_config.unlink(missing_ok=True)
 
+            if step_status == 'success':
+                try:
+                    initial_password_pipeline.completed(password_context, step_idx)
+                except Exception:
+                    step_status = 'failed'
+                    yield from send('stderr', 'Could not persist completed work; later steps stopped. Reconcile before retrying.')
+            result_code = special_code if workflow == initial_passwords.WORKFLOW else (proc.returncode if proc else -1)
+
             step_results.append({
                 'step':       step_idx,
                 'workflow':   workflow,
                 'configFile': config_file,
                 'status':     step_status,
-                'returnCode': proc.returncode if proc else -1,
+                'returnCode': result_code,
             })
 
             yield from send('step_complete', {
                 'step':       step_idx,
                 'workflow':   workflow,
                 'status':     step_status,
-                'returnCode': proc.returncode if proc else -1,
+                'returnCode': result_code,
             })
 
             if step_status == 'failed':
@@ -41887,6 +41939,8 @@ def run_pipeline(pipeline_id: str):
                         'workflow': steps[remaining_idx]['workflow'],
                     })
                 break
+
+        initial_password_pipeline.finish(password_context, overall_status)
 
         # Record in history
         ts       = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z'
@@ -41934,11 +41988,21 @@ def run_pipeline(pipeline_id: str):
                 daemon=True,
             ).start()
 
-    return Response(
+    def generate():
+        try:
+            yield from generate_steps()
+        finally:
+            initial_password_pipeline.release(password_context)
+
+    response = Response(
         _tracked_update_stream(generate(), 'pipeline-' + pipeline_run_id),
         mimetype='text/event-stream',
         headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive'},
     )
+
+
+    response.call_on_close(lambda: initial_password_pipeline.release(password_context))
+    return response
 
 
 # ─── Execute workflow ─────────────────────────────────────────────────────────
@@ -42900,6 +42964,61 @@ def review_cluster_storage_standard():
         return jsonify({'error': 'Storage identity review failed; no changes were submitted'}), 400
 
 
+_INITIAL_PASSWORD_SERVICE = None
+_INITIAL_PASSWORD_ACTIVE_PIPELINES = initial_password_pipeline.ACTIVE
+
+
+def _initial_password_service():
+    global _INITIAL_PASSWORD_SERVICE
+    if _INITIAL_PASSWORD_SERVICE is None:
+        _INITIAL_PASSWORD_SERVICE = initial_password_routes.PasswordSetupService(sys.modules[__name__])
+    return _INITIAL_PASSWORD_SERVICE
+
+
+@app.route('/api/initial-password-setup')
+@require_role('admin')
+def initial_password_capabilities():
+    return jsonify({'applyEnabled': os.environ.get('ZTF_ALLOW_INITIAL_PASSWORD_SETUP', '').lower() in {'1', 'true', 'yes'},
+                    'minimumAos': '7.5.1.8', 'minimumAhv': '11.0.1.3-23',
+                    'prismCentralRequired': False, 'tlsRequired': False,
+                    'sshHostKeyVerificationRequired': True})
+
+
+@app.route('/api/initial-password-setup/runs')
+@require_role('admin')
+def initial_password_runs():
+    return jsonify(_initial_password_service().list_runs())
+
+
+@app.route('/api/initial-password-setup/runs/<run_id>/reconcile', methods=['POST'])
+@require_role('admin')
+@limiter.limit('3 per minute')
+def reconcile_initial_password_run(run_id):
+    if _maintenance_active():
+        body, status_code = _maintenance_error()
+        return jsonify(body), status_code
+    try:
+        result = _initial_password_service().reconcile_run(
+            run_id, request.get_json(silent=True) or {}, request.current_user['username'])
+        return jsonify(result)
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 409
+
+
+@app.route('/api/initial-password-setup/runs/<run_id>/resume', methods=['POST'])
+@require_role('admin')
+@limiter.limit('3 per minute')
+def resume_initial_password_run(run_id):
+    if _maintenance_active():
+        body, status_code = _maintenance_error()
+        return jsonify(body), status_code
+    try:
+        return _initial_password_service().resume(
+            run_id, request.get_json(silent=True) or {}, request.current_user['username'])
+    except ValueError as exc:
+        return jsonify({'error': str(exc)}), 409
+
+
 _ROTATION_SUBMIT_LOCK = threading.Lock()
 
 
@@ -42970,6 +43089,9 @@ def execute_workflow():
         return _submit_unregistration_request(data, stream=True)
     if data.get('workflow') == rotation.WORKFLOW:
         return _submit_rotation_request(data, stream=True)
+    if data.get('workflow') == initial_passwords.WORKFLOW:
+        actor = getattr(request, 'current_user', {})
+        return _initial_password_service().submit(data, actor.get('username', ''), actor.get('role', ''), stream=True)
     workflow       = data.get('workflow')
     config_content = data.get('configContent')
     config_file    = data.get('configFile')
@@ -43314,6 +43436,9 @@ def submit_job():
         return _submit_unregistration_request(data)
     if data.get('workflow') == rotation.WORKFLOW:
         return _submit_rotation_request(data)
+    if data.get('workflow') == initial_passwords.WORKFLOW:
+        actor = getattr(request, 'current_user', {})
+        return _initial_password_service().submit(data, actor.get('username', ''), actor.get('role', ''))
     settings = get_settings()
     current_user = getattr(request, 'current_user', {}).get('username', 'unknown')
     if data.get('framework') == 'ztf2':
@@ -44824,6 +44949,13 @@ def create_approval():
     workflow = data.get('workflow', '')
     if not workflow or not _is_allowed_approval_workflow(workflow):
         return jsonify({'error': 'Unknown workflow'}), 400
+    if workflow == initial_passwords.WORKFLOW:
+        if getattr(request, 'current_user', {}).get('role') != 'admin':
+            return jsonify({'error': 'Initial password setup requires an administrator'}), 403
+        try:
+            _initial_password_service().parse(data)
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
     if workflow == storage_standard.WORKFLOW:
         if getattr(request, 'current_user', {}).get('role') != 'admin':
             return jsonify({'error': 'Cluster storage standard requires an Orchestrator administrator'}), 403
@@ -44881,7 +45013,7 @@ def approve_request(aid):
         return jsonify({'error': 'not found'}), 404
     if approval.get('status') == 'pending' and (
         approval.get('requestedBy') == current_user
-        or (approval.get('workflow') in {uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
+        or (approval.get('workflow') in {initial_passwords.WORKFLOW, uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
             and str(approval.get('requestedBy') or '').casefold() == current_user.casefold())
     ):
         return jsonify({'error': 'Self-approval is not allowed'}), 403

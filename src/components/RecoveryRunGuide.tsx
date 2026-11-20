@@ -1,15 +1,97 @@
+import { useEffect, useState } from 'react'
 import type { ExecutionJob } from '../types'
 import { Link } from '../router'
+import { apiFetch } from '../utils/api'
+import { PASSWORD_SETUP_CONFIRMATION, PASSWORD_SETUP_WORKFLOW } from '../utils/initialPasswordSetup'
 
 type StageStatus = 'Completed' | 'Current' | 'Blocked' | 'Pending' | 'Not required'
 type GuidedRun = {
+  id: string
   status: string
+  initialPasswordRunId?: string
   canRetryRegistration?: boolean
   deploymentJobId?: string
   currentJobId?: string
   bootstrapStepCount?: number
-  steps: { index: number; status: string; jobId: string }[]
-  snapshot: { steps: { configFile: string; workflow: string }[] }
+  steps: { index: number; status: string; jobId: string; initialPasswordRunId?: string }[]
+  snapshot: { steps: { configFile: string; workflow: string; configContent: string }[] }
+}
+
+export type RecoveryPasswordSetupFields = {
+  passwordSetupApprovalId: string
+  passwordSetupConfirmation: string
+}
+const emptyPasswordSetup: RecoveryPasswordSetupFields = {
+  passwordSetupApprovalId: '', passwordSetupConfirmation: '',
+}
+
+/** Only the selected, next password action may attach these optional fields. */
+export function recoveryPasswordSetupFields(run: GuidedRun, index: number, fields: RecoveryPasswordSetupFields) {
+  if (run.status !== 'ready_for_configuration' || index !== run.steps.length
+    || run.snapshot.steps[index]?.workflow !== PASSWORD_SETUP_WORKFLOW) return {}
+  return { passwordSetupApprovalId: fields.passwordSetupApprovalId.trim(),
+    passwordSetupConfirmation: fields.passwordSetupConfirmation }
+}
+
+export function recoveryPasswordSetupReady(run: GuidedRun, index: number, fields: RecoveryPasswordSetupFields) {
+  if (run.status !== 'ready_for_configuration') return false
+  if (run.snapshot.steps[run.steps.length]?.workflow !== PASSWORD_SETUP_WORKFLOW) return true
+  return index === run.steps.length && Boolean(fields.passwordSetupApprovalId.trim())
+    && fields.passwordSetupConfirmation === PASSWORD_SETUP_CONFIRMATION
+}
+
+function PasswordSetupApproval({ run, step, onChange }: {
+  run: GuidedRun; step: GuidedRun['snapshot']['steps'][number]
+  onChange?: (fields: RecoveryPasswordSetupFields) => void
+}) {
+  const [fields, setFields] = useState(emptyPasswordSetup)
+  const [requesting, setRequesting] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  useEffect(() => { onChange?.(fields) }, [fields, onChange])
+  useEffect(() => () => { onChange?.(emptyPasswordSetup) }, [onChange])
+
+  async function requestApproval() {
+    setRequesting(true); setError(''); setMessage('')
+    try {
+      const response = await apiFetch('/api/approvals', { method: 'POST', body: JSON.stringify({
+        workflow: PASSWORD_SETUP_WORKFLOW, configFile: step.configFile, configContent: step.configContent,
+        notes: `Initial Host & CVM password setup for recovery ${run.id}`,
+      }) })
+      if (!response.ok) throw new Error(`Password setup approval request failed (HTTP ${response.status}).`)
+      const result = await response.json()
+      if (typeof result.id !== 'string' || !result.id.trim() || result.id.length > 200) {
+        throw new Error('Approval response did not contain a usable request ID. Check Approvals before requesting again.')
+      }
+      setFields(value => ({ ...value, passwordSetupApprovalId: result.id }))
+      setMessage('Request created. A different administrator must approve this exact filename and YAML before execution.')
+    } catch (e) {
+      setError(e instanceof Error && e.message.startsWith('Password setup approval request failed')
+        ? e.message : 'Could not confirm the approval request. Check Approvals before requesting again.')
+    } finally { setRequesting(false) }
+  }
+
+  return <section aria-label="Initial Host and CVM password approval" className="space-y-3 rounded border border-amber-500/40 p-3">
+    <h4 className="font-semibold">Initial Host &amp; CVM passwords</h4>
+    <p className="text-sm">This action requires its own approval. Deployment and PE bootstrap approvals do not authorize host or CVM password changes. Fresh PE health evidence remains required.</p>
+    <p className="break-all text-sm">Saved password YAML: {step.configFile}</p>
+    <details><summary className="cursor-pointer text-sm">Review exact password setup snapshot</summary>
+      <pre className="max-h-52 overflow-auto whitespace-pre-wrap break-words text-xs">{step.configContent}</pre>
+    </details>
+    <button type="button" className="btn-secondary" disabled={requesting || !step.configFile || !step.configContent}
+      onClick={() => void requestApproval()}>Request Password Setup Approval</button>
+    {message && <p role="status" className="text-sm">{message}</p>}
+    {error && <p role="alert" className="text-sm text-amber-500">{error}</p>}
+    <label className="block space-y-1 text-sm"><span>Independent password setup approval ID</span>
+      <input className="input w-full" maxLength={200} value={fields.passwordSetupApprovalId}
+        onChange={e => setFields(value => ({ ...value, passwordSetupApprovalId: e.target.value }))} />
+    </label>
+    <label className="block space-y-1 text-sm"><span>Password setup confirmation: {PASSWORD_SETUP_CONFIRMATION}</span>
+      <input className="input w-full" autoComplete="off" value={fields.passwordSetupConfirmation}
+        onChange={e => setFields(value => ({ ...value, passwordSetupConfirmation: e.target.value }))} />
+    </label>
+    <p className="text-xs text-gray-400">A request ID alone does not mean approval was granted. The server checks approval and confirmation again before submitting the dedicated password job.</p>
+  </section>
 }
 
 const stages = [
@@ -35,9 +117,15 @@ const stageStyles: Record<StageStatus, string> = {
   'Not required': 'text-gray-500',
 }
 
-export default function RecoveryRunGuide({ run, admin, job, jobError }: {
+export default function RecoveryRunGuide({ run, admin, job, jobError, selectedStepIndex = run.steps.length, onPasswordSetupChange }: {
   run: GuidedRun; admin: boolean; job: ExecutionJob | null; jobError: string
+  selectedStepIndex?: number
+  onPasswordSetupChange?: (fields: RecoveryPasswordSetupFields) => void
 }) {
+  const selectedStep = run.snapshot.steps[selectedStepIndex]
+  const passwordSelected = selectedStepIndex === run.steps.length && selectedStep?.workflow === PASSWORD_SETUP_WORKFLOW
+  const diagnostics = job?.diagnostics as (ExecutionJob['diagnostics'] & { initialPasswordRunId?: string })
+  const journalId = run.initialPasswordRunId || diagnostics?.initialPasswordRunId
   const reconciliation = run.status === 'needs_reconciliation'
   const closed = run.status === 'closed_reconciled'
   const bootstrap = run.bootstrapStepCount || 0
@@ -76,6 +164,9 @@ export default function RecoveryRunGuide({ run, admin, job, jobError }: {
 
   return <section aria-label="Recovery stage guide" className="space-y-4 rounded-lg border border-border p-4">
     <h3 className="font-semibold text-gray-100">Recovery progress</h3>
+    {typeof journalId === 'string' && journalId && <p className="break-all text-sm">Password setup journal run ID: {journalId}</p>}
+    {admin && passwordSelected && run.status === 'ready_for_configuration' && <PasswordSetupApproval
+      key={`${run.id}:${selectedStepIndex}:${selectedStep.configContent}`} run={run} step={selectedStep} onChange={onPasswordSetupChange} />}
     {reconciliation && <div role="status" className="space-y-2 rounded border border-amber-500/40 p-3">
       <h4 className="font-semibold">{run.currentJobId ? 'Configuration needs attention' : 'Foundation deployment needs attention'}</h4>
       <p className="text-sm">{run.steps.filter(step => step.status === 'success').length} pipeline steps completed.</p>
@@ -124,6 +215,7 @@ export default function RecoveryRunGuide({ run, admin, job, jobError }: {
             <span>{String(index + 1).padStart(2, '0')}. {step.configFile || step.workflow}</span>
             <span className={`ml-2 ${stageStyles[status]}`}>{status}</span>
             {completed && <Link className="ml-2 text-nutanix-blue underline" to="/jobs">Job {completed.jobId}</Link>}
+            {completed?.initialPasswordRunId && <span className="block break-all text-xs">Password setup journal run ID: {completed.initialPasswordRunId}</span>}
           </li>
         })}
       </ol>

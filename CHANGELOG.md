@@ -23,7 +23,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Add Generate YAML and preserve password-setup form values across preview navigation; label its independent approval as always required in Governance and explain which preparation actions need no approval.
+
+- Keep Download Config visible in Initial Host & CVM Password Setup, disabled with guidance until valid YAML is available; preserve reviewed filenames when downloading.
+
 ### Added
+- Add optional Initial Host & CVM Password Setup after the existing PE admin pipeline step, using reference-only intent, pinned SSH, observed AOS/AHV minimums, independent exact-plan approval, durable per-target checkpoints and reconciliation before resume. Existing pipelines and registration-only recovery retry remain unchanged; live writes default off pending lab validation.
 - Add operational YAML Studio with datacenter/cluster context, guided task fields, explicit policy choices, task-specific authoring checks and reviewed append-only pipeline handoff. Preserve execution approval policies, existing steps and recovery snapshots.
 - Add PE-direct AHV uplink migration through pinned CVM SSH and PE-direct DARE with Local KMS, with per-run approval-bound TLS exceptions, audit records and fresh verification. Existing PC paths, ZTF 1.x pipelines and recovery gates remain available; live writes stay disabled by default.
 - Show the current pending approval count beside Approvals in expanded and compact navigation, with refresh after approval changes.

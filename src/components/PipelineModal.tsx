@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { X, CheckCircle, XCircle, Clock, Loader, GitBranch } from 'lucide-react'
+import { useInitialPasswordSetupCapability } from './useInitialPasswordSetupCapability'
 import Terminal from './Terminal'
 import { apiFetch } from '../utils/api'
+import { PASSWORD_SETUP_WORKFLOW, PASSWORD_SETUP_CONFIRMATION } from '../utils/initialPasswordSetup'
 import type { Pipeline, PipelineStepResult } from '../types'
 import clsx from 'clsx'
 import { actionName } from '../startGuide'
@@ -14,6 +16,13 @@ interface Props {
 }
 
 export default function PipelineModal({ pipeline, onClose }: Props) {
+  const setupSteps = pipeline.steps.filter(s => s.workflow === PASSWORD_SETUP_WORKFLOW)
+  const needsSetup = setupSteps.length > 0
+  const passwordCapability = useInitialPasswordSetupCapability(needsSetup)
+  const [passwordSetupApprovalId, setPasswordSetupApprovalId] = useState('')
+  const [passwordSetupConfirmation, setPasswordSetupConfirmation] = useState('')
+  const [passwordSetupResumeRunId, setPasswordSetupResumeRunId] = useState('')
+  const [setupRequest, setSetupRequest] = useState<Record<string, string> | null>(null)
   const [logs,        setLogs]        = useState<LogLine[]>([])
   const [stepResults, setStepResults] = useState<PipelineStepResult[]>(
     pipeline.steps.map((s, i) => ({ step: i, workflow: s.workflow, configFile: s.configFile, status: 'running' as const }))
@@ -22,6 +31,7 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
   const [status,      setStatus]      = useState<'running' | 'success' | 'failed'>('running')
 
   useEffect(() => {
+    if (needsSetup && !setupRequest) return
     let cancelled = false
 
     const appendLog = (type: string, data: string) => {
@@ -42,7 +52,7 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
       const resp = await apiFetch(`/api/pipelines/${pipeline.id}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(needsConfirmation ? { riskAcknowledged: true, destructiveConfirmation: phrase } : {}),
+        body: JSON.stringify({ ...(needsConfirmation ? { riskAcknowledged: true, destructiveConfirmation: phrase } : {}), ...(setupRequest || {}) }),
       })
       if (!resp.ok) {
         const error = await resp.json().catch(() => ({}))
@@ -94,12 +104,26 @@ export default function PipelineModal({ pipeline, onClose }: Props) {
       }
     }
 
-    run()
+    void run().catch(() => { if (!cancelled) { appendLog('stderr', 'Pipeline request failed. Review server state before retrying.'); setStatus('failed') } })
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [setupRequest])
 
   const done = status !== 'running'
+
+  if (needsSetup && !setupRequest) return <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
+    <section role="dialog" aria-label="Approve initial password setup pipeline" className="card w-full max-w-2xl space-y-4 max-h-[90vh] overflow-auto">
+      <h3 className="font-semibold">Review initial password setup · {pipeline.name}</h3>
+      <p>Live writes default off pending lab validation. Obtain a fresh approval for the exact saved YAML below. The server verifies content, approval scope and resume state, and preserves completed steps.</p>
+      <p role="status">{passwordCapability.liveEnabled ? 'Server live-write flag enabled; hardware validation still required.' : 'Server live-write flag off or unavailable. Pipeline execution disabled.'}</p>
+      <ul>{setupSteps.map((step, i) => <li key={i} className="font-mono break-all">{step.configFile || 'Missing saved YAML — choose a file before running'}</li>)}</ul>
+      <label className="block">Password setup approval ID<input name="passwordSetupApprovalId" className="input w-full" value={passwordSetupApprovalId} onChange={e => setPasswordSetupApprovalId(e.target.value)} /></label>
+      <label className="block">Password setup confirmation: {PASSWORD_SETUP_CONFIRMATION}<input aria-label="Password setup confirmation" name="passwordSetupConfirmation" className="input w-full" value={passwordSetupConfirmation} onChange={e => setPasswordSetupConfirmation(e.target.value)} /></label>
+      <label className="block">Password setup resume run ID (optional)<input name="passwordSetupResumeRunId" className="input w-full" value={passwordSetupResumeRunId} onChange={e => setPasswordSetupResumeRunId(e.target.value)} /></label>
+      <p className="text-sm text-amber-300">One initial password setup step per run is supported by this approval control. Review PE administrative-access confirmation separately when present.</p>
+      <div className="flex gap-3"><button className="btn-primary" disabled={!passwordCapability.liveEnabled || setupSteps.length !== 1 || !setupSteps[0]?.configFile || !passwordSetupApprovalId.trim() || passwordSetupConfirmation !== PASSWORD_SETUP_CONFIRMATION} onClick={() => setSetupRequest({ passwordSetupApprovalId: passwordSetupApprovalId.trim(), passwordSetupConfirmation, ...(passwordSetupResumeRunId.trim() ? { passwordSetupResumeRunId: passwordSetupResumeRunId.trim() } : {}) })}>Run approved pipeline</button><button className="btn-secondary" onClick={onClose}>Cancel</button></div>
+    </section>
+  </div>
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
