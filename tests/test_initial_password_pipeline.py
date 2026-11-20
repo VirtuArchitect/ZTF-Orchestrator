@@ -580,7 +580,7 @@ def test_server_active_alias_and_service_journal_key_guard(harness, monkeypatch)
     monkeypatch.setattr(h.facade, '_job_manager', SimpleNamespace(get_job=lambda _: None), raising=False)
     run = h.service.get_run(context['runId'])
     with pytest.raises(ValueError, match='pipeline is still active'):
-        h.service._inactive(run)
+        h.service._inactive(run, None)
     adapter.release(context)
     h.service._inactive(run)
 
