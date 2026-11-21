@@ -23,6 +23,10 @@ services:
       ZTF2_PATH: /opt/zerotouch-framework-2x
       ZTF2_COMMAND: ${ZTF2_COMMAND:-/opt/ztf2-python/bin/ztf}
       ZTF_NKP_PATH: /var/lib/ztf-orchestrator/nkp-zerotouch-framework
+      ZTF_AHV_UPLINK_MIGRATION_ENABLED: ${ZTF_AHV_UPLINK_MIGRATION_ENABLED:-true}
+      ZTF_CREATE_VIRTUAL_SWITCH_ENABLE_MUTATION: ${ZTF_CREATE_VIRTUAL_SWITCH_ENABLE_MUTATION:-true}
+      ZTF_DARE_ENABLE_MUTATION: ${ZTF_DARE_ENABLE_MUTATION:-true}
+      ZTF_VS0_MTU_ENABLE_MUTATION: ${ZTF_VS0_MTU_ENABLE_MUTATION:-true}
       ZTF_PORT: "5001"
       ZTF_BIND_HOST: "0.0.0.0"
       ZTF_LOG_LEVEL: ${ZTF_LOG_LEVEL:-INFO}

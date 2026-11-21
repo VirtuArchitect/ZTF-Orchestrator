@@ -166,6 +166,13 @@ COPY --from=postgres-client /usr/lib/postgresql/16/bin/pg_restore /usr/local/bin
 RUN pg_dump --version | grep -E 'PostgreSQL\) 16\.' && \
     pg_restore --version | grep -E 'PostgreSQL\) 16\.'
 
+# Packaged appliances permit reviewed workflow application. Explicit host false
+# overrides retain planning mode; approvals and target verification still apply.
+ENV ZTF_AHV_UPLINK_MIGRATION_ENABLED=true
+ENV ZTF_CREATE_VIRTUAL_SWITCH_ENABLE_MUTATION=true
+ENV ZTF_DARE_ENABLE_MUTATION=true
+ENV ZTF_VS0_MTU_ENABLE_MUTATION=true
+
 USER ztf-svc
 
 # ============================================================================
