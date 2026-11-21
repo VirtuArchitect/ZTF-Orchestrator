@@ -1,8 +1,8 @@
 # ZTF-Orchestrator Admin Guide
 
-Reviewed 19 November 2026 against application `f33c9ed` and README revision `27d28a2`. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
+Current execution and transport guidance refreshed 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
-ZTF 1.x remains the pipeline executor. Native opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; live writes default to off. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
+ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; packaged builds enable the four reviewed network/encryption application paths; explicit false overrides retain planning mode. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
 The [revision 3 cluster deployment process](cluster-deployment-process.md)
 provides the diagram, text equivalent and acceptance gates. The PDF manual
@@ -100,7 +100,7 @@ a valid session token.
 | Role | Intended user | Capabilities |
 |---|---|---|
 | Admin | Platform owner, lead operator, or trusted maintainer. | Full access to settings, users, approvals, jobs, configs, evidence, audit log, backup restore, and cleanup actions. |
-| Operator | Infrastructure engineer running approved workflows. | Can prepare configs, run workflows, scripts, schedules, pipelines, NKP phases, drift checks, and evidence tasks where allowed. Cannot manage users or access admin-only audit screens. |
+| Operator | Infrastructure engineer running approved workflows. | Can prepare configs, run workflows, scripts, schedules, pipelines, drift checks, and evidence tasks where allowed. Cannot manage users or access admin-only audit screens. |
 | Viewer | Auditor, stakeholder, or handover reviewer. | Can inspect dashboard, configs, jobs, schedules, evidence, drift, appliance state, upgrade assessments, and operational history. Mutation is blocked. |
 
 Use the lowest role that allows the work. Admin accounts should be limited and
@@ -147,7 +147,7 @@ select a target automatically. Follow [the complete journey](start-here.md).
 
 Administrators can open **Configure → Enable Data-at-Rest Encryption (DARE)** to
 review a read-only Prism preflight and request independent approval for software
-encryption with Native KMS (Local). Live enablement defaults to off. See the
+encryption with Native KMS (Local). Packaged builds enable reviewed application by default; explicit false overrides retain planning mode. See the
 [DARE wizard guide](dare-workflow.md) for prerequisites and verification.
 
 ## Overview Dashboard
@@ -185,7 +185,7 @@ Setup & Install helps admins bootstrap or repair the framework runtimes.
 |---|---|---|
 | ZTF 1.x Legacy | Supports the existing workflow and script catalog through the legacy CLI model. | Use for Foundation Central, Prism Element, Prism Central, pod, workload, NDB, and script workflows that depend on ZTF 1.x. |
 | ZTF 2.x IaC | Supports the separate plan/apply IaC lane. | Configure independently; do not treat it as a drop-in replacement for ZTF 1.x. |
-| NKP Framework | Optional integration for NKP preparation and safe phases. | Register only after the NKP framework path and binary strategy are understood. |
+| NKP Framework (historical) | Console setup and execution are retired; review retained records only. |
 
 Admin use cases:
 
@@ -352,37 +352,7 @@ Execution controls:
 
 ## Workflows 2.x And ZTF 2.x IaC
 
-ZTF 2.x is a separate plan/apply lane. It is not a replacement launcher for
-the legacy ZTF 1.x workflow catalog.
-
-Available starter workflows:
-
-| Template | Purpose | Use case |
-|---|---|---|
-| Prism Category | Multi-category Prism Central intent. | Standard tags for governance, chargeback, automation, or policy targeting. |
-| Project | Prism Central project intent. | Tenant or application project setup. |
-| Subnet Intent | Multi-subnet or VLAN resource intent. | Network desired-state planning. |
-| Image Registration | Disk, ISO, or cloud-init image registration. | Preparing images for VM provisioning. |
-| VM Deployment | VM sizing, image, subnet, category, and power-state intent. | Governed VM deployment through desired-state planning. |
-| Security Groups | Address and service group intent. | Foundation for Flow policy and reusable security objects. |
-| Protection Policy | Protection policy with schedule and RPO. | Data protection planning before approval-bound apply. |
-| Recovery Plan | Disaster recovery plan linked to projects, subnets, VMs, and recovery locations. | DR plan definition and review. |
-
-Admin operating model:
-
-1. Configure the ZTF 2.x path, command, and project directory in Settings.
-2. Generate or import `input.yml` and `global.yml`.
-3. Run Plan to produce evidence.
-4. Request approval for apply or destroy.
-5. Apply only when the approval is bound to the plan ID, input hash, global
-   hash, and state path.
-
-Use case distinction:
-
-- Use Workflows 1.x for current legacy ZTF operational workflows.
-- Use ZTF 2.x IaC for governed desired-state planning and approved apply.
-- Use ZTF 2.x Recovery Plan for DR plan intent, not for malware cleanup,
-  backup recovery, or forensic response.
+This console integration is retired. Current ZTF 1.x workflows and scripts remain the supported pipeline execution path. Retained ZTF 2.x templates, state metadata, approvals and jobs are historical records; they do not provide a current plan, apply or destroy option. New mutating requests to the retired integration are rejected with HTTP 410. Preserve existing records and follow [console retirement](console-retirement.md) when reviewing older configurations.
 
 ## Scripts 1.x
 
@@ -415,21 +385,7 @@ Admin guidance:
 
 ## Scripts 2.x
 
-Scripts 2.x provides narrow ZTF 2.x plan-oriented actions that map selected
-legacy patterns to declarative IaC templates.
-
-| Script | Purpose |
-|---|---|
-| Create Category (PC) | Generates Prism Central category intent. |
-| Create Project (PC) | Generates Prism Central project intent. |
-| Create Subnets (PC) | Generates subnet or VLAN intent. |
-| Upload Image (PC) | Generates VM image registration intent. |
-| Create VMs (PC) | Generates VM desired-state intent. |
-| Create Security Groups (PC) | Generates address and service group intent. |
-| Create Protection Policy (PC) | Generates protection policy intent. |
-| Create Recovery Plan (PC) | Generates recovery plan intent. |
-
-Apply and destroy remain governed by the ZTF 2.x approval-bound operating model.
+This console integration is retired. Current ZTF 1.x workflows and scripts remain the supported pipeline execution path. Retained ZTF 2.x templates, state metadata, approvals and jobs are historical records; they do not provide a current plan, apply or destroy option. New mutating requests to the retired integration are rejected with HTTP 410. Preserve existing records and follow [console retirement](console-retirement.md) when reviewing older configurations.
 
 ## Jobs And Queue
 
@@ -482,8 +438,8 @@ Common approval use cases:
 |---|---|
 | Destructive or mutating workflows | Prevent accidental imaging, deletion, or configuration drift. |
 | ZTF 2.x apply or destroy | Bind approval to exact plan evidence and hashes. |
-| NKP controlled phases | Require review before deployment-affecting phases. |
-| Native Foundation controlled-UAT records | Tie read-only review packets and evidence to future execution gates. |
+| Historical NKP approvals | Retained for review; new NKP execution is retired. |
+| Retained Native Foundation review records | Historical design/evidence records; native console execution is retired. |
 | Disaster recovery rebuild workflow | Ensure containment, authorization, scope, and restore prerequisites are approved before rebuilding infrastructure. |
 
 Admin guidance:
@@ -595,59 +551,11 @@ Follow [live collection and diagnostics](live-pe-drift-monitoring.md) and the
 
 ## NKP Validation Evidence (Preview)
 
-Open **Advanced Automation > NKP Validation Evidence (Preview)** for specialist
-NKP and ZTF UAT evidence records and exports. Its title does not imply that an AHV
-cluster, PE/PC endpoint or recovery target has passed operational verification.
-Use Monitor & Verify, job logs and fresh target readbacks for those checks.
-The original route, saved records, both evidence sources and permissions are retained.
-
-Validation Evidence creates timestamped evidence records for UAT, change
-records, handover, and internal audit.
-
-Evidence sources can include:
-
-- Saved NKP profiles.
-- Completed workflow or script executions.
-- Saved YAML or JSON configs.
-- ZTF workflow UAT summaries.
-- Native Foundation phase captures and review packet metadata.
-
-Use cases:
-
-- Attach evidence to a change record.
-- Build customer or internal UAT handover packs.
-- Preserve generated YAML, config hashes, parse status, linked approvals, job
-  references, task references, notes, and redacted output.
-- Record readiness before a DR rebuild or after a cluster baseline restoration.
-
-Admin guidance:
-
-- Capture evidence close to the time of validation.
-- Redact secrets and private environment details.
-- Prefer evidence IDs over screenshots alone.
-- Export ZIP bundles when records must survive outside the Orchestrator.
+Validation Evidence remains available for supported ZTF packs and historical downloads. Record the exact source, version, collection time and validation boundary. Earlier screenshots may show an NKP source selector; new NKP evidence submissions are retired. Existing results remain historical evidence and do not establish current live target compatibility.
 
 ## NKP Framework
 
-The NKP Framework page integrates optional Nutanix Kubernetes Platform
-preparation workflows.
-
-Feature areas:
-
-| Feature | Purpose | Use case |
-|---|---|---|
-| Framework status | Detect NKP framework path and readiness. | Confirm integration after install or appliance update. |
-| Safe phases (Preview) | Launch only the installed allowlisted phases. Registry and Deploy are planning output; apply, registry push, upgrade and destroy remain blocked. | Governed preparation and evidence; not an end-to-end NKP cluster deployment. |
-| Deployment Profile Builder | Build NKP deployment profiles with Prism Central, cluster, network, VLAN, DNS, NTP, and node inventory data. | Standardize management, workload, or air-gapped NKP deployment inputs. |
-| Template packs | Seed Management Cluster, Workload Cluster, or Air-Gapped / Local Registry profile drafts. | Reduce setup errors while keeping profiles editable. |
-| Example discovery | Discover installed examples from the configured NKP framework path. | Align generated YAML with the installed framework. |
-| Binary Manager | Register or upload NKP binaries and bundles. | Track versions, paths, checksums, and defaults. |
-| Readiness validation | Score profiles as ready, needs attention, or blocked. | Prevent malformed profile launches. |
-
-Governance boundary:
-
-Controlled NKP phases require approval. Destructive, broad, or unsupported NKP
-actions remain blocked server-side.
+NKP console setup and execution are retired. Saved profiles, binary records, historical jobs and approvals remain available for authenticated review where retained read endpoints allow it. Do not launch safe phases, upload binaries, create profiles or submit new NKP jobs from earlier instructions. New mutating requests to the retired integration are rejected with HTTP 410. Retaining an NKP runtime in an appliance is separate from offering an executable console integration. See [console retirement](console-retirement.md).
 
 ## Upgrade Advisor
 
@@ -916,31 +824,9 @@ Controls to require:
 
 ## Native Foundation Controlled-UAT Boundary
 
-Native Foundation Deploy is an extensive planning and evidence framework for
-Orchestrator-owned Foundation-style deployment workflows.
+Native pipeline execution and its former console opt-in are retired. Saved native pipeline definitions remain visible but are blocked from execution. Administrators may review actions and YAML before explicitly converting a pipeline to ZTF 1.x; existing recovery snapshots and step 08-only retry retain their own approval and reconciliation requirements.
 
-Current administrative boundary:
-
-- Most Native Foundation phases are read-only reviews.
-- They produce plans, manifests, matrices, evidence packets, hashes, approval
-  bindings, and readiness records.
-- They do not automatically contact hardware, call Foundation, mutate Prism, or
-  image nodes unless a controlled-UAT adapter path is explicitly enabled and
-  validated.
-- Dell iDRAC Redfish deployment support is controlled-UAT only unless local
-  evidence and signoff establish a broader support claim.
-
-Admin use cases:
-
-- Build a controlled-UAT deployment packet.
-- Confirm provider/topology support status.
-- Review image, network, secret, approval, evidence, runtime, and adapter
-  readiness.
-- Generate a redacted packet for review.
-- Capture Native Foundation phase evidence.
-
-Do not describe planning artifacts, mocked tests, or dry-run packets as proof
-of live infrastructure support.
+The dedicated Native Foundation Deploy workflow remains separate from that retired pipeline executor. Its planning/review APIs do not perform hardware writes. A constrained controlled-UAT adapter path has separate deployment flags, reviewed absolute adapter command, exact intent/approval and target validation requirements. Planning or review success does not activate it. Foundation VM, Foundation Central and Standalone FCA remain distinct deployment-service workflows. No documentation entry enables a mutation gate. See [console retirement](console-retirement.md) and [Start Here](start-here.md).
 
 ## Operational Runbooks
 
@@ -1066,3 +952,9 @@ An administrative change is complete when:
 ## Unregister a PE from PC
 
 Use the administrator-only [Unregister PE from PC wizard](unregister-pe-from-pc.md) to generate reference-only YAML, review the exact PC/PE identity and request a separate administrator approval. Removal requires an exact UUID confirmation and single-use approval. PC task completion and inventory absence are verified; PE-side cleanup and dependent-service checks remain separate. Unsupported v4.2 APIs fail closed.
+
+## Current PE TLS options and virtual switch creation
+
+The per-operation [PE TLS options](pe-tls-options.md) allow an explicitly reviewed HTTPS certificate-verification exception for supported PE operations. HTTPS encryption is retained; the PE server certificate does not authenticate identity while verification is bypassed. Prefer verification whenever the PE certificate is trusted. Saved plans retain their reviewed policy, changing it requires a fresh plan and approval, and an HTTPS exception never bypasses PC or SSH trust.
+
+[Create Virtual Switch](create-virtual-switch.md) is a separate action under Configure. It creates empty cluster-local OVS bridges through pinned CVM SSH, reports observed MTU, and moves no physical NICs. Use its read-only preflight, independently approved exact plan, exact confirmation and per-host readback. Packaged builds enable reviewed creation by default; explicit false overrides retain planning mode. Validate the exact target before production use. To attach NICs later, use the separate [AHV Uplink Migration](ahv-uplink-migration.md) workflow with its own preflight and approval.

@@ -1,4 +1,4 @@
-# RB-008 - NKP Safe Phase Execution
+# RB-008 - Historical NKP Record Review
 
 Current release marker: `v1.8.5-rc1` (prerelease; production deployment use reported separately).
 
@@ -7,118 +7,86 @@ Current release marker: `v1.8.5-rc1` (prerelease; production deployment use repo
 | Field | Value |
 |---|---|
 | Runbook ID | RB-008 |
-| Title | NKP safe phase execution |
+| Title | Historical NKP record review |
 | Version | 1.0 |
 | Owner | Platform operations |
 | Approver | Platform lead |
 | Classification | Internal operational procedure |
-| Status | Draft |
+| Status | Retired execution and review only |
 
 ## Purpose
 
-Run constrained NKP ZeroTouch Framework safe phases through ZTF-Orchestrator
-with profile validation, approval, job tracking, and readiness evidence.
+Review retained NKP records without submitting new work. NKP console setup and execution are retired; earlier safe-phase instructions do not apply.
 
 ## Scope
 
-Covers NKP phases exposed by the current integration. Apply, registry push,
-upgrade, and destroy actions remain blocked server-side in this release.
+Authenticated review of retained profiles, binaries, historical approvals, jobs and evidence where read endpoints remain available. New mutating NKP requests are rejected with HTTP 410.
 
 ## Preconditions
 
-- NKP framework path is configured.
-- NKP binary/source is registered.
-- Deployment profile validates as ready or accepted with documented warnings.
-- Required approval is approved.
-- Generated YAML is reviewed.
+- Authorized access to retained records.
+- Exact historical job/profile identifiers and an evidence-retention owner.
+- No new NKP execution, uploads or configuration changes.
 
 ## Required Role/RBAC
 
-Operator/admin for profile preparation and safe phase submission. Approver/admin
-for controlled phases.
+Use an authenticated role permitted to inspect the record. Administrator access does not re-enable retired execution.
 
 ## Required Inputs
 
-- NKP profile ID and revision.
-- Generated YAML/config reference.
-- NKP binary/source reference.
-- Approval ID.
-- Target Prism Central and cluster details.
+- Historical profile ID/revision, job ID and evidence reference.
+- Retention requirements and the incident/change record when applicable.
 
 ## Dependencies
 
-- NKP Framework page.
-- NKP binary registry.
-- Validation Evidence.
-- Jobs / Queue.
-- Target Nutanix endpoints.
+Retained authenticated read endpoints, Jobs / Queue, approvals and saved evidence. A baked runtime is not an available console launcher.
 
 ## Risk/Impact
 
-NKP safe phases can prepare deployment artifacts and interact with target
-systems. Treat profile revision, generated YAML, and approval binding as part of
-the control boundary.
+Historical records may contain sensitive references. Redact exports and preserve audit evidence. Do not run old phase commands to reproduce a record.
 
 ## Procedure
 
-1. Open **NKP Framework**.
-2. Review profile fields, node inventory, Prism Central endpoint, networking,
-   and binary/source references.
-3. Run deployment readiness validation.
-4. Generate or review YAML.
-5. Request approval for controlled phase execution.
-6. Submit the safe phase job with the approved profile revision.
-7. Monitor **Jobs / Queue**.
-8. Capture Validation Evidence with profile revision, generated YAML, approval,
-   job output, and target-side checks.
+1. Identify the historical job, profile revision and approval.
+2. Review saved inputs and logs through permitted read paths.
+3. Record collection time, source build and unresolved target-side outcomes.
+4. Retain a redacted export under the applicable retention policy.
+5. Use a separately reviewed supported toolchain for any new platform work; this runbook authorizes none.
 
 ## Validation
 
-- Readiness validation is pass or accepted with documented warnings.
-- Submitted job references the expected profile revision.
-- Job reaches completed state.
-- Generated YAML and evidence bundle are retained.
+- No new job or mutation was submitted.
+- Historical IDs, revision and evidence remain traceable.
+- Retired records are clearly labelled as historical.
 
 ## Expected Result
 
-The approved safe phase completes with traceable NKP profile, YAML, job, and
-evidence records.
+Historical intent and evidence are understood and retained. No new NKP execution or live compatibility claim is made.
 
 ## Failure Conditions
 
-- Profile readiness is blocked.
-- Approval is missing or stale.
-- Profile revision changes after approval.
-- Job fails or target-side validation disagrees.
+- Required historical records cannot be found or their identity is uncertain.
+- An earlier procedure asks for a new phase submission or bypass of retirement controls.
 
 ## Recovery/Rollback
 
-Use [RB-005](RB-005-failed-job-recovery.md). Do not continue with downstream NKP
-steps until the failed phase is understood.
+Stop the review if source identity is uncertain. Preserve records and use [RB-005](RB-005-failed-job-recovery.md) for investigation. Do not re-enable retired routes or delete records to follow old instructions.
 
 ## Evidence To Capture
 
-- Profile ID, name, and revision.
-- Generated YAML reference.
-- NKP binary/source reference.
-- Approval ID.
-- Job ID and logs.
-- Readiness record.
-- Target-side confirmation.
+Historical profile/revision, job, approval and source build; redacted logs; retention owner and any unresolved target-side effects.
 
 ## Audit Requirements
 
-Evidence must bind approval to the exact profile revision and generated YAML
-used for execution.
+Preserve the original approval-to-input binding and distinguish historical evidence from new validation.
 
 ## Escalation
 
-Escalate when readiness is blocked, revision mismatch occurs, or target state is
-unclear after failure.
+Escalate missing records, conflicting identities or requests to bypass retirement to the application and evidence owners.
 
 ## References
 
-- [NKP v2.17 Alignment](../nkp-v217-alignment.md)
+- [Console retirement](../console-retirement.md)
 - [UAT Evidence Checklist](../uat-evidence-checklist.md)
 - [Runbook Index](README.md)
 
@@ -126,7 +94,7 @@ unclear after failure.
 
 | Evidence | Source | Required |
 |---|---|---|
-| Profile revision | NKP Framework | Yes |
-| Readiness result | Validation Evidence | Yes |
-| Approval | Approvals | Yes |
-| Job output | Jobs / Queue | Yes |
+| Historical profile revision | Retained records | When present |
+| Historical approval | Approvals | When present |
+| Job output | Jobs / Queue | When present |
+| Review provenance | Review record | Yes |

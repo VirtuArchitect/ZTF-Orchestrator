@@ -15,7 +15,7 @@ Nutanix infrastructure from reviewed profiles through one web console.
 **[Video Tutorials](https://www.johngoulden.de/ztf/tutorials.html)**
 
 [Workflow and Script Quick Guides](docs/quick-guides/README.md) provide individual
-task procedures and a complete Word/PDF collection, with prerequisites, inputs,
+task procedures and a complete current PDF collection, with prerequisites, inputs,
 execution, verification and recovery guidance.
 
 [Stable v1.8.4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4) |
@@ -379,7 +379,7 @@ recovery and administration procedures alongside matching tutorials.
 | [Current source and package status](docs/current-status.md) | Release channels, exact build identity and historical package boundaries |
 | [Installation](docs/installation-guide.md) | Docker, appliance, manual and offline procedures |
 | [AHV Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) | Static IP before SSH, key provisioning, sudo and web admin access |
-| Administrator and User Guide — [PDF](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf) · [Word](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.docx) | Updated 156-page illustrated manual, with links to all 23 corrected videos and the complete offline video ZIP |
+| Earlier combined Administrator and User Guide: [PDF](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf) · [Word](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.docx) | 19 November 2026 edition, retained with its original source provenance; use the documentation collection for the current manuals and task PDFs |
 | [Administrator guide](docs/admin-guide.md) | Console configuration and operation |
 | [User guide](docs/user-guide.md) | Workflows, scripts, pipelines and saved configuration |
 | [Infrastructure recovery](docs/infrastructure-recovery.md) | Rebuild preparation and acceptance boundaries |

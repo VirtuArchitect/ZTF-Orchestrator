@@ -6,7 +6,7 @@ Current release marker: `v1.8.5-rc1` (prerelease; production deployment use repo
 
 This directory contains operational runbooks for controlled ZTF-Orchestrator
 use. The runbooks are intended for internal operators who run allowlisted
-ZeroTouch Framework workflows, safe NKP phases, appliance updates, backups,
+ZeroTouch Framework workflows, appliance updates, backups,
 restore actions, and incident response in a governed environment.
 
 ZTF-Orchestrator is an unofficial community project and is not affiliated with
@@ -47,7 +47,7 @@ See:
 | [RB-005](RB-005-failed-job-recovery.md) | Failed job recovery | High | Conditional | N/A | Required | Approved |
 | [RB-006](RB-006-emergency-stop.md) | Emergency stop | Critical | Notify approver | N/A | Required | Approved |
 | [RB-007](RB-007-airgapped-update.md) | Air-gapped update | Medium | Yes | Required | Required | Draft |
-| [RB-008](RB-008-nkp-safe-phase-execution.md) | NKP safe phase execution | High | Yes | Required | Required | Draft |
+| [RB-008](RB-008-nkp-safe-phase-execution.md) | Historical NKP record review only | High | No new execution | Preserve records | Required | Retired execution |
 | [RB-009](RB-009-user-rbac-management.md) | User and RBAC management | Medium | Yes for admin changes | Yes | Audit | Draft |
 | [RB-010](RB-010-database-recovery.md) | Database recovery | Critical | Yes | Safety backup | Required | Draft |
 | [RB-011](RB-011-security-incident.md) | Security incident | Critical | Escalate | N/A | Required | Draft |

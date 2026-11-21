@@ -1,4 +1,4 @@
-# TESTING_GUIDE.md
+# Testing Guide
 
 ## Testing Policy
 

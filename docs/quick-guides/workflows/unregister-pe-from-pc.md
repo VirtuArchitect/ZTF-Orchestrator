@@ -1,6 +1,6 @@
 # Unregister PE from PC Quick Guide
 
-Guide ID: `QG-W-unregister-pe-from-pc` · Reviewed: 20 November 2026 · Source: `79c3ecc`
+Guide ID: `QG-W-unregister-pe-from-pc` · Reviewed: 21 November 2026 · Source: `48eb875`
 
 Status: Current source procedure. Read [Using the quick guides](../using-the-guides.md) first.
 
@@ -35,15 +35,15 @@ PC-side removal does not prove PE cleanup or service health. Reconcile ambiguous
 
 Record the exact target, installed build, reviewed config filename/hash, approval if applicable, job/task/run IDs and redacted before/after checks. Keep unresolved follow-up with the change record.
 
-## Screen reference
-
-![Unregister PE from PC authoring screen with simulated data](../../assets/quick-guides/2026-11-20/workflows-unregister-pe-from-pc.png)
-
-Local demonstration of **Configure / initial draft** at `/workflows/unregister-pe-from-pc`, captured from source `79c3ecc` on 20 November 2026. Values and credential references are synthetic; required fields may intentionally be incomplete. This is the initial screen or selected configuration panel, not evidence of a successful run. Lower form sections may be outside the captured viewport. Follow this guide's preparation, approval and verification steps.
-
 ## References
 
 - [Detailed procedure](../../unregister-pe-from-pc.md)
 - [Catalogue and details](../../../src/data.ts)
 - [Execution form](../../../src/pages/WorkflowDetail.tsx)
 - [Guide index](../README.md)
+
+## Screen reference
+
+![Unregister PE from PC authoring screen with simulated data](../../assets/quick-guides/2026-11-21/workflows-unregister-pe-from-pc.png)
+
+Simulated initial/authoring view captured 21 November 2026 from application source `48eb875`. State: **Configure / initial draft** at `/workflows/unregister-pe-from-pc`. Values are synthetic and required inputs may be incomplete. This is not evidence of a successful run, live target authentication or hardware compatibility. Lower form sections may be outside the captured viewport. Follow the preparation, approval, verification and recovery instructions.

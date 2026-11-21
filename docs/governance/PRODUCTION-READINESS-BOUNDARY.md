@@ -10,14 +10,12 @@ environment-specific proof.
 
 ## Valid Claims
 
-- Internal operations console for guided ZTF 1.x workflows and safe NKP
-  deployment preparation.
+- Internal operations console for guided ZTF 1.x workflows and governed dedicated operations.
 - RBAC, approvals, durable jobs, schedules, audit history, drift checks,
   validation evidence, YAML Studio, and appliance update surfaces are present.
 - YAML Studio is non-mutating.
 - ZTF 1.x workflow/script actions use the legacy CLI; Foundation VM and selected
-  PE extensions use explicit Orchestrator integrations. ZTF 2.x and NKP retain
-  their separate documented execution and preview boundaries.
+  PE extensions use explicit Orchestrator integrations. Native pipeline execution, ZTF 2.x and NKP console actions are retired; retained records do not provide an execution option.
 
 ## Claims Requiring More Evidence
 

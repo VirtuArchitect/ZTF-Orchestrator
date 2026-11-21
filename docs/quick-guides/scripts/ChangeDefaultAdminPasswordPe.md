@@ -1,6 +1,6 @@
 # Change Default Admin Password (PE) Quick Guide
 
-Guide ID: `QG-S-ChangeDefaultAdminPasswordPe` · Reviewed: 20 November 2026 · Source: `79c3ecc`
+Guide ID: `QG-S-ChangeDefaultAdminPasswordPe` · Reviewed: 21 November 2026 · Source: `48eb875`
 
 Status: Current source procedure. Read [Using the quick guides](../using-the-guides.md) first.
 
@@ -41,12 +41,6 @@ This changes PE admin only, not AHV/CVM/iDRAC. Do not repeat after an ambiguous 
 
 Record the exact target, installed build, reviewed config filename/hash, approval if applicable, job/task/run IDs and redacted before/after checks. Keep unresolved follow-up with the change record.
 
-## Screen reference
-
-![Change Default Admin Password (PE) authoring screen with simulated data](../../assets/quick-guides/2026-11-20/scripts-ChangeDefaultAdminPasswordPe.png)
-
-Local demonstration of **Single-script configuration wizard / authoring only** at `/scripts`, captured from source `79c3ecc` on 20 November 2026. Values and credential references are synthetic; required fields may intentionally be incomplete. This is the initial screen or selected configuration panel, not evidence of a successful run. Lower form sections may be outside the captured viewport. Follow this guide's preparation, approval and verification steps.
-
 ## References
 
 - [Detailed procedure](../../pe-admin-password-change.md)
@@ -54,3 +48,9 @@ Local demonstration of **Single-script configuration wizard / authoring only** a
 - [Script execution UI](../../../src/pages/Scripts.tsx)
 - [Common execution and recovery](../using-the-guides.md)
 - [Guide index](../README.md)
+
+## Screen reference
+
+![Change Default Admin Password (PE) authoring screen with simulated data](../../assets/quick-guides/2026-11-21/scripts-ChangeDefaultAdminPasswordPe.png)
+
+Simulated initial/authoring view captured 21 November 2026 from application source `48eb875`. State: **Single-script configuration wizard / authoring only** at `/scripts`. Values are synthetic and required inputs may be incomplete. This is not evidence of a successful run, live target authentication or hardware compatibility. Lower form sections may be outside the captured viewport. Follow the preparation, approval, verification and recovery instructions.

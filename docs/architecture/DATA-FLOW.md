@@ -13,7 +13,7 @@ Operator
   -> Storage backend
        file JSON or PostgreSQL documents/sessions/audit events
   -> Durable job queue
-  -> ZTF 1.x or NKP execution adapter
+  -> ZTF 1.x pipeline execution or an explicitly governed dedicated operation
   -> Nutanix targets
   -> Job logs, task IDs, audit events, validation evidence
 ```

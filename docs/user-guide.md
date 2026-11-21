@@ -5,9 +5,9 @@ including the complete editable Word and PDF collection.
 
 The [console retirement procedure](console-retirement.md) describes current ZTF 1.x operation and historical integration access.
 
-Reviewed 19 November 2026 against application `f33c9ed` and README revision `27d28a2`. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
+Current execution and transport guidance refreshed 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
-ZTF 1.x remains the pipeline executor. Native opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; live writes default to off. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
+ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; packaged builds enable the four reviewed network/encryption application paths; explicit false overrides retain planning mode. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
 For Disaster Recovery, use the updated manual and the focused
 [illustrated recovery setup guide](disaster-recovery-setup.md), reviewed against
@@ -42,7 +42,7 @@ The visible menu depends on the signed-in user's role.
 | Role | Intended user | Access summary |
 |---|---|---|
 | Admin | Platform owner or trusted operator | Full access, including user management, audit log, settings, backup restore, approvals, and destructive record cleanup. |
-| Operator | Infrastructure operator | Can configure and execute governed workflows, scripts, schedules, pipelines, NKP phases, drift checks, and evidence runs. Cannot manage users or view admin-only audit screens. |
+| Operator | Infrastructure operator | Can configure and execute governed workflows, scripts, schedules, pipelines, drift checks, and evidence runs. Cannot manage users or view admin-only audit screens. |
 | Viewer | Reviewer, auditor, or stakeholder | Can view operational state, configs, jobs, schedules, evidence, drift results, appliance state, NKP state, and upgrade assessments. Viewer actions are read-only where execution or mutation would occur. |
 
 All protected pages require login. If a user opens a page their role cannot
@@ -83,7 +83,7 @@ Most production-style work follows this path:
 2. Define credentials, vault behavior, and IPAM in Global Config.
 3. Generate, upload, or edit YAML in YAML Studio, Config Files, Workflows, NKP Framework, or Scripts.
 4. Validate the YAML and run a dry run where available.
-5. Request approval for governed workflows or NKP phases.
+5. Request approval for governed workflows.
 6. Submit the work as a durable job through Workflows, Scripts, Pipelines, Schedules, Parallel Exec, or NKP Framework.
 7. Monitor Jobs / Queue and Execution History.
 8. Verify actual target settings and health; retain job logs and readbacks. Review Drift Detection and Audit Log. NKP Validation Evidence is a separate Preview tool for its supported specialist evidence sources.
@@ -163,27 +163,7 @@ and execute through the guarded `python main.py --workflow` path.
 
 ### Workflows 2.x
 
-Use **Workflows 2.x** for ZTF 2.x IaC templates. These workflows generate
-`input.yml`, an editable `global.yml`, and a state file name. Selecting **Run
-Plan** submits a governed `ztf2:plan` job and stores plan evidence on the job
-record. Apply and destroy remain separate approval-bound actions from the ZTF
-2.x IaC page.
-
-Available starter templates:
-
-| Workflow | Purpose |
-|---|---|
-| ZTF 2.x Prism Category | Multi-category Prism Central intent. |
-| ZTF 2.x Project | Project intent with cluster, subnet, and account references. |
-| ZTF 2.x Subnet Intent | Multi-subnet/VLAN intent. |
-| ZTF 2.x Image Registration | Disk, ISO, or cloud-init image registration intent. |
-| ZTF 2.x VM Deployment | VM intent with sizing, image, subnet, categories, and power state. |
-| ZTF 2.x Security Groups | Address and service group intent. |
-| ZTF 2.x Protection Policy | Protection policy intent with schedule and RPO. |
-| ZTF 2.x Recovery Plan | Recovery plan intent with VM, subnet, and recovery location references. |
-
-The templates are operational starters. Validate generated plans against the
-installed ZTF 2.x resource schema before using approval-bound apply.
+ZTF 2.x console execution is retired. Retained templates, state, approvals and jobs are historical records. New plan, apply and destroy requests are rejected. Use supported ZTF 1.x workflows for new pipeline work. See [console retirement](console-retirement.md).
 
 ## Configure Menu
 
@@ -237,7 +217,7 @@ never renames files or changes YAML. See [the grouping procedure](config-file-gr
 
 
 Use Config Files to manage saved YAML and JSON configuration files used by
-workflows, scripts, schedules, pipelines, NKP phases, drift checks, and evidence
+workflows, scripts, schedules, pipelines, drift checks, and evidence
 records.
 
 Key functions:
@@ -539,26 +519,7 @@ specific legacy ZTF script or a carefully ordered script sequence.
 
 ### Scripts 2.x
 
-Use Scripts 2.x for converted ZTF 2.x IaC actions. These actions are not legacy
-`--script` commands. They generate `input.yml`, editable `global.yml`, and a
-state file name, then submit a governed `ztf2:plan` job. Apply and destroy
-remain approval-bound through the ZTF 2.x IaC page.
-
-Available converted actions:
-
-| Action | Legacy mapping |
-|---|---|
-| Create Category (PC) | `CreateCategoryPc` |
-| Create Project (PC) | New ZTF 2.x declarative action |
-| Create Subnets (PC) | `CreateSubnetsPc` |
-| Upload Image (PC) | `PcImageUpload` |
-| Create VMs (PC) | `CreateVmsPc` |
-| Create Security Groups (PC) | `CreateAddressGroups`, `CreateServiceGroups` |
-| Create Protection Policy (PC) | `CreateProtectionPolicy` |
-| Create Recovery Plan (PC) | `CreateRecoveryPlan` |
-
-PE-only, CVM/Foundation, delete, and power actions stay in Scripts 1.x until a
-reviewed ZTF 2.x resource contract is available.
+This console integration is retired. Current ZTF 1.x workflows and scripts remain the supported pipeline execution path. Retained ZTF 2.x templates, state metadata, approvals and jobs are historical records; they do not provide a current plan, apply or destroy option. New mutating requests to the retired integration are rejected with HTTP 410. Preserve existing records and follow [console retirement](console-retirement.md) when reviewing older configurations.
 
 ## Execute Menu
 
@@ -664,44 +625,7 @@ site-level validation and evidence remain required.
 
 ### NKP Framework
 
-Use NKP Framework for optional NKP ZeroTouch Framework integration, deployment
-profile management, readiness checks, binary registration, generated YAML, and
-guarded safe-phase submission.
-
-Tabs and functions:
-
-| Tab | Function |
-|---|---|
-| Overview | Shows NKP framework status, configured path, safe phases, config inventory, and phase launcher. |
-| Schema | Discovers installed NKP example YAML and infers expected schema shape from the configured framework path. |
-| Templates | Provides guided deployment starters such as Management Cluster, Workload Cluster, and Air-Gapped / Local Registry. |
-| Binaries | Registers or uploads NKP binaries and checks CLI compatibility. |
-| Profiles | Creates, edits, validates, versions, restores, and renders NKP deployment profiles into YAML. |
-
-Safe phases:
-
-| Phase | Function |
-|---|---|
-| Validate | Performs schema, bundle, endpoint, and tooling checks. |
-| Prepare | Stages NKP tools and workspace metadata. Approval may be required. |
-| Generate | Creates cluster values, environment content, or helper files. Approval may be required. |
-| Registry Plan | Generates private registry planning output. Approval may be required. |
-| Deploy Plan | Generates deployment planning output. Approval may be required. |
-| Verify | Collects local state and kubeconfig-based checks when available. |
-| Runs | Summarizes NKP ZeroTouch run artifacts. |
-
-Important boundaries:
-
-| Boundary | Meaning |
-|---|---|
-| Safe-phase model | NKP actions are allowlisted and constrained. Apply, registry push, upgrade, and destroy actions are blocked server-side unless explicitly implemented later. |
-| Approval-required phases | Prepare, Generate, Registry Plan, and Deploy Plan require governance approval where policy applies. |
-| Profile revisions | Saved profiles are versioned. Restoring an older profile creates a new revision instead of erasing history. |
-| Readiness scoring | Profiles can be ready, needs attention, or blocked based on required fields, endpoint shape, IP checks, binary paths, and YAML validity. |
-| Generated YAML | The YAML is transparent and editable in Config Files so teams can align it to the exact NKP schema they adopt. |
-
-Use NKP Framework when preparing Kubernetes platform deployment evidence or
-safe-phase automation. Use Jobs / Queue to monitor submitted NKP jobs.
+NKP console setup and execution are retired. Saved profiles, binary records, historical jobs and approvals remain available for authenticated review where retained read endpoints allow it. Do not launch safe phases, upload binaries, create profiles or submit new NKP jobs from earlier instructions. New mutating requests to the retired integration are rejected with HTTP 410. Retaining an NKP runtime in an appliance is separate from offering an executable console integration. See [console retirement](console-retirement.md).
 
 ## Govern Menu
 
@@ -723,7 +647,7 @@ Key functions:
 | Reject | Admin decision action that blocks the request. |
 | Delete | Removes an approval request after confirmation. |
 
-Approval requests are used by workflow detail pages and controlled NKP phases
+Approval requests are used by supported workflow detail pages
 when mandatory approval policy is enabled.
 
 ### Appliance Ops
@@ -806,31 +730,7 @@ executed by these controls.
 
 ### NKP Validation Evidence (Preview)
 
-Open **Advanced Automation > NKP Validation Evidence (Preview)**. It retains
-NKP and ZTF UAT evidence sources, saved records and exports. These records do not
-establish AHV cluster, PE/PC or recovery health. For ordinary cluster monitoring,
-use **Monitor & Verify**, Jobs / Queue, Execution History and actual target readbacks.
-
-Use Validation Evidence to create and download defensible evidence records for
-UAT, handover, review, and change records.
-
-Key functions:
-
-| Function | Purpose |
-|---|---|
-| Create Evidence Run | Builds an evidence record from selected source data. |
-| Evidence source | Can reference an NKP profile, completed workflow/script execution, or saved config file. |
-| Saved Config | Binds a config file to the evidence record. |
-| Workflow / Script | Names the workflow or script under review. |
-| Notes | Adds operator context for handover or UAT narrative. |
-| Create Evidence | Saves the evidence archive. |
-| Download | Downloads a ZIP bundle with generated summary and supporting records. |
-| Delete | Admin/operator cleanup for evidence records after exact confirmation. |
-| Create NKP Profile | Routes to NKP Framework when evidence needs a saved NKP profile first. |
-
-Evidence bundles can include readiness scoring, generated YAML, config hashes,
-approval/job/task references, parse results, redacted output, and Markdown
-summaries depending on the selected source.
+Use Validation Evidence for supported ZTF pack results and historical downloads. The former NKP evidence source is retired for new submissions. Existing NKP results are historical records and do not establish current live compatibility.
 
 ### Drift Detection
 
@@ -1342,3 +1242,9 @@ only the login-screen title and verifies it with a fresh read-back. It does not
 rename the cluster or CVMs. See [the compatibility and YAML procedure](pe-login-title.md).
 
 ![PE login title configuration with simulated records](assets/guide/v1.8.5-rc1/pe-login-title.png)
+
+## Current PE TLS options and virtual switch creation
+
+The per-operation [PE TLS options](pe-tls-options.md) allow an explicitly reviewed HTTPS certificate-verification exception for supported PE operations. HTTPS encryption is retained; the PE server certificate does not authenticate identity while verification is bypassed. Prefer verification whenever the PE certificate is trusted. Saved plans retain their reviewed policy, changing it requires a fresh plan and approval, and an HTTPS exception never bypasses PC or SSH trust.
+
+[Create Virtual Switch](create-virtual-switch.md) is a separate action under Configure. It creates empty cluster-local OVS bridges through pinned CVM SSH, reports observed MTU, and moves no physical NICs. Use its read-only preflight, independently approved exact plan, exact confirmation and per-host readback. Packaged builds enable reviewed creation by default; explicit false overrides retain planning mode. Validate the exact target before production use. To attach NICs later, use the separate [AHV Uplink Migration](ahv-uplink-migration.md) workflow with its own preflight and approval.
