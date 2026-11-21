@@ -1,5 +1,52 @@
 # Administrator and User Guide
 
+Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/) to search the collection, preview guides and download individual PDFs.
+
+## Workflow and Script Quick Guides
+
+### Corrected standard cover and format
+
+Use the **21 November 2026** corrected editions for the original ZTF
+Operational Quick Guides cover and matching page layout:
+[illustrated PDF](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf) ·
+[illustrated Word](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.docx) ·
+[screenshot PDF](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf) ·
+[screenshot Word](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.docx) ·
+[text PDF](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf) ·
+[text Word](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.docx).
+See the [format reference](../assets/quick-guides/branding/README.md),
+[checksums](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded-SHA256SUMS.txt) and
+[branding manifest](workflow-script-quick-guides-branding.json).
+Source content and screenshot provenance remain unchanged; earlier editions
+below are retained for comparison.
+
+### Previous editions
+
+
+The **illustrated edition** adds 117 task-specific simulated console screenshots:
+[279-page PDF](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf) ·
+[editable Word](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.docx).
+For images alone, use the [122-page screenshot companion](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf),
+[PNG and offline-gallery ZIP](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.zip)
+or [online-style local gallery](../assets/quick-guides/2026-11-20/gallery.html).
+See [screenshot provenance](../assets/quick-guides/2026-11-20/README.md) and
+[checksums](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-SHA256SUMS.txt).
+These initial-screen/authoring views do not demonstrate live target execution.
+The original text edition below is preserved unchanged.
+
+The [indexed quick-guide library](../quick-guides/README.md), reviewed 20 November
+2026 against source `79c3ecc`, covers all 30 current workflows, 79 scripts and
+eight dedicated operator flows. Sixteen retired catalogue entries have separate
+historical reference notes. Each task includes prerequisites, inputs, steps,
+verification and recovery. Download the [complete PDF](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf)
+or [editable Word collection](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.docx).
+These source-reviewed procedures do not establish live target compatibility.
+The collection has 162 pages with linked contents. [Checksums](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-SHA256SUMS.txt)
+and the [collection manifest](workflow-script-quick-guides-collection.json) identify
+the exact files; see the [validation record](../quick-guides/VALIDATION.md).
+
+## Administrator and User Guide downloads
+
 [Download the illustrated PDF guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.docx) · [Release download checksums](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19-SHA256SUMS.txt)
 
 Dated **19 November 2026** release assets are byte-identical to the maintained guide files below. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).

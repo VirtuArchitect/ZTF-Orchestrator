@@ -66,6 +66,9 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      - name: Verify PDF documentation packaging
+        run: node scripts/build-documentation-library.mjs "$RUNNER_TEMP/documentation-library"
+
       - name: Build
         run: npm run build
 

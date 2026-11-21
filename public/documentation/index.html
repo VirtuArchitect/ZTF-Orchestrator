@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse, read and download the ZTF-Orchestrator PDF documentation: illustrated manuals, task-based Quick Guides, deployment and recovery procedures.">
+  <title>ZTF-Orchestrator | PDF Documentation Library</title>
+  <link rel="canonical" href="https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="library.css">
+  <script src="library.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#reader">Skip to selected document</a>
+  <header class="site-header">
+    <a class="brand" href="../"><img src="../zto-logo-mark.svg" width="34" height="34" alt="">ZTF-Orchestrator</a>
+    <nav aria-label="Main navigation"><a href="../">Project site</a><a href="./" aria-current="page">Documentation</a><a href="../tutorials/">Video tutorials</a><a href="../demo/">Console demo</a><a href="../releases/">Releases</a></nav>
+  </header>
+  <section class="intro" aria-labelledby="heading">
+    <p class="eyebrow">THE DOCUMENTATION COLLECTION</p>
+    <h1 id="heading">Find your guide. Follow your task.</h1>
+    <p>Browse the PDF documentation in one place. Choose a manual, preview it here, or download a copy to keep beside your console.</p>
+    <p class="boundary">Versioned guidance for v1.8.5-rc1, a prerelease. Match each guide to your installed build. Simulated screenshots demonstrate the interface; they do not establish live target compatibility.</p>
+  </section>
+  <main class="workspace">
+    <aside aria-label="Find documentation">
+      <div class="filters">
+        <label for="search">Search the library</label>
+        <input id="search" type="search" placeholder="Try recovery, YAML or uplink…" aria-describedby="search-help">
+        <p id="search-help" class="muted">Search titles, topics and descriptions.</p>
+        <label for="category">Topic</label>
+        <select id="category"><option value="all">All topics</option></select>
+        <label class="archive"><input id="archive" type="checkbox"> Include previous editions</label>
+      </div>
+      <p id="count" role="status" aria-live="polite">Loading documentation…</p>
+      <div id="documents" class="documents"></div>
+      <p id="empty" hidden>No guides match. Try another search or choose all topics.</p>
+      <p id="error" role="alert" hidden>The library could not load. Reload this page or visit the <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/tree/main/docs/manuals">repository manuals</a>.</p>
+    </aside>
+    <section id="reader" tabindex="-1" aria-labelledby="document-title" hidden>
+      <div class="summary">
+        <img id="cover" width="160" height="207" alt="">
+        <div><p id="document-category" class="eyebrow"></p><h2 id="document-title"></h2><p id="description"></p><p id="metadata" class="muted"></p><p id="scope" class="scope"></p>
+          <div class="actions"><a id="open" class="primary" target="_blank" rel="noopener">Open PDF</a><a id="download" class="secondary" download>Download PDF</a><a id="tutorial" hidden>Related video tutorial</a></div>
+        </div>
+      </div>
+      <details class="integrity"><summary>File integrity and source</summary><p>SHA-256: <code id="checksum"></code></p><a href="SHA256SUMS.txt">Download library checksums</a> · <a id="source">Repository PDF</a></details>
+      <p class="viewer-help">Read below, or use <strong>Open PDF</strong> if your browser does not support embedded PDFs. On smaller screens, opening the PDF gives you the full reading area.</p>
+      <iframe id="pdf" title="Selected PDF document" loading="lazy"></iframe>
+    </section>
+  </main>
+  <footer>PDFs keep their original ZTF-Orchestrator cover and formatting. <a href="../tutorials/">Prefer a walkthrough? Browse the video tutorials.</a> <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/tree/main/docs">All repository documentation</a></footer>
+  <noscript><p class="noscript">Enable JavaScript to search and preview the library, or <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/tree/main/docs/manuals">browse the PDF manuals in the repository</a>.</p></noscript>
+</body>
+</html>

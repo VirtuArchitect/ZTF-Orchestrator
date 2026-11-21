@@ -1,5 +1,8 @@
 # ZTF-Orchestrator User Guide
 
+For short task-specific procedures, use the [Workflow and Script Quick Guides](quick-guides/README.md),
+including the complete editable Word and PDF collection.
+
 The [console retirement procedure](console-retirement.md) describes current ZTF 1.x operation and historical integration access.
 
 Reviewed 19 November 2026 against application `f33c9ed` and README revision `27d28a2`. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).

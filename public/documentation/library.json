@@ -1,0 +1,220 @@
+{
+  "updated": "2026-11-21",
+  "documents": [
+    {
+      "id": "illustrated-quick-guides",
+      "title": "Workflow and Script Quick Guides: Illustrated",
+      "category": "Quick Guides",
+      "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
+      "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
+      "description": "133 task guides with prerequisites, inputs, numbered steps, verification and recovery. Includes 117 task-specific console screenshots.",
+      "edition": "Branded edition \u00b7 21 November 2026",
+      "scope": "Source reviewed 20 November 2026 at 79c3ecc; v1.8.5-rc1 prerelease. Screenshots are simulated. Includes separately identified retired reference notes.",
+      "tags": [
+        "workflow",
+        "script",
+        "YAML",
+        "network",
+        "uplink",
+        "storage",
+        "credentials"
+      ],
+      "archived": false,
+      "pages": 308,
+      "bytes": 5968870,
+      "sha256": "ed5a3b67be8c4efe89633393c9c183ec559f097a85c5e2a51c340c1fad0b2187",
+      "tutorial": "08"
+    },
+    {
+      "id": "administrator-user-guide",
+      "title": "Administrator and User Guide",
+      "category": "Administration",
+      "source": "docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
+      "pdf": "files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
+      "description": "The illustrated console manual: deployment, configuration, recovery, monitoring, approvals and administration.",
+      "edition": "Reviewed 19 November 2026",
+      "scope": "Application source f33c9ed; v1.8.5-rc1 prerelease. Training links refreshed separately. Illustrations retain their stated provenance.",
+      "tags": [
+        "manual",
+        "admin",
+        "YAML",
+        "monitoring",
+        "backup",
+        "updates"
+      ],
+      "archived": false,
+      "pages": 156,
+      "bytes": 9576617,
+      "sha256": "6a0d0ef25d2d9f148f8b79d616aa88df09c9ba311dc85cca7925ac59c84d0017",
+      "tutorial": "00"
+    },
+    {
+      "id": "text-quick-guides",
+      "title": "Workflow and Script Quick Guides: Text",
+      "category": "Quick Guides",
+      "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+      "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+      "description": "The complete task-based collection in a compact text edition, with linked contents and operational checks.",
+      "edition": "Branded edition \u00b7 21 November 2026",
+      "scope": "Source reviewed 20 November 2026 at 79c3ecc. Same task coverage as the illustrated edition, without its screenshot collection.",
+      "tags": [
+        "workflow",
+        "script",
+        "YAML",
+        "credentials",
+        "network"
+      ],
+      "archived": false,
+      "pages": 191,
+      "bytes": 2075475,
+      "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+      "tutorial": "08"
+    },
+    {
+      "id": "screenshot-companion",
+      "title": "Quick Guide Screenshot Companion",
+      "category": "Quick Guides",
+      "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
+      "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
+      "description": "Find the matching console view in 117 labelled task-specific screenshots. Use alongside the full task procedures.",
+      "edition": "Branded edition \u00b7 21 November 2026",
+      "scope": "Captured 20 November 2026 against source 79c3ecc. Simulated initial and authoring states; no live infrastructure execution.",
+      "tags": [
+        "workflow",
+        "script",
+        "screenshots",
+        "console"
+      ],
+      "archived": false,
+      "pages": 123,
+      "bytes": 4342824,
+      "sha256": "4a62bce84d37dbed4bc556211a37eb9511f7f6d218db765c9256015bf4ed3614",
+      "tutorial": "08"
+    },
+    {
+      "id": "ahv-appliance-deployment",
+      "title": "AHV Appliance Deployment Quick Guide",
+      "category": "Deployment",
+      "source": "docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf",
+      "pdf": "files/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf",
+      "description": "Deploy the appliance, configure a static IP, prepare SSH access and complete the first web sign-in.",
+      "edition": "Maintained deployment guide",
+      "scope": "Check prerequisites and exact appliance build before applying the procedure. A documentation update does not update an installed appliance.",
+      "tags": [
+        "AHV",
+        "VM",
+        "IP",
+        "SSH",
+        "Netplan",
+        "install"
+      ],
+      "archived": false,
+      "pages": 9,
+      "bytes": 419904,
+      "sha256": "269dfc9e1c1d2398f2ca6480a22a93fec0857caa1559167a62327c877fa41269",
+      "tutorial": "16"
+    },
+    {
+      "id": "disaster-recovery-setup",
+      "title": "Datacenter and Recovery Cluster Profile Setup",
+      "category": "Recovery",
+      "source": "docs/manuals/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf",
+      "pdf": "files/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf",
+      "description": "Link saved deployment and post-configuration automation to a recovery profile without deploying infrastructure.",
+      "edition": "Build-specific \u00b7 2 November 2026",
+      "scope": "Reviewed at a3c9c79 for v1.8.5-rc1-636f191. Earlier build reference: compare with the Administrator and User Guide for later console behaviour.",
+      "tags": [
+        "disaster",
+        "recovery",
+        "profile",
+        "datacenter"
+      ],
+      "archived": false,
+      "pages": 9,
+      "bytes": 618399,
+      "sha256": "ec1404037a7f14aefec916a59debec5c4fab658959e2b207749bb559af96d6d3",
+      "tutorial": "15"
+    },
+    {
+      "id": "ahv-appliance-build",
+      "title": "AHV Appliance Build Guide",
+      "category": "Deployment",
+      "source": "docs/AHV-Appliance-Build-Guide.pdf",
+      "pdf": "files/AHV-Appliance-Build-Guide.pdf",
+      "description": "Reference for building an AHV-importable QCOW2 appliance and understanding baked framework and bundle contents.",
+      "edition": "Build reference",
+      "scope": "Includes historical NKP/runtime references. Retained components do not imply a current console execution option. Verify current build instructions in the repository.",
+      "tags": [
+        "AHV",
+        "QCOW2",
+        "build",
+        "image",
+        "offline"
+      ],
+      "archived": false,
+      "pages": 5,
+      "bytes": 291376,
+      "sha256": "0b6c24c0fc35be0efeb3e843f91648a00fb3f2d9bdd2ec94ae89942afa33cd0a"
+    },
+    {
+      "id": "previous-text",
+      "title": "Quick Guides: Previous Text Edition",
+      "category": "Quick Guides",
+      "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
+      "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
+      "description": "Preserved earlier edition before the original ZTF cover and document formatting were restored. Choose the branded edition for current presentation.",
+      "edition": "Previous edition \u00b7 20 November 2026",
+      "scope": "Historical presentation of the source-reviewed 79c3ecc guide content. Superseded by the branded edition; simulated screenshot boundaries still apply.",
+      "tags": [
+        "archive",
+        "previous",
+        "workflow",
+        "script"
+      ],
+      "archived": true,
+      "pages": 162,
+      "bytes": 1882866,
+      "sha256": "8b5fb2350c15276ef73596abbfa86a355309bb07ac349c8fe0a261f405efa44f"
+    },
+    {
+      "id": "previous-illustrated",
+      "title": "Quick Guides: Previous Illustrated Edition",
+      "category": "Quick Guides",
+      "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
+      "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
+      "description": "Preserved earlier edition before the original ZTF cover and document formatting were restored. Choose the branded edition for current presentation.",
+      "edition": "Previous edition \u00b7 20 November 2026",
+      "scope": "Historical presentation of the source-reviewed 79c3ecc guide content. Superseded by the branded edition; simulated screenshot boundaries still apply.",
+      "tags": [
+        "archive",
+        "previous",
+        "workflow",
+        "script"
+      ],
+      "archived": true,
+      "pages": 279,
+      "bytes": 5781153,
+      "sha256": "3b8c25afa8245790a377f8edae6d77a2f0deb63800add4056094b79b478e7931"
+    },
+    {
+      "id": "previous-screenshots",
+      "title": "Screenshot Companion: Previous Edition",
+      "category": "Quick Guides",
+      "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
+      "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
+      "description": "Preserved earlier edition before the original ZTF cover and document formatting were restored. Choose the branded edition for current presentation.",
+      "edition": "Previous edition \u00b7 20 November 2026",
+      "scope": "Historical presentation of the source-reviewed 79c3ecc guide content. Superseded by the branded edition; simulated screenshot boundaries still apply.",
+      "tags": [
+        "archive",
+        "previous",
+        "workflow",
+        "script"
+      ],
+      "archived": true,
+      "pages": 122,
+      "bytes": 4148857,
+      "sha256": "3991fa4a5acf2f10dfda1c5ca440cc25eef8a57228dc77126b92015d40ede0aa"
+    }
+  ]
+}
