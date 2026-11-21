@@ -38,7 +38,7 @@ Current ZTF-Orchestrator release for this drill: `v1.8.5-rc1`.
 7. Restore the backup through the restore dialog by typing `RESTORE`.
 8. Restart the Orchestrator service.
 9. Sign back in and confirm:
-   - `/api/health` returns healthy.
+   - `/health` returns healthy.
    - Settings load successfully.
    - Audit log loads successfully.
    - Jobs page loads successfully.

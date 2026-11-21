@@ -2,6 +2,7 @@ const byId = id => document.getElementById(id);
 const search = byId('search');
 const category = byId('category');
 const archive = byId('archive');
+const documentType = byId('document-type');
 const list = byId('documents');
 let documents = [];
 let selected;
@@ -15,12 +16,14 @@ function selectDocument(item, updateUrl = true, moveFocus = false) {
   byId('metadata').textContent = `${item.pages} pages · ${(item.bytes / 1048576).toFixed(1)} MiB · ${item.edition}`;
   byId('scope').textContent = item.scope;
   byId('checksum').textContent = item.sha256;
-  byId('cover').src = `covers/${item.id}.jpg`;
+  byId('cover').src = `covers/${item.coverFile || item.id + '.jpg'}`;
   byId('cover').alt = `${item.title}: original PDF cover`;
   byId('open').href = item.pdf;
   byId('download').href = item.pdf;
   byId('download').download = item.pdf.split('/').pop();
   byId('source').href = `https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/${item.source}`;
+  byId('source-document').hidden = !item.sourceDocument;
+  if (item.sourceDocument) byId('source-document').href = `https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/${item.sourceDocument}`;
   byId('pdf').src = `${item.pdf}#view=FitH`;
   byId('pdf').title = `${item.title} PDF preview`;
   byId('tutorial').hidden = item.tutorial === undefined;
@@ -41,6 +44,7 @@ function filterDocuments() {
   const words = search.value.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   const visible = documents.filter(item => (archive.checked || !item.archived) &&
     (category.value === 'all' || item.category === category.value) &&
+    (documentType.value === 'all' || (documentType.value === 'design' ? ['design', 'pilot'].includes(item.kind) : (item.kind || 'guide') === documentType.value)) &&
     words.every(word => `${item.title} ${item.description} ${item.tags.join(' ')}`.toLocaleLowerCase().includes(word)));
   list.replaceChildren();
   for (const item of visible) {
@@ -52,12 +56,12 @@ function filterDocuments() {
     const title = document.createElement('strong');
     title.textContent = item.title;
     const detail = document.createElement('span');
-    detail.textContent = `${item.category} · ${item.pages} pages${item.archived ? ' · Previous edition': ''}`;
+    detail.textContent = `${item.category} · ${item.pages} pages${item.archived ? ' · Historical reference' : item.kind === 'reference' ? ' · Technical reference' : ''}`;
     button.append(title, detail);
     button.addEventListener('click', () => selectDocument(item, true, true));
     list.append(button);
   }
-  byId('count').textContent = `${visible.length} ${visible.length === 1 ? 'document': 'documents'}${archive.checked ? ' · including previous editions': ' · previous editions hidden'}`;
+  byId('count').textContent = `${visible.length} ${visible.length === 1 ? 'document': 'documents'}${archive.checked ? ' · including historical references': ' · historical references hidden'}`;
   byId('empty').hidden = visible.length > 0;
   // The reader retains the chosen PDF while the list is narrowed.
 }
@@ -69,7 +73,10 @@ async function initialize() {
     const catalogue = await response.json();
     documents = catalogue.documents;
     // Only catalogue IDs and packaged PDF paths can reach the viewer; query strings never become URLs.
-    if (!documents.length || !documents.every(item => /^[a-z0-9-]+$/.test(item.id) && /^files\/[A-Za-z0-9.-]+\.pdf$/.test(item.pdf) && /^docs\/[A-Za-z0-9/._-]+\.pdf$/.test(item.source) && !item.source.includes('..'))) throw new Error('Invalid catalogue');
+    if (!documents.length || !documents.every(item => /^[a-z0-9-]+$/.test(item.id) && /^files\/[A-Za-z0-9.-]+\.pdf$/.test(item.pdf) && /^docs\/[A-Za-z0-9/._-]+\.pdf$/.test(item.source) && !item.source.includes('..') && (!item.coverFile || /^[a-z0-9-]+\.jpg$/.test(item.coverFile)) && (!item.sourceDocument || /^[A-Za-z0-9/._-]+\.(md|docx)$/.test(item.sourceDocument) && !item.sourceDocument.includes('..')))) throw new Error('Invalid catalogue');
+    const currentCount = documents.filter(item => !item.archived).length;
+    const reviewed = new Date(`${catalogue.updated}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    byId('collection-status').textContent = `${currentCount} current guides and references · ${documents.length - currentCount} historical documents · Source ${catalogue.applicationSource.slice(0, 7)} · ${reviewed}`;
     for (const name of [...new Set(documents.map(item => item.category))]) {
       const option = document.createElement('option');
       option.value = name;
@@ -84,6 +91,7 @@ async function initialize() {
     search.addEventListener('input', filterDocuments);
     category.addEventListener('change', filterDocuments);
     archive.addEventListener('change', filterDocuments);
+    documentType.addEventListener('change', filterDocuments);
   } catch {
     byId('count').textContent = 'Documentation unavailable';
     byId('error').hidden = false;

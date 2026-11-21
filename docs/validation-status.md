@@ -1,5 +1,14 @@
 # Validation Status
 
+
+## Current source verification 21 November 2026
+
+Application source `48eb875931ebfc73abe3c564e9996c0c030a179e` passed [main CI](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/44921462182): 1,878 tests passed, four were skipped and measured server coverage was 81.50%. Frontend build/audit, caption rendering, Docker build and the Docker smoke test passed. Pages deployment and container publishing passed separately. These are repository and simulated/container checks, not live Nutanix compatibility or production recovery evidence.
+
+Current source includes per-operation [PE TLS options](pe-tls-options.md) and the separate [Create Virtual Switch](create-virtual-switch.md) action. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired. Retained tests, fixtures, templates and runtime files do not establish an available console execution path. Native Foundation Deploy is a separate workflow with planning/review APIs and an explicitly gated controlled-UAT adapter path. A successful planning review is not adapter activation.
+
+The detailed earlier review records below retain their original scope. Historical integration test coverage is not current execution availability.
+
 Current application baseline: `a3c9c79`; consolidated appliance bundle
 `v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
 
@@ -76,7 +85,7 @@ checks, static configuration checks, or local Docker checks:
 | Appliance kit | Appliance Compose file, first-boot scripts, cloud-init examples, and release packaging workflow are included. Local validation covers Compose rendering and script syntax only; QCOW2 image build and AHV import require infrastructure UAT. |
 | Durable execution jobs | Job submission, persisted logs, estimated phase progress, execution history integration, cancellation, terminal job deletion controls, and interrupted-job recovery logic are implemented and tested. |
 | Dashboard and health | `/health` reports runtime, storage backend, database location, retention, job queue counts, and NKP binary readiness. |
-| NKP integration | Safe-phase install/update, template-aware profile packs, installed-example schema inference, example import, YAML preview/generation, profile validation, profile revisioning/restoration, execution trace metadata, approval-gated execution, task ID extraction, and NKP binary registration/upload flows are implemented and covered by repository-level tests. |
+| NKP integration | Console setup and execution are retired. Saved profiles, binaries, historical approvals/jobs and retained read paths do not provide new phase submission. |
 | Validation evidence | NKP evidence records, generic ZTF workflow UAT packs, and native Foundation review-packet evidence records are tested locally, including role-gated creation/list/download/delete behavior, generated or saved config capture, server-computed config hashes, readiness/schema metadata, redacted job output excerpts, native Foundation packet manifests, approval/phase-bound capture metadata, artifact hashes, approval binding from captured record IDs, and ZIP bundle export. |
 | Pipelines | CRUD, viewer access, invalid workflows, empty steps, and streamed execution behavior are tested. |
 | Schedules | Schedule validation and configured config directory behavior are tested. |
@@ -152,9 +161,4 @@ configuration workflows. Full enterprise validation requires environment-specifi
 UAT against the target Nutanix infrastructure, PostgreSQL deployment,
 Kubernetes/load-balancing model, and disaster recovery process.
 
-ZTF 2.x support is intentionally tracked outside the legacy workflow lane in the
-[ZTF 2.x Plan/Apply Roadmap](ztf-2x-plan-apply-roadmap.md). Current validation
-covers runtime detection, job admission guards, YAML Studio shape checks,
-Workflows 2.x, Scripts 2.x converted actions, demo visibility, and Docker
-default bake validation. Live `ztf plan/apply` resource behavior still requires
-environment-specific UAT against a reviewed ZeroTouch Framework 2.x checkout.
+ZTF 2.x console execution is retired. The [ZTF 2.x Plan/Apply Roadmap](ztf-2x-plan-apply-roadmap.md) and retained tests describe historical implementation and design context; they do not provide current plan/apply availability. See [console retirement](console-retirement.md).

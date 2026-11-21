@@ -787,10 +787,14 @@ def test_ztf2_converted_script_actions_are_separate_from_legacy_launcher():
     assert 'Ztf2WorkflowForm' in scripts2x
     assert '--script' not in scripts2x
 
-    for text in [readme, user_guide, demo_guide]:
+    for text in [readme, demo_guide]:
         assert 'Scripts 2.x' in text
         assert 'ztf2:plan' in text
         assert 'Create Security Groups' in text
+    retired_section = user_guide.split('### Scripts 2.x', 1)[1].split('\n### ', 1)[0]
+    assert 'This console integration is retired.' in retired_section
+    assert 'historical records' in retired_section
+    assert 'HTTP 410' in retired_section
 
 
 def test_destructive_and_pe_preflight_script_guards_cover_high_risk_ids():

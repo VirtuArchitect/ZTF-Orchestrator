@@ -1,6 +1,6 @@
 # AHV Uplink Migration Quick Guide
 
-Guide ID: `QG-O-ahv-uplink-migration` · Reviewed: 20 November 2026 · Source: `79c3ecc`
+Guide ID: `QG-O-ahv-uplink-migration` · Reviewed: 21 November 2026 · Source: `48eb875`
 
 Status: Current source procedure. Read [Using the quick guides](../using-the-guides.md) first.
 
@@ -18,7 +18,7 @@ Administrator; 3–16 healthy AHV hosts; reviewed fabric/VLAN/MTU and out-of-ban
 
 ## Procedure
 
-1. Open Configure → AHV Uplink Migration. Choose PE direct — no Prism Central unless you deliberately need the PC-managed transport. Keep Verify PE TLS certificate selected; use only the documented per-run, reasoned exception if separately approved.
+1. Open Configure → AHV Uplink Migration. Choose PE direct : no Prism Central unless you deliberately need the PC-managed transport. Keep Verify PE TLS certificate selected; use only the documented per-run, reasoned exception if separately approved.
 2. Paste one valid JSON object mapping all CVM IPv4 addresses to their independently verified SHA256: host-key fingerprints. Do not paste separate JSON objects per line. A pin has SHA256: followed by 43 base64 characters; no trailing full stop. Verify identity through a trusted console; an unverified key scan is insufficient.
 3. Run Discover cluster (read-only) and review serials, health and current OVS membership. Choose a new or consistently existing destination. In PE-direct mode vs1 means local bridge br1, not a PC distributed-switch object.
 4. Assign at least two destination uplinks per host while retaining at least two operational br0 uplinks. A new destination therefore needs at least four suitable physical NICs on every host. Check the real cabling and VLAN/MTU design independently.
@@ -36,14 +36,14 @@ Live writes default off. Missing pins, inconsistent inventory or unhealthy hosts
 
 Record the exact target, installed build, reviewed config filename/hash, approval if applicable, job/task/run IDs and redacted before/after checks. Keep unresolved follow-up with the change record.
 
-## Screen reference
-
-![AHV Uplink Migration authoring screen with simulated data](../../assets/quick-guides/2026-11-20/operations-ahv-uplink-migration.png)
-
-Local demonstration of **Configure / initial draft** at `/configure/ahv-uplink-migration`, captured from source `79c3ecc` on 20 November 2026. Values and credential references are synthetic; required fields may intentionally be incomplete. This is the initial screen or selected configuration panel, not evidence of a successful run. Lower form sections may be outside the captured viewport. Follow this guide's preparation, approval and verification steps.
-
 ## References
 
 - [Detailed procedure](../../ahv-uplink-migration.md)
 - [Route and access controls](../../../src/App.tsx)
 - [Guide index](../README.md)
+
+## Screen reference
+
+![AHV Uplink Migration authoring screen with simulated data](../../assets/quick-guides/2026-11-21/operations-ahv-uplink-migration.png)
+
+Simulated initial/authoring view captured 21 November 2026 from application source `48eb875`. State: **Configure / initial draft** at `/configure/ahv-uplink-migration`. Values are synthetic and required inputs may be incomplete. This is not evidence of a successful run, live target authentication or hardware compatibility. Lower form sections may be outside the captured viewport. Follow the preparation, approval, verification and recovery instructions.

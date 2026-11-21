@@ -4,10 +4,7 @@ Current release marker: `v1.8.5-rc1` (prerelease; production deployment use repo
 
 The native Foundation engine is the planned ZTF-Orchestrator capability for
 operator-owned bare-metal deployment planning across multiple sites, hardware
-providers, and Nutanix cluster deployment types. In this release it is
-planning-only: it validates intent shape and policy, but it does not image
-nodes, power-cycle hardware, create clusters, or replace Nutanix-supported
-Foundation execution paths.
+providers, and Nutanix cluster deployment types. Default planning/review operations validate intent shape and policy without imaging nodes, power-cycling hardware or creating clusters. The dedicated Native Foundation Deploy workflow also has a separate controlled-UAT adapter path, gated by deployment flags, a reviewed absolute adapter command, exact plan/approval and target-version validation. Planning reviews do not enable that adapter. This workflow is distinct from the retired Native pipeline executor option and does not replace Nutanix-supported Foundation execution paths.
 
 ## Goal
 

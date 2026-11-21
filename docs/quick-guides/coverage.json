@@ -1,11 +1,11 @@
 {
-  "reviewed": "2026-11-20",
-  "sourceCommit": "79c3eccde1a0361ddfb49850e78c732217980f26",
-  "scope": "Console workflow/script catalogue plus eight dedicated operator flows; repository engineering helpers are outside scope.",
+  "reviewed": "2026-11-21",
+  "sourceCommit": "48eb875931ebfc73abe3c564e9996c0c030a179e",
+  "scope": "Console workflow/script catalogue plus nine dedicated operator flows; repository engineering helpers are outside scope.",
   "counts": {
     "currentWorkflows": 30,
     "scripts": 79,
-    "dedicatedOperations": 8,
+    "dedicatedOperations": 9,
     "retiredReferences": 16
   },
   "guides": [
@@ -829,116 +829,125 @@
       "status": "Current source procedure"
     },
     {
+      "kind": "operations",
+      "id": "create-virtual-switch",
+      "title": "Create Virtual Switch",
+      "path": "operations/create-virtual-switch.md",
+      "status": "Current source procedure"
+    },
+    {
       "kind": "retired",
       "id": "workflow-ztf2-prism-category",
       "title": "ZTF 2.x Prism Category",
       "path": "retired/workflow-ztf2-prism-category.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-project",
       "title": "ZTF 2.x Project",
       "path": "retired/workflow-ztf2-project.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-subnet-intent",
       "title": "ZTF 2.x Subnet Intent",
       "path": "retired/workflow-ztf2-subnet-intent.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-image-registration",
       "title": "ZTF 2.x Image Registration",
       "path": "retired/workflow-ztf2-image-registration.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-vm-deployment",
       "title": "ZTF 2.x VM Deployment",
       "path": "retired/workflow-ztf2-vm-deployment.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-security-groups",
       "title": "ZTF 2.x Security Groups",
       "path": "retired/workflow-ztf2-security-groups.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-protection-policy",
       "title": "ZTF 2.x Protection Policy",
       "path": "retired/workflow-ztf2-protection-policy.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "workflow-ztf2-recovery-plan",
       "title": "ZTF 2.x Recovery Plan",
       "path": "retired/workflow-ztf2-recovery-plan.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-category-pc",
       "title": "Create Category (PC)",
       "path": "retired/script-ztf2-create-category-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-project-pc",
       "title": "Create Project (PC)",
       "path": "retired/script-ztf2-create-project-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-subnets-pc",
       "title": "Create Subnets (PC)",
       "path": "retired/script-ztf2-create-subnets-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-upload-image-pc",
       "title": "Upload Image (PC)",
       "path": "retired/script-ztf2-upload-image-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-vms-pc",
       "title": "Create VMs (PC)",
       "path": "retired/script-ztf2-create-vms-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-security-groups-pc",
       "title": "Create Security Groups (PC)",
       "path": "retired/script-ztf2-create-security-groups-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-protection-policy-pc",
       "title": "Create Protection Policy (PC)",
       "path": "retired/script-ztf2-create-protection-policy-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     },
     {
       "kind": "retired",
       "id": "script-ztf2-create-recovery-plan-pc",
       "title": "Create Recovery Plan (PC)",
       "path": "retired/script-ztf2-create-recovery-plan-pc.md",
-      "status": "Retired console entry \u2014 reference only"
+      "status": "Retired console entry : reference only"
     }
-  ]
+  ],
+  "screenshotDirectory": "docs/assets/quick-guides/2026-11-21",
+  "applicationSource": "48eb875931ebfc73abe3c564e9996c0c030a179e"
 }

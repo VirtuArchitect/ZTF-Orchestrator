@@ -1,56 +1,53 @@
-# PDF documentation library
+# PDF Documentation Collection Maintenance
 
-The Pages site provides a shared PDF library at
-<https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/>.
-The tutorial page and project navigation link to it. Nothing is uploaded by
-visitors; all PDFs are selected from the repository documentation set.
+The public collection at <https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/> brings maintained manuals, task procedures, runbooks, architecture, governance and API references into one searchable PDF library. Current guides and historical references are separate. A source snapshot is not a hardware validation result or an appliance update.
 
-`public/documentation/library.json` is the curated catalogue. Each entry records
-its repository source, original PDF cover thumbnail, page count, size, SHA-256,
-topic, edition and source-review boundary. Previous unbranded Quick Guide
-editions are hidden until the reader enables **Include previous editions**.
-Search matches titles, descriptions and topic keywords, not the full PDF text.
-Use the browser PDF viewer's own Find command to search inside a guide.
+## Source and publication records
 
-Build the frontend, then package the library:
+`public/documentation/library.json` controls titles, categories, document types, PDF paths, page counts, file sizes and SHA-256 checksums. `docs/manuals/current/collection-plan.json` selects Markdown sources for PDF export. The collection register records source dispositions, current input fingerprints and provided-document provenance. Private deployment packs and dated lab reports are not current public operating guidance.
+
+Current PDFs record their Markdown and local-figure inputs. Text fingerprints normalise UTF-8 line endings to LF; binary sources use exact bytes. The packager rejects changed current inputs, mismatched PDF bytes, duplicate output filenames, invalid IDs and sources outside the documentation allowlist. Historical PDFs retain their recorded edition and byte checksum; their earlier source fingerprints are provenance rather than a requirement that the current checkout still contain identical text.
+
+## Regenerate a Markdown PDF
+
+Review the actual source and implementation first. Exporting text does not establish semantic freshness, target compatibility or approval. Record the reviewed application commit and date in the collection plan. Use an authoring toolkit with Node, marked, Playwright and Chrome, plus Python, pypdf and reportlab. These are authoring tools, not application runtime dependencies. Arial fonts are required to preserve the supplied guide format.
+
+```powershell
+$env:DOCUMENTATION_TOOL_MODULES = '<authoring toolkit>/node_modules'
+$env:DOCUMENTATION_ARIAL_FONT = '<fonts>/arial.ttf'
+$env:DOCUMENTATION_ARIAL_BOLD_FONT = '<fonts>/arialbd.ttf'
+node scripts/documentation/render-markdown.cjs <document-id-fragment>
+python scripts/documentation/update-markdown-pdfs.py --font $env:DOCUMENTATION_ARIAL_FONT
+```
+
+Omit the ID fragment to render the selected Markdown set. Render output defaults to `output/documentation-render`; `DOCUMENTATION_RENDER_DIR` selects another working directory. Raw HTML is escaped, figures are embedded from repository assets, external rendering requests are blocked and PDF links use public documentation or repository URLs. Sources and output IDs must remain inside the permitted boundaries.
+
+The PDF updater retains the standard ZTF cover, Letter layout where applicable, Arial body text, navy tables and running furniture. A later dated edition preserves the earlier PDF as a historical entry. Inspect the rendered pages and links before publication. Frozen provided Word/PDF editions require their own source review and controlled export; they are not silently rewritten by this Markdown tool.
+
+When a task PDF changes, rebuild the complete current task book:
+
+```powershell
+python scripts/documentation/build-task-book.py
+```
+
+This book combines common preparation and every current task body, adds a linked contents list and bookmarks, and applies continuous physical page numbering. Retired catalogue entries remain separate historical references. Update the source register and any new source dispositions before publication.
+
+## Build and publish
 
 ```sh
 npm run build:demo -- --outDir dist-demo/demo
 node scripts/build-documentation-library.mjs dist-demo/documentation
 ```
 
-The Pages workflow moves the public library shell to the site root, then copies
-the allowlisted source PDFs into `documentation/files/`. The packager checks
-PDF signatures, repository containment and the recorded file hashes before
-copying. A mismatch fails publication instead of silently publishing stale
-metadata. `SHA256SUMS.txt` is generated from those verified files. PDFs remain
-byte-identical; original cover pages, bookmarks and links are preserved.
+The existing Pages workflow places the library beside the tutorials and copies verified PDFs into `documentation/files/`. It generates `SHA256SUMS.txt` and includes the collection register. No PDF regeneration occurs in the deployment job. Publication uses the protected main branch and required checks. A source branch or local build is not a live deployment.
 
-When a guide changes, update its catalogue metadata and render its first page
-as `public/documentation/covers/<id>.jpg`. Preserve its review provenance; a
-format or download-link refresh does not establish a new content review.
-Do not add environment-specific or confidential documents to the public set.
+## Required review
 
-Links such as `?doc=illustrated-quick-guides` select a specific guide. Unknown
-IDs select the default guide. Query strings never become file paths or HTML.
-The viewer uses packaged same-origin PDFs, with separate open/download links
-for mobile browsers and browsers without an embedded PDF viewer. JavaScript
-or catalogue failures provide a repository-manuals fallback.
+- Compare operating instructions, visible controls, routes and retained execution boundaries against the reviewed source. Keep Native Foundation Deploy distinct from the retired Native pipeline executor. NKP and ZTF 2.x console execution remain retired.
+- Verify source hashes, all PDF responses, content types, sizes and byte checksums. Confirm the complete task book has the expected current task set and valid contents destinations.
+- Render every changed PDF page, inspect layout and figures, check text preservation and reject authoring-machine or private paths in links and metadata.
+- Use generic or simulated records. Label historical images and evidence. Preserve existing source documents and earlier editions.
+- Exercise title/topic/type search, historical filtering, deep links, invalid-ID handling, empty results and catalogue failure fallback. Check keyboard and mobile-sized layouts.
+- Verify the deployed source identity and actual PDF downloads after Pages publication. Test the embedded reader and keep independent Open PDF and Download PDF links available for browsers without embedding support.
 
-No runtime dependency, authentication, appliance or workflow behavior changes.
-
-CI verifies PDF packaging in the frontend job, which supplies Node. The Python
-integration test also runs where Node is installed and skips in Python-only
-environments. Catalogue, review-boundary and navigation tests remain enabled.
-
-## Verification: 21 November 2026
-
-- `python -m pytest tests/test_documentation_library.py tests/test_quick_guides.py tests/test_documentation_media.py tests/test_release_integrity.py -q`: 49 passed.
-- `npm run build` and `npm run build:demo -- --outDir dist-demo/demo`: passed. Existing large-chunk and unset non-demo placeholder warnings remain.
-- `git diff --check` and `node --check` for the three new JavaScript modules: passed.
-- `node scripts/smoke-documentation-library.mjs <local-documentation-URL> <screenshot-directory>`: all ten PDF responses were HTTP 200, PDF content types and SHA-256 matched; all covers and related tutorial links resolved. Search, empty results, topic filtering, archive selection, deep links, invalid-ID fallback, catalogue failure fallback and 390-pixel mobile focus/overflow checks passed. Native Chrome PDF preview and original cover were inspected visually.
-- File/download review: repository-only source paths, fixed PDF IDs, same-origin viewer URLs, text-only DOM insertion, no visitor uploads, secrets or new dependencies. A PDF text scan found no supplied lab identifiers or private user paths; generic Windows placeholders and product names are retained.
-
-These are local build and browser results. No production deployment or live
-appliance validation was performed. Other browsers use their native PDF viewer;
-the separate open/download links remain available when embedding is unsupported.
+The library is static and accepts no visitor uploads. Query strings select catalogue IDs and never become arbitrary viewer URLs or HTML. No runtime credentials, permissions, infrastructure write gates or application data are changed by documentation publication.

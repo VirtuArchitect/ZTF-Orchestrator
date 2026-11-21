@@ -1,6 +1,6 @@
 # Using the quick guides
 
-Reviewed 20 November 2026 against application source `79c3ecc`. These procedures describe source behaviour; compare your installed build before use. v1.8.5-rc1 remains a prerelease; documentation does not update an appliance or certify target compatibility.
+Reviewed 21 November 2026 against application source `48eb875`. These procedures describe source behaviour; compare your installed build before use. v1.8.5-rc1 remains a prerelease; documentation does not update an appliance or certify target compatibility.
 
 The library follows the ZTF operator documentation structure: purpose, prerequisites, required inputs, numbered procedure, validation, failure/recovery and evidence. The Word/PDF edition uses the maintained manual's portrait geometry, Arial typography and navy table headers. Each catalogue entry also has an individually linked Markdown guide.
 
@@ -42,3 +42,8 @@ This collection covers the UI workflow/script catalogue, retained retired entrie
 - [Current source and appliance status](../current-status.md)
 - [Console retirement](../console-retirement.md)
 - [Return to the guide index](README.md)
+
+
+## Current PE transport policy
+
+Supported PE operations now expose per-operation TLS verification and an explicit exception reason. Prefer certificate verification when the PE certificate is trusted. New deployment/recovery drafts may start with a reviewed exception; inspect the actual setting instead of assuming the checkbox is enabled. HTTPS encryption is retained while server identity is not certificate-authenticated when verification is bypassed. Changing the transport choice requires fresh review and approval where that operation uses an approved plan. PC certificate policy and pinned CVM/AHV SSH identity remain separate. Consult [PE TLS options](../pe-tls-options.md) and the detailed procedure for the selected action.

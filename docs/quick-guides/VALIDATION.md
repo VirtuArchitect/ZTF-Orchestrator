@@ -1,140 +1,25 @@
-# Quick Guide Validation Record
+# Quick Guide Validation and Source Checks
 
-Reviewed 20 November 2026 against application source
-`79c3eccde1a0361ddfb49850e78c732217980f26`.
+The current guide set is aligned to application source `48eb875931ebfc73abe3c564e9996c0c030a179e`, reviewed 21 November 2026 for v1.8.5-rc1 prerelease. It covers 30 workflows, 79 scripts and nine dedicated operations. Sixteen retired entries remain reference-only.
 
-## Cover and format correction on 21 November 2026
+## Current procedure and screenshot coverage
 
-The corrected **Branded** editions restore the unchanged standard Operational
-Quick Guides cover from the existing Multiple Cluster Deployment Planning guide.
-The matching editable Initial Host/CVM Password Setup guide supplies the body
-format: Letter portrait, Arial, 20 pt titles, 15 pt subheadings, 11 pt body,
-Team Operational Quick Guides header, versioned footer and navy tables. The
-cover is a separate full-page section with no footer. Inline screenshots retain
-automatic line height so the reference's fixed text-line spacing cannot clip them.
+The coverage manifest records each guide ID and source path. Current source schemas supply the script wizard field tables. Every current task has a matching source-identified simulated authoring screenshot; the capture manifest records route, state, dimensions and SHA-256 for all 118 PNGs. Real API calls and external network requests were blocked during capture. No discovery, approval, job, installation or infrastructure change was submitted.
 
-The corrected outputs are **191 pages** for text, **308 pages** illustrated and
-**123 pages** for the screenshot companion. Their contents and page fields were
-refreshed in Microsoft Word. Every PDF page was rendered, with cover, body,
-table and screenshot samples inspected. Checks verified Letter geometry, the
-correct header/footer on every body page, no text or images outside the page,
-resolved internal links, all 133 guide IDs in both full collections and all
-117 task screenshots in the illustrated and companion editions. The exported
-cover was compared with the actual reference cover render.
+Required preparation includes installed-build identity, exact targets, credential references, certificate and SSH trust policy, applicable approvals, recovery arrangements and evidence ownership. Per-operation PE TLS choices do not bypass PC or SSH identity checks. Planning and review success is separate from enabling a hardware mutation gate. Native Foundation Deploy remains distinct from the retired Native pipeline executor.
 
-Editable procedures, captions, references and table values were compared with
-the previous editions and are unchanged; only subject/edition labels, contents
-page numbers and formatting differ. Longer tasks were balanced across pages to
-avoid isolated evidence/reference continuations. All seven earlier Word/PDF/ZIP
-downloads remain byte-identical to their existing manifests. Reference files and
-the task screenshot PNGs remain unchanged.
+## Artifact review procedure
 
-`python -m pytest tests/test_quick_guides.py tests/test_release_integrity.py -q`
-passed **35 tests**, including the standard cover, page-section geometry, font
-sizes, page furniture, original-file preservation and embedded screenshot checks.
-The [branding manifest](../manuals/workflow-script-quick-guides-branding.json)
-and [corrected edition checksums](../manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded-SHA256SUMS.txt)
-identify the exact files. This correction changes no runtime behaviour or
-infrastructure; source review and simulated screenshot provenance remain dated
-20 November 2026 at `79c3ecc`. No release or production-readiness status changes.
+1. Check every current workflow, script and dedicated operation against its maintained catalogue or documented route. Retired entries must remain explicitly non-executable references.
+2. Compare each guide to its field schema and detailed procedure. Check generated examples, including the plain-VLAN workaround that omits an incomplete IPAM block.
+3. Match each screenshot to its guide and manifest row, rather than checking only the total. Review current transport controls and the Create Virtual Switch state. Treat incomplete synthetic inputs as authoring examples.
+4. Verify every source/image digest and PDF byte checksum. Normalise only text line endings; preserve binary input bytes.
+5. Render every changed PDF page and inspect cover, headings, tables, code, figures, running furniture, continuation pages and links. Use independent PDF text extraction for wrapped table cells before treating extraction differences as missing content.
+6. Ensure the current complete task book contains all 118 current tasks, linked contents destinations, bookmarks and continuous physical page numbering. Keep previous Word/PDF editions unchanged.
+7. Run the documentation, catalogue, media and release-integrity checks, the frontend builds and representative browser smoke tests. Verify every published PDF response and checksum after deployment.
 
-## Screenshot addition
+## Evidence and operating limits
 
-The illustrated edition adds **117 matching task screenshots**, covering all
-30 current workflows, 79 scripts and eight dedicated operations. The 16 retired
-entries retain reference notes without current execution screenshots.
+Screenshots are simulated initial/authoring states. Repository tests, mocked endpoints, container checks and source review do not establish live target compatibility, production acceptance, an achieved RPO/RTO or application recovery. Verify the actual installed build and applicable vendor procedure independently.
 
-Screens were captured through the actual UI of an isolated local source demo,
-with external requests blocked and no real backend connected. Synthetic
-credential references and documentation addresses were entered in the script
-forms; other visible values can be source-provided demonstration defaults or
-placeholders. No Run, Apply, Dry Run, Discover or approval submission was invoked.
-Each capture visibly states that its data is simulated and there is no live
-execution. Some required fields are deliberately incomplete. Captures show the
-initial screen or selected configuration panel; lower sections may be outside
-the viewport. No runtime code or security setting was changed for the captures.
-
-The [capture manifest](../assets/quick-guides/2026-11-20/capture-manifest.json)
-binds each task ID to its route, state, PNG dimensions, source commit and SHA-256.
-All 117 images were reviewed in contact sheets, with representative forms also
-inspected at full size. The illustrated Word file embeds every image; a coverage
-test verifies the PNG identities, hashes, guide links and embedded image bytes.
-
-Microsoft Word refreshed the contents and exported the **279-page illustrated
-PDF** and **122-page screenshot companion**. All pages were rendered; structural
-checks found the expected 117 screenshot placements in each PDF, no text outside
-the page bounds and no missing guide IDs in the full collection. Link checks
-resolved internal destinations. Representative inserted-image pages were
-inspected at full size. The original text-only Word and PDF hashes remain
-unchanged. The [edition manifest](../manuals/workflow-script-quick-guides-screenshots.json)
-and [checksums](../manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-SHA256SUMS.txt)
-identify the new downloads. The PNG ZIP passed archive integrity checks.
-
-`python -m pytest tests/test_quick_guides.py tests/test_release_integrity.py -q`
-passed **34 tests** after adding screenshot coverage. Browser capture and gallery
-checks establish UI/document delivery only; they do not validate target hardware
-or live operations. The original text-edition validation record follows.
-
-## Coverage and source review
-
-- All 30 current workflow entries and 79 scripts in `src/data.ts` have individual guides.
-- Eight dedicated operator flows have separate guides, including AHV uplinks,
-  DARE, default-switch MTU, post-deployment, pipelines, recovery, appliance
-  updates and Upgrade Advisor.
-- Eight retired workflows and eight retired script entries have historical
-  reference notes that explicitly prohibit following the retired execution path.
-- All 508 script-wizard inputs were compared with `src/scriptConfigSchemas.ts`.
-  The guides distinguish form-required fields from additional dependencies of
-  the selected operation.
-- Detailed workflow documents, execution forms, routes and post-cluster control
-  modes were reviewed. Older documents' retired integration instructions do not
-  override the current console retirement boundary.
-
-## Automated checks
-
-`python -m pytest tests/test_quick_guides.py tests/test_release_integrity.py -q`
-passed **33 tests**. Coverage checks compare the actual catalogue IDs with the
-manifest and index, check guide structure and local links, and parse the plain
-VLAN example to ensure it has no incomplete IPAM block. `git diff --check` passed.
-
-The local HTTP smoke test served the index, common preparation instructions
-and all **133 individual guides** successfully. This verifies local document
-delivery; it is not website publication or a workflow execution test.
-
-## Word and PDF checks
-
-The editable collection copies the maintained manual's portrait page system,
-Arial typography and navy input-table design. Compact spacing and input guidance
-suit the quick-guide format. Longer script guides separate preparation/inputs
-from procedure and acceptance. The original manual remains unchanged.
-
-Microsoft Word refreshed the contents and page fields and exported the matching
-**162-page PDF**. Every PDF page was rendered and reviewed in contact sheets,
-with representative input tables also inspected at full size. Text-bound checks
-found no page overflow, all 133 guide IDs were present, and no reference-only or
-blank continuation pages remained. PDF link checks examined **786 links** and
-resolved their internal destinations. Local links are checked separately;
-external vendor/service availability was not revalidated by these checks.
-
-The [collection manifest](../manuals/workflow-script-quick-guides-collection.json)
-and [SHA-256 sums](../manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-SHA256SUMS.txt)
-record the exact Word/PDF files.
-
-## Security and operating limits
-
-This is a documentation change. Runtime code, dependencies, authorization rules
-and live-write gates are unchanged. Examples use generic identities and
-documentation addresses. The review checked for private filesystem paths and
-environment-specific IPs in the delivered text and document XML.
-
-The instructions preserve credential references, independent SSH identity
-verification, certificate trust, required approvals, irreversible-operation
-warnings and reconciliation before retry. Password/session fields and exported
-overrides are explicitly treated as sensitive. The plain-VLAN workaround is
-documented; the subnet generator/runtime itself is not changed by this work.
-
-No live cluster API, imaging, password rotation, network migration, encryption,
-deletion, appliance installation or hardware compatibility validation was
-performed. Check the installed build and applicable vendor contract before
-operational use. Source review and simulated tests do not establish production
-readiness, achieved RPO/RTO or application recovery.
+The source register and collection build record identify the exact exported artifacts. The [previous edition validation record](VALIDATION-PREVIOUS-EDITIONS.md) preserves the earlier text, illustrated and branded Word/PDF review provenance. It does not substitute for reviewing the current source collection.

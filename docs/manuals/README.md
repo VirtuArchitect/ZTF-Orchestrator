@@ -1,12 +1,20 @@
-# Administrator and User Guide
+# ZTF-Orchestrator Documentation Collection
 
 Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/) to search the collection, preview guides and download individual PDFs.
 
-## Workflow and Script Quick Guides
+## Current source collection
 
-### Corrected standard cover and format
+The collection is reviewed against application source `48eb875` on **21 November 2026**. Use the [collection overview](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=collection-overview), [current Administrator Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=admin-guide), [current User Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=user-guide) and [complete current task collection](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=current-workflow-script-collection). Every current workflow, script and dedicated operation also has an individual PDF.
 
-Use the **21 November 2026** corrected editions for the original ZTF
+Runbooks, architecture, API references, installation, updates, recovery, security, test guidance and the provided remote deployment design/pilot are searchable by topic and document type. Current guides retain the ZTF cover and running format. Historical editions are hidden by default and retain their original bytes and source provenance. Source review and simulated figures do not establish hardware or production acceptance.
+
+The [source register](current/collection-register.json) records publication dispositions, source fingerprints and provided-document provenance. The [maintenance guide](../pages/documentation-library.md) describes review, regeneration and publication.
+
+## Earlier workflow and script editions
+
+### Earlier editions with corrected standard cover and format
+
+The **21 November 2026** format-corrected editions retain the earlier source `79c3ecc`. They preserve the original ZTF
 Operational Quick Guides cover and matching page layout:
 [illustrated PDF](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf) ·
 [illustrated Word](./ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.docx) ·
@@ -34,8 +42,8 @@ See [screenshot provenance](../assets/quick-guides/2026-11-20/README.md) and
 These initial-screen/authoring views do not demonstrate live target execution.
 The original text edition below is preserved unchanged.
 
-The [indexed quick-guide library](../quick-guides/README.md), reviewed 20 November
-2026 against source `79c3ecc`, covers all 30 current workflows, 79 scripts and
+The earlier quick-guide editions, reviewed 20 November
+2026 against source `79c3ecc`, cover all 30 current workflows, 79 scripts and
 eight dedicated operator flows. Sixteen retired catalogue entries have separate
 historical reference notes. Each task includes prerequisites, inputs, steps,
 verification and recovery. Download the [complete PDF](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf)
@@ -43,9 +51,9 @@ or [editable Word collection](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.
 These source-reviewed procedures do not establish live target compatibility.
 The collection has 162 pages with linked contents. [Checksums](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-SHA256SUMS.txt)
 and the [collection manifest](workflow-script-quick-guides-collection.json) identify
-the exact files; see the [validation record](../quick-guides/VALIDATION.md).
+the exact files; see the [earlier validation record](../quick-guides/VALIDATION-PREVIOUS-EDITIONS.md).
 
-## Administrator and User Guide downloads
+## Earlier combined Administrator and User Guide downloads
 
 [Download the illustrated PDF guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.docx) · [Release download checksums](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19-SHA256SUMS.txt)
 
@@ -57,7 +65,7 @@ The Word and searchable PDF retain the original typography, navy table headers, 
 
 The training references on page 77 now link all [23 corrected videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256). The ZIP includes transcripts, English captions and chapter files. This narrow link refresh was checked against repository revision `fa962ba`: all 156 PDF pages were compared, with the other 155 pages pixel-identical. The original guide review provenance remains unchanged.
 
-## Current operating coverage
+## Operating coverage of the earlier combined guide
 
 - YAML Studio: datacenter/cluster context, guided configuration, Advanced YAML, authoring validation and reviewed pipeline handoff. Validation and handoff start no target execution.
 - ZTF 1.x workflow/script pipelines, credential synchronization, credential and Config Files grouping, exact saved-step naming, job logs and reported failure stages.

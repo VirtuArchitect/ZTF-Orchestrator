@@ -1,0 +1,2630 @@
+{
+  "applicationSource": "48eb875931ebfc73abe3c564e9996c0c030a179e",
+  "reviewed": "2026-11-21",
+  "items": [
+    {
+      "id": "collection-overview",
+      "title": "Documentation Collection Overview",
+      "category": "Getting started",
+      "sourceDocument": "docs/documentation-collection.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "admin-guide",
+      "title": "ZTF-Orchestrator Admin Guide",
+      "category": "Getting started",
+      "sourceDocument": "docs/admin-guide.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "ahv-uplink-migration",
+      "title": "AHV Uplink Migration",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/ahv-uplink-migration.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "appliance-update-manager",
+      "title": "Appliance Update Manager",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/appliance-update-manager.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "change-virtual-switch-mtu",
+      "title": "Change Virtual Switch MTU",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/change-virtual-switch-mtu.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "cluster-deployment-process",
+      "title": "AHV HCI cluster deployment process",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/cluster-deployment-process.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "cluster-initial-configuration",
+      "title": "Initial Cluster Configuration",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/cluster-initial-configuration.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "cluster-operations",
+      "title": "Cluster-focused operations",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/cluster-operations.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "cluster-storage-standard",
+      "title": "Cluster Storage Standard",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/cluster-storage-standard.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "config-file-groups",
+      "title": "Config files by datacenter and cluster",
+      "category": "Technical reference",
+      "sourceDocument": "docs/config-file-groups.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "console-retirement",
+      "title": "Console integration retirement",
+      "category": "Technical reference",
+      "sourceDocument": "docs/console-retirement.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "create-virtual-switch",
+      "title": "Create Virtual Switch",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/create-virtual-switch.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "credential-groups",
+      "title": "Credential groups by datacenter and cluster",
+      "category": "Security and access",
+      "sourceDocument": "docs/credential-groups.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "credential-rotation",
+      "title": "CVM and Dell iDRAC password rotation",
+      "category": "Security and access",
+      "sourceDocument": "docs/credential-rotation.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "current-status",
+      "title": "Current documentation and appliance build",
+      "category": "Getting started",
+      "sourceDocument": "docs/current-status.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "dare-workflow",
+      "title": "Enable Data-at-Rest Encryption (DARE)",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/dare-workflow.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "dev-lab-disposable-container-runbook",
+      "title": "DEV_LAB Disposable Container Validation Runbook",
+      "category": "Technical reference",
+      "sourceDocument": "docs/dev-lab-disposable-container-runbook.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "disaster-recovery-setup",
+      "title": "Illustrated Disaster Recovery setup",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/disaster-recovery-setup.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "disaster-recovery",
+      "title": "Disaster Recovery: datacenters and cluster rebuilds",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/disaster-recovery.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "docker-build-identity",
+      "title": "Docker build identity",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/docker-build-identity.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "foundation-central-validation",
+      "title": "Foundation Central Validation Path",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/foundation-central-validation.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-roadmap",
+      "title": "Native Foundation Engine Roadmap",
+      "category": "Technical reference",
+      "sourceDocument": "docs/foundation-engine-roadmap.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "guided-appliance-updates",
+      "title": "Guided appliance updates",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/guided-appliance-updates.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "infrastructure-recovery",
+      "title": "Infrastructure Recovery Preparation and Rebuild",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/infrastructure-recovery.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "initial-host-cvm-password-setup",
+      "title": "Initial Host & CVM Password Setup",
+      "category": "Security and access",
+      "sourceDocument": "docs/initial-host-cvm-password-setup.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "installation-guide",
+      "title": "ZTF-Orchestrator Installation Guide",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/installation-guide.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "live-pe-drift-monitoring",
+      "title": "Live Prism Element drift monitoring",
+      "category": "Technical reference",
+      "sourceDocument": "docs/live-pe-drift-monitoring.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "nginx-tls",
+      "title": "nginx Reverse Proxy with TLS",
+      "category": "Security and access",
+      "sourceDocument": "docs/nginx-tls.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "nkp-v217-alignment",
+      "title": "NKP v2.17 Alignment Matrix",
+      "category": "Technical reference",
+      "sourceDocument": "docs/nkp-v217-alignment.md",
+      "archived": true,
+      "kind": "reference"
+    },
+    {
+      "id": "nutanix-upgrade-risk-advisor",
+      "title": "Nutanix Upgrade Risk Advisor",
+      "category": "Technical reference",
+      "sourceDocument": "docs/nutanix-upgrade-risk-advisor.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "operator-controlled-uat-readiness",
+      "title": "Operator Controlled UAT Readiness",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/operator-controlled-uat-readiness.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "pe-admin-password-change",
+      "title": "Prism Element Admin Password Change",
+      "category": "Security and access",
+      "sourceDocument": "docs/pe-admin-password-change.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "pe-certificate-trust",
+      "title": "Persistent PE Certificate Trust in Docker",
+      "category": "Security and access",
+      "sourceDocument": "docs/pe-certificate-trust.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "pe-health-reporting",
+      "title": "PE health reporting: evidence age and collection outcomes",
+      "category": "Technical reference",
+      "sourceDocument": "docs/pe-health-reporting.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "pe-local-users",
+      "title": "Create Local Users (PE)",
+      "category": "Security and access",
+      "sourceDocument": "docs/pe-local-users.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "pe-login-title",
+      "title": "Set Prism Login Title (PE)",
+      "category": "Security and access",
+      "sourceDocument": "docs/pe-login-title.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "pe-post-configuration-verification",
+      "title": "PE Post-Configuration Verification",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/pe-post-configuration-verification.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "pe-tls-options",
+      "title": "PE TLS options for deployment and recovery",
+      "category": "Security and access",
+      "sourceDocument": "docs/pe-tls-options.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "post-deployment-checks",
+      "title": "Post-deployment checks",
+      "category": "Cluster operations",
+      "sourceDocument": "docs/post-deployment-checks.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "postgresql-backend",
+      "title": "PostgreSQL Backend",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/postgresql-backend.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "postgresql-backup-restore-drill",
+      "title": "PostgreSQL Backup and Restore Drill",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/postgresql-backup-restore-drill.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "prism-central-simulator",
+      "title": "Prism Central Simulator",
+      "category": "Technical reference",
+      "sourceDocument": "docs/prism-central-simulator.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "production-readiness-boundary",
+      "title": "Production Readiness Boundary",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/production-readiness-boundary.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "recovery-profile-management",
+      "title": "Recovery profile management",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/recovery-profile-management.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "recovery-rehearsal-checklist",
+      "title": "Recovery Rehearsal Checklist",
+      "category": "Recovery and data",
+      "sourceDocument": "docs/recovery-rehearsal-checklist.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "sanitized-uat-evidence-record",
+      "title": "Sanitized UAT Evidence Record Pattern",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/sanitized-uat-evidence-record.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "script-wizard-validation-test-plan",
+      "title": "Script Wizard Validation Test Plan",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/script-wizard-validation-test-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "session-management",
+      "title": "Session management",
+      "category": "Security and access",
+      "sourceDocument": "docs/session-management.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "start-here",
+      "title": "Start Here and cluster deployment guidance",
+      "category": "Getting started",
+      "sourceDocument": "docs/start-here.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "streamlined-console",
+      "title": "Streamlined operations console",
+      "category": "Getting started",
+      "sourceDocument": "docs/streamlined-console.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "systemd",
+      "title": "systemd Service Unit",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/systemd.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "uat-evidence-checklist",
+      "title": "UAT Evidence Checklist",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/uat-evidence-checklist.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "unregister-pe-from-pc",
+      "title": "Unregister PE from PC",
+      "category": "Technical reference",
+      "sourceDocument": "docs/unregister-pe-from-pc.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "upgrade-advisor-tls",
+      "title": "Upgrade Advisor: temporary TLS exceptions",
+      "category": "Security and access",
+      "sourceDocument": "docs/upgrade-advisor-tls.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "user-guide",
+      "title": "ZTF-Orchestrator User Guide",
+      "category": "Getting started",
+      "sourceDocument": "docs/user-guide.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "validation-status",
+      "title": "Validation Status",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/validation-status.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "ztf-2x-plan-apply-roadmap",
+      "title": "ZTF 2.x Plan/Apply Roadmap",
+      "category": "Technical reference",
+      "sourceDocument": "docs/ztf-2x-plan-apply-roadmap.md",
+      "archived": true,
+      "kind": "reference"
+    },
+    {
+      "id": "runbooks-rb-001-start-stop-restart",
+      "title": "RB-001 - Start, Stop, Restart",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-001-start-stop-restart.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-002-backup-restore",
+      "title": "RB-002 - Backup and Restore",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-002-backup-restore.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-003-upgrade-rollback",
+      "title": "RB-003 - Upgrade and Rollback",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-003-upgrade-rollback.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-004-ztf-workflow-execution",
+      "title": "RB-004 - ZTF Workflow Execution",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-004-ztf-workflow-execution.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-005-failed-job-recovery",
+      "title": "RB-005 - Failed Job Recovery",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-005-failed-job-recovery.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-006-emergency-stop",
+      "title": "RB-006 - Emergency Stop",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-006-emergency-stop.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-007-airgapped-update",
+      "title": "RB-007 - Air-Gapped Update",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-007-airgapped-update.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-008-nkp-safe-phase-execution",
+      "title": "RB-008 - Historical NKP Record Review",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-008-nkp-safe-phase-execution.md",
+      "archived": true,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-009-user-rbac-management",
+      "title": "RB-009 - User and RBAC Management",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-009-user-rbac-management.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-010-database-recovery",
+      "title": "RB-010 - Database Recovery",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-010-database-recovery.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-011-security-incident",
+      "title": "RB-011 - Security Incident",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-011-security-incident.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-012-decommission",
+      "title": "RB-012 - Decommission",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-012-decommission.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "runbooks-rb-013-test-fca-port-from-cvm",
+      "title": "RB-013: Test FCA Port 8000 From a CVM",
+      "category": "Operational runbooks",
+      "sourceDocument": "docs/runbooks/RB-013-test-fca-port-from-cvm.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "architecture-data-flow",
+      "title": "Data Flow",
+      "category": "Architecture",
+      "sourceDocument": "docs/architecture/DATA-FLOW.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "architecture-deployment-boundaries",
+      "title": "Deployment Boundaries",
+      "category": "Architecture",
+      "sourceDocument": "docs/architecture/DEPLOYMENT-BOUNDARIES.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "architecture-native-foundation-engine",
+      "title": "Native Foundation Engine Architecture",
+      "category": "Architecture",
+      "sourceDocument": "docs/architecture/native-foundation-engine.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "architecture-security-boundary",
+      "title": "Security Boundary",
+      "category": "Architecture",
+      "sourceDocument": "docs/architecture/SECURITY-BOUNDARY.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "governance-disaster-recovery",
+      "title": "Disaster Recovery of ZTF-Orchestrator",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/governance/DISASTER-RECOVERY.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "governance-evidence-mapping",
+      "title": "Evidence Mapping",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/governance/EVIDENCE-MAPPING.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "governance-limitations",
+      "title": "Limitations",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/governance/LIMITATIONS.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "governance-production-readiness-boundary",
+      "title": "Production Readiness Boundary",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/governance/PRODUCTION-READINESS-BOUNDARY.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "governance-supportability",
+      "title": "Supportability",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/governance/SUPPORTABILITY.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "testing-pe-direct-configuration",
+      "title": "PE-direct configuration validation",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/testing/pe-direct-configuration.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "testing-regression-guards",
+      "title": "Regression Guards",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/testing/REGRESSION-GUARDS.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "testing-testing-matrix",
+      "title": "Testing Matrix",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/testing/TESTING-MATRIX.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "uat-uat-cases",
+      "title": "UAT Cases",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/uat/UAT-CASES.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "uat-uat-evidence",
+      "title": "UAT Evidence",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/uat/UAT-EVIDENCE.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "uat-uat-plan",
+      "title": "UAT Plan",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/uat/UAT-PLAN.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "foundation-engine-adapter-activation-review",
+      "title": "Native Foundation Adapter Activation Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-activation-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-allow-list-review",
+      "title": "Native Foundation Adapter Allow-List Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-allow-list-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-command-invocation-review",
+      "title": "Native Foundation Adapter Command Invocation Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-command-invocation-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-contracts",
+      "title": "Native Foundation Adapter Contracts",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-contracts.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-credential-handoff-review",
+      "title": "Native Foundation Adapter Credential Handoff Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-credential-handoff-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-enablement-review",
+      "title": "Native Foundation Adapter Enablement Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-enablement-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-execution-preflight-review",
+      "title": "Native Foundation Adapter Execution Preflight Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-execution-preflight-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-load-plan-review",
+      "title": "Native Foundation Adapter Load Plan Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-load-plan-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-output-evidence-review",
+      "title": "Native Foundation Adapter Output Evidence Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-output-evidence-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-package-provenance-review",
+      "title": "Native Foundation Adapter Package Provenance Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-package-provenance-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-promotion-review",
+      "title": "Native Foundation Adapter Promotion Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-promotion-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-readiness",
+      "title": "Native Foundation Adapter Readiness",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-readiness.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-runtime-admission-review",
+      "title": "Native Foundation Adapter Runtime Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-runtime-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-runtime-isolation-review",
+      "title": "Native Foundation Adapter Runtime Isolation Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-runtime-isolation-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-sbom-review",
+      "title": "Native Foundation Adapter SBOM Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-sbom-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-target-connectivity-review",
+      "title": "Native Foundation Adapter Target Connectivity Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-target-connectivity-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-adapter-uat-rehearsal",
+      "title": "Native Foundation Adapter UAT Rehearsal",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/adapter-uat-rehearsal.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-approval-binding-review",
+      "title": "Native Foundation Approval Binding Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/approval-binding-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-backup-restore-review",
+      "title": "Native Foundation Backup/Restore Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/backup-restore-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-cluster-formation-plan",
+      "title": "Native Foundation Cluster Formation Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/cluster-formation-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-completion-review",
+      "title": "Native Foundation Controlled UAT Completion Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-completion-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-entry-issuance-review",
+      "title": "Native Foundation Controlled UAT Entry Issuance Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-entry-issuance-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-entry-persistence-admission-review",
+      "title": "Native Foundation Controlled UAT Entry Persistence Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-entry-persistence-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-entry-review",
+      "title": "Native Foundation Controlled UAT Entry Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-entry-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-execution-authorization-review",
+      "title": "Native Foundation Controlled UAT Execution Authorization Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-execution-authorization-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-hardware-reservation-review",
+      "title": "Native Foundation Controlled UAT Hardware Reservation Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-hardware-reservation-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-lane-persistence-admission-review",
+      "title": "Native Foundation Controlled UAT Lane Persistence Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-lane-persistence-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-lane-selection-review",
+      "title": "Native Foundation Controlled UAT Lane Selection Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-lane-selection-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-operations-review",
+      "title": "Native Foundation Controlled UAT Operations Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-operations-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-reservation-persistence-admission-review",
+      "title": "Native Foundation Controlled UAT Reservation Persistence Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-reservation-persistence-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-runbook-review",
+      "title": "Native Foundation Controlled UAT Runbook Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-runbook-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-runner-admission-review",
+      "title": "Native Foundation Controlled UAT Runner Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-runner-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-runner-persistence-admission-review",
+      "title": "Native Foundation Controlled UAT Runner Persistence Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-runner-persistence-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-scope-review",
+      "title": "Native Foundation Controlled UAT Scope Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-scope-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-security-review",
+      "title": "Native Foundation Controlled UAT Security Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-security-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-signoff-review",
+      "title": "Native Foundation Controlled UAT Signoff Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-signoff-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-start-persistence-admission-review",
+      "title": "Native Foundation Controlled UAT Start Persistence Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-start-persistence-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-controlled-uat-start-readiness-review",
+      "title": "Native Foundation Controlled UAT Start Readiness Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/controlled-uat-start-readiness-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-dell-xc770-hci-deployment-requirements",
+      "title": "Dell XC770 AHV HCI Deployment Requirements",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/dell-xc770-hci-deployment-requirements.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-policy",
+      "title": "Native Foundation Deployment Policy",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-policy.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-scheduler-review",
+      "title": "Native Foundation Deployment Scheduler Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-scheduler-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-type-support-review",
+      "title": "Native Foundation Deployment Type Support Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-type-support-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-wave-authorization-review",
+      "title": "Native Foundation Deployment Wave Authorization Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-wave-authorization-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-wave-gates",
+      "title": "Native Foundation Deployment Wave Gates",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-wave-gates.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-wave-rehearsal",
+      "title": "Native Foundation Deployment Wave Rehearsal",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-wave-rehearsal.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-deployment-window-reservation-review",
+      "title": "Native Foundation Deployment Window Reservation Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/deployment-window-reservation-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-discovery-contract",
+      "title": "Native Foundation Discovery Contract",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/discovery-contract.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-discovery-preview",
+      "title": "Native Foundation Discovery Preview",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/discovery-preview.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-discovery-reconciliation",
+      "title": "Native Foundation Discovery Reconciliation",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/discovery-reconciliation.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-dry-run-ledger",
+      "title": "Native Foundation Dry-Run Ledger",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/dry-run-ledger.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-evidence-pack-approval-review",
+      "title": "Native Foundation Evidence Pack Approval Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/evidence-pack-approval-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-evidence-packs",
+      "title": "Native Foundation Evidence Packs",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/evidence-packs.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-adapter-contract",
+      "title": "Native Foundation Execution Adapter Contract",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-adapter-contract.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-admission-review",
+      "title": "Native Foundation Execution Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-audit-plan",
+      "title": "Native Foundation Execution Audit Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-audit-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-graph",
+      "title": "Native Foundation Execution Graph",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-graph.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-lock-plan",
+      "title": "Native Foundation Execution Lock Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-lock-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-permit-review",
+      "title": "Native Foundation Execution Permit Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-permit-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-readiness",
+      "title": "Native Foundation Execution Readiness",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-readiness.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-request-review",
+      "title": "Native Foundation Execution Request Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-request-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-retention-plan",
+      "title": "Native Foundation Execution Retention Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-retention-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-runner-readiness",
+      "title": "Native Foundation Runner Readiness",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-runner-readiness.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-execution-submission-review",
+      "title": "Native Foundation Execution Submission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/execution-submission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-image-sources",
+      "title": "Native Foundation Image Sources",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/image-sources.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-intent-schema",
+      "title": "Native Foundation Intent Schema",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/intent-schema.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-job-state-plan",
+      "title": "Native Foundation Job State Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/job-state-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-mutating-adapter-binding-review",
+      "title": "Native Foundation Mutating Adapter Binding Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/mutating-adapter-binding-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-mutating-enablement-review",
+      "title": "Native Foundation Mutating Enablement Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/mutating-enablement-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-network-manifest",
+      "title": "Native Foundation Network Manifest",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/network-manifest.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-node-imaging-plan",
+      "title": "Native Foundation Node Imaging Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/node-imaging-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-phase-advancement-review",
+      "title": "Native Foundation Phase Advancement Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/phase-advancement-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-phase-catalog",
+      "title": "Native Foundation Phase Catalog",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/phase-catalog.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-plan-approval-binding",
+      "title": "Native Foundation Plan And Approval Binding",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/plan-approval-binding.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-post-create-validation-plan",
+      "title": "Native Foundation Post-Create Validation Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/post-create-validation-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-adapters",
+      "title": "Native Foundation Provider Adapters",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-adapters.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-operation-admission-review",
+      "title": "Native Foundation Provider Operation Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-operation-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-operation-catalog",
+      "title": "Native Foundation Provider Operation Catalog",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-operation-catalog.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-operation-queue-admission-review",
+      "title": "Native Foundation Provider Operation Queue Admission Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-operation-queue-admission-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-operation-queue-plan",
+      "title": "Native Foundation Provider Operation Queue Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-operation-queue-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-preflight",
+      "title": "Native Foundation Provider Preflight",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-preflight.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-provider-topology-matrix",
+      "title": "Native Foundation Provider/Topology Matrix",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/provider-topology-matrix.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-queue-persistence-review",
+      "title": "Native Foundation Queue Persistence Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/queue-persistence-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-recovery-plan",
+      "title": "Native Foundation Recovery Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/recovery-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-restart-resume-review",
+      "title": "Native Foundation Restart/Resume Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/restart-resume-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-resume-checkpoint",
+      "title": "Native Foundation Resume Checkpoint",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/resume-checkpoint.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-retained-evidence-export-review",
+      "title": "Native Foundation Retained Evidence Export Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/retained-evidence-export-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-review-job",
+      "title": "Native Foundation Review Job",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/review-job.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-review-packet",
+      "title": "Native Foundation Review Packet",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/review-packet.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-secret-audit-persistence-review",
+      "title": "Native Foundation Secret Audit Persistence Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/secret-audit-persistence-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-secret-lease-execution-review",
+      "title": "Native Foundation Secret Lease Execution Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/secret-lease-execution-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-secret-references",
+      "title": "Native Foundation Secret References",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/secret-references.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-secret-resolution-plan",
+      "title": "Native Foundation Secret Resolution Plan",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/secret-resolution-plan.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-secret-store-binding-review",
+      "title": "Native Foundation Secret Store Binding Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/secret-store-binding-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-secret-store-provider-contract-review",
+      "title": "Native Foundation Secret Store Provider Contract Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/secret-store-provider-contract-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-support-matrix",
+      "title": "Native Foundation Support Matrix",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/support-matrix.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-topology-rules",
+      "title": "Native Foundation Topology Rules",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/topology-rules.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-uat-checklist",
+      "title": "Native Foundation UAT Checklist",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/uat-checklist.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "foundation-engine-uat-evidence-acceptance-review",
+      "title": "Native Foundation UAT Evidence Acceptance Review",
+      "category": "Native Foundation reference",
+      "sourceDocument": "docs/foundation-engine/uat-evidence-acceptance-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "quick-guides-workflows-initial-host-cvm-password-setup",
+      "title": "Initial Host & CVM Password Setup Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/initial-host-cvm-password-setup.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-cluster-storage-standard",
+      "title": "Cluster Storage Standard Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/cluster-storage-standard.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-unregister-pe-from-pc",
+      "title": "Unregister PE from PC Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/unregister-pe-from-pc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-cvm-idrac-password-rotation",
+      "title": "CVM & iDRAC Password Rotation Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/cvm-idrac-password-rotation.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-cluster-create",
+      "title": "Cluster Create Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/cluster-create.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-cluster-create-standalone-fca",
+      "title": "Cluster Create (Standalone FCA) Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/cluster-create-standalone-fca.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-cluster-create-foundation-vm",
+      "title": "Cluster Create (Foundation VM) Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/cluster-create-foundation-vm.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-imaging-only",
+      "title": "Imaging Only Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/imaging-only.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-imaging-only-standalone-fca",
+      "title": "Imaging Only (Standalone FCA) Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/imaging-only-standalone-fca.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-imaging",
+      "title": "Pod Imaging Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/imaging.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-imaging-standalone-fca",
+      "title": "Pod Imaging (Standalone FCA) Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/imaging-standalone-fca.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-site-deploy",
+      "title": "Site Deploy Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/site-deploy.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-site-deploy-standalone-fca",
+      "title": "Site Deploy (Standalone FCA) Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/site-deploy-standalone-fca.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-native-foundation-deploy",
+      "title": "Native Foundation Deploy Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/native-foundation-deploy.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-config-cluster",
+      "title": "Configure Cluster Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/config-cluster.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-post-foundation-baseline",
+      "title": "Post-Foundation Baseline Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/post-foundation-baseline.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-pe-monitoring-baseline",
+      "title": "PE Monitoring Baseline Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/pe-monitoring-baseline.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-pe-security-hardening",
+      "title": "AHV Security Hardening Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/pe-security-hardening.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-pe-network-baseline",
+      "title": "PE Network Baseline Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/pe-network-baseline.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-pe-certificate-baseline",
+      "title": "PE Certificate Baseline Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/pe-certificate-baseline.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-hardware-out-of-band-baseline",
+      "title": "Hardware OOB Baseline Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/hardware-out-of-band-baseline.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-deploy-pc",
+      "title": "Deploy Prism Central Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/deploy-pc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-config-pc",
+      "title": "Configure Prism Central Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/config-pc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-pod-config",
+      "title": "Pod Config Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/pod-config.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-deploy-management-pc",
+      "title": "Deploy Management PC Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/deploy-management-pc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-config-management-pc",
+      "title": "Configure Management PC Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/config-management-pc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-calm-vm-workloads",
+      "title": "Calm VM Workloads Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/calm-vm-workloads.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-calm-edgeai-vm-workload",
+      "title": "Edge AI Workload Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/calm-edgeai-vm-workload.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-ndb",
+      "title": "NDB Deploy Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/ndb.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-workflows-lcm-update",
+      "title": "LCM Update Quick Guide",
+      "category": "Workflow quick guides",
+      "sourceDocument": "docs/quick-guides/workflows/lcm-update.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addadserverpe",
+      "title": "Add AD Server (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddAdServerPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addadserverpc",
+      "title": "Add AD Server (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddAdServerPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createrolemappingpe",
+      "title": "Create Role Mapping (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateRoleMappingPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createrolemappingpc",
+      "title": "Create Role Mapping (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateRoleMappingPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createidp",
+      "title": "Create SAML IDP (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateIdp.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addlocalusers",
+      "title": "Add Local Users (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddLocalUsers.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createlocaluserspe",
+      "title": "Create Local Users (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateLocalUsersPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-importusers",
+      "title": "Import Users (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/ImportUsers.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addusergroups",
+      "title": "Add User Groups (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddUserGroups.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addroles",
+      "title": "Add Roles (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddRoles.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-adddirectoryservices",
+      "title": "Add Directory Services (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddDirectoryServices.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createsubnetpe",
+      "title": "Create Subnet (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateSubnetPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createsubnetspc",
+      "title": "Create Subnets (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateSubnetsPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletesubnetspe",
+      "title": "Delete Subnets (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteSubnetsPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletesubnetspc",
+      "title": "Delete Subnets (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteSubnetsPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createvpc",
+      "title": "Create VPC (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateVPC.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-updatevpc",
+      "title": "Update VPC (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UpdateVPC.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletevpc",
+      "title": "Delete VPC (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteVPC.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enablenetworkcontroller",
+      "title": "Enable Network Controller (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableNetworkController.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-disablenetworkcontroller",
+      "title": "Disable Network Controller (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DisableNetworkController.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addnameserverspe",
+      "title": "Add DNS Servers (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddNameServersPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addnameserverspc",
+      "title": "Add DNS Servers (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddNameServersPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addntpserverspe",
+      "title": "Add NTP Servers (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddNtpServersPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-addntpserverspc",
+      "title": "Add NTP Servers (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AddNtpServersPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createcontainerpe",
+      "title": "Create Storage Container (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateContainerPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletecontainerpe",
+      "title": "Delete Storage Container (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteContainerPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createobjectstore",
+      "title": "Create Object Store (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateObjectStore.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deleteobjectstore",
+      "title": "Delete Object Store (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteObjectStore.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createbucket",
+      "title": "Create Bucket (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateBucket.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-sharebucket",
+      "title": "Share Bucket (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/ShareBucket.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createvmpe",
+      "title": "Create VM (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateVmPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createvmspc",
+      "title": "Create VMs (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateVmsPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletevmpe",
+      "title": "Delete VM (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteVmPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletevmpc",
+      "title": "Delete VM (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteVmPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-powertransitionvmpe",
+      "title": "Power Transition VM (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/PowerTransitionVmPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-poweronvmpc",
+      "title": "Power On VM (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/PowerOnVmPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-uploadimagepe",
+      "title": "Upload Image (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UploadImagePe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-pcimageupload",
+      "title": "Upload Image (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/PcImageUpload.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-pcovaupload",
+      "title": "Upload OVA (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/PcOVAUpload.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-pcimagedelete",
+      "title": "Delete Image (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/PcImageDelete.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-pcovadelete",
+      "title": "Delete OVA (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/PcOVADelete.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createnetworksecuritypolicy",
+      "title": "Create Security Policy (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateNetworkSecurityPolicy.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletenetworksecuritypolicy",
+      "title": "Delete Security Policy (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteNetworkSecurityPolicy.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createaddressgroups",
+      "title": "Create Address Groups (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateAddressGroups.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deleteaddressgroups",
+      "title": "Delete Address Groups (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteAddressGroups.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createservicegroups",
+      "title": "Create Service Groups (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateServiceGroups.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deleteservicegroups",
+      "title": "Delete Service Groups (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteServiceGroups.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createcategorypc",
+      "title": "Create Category (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateCategoryPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deletecategorypc",
+      "title": "Delete Category (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteCategoryPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createkarbonclusterpc",
+      "title": "Create NKE Cluster (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateKarbonClusterPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enablenke",
+      "title": "Enable NKE (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableNke.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-ndbconfig",
+      "title": "Configure NDB Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/NdbConfig.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-registerinitclusterndb",
+      "title": "Register NDB Cluster Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/RegisterInitClusterNdb.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deploypc",
+      "title": "Deploy Prism Central Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeployPC.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-unregisterpefrompc",
+      "title": "Unregister PE from PC Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UnregisterPeFromPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-registertopc",
+      "title": "Register PE to PC Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/RegisterToPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enablemicrosegmentation",
+      "title": "Enable Microsegmentation (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableMicrosegmentation.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-disablemicrosegmentation",
+      "title": "Disable Microsegmentation (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DisableMicrosegmentation.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enableobjects",
+      "title": "Enable Objects (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableObjects.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enabledr",
+      "title": "Enable DR (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableDR.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createprotectionpolicy",
+      "title": "Create Protection Policy (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateProtectionPolicy.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deleteprotectionpolicy",
+      "title": "Delete Protection Policy (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteProtectionPolicy.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-createrecoveryplan",
+      "title": "Create Recovery Plan (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/CreateRecoveryPlan.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-deleterecoveryplan",
+      "title": "Delete Recovery Plan (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DeleteRecoveryPlan.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-connecttoaz",
+      "title": "Connect Availability Zone (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/ConnectToAz.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-disconnectaz",
+      "title": "Disconnect Availability Zone (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/DisconnectAz.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enablefc",
+      "title": "Enable Foundation Central (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableFC.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-generatefcapikey",
+      "title": "Generate FC API Key Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/GenerateFcApiKey.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-enablemarketplace",
+      "title": "Enable Marketplace (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/EnableMarketplace.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-setprismlogintitlepe",
+      "title": "Set Prism Login Title (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/SetPrismLoginTitlePe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-changedefaultadminpasswordpe",
+      "title": "Change Default Admin Password (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/ChangeDefaultAdminPasswordPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-accepteulape",
+      "title": "Accept EULA (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AcceptEulaPe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-accepteulapc",
+      "title": "Accept EULA (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/AcceptEulaPc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-updatepulsepe",
+      "title": "Update Pulse (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UpdatePulsePe.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-updatepulsepc",
+      "title": "Update Pulse (PC) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UpdatePulsePc.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-hareservation",
+      "title": "Set HA Reservation (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/HaReservation.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-rebuildcapacityreservation",
+      "title": "Set Rebuild Capacity (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/RebuildCapacityReservation.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-updatedsip",
+      "title": "Update DSIP (PE) Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UpdateDsip.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-scripts-updatecvmfoundation",
+      "title": "Update CVM Foundation Quick Guide",
+      "category": "Script quick guides",
+      "sourceDocument": "docs/quick-guides/scripts/UpdateCvmFoundation.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-ahv-uplink-migration",
+      "title": "AHV Uplink Migration Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/ahv-uplink-migration.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-dare",
+      "title": "Enable Data at Rest Encryption Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/dare.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-change-virtual-switch-mtu",
+      "title": "Change Virtual Switch MTU Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/change-virtual-switch-mtu.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-post-deployment",
+      "title": "Post Deployment Checks and Sequence Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/post-deployment.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-pipelines",
+      "title": "Run a Reviewed Pipeline Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/pipelines.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-recover-infrastructure",
+      "title": "Recover Infrastructure and Resume Recovery Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/recover-infrastructure.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-guided-appliance-update",
+      "title": "Guided Appliance Update Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/guided-appliance-update.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-upgrade-advisor",
+      "title": "Upgrade Risk Advisor Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/upgrade-advisor.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-operations-create-virtual-switch",
+      "title": "Create Virtual Switch Quick Guide",
+      "category": "Dedicated operations",
+      "sourceDocument": "docs/quick-guides/operations/create-virtual-switch.md",
+      "archived": false,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-prism-category",
+      "title": "ZTF 2.x Prism Category Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-prism-category.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-project",
+      "title": "ZTF 2.x Project Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-project.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-subnet-intent",
+      "title": "ZTF 2.x Subnet Intent Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-subnet-intent.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-image-registration",
+      "title": "ZTF 2.x Image Registration Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-image-registration.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-vm-deployment",
+      "title": "ZTF 2.x VM Deployment Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-vm-deployment.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-security-groups",
+      "title": "ZTF 2.x Security Groups Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-security-groups.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-protection-policy",
+      "title": "ZTF 2.x Protection Policy Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-protection-policy.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-workflow-ztf2-recovery-plan",
+      "title": "ZTF 2.x Recovery Plan Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/workflow-ztf2-recovery-plan.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-category-pc",
+      "title": "Create Category (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-category-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-project-pc",
+      "title": "Create Project (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-project-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-subnets-pc",
+      "title": "Create Subnets (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-subnets-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-upload-image-pc",
+      "title": "Upload Image (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-upload-image-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-vms-pc",
+      "title": "Create VMs (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-vms-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-security-groups-pc",
+      "title": "Create Security Groups (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-security-groups-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-protection-policy-pc",
+      "title": "Create Protection Policy (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-protection-policy-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-retired-script-ztf2-create-recovery-plan-pc",
+      "title": "Create Recovery Plan (PC) Quick Guide",
+      "category": "Historical references",
+      "sourceDocument": "docs/quick-guides/retired/script-ztf2-create-recovery-plan-pc.md",
+      "archived": true,
+      "kind": "task"
+    },
+    {
+      "id": "quick-guides-using-the-guides",
+      "title": "Using the quick guides",
+      "category": "Getting started",
+      "sourceDocument": "docs/quick-guides/using-the-guides.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "security",
+      "title": "Security Policy",
+      "category": "Development and support",
+      "sourceDocument": "SECURITY.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "contributing",
+      "title": "Contributing to ZTF-Orchestrator",
+      "category": "Development and support",
+      "sourceDocument": "CONTRIBUTING.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "release",
+      "title": "Release Checklist",
+      "category": "Development and support",
+      "sourceDocument": "RELEASE.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "testing-guide",
+      "title": "Testing Guide",
+      "category": "Development and support",
+      "sourceDocument": "TESTING_GUIDE.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "appliance-update-console-recovery",
+      "title": "ZTF-Orchestrator Appliance Update Console Recovery",
+      "category": "Development and support",
+      "sourceDocument": "appliance-update-console-recovery.md",
+      "archived": false,
+      "kind": "guide"
+    },
+    {
+      "id": "audits-create-virtual-switch-security-review",
+      "title": "Create Virtual Switch security review",
+      "category": "Technical reference",
+      "sourceDocument": "docs/audits/create-virtual-switch-security-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "audits-pe-tls-options-security-review",
+      "title": "PE TLS options security review",
+      "category": "Technical reference",
+      "sourceDocument": "docs/audits/pe-tls-options-security-review.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "demo-prism-central-simulator",
+      "title": "Prism Central Simulator Technical Guide",
+      "category": "Technical reference",
+      "sourceDocument": "docs/demo/PRISM-CENTRAL-SIMULATOR.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "pages-documentation-library",
+      "title": "PDF Documentation Collection Maintenance",
+      "category": "Development and support",
+      "sourceDocument": "docs/pages/documentation-library.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "quick-guides-validation",
+      "title": "Quick Guide Validation and Source Checks",
+      "category": "Testing and governance",
+      "sourceDocument": "docs/quick-guides/VALIDATION.md",
+      "archived": false,
+      "kind": "reference"
+    }
+  ]
+}
