@@ -1,0 +1,7 @@
+# Uplink discovery feedback security review
+
+Scope: frontend discovery state and disabled-action explanations; no backend API, authorization, schema, execution transport or runtime dependency changes.
+
+Discovery remains a manual call to the existing read-only endpoint. New feedback displays only returned inventory counts/names and existing server error text plus HTTP status, rendered as escaped React text. No credentials, response dumps, new logs or external destinations were added. Connection controls are disabled while discovery runs; previous inventory is cleared before refresh so a failed request cannot unlock assignment with stale results. Editing connection/TLS details requires discovery again. The timer reports elapsed request time, not an invented progress percentage, and is cleaned up after completion/unmount.
+
+Preflight, exact independent approval, confirmations, verification and reconciliation remain unchanged. Existing approvals and stored recovery records are not modified. Mocked browser checks intercept all application API requests and cover missing inputs, malformed pins, running progress, successful host inventory, empty results, HTTP errors/retry, failed refresh, changed TLS settings and mobile layout. Deployment verification compares persisted state and confirms unchanged backend/recovery source hashes. Live discovery and hardware migration are outside this verification.

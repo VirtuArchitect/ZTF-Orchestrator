@@ -1,3 +1,6 @@
+UPLINK DISCOVERY FEEDBACK (new consolidated builds; existing bundles unchanged)
+AHV Uplink Migration explains disabled Continue, missing inputs and stale discovery, reports Running/Passed/Failed with elapsed time and per-host counts, and exposes discovery HTTP errors with retry guidance. No automatic discovery, approval or cluster changes.
+
 WORKFLOW EXECUTION DEFAULTS (new consolidated appliance builds)
 Packaged Docker/appliance deployments permit reviewed uplink migration, empty virtual switch creation, DARE and VS0 MTU application by default. Explicit false overrides remain authoritative. Startup executes no cluster changes; approvals, confirmations, SSH trust, verification and step 08-only recovery remain intact. See docs/workflow-execution-settings.md. Existing older packages are unchanged.
 
