@@ -24,7 +24,8 @@
       "category": "Cluster operations",
       "sourceDocument": "docs/ahv-uplink-migration.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862"
     },
     {
       "id": "appliance-update-manager",
@@ -120,7 +121,8 @@
       "category": "Getting started",
       "sourceDocument": "docs/current-status.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862"
     },
     {
       "id": "dare-workflow",
