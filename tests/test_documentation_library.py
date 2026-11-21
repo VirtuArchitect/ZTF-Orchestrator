@@ -95,3 +95,12 @@ def test_pages_navigation_and_pdf_packaging_are_connected():
     for path, link in [('public/tutorials/index.html', '../documentation/'),
                        ('docs/pages/project/index.html', './documentation/')]:
         assert f'href="{link}"' in (ROOT / path).read_text(encoding='utf-8')
+
+
+def test_project_and_tutorial_entries_link_current_manuals_and_label_earlier_editions():
+    for path in ['public/tutorials/index.html', 'docs/pages/project/index.html']:
+        source = (ROOT / path).read_text(encoding='utf-8')
+        for ident in ['admin-guide', 'user-guide', 'current-workflow-script-collection']:
+            assert 'documentation/?doc=' + ident in source
+        assert 'Earlier combined' in source
+        assert '2026-11-19.pdf' in source
