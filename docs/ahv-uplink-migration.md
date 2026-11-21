@@ -20,8 +20,10 @@ Select **Prism Central managed** to retain the existing trusted PC/PE v4.2 flow.
 
 ## Validation and enablement
 
-Live writes are disabled by default. The deployment owner may set `ZTF_AHV_UPLINK_MIGRATION_ENABLED=true` only after validating the selected transport and the complete rolling operation on representative AOS/AHV hardware. PE-direct mode reuses the installed ZTF SSH interpreter and Paramiko; no runtime dependency is added. Missing runtime support, unverified host keys, unsupported inventory, partial destination bridges and unhealthy hosts block execution. Mocked tests do not establish hardware compatibility or end-to-end VLAN/workload connectivity. VS0 MTU and recovery health collection keep their existing transport rules.
+Packaged Docker/appliance deployments set `ZTF_AHV_UPLINK_MIGRATION_ENABLED=true`; explicit false overrides retain planning mode. Validate the selected transport and complete rolling operation on representative AOS/AHV hardware before production use. PE-direct mode reuses the installed ZTF SSH interpreter and Paramiko; no runtime dependency is added. Missing runtime support, unverified host keys, unsupported inventory, partial destination bridges and unhealthy hosts block execution. Mocked tests do not establish hardware compatibility or end-to-end VLAN/workload connectivity. VS0 MTU and recovery health collection keep their existing transport rules.
 
 - [Nutanix PE v2 API reference](https://www.nutanix.dev/api_reference/apis/prism_v2.html)
 - [Nutanix cluster-local networking guidance](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Security-Guide%3Aportal-full-page-view-html)
 - [Nutanix Networking v4.2 virtual switch API](https://developers.nutanix.com/api/v1/sdk/namespaces/main/networking/versions/v4.2/languages/python/ntnx_networking_py_client.api.virtual_switches_api.html)
+
+See [workflow execution settings](workflow-execution-settings.md) for defaults and operator overrides.

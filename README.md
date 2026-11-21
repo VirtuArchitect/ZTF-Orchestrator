@@ -82,7 +82,7 @@ approval remain in the existing workflow and pipeline paths.
 
 | Workflow | Connection and operating boundary |
 |---|---|
-| [Create Virtual Switch](docs/create-virtual-switch.md) | Separate PE-direct action to create an empty AHV bridge per host; preflight, approval and readback preserve all physical NIC assignments. Live writes default off |
+| [Create Virtual Switch](docs/create-virtual-switch.md) | Separate PE-direct action to create an empty AHV bridge per host; preflight, approval and readback preserve all physical NIC assignments. Live application available with approvals |
 | [AHV Uplink Migration](docs/ahv-uplink-migration.md) | PE-direct discovery and pinned CVM SSH; per-host NIC keep/move assignments, optional new bridge, read-only preflight, independent approval and sequential verification |
 | [Enable DARE](docs/dare-workflow.md) | PE-direct v2 APIs with an existing Local KMS; no PC required, read-only discovery/preflight, independent approval and encryption-state verification |
 | [VS0 MTU](docs/change-virtual-switch-mtu.md) | Per-host preflight, approval and verification; follow the workflow's own transport and rollback rules |
@@ -91,8 +91,11 @@ approval remain in the existing workflow and pipeline paths.
 | [Initial Host & CVM Password Setup](docs/initial-host-cvm-password-setup.md) | Optional pipeline action after the existing PE admin password step; pinned SSH, observed version/membership checks, exact approval, per-target verification and controlled resume. Live writes default off pending lab validation |
 | [Unregister PE from PC](docs/unregister-pe-from-pc.md) | Exact-identity review, independent approval and PC-side verification; PE-side cleanup remains separate |
 
-Uplink migration and DARE **live writes default to off** pending validation on
-representative hardware and API versions. Their PE-direct paths support a
+Packaged Docker/appliance deployments enable reviewed application for uplink
+migration, Create Virtual Switch, DARE and VS0 MTU changes. Explicit `false`
+host overrides retain planning mode; startup never submits a change. Validate
+representative hardware and API versions before use. See [workflow execution
+settings](docs/workflow-execution-settings.md). Their PE-direct paths support a
 reasoned, audited, per-run TLS exception bound to independent approval. TLS
 verification is optional for new PE deployment/recovery drafts, including uplink,
 DARE, MTU, storage, post-deployment and health collection. Saved TLS choices are retained, and SSH host-key

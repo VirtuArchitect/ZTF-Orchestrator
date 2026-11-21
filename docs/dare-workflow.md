@@ -17,10 +17,12 @@ Choose **Prism Central managed** to retain the existing verified PC/PE path and 
 
 ## Enablement, interruption and rollback
 
-Live changes default to off. Validate the installed AOS/API contract and licensing on representative approved lab hardware before setting `ZTF_DARE_ENABLE_MUTATION=true` in a site-managed Compose override. The flag permits submission only after normal approval and verification; it does not enable encryption by itself.
+Packaged Docker/appliance deployments set `ZTF_DARE_ENABLE_MUTATION=true`; an explicit false host override retains planning mode. Validate the installed AOS/API contract and licensing on representative approved lab hardware before production use. The flag permits submission only after normal approval and verification; it does not enable encryption by itself.
 
 If submission, cancellation or readback is uncertain, inspect PE encryption state and tasks before any new request. The workflow never automatically retries or rolls back encryption. Rolling back the Orchestrator container does not disable DARE. Preserve key backups outside the appliance and verify the approved recovery procedure.
 
 - [Nutanix PE v2 API reference](https://www.nutanix.dev/api_reference/apis/prism_v2.html)
 - [Nutanix AOS Security Guide](https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Security-Guide%3Aportal-full-page-view-html)
 - [Nutanix Cluster Management v4.3 encryption API](https://developers.nutanix.com/api/v1/sdk/namespaces/main/clustermgmt/versions/v4.3/languages/python/ntnx_clustermgmt_py_client.api.encryption_api.html)
+
+See [workflow execution settings](workflow-execution-settings.md) for defaults and operator overrides.

@@ -1,4 +1,7 @@
-Create Virtual Switch is a separate create-only workflow for empty AHV bridges, with optional PE TLS verification, SSH pins, exact approval, durable job output and per-host readback. Existing switch/uplink state is preserved; live writes remain disabled pending hardware validation.
+WORKFLOW EXECUTION DEFAULTS (new consolidated appliance builds)
+Packaged Docker/appliance deployments permit reviewed uplink migration, empty virtual switch creation, DARE and VS0 MTU application by default. Explicit false overrides remain authoritative. Startup executes no cluster changes; approvals, confirmations, SSH trust, verification and step 08-only recovery remain intact. See docs/workflow-execution-settings.md. Existing older packages are unchanged.
+
+Create Virtual Switch is a separate create-only workflow for empty AHV bridges, with optional PE TLS verification, SSH pins, exact approval, durable job output and per-host readback. Existing switch/uplink state is preserved; packaged live capability follows the workflow execution settings above.
 
 PE TLS options: deployment/recovery forms support per-operation exceptions across DARE, MTU, storage, post-deployment and health collection. YAML-based PE operations accept explicit policy fields. PC and SSH trust, old saved plans, approvals and completed recovery work remain intact.
 
