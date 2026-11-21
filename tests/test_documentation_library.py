@@ -1,13 +1,17 @@
 """Verify the public PDF catalogue and the actual Pages packaging path."""
 import hashlib
 import json
+import shutil
 import subprocess
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOGUE = ROOT / 'public/documentation/library.json'
 
 
+@pytest.mark.skipif(shutil.which('node') is None, reason='PDF packaging runs in the Node CI job; Node is unavailable here')
 def test_library_packages_exact_source_pdfs(tmp_path):
     subprocess.run(['node', str(ROOT / 'scripts/build-documentation-library.mjs'), str(tmp_path)], check=True)
     catalogue = json.loads((tmp_path / 'library.json').read_text(encoding='utf-8'))
@@ -46,6 +50,8 @@ def test_pages_navigation_and_pdf_packaging_are_connected():
     workflow = (ROOT / '.github/workflows/pages-demo.yml').read_text()
     assert 'dist-demo/demo/documentation dist-demo/' in workflow
     assert 'node scripts/build-documentation-library.mjs dist-demo/documentation' in workflow
+    ci = (ROOT / '.github/workflows/ci.yml').read_text()
+    assert 'node scripts/build-documentation-library.mjs "$RUNNER_TEMP/documentation-library"' in ci
     for path, link in [('public/tutorials/index.html', '../documentation/'),
                        ('docs/pages/project/index.html', './documentation/')]:
         assert f'href="{link}"' in (ROOT / path).read_text(encoding='utf-8')

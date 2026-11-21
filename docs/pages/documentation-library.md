@@ -39,6 +39,10 @@ or catalogue failures provide a repository-manuals fallback.
 
 No runtime dependency, authentication, appliance or workflow behavior changes.
 
+CI verifies PDF packaging in the frontend job, which supplies Node. The Python
+integration test also runs where Node is installed and skips in Python-only
+environments. Catalogue, review-boundary and navigation tests remain enabled.
+
 ## Verification: 21 November 2026
 
 - `python -m pytest tests/test_documentation_library.py tests/test_quick_guides.py tests/test_documentation_media.py tests/test_release_integrity.py -q`: 49 passed.
