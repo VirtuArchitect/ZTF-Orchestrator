@@ -121,13 +121,15 @@ test('operational GET polling honours Retry-After and marks prior data stale', a
   await page.clock.install()
   await seed(page)
   let calls = 0
+  let failRefresh = false
   await page.route('**/api/operations', route => {
     calls++
-    if (calls <= 2) return route.fulfill({ json: fixture() })
+    if (!failRefresh) return route.fulfill({ json: fixture() })
     return route.fulfill({ status: 429, headers: { 'Retry-After': '90' }, json: { error: 'rate limited' } })
   })
   await page.goto('/clusters')
   await expect(page.getByRole('button', { name: 'Review HCI-01' })).toBeVisible()
+  failRefresh = true
   await page.clock.fastForward(30_001)
   await expect(page.getByText(/Operational records unavailable \(HTTP 429\)/).first()).toBeVisible()
   const previous = calls
@@ -159,7 +161,7 @@ test('existing recovery run deep link is read-only and failed refresh stays expl
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('Last successful run refresh:', { exact: false })).toBeVisible()
   await page.clock.fastForward(10_100)
-  await expect(dialog.getByRole('status')).toContainText("This run's displayed state is stale")
+  await expect(dialog.getByRole('status').filter({ hasText: "This run's displayed state is stale" })).toBeVisible()
   const previous = reads
   await page.clock.fastForward(119_000)
   expect(reads).toBe(previous)
@@ -213,10 +215,11 @@ test('future evidence and invalid timestamps have explicit labels', async ({page
 test('dashboard refresh failure does not claim that PE collection failed', async ({page}) => {
   await page.clock.install()
   await seed(page)
-  let reads=0
-  await page.route('**/api/operations',route => ++reads<=2 ? route.fulfill({json:fixture()}) : route.fulfill({status:503,json:{error:'unavailable'}}))
+  let failRefresh = false
+  await page.route('**/api/operations',route => !failRefresh ? route.fulfill({json:fixture()}) : route.fulfill({status:503,json:{error:'unavailable'}}))
   await page.goto('/clusters')
   await expect(page.getByText('PE-reported health: Good',{exact:true}).first()).toBeVisible()
+  failRefresh = true
   await page.clock.fastForward(30_001)
   await expect(page.getByText('Dashboard refresh failed',{exact:true}).first()).toBeVisible()
   await expect(page.getByText('Collection failed',{exact:true})).toHaveCount(0)

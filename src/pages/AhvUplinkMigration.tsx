@@ -4,7 +4,7 @@ import { operationsRequest, type Operations } from '../components/ClusterOperati
 import { Link } from '../router'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
-import PeDirectConnection, { initialPeConnection, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
+import PeDirectConnection, { initialPeConnection, deploymentRecoveryTls, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
 
 const base = '/api/ahv-uplink-migration'
 const steps = ['Select cluster', 'Assign uplinks', 'Preflight', 'Review & approve', 'Apply & verify']
@@ -21,7 +21,7 @@ type Draft = { connection: Connection; destination: Destination; inventory: Inve
   plan: Plan | null; approval: string; jobId: string; step: number }
 
 const initial: Draft = {
-  connection: { ...initialPeConnection },
+  connection: { ...initialPeConnection, ...deploymentRecoveryTls },
   destination: { mode: 'create', name: 'vs1', bondMode: 'ACTIVE_BACKUP', mtu: 1500 },
   inventory: null, move: {}, reviewed: false, plan: null, approval: '', jobId: '', step: 0,
 }
@@ -158,7 +158,7 @@ export default function AhvUplinkMigration() {
               </select>
             </label>
             <label className="block">Source switch<input className="input mt-1" readOnly value="br0 (vs0)" /></label>
-            <PeDirectConnection value={connection} onChange={updateConnection} disabled={busy} cvm />
+            <PeDirectConnection value={connection} onChange={updateConnection} disabled={busy} cvm recoveryTls />
           </div>
           <button className="btn-secondary" disabled={busy || !connectionReady(connection, true)} onClick={() => void act(async () => {
             const observed = await request<Inventory>(base + '/discover', connectionPayload(connection, true))

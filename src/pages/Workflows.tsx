@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useStore } from '../store'
 import { Link } from '../router'
 import {
   Server, HardDrive, Layers, Globe, Settings, Cloud,
@@ -65,6 +66,7 @@ function WorkflowCard({ workflow, detailBasePath }: { workflow: WorkflowDef; det
 }
 
 export default function Workflows({ runtimeMode = 'ztf1' }: { runtimeMode?: 'ztf1' | 'ztf2' }) {
+  const role = useStore(s => s.user?.role)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const detailBasePath = runtimeMode === 'ztf2' ? '/workflows-2x' : '/workflows'
@@ -94,6 +96,7 @@ export default function Workflows({ runtimeMode = 'ztf1' }: { runtimeMode?: 'ztf
 
   return (
     <Layout title={title} subtitle={subtitle}>
+      {role === 'admin' && <Link className="btn-secondary mb-4" to="/configure/create-virtual-switch">Create Virtual Switch</Link>}
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="relative">

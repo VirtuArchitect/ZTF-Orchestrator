@@ -59,15 +59,23 @@ test(mode + ' - assigns physical NICs per host and submits only the exact approv
   await page.getByLabel('Target cluster').selectOption('cluster-1')
   if (mode === 'pc') {
   await page.getByLabel('Connection mode').selectOption('pc')
+  await expect(page.getByLabel('Verify PE TLS certificate (optional)', { exact: true })).not.toBeChecked()
   await page.getByLabel('Prism Central HTTPS endpoint').fill('https://pc.example.com:9440')
   await page.getByLabel('PC credential reference').fill('pc_ref')
   } else {
     await expect(page.getByLabel('Prism Central HTTPS endpoint')).toHaveCount(0)
-    await expect(page.getByLabel('Verify PE TLS certificate')).toBeChecked()
+    await expect(page.getByLabel('Verify PE TLS certificate')).not.toBeChecked()
+    await expect(page.getByLabel('TLS bypass reason')).toHaveValue('Initial cluster deployment or disaster recovery configuration')
+    await page.getByLabel('Verify PE TLS certificate').check()
+    await page.getByLabel('Connection mode').selectOption('pc')
+    await page.getByLabel('Connection mode').selectOption('pe-direct')
+    await expect(page.getByLabel('Verify PE TLS certificate')).not.toBeChecked()
+    await page.getByLabel('Verify PE TLS certificate').check()
     await page.getByLabel('CVM credential reference').fill('cvm_ref')
     await page.getByLabel('CVM SSH host keys by IP as JSON').fill(JSON.stringify(Object.fromEntries(
       ['192.0.2.21', '192.0.2.22', '192.0.2.23'].map(ip => [ip, 'SHA256:' + 'A'.repeat(43)]))))
     await page.getByLabel('Verify PE TLS certificate').uncheck()
+    await page.getByLabel('TLS bypass reason').fill('')
     await expect(page.getByRole('button', { name: 'Discover cluster (read-only)' })).toBeDisabled()
     await page.getByLabel('TLS bypass reason').fill('CHG-123 fresh cluster')
   }
@@ -99,9 +107,39 @@ test(mode + ' - assigns physical NICs per host and submits only the exact approv
   await page.getByRole('button', { name: 'Apply approved plan' }).click()
   await expect(page.getByRole('list', { name: 'Per-host verification' }).getByText('Both switch assignments verified')).toHaveCount(3)
   const preflight = requests.find(request => request.path === base + '/preflight')
+  if (mode === 'pe-direct') expect(preflight?.data.connection).toMatchObject({
+    verify_tls: false, tls_bypass_reason: 'CHG-123 fresh cluster',
+  })
   expect(preflight?.data.move).toEqual(Object.fromEntries(hosts.map(host => [host.id, ['eth2', 'eth3']])))
   expect(requests.filter(request => request.path === base + '/apply')).toEqual([{ path: base + '/apply',
     data: { content: 'exact-plan', approvalId: 'approval-1', confirmation: `APPLY UPLINKS ${cluster}` } }])
 })
 
+}
+
+for (const verified of [true, false]) {
+  test(`saved uplink draft retains TLS verification ${verified}`, async ({ page }) => {
+    const posts: string[] = []
+    await page.addInitScript(({ cluster, verified }) => {
+      sessionStorage.setItem('ztf-ui-store', JSON.stringify({ state: {
+        sessionToken: 'fixture-only', user: { username: 'example-admin', role: 'admin' },
+      }, version: 0 }))
+      sessionStorage.setItem('ztf-ahv-uplink-draft:example-admin', JSON.stringify({
+        connection: { mode: 'pe-direct', pe_endpoint: 'https://pe.example.com:9440', pe_credential: 'pe_ref',
+          pc_endpoint: '', pc_credential: '', cluster_uuid: cluster, verify_tls: verified,
+          tls_bypass_reason: verified ? '' : 'Reviewed recovery exception', cvm_credential: '', cvm_host_keys: '' },
+        destination: { mode: 'create', name: 'vs1', bondMode: 'ACTIVE_BACKUP', mtu: 1500 },
+        inventory: null, move: {}, reviewed: false, plan: null, approval: '', jobId: '', step: 0,
+      }))
+    }, { cluster, verified })
+    await page.route('**/api/**', route => {
+      if (route.request().method() === 'POST') posts.push(route.request().url())
+      return route.fulfill({ json: { clusters: [], applyEnabled: false } })
+    })
+    await page.goto('/configure/ahv-uplink-migration')
+    await expect(page.getByLabel('Verify PE TLS certificate')).toBeChecked({ checked: verified })
+    if (!verified) await expect(page.getByLabel('TLS bypass reason')).toHaveValue('Reviewed recovery exception')
+    await expect(page.getByText(/PE certificate verification is optional/)).toBeVisible()
+    expect(posts).toEqual([])
+  })
 }

@@ -29,3 +29,7 @@ and settings with the recorded original job, then uses its original MTU as
 the rollback target. Request fresh approval and type the rollback confirmation.
 If Prism or host telemetry is unavailable, use the site's out-of-band recovery
 procedure. The action does not automatically reverse or replay a write.
+
+## Deployment/recovery PE certificates
+
+PE certificate verification is optional per operation. See [PE TLS options](pe-tls-options.md) for the UI, YAML fields, audit evidence and preserved approval/identity checks. PC trust is unchanged.

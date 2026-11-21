@@ -9,6 +9,7 @@ import re
 import uuid
 
 from flask import jsonify, request
+import pe_tls
 from prism_drift import endpoint
 from upgrade_inventory import read, PEReadError
 
@@ -111,21 +112,24 @@ def validate_cluster(data):
 
 
 def collect_health(record, lookup):
-    """Two fixed GETs; HTTPS identity verification is mandatory, with no bypass."""
+    """Two fixed GETs with an explicit per-collection PE TLS policy."""
+    tls = pe_tls.policy(record)
     checks = []
     result = {'collectedAt': now(), 'status': 'unknown', 'checks': checks,
               'source': 'verified-https-pe-readback', 'collectionStatus': 'not_attempted', 'message': 'Expected UUID, credential and complete node baseline are required.'}
     if not record['expectedUuid'] or not record['peCredential'] or not record['expectedNodes']:
         return result
+    if not tls['pe_verify_tls']:
+        result.update(tls, source='tls-exception-pe-readback')
     stage = 'cluster identity/health'
     try:
         cluster = read(record['peEndpoint'], record['peCredential'],
-                       '/PrismGateway/services/rest/v2.0/cluster/?include_health_summary=true', lookup, detailed_errors=True)
+                       '/PrismGateway/services/rest/v2.0/cluster/?include_health_summary=true', lookup, detailed_errors=True, **({'verify_tls': False} if not tls['pe_verify_tls'] else {}))
         if not isinstance(cluster, dict):
             raise PEReadError('PE cluster API response format is unsupported. Expected a JSON object; review API compatibility.')
         stage = 'host inventory/health'
         hosts = read(record['peEndpoint'], record['peCredential'],
-                     '/PrismGateway/services/rest/v2.0/hosts/?include_health_summary=true', lookup, detailed_errors=True)
+                     '/PrismGateway/services/rest/v2.0/hosts/?include_health_summary=true', lookup, detailed_errors=True, **({'verify_tls': False} if not tls['pe_verify_tls'] else {}))
         if not isinstance(hosts, dict):
             raise PEReadError('PE host API response format is unsupported. Expected a JSON object; review API compatibility.')
         def check(name, passed):
@@ -239,7 +243,8 @@ class OperationsService:
             self.s['audit']('cluster_record_saved', actor, row['id'])
             return {'id': row['id'], 'revision': state['revision']}, 200
 
-    def observe(self, identity, actor):
+    def observe(self, identity, actor, transport=None):
+        tls = pe_tls.policy(transport or {})
         with self.lock:
             state = self.load()
             row = next((r for r in state['clusters'] if r['id'] == identity), None)
@@ -250,7 +255,11 @@ class OperationsService:
             snapshot = deepcopy(row)
             self.collecting.add(identity)
         try:
-            observation = self.s['collect'](snapshot)
+            observation = self.s['collect']({**snapshot, **tls} if transport else snapshot)
+            if transport:
+                observation.update(tls)
+                if not tls['pe_verify_tls']:
+                    observation['source'] = 'tls-exception-pe-readback'
             with self.lock:
                 state = self.load()
                 row = next((r for r in state['clusters'] if r['id'] == identity), None)
@@ -347,9 +356,9 @@ class OperationsService:
 
 def register_routes(app, service, require_role, limiter):
     def observe(data, actor, identity):
-        if data is not None and data != {}:
-            raise ValueError('PE health collection accepts no target overrides or TLS exceptions')
-        return service.observe(identity, actor)
+        if data is not None and (not isinstance(data, dict) or set(data) - pe_tls.FIELDS):
+            raise ValueError('PE collection accepts only a per-collection TLS policy, never target overrides')
+        return service.observe(identity, actor, data)
     def bind(path, methods, roles, action, limit):
         def call(**kwargs):
             try:

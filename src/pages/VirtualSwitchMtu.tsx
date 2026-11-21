@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import PeTlsOptions, { deploymentPeTls, type PeTlsPolicy } from '../components/PeTlsOptions'
 import Layout from '../components/Layout'
 import { Link } from '../router'
 import { apiFetch } from '../utils/api'
@@ -18,7 +19,7 @@ type Review = { content: string; changeRequired: boolean; plan: {
   clusterName: string; switch: { config: { mtu: number; extId: string } }; targetMtu: number; hosts: Host[]
 } }
 type Job = { status: string; diagnostics?: { verifiedHosts?: Host[]; evidence?: string; likelyFix?: string } }
-type SavedReview = { connection: typeof emptyConnection; rollbackJobId: string; review: Review;
+type SavedReview = { connection: typeof emptyConnection & Partial<PeTlsPolicy>; rollbackJobId: string; review: Review;
   approval: string; jobId: string }
 
 function restore(key: string): SavedReview | null {
@@ -48,6 +49,7 @@ export default function VirtualSwitchMtu() {
   const storageKey = 'ztf-vs0-mtu-review:' + username
   const [saved] = useState(() => restore(storageKey))
   const [connection, setConnection] = useState(saved?.connection || emptyConnection)
+  const [tls, setTls] = useState<PeTlsPolicy>(() => saved ? { pe_verify_tls: true, pe_tls_bypass_reason: '', ...saved.connection } : deploymentPeTls)
   const [rollbackJobId, setRollbackJobId] = useState(saved?.rollbackJobId || '')
   const [fabricReviewed, setFabricReviewed] = useState(!!saved)
   const [enabled, setEnabled] = useState<boolean | null>(null)
@@ -62,10 +64,10 @@ export default function VirtualSwitchMtu() {
 
   useEffect(() => {
     try {
-      if (approval && review) sessionStorage.setItem(storageKey, JSON.stringify({ connection, rollbackJobId, review, approval, jobId }))
+      if (approval && review) sessionStorage.setItem(storageKey, JSON.stringify({ connection: { ...connection, ...tls }, rollbackJobId, review, approval, jobId }))
       else sessionStorage.removeItem(storageKey)
     } catch { /* The approval and job remain available from their own pages. */ }
-  }, [approval, connection, jobId, review, rollbackJobId, storageKey])
+  }, [approval, connection, tls, jobId, review, rollbackJobId, storageKey])
 
   useEffect(() => {
     void request<{ applyEnabled: boolean }>(base).then(result => setEnabled(result.applyEnabled))
@@ -121,6 +123,7 @@ export default function VirtualSwitchMtu() {
       {error && <p className="card text-red-500" role="alert">{error}</p>}
       <section className="card space-y-4">
         <h2 className="section-title">Target and read-only preflight</h2>
+        <PeTlsOptions value={tls} onChange={value => { resetReview(); setTls(value) }} disabled={busy || !!approval} />
         <fieldset disabled={busy || !!approval} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             {(Object.keys(fields) as (keyof typeof fields)[]).map(key => <label key={key}>{fields[key]}
@@ -139,7 +142,7 @@ export default function VirtualSwitchMtu() {
           <button className="btn-primary" disabled={!fabricReviewed} onClick={() => void act(async () => {
             resetReview()
             setReview(await request<Review>(base + '/preflight', {
-              connection: Object.fromEntries(Object.entries(connection).map(([key, value]) => [key, value.trim()])),
+              connection: { ...Object.fromEntries(Object.entries(connection).filter(([key]) => key in fields).map(([key, value]) => [key, String(value).trim()])), ...tls },
               fabricReviewed, rollbackJobId: rollbackJobId.trim(),
             }))
           })}>Run read-only preflight</button>

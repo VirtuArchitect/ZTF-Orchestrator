@@ -66,7 +66,8 @@ def preflight(intent, pc, pe, original=None):
     allowed = {current}
     if rollback_id:
         if (not original or original['intent']['rollbackJobId']
-                or original['intent']['connection'] != config
+                or {k: v for k, v in original['intent']['connection'].items() if k not in uplink.pe_tls.FIELDS}
+                    != {k: v for k, v in config.items() if k not in uplink.pe_tls.FIELDS}
                 or original['targetMtu'] != TARGET_MTU
                 or original['switch']['config']['mtu'] != 1500
                 or switch_identity(original['switch']['config']) != switch_identity(switch['config'])

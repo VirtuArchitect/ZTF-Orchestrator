@@ -56,7 +56,7 @@ export default function UpgradeAdvisor() {
   const [current, setCurrent] = useState<VersionMap>({})
   const [targets, setTargets] = useState<VersionMap>({})
   const [connections, setConnections] = useState({ peEndpoint: '', peCredential: '', pcEndpoint: '', pcCredential: '' })
-  const [verifyTls, setVerifyTls] = useState({ pe: true, pc: true })
+  const [verifyTls, setVerifyTls] = useState({ pe: user?.role !== 'admin', pc: true })
   const [collection, setCollection] = useState<Collection | null>(null)
   const [history, setHistory] = useState<SavedAssessment[]>([])
   const [collecting, setCollecting] = useState(false)
@@ -120,7 +120,7 @@ export default function UpgradeAdvisor() {
       setCollection(data); setCurrent(data.components); setClusterName(data.clusterName || clusterName)
       setAssessment(null); setAssessmentInput(null); setSavedId('')
     } catch (err) { setError(err instanceof Error ? err.message : 'Inventory collection failed') }
-    finally { setCollecting(false); setVerifyTls({ pe: true, pc: true }) }
+    finally { setCollecting(false); setVerifyTls({ pe: user?.role !== 'admin', pc: true }) }
   }
   const saveAssessment = async () => {
     setSaving(true); setError('')

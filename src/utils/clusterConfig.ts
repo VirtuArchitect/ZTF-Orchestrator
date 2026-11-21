@@ -16,7 +16,7 @@ export function validateClusterConfig(value: unknown): string[] {
       if (!filled(c.pe_credential === undefined ? value.pe_credential : c.pe_credential)) fail('A PE credential reference is required for a login-title change.')
       if (typeof c.prism_login_title !== 'string' || !c.prism_login_title.trim() || Array.from(c.prism_login_title).length > 128 || /[<>\p{C}]/u.test(c.prism_login_title)) fail('Prism Login Title must be 1–128 characters of nonblank plain text without HTML or control characters.')
       if (c.prism_login_title_verify_tls !== undefined && typeof c.prism_login_title_verify_tls !== 'boolean') fail('prism_login_title_verify_tls must be a boolean.')
-      if (Object.keys(c).some(key => !['name', 'pe_credential', 'prism_login_title', 'prism_login_title_verify_tls'].includes(key))) fail('Login-title changes cannot be mixed with other cluster settings. Use a separate configuration step.')
+      if (Object.keys(c).some(key => !['name', 'pe_credential', 'prism_login_title', 'prism_login_title_verify_tls', 'pe_verify_tls', 'pe_tls_bypass_reason'].includes(key))) fail('Login-title changes cannot be mixed with other cluster settings. Use a separate configuration step.')
       continue
     }
     if (!filled(c.pe_credential) || !filled(c.new_pe_admin_credential)) fail('Both PE credential references are required.')

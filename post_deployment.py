@@ -1,4 +1,5 @@
 """Reviewed post-deployment actions and read-only cluster acceptance checks."""
+import pe_tls
 import datetime
 import hashlib
 import http.client
@@ -105,7 +106,7 @@ def _verify_pe_name(hostname, identity, pe):
     except (OSError, ValueError, KeyError, TypeError):
         raise PostDeploymentError('DNS must resolve exclusively to verified PE VIP or CVM addresses.') from None
 
-    context = ssl.create_default_context()
+    context = pe_tls.context(getattr(pe, 'tls_policy', {}))
     observations = []
     for address in sorted(answers, key=str):
         # Connect to the already checked address, while validating TLS for the new name.
@@ -136,7 +137,7 @@ def certificate_check(value, resolve):
     config = connection(value['connection'])
     name = fqdn(value['fqdn'])
     _, pe, _ = _clients(config, resolve)
-    return {'clusterUuid': config['cluster_uuid'], 'fqdn': name,
+    return {**pe_tls.policy(config), 'clusterUuid': config['cluster_uuid'], 'fqdn': name,
             'endpoints': _verify_pe_name(name, config['cluster_uuid'], pe)}
 
 

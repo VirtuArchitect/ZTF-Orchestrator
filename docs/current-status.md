@@ -1,6 +1,14 @@
 # Current documentation and appliance build
 
-## Current source review — 19 November 2026
+## Source additions — 21 November 2026
+
+Current source adds [per-operation PE TLS options](pe-tls-options.md) across supported configuration and collection paths, plus the separate [Create Virtual Switch](create-virtual-switch.md) action. New deployment/recovery drafts expose an audited PE TLS exception; old saved YAML/plans retain their reviewed policy. PC and SSH trust remain separate. Existing ZTF 1.x pipelines, independent approvals, completed recovery work and step 08-only registration retry are preserved.
+
+Create Virtual Switch creates empty cluster-local bridges without moving NICs and can hand off to the existing uplink migration action. Live creation defaults off pending representative hardware validation. Publication checks and consolidated package verification do not establish production installation or live Nutanix compatibility. Use the exact versioned ZIP and checksum supplied with the merged update; earlier packages remain immutable.
+
+Local mocked verification covered PE TLS isolation, canonical approvals, partial switch creation, uncertain submissions, per-host readback and the registration-only recovery rehearsal. Local Docker was updated without modifying live clusters; source and package release evidence remain separate.
+
+## Historical source review — 19 November 2026
 
 Application source reviewed at [`f33c9ed`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2) (PR #202). v1.8.5-rc1 remains the current prerelease; v1.8.4 remains Latest stable. The corresponding consolidated appliance build is `v1.8.5-rc1-f33c9ed`. This source review does not assert that the matching ZIP is a public GitHub Release asset; obtain the exact versioned package and checksum from your release maintainer. Earlier ZIPs are immutable.
 
@@ -27,7 +35,7 @@ Operators have reported more than 20 successful AHV cluster deployments, includi
 | Credential organization | Administrator-managed datacenter/cluster and shared-service labels; flat references and selected-vault lookup preserved | [Credential groups](credential-groups.md) |
 | Configuration library | Shared group catalogue, purposes, search, inherited labels on new files/uploads, Ungrouped and shared views | [Config Files grouping](config-file-groups.md) |
 | Workflow and pipeline selection | Cluster-aware saved-file selection, Show all files and retention of existing selections outside a filter | [User guide](user-guide.md) |
-| Prism Element title | Set Prism Login Title (PE) script and pipeline action, or a separate title-only Configure Cluster configuration; strict TLS and read-back verification | [PE login title](pe-login-title.md) |
+| Prism Element title | Set Prism Login Title (PE) script and pipeline action, or a separate title-only Configure Cluster configuration; optional per-operation PE TLS verification and mandatory read-back | [PE login title](pe-login-title.md) |
 | Appliance updates | Explicit host-service bootstrap, guided upload/readiness/approval/install/verification; green completed, blue active, grey pending, red failed, amber interrupted stages | [Guided updates](guided-appliance-updates.md) |
 | Sessions | Administrator-only sign-in inventory, activity/expiry, confirmed session revocation and audit | [Session management](session-management.md) |
 | Recovery | Reviewed Foundation VM snapshots, governed imaging, initial-access bootstrap before independent PE health evidence, then post-configuration and acceptance | [Disaster Recovery](disaster-recovery.md) |
@@ -69,4 +77,4 @@ Recovery profile lifecycle management adds visible editing, blocking-run links, 
 
 ## PE collection diagnostics source update
 
-Updated source adds safe, stage-specific certificate trust/SAN, credential resolution, HTTP 401/403 and connectivity errors for explicit PE health collection. The earlier expiry/clock fix remains included. Existing packages are immutable; use the new consolidated package containing these changes. No additional PE calls, TLS bypass or recovery-gate changes are introduced. See [PE health reporting](pe-health-reporting.md).
+Updated source adds safe, stage-specific certificate trust/SAN, credential resolution, HTTP 401/403 and connectivity errors for explicit PE health collection. The earlier expiry/clock fix remains included. Existing packages are immutable; use the new consolidated package containing these changes. The original diagnostics change added no PE calls or recovery-gate changes. Current source also supports explicit per-operation PE TLS exceptions; see [PE TLS options](pe-tls-options.md). See [PE health reporting](pe-health-reporting.md).

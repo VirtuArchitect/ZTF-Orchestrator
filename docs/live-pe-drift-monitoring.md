@@ -46,10 +46,10 @@ are normalized. This is settings drift, not DNS/NTP service-health testing.
 
 ## Trust and API compatibility
 
-TLS certificate and hostname verification are mandatory. Install your PE CA in
+Older YAML without TLS fields verifies the PE certificate and hostname. For deployment/recovery, a saved monitoring intent may explicitly select `pe_verify_tls: false` with `pe_tls_bypass_reason`; see [PE TLS options](pe-tls-options.md). For verified mode, Install your PE CA in
 the appliance/container trust store, or mount a PEM CA bundle and configure
 Python's `SSL_CERT_FILE`. Include the certificate chain and connect using a name
-or IP present in the certificate SAN. There is no insecure TLS bypass.
+or IP present in the certificate SAN. Exceptions apply only to this saved monitoring intent; global and PC trust are unchanged.
 
 The collector uses only GET requests to the installed ZTF legacy PE contracts:
 
@@ -86,7 +86,7 @@ Each failed setting retains Unknown with an actionable, sanitized message:
 The first TLS failure may mask another: after repairing trust, rerun to detect a
 possible SAN mismatch. No credentials, raw exception messages, certificate contents
 or local filesystem paths are included in these errors. HTTP status errors remain
-separate from transport errors. TLS and hostname verification are never bypassed.
+separate from transport errors. Certificate-unverified collections retain their selected TLS policy in collection metadata.
 
 Each run records collection-start time, completion time and target endpoints.
 Schedules persist through application restarts; missed downtime runs are not a
