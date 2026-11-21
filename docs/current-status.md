@@ -2,6 +2,8 @@
 
 ## Source additions — 21 November 2026
 
+AHV Uplink Migration now explains disabled assignment controls and reports discovery Running/Passed/Failed, elapsed request time, per-host NIC counts and HTTP errors. Connection changes require rediscovery; a failed refresh clears old inventory. See [uplink discovery feedback](ahv-uplink-migration.md#discovery-and-continue-feedback). No automatic discovery or cluster operation is introduced.
+
 Current source adds [per-operation PE TLS options](pe-tls-options.md) across supported configuration and collection paths, plus the separate [Create Virtual Switch](create-virtual-switch.md) action. New deployment/recovery drafts expose an audited PE TLS exception; old saved YAML/plans retain their reviewed policy. PC and SSH trust remain separate. Existing ZTF 1.x pipelines, independent approvals, completed recovery work and step 08-only registration retry are preserved.
 
 Create Virtual Switch creates empty cluster-local bridges without moving NICs and can hand off to the existing uplink migration action. Packaged Docker/appliance builds now enable reviewed live application for Create Virtual Switch, uplink migration, DARE and VS0 MTU by default; explicit false host overrides retain planning mode. See [workflow execution settings](workflow-execution-settings.md). Startup submits no operation. Publication checks and consolidated package verification do not establish production installation or live Nutanix compatibility. Use the exact versioned ZIP and checksum supplied with the merged update; earlier packages remain immutable.

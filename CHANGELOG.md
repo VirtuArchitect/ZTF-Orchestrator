@@ -1,5 +1,8 @@
 # Changelog
 
+### Unreleased source
+- Explain disabled uplink assignment, show discovery Running/Passed/Failed with elapsed time, per-host inventory and HTTP errors, and clear stale inventory before a refresh. Existing approvals and execution gates remain unchanged.
+
 
 ### Documentation
 - Enable reviewed AHV Uplink Migration, Create Virtual Switch, DARE and VS0 MTU application in packaged Docker/appliance deployments; honor explicit planning-mode overrides and preserve approvals, pipelines and step 08-only recovery.

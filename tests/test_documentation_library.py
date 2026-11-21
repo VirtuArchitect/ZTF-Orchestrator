@@ -47,7 +47,10 @@ def test_collection_covers_selected_sources_and_current_tasks():
         published = documents[item['id']]
         assert published['sourceDocument'] == item['sourceDocument']
         assert published['archived'] == item['archived']
-        assert published['applicationSource'] == plan['applicationSource']
+        # Incremental exports retain each unchanged document's reviewed source.
+        expected_source = item.get('applicationSource', plan['applicationSource'])
+        assert len(expected_source) == 40 and all(char in '0123456789abcdef' for char in expected_source)
+        assert published['applicationSource'] == expected_source
         assert any(source['path'] == item['sourceDocument'] for source in published['inputSources'])
     coverage = load('docs/quick-guides/coverage.json')
     tasks = {item['sourceDocument'] for item in current if item.get('kind') == 'task'}

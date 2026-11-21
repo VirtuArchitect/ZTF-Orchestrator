@@ -1,6 +1,6 @@
 {
   "updated": "2026-11-21",
-  "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+  "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862",
   "currentDocuments": 317,
   "historicalDocuments": 28,
   "documents": [
@@ -242,7 +242,7 @@
       "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-21.pdf",
       "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
       "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "scope": "Reviewed against application source 590de8c. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Cluster operations",
         "docs/ahv-uplink-migration.md",
@@ -260,13 +260,13 @@
       ],
       "archived": false,
       "pages": 3,
-      "bytes": 570673,
-      "sha256": "6e93581e8d35d11955c850ac9145bebfe1fa1e1fca315a87e060ea6ec2e85a39",
+      "bytes": 594371,
+      "sha256": "a7d32338ee71fe063fdf2dccee63e7b0b434aa75a0fde6cfa597a0c60559c6e5",
       "sourceDocument": "docs/ahv-uplink-migration.md",
       "inputSources": [
         {
           "path": "docs/ahv-uplink-migration.md",
-          "sha256": "3512adf775c38e069d34ca1342b049a3b0ee6be26b4e08be0eacb6c06ac627cc",
+          "sha256": "b127962defbcfca96e8a9dacfa973534bb7456ed8f403e931e236a6c9050b790",
           "normalization": "utf8-lf"
         },
         {
@@ -275,7 +275,7 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
       "reviewed": "2026-11-21"
@@ -1273,7 +1273,7 @@
       "pdf": "files/ZTF-Orchestrator-current-status-2026-11-21.pdf",
       "description": "Current source adds per-operation PE TLS options across supported configuration and collection paths, plus the separate Create Virtual Switch action. New deployment/recovery drafts expose an audited PE TLS exception; old saved YAML/plans...",
       "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "scope": "Reviewed against application source 590de8c. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Getting started",
         "docs/current-status.md",
@@ -1282,13 +1282,13 @@
       ],
       "archived": false,
       "pages": 5,
-      "bytes": 711957,
-      "sha256": "3491415960d7a86e5c04a2d7c50945e290a2778dea1bfb54d210b5ca7df3bc9c",
+      "bytes": 721525,
+      "sha256": "57eed52d2947999622a7cf82be1a457fa009884825a2e9602e14ab2375dd8ada",
       "sourceDocument": "docs/current-status.md",
       "inputSources": [
         {
           "path": "docs/current-status.md",
-          "sha256": "c9d7f27e78b5d59ebb0e4c9f061ffa8408d9c107c4899cf22bcca20a3539223f",
+          "sha256": "26ffaf2649685f742964b0907be61e3a391fc97283b4ebac934c3c3daadc9e1f",
           "normalization": "utf8-lf"
         },
         {
@@ -1297,7 +1297,7 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
       "reviewed": "2026-11-21"

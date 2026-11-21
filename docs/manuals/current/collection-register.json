@@ -1,5 +1,5 @@
 {
-  "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+  "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862",
   "reviewed": "2026-11-21",
   "currentDocuments": 317,
   "historicalDocuments": 28,
@@ -2278,6 +2278,12 @@
       "disposition": "published-current",
       "reason": "Available as a PDF in the collection.",
       "documentId": "audits-live-workflow-enablement-security-review"
+    },
+    {
+      "path": "docs/audits/uplink-discovery-feedback-security-review.md",
+      "disposition": "historical-evidence",
+      "reason": "Dated frontend security review retained as implementation evidence, not current operating guidance.",
+      "documentId": null
     }
   ],
   "providedDocuments": [
@@ -2424,11 +2430,11 @@
     {
       "id": "ahv-uplink-migration",
       "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-21.pdf",
-      "sha256": "6e93581e8d35d11955c850ac9145bebfe1fa1e1fca315a87e060ea6ec2e85a39",
+      "sha256": "a7d32338ee71fe063fdf2dccee63e7b0b434aa75a0fde6cfa597a0c60559c6e5",
       "inputSources": [
         {
           "path": "docs/ahv-uplink-migration.md",
-          "sha256": "3512adf775c38e069d34ca1342b049a3b0ee6be26b4e08be0eacb6c06ac627cc",
+          "sha256": "b127962defbcfca96e8a9dacfa973534bb7456ed8f403e931e236a6c9050b790",
           "normalization": "utf8-lf"
         },
         {
@@ -2889,11 +2895,11 @@
     {
       "id": "current-status",
       "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-21.pdf",
-      "sha256": "3491415960d7a86e5c04a2d7c50945e290a2778dea1bfb54d210b5ca7df3bc9c",
+      "sha256": "57eed52d2947999622a7cf82be1a457fa009884825a2e9602e14ab2375dd8ada",
       "inputSources": [
         {
           "path": "docs/current-status.md",
-          "sha256": "c9d7f27e78b5d59ebb0e4c9f061ffa8408d9c107c4899cf22bcca20a3539223f",
+          "sha256": "26ffaf2649685f742964b0907be61e3a391fc97283b4ebac934c3c3daadc9e1f",
           "normalization": "utf8-lf"
         },
         {

@@ -27,3 +27,9 @@ Packaged Docker/appliance deployments set `ZTF_AHV_UPLINK_MIGRATION_ENABLED=true
 - [Nutanix Networking v4.2 virtual switch API](https://developers.nutanix.com/api/v1/sdk/namespaces/main/networking/versions/v4.2/languages/python/ntnx_networking_py_client.api.virtual_switches_api.html)
 
 See [workflow execution settings](workflow-execution-settings.md) for defaults and operator overrides.
+
+## Discovery and Continue feedback
+
+The discovery panel lists missing inputs before a request can start, including invalid SSH host-key JSON. Running shows elapsed request time, without an estimated percentage. Passed lists the returned cluster, host count and each host's physical NIC/br0 uplink counts. Failed retains the returned error and HTTP status, with read-only retry guidance. Refreshing discovery clears earlier inventory first; a failed or empty response cannot unlock assignment using old results.
+
+A message beside **Continue to uplink assignment** explains the current blocker: incomplete connection details, discovery running/failed/not run, changed connection/TLS settings requiring rediscovery, or a missing destination switch. After successful discovery and destination selection it shows Ready. Connection controls are disabled during discovery. These UI changes do not perform discovery automatically or change preflight, approval or apply behavior.

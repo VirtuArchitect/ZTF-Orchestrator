@@ -10,7 +10,6 @@ const { chromium } = require(path.join(modules, 'playwright'));
 const output = path.resolve(process.env.DOCUMENTATION_RENDER_DIR || path.join(root, 'output/documentation-render'));
 fs.mkdirSync(output, { recursive: true });
 const plan = JSON.parse(fs.readFileSync(path.join(root, 'docs/manuals/current/collection-plan.json'), 'utf8'));
-const sourceShort = plan.applicationSource.slice(0, 7);
 const reviewDate = new Date(plan.reviewed + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const version = 'v' + JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const publicBase = 'https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/';
@@ -45,6 +44,9 @@ function referenceScope(item) {
     const filter = process.argv[2];
     for (const item of plan.items) {
       if (filter && !item.id.includes(filter)) continue;
+      const applicationSource = item.applicationSource || plan.applicationSource;
+      if (!/^[0-9a-f]{40}$/.test(applicationSource)) throw new Error('Invalid application source.');
+      const sourceShort = applicationSource.slice(0, 7);
       if (!/^[a-z0-9-]+$/.test(item.id)) throw new Error('Invalid document ID.');
       const sourceFile = fs.realpathSync(path.resolve(root, item.sourceDocument));
       const sourceRelative = path.relative(root, sourceFile);
@@ -97,7 +99,7 @@ function referenceScope(item) {
       await page.pdf({ path: path.join(output, item.id + '-body.pdf'), printBackground: true, preferCSSPageSize: true, tagged: true, outline: true });
       fs.writeFileSync(path.join(output, item.id + '.html'), html);
       fs.writeFileSync(path.join(output, item.id + '.txt'), visibleText);
-      const record = { ...item, scope, inputSources: sources, landscape, applicationSource: plan.applicationSource, reviewed: plan.reviewed };
+      const record = { ...item, scope, inputSources: sources, landscape, applicationSource, reviewed: plan.reviewed };
       fs.writeFileSync(path.join(output, item.id + '.json'), JSON.stringify(record, null, 2) + '\n');
       all.push(record);
       await page.close();

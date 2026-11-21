@@ -19,6 +19,32 @@ type Plan = { content: string; sha256: string; assignments: Assignment[]; cluste
 type Job = { status: string; diagnostics?: { verifiedHosts?: { hostId: string; host: string; kept: string[]; moved: string[]; stage: 'verified' | 'retained_uplinks_verified' }[]; evidence?: string; likelyFix?: string } }
 type Draft = { connection: Connection; destination: Destination; inventory: Inventory | null; move: Record<string, string[]>; reviewed: boolean;
   plan: Plan | null; approval: string; jobId: string; step: number }
+type Discovery = { state: 'idle' | 'running' | 'passed' | 'failed' | 'stale'; error?: string }
+
+function discoveryRequirements(value: Connection): string[] {
+  const fields: [string | undefined, string][] = [
+    [value.pe_endpoint, 'Prism Element HTTPS endpoint'], [value.pe_credential, 'PE credential reference'],
+    [value.cluster_uuid, 'Expected cluster UUID'],
+  ]
+  if (value.mode !== 'pe-direct') {
+    fields.push([value.pc_endpoint, 'Prism Central HTTPS endpoint'], [value.pc_credential, 'PC credential reference'])
+    if (value.pe_verify_tls === false) fields.push([value.pe_tls_bypass_reason, 'PE TLS bypass reason'])
+  } else {
+    fields.push([value.cvm_credential, 'CVM credential reference'])
+    if (value.verify_tls === false) fields.push([value.tls_bypass_reason, 'TLS bypass reason'])
+  }
+  const missing = fields.filter(([value]) => !value?.trim()).map(([, label]) => label)
+  if (value.mode === 'pe-direct') {
+    try {
+      const pins = typeof value.cvm_host_keys === 'string' ? JSON.parse(value.cvm_host_keys || '{}') : value.cvm_host_keys
+      if (!pins || typeof pins !== 'object' || Array.isArray(pins) || Object.keys(pins).length < 3)
+        missing.push('CVM SSH host keys: provide a JSON object with at least three verified CVM address/fingerprint entries')
+    } catch {
+      missing.push('CVM SSH host keys: correct the invalid JSON')
+    }
+  }
+  return missing
+}
 
 const initial: Draft = {
   connection: { ...initialPeConnection, ...deploymentRecoveryTls },
@@ -33,7 +59,7 @@ function restore(key: string): Draft {
 async function request<T>(url: string, body?: object): Promise<T> {
   const response = await apiFetch(url, body ? { method: 'POST', body: JSON.stringify(body) } : {})
   const result = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(result.error || `Request failed (HTTP ${response.status}). Check the existing approval or job before retrying.`)
+  if (!response.ok) throw new Error(`${typeof result.error === 'string' ? result.error : 'Request failed.'} (HTTP ${response.status})`)
   return result
 }
 
@@ -58,10 +84,18 @@ export default function AhvUplinkMigration() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [discovery, setDiscovery] = useState<Discovery>(() => ({ state: draft.inventory ? 'passed' : 'idle' }))
+  const [discoverySeconds, setDiscoverySeconds] = useState(0)
   const { connection, destination, inventory, move, plan, approval, jobId, reviewed, step } = draft
   const stepper = useRef<HTMLOListElement>(null)
 
   useEffect(() => { stepper.current?.scrollIntoView({ block: 'start' }) }, [step])
+  useEffect(() => {
+    if (discovery.state !== 'running') return
+    const started = Date.now()
+    const timer = window.setInterval(() => setDiscoverySeconds(Math.floor((Date.now() - started) / 1000)), 1000)
+    return () => window.clearInterval(timer)
+  }, [discovery.state])
 
   useEffect(() => {
     void request<{ applyEnabled: boolean }>(base).then(result => setApplyEnabled(result.applyEnabled)).catch(() => setApplyEnabled(false))
@@ -111,7 +145,24 @@ export default function AhvUplinkMigration() {
   }
 
   function updateConnection(patch: Partial<Connection>) {
+    setDiscovery(previous => ({ state: inventory || previous.state === 'passed' || previous.state === 'stale' ? 'stale' : 'idle' }))
     update({ connection: { ...connection, ...patch }, inventory: null, move: {}, reviewed: false })
+  }
+
+  async function discoverCluster() {
+    setBusy(true)
+    setNotice('')
+    update({ inventory: null, move: {}, reviewed: false })
+    setDiscoverySeconds(0)
+    setDiscovery({ state: 'running' })
+    try {
+      const observed = await request<Inventory>(base + '/discover', connectionPayload(connection, true))
+      if (!observed.hosts?.length) throw new Error('Discovery returned no hosts. Check the selected cluster and retry read-only discovery.')
+      update({ inventory: observed, move: Object.fromEntries(observed.hosts.map(host => [host.id, []])), reviewed: false })
+      setDiscovery({ state: 'passed' })
+    } catch (failure) {
+      setDiscovery({ state: 'failed', error: failure instanceof Error ? failure.message : 'Discovery request failed. Check connectivity to the Orchestrator.' })
+    } finally { setBusy(false) }
   }
 
   async function act(action: () => Promise<void>) {
@@ -131,6 +182,15 @@ export default function AhvUplinkMigration() {
   const total = Object.values(current).reduce((sum, nics) => sum + nics.length, 0)
   const migrating = Object.values(move).reduce((sum, ports) => sum + ports.length, 0)
   const expectedConfirmation = `APPLY UPLINKS ${connection.cluster_uuid.toLowerCase()}`
+  const missingDiscoveryInputs = discoveryRequirements(connection)
+  const continueBlocker = discovery.state === 'running' ? 'Discovery is running. Wait for host and uplink results before continuing.'
+    : busy ? 'Wait for the current operation to finish.'
+    : !connectionReady(connection, true) ? 'Complete the cluster connection details listed above, then run Discover cluster (read-only).'
+    : discovery.state === 'failed' ? 'Discovery failed. Resolve the reported error and retry Discover cluster (read-only).'
+    : !inventory?.hosts.length ? discovery.state === 'stale'
+      ? 'Connection or TLS settings changed. Run Discover cluster (read-only) again before assigning uplinks.'
+      : 'Run Discover cluster (read-only) successfully before assigning uplinks.'
+    : !destination.name.trim() ? 'Enter a new switch name or select a discovered destination switch.' : ''
 
   return <Layout title="AHV Uplink Migration" subtitle="Review and migrate physical AHV uplinks">
     <div className="max-w-6xl space-y-5">
@@ -147,7 +207,7 @@ export default function AhvUplinkMigration() {
           <h2 className="section-title">Select cluster and destination switch</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block">Target cluster
-              <select className="input mt-1" value={clusters.find(item => item.expectedUuid === connection.cluster_uuid)?.id || ''}
+              <select className="input mt-1" disabled={busy} value={clusters.find(item => item.expectedUuid === connection.cluster_uuid)?.id || ''}
                 onChange={e => {
                   const selected = clusters.find(item => item.id === e.target.value)
                   if (selected) updateConnection({ pe_endpoint: selected.peEndpoint, pe_credential: selected.peCredential, cluster_uuid: selected.expectedUuid })
@@ -160,11 +220,30 @@ export default function AhvUplinkMigration() {
             <label className="block">Source switch<input className="input mt-1" readOnly value="br0 (vs0)" /></label>
             <PeDirectConnection value={connection} onChange={updateConnection} disabled={busy} cvm recoveryTls />
           </div>
-          <button className="btn-secondary" disabled={busy || !connectionReady(connection, true)} onClick={() => void act(async () => {
-            const observed = await request<Inventory>(base + '/discover', connectionPayload(connection, true))
-            update({ inventory: observed, move: Object.fromEntries(observed.hosts.map(host => [host.id, []])), reviewed: false })
-          })}>Discover cluster (read-only)</button>
-          {inventory && <p className="text-sm">{inventory.clusterName} · {inventory.hosts.length} hosts discovered</p>}
+          <button className="btn-secondary" disabled={busy || !connectionReady(connection, true)}
+            aria-describedby="uplink-discovery-feedback" onClick={() => void discoverCluster()}>
+            {discovery.state === 'running' ? 'Discovering cluster…' : 'Discover cluster (read-only)'}</button>
+          <section id="uplink-discovery-feedback" aria-label="Cluster discovery" aria-busy={discovery.state === 'running'}
+            className={`rounded-lg border p-4 space-y-2 text-sm ${discovery.state === 'failed' ? 'border-red-500' : discovery.state === 'passed' ? 'border-emerald-500' : 'border-border'}`}>
+            <h3 className="font-semibold">Cluster discovery</h3>
+            <p role="status" className={discovery.state === 'failed' ? 'text-red-600' : discovery.state === 'passed' ? 'text-emerald-600' : ''}>
+              {discovery.state === 'running' ? 'Running — waiting for host and uplink inventory.'
+                : discovery.state === 'passed' && inventory ? `Passed — ${inventory.clusterName} · ${inventory.hosts.length} hosts discovered`
+                : discovery.state === 'failed' ? 'Failed — discovery did not complete.'
+                : discovery.state === 'stale' ? 'Discovery required again — connection or TLS settings changed.' : 'Not run — complete the connection details, then discover the cluster.'}
+            </p>
+            {discovery.state === 'running' && <p aria-live="off">Elapsed: {discoverySeconds}s. This read-only request does not change cluster settings.</p>}
+            {discovery.state === 'failed' && <>
+              <p role="alert">{discovery.error}</p>
+              <p>Review the error and the selected connection, credential references and SSH host keys, then retry discovery. No migration was submitted.</p>
+            </>}
+            {missingDiscoveryInputs.length > 0 && <div><p>Complete before discovery:</p><ul className="list-disc pl-5">
+              {missingDiscoveryInputs.map(label => <li key={label}>{label}</li>)}
+            </ul></div>}
+            {discovery.state === 'passed' && inventory && <ul aria-label="Discovered host inventory" className="space-y-1">
+              {inventory.hosts.map(host => <li key={host.id}>{host.name} · {host.nics.length} physical NICs · {current[host.id]?.length || 0} uplinks on br0 (vs0)</li>)}
+            </ul>}
+          </section>
           <fieldset className="rounded-lg border border-border p-4 space-y-4">
             <legend className="px-2 font-semibold">Destination switch</legend>
             <div className="grid gap-3 md:grid-cols-2">
@@ -278,8 +357,11 @@ export default function AhvUplinkMigration() {
           try { sessionStorage.setItem(storageKey, JSON.stringify(draft)); setNotice('Draft saved for this browser tab.') }
           catch { setError('Browser storage is unavailable.') }
         }}>Save draft</button>}
-        {step === 0 && <button className="btn-primary ml-auto" disabled={busy || !inventory || !destination.name.trim()}
-          onClick={() => setDraft(value => ({ ...value, step: 1 }))}>Continue to uplink assignment</button>}
+        {step === 0 && <div className="ml-auto max-w-xl space-y-2">
+          <p id="uplink-assignment-guidance" role="status" className="text-sm">{continueBlocker || 'Ready — discovery completed and a destination switch is selected. Continue to choose NICs for each host.'}</p>
+          <button className="btn-primary" disabled={Boolean(continueBlocker)} aria-describedby="uplink-assignment-guidance"
+            onClick={() => setDraft(value => ({ ...value, step: 1 }))}>Continue to uplink assignment</button>
+        </div>}
         {step === 1 && <button className="btn-primary ml-auto" disabled={busy || !migrating}
           onClick={() => setDraft(value => ({ ...value, step: 2 }))}>Continue to preflight</button>}
         {step === 3 && <button className="btn-primary ml-auto" disabled={busy || approvalStatus !== 'approved'}
