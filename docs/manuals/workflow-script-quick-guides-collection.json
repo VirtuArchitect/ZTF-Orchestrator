@@ -1,0 +1,20 @@
+{
+  "reviewed": "2026-11-20",
+  "sourceCommit": "79c3eccde1a0361ddfb49850e78c732217980f26",
+  "pageCount": 162,
+  "guideCount": 133,
+  "scriptWizardFieldsChecked": 508,
+  "pdfLinksChecked": 786,
+  "files": [
+    {
+      "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
+      "bytes": 1882866,
+      "sha256": "8b5fb2350c15276ef73596abbfa86a355309bb07ac349c8fe0a261f405efa44f"
+    },
+    {
+      "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.docx",
+      "bytes": 1814937,
+      "sha256": "ddd89a250cc7ad45e638c6fd4acf1996440dc14d85b1c97aff9faa80737644af"
+    }
+  ]
+}

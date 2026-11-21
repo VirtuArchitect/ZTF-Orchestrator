@@ -1,0 +1,944 @@
+{
+  "reviewed": "2026-11-20",
+  "sourceCommit": "79c3eccde1a0361ddfb49850e78c732217980f26",
+  "scope": "Console workflow/script catalogue plus eight dedicated operator flows; repository engineering helpers are outside scope.",
+  "counts": {
+    "currentWorkflows": 30,
+    "scripts": 79,
+    "dedicatedOperations": 8,
+    "retiredReferences": 16
+  },
+  "guides": [
+    {
+      "kind": "workflows",
+      "id": "initial-host-cvm-password-setup",
+      "title": "Initial Host & CVM Password Setup",
+      "path": "workflows/initial-host-cvm-password-setup.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "cluster-storage-standard",
+      "title": "Cluster Storage Standard",
+      "path": "workflows/cluster-storage-standard.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "unregister-pe-from-pc",
+      "title": "Unregister PE from PC",
+      "path": "workflows/unregister-pe-from-pc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "cvm-idrac-password-rotation",
+      "title": "CVM & iDRAC Password Rotation",
+      "path": "workflows/cvm-idrac-password-rotation.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "cluster-create",
+      "title": "Cluster Create",
+      "path": "workflows/cluster-create.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "cluster-create-standalone-fca",
+      "title": "Cluster Create (Standalone FCA)",
+      "path": "workflows/cluster-create-standalone-fca.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "cluster-create-foundation-vm",
+      "title": "Cluster Create (Foundation VM)",
+      "path": "workflows/cluster-create-foundation-vm.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "imaging-only",
+      "title": "Imaging Only",
+      "path": "workflows/imaging-only.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "imaging-only-standalone-fca",
+      "title": "Imaging Only (Standalone FCA)",
+      "path": "workflows/imaging-only-standalone-fca.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "imaging",
+      "title": "Pod Imaging",
+      "path": "workflows/imaging.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "imaging-standalone-fca",
+      "title": "Pod Imaging (Standalone FCA)",
+      "path": "workflows/imaging-standalone-fca.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "site-deploy",
+      "title": "Site Deploy",
+      "path": "workflows/site-deploy.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "site-deploy-standalone-fca",
+      "title": "Site Deploy (Standalone FCA)",
+      "path": "workflows/site-deploy-standalone-fca.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "native-foundation-deploy",
+      "title": "Native Foundation Deploy",
+      "path": "workflows/native-foundation-deploy.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "config-cluster",
+      "title": "Configure Cluster",
+      "path": "workflows/config-cluster.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "post-foundation-baseline",
+      "title": "Post-Foundation Baseline",
+      "path": "workflows/post-foundation-baseline.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "pe-monitoring-baseline",
+      "title": "PE Monitoring Baseline",
+      "path": "workflows/pe-monitoring-baseline.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "pe-security-hardening",
+      "title": "AHV Security Hardening",
+      "path": "workflows/pe-security-hardening.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "pe-network-baseline",
+      "title": "PE Network Baseline",
+      "path": "workflows/pe-network-baseline.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "pe-certificate-baseline",
+      "title": "PE Certificate Baseline",
+      "path": "workflows/pe-certificate-baseline.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "hardware-out-of-band-baseline",
+      "title": "Hardware OOB Baseline",
+      "path": "workflows/hardware-out-of-band-baseline.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "deploy-pc",
+      "title": "Deploy Prism Central",
+      "path": "workflows/deploy-pc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "config-pc",
+      "title": "Configure Prism Central",
+      "path": "workflows/config-pc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "pod-config",
+      "title": "Pod Config",
+      "path": "workflows/pod-config.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "deploy-management-pc",
+      "title": "Deploy Management PC",
+      "path": "workflows/deploy-management-pc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "config-management-pc",
+      "title": "Configure Management PC",
+      "path": "workflows/config-management-pc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "calm-vm-workloads",
+      "title": "Calm VM Workloads",
+      "path": "workflows/calm-vm-workloads.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "calm-edgeai-vm-workload",
+      "title": "Edge AI Workload",
+      "path": "workflows/calm-edgeai-vm-workload.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "ndb",
+      "title": "NDB Deploy",
+      "path": "workflows/ndb.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "workflows",
+      "id": "lcm-update",
+      "title": "LCM Update",
+      "path": "workflows/lcm-update.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddAdServerPe",
+      "title": "Add AD Server (PE)",
+      "path": "scripts/AddAdServerPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddAdServerPc",
+      "title": "Add AD Server (PC)",
+      "path": "scripts/AddAdServerPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateRoleMappingPe",
+      "title": "Create Role Mapping (PE)",
+      "path": "scripts/CreateRoleMappingPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateRoleMappingPc",
+      "title": "Create Role Mapping (PC)",
+      "path": "scripts/CreateRoleMappingPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateIdp",
+      "title": "Create SAML IDP (PC)",
+      "path": "scripts/CreateIdp.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddLocalUsers",
+      "title": "Add Local Users (PC)",
+      "path": "scripts/AddLocalUsers.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateLocalUsersPe",
+      "title": "Create Local Users (PE)",
+      "path": "scripts/CreateLocalUsersPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "ImportUsers",
+      "title": "Import Users (PC)",
+      "path": "scripts/ImportUsers.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddUserGroups",
+      "title": "Add User Groups (PC)",
+      "path": "scripts/AddUserGroups.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddRoles",
+      "title": "Add Roles (PC)",
+      "path": "scripts/AddRoles.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddDirectoryServices",
+      "title": "Add Directory Services (PC)",
+      "path": "scripts/AddDirectoryServices.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateSubnetPe",
+      "title": "Create Subnet (PE)",
+      "path": "scripts/CreateSubnetPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateSubnetsPc",
+      "title": "Create Subnets (PC)",
+      "path": "scripts/CreateSubnetsPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteSubnetsPe",
+      "title": "Delete Subnets (PE)",
+      "path": "scripts/DeleteSubnetsPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteSubnetsPc",
+      "title": "Delete Subnets (PC)",
+      "path": "scripts/DeleteSubnetsPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateVPC",
+      "title": "Create VPC (PC)",
+      "path": "scripts/CreateVPC.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UpdateVPC",
+      "title": "Update VPC (PC)",
+      "path": "scripts/UpdateVPC.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteVPC",
+      "title": "Delete VPC (PC)",
+      "path": "scripts/DeleteVPC.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableNetworkController",
+      "title": "Enable Network Controller (PC)",
+      "path": "scripts/EnableNetworkController.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DisableNetworkController",
+      "title": "Disable Network Controller (PC)",
+      "path": "scripts/DisableNetworkController.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddNameServersPe",
+      "title": "Add DNS Servers (PE)",
+      "path": "scripts/AddNameServersPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddNameServersPc",
+      "title": "Add DNS Servers (PC)",
+      "path": "scripts/AddNameServersPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddNtpServersPe",
+      "title": "Add NTP Servers (PE)",
+      "path": "scripts/AddNtpServersPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AddNtpServersPc",
+      "title": "Add NTP Servers (PC)",
+      "path": "scripts/AddNtpServersPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateContainerPe",
+      "title": "Create Storage Container (PE)",
+      "path": "scripts/CreateContainerPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteContainerPe",
+      "title": "Delete Storage Container (PE)",
+      "path": "scripts/DeleteContainerPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateObjectStore",
+      "title": "Create Object Store (PC)",
+      "path": "scripts/CreateObjectStore.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteObjectStore",
+      "title": "Delete Object Store (PC)",
+      "path": "scripts/DeleteObjectStore.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateBucket",
+      "title": "Create Bucket (PC)",
+      "path": "scripts/CreateBucket.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "ShareBucket",
+      "title": "Share Bucket (PC)",
+      "path": "scripts/ShareBucket.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateVmPe",
+      "title": "Create VM (PE)",
+      "path": "scripts/CreateVmPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateVmsPc",
+      "title": "Create VMs (PC)",
+      "path": "scripts/CreateVmsPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteVmPe",
+      "title": "Delete VM (PE)",
+      "path": "scripts/DeleteVmPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteVmPc",
+      "title": "Delete VM (PC)",
+      "path": "scripts/DeleteVmPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "PowerTransitionVmPe",
+      "title": "Power Transition VM (PE)",
+      "path": "scripts/PowerTransitionVmPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "PowerOnVmPc",
+      "title": "Power On VM (PC)",
+      "path": "scripts/PowerOnVmPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UploadImagePe",
+      "title": "Upload Image (PE)",
+      "path": "scripts/UploadImagePe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "PcImageUpload",
+      "title": "Upload Image (PC)",
+      "path": "scripts/PcImageUpload.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "PcOVAUpload",
+      "title": "Upload OVA (PC)",
+      "path": "scripts/PcOVAUpload.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "PcImageDelete",
+      "title": "Delete Image (PC)",
+      "path": "scripts/PcImageDelete.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "PcOVADelete",
+      "title": "Delete OVA (PC)",
+      "path": "scripts/PcOVADelete.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateNetworkSecurityPolicy",
+      "title": "Create Security Policy (PC)",
+      "path": "scripts/CreateNetworkSecurityPolicy.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteNetworkSecurityPolicy",
+      "title": "Delete Security Policy (PC)",
+      "path": "scripts/DeleteNetworkSecurityPolicy.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateAddressGroups",
+      "title": "Create Address Groups (PC)",
+      "path": "scripts/CreateAddressGroups.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteAddressGroups",
+      "title": "Delete Address Groups (PC)",
+      "path": "scripts/DeleteAddressGroups.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateServiceGroups",
+      "title": "Create Service Groups (PC)",
+      "path": "scripts/CreateServiceGroups.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteServiceGroups",
+      "title": "Delete Service Groups (PC)",
+      "path": "scripts/DeleteServiceGroups.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateCategoryPc",
+      "title": "Create Category (PC)",
+      "path": "scripts/CreateCategoryPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteCategoryPc",
+      "title": "Delete Category (PC)",
+      "path": "scripts/DeleteCategoryPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateKarbonClusterPc",
+      "title": "Create NKE Cluster (PC)",
+      "path": "scripts/CreateKarbonClusterPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableNke",
+      "title": "Enable NKE (PC)",
+      "path": "scripts/EnableNke.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "NdbConfig",
+      "title": "Configure NDB",
+      "path": "scripts/NdbConfig.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "RegisterInitClusterNdb",
+      "title": "Register NDB Cluster",
+      "path": "scripts/RegisterInitClusterNdb.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeployPC",
+      "title": "Deploy Prism Central",
+      "path": "scripts/DeployPC.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UnregisterPeFromPc",
+      "title": "Unregister PE from PC",
+      "path": "scripts/UnregisterPeFromPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "RegisterToPc",
+      "title": "Register PE to PC",
+      "path": "scripts/RegisterToPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableMicrosegmentation",
+      "title": "Enable Microsegmentation (PC)",
+      "path": "scripts/EnableMicrosegmentation.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DisableMicrosegmentation",
+      "title": "Disable Microsegmentation (PC)",
+      "path": "scripts/DisableMicrosegmentation.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableObjects",
+      "title": "Enable Objects (PC)",
+      "path": "scripts/EnableObjects.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableDR",
+      "title": "Enable DR (PC)",
+      "path": "scripts/EnableDR.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateProtectionPolicy",
+      "title": "Create Protection Policy (PC)",
+      "path": "scripts/CreateProtectionPolicy.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteProtectionPolicy",
+      "title": "Delete Protection Policy (PC)",
+      "path": "scripts/DeleteProtectionPolicy.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "CreateRecoveryPlan",
+      "title": "Create Recovery Plan (PC)",
+      "path": "scripts/CreateRecoveryPlan.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DeleteRecoveryPlan",
+      "title": "Delete Recovery Plan (PC)",
+      "path": "scripts/DeleteRecoveryPlan.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "ConnectToAz",
+      "title": "Connect Availability Zone (PC)",
+      "path": "scripts/ConnectToAz.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "DisconnectAz",
+      "title": "Disconnect Availability Zone (PC)",
+      "path": "scripts/DisconnectAz.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableFC",
+      "title": "Enable Foundation Central (PC)",
+      "path": "scripts/EnableFC.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "GenerateFcApiKey",
+      "title": "Generate FC API Key",
+      "path": "scripts/GenerateFcApiKey.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "EnableMarketplace",
+      "title": "Enable Marketplace (PC)",
+      "path": "scripts/EnableMarketplace.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "SetPrismLoginTitlePe",
+      "title": "Set Prism Login Title (PE)",
+      "path": "scripts/SetPrismLoginTitlePe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "ChangeDefaultAdminPasswordPe",
+      "title": "Change Default Admin Password (PE)",
+      "path": "scripts/ChangeDefaultAdminPasswordPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AcceptEulaPe",
+      "title": "Accept EULA (PE)",
+      "path": "scripts/AcceptEulaPe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "AcceptEulaPc",
+      "title": "Accept EULA (PC)",
+      "path": "scripts/AcceptEulaPc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UpdatePulsePe",
+      "title": "Update Pulse (PE)",
+      "path": "scripts/UpdatePulsePe.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UpdatePulsePc",
+      "title": "Update Pulse (PC)",
+      "path": "scripts/UpdatePulsePc.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "HaReservation",
+      "title": "Set HA Reservation (PE)",
+      "path": "scripts/HaReservation.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "RebuildCapacityReservation",
+      "title": "Set Rebuild Capacity (PE)",
+      "path": "scripts/RebuildCapacityReservation.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UpdateDsip",
+      "title": "Update DSIP (PE)",
+      "path": "scripts/UpdateDsip.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "scripts",
+      "id": "UpdateCvmFoundation",
+      "title": "Update CVM Foundation",
+      "path": "scripts/UpdateCvmFoundation.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "ahv-uplink-migration",
+      "title": "AHV Uplink Migration",
+      "path": "operations/ahv-uplink-migration.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "dare",
+      "title": "Enable Data at Rest Encryption",
+      "path": "operations/dare.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "change-virtual-switch-mtu",
+      "title": "Change Virtual Switch MTU",
+      "path": "operations/change-virtual-switch-mtu.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "post-deployment",
+      "title": "Post Deployment Checks and Sequence",
+      "path": "operations/post-deployment.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "pipelines",
+      "title": "Run a Reviewed Pipeline",
+      "path": "operations/pipelines.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "recover-infrastructure",
+      "title": "Recover Infrastructure and Resume Recovery",
+      "path": "operations/recover-infrastructure.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "guided-appliance-update",
+      "title": "Guided Appliance Update",
+      "path": "operations/guided-appliance-update.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "operations",
+      "id": "upgrade-advisor",
+      "title": "Upgrade Risk Advisor",
+      "path": "operations/upgrade-advisor.md",
+      "status": "Current source procedure"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-prism-category",
+      "title": "ZTF 2.x Prism Category",
+      "path": "retired/workflow-ztf2-prism-category.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-project",
+      "title": "ZTF 2.x Project",
+      "path": "retired/workflow-ztf2-project.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-subnet-intent",
+      "title": "ZTF 2.x Subnet Intent",
+      "path": "retired/workflow-ztf2-subnet-intent.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-image-registration",
+      "title": "ZTF 2.x Image Registration",
+      "path": "retired/workflow-ztf2-image-registration.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-vm-deployment",
+      "title": "ZTF 2.x VM Deployment",
+      "path": "retired/workflow-ztf2-vm-deployment.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-security-groups",
+      "title": "ZTF 2.x Security Groups",
+      "path": "retired/workflow-ztf2-security-groups.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-protection-policy",
+      "title": "ZTF 2.x Protection Policy",
+      "path": "retired/workflow-ztf2-protection-policy.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "workflow-ztf2-recovery-plan",
+      "title": "ZTF 2.x Recovery Plan",
+      "path": "retired/workflow-ztf2-recovery-plan.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-category-pc",
+      "title": "Create Category (PC)",
+      "path": "retired/script-ztf2-create-category-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-project-pc",
+      "title": "Create Project (PC)",
+      "path": "retired/script-ztf2-create-project-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-subnets-pc",
+      "title": "Create Subnets (PC)",
+      "path": "retired/script-ztf2-create-subnets-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-upload-image-pc",
+      "title": "Upload Image (PC)",
+      "path": "retired/script-ztf2-upload-image-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-vms-pc",
+      "title": "Create VMs (PC)",
+      "path": "retired/script-ztf2-create-vms-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-security-groups-pc",
+      "title": "Create Security Groups (PC)",
+      "path": "retired/script-ztf2-create-security-groups-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-protection-policy-pc",
+      "title": "Create Protection Policy (PC)",
+      "path": "retired/script-ztf2-create-protection-policy-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    },
+    {
+      "kind": "retired",
+      "id": "script-ztf2-create-recovery-plan-pc",
+      "title": "Create Recovery Plan (PC)",
+      "path": "retired/script-ztf2-create-recovery-plan-pc.md",
+      "status": "Retired console entry \u2014 reference only"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+8b5fb2350c15276ef73596abbfa86a355309bb07ac349c8fe0a261f405efa44f  ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf
+ddd89a250cc7ad45e638c6fd4acf1996440dc14d85b1c97aff9faa80737644af  ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.docx

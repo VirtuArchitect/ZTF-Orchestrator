@@ -1,5 +1,7 @@
 # ZTF-Orchestrator · v1.8.5-rc1
 
+Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/) to search the collection, preview guides and download individual PDFs.
+
 ![ZTF-Orchestrator banner with three teal-linked server clusters on a pale background](docs/assets/readme-hero/ztf-orchestrator-banner-light.webp)
 
 Prepare cluster configuration, run governed ZTF 1.x pipelines, and recover
@@ -11,6 +13,10 @@ Nutanix infrastructure from reviewed profiles through one web console.
 **[Download Centre](https://www.johngoulden.de/ztf/downloads.html)** |
 **[Task-Based Documentation](https://www.johngoulden.de/ztf/documentation.html)** |
 **[Video Tutorials](https://www.johngoulden.de/ztf/tutorials.html)**
+
+[Workflow and Script Quick Guides](docs/quick-guides/README.md) provide individual
+task procedures and a complete Word/PDF collection, with prerequisites, inputs,
+execution, verification and recovery guidance.
 
 [Stable v1.8.4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.4) |
 [Release candidate v1.8.5-rc1](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/tag/v1.8.5-rc1) |
