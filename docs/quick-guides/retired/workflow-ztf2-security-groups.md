@@ -1,8 +1,8 @@
 # ZTF 2.x Security Groups Quick Guide
 
-Guide ID: `QG-R-workflow-ztf2-security-groups` · Reviewed: 20 November 2026 · Source: `79c3ecc`
+Guide ID: `QG-R-workflow-ztf2-security-groups` · Reviewed: 21 November 2026 · Source: `48eb875`
 
-Status: Retired console entry — reference only. Read [Using the quick guides](../using-the-guides.md) first.
+Status: Retired console entry : reference only. Read [Using the quick guides](../using-the-guides.md) first.
 
 ## Purpose
 

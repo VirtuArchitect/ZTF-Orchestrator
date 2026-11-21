@@ -77,15 +77,15 @@ def test_plain_vlan_example_omits_incomplete_ipam():
     assert 'dhcp_options' in text
 
 
-def test_screenshots_match_all_current_guides_and_illustrated_book():
-    assets = ROOT / 'docs/assets/quick-guides/2026-11-20'
-    capture = json.loads((assets / 'capture-manifest.json').read_text(encoding='utf-8'))
+def test_screenshots_match_all_current_guides():
     coverage = json.loads((GUIDES / 'coverage.json').read_text(encoding='utf-8'))
+    assets = ROOT / coverage['screenshotDirectory']
+    capture = json.loads((assets / 'capture-manifest.json').read_text(encoding='utf-8'))
     expected = {(g['kind'], g['id']): g for g in coverage['guides'] if g['kind'] != 'retired'}
     actual = {(s['kind'], s['id']): s for s in capture['captures']}
     assert len(actual) == len(capture['captures'])
     assert set(actual) == set(expected)
-    assert capture['sourceCommit'] == coverage['sourceCommit']
+    assert capture['sourceCommit'] == coverage.get('screenshotSourceCommit', coverage['sourceCommit'])
     assert 'external network blocked' in capture['mode']
     hashes = set()
     for key, shot in actual.items():
@@ -98,6 +98,12 @@ def test_screenshots_match_all_current_guides_and_illustrated_book():
         hashes.add(digest)
         text = (GUIDES / expected[key]['path']).read_text(encoding='utf-8')
         assert shot['file'] in text and 'not evidence of a successful run' in text
+        assert f"captured 21 November 2026 from application source `{capture['sourceCommit'][:7]}`" in text
+
+
+def test_previous_illustrated_word_preserves_original_screenshots():
+    capture = json.loads((ROOT / 'docs/assets/quick-guides/2026-11-20/capture-manifest.json').read_text())
+    hashes = {shot['sha256'] for shot in capture['captures']}
     illustrated = ROOT / 'docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.docx'
     with zipfile.ZipFile(illustrated) as book:
         embedded = {hashlib.sha256(book.read(name)).hexdigest()

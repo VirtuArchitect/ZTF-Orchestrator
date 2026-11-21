@@ -58,13 +58,10 @@ Each UAT scenario should capture:
 
 - ZTF-Orchestrator targets the legacy ZeroTouch Framework 1.x workflow/script
   CLI for Workflows 1.x and Scripts 1.x execution paths.
-- ZTF 2.x plan/apply support is implemented as a separate guarded IaC lane for
-  ZTF 2.x IaC, Workflows 2.x, and Scripts 2.x converted actions. It is not a
-  drop-in replacement for the legacy workflow or script catalog.
+- ZTF 2.x console plan/apply, Workflows 2.x and Scripts 2.x execution are retired. Existing jobs, state and approvals remain historical records.
 - YAML Studio generates, validates, saves, and exports YAML. It does not execute
   workflows or mutate Nutanix infrastructure.
-- NKP integration is constrained to exposed safe phases; blocked phases remain
-  blocked server-side.
+- NKP console setup and new phase submissions are retired and rejected server-side. Retaining a runtime or historical records does not re-enable them.
 - DEV_LAB, simulator, and local checks are useful evidence but do not prove
   broad production readiness.
 

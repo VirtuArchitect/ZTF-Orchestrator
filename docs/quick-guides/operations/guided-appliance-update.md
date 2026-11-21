@@ -1,6 +1,6 @@
 # Guided Appliance Update Quick Guide
 
-Guide ID: `QG-O-guided-appliance-update` · Reviewed: 20 November 2026 · Source: `79c3ecc`
+Guide ID: `QG-O-guided-appliance-update` · Reviewed: 21 November 2026 · Source: `48eb875`
 
 Status: Current source procedure. Read [Using the quick guides](../using-the-guides.md) first.
 
@@ -36,14 +36,14 @@ Do not force through busy, backup or space blockers. An uncertain install requir
 
 Record the exact target, installed build, reviewed config filename/hash, approval if applicable, job/task/run IDs and redacted before/after checks. Keep unresolved follow-up with the change record.
 
-## Screen reference
-
-![Guided Appliance Update authoring screen with simulated data](../../assets/quick-guides/2026-11-20/operations-guided-appliance-update.png)
-
-Local demonstration of **Appliance Ops / Updates / no install submitted** at `/appliance`, captured from source `79c3ecc` on 20 November 2026. Values and credential references are synthetic; required fields may intentionally be incomplete. This is the initial screen or selected configuration panel, not evidence of a successful run. Lower form sections may be outside the captured viewport. Follow this guide's preparation, approval and verification steps.
-
 ## References
 
 - [Detailed procedure](../../guided-appliance-updates.md)
 - [Route and access controls](../../../src/App.tsx)
 - [Guide index](../README.md)
+
+## Screen reference
+
+![Guided Appliance Update authoring screen with simulated data](../../assets/quick-guides/2026-11-21/operations-guided-appliance-update.png)
+
+Simulated initial/authoring view captured 21 November 2026 from application source `48eb875`. State: **Appliance Ops / Updates / no install submitted** at `/appliance`. Values are synthetic and required inputs may be incomplete. This is not evidence of a successful run, live target authentication or hardware compatibility. Lower form sections may be outside the captured viewport. Follow the preparation, approval, verification and recovery instructions.

@@ -28,7 +28,7 @@ effective environment:
 - `ZTF_CLUSTER_FQDN_ENABLE_MUTATION=true` enables approved FQDN submissions.
 - `ZTF_LCM_INVENTORY_ENABLE_SUBMISSION=true` enables approved LCM inventory submissions.
 
-Both default to off. Review the exact plan, request approval from a different
+Packaged builds enable reviewed application for both workflows; explicit false overrides retain planning mode. Review the exact plan, request approval from a different
 administrator, check the approval status, enter the cluster-bound confirmation
 and submit. Repeating the submission with the same approved plan returns the
 same job. The worker rechecks identity, preflight state, maintenance, roles,

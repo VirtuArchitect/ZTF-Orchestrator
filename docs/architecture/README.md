@@ -13,11 +13,8 @@ ZTF-Orchestrator is the control plane and evidence layer between operators and
 the underlying automation engines:
 
 - ZeroTouch Framework 1.x remains the ZTF workflow/script execution engine.
-- NKP ZeroTouch Framework remains the optional NKP automation engine.
-- Native Foundation Engine is a guarded deployment-intent lane. Dell iDRAC
-  Redfish has a controlled-UAT adapter path when the runtime gates and local
-  adapter command are enabled; other providers and production certification
-  still require provider-specific evidence.
+- NKP and ZTF 2.x console setup and execution are retired; saved records and baked runtimes are retained separately.
+- Native Foundation Deploy remains a dedicated workflow with planning/review APIs and a separately gated controlled-UAT adapter path. It is distinct from the retired Native pipeline executor option. Adapter availability and hardware validation must be established for the exact target; planning reviews do not enable mutation.
 - ZTF-Orchestrator owns UI workflow, RBAC, approvals, durable jobs, schedules,
   audit events, validation evidence, config management, and storage posture.
 - Nutanix infrastructure remains the target system; production validation is

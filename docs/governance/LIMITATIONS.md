@@ -8,15 +8,14 @@ operator-controlled or production-assessable use.
 ## Current Limits
 
 - Workflows 1.x and Scripts 1.x execution target legacy ZeroTouch Framework 1.x.
-- ZTF 2.x plan/apply is available only through the separate guarded ZTF 2.x IaC,
-  Workflows 2.x, and Scripts 2.x lanes.
+- ZTF 2.x console plan/apply, Workflows 2.x and Scripts 2.x execution are retired. Saved jobs, approvals and state remain historical records.
 - Ungoverned ZTF 2.x apply/destroy and live resource behavior without
   environment-specific UAT remain out of scope.
 - YAML Studio does not execute workflows or mutate infrastructure.
-- NKP apply/destructive behavior remains constrained.
+- NKP console setup and all new phase submissions are retired.
 - Production validation is environment-specific.
 - Foundation Central create/imaging requires its own UAT lane.
-- Native Foundation deployment is planning-only. It validates intent shape for
+- Native pipeline execution and its console opt-in are retired. The dedicated Native Foundation Deploy workflow is separate and retains planning/review APIs plus an explicitly gated controlled-UAT adapter path. Planning reviews alone validate intent shape for
   multi-site, heterogeneous hardware and HCI/compute-only/storage-only cluster
   types, including named credential reference metadata and post-create
   validation payload previews and future secret resolution and binding requests, but does

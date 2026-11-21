@@ -1,0 +1,592 @@
+[
+  {
+    "id": "quick-guides-operations-ahv-uplink-migration",
+    "page": 11,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-change-virtual-switch-mtu",
+    "page": 14,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-create-virtual-switch",
+    "page": 17,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-dare",
+    "page": 20,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-guided-appliance-update",
+    "page": 23,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-post-deployment",
+    "page": 26,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-recover-infrastructure",
+    "page": 29,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-pipelines",
+    "page": 32,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-operations-upgrade-advisor",
+    "page": 35,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-accepteulapc",
+    "page": 38,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-accepteulape",
+    "page": 41,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addadserverpc",
+    "page": 44,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addadserverpe",
+    "page": 47,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-adddirectoryservices",
+    "page": 50,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addnameserverspc",
+    "page": 53,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addnameserverspe",
+    "page": 55,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addlocalusers",
+    "page": 58,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addntpserverspc",
+    "page": 61,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addntpserverspe",
+    "page": 63,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addroles",
+    "page": 66,
+    "contentsPage": 2
+  },
+  {
+    "id": "quick-guides-scripts-addusergroups",
+    "page": 69,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-changedefaultadminpasswordpe",
+    "page": 72,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-ndbconfig",
+    "page": 75,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-connecttoaz",
+    "page": 78,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createaddressgroups",
+    "page": 81,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createbucket",
+    "page": 84,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createcategorypc",
+    "page": 87,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createlocaluserspe",
+    "page": 90,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createkarbonclusterpc",
+    "page": 93,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createobjectstore",
+    "page": 96,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createprotectionpolicy",
+    "page": 99,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createrecoveryplan",
+    "page": 103,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createrolemappingpc",
+    "page": 106,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createrolemappingpe",
+    "page": 109,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createidp",
+    "page": 112,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createnetworksecuritypolicy",
+    "page": 115,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createservicegroups",
+    "page": 118,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createcontainerpe",
+    "page": 121,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createsubnetpe",
+    "page": 124,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createsubnetspc",
+    "page": 128,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createvmpe",
+    "page": 132,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createvmspc",
+    "page": 135,
+    "contentsPage": 3
+  },
+  {
+    "id": "quick-guides-scripts-createvpc",
+    "page": 138,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deleteaddressgroups",
+    "page": 141,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletecategorypc",
+    "page": 144,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-pcimagedelete",
+    "page": 147,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deleteobjectstore",
+    "page": 150,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-pcovadelete",
+    "page": 153,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deleteprotectionpolicy",
+    "page": 156,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deleterecoveryplan",
+    "page": 160,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletenetworksecuritypolicy",
+    "page": 163,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deleteservicegroups",
+    "page": 166,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletecontainerpe",
+    "page": 169,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletesubnetspc",
+    "page": 172,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletesubnetspe",
+    "page": 175,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletevmpc",
+    "page": 178,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletevmpe",
+    "page": 181,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deletevpc",
+    "page": 184,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-deploypc",
+    "page": 187,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-disablemicrosegmentation",
+    "page": 191,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-disablenetworkcontroller",
+    "page": 194,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-disconnectaz",
+    "page": 197,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-enabledr",
+    "page": 200,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-enablefc",
+    "page": 202,
+    "contentsPage": 4
+  },
+  {
+    "id": "quick-guides-scripts-enablemarketplace",
+    "page": 204,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-enablemicrosegmentation",
+    "page": 206,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-enablenetworkcontroller",
+    "page": 208,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-enablenke",
+    "page": 210,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-enableobjects",
+    "page": 212,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-generatefcapikey",
+    "page": 214,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-importusers",
+    "page": 216,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-poweronvmpc",
+    "page": 219,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-powertransitionvmpe",
+    "page": 222,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-registerinitclusterndb",
+    "page": 225,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-registertopc",
+    "page": 228,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-hareservation",
+    "page": 231,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-setprismlogintitlepe",
+    "page": 234,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-rebuildcapacityreservation",
+    "page": 237,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-sharebucket",
+    "page": 240,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-unregisterpefrompc",
+    "page": 243,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-updatecvmfoundation",
+    "page": 246,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-updatedsip",
+    "page": 249,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-updatepulsepc",
+    "page": 252,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-updatepulsepe",
+    "page": 254,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-updatevpc",
+    "page": 257,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-pcimageupload",
+    "page": 260,
+    "contentsPage": 5
+  },
+  {
+    "id": "quick-guides-scripts-uploadimagepe",
+    "page": 263,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-scripts-pcovaupload",
+    "page": 266,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-pe-security-hardening",
+    "page": 269,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-calm-vm-workloads",
+    "page": 272,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-cluster-create-foundation-vm",
+    "page": 275,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-cluster-create-standalone-fca",
+    "page": 278,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-cluster-create",
+    "page": 281,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-cluster-storage-standard",
+    "page": 284,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-config-cluster",
+    "page": 287,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-config-management-pc",
+    "page": 290,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-config-pc",
+    "page": 293,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-cvm-idrac-password-rotation",
+    "page": 296,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-deploy-management-pc",
+    "page": 299,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-deploy-pc",
+    "page": 302,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-calm-edgeai-vm-workload",
+    "page": 305,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-hardware-out-of-band-baseline",
+    "page": 308,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-imaging-only-standalone-fca",
+    "page": 311,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-imaging-only",
+    "page": 314,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-initial-host-cvm-password-setup",
+    "page": 317,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-lcm-update",
+    "page": 320,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-native-foundation-deploy",
+    "page": 323,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-ndb",
+    "page": 326,
+    "contentsPage": 6
+  },
+  {
+    "id": "quick-guides-workflows-pe-certificate-baseline",
+    "page": 329,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-pe-monitoring-baseline",
+    "page": 332,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-pe-network-baseline",
+    "page": 335,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-pod-config",
+    "page": 338,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-imaging-standalone-fca",
+    "page": 341,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-imaging",
+    "page": 344,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-post-foundation-baseline",
+    "page": 347,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-site-deploy-standalone-fca",
+    "page": 350,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-site-deploy",
+    "page": 353,
+    "contentsPage": 7
+  },
+  {
+    "id": "quick-guides-workflows-unregister-pe-from-pc",
+    "page": 356,
+    "contentsPage": 7
+  }
+]

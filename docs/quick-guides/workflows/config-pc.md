@@ -1,6 +1,6 @@
 # Configure Prism Central Quick Guide
 
-Guide ID: `QG-W-config-pc` · Reviewed: 20 November 2026 · Source: `79c3ecc`
+Guide ID: `QG-W-config-pc` · Reviewed: 21 November 2026 · Source: `48eb875`
 
 Status: Current source procedure. Read [Using the quick guides](../using-the-guides.md) first.
 
@@ -35,15 +35,15 @@ The starter enables illustrative features and is not a safe default policy. Part
 
 Record the exact target, installed build, reviewed config filename/hash, approval if applicable, job/task/run IDs and redacted before/after checks. Keep unresolved follow-up with the change record.
 
-## Screen reference
-
-![Configure Prism Central authoring screen with simulated data](../../assets/quick-guides/2026-11-20/workflows-config-pc.png)
-
-Local demonstration of **Configure / initial draft** at `/workflows/config-pc`, captured from source `79c3ecc` on 20 November 2026. Values and credential references are synthetic; required fields may intentionally be incomplete. This is the initial screen or selected configuration panel, not evidence of a successful run. Lower form sections may be outside the captured viewport. Follow this guide's preparation, approval and verification steps.
-
 ## References
 
 - [Detailed procedure](../../user-guide.md)
 - [Catalogue and details](../../../src/data.ts)
 - [Execution form](../../../src/pages/WorkflowDetail.tsx)
 - [Guide index](../README.md)
+
+## Screen reference
+
+![Configure Prism Central authoring screen with simulated data](../../assets/quick-guides/2026-11-21/workflows-config-pc.png)
+
+Simulated initial/authoring view captured 21 November 2026 from application source `48eb875`. State: **Configure / initial draft** at `/workflows/config-pc`. Values are synthetic and required inputs may be incomplete. This is not evidence of a successful run, live target authentication or hardware compatibility. Lower form sections may be outside the captured viewport. Follow the preparation, approval, verification and recovery instructions.
