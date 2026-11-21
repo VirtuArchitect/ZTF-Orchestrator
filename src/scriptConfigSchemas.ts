@@ -176,7 +176,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       ...commonPeClusterFields,
       { key: 'prism_login_title', label: 'Prism Login Title', type: 'text', required: true, placeholder: 'Example Cluster',
         help: '1–128 characters of plain text, including at least one non-whitespace character. No HTML or control characters. Spaces are preserved.' },
-      { key: 'prism_login_title_verify_tls', label: 'Verify TLS', type: 'boolean', defaultValue: true,
+      { key: 'prism_login_title_verify_tls', label: 'Verify TLS (optional)', type: 'boolean', defaultValue: false,
         help: 'Verify the PE certificate. Disable only for an explicitly accepted untrusted certificate; this override applies only to the login-title client.' },
     ],
     build: values => {
@@ -184,7 +184,7 @@ const EXACT_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
       if (typeof title !== 'string' || !title.trim() || Array.from(title).length > 128 || /[<>\p{C}]/u.test(title)) {
         throw new Error('Prism Login Title must be 1–128 characters of nonblank plain text without HTML or control characters.')
       }
-      const verifyTls = values.prism_login_title_verify_tls === undefined ? true : values.prism_login_title_verify_tls
+      const verifyTls = values.prism_login_title_verify_tls === undefined ? false : values.prism_login_title_verify_tls
       if (typeof verifyTls !== 'boolean') throw new Error('Verify TLS must be a boolean.')
       if (!text(values, 'cluster_ip') || !text(values, 'cluster_name') || !text(values, 'pe_credential')) {
         throw new Error('Prism Element IP, Cluster Name and PE Credential Ref are required.')
@@ -1302,9 +1302,11 @@ const FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
   CreateLocalUsersPe: {
     scriptId: 'CreateLocalUsersPe',
     title: 'Create Local Users (PE)',
-    description: 'Creates PE cluster and user administrators. Existing accounts must already have both roles; their passwords remain unchanged. Requires an Orchestrator administrator and trusted PE certificate.',
+    description: 'Creates PE cluster and user administrators. Existing accounts must already have both roles; their passwords remain unchanged. Requires an Orchestrator administrator. PE certificate verification is optional per operation.',
     fields: [
       ...commonPeClusterFields,
+      { key: 'pe_verify_tls', label: 'Verify PE TLS certificate (optional)', type: 'boolean', defaultValue: false },
+      { key: 'pe_tls_bypass_reason', label: 'PE TLS bypass reason', type: 'text', defaultValue: 'Initial cluster deployment or disaster recovery configuration' },
       { key: 'local_user_refs', label: 'Local Users (username=credential reference)', type: 'list', required: true,
         defaultValue: Array.from({ length: 8 }, (_, i) => `ops.admin${String(i + 1).padStart(2, '0')}=pe_ops_admin${String(i + 1).padStart(2, '0')}`).join('\n'),
         help: 'One username=credential reference per line. Credential usernames must match, with a unique password for every user. No plaintext passwords.' },
@@ -1315,7 +1317,7 @@ const FIELD_GUIDED_SCRIPT_CONFIG_SCHEMAS: Record<string, ScriptConfigSchema> = {
         if (!match) throw new Error('Each local user must be username=credential_reference')
         return { username: match[1], credential_ref: match[2] }
       })
-      return toYaml(peCluster(values, { pe_credential: text(values, 'pe_credential'), local_users: entries }))
+      return toYaml({ pe_verify_tls: values.pe_verify_tls === true, pe_tls_bypass_reason: text(values, 'pe_tls_bypass_reason') || 'Initial cluster deployment or disaster recovery configuration', ...peCluster(values, { pe_credential: text(values, 'pe_credential'), local_users: entries }) })
     },
   },
   AcceptEulaPe: initialPcSchema('AcceptEulaPe', 'Accept EULA (PE)', 'pe'),

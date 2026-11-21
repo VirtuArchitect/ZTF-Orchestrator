@@ -343,7 +343,15 @@ def patch_pe_postconfig_verification() -> None:
         path.write_text(patched)
 
 
+def patch_pe_tls_policy() -> None:
+    source = Path(__file__).resolve().parent / 'pe_tls.py'
+    if not source.exists():
+        source = source.parent.parent / 'pe_tls.py'
+    _runtime_path('pe_tls.py').write_text(source.read_text(encoding='utf-8'), encoding='utf-8')
+
+
 def main() -> None:
+    patch_pe_tls_policy()
     patch_pc_entity_list()
     patch_pc_vm_payload_name()
     patch_deploy_pc_cvm_credential_fallback()

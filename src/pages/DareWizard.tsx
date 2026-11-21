@@ -4,7 +4,7 @@ import { operationsRequest, type Operations } from '../components/ClusterOperati
 import { Link } from '../router'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
-import PeDirectConnection, { initialPeConnection, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
+import PeDirectConnection, { initialPeConnection, deploymentRecoveryTls, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
 
 const base = '/api/dare'
 const steps = ['Select cluster', 'Choose key manager', 'Preflight', 'Review & approve', 'Enable & verify']
@@ -26,7 +26,7 @@ type Observation = { cluster: Cluster; state: 'unconfigured' | 'already_configur
 type Plan = Observation & { content: string; sha256: string }
 type Job = { status: string; diagnostics?: { encryptionState?: string; lastKeyBackupAt?: string | null; evidence?: string; likelyFix?: string } }
 type Pending = { plan: Plan; reference: string; approval: string; jobId?: string }
-const emptyConnection: Connection = { ...initialPeConnection }
+const emptyConnection: Connection = { ...initialPeConnection, ...deploymentRecoveryTls }
 
 async function request<T>(url: string, body?: object): Promise<T> {
   const response = await apiFetch(url, body ? { method: 'POST', body: JSON.stringify(body) } : {})
@@ -148,7 +148,7 @@ export default function DareWizard() {
               {clusters.map(cluster => <option value={cluster.id} key={cluster.id}>{cluster.name}</option>)}
             </select>
           </label>
-          <PeDirectConnection value={connection} disabled={busy} onChange={patch => {
+          <PeDirectConnection recoveryTls value={connection} disabled={busy} onChange={patch => {
             setConnection(current => ({ ...current, ...patch })); setObservation(null); setPlan(null); setPending(null); setReview({})
           }} />
           <button className="btn-primary" disabled={busy || !connectionReady(connection)}

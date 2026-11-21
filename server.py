@@ -44,6 +44,8 @@ import pc_unregistration as unregistration
 import ahv_uplink_migration as uplink_migration
 import pe_direct
 import yaml_studio_routes as studio_routes
+import pe_tls
+import virtual_switch_create as switch_create
 import virtual_switch_mtu as switch_mtu
 import dare_workflow as dare
 import post_deployment
@@ -3334,7 +3336,7 @@ def _approval_required_workflows(settings: dict | None = None) -> set[str]:
 def _workflow_requires_approval(workflow: str | None, settings: dict | None = None) -> bool:
     if workflow in post_deployment.WORKFLOWS:
         return True
-    if workflow in {initial_passwords.WORKFLOW, rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW}:
+    if workflow in {initial_passwords.WORKFLOW, rotation.WORKFLOW, unregistration.WORKFLOW, storage_standard.WORKFLOW, uplink_migration.WORKFLOW, switch_create.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW}:
         return True
     return bool(workflow and workflow in _approval_required_workflows(settings))
 
@@ -34945,7 +34947,7 @@ class ExecutionJobManager:
 
     def _run_ahv_uplink_job(self, job_id, payload, user):
         status = 'failed'
-        workflow = switch_mtu if payload['workflow'] == switch_mtu.WORKFLOW else uplink_migration
+        workflow = {switch_mtu.WORKFLOW: switch_mtu, switch_create.WORKFLOW: switch_create}.get(payload['workflow'], uplink_migration)
         diagnostics = {'category': workflow.WORKFLOW.replace('-', '_'), 'verifiedHosts': []}
         try:
             with uplink_migration.LOCK:
@@ -35151,7 +35153,7 @@ class ExecutionJobManager:
         if payload.get('workflow') == dare.WORKFLOW:
             self._run_dare_job(job_id, payload, user)
             return
-        if payload.get('workflow') in {uplink_migration.WORKFLOW, switch_mtu.WORKFLOW}:
+        if payload.get('workflow') in {uplink_migration.WORKFLOW, switch_create.WORKFLOW, switch_mtu.WORKFLOW}:
             self._run_ahv_uplink_job(job_id, payload, user)
             return
         if payload.get('workflow') == storage_standard.WORKFLOW:
@@ -42392,13 +42394,20 @@ def _advance_post_deployment(runs, run, action, data, actor):
     if stage in post_sequence.CHECKPOINTS:
         evidence = {'reference': post_sequence.reference(data.get('reference'))}
         if stage == 'certificate':
-            expected = data.get('fingerprint')
-            if not isinstance(expected, str) or not re.fullmatch(r'[a-f0-9]{64}', expected):
-                return 'Provide the approved leaf certificate SHA-256 in lowercase hex.'
-            verified = post_deployment.certificate_check({key: config[key] for key in ('connection', 'fqdn')}, resolve)
-            if not verified['endpoints'] or any(row['leafSha256'] != expected for row in verified['endpoints']):
-                return 'The installed certificate does not match the approved fingerprint on every endpoint.'
-            evidence['certificate'] = verified
+            selected = pe_tls.policy(config['connection'])
+            if not selected['pe_verify_tls']:
+                # Target identity was read by _post_run_target above. This is an
+                # explicit transport exception, never a certificate installation claim.
+                evidence['peTlsException'] = selected
+                _audit_pe_transport(config['connection'], 'post-deployment-sequence', 'record-tls-exception', actor)
+            else:
+                expected = data.get('fingerprint')
+                if not isinstance(expected, str) or not re.fullmatch(r'[a-f0-9]{64}', expected):
+                    return 'Provide the approved leaf certificate SHA-256 in lowercase hex.'
+                verified = post_deployment.certificate_check({key: config[key] for key in ('connection', 'fqdn')}, resolve)
+                if not verified['endpoints'] or any(row['leafSha256'] != expected for row in verified['endpoints']):
+                    return 'The installed certificate does not match the approved fingerprint on every endpoint.'
+                evidence['certificate'] = verified
         elif stage == 'cvm-renames':
             evidence['reviewedMapping'] = post_deployment.cvm_rename_plan(
                 {key: config[key] for key in ('connection', 'hostSerials')}, resolve)['nodes']
@@ -42499,6 +42508,13 @@ _DARE_TARGET_ERRORS = (dare.DareError, uplink_migration.MigrationError, unregist
 
 
 def _audit_pe_transport(config, workflow, operation, actor, job_id=''):
+    if not pe_direct.direct(config):
+        selected = pe_tls.policy(config)
+        if not selected['pe_verify_tls']:
+            log.warning('pe_tls_verification_bypassed', extra={'action': 'pe_tls_verification_bypassed',
+                'user': actor, 'workflow': workflow, 'operation': operation, 'jobId': job_id,
+                'clusterUuid': config.get('cluster_uuid', ''), 'verifyTls': False,
+                'reason': selected['pe_tls_bypass_reason']})
     if pe_direct.direct(config):
         config = pe_direct.connection(config)
         if config['verify_tls'] is False:
@@ -42511,14 +42527,15 @@ def _audit_pe_transport(config, workflow, operation, actor, job_id=''):
 
 def _pe_transport_diagnostics(config):
     if not pe_direct.direct(config):
-        return {}
+        return {'connectionMode': 'pc', **pe_tls.policy(config)}
     return {'connectionMode': 'pe-direct', 'verifyTls': config['verify_tls'],
             'tlsBypassReason': config['tls_bypass_reason']}
 
 
 def _pe_transport_review(config):
     if not pe_direct.direct(config):
-        return ' PC-managed connection with verified HTTPS.'
+        selected = pe_tls.policy(config)
+        return ' PC-managed connection; PE TLS verification ' + ('enabled.' if selected['pe_verify_tls'] else 'BYPASSED. Reason: ' + selected['pe_tls_bypass_reason'])
     return (' PE-direct connection. TLS verification ' + ('enabled.' if config['verify_tls'] else
             'BYPASSED for this run. Reason: ' + config['tls_bypass_reason']))
 
@@ -42759,6 +42776,7 @@ def virtual_switch_mtu_capabilities():
 @require_role('admin')
 @limiter.limit('5 per minute')
 def virtual_switch_mtu_action(action):
+    actor = request.current_user['username']
     if action not in {'preflight', 'approval', 'apply'}:
         return jsonify({'error': 'Unknown MTU action.'}), 404
     if action != 'preflight' and _maintenance_active():
@@ -42770,6 +42788,7 @@ def virtual_switch_mtu_action(action):
     try:
         _require_engines()
         if action == 'preflight':
+            _audit_pe_transport(switch_mtu.connection(data), switch_mtu.WORKFLOW, action, actor)
             plan = _fresh_mtu_plan(data)
             return jsonify({'plan': plan, 'content': uplink_migration.canonical(plan),
                             'changeRequired': switch_mtu.needs_change(plan)})
@@ -42780,6 +42799,7 @@ def virtual_switch_mtu_action(action):
         plan = switch_mtu.load_plan(content)
         intent = plan['intent']
         connection = switch_mtu.connection(intent)
+        _audit_pe_transport(connection, switch_mtu.WORKFLOW, action, actor)
         actor = request.current_user['username']
         if action == 'approval':
             if _fresh_mtu_plan(intent) != plan or not switch_mtu.needs_change(plan):
@@ -42804,6 +42824,74 @@ def virtual_switch_mtu_action(action):
         return jsonify({'error': str(error)}), 403 if action == 'apply' else 400
     except Exception:
         return jsonify({'error': 'The MTU request could not be verified. Review existing approvals and jobs before retrying.'}), 400
+
+
+
+
+def _fresh_switch_create_plan(value):
+    selected = switch_create.intent(value)
+    pc, pe = uplink_migration.clients(selected['connection'], _pe_login_title_resolver({}))
+    return switch_create.preflight(selected, pc, pe)
+
+
+@app.route('/api/create-virtual-switch')
+@require_role('admin')
+def create_virtual_switch_capabilities():
+    return jsonify({'applyEnabled': switch_create.writes_enabled()})
+
+
+@app.route('/api/create-virtual-switch/<action>', methods=['POST'])
+@require_role('admin')
+@limiter.limit('5 per minute')
+def create_virtual_switch_action(action):
+    actor = request.current_user['username']
+    if action not in {'preflight', 'approval', 'apply'}:
+        return jsonify({'error': 'Unknown switch creation action.'}), 404
+    if action != 'preflight' and _maintenance_active():
+        body, code = _maintenance_error()
+        return jsonify(body), code
+    if action == 'apply' and not switch_create.writes_enabled():
+        return jsonify({'error': 'Live switch creation is disabled pending hardware validation.'}), 403
+    data = request.get_json(silent=True)
+    try:
+        _require_engines()
+        if action == 'preflight':
+            _audit_pe_transport(switch_create.intent(data)['connection'], switch_create.WORKFLOW, action, actor)
+            plan = _fresh_switch_create_plan(data)
+            return jsonify({'plan': plan, 'content': uplink_migration.canonical(plan), 'sha256': uplink_migration.fingerprint(plan),
+                            'changeRequired': plan['changeRequired']})
+        fields = {'content'} if action == 'approval' else {'content', 'approvalId', 'confirmation'}
+        if not isinstance(data, dict) or set(data) != fields:
+            raise uplink_migration.MigrationError('Provide the exact reviewed switch creation plan and required approval fields.')
+        content = data['content']
+        plan = switch_create.load_plan(content)
+        intent = plan['intent']
+        connection = switch_create.intent(intent)['connection']
+        _audit_pe_transport(connection, switch_create.WORKFLOW, action, actor)
+        actor = request.current_user['username']
+        if action == 'approval':
+            if _fresh_switch_create_plan(intent) != plan or not plan['changeRequired']:
+                return jsonify({'error': 'Target changed or the empty switch is already present. Run preflight again.'}), 409
+            approval = _approval_manager.create_request(switch_create.WORKFLOW, switch_create.FILENAME, content, actor,
+                notes='Create an empty bridge on every host. No physical NIC assignment or existing switch is changed.' + _pe_transport_review(connection))
+            return jsonify({'id': approval['id']}), 201
+        expected = 'CREATE SWITCH ' + connection['cluster_uuid'] + ' ' + intent['switchName']
+        if data['confirmation'] != expected:
+            return jsonify({'error': f'Type exactly: {expected}'}), 403
+        payload = {'workflow': switch_create.WORKFLOW, 'framework': switch_create.WORKFLOW,
+                   'configFile': switch_create.FILENAME, 'configContent': content,
+                   'approvalId': str(data['approvalId'] or '')}
+        with _AHV_UPLINK_SUBMIT_LOCK:
+            approval = _check_ahv_uplink_approval(payload, actor, switch_create)
+            if approval.get('jobId'):
+                return jsonify({'id': approval['jobId']}), 202
+            job = _job_manager.submit(payload, actor)
+            _approval_manager.link_job(approval['id'], job['id'])
+        return jsonify({'id': job['id']}), 202
+    except (uplink_migration.MigrationError, unregistration.UnregistrationError, storage_standard.StorageError) as error:
+        return jsonify({'error': str(error)}), 403 if action == 'apply' else 400
+    except Exception:
+        return jsonify({'error': 'The switch creation request could not be verified. Review existing approvals and jobs before retrying.'}), 400
 
 
 
@@ -45013,7 +45101,7 @@ def approve_request(aid):
         return jsonify({'error': 'not found'}), 404
     if approval.get('status') == 'pending' and (
         approval.get('requestedBy') == current_user
-        or (approval.get('workflow') in {initial_passwords.WORKFLOW, uplink_migration.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
+        or (approval.get('workflow') in {initial_passwords.WORKFLOW, uplink_migration.WORKFLOW, switch_create.WORKFLOW, switch_mtu.WORKFLOW, dare.WORKFLOW} | post_deployment.WORKFLOWS
             and str(approval.get('requestedBy') or '').casefold() == current_user.casefold())
     ):
         return jsonify({'error': 'Self-approval is not allowed'}), 403

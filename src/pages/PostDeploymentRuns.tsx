@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import PeTlsOptions, { deploymentPeTls } from '../components/PeTlsOptions'
 import Layout from '../components/Layout'
 import { Link } from '../router'
 import { apiFetch } from '../utils/api'
 
 const base = '/api/post-deployment/runs'
 const stages = [
-  ['certificate', 'PE certificate replacement'],
+  ['certificate', 'PE HTTPS policy'],
   ['set-cluster-fqdn', 'Cluster FQDN'],
   ['cvm-renames', 'CVM display renames'],
   ['platform-changes', 'Storage, uplinks and DARE'],
@@ -15,7 +16,7 @@ const stages = [
   ['signoff', 'Operator sign-off'],
 ]
 const checkpoints: Record<string, string> = {
-  certificate: 'Complete the PE certificate change outside this run and record its approval and verification.',
+  certificate: 'Record the PE certificate change or the selected per-run TLS exception, its approval and verification. The exception does not require CA provisioning.',
   'cvm-renames': 'Record the supervised renames and the health check after each CVM. This run checks membership and health, not current display names.',
   'platform-changes': 'Record evidence for in-scope storage, uplink and encryption changes, including any approved exclusions.',
   signoff: 'Record the final review of NCC, LCM, storage and network evidence, and encryption completion and key backup if required.',
@@ -34,7 +35,7 @@ const fields = [
 ]
 type Run = {
   id: string; revision: number; stage: string; attempt: string; approvalId: string; approvalStatus: string;
-  confirmation: string; nccEnabled: boolean; jobVerified: boolean; intent: { connection: { cluster_uuid: string } };
+  confirmation: string; nccEnabled: boolean; jobVerified: boolean; intent: { connection: { cluster_uuid: string; pe_verify_tls?: boolean; pe_tls_bypass_reason?: string } };
   completed: { stage: string; at: string; actor: string; evidence: Record<string, unknown> }[];
   reconciliations: { stage: string; at: string; actor: string; reference: string }[];
   job: { id: string; status: string; diagnostics?: { counts?: Record<string, number> } } | null;
@@ -50,6 +51,7 @@ async function request<T>(url: string, body?: object): Promise<T> {
 }
 
 export default function PostDeploymentRuns() {
+  const [tls, setTls] = useState(deploymentPeTls)
   const [runs, setRuns] = useState<Run[]>([])
   const [selection, select] = useState('')
   const [values, setValues] = useState<Record<string, string>>({})
@@ -95,7 +97,7 @@ export default function PostDeploymentRuns() {
   const active = ['queued', 'running', 'cancelling'].includes(run?.job?.status || '')
   const stopped = Boolean(run?.attempt && !active && !run.jobVerified)
   const canContinue = run && !closed && !active && !stopped && (!checkpoint || reference.trim())
-    && (run.stage !== 'certificate' || /^[a-f0-9]{64}$/.test(fingerprint.trim()))
+    && (run.stage !== 'certificate' || run.intent.connection.pe_verify_tls === false || /^[a-f0-9]{64}$/.test(fingerprint.trim()))
     && (run.stage !== 'post-deployment-ncc' || run.nccEnabled || run.attempt)
     && (!run.confirmation || run.approvalStatus !== 'pending')
     && (run.approvalStatus !== 'approved' || run.attempt || confirmation === run.confirmation)
@@ -118,10 +120,11 @@ export default function PostDeploymentRuns() {
             </option>)}
           </select>
         </label>
+        {!run && <PeTlsOptions value={tls} onChange={setTls} disabled={busy} />}
         {!run && <form className="space-y-4" onSubmit={event => {
           event.preventDefault()
           void perform(async () => {
-            const connection = Object.fromEntries(fields.slice(0, 5).map(([id]) => [id, values[id]?.trim()]))
+            const connection = { ...Object.fromEntries(fields.slice(0, 5).map(([id]) => [id, values[id]?.trim()])), ...tls }
             replace(await request<Run>(base, { connection, fqdn: values.fqdn?.trim(), repository: values.repository?.trim(),
               hostSerials: lines(values.hostSerials || ''), containers: lines(values.containers || ''),
               ncc: { hostSerial: values.hostSerial?.trim(), credential: values.credential?.trim(), hostKey: values.hostKey?.trim() },
@@ -156,6 +159,7 @@ export default function PostDeploymentRuns() {
           <section className="space-y-3 border-t border-border pt-4">
             <h2 className="section-title">{closed ? `Run ${run.stage}` : title(run.stage)}</h2>
             {checkpoint && <p className="text-sm">{checkpoint}</p>}
+            {run.intent.connection.pe_verify_tls === false && <p className="text-sm text-amber-600">This sequence uses a PE TLS exception: {run.intent.connection.pe_tls_bypass_reason}. Certificate provisioning is not required; target identity and all subsequent approvals remain required.</p>}
             {run.stage === 'post-deployment-ncc' && !run.nccEnabled && <p role="status">Automated NCC is disabled on this appliance.</p>}
             {run.approvalId && <p className="text-sm">Approval: {run.approvalStatus || 'unavailable'} · <Link className="text-nutanix-cyan"
               to="/approvals" target="_blank" rel="noopener noreferrer">Open Approvals</Link></p>}
@@ -167,7 +171,7 @@ export default function PostDeploymentRuns() {
             {!closed && (checkpoint || stopped || abandoning) && <label className="label">Change or evidence reference
               <input className="input mt-1" value={reference} onChange={event => setReference(event.target.value)} maxLength={128} disabled={busy} />
             </label>}
-            {run.stage === 'certificate' && <label className="label">Approved leaf certificate SHA-256 (lowercase hex)
+            {run.stage === 'certificate' && run.intent.connection.pe_verify_tls !== false && <label className="label">Approved leaf certificate SHA-256 (lowercase hex)
               <input className="input mt-1" value={fingerprint} onChange={event => setFingerprint(event.target.value)} maxLength={64} disabled={busy} />
             </label>}
             {run.confirmation && run.approvalStatus === 'approved' && !run.attempt && <label className="label">Type {run.confirmation}

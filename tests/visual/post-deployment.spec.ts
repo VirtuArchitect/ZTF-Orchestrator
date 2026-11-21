@@ -32,7 +32,7 @@ test('post-deployment approval, acceptance and supervised checks on mobile', asy
       checks: [{ label: 'Trusted cluster access', passed: true }],
     } })
     if (path === '/api/post-deployment/certificate-check') return route.fulfill({ json: {
-      fqdn: 'pe.example.com', endpoints: [{ address: '192.0.2.1', leafSha256: 'b'.repeat(64) }],
+      pe_verify_tls: false, pe_tls_bypass_reason: 'Fixture deployment exception', fqdn: 'pe.example.com', endpoints: [{ address: '192.0.2.1', leafSha256: 'b'.repeat(64) }],
     } })
     if (path === '/api/post-deployment/cvm-rename-plan') return route.fulfill({ json: {
       nodes: [{ serial: 'S1', cvmAddress: '192.0.2.10', displayName: 'NTNX-LAB-N01-CVM' }],
@@ -65,6 +65,8 @@ test('post-deployment approval, acceptance and supervised checks on mobile', asy
   await expect(page.getByText('Passed: Trusted cluster access')).toBeVisible()
   await page.getByRole('button', { name: 'PE certificate check' }).click()
   await page.getByRole('button', { name: 'Verify installed certificate' }).click()
+  await expect(page.getByRole('heading', { name: 'PE certificate readback — trust not verified' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Trusted PE certificate verified' })).toHaveCount(0)
   await expect(page.getByText(`Leaf SHA-256: ${'b'.repeat(64)}`)).toBeVisible()
   await page.getByRole('button', { name: 'CVM rename plan' }).click()
   await page.getByRole('button', { name: 'Build read-only rename plan' }).click()
@@ -117,7 +119,7 @@ test('mobile sequence restores a supervised checkpoint and does not retry an unv
   })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/configure/post-deployment/runs')
-  await expect(page.getByRole('heading', { name: 'PE certificate replacement' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'PE HTTPS policy' })).toBeVisible()
   const checkpoint = page.getByRole('button', { name: 'Record checkpoint' })
   await expect(checkpoint).toBeDisabled()
   await page.getByLabel('Change or evidence reference').fill('CHG-1')

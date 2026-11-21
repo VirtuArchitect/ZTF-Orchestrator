@@ -53,12 +53,13 @@ test(mode + ' - reviews a read-only DARE plan, requires approval and confirms th
   await page.getByLabel('Managed cluster (optional)').selectOption('example-cluster')
   if (mode === 'pc') {
   await page.getByLabel('Connection mode').selectOption('pc')
+  await expect(page.getByLabel('Verify PE TLS certificate (optional)', { exact: true })).not.toBeChecked()
   await page.getByLabel('Prism Central HTTPS endpoint').fill('https://pc.example.com:9440')
   await page.getByLabel('PC credential reference').fill('pc_admin')
   } else {
     await expect(page.getByLabel('Prism Central HTTPS endpoint')).toHaveCount(0)
-    await expect(page.getByLabel('Verify PE TLS certificate')).toBeChecked()
-    await page.getByLabel('Verify PE TLS certificate').uncheck()
+    await expect(page.getByLabel('Verify PE TLS certificate')).not.toBeChecked()
+    await page.getByLabel('TLS bypass reason').fill('')
     await expect(page.getByRole('button', { name: 'Discover cluster (read-only)' })).toBeDisabled()
     await page.getByLabel('TLS bypass reason').fill('CHG-123 fresh cluster')
   }
@@ -73,8 +74,8 @@ test(mode + ' - reviews a read-only DARE plan, requires approval and confirms th
   if (mode === 'pe-direct') await expect(page.getByText(/PE direct.*TLS verification bypassed for this run.*CHG-123 fresh cluster/)).toBeVisible()
   if (mode === 'pe-direct') {
     await page.getByRole('button', { name: 'Start a new review' }).click()
-    await expect(page.getByLabel('Verify PE TLS certificate')).toBeChecked()
-    await expect(page.getByLabel('TLS bypass reason')).toHaveCount(0)
+    await expect(page.getByLabel('Verify PE TLS certificate')).not.toBeChecked()
+    await expect(page.getByLabel('TLS bypass reason')).toHaveValue('Initial cluster deployment or disaster recovery configuration')
     await page.getByLabel('Managed cluster (optional)').selectOption('example-cluster')
     await page.getByLabel('Verify PE TLS certificate').uncheck()
     await page.getByLabel('TLS bypass reason').fill('CHG-123 fresh cluster')

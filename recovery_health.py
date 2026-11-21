@@ -1,5 +1,6 @@
 """Strict, read-only PE recovery evidence; missing fields never imply health."""
 
+import pe_tls
 from prism_drift import endpoint
 from upgrade_inventory import read
 
@@ -8,6 +9,7 @@ def collect(snapshot, lookup):
     # Imported lazily to keep recovery intent validation independent of transport.
     from disaster_recovery import bootstrap_count, reference_only
 
+    tls = pe_tls.policy(snapshot.get('pe_tls', {}))
     checks = []
     def check(name, passed):
         checks.append({'name': name, 'status': 'passed' if passed else 'unknown_or_failed'})
@@ -23,11 +25,11 @@ def collect(snapshot, lookup):
         if not isinstance(credential, str) or not credential.strip():
             return {'status': 'unknown', 'checks': checks, 'message': 'No reviewed PE credential reference is available.'}
         url = endpoint(snapshot['clusterVip'])
-        cluster = read(url, credential, '/PrismGateway/services/rest/v2.0/cluster/?include_health_summary=true', lookup)
-        hosts = read(url, credential, '/PrismGateway/services/rest/v2.0/hosts/?include_health_summary=true', lookup)
+        cluster = read(url, credential, '/PrismGateway/services/rest/v2.0/cluster/?include_health_summary=true', lookup, **({'verify_tls': False} if not tls['pe_verify_tls'] else {}))
+        hosts = read(url, credential, '/PrismGateway/services/rest/v2.0/hosts/?include_health_summary=true', lookup, **({'verify_tls': False} if not tls['pe_verify_tls'] else {}))
         if not isinstance(cluster, dict) or not isinstance(hosts, dict):
             raise ValueError('Unsupported PE readback')
-        check('Fresh authenticated PE cluster identity', isinstance(cluster.get('uuid'), str) and bool(cluster['uuid'].strip()) and cluster.get('name') == snapshot['clusterName']
+        check('Fresh PE cluster identity and expected VIP', isinstance(cluster.get('uuid'), str) and bool(cluster['uuid'].strip()) and cluster.get('name') == snapshot['clusterName']
               and cluster.get('cluster_external_ipaddress') == snapshot['clusterVip'])
         entities = hosts.get('entities')
         metadata = hosts.get('metadata')

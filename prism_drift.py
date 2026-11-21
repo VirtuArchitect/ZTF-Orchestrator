@@ -6,6 +6,7 @@ import ipaddress
 import json
 import re
 import socket
+import pe_tls
 import ssl
 import urllib.error
 import urllib.parse
@@ -115,7 +116,7 @@ def connection_error(exc):
     return 'PE network connection failed: check target reachability, routing, firewall rules and the PE service.'
 
 
-def read_setting(url, ref, key, lookup):
+def read_setting(url, ref, key, lookup, transport=None):
     username, password, error = lookup(ref)
     if error or not username or not password:
         raise ValueError('PE credential reference could not be resolved')
@@ -124,7 +125,7 @@ def read_setting(url, ref, key, lookup):
                                  headers={'Authorization': 'Basic ' + token, 'Accept': 'application/json'},
                                  method='GET')
     try:
-        context = ssl.create_default_context()
+        context = pe_tls.context(transport or {})
     except OSError:
         raise ValueError('PE TLS trust configuration could not be loaded: check the container CA bundle and SSL_CERT_FILE.') from None
     try:
@@ -153,11 +154,12 @@ def read_setting(url, ref, key, lookup):
 def collect(config, lookup):
     findings, collections = [], []
     summary = dict(matched=0, changed=0, missing=0, unexpected=0, unknown=0, total=0)
+    tls = pe_tls.policy(config)
     for url, ref, settings in targets(config):
         errors = {}
         for key, desired in settings.items():
             try:
-                observed = read_setting(url, ref, key, lookup)
+                observed = read_setting(url, ref, key, lookup, tls) if pe_tls.FIELDS.intersection(config) else read_setting(url, ref, key, lookup)
                 status = 'matched' if desired == observed else 'changed'
             except ValueError as exc:
                 observed, status = None, 'unknown'
@@ -165,7 +167,7 @@ def collect(config, lookup):
             findings.append(dict(path=f'{url}.{key}', status=status, desired=desired, observed=observed))
             summary[status] += 1
             summary['total'] += 1
-        collections.append(dict(endpoint=url, errors=errors))
+        collections.append(dict(endpoint=url, errors=errors, **(tls if pe_tls.FIELDS.intersection(config) else {})))
     # Preserve confirmed drift even if another read failed; unknown is never matched.
     status = 'drifted' if summary['changed'] else 'unknown' if summary['unknown'] else 'matched'
     return dict(status=status, findings=findings, summary=summary, collections=collections)

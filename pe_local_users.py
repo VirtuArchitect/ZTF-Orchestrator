@@ -1,5 +1,6 @@
 """Guarded PE v1 local-user provisioning; no passwords in intent or output."""
 
+import pe_tls
 import base64
 import ipaddress
 import json
@@ -38,7 +39,10 @@ def validate_intent(config):
     clusters = config.get('clusters') if isinstance(config, dict) else None
     if not isinstance(clusters, dict) or not clusters or len(clusters) > 32:
         raise ValueError('Provide 1-32 clusters keyed by PE IP address')
+    pe_tls.policy(config)
     for host, cluster in clusters.items():
+        if isinstance(cluster, dict):
+            pe_tls.policy({**config, **cluster})
         try:
             ipaddress.ip_address(host)
         except (ValueError, TypeError):
@@ -71,7 +75,7 @@ def validate_intent(config):
 
 
 class PeUsersClient:
-    def __init__(self, host, username, password):
+    def __init__(self, host, username, password, tls_policy=None):
         address = ipaddress.ip_address(host)
         host = f'[{address}]' if address.version == 6 else str(address)
         self.host = str(address)
@@ -84,7 +88,7 @@ class PeUsersClient:
                 return None
         self.opener = urllib.request.build_opener(
             urllib.request.ProxyHandler({}), NoRedirect(),
-            urllib.request.HTTPSHandler(context=ssl.create_default_context()),
+            urllib.request.HTTPSHandler(context=pe_tls.context(tls_policy or {})),
         )
 
     def request(self, method, suffix='', payload=None):
@@ -188,7 +192,7 @@ def provision(config, resolve, emit, client_factory=PeUsersClient):
     planned = prepare_credentials(config, resolve)
     prepared = []
     for host, admin, password, users in planned:
-        client = _stage('client_initialization', host, lambda: client_factory(host, admin, password))
+        client = _stage('client_initialization', host, lambda: client_factory(host, admin, password, pe_tls.policy({**config, **config['clusters'][host]})) if pe_tls.FIELDS.intersection(config.keys() | config['clusters'][host].keys()) else client_factory(host, admin, password))
         existing = _stage('existing_account_read', host, client.users)
         for user, _ in users:
             name = user['username']

@@ -3,12 +3,13 @@ import yaml from 'js-yaml'
 import Layout from '../components/Layout'
 import { Link } from '../router'
 import { apiFetch } from '../utils/api'
+import { deploymentPeTls } from '../components/PeTlsOptions'
 import { toYaml } from '../utils/yaml'
 
 const workflow = 'cluster-storage-standard'
 const filename = 'cluster-storage-standard.yml'
 type Reviewed = { expected_cluster_uuid: string; expected_default: { name: string; uuid: string } | null; [key: string]: unknown }
-const example = toYaml({ pe_endpoint: 'https://pe.example.com:9440', pe_credential: 'pe_admin_ref', containers: [
+const example = toYaml({ ...deploymentPeTls, pe_endpoint: 'https://pe.example.com:9440', pe_credential: 'pe_admin_ref', containers: [
   { name: 'CLUSTER01-DATA', replication_factor: 2, compression_enabled: true, on_disk_dedup: 'OFF', erasure_code: 'OFF' },
   { name: 'CLUSTER01-INFRA', replication_factor: 2, compression_enabled: true, on_disk_dedup: 'OFF', erasure_code: 'OFF' },
   { name: 'CLUSTER01-SERVICE', replication_factor: 2, compression_enabled: true, on_disk_dedup: 'OFF', erasure_code: 'OFF' },

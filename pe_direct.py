@@ -58,7 +58,7 @@ def credential(config, resolver, name='pe_credential'):
 class Client:
     def __init__(self, config, saved_credential):
         self.config = connection(config)
-        context = ssl.create_default_context()
+        context = ssl.create_default_context() if self.config['verify_tls'] else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         if not self.config['verify_tls']:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
