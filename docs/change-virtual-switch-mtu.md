@@ -17,9 +17,9 @@ bond and keeps quick mode off.
 4. Review the Prism task and per-host readback in Jobs / Queue. Verify
    end-to-end traffic on the intended VLANs before acceptance.
 
-Live writes default to off. Validate the exact PC/AOS/AHV combination on
-representative hardware before setting `ZTF_VS0_MTU_ENABLE_MUTATION=true`
-in the application container. Keep CVM interface MTU at 1500 per Nutanix
+Packaged Docker/appliance deployments set `ZTF_VS0_MTU_ENABLE_MUTATION=true`;
+an explicit false host override retains planning mode. Validate the exact
+PC/AOS/AHV combination on representative hardware before production use. Keep CVM interface MTU at 1500 per Nutanix
 guidance. The action checks physical NIC readback, while end-to-end traffic
 verification remains an operator check.
 
@@ -33,3 +33,5 @@ procedure. The action does not automatically reverse or replay a write.
 ## Deployment/recovery PE certificates
 
 PE certificate verification is optional per operation. See [PE TLS options](pe-tls-options.md) for the UI, YAML fields, audit evidence and preserved approval/identity checks. PC trust is unchanged.
+
+See [workflow execution settings](workflow-execution-settings.md) for defaults and operator overrides.

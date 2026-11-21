@@ -2,6 +2,8 @@
 
 
 ### Documentation
+- Enable reviewed AHV Uplink Migration, Create Virtual Switch, DARE and VS0 MTU application in packaged Docker/appliance deployments; honor explicit planning-mode overrides and preserve approvals, pipelines and step 08-only recovery.
+
 - Publish dated Administrator and User Guide PDF/Word release assets and checksums; point README, landing page, video page and manual index downloads to the verified release files while retaining repository copies.
 - Link the updated Administrator and User Guide PDF and Word from the README, light landing page and User Guide Videos page; retain existing manual filenames and video links.
 - Link all 23 corrected tutorials, the complete offline ZIP and checksum from the maintained Administrator and User Guide Word/PDF; preserve the 156-page layout and existing download paths.

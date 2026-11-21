@@ -16,7 +16,7 @@ Creates an empty cluster-local AHV OVS bridge on each discovered host through th
 6. Use **Generate YAML** or **Download Config** to retain the draft without executing. The draft is configuration intent, not permission to create a switch or a legacy ZTF script input.
 7. Run **read-only preflight**. Review every host, physical NIC assignments, existing empty bridges and the exact plan SHA-256. This phase performs reads only.
 8. Request **independent approval**. Another administrator must approve the exact canonical plan. Saved approvals are not changed when inputs change; a new plan needs fresh approval.
-9. After hardware validation and deployment-owner enablement, type `CREATE SWITCH <cluster-uuid> vs1` and apply. Only the requester may submit their independently approved plan. Duplicate submission returns the existing job.
+9. After environment validation and approval, type `CREATE SWITCH <cluster-uuid> vs1` and apply. Only the requester may submit their independently approved plan. Duplicate submission returns the existing job.
 10. Review per-host results in the workflow and Jobs / Queue. Each created bridge must be empty; observed br0, physical NICs, serial and management addresses must remain unchanged. Reported MTU is evidence, not a requested change.
 11. To attach uplinks later, open **AHV Uplink Migration**, choose **Use an existing virtual switch**, select `vs1`, and complete that action's own preflight and approval. An empty bridge with no bond is supported; the uplink action configures its reviewed bond/MTU while verifying retained br0 uplinks.
 
@@ -26,6 +26,8 @@ No write is automatically retried or rolled back. A response loss or failed read
 
 ## Enablement and validation
 
-`ZTF_CREATE_VIRTUAL_SWITCH_ENABLE_MUTATION=true` is a dedicated host deployment setting. It defaults off and is independent of uplink migration enablement. Leave it off until a representative hardware trial verifies the exact cluster-local command, switch representation and workload connectivity on the selected AOS/AHV version. Local automated tests use mocked PE/CVM endpoints; no live cluster is changed. Other workflows and legacy ZTF 1.x pipelines keep their existing behavior.
+`ZTF_CREATE_VIRTUAL_SWITCH_ENABLE_MUTATION=true` is a dedicated host deployment setting. Packaged Docker/appliance deployments set it to true; an explicit false override disables application. It remains independent of uplink migration enablement. Validate the exact cluster-local command, switch representation and workload connectivity on the selected AOS/AHV version before a production operation. Local automated tests use mocked PE/CVM endpoints; no live cluster is changed. Other workflows and legacy ZTF 1.x pipelines keep their existing behavior.
 
 The API is admin-only: `GET /api/create-virtual-switch`, and `POST` to `/preflight`, `/approval` and `/apply`. Preflight accepts `connection`, `switchName` and `reviewed`; approval accepts exact `content`; apply requires `content`, `approvalId` and the exact `confirmation`. The durable job uses `create-virtual-switch.yml` as the reviewed configuration filename. No credentials or private SSH keys are included in the plan.
+
+See [workflow execution settings](workflow-execution-settings.md) for packaged defaults, existing overrides and planning-mode rollback.
