@@ -4,6 +4,7 @@ Uses the legacy Prism UI system-data contract, not a public v4 API guarantee.
 No shell, CVM file edits, theme replacement, or cluster rename is performed.
 """
 
+import pe_tls
 import base64
 from contextlib import contextmanager, ExitStack
 import hashlib
@@ -23,7 +24,7 @@ UI_PATH = '/PrismGateway/services/rest/v1/application/system_data'
 UI_TYPE = 'CUSTOM_LOGIN_SCREEN'
 UI_KEY = 'product_title'
 MAX_RESPONSE_BYTES = 1024 * 1024
-CLUSTER_KEYS = {'name', 'pe_credential', 'prism_login_title', 'prism_login_title_verify_tls'}
+CLUSTER_KEYS = {'name', 'pe_credential', 'prism_login_title', 'prism_login_title_verify_tls'} | pe_tls.FIELDS
 
 
 class LoginTitleError(ValueError, RuntimeError):
@@ -57,6 +58,7 @@ def validate_intent(config):
         raise LoginTitleError('invalid_intent', 'pe_credential must be a nonempty credential reference string.')
     if not isinstance(config.get('prism_login_title_verify_tls', True), bool):
         raise LoginTitleError('invalid_intent', 'prism_login_title_verify_tls must be a YAML boolean.')
+    pe_tls.policy(config)
     targets = set()
     for host, cluster in clusters.items():
         try:
@@ -76,6 +78,7 @@ def validate_intent(config):
             raise LoginTitleError('invalid_intent', 'Every cluster requires its existing name.')
         if 'pe_credential' in cluster and (not isinstance(cluster['pe_credential'], str) or not cluster['pe_credential'].strip()):
             raise LoginTitleError('invalid_intent', 'Per-cluster pe_credential must be a nonempty reference string.')
+        pe_tls.policy({**config, **cluster})
         ref = cluster.get('pe_credential') or config.get('pe_credential')
         if not isinstance(ref, str) or not ref.strip():
             raise LoginTitleError('invalid_intent', 'Every target requires a nonempty pe_credential reference.')
@@ -105,7 +108,7 @@ def prepare_credentials(config, resolve):
                                   f'[PE-TITLE] stage=credential_resolution target={host} category=credential_resolution_failed: '
                                   'Check the reference in the selected vault and its username/password. No PE requests were made.') from None
         planned.append((host, cluster['name'], ref, username, password, cluster['prism_login_title'],
-                        cluster.get('prism_login_title_verify_tls', config.get('prism_login_title_verify_tls', True))))
+                        cluster.get('prism_login_title_verify_tls', config.get('prism_login_title_verify_tls', pe_tls.policy({**config, **cluster})['pe_verify_tls']))))
     return planned
 
 
@@ -122,7 +125,7 @@ class PeLoginTitleClient:
             def redirect_request(self, req, fp, code, msg, headers, newurl):
                 return None
 
-        context = ssl.create_default_context()
+        context = ssl.create_default_context() if verify_tls else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         if not verify_tls:
             # Explicit per-operation opt-out; never alter process-global trust.
             context.check_hostname = False

@@ -1,5 +1,5 @@
 /** Presentation of appliance evidence. Browser wall time never determines freshness. */
-export type PEObservation = { status: string; collectedAt: string; completedAt?: string; collectionStatus?: string; message: string; checks: { name: string; status: string }[] }
+export type PEObservation = { pe_verify_tls?: boolean; pe_tls_bypass_reason?: string; status: string; collectedAt: string; completedAt?: string; collectionStatus?: string; message: string; checks: { name: string; status: string }[] }
 export type ObservationRecord = { observationFresh?: boolean; observation?: PEObservation; observationDiagnostics?: { state: string; ageSeconds: number | null; ttlSeconds: number; message: string } }
 export type ObservationSnapshot = { collectedAt: string; clientReceivedAt?: number }
 

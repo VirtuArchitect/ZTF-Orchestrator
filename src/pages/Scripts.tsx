@@ -196,6 +196,7 @@ export default function Scripts() {
 
         {/* ── Left: list ─────────────────────────────────────────────────── */}
         <div className="w-80 flex-shrink-0 flex flex-col gap-3">
+          {user?.role === 'admin' && <Link className="btn-secondary" to="/scripts/create-virtual-switch">Create Virtual Switch</Link>}
           {user?.role === 'admin' && <Link className="btn-secondary" to="/scripts/change-virtual-switch-mtu">Change Virtual Switch MTU</Link>}
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />

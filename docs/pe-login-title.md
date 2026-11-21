@@ -33,7 +33,7 @@ by importing YAML alone.
 2. Select the vault containing that reference and **Save to ZTF**. The lookup must
    succeed in that selected vault; a similarly named entry elsewhere is insufficient.
 3. Configure persistent certificate trust in the application container, and use
-   a PE IP present in the certificate SAN. TLS verification defaults to `true`.
+   a PE IP present in the certificate SAN. Older YAML with no flag defaults to verified TLS. New generated deployment/recovery YAML defaults to `prism_login_title_verify_tls: false`; enable it when trust is configured. See [PE TLS options](pe-tls-options.md).
    The existing [certificate guidance](pe-local-users.md) describes container trust.
 
 Save a separate configuration file, for example `set_pe_login_title.yml`:

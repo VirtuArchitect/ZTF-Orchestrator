@@ -1,3 +1,9 @@
+Create Virtual Switch is a separate create-only workflow for empty AHV bridges, with optional PE TLS verification, SSH pins, exact approval, durable job output and per-host readback. Existing switch/uplink state is preserved; live writes remain disabled pending hardware validation.
+
+PE TLS options: deployment/recovery forms support per-operation exceptions across DARE, MTU, storage, post-deployment and health collection. YAML-based PE operations accept explicit policy fields. PC and SSH trust, old saved plans, approvals and completed recovery work remain intact.
+
+AHV Uplink Migration: new PE-direct drafts do not require trusted PE certificates. The visible, editable per-run exception remains audited and bound to approval; saved choices, UUID checks and SSH pins are preserved. No global TLS policy changes.
+
 UNRELEASED SOURCE ADDITION (not part of existing appliance assets)
 Generate YAML opens the validated password-setup preview while preserving form values; Governance accurately displays independent approval as always required for live password changes. Preparation and read-only checks require no approval.
 Download Config remains visible in Initial Host & CVM Password Setup, with completion guidance while disabled and reviewed filenames retained when YAML is downloaded.

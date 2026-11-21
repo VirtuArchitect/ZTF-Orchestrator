@@ -87,7 +87,9 @@ class Controller:
             existing = dest['ports'] if dest else []
             if not set(moved).issubset(source['ports']) or len(kept) < 2 or len(existing) + len(moved) < 2:
                 raise pe_direct.DirectError('Each host needs two retained br0 uplinks and two destination uplinks.')
-            if dest and (dest['bondMode'] != 'active-backup' or dest['mtu'] != intent['target']['mtu']):
+            if dest and ((dest['ports'] and dest['bondMode'] != 'active-backup')
+                         or (not dest['ports'] and (dest['bond'] is not None or dest['bondMode'] is not None))
+                         or (dest['ports'] and dest['mtu'] != intent['target']['mtu'])):
                 raise pe_direct.DirectError('Existing destination bond mode or MTU differs from the plan.')
             by_name = {n['name']: n for n in host['nics']}
             if any(not by_name[n]['up'] for n in kept + moved + existing):
@@ -145,7 +147,7 @@ class Controller:
                 ssh.run(node, self.saved, 'create', {'bridge': bridge}, cancelled)
             authorize()
             ssh.run(node, self.saved, 'uplinks', {'bridge': bridge, 'ports': assignment['destination'],
-                    'bond': destination['bond'] if destination else bridge + '-up', 'mtu': plan['intent']['target']['mtu']}, cancelled)
+                    'bond': destination['bond'] if destination and destination['bond'] else bridge + '-up', 'mtu': plan['intent']['target']['mtu']}, cancelled)
             final = ssh.run(node, self.saved, 'inspect', cancelled=cancelled)['inventory']
             final_source, final_dest = final['switches'].get('br0'), final['switches'].get(bridge)
             nics = {n['name']: n for n in final['nics']}

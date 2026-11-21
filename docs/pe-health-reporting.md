@@ -56,7 +56,7 @@ Invalid or future evidence timestamps still fail closed. Local display timers do
 5. If evidence expired, collect again. If collection failed, resolve the credential, certificate trust/SAN, connectivity or API issue before retrying. If refresh failed, fix the dashboard/API connection first.
 6. Review historical attention items separately. A later successful readback does not automatically close earlier review obligations.
 
-**Refresh** reloads saved records. It does not query PE. The collector still makes only the two existing fixed verified-HTTPS GETs; it introduces no TLS bypass, redirects, extra permissions or live writes. A failed new collection replaces an old Good observation.
+**Refresh** reloads saved records. It does not query PE. The collector still makes only the two existing fixed HTTPS GETs. A per-collection PE TLS exception can be selected for deployment/recovery; its policy and reason are retained in observation metadata and it is never labelled certificate-verified evidence. Redirects, extra permissions and live writes remain excluded. A failed new collection replaces an old Good observation.
 
 ## Attention, compatibility and rollback
 

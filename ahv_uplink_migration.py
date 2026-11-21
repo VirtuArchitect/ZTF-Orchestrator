@@ -1,4 +1,5 @@
 """Conservative, approval-bound AHV physical uplink migration via Prism APIs."""
+import pe_tls
 import copy
 import hashlib
 import json
@@ -46,8 +47,12 @@ def connection(value):
     if pe_direct.direct(value):
         return pe_direct.connection(value)
     fields = {'pc_endpoint', 'pc_credential', 'pe_endpoint', 'pe_credential', 'cluster_uuid'}
-    if not isinstance(value, dict) or set(value) != fields:
+    if not isinstance(value, dict) or set(value) - fields - pe_tls.FIELDS or not fields.issubset(value):
         raise MigrationError('Provide Prism Central and Prism Element connections and the AHV cluster UUID.')
+    try:
+        pe_tls.policy(value)
+    except ValueError as error:
+        raise MigrationError(str(error)) from None
     result = dict(value)
     for prefix in ('pc', 'pe'):
         try:

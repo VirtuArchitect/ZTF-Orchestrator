@@ -5,6 +5,7 @@ to the existing authenticated submission path. A service restart never replays
 imaging or configuration; an administrator must reconcile uncertain target state.
 """
 from __future__ import annotations
+import pe_tls
 
 from copy import deepcopy
 from datetime import datetime, timezone, timedelta
@@ -519,6 +520,14 @@ class RecoveryService:
             return deepcopy(revision)
 
     def prepare(self, data, actor):
+        health_tls = data.get('healthTlsPolicy')
+        if health_tls is not None:
+            if not isinstance(health_tls, dict) or set(health_tls) - pe_tls.FIELDS:
+                raise RecoveryError('Only PE TLS collection options are accepted for healthTlsPolicy')
+            try:
+                health_tls = pe_tls.policy(health_tls)
+            except ValueError as error:
+                raise RecoveryError(str(error)) from None
         with self.lock:
             state = self.load()
             profile = self.find(state, 'profiles', data.get('profileId'))
@@ -535,7 +544,8 @@ class RecoveryService:
             self.check_drift(revision)
             if data.get('mode') not in ('recovery', 'rehearsal'):
                 raise RecoveryError('Select recovery or rehearsal; both execute real changes')
-            run = {'id': str(uuid.uuid4()), 'profileId': profile['id'], 'profileName': profile['name'],
+            run = {**({'healthTlsPolicy': health_tls} if health_tls is not None else {}),
+                   'id': str(uuid.uuid4()), 'profileId': profile['id'], 'profileName': profile['name'],
                    'datacenterId': dc['id'], 'mode': data['mode'], 'status': 'prepared', 'createdBy': actor,
                    'createdAt': now(), 'updatedAt': now(), 'snapshot': deepcopy(revision),
                    'revision': revision['revision'], 'baselineSha256': revision['sha256'],
@@ -743,7 +753,13 @@ class RecoveryService:
             thread.start()
             return self.public(run, True)
 
-    def collect_health(self, identity, actor):
+    def collect_health(self, identity, actor, transport=None):
+        if transport is not None and (not isinstance(transport, dict) or set(transport) - pe_tls.FIELDS):
+            raise RecoveryError("Only per-collection PE TLS options are accepted")
+        try:
+            tls = pe_tls.policy(transport or {})
+        except ValueError as error:
+            raise RecoveryError(str(error)) from None
         with self.lock:
             state = self.load()
             run = self.find(state, 'runs', identity)
@@ -762,7 +778,9 @@ class RecoveryService:
             self.save(state)
         # Bounded HTTPS reads must not hold the execution queue lock.
         try:
-            result = self.s['collect_health'](snapshot)
+            result = self.s['collect_health']({**snapshot, 'pe_tls': tls} if transport else snapshot)
+            if transport:
+                result.update(tls)
         except Exception:
             result = {'status': 'unknown', 'checks': [], 'message': 'PE collection failed; review connectivity, trust and credentials.'}
         with self.lock:
@@ -772,7 +790,7 @@ class RecoveryService:
                 raise RecoveryError('Recovery state changed during collection; collect fresh health evidence', 409)
             run['healthCollection'] = result
             if result.get('status') == 'passed':
-                run['healthEvidence'] = {'source': 'verified-https-pe-readback', 'by': actor, 'at': now(),
+                run['healthEvidence'] = {'source': 'verified-https-pe-readback' if tls['pe_verify_tls'] else 'tls-exception-pe-readback', **tls, 'by': actor, 'at': now(),
                     'clusterIdentity': run['clusterName'], 'deploymentJobId': run['deploymentJobId'],
                     'reference': f'recovery/{identity}/health/{collection}', 'checks': result['checks']}
                 run['status'] = 'ready_for_configuration'
@@ -783,7 +801,9 @@ class RecoveryService:
 
     def _collect_after_bootstrap(self, identity, actor):
         try:
-            self.collect_health(identity, actor)
+            with self.lock:
+                policy = deepcopy(self.find(self.load(), 'runs', identity).get('healthTlsPolicy'))
+            self.collect_health(identity, actor, policy)
         except RecoveryError:
             # An operator may have stopped or reconciled this run in the meantime.
             return
@@ -1082,7 +1102,7 @@ def register_routes(app, service, require_role, limiter):
     add('/runs/<identity>/approval', ['POST'], lambda d, u, a, identity: service.request_approval(identity, u, a), admin)
     add('/runs/<identity>/deploy', ['POST'], lambda d, u, a, identity: service.deploy(identity, u, d, a), admin)
     add('/runs/<identity>/health', ['POST'], lambda d, u, a, identity: service.attest_health(identity, u, d), admin)
-    add('/runs/<identity>/health/collect', ['POST'], lambda d, u, a, identity: service.collect_health(identity, u), admin)
+    add('/runs/<identity>/health/collect', ['POST'], lambda d, u, a, identity: service.collect_health(identity, u, d), admin)
     add('/runs/<identity>/bootstrap/approval', ['POST'], lambda d, u, a, identity: service.bootstrap_approval(identity, u, d, a), admin)
     add('/runs/<identity>/bootstrap', ['POST'], lambda d, u, a, identity: service.start_bootstrap(identity, u, d, a), admin)
     add('/runs/<identity>/configure', ['POST'], lambda d, u, a, identity: service.start_configuration(identity, u, d, a), admin)

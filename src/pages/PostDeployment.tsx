@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import PeTlsOptions, { deploymentPeTls } from '../components/PeTlsOptions'
 import Layout from '../components/Layout'
 import { Link } from '../router'
 import { apiFetch } from '../utils/api'
@@ -10,7 +11,7 @@ type Workflow = typeof fqdnWorkflow | typeof lcmWorkflow
 type Mode = Workflow | 'acceptance' | 'certificate-check' | 'cvm-rename-plan'
 type Plan = { content: string; sha256: string; confirmation: string }
 type Result = { status: string; clusterUuid: string; collectedAt: string; checks: { label: string; passed: boolean }[] }
-type CertificateResult = { fqdn: string; endpoints: { address: string; leafSha256: string }[] }
+type CertificateResult = { pe_verify_tls?: boolean; pe_tls_bypass_reason?: string; fqdn: string; endpoints: { address: string; leafSha256: string }[] }
 type RenamePlan = { nodes: { serial: string; cvmAddress: string; displayName: string }[] }
 const modes: { id: Mode; label: string }[] = [
   { id: fqdnWorkflow, label: 'Cluster FQDN' },
@@ -43,6 +44,7 @@ async function post<T>(action: string, body: object): Promise<T> {
 }
 
 export default function PostDeployment() {
+  const [tls, setTls] = useState(deploymentPeTls)
   const [mode, setMode] = useState<Mode>(fqdnWorkflow)
   const [values, setValues] = useState<Record<string, string>>({})
   const [enabled, setEnabled] = useState<Partial<Record<Workflow, boolean>>>({})
@@ -77,7 +79,7 @@ export default function PostDeployment() {
     catch (failure) { setError(failure instanceof Error ? failure.message : 'Request failed') }
     finally { setBusy(false) }
   }
-  const connection = Object.fromEntries(fields.map(field => [field.id, (values[field.id] || '').trim()]))
+  const connection = { ...Object.fromEntries(fields.map(field => [field.id, (values[field.id] || '').trim()])), ...tls }
   const canSubmit = (mode === fqdnWorkflow || mode === lcmWorkflow) && enabled[mode] === true
   const input = (id: string, label: string, placeholder = '') => (
     <label key={id} className="label">
@@ -95,6 +97,7 @@ export default function PostDeployment() {
             className={mode === item.id ? 'btn-primary' : 'btn-secondary'} disabled={busy}
             onClick={() => { if (item.id !== mode) { clear(); setMode(item.id) } }}>{item.label}</button>)}
         </div>
+        <PeTlsOptions value={tls} onChange={value => { clear(); setTls(value) }} disabled={busy || !!approval} />
         <form className="space-y-4" onSubmit={event => {
           event.preventDefault()
           clear()
@@ -179,7 +182,7 @@ export default function PostDeployment() {
             and encryption completion and key backup where required.</p>
         </section>}
         {certificate && <section aria-labelledby="post-deployment-certificate" className="space-y-3 border-t border-border pt-4">
-          <h2 className="section-title" id="post-deployment-certificate">Trusted PE certificate verified</h2>
+          <h2 className="section-title" id="post-deployment-certificate">{certificate.pe_verify_tls === false ? 'PE certificate readback — trust not verified' : 'Trusted PE certificate verified'}</h2>
           <p className="break-all text-sm">{certificate.fqdn}</p>
           <ul className="space-y-2 text-sm">
             {certificate.endpoints.map(endpoint => <li key={endpoint.address}>

@@ -3,6 +3,7 @@
 Uses the same PE v1 container contract as the pinned framework. Never removes
 VDisk data, forces cleanup, retries writes, or changes existing containers.
 """
+import pe_tls
 import base64
 import copy
 import json
@@ -33,9 +34,13 @@ class CleanupBlocked(StorageError):
 
 def validate_intent(config, reviewed=False):
     keys = {'pe_endpoint', 'pe_credential', 'containers', 'expected_cluster_uuid',
-            'expected_default', 'dependencies_reviewed'}
+            'expected_default', 'dependencies_reviewed'} | pe_tls.FIELDS
     if not isinstance(config, dict) or set(config) - keys:
         raise StorageError('Use only the documented storage intent fields and credential references.')
+    try:
+        pe_tls.policy(config)
+    except ValueError as error:
+        raise StorageError(str(error)) from None
     try:
         identity.endpoint(config.get('pe_endpoint'))
     except ValueError:
@@ -93,6 +98,7 @@ def credentials(config, resolver):
 
 class Client:
     def __init__(self, config, credential):
+        self.tls_policy = pe_tls.policy(config)
         self.base = identity.endpoint(config['pe_endpoint'])
         self.headers = {'Accept': 'application/json', 'Content-Type': 'application/json',
                         'Authorization': 'Basic '+base64.b64encode(':'.join(credential).encode()).decode()}
@@ -100,7 +106,7 @@ class Client:
             def redirect_request(self, *args, **kwargs):
                 return None
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect(),
-            urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+            urllib.request.HTTPSHandler(context=pe_tls.context(config)))
 
     def request(self, method, path, body=None):
         req = urllib.request.Request(self.base+path, method=method, headers=self.headers,

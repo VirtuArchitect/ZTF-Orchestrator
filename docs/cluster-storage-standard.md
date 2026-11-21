@@ -88,3 +88,7 @@ and the [PE API reference](https://www.nutanix.dev/api_reference/apis/prism_v2.h
 
 Automated tests use simulated PE responses. No live creation, deletion, disk
 migration or vendor compatibility validation was performed for this addition.
+
+## Deployment/recovery PE certificates
+
+PE certificate verification is optional per operation. See [PE TLS options](pe-tls-options.md) for the UI, YAML fields, audit evidence and preserved approval/identity checks. PC trust is unchanged.

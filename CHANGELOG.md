@@ -23,6 +23,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Add a separate Create Virtual Switch action with PE-direct preflight, pinned CVM SSH, exact independent approval and per-host verification. Empty bridges can be handed to the existing uplink migration action; partial creations require a fresh reviewed plan. Live writes default off.
+
+- Extend explicit PE TLS exceptions to DARE, PC-managed PE clients (including MTU), storage, post-deployment, health/recovery collection and YAML-based PE scripts/monitoring. Preserve PC trust, approvals, existing plan settings and step 08-only recovery.
+
+- New AHV Uplink Migration PE-direct drafts use an audited per-run deployment/recovery TLS exception by default; certificate verification remains optional, saved choices and independent approval/SSH/identity checks are preserved.
+
 - Block equivalent IP spellings from overlapping password pipelines, fail closed on unreadable recovery journals, and align submission/recovery lock ordering.
 
 - Add Generate YAML and preserve password-setup form values across preview navigation; label its independent approval as always required in Governance and explain which preparation actions need no approval.

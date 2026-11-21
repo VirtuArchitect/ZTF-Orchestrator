@@ -14,9 +14,7 @@ iDRAC or Orchestrator accounts.
 - Sign in to Orchestrator as an administrator. Operators and viewers cannot run
   this privileged script, including through a pipeline.
 - Have an existing PE credential authorized to manage local users and roles.
-- Trust the PE certificate chain in the container and use a PE IP present in
-  its certificate SAN. TLS verification cannot be disabled by this script.
-  See [PE certificate trust](live-pe-drift-monitoring.md#trust-and-api-compatibility).
+- Select trusted PE HTTPS, or include the explicit per-operation `pe_verify_tls: false` and a nonempty `pe_tls_bypass_reason` in the saved YAML for deployment/recovery. See [PE TLS options](pe-tls-options.md).
 - In Global Config, add the connection credential and eight separate user
   credential references. Each new credential's username must match its YAML
   username, and each password must be unique and satisfy the PE password policy.
@@ -93,7 +91,7 @@ not negate their presence. Match exact usernames rather than display names.
 
 An independent verifier can use GET `/api/nutanix/v1/users` to inspect
 `profile.username` and explicit boolean `profile.enabled`, then GET
-`/api/nutanix/v1/users/{username}/roles` for each account. Preserve verified TLS,
+`/api/nutanix/v1/users/{username}/roles` for each account. Preserve the reviewed per-operation TLS policy,
 endpoint SAN checking and hidden password entry. No POST, password reset or role
 assignment is needed for verification. Unknown response shapes or a missing
 enabled flag cannot prove the account is enabled.
