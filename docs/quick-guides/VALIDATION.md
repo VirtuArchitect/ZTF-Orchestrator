@@ -8,6 +8,8 @@ The coverage manifest records each guide ID and source path. Current source sche
 
 Required preparation includes installed-build identity, exact targets, credential references, certificate and SSH trust policy, applicable approvals, recovery arrangements and evidence ownership. Per-operation PE TLS choices do not bypass PC or SSH identity checks. Planning and review success is separate from enabling a hardware mutation gate. Native Foundation Deploy remains distinct from the retired Native pipeline executor.
 
+The capture fixture is source `48eb875`; the collection source review also includes the packaged enablement change at `db16219`. The shared interface controls are unchanged. Planning-mode figures illustrate an explicit disabled fixture. Packaged defaults, owner overrides and the four reviewed application paths follow [workflow execution settings](../workflow-execution-settings.md).
+
 ## Artifact review procedure
 
 1. Check every current workflow, script and dedicated operation against its maintained catalogue or documented route. Retired entries must remain explicitly non-executable references.

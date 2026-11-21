@@ -1,6 +1,6 @@
 # ZTF Orchestrator Documentation Collection
 
-This collection brings the maintained operator guides, task procedures, runbooks, architecture, governance and API references into one PDF library. Current execution and transport guidance was reviewed on 21 November 2026 against application source `48eb875931ebfc73abe3c564e9996c0c030a179e`. The release remains v1.8.5-rc1 prerelease. Match each document to the exact installed build.
+This collection brings the maintained operator guides, task procedures, runbooks, architecture, governance and API references into one PDF library. Current execution and transport guidance was reviewed on 21 November 2026 against application source `db162199f8b89a2f1a82b21581a28a7bc204ef59`. The release remains v1.8.5-rc1 prerelease. Match each document to the exact installed build.
 
 Use Getting started to choose an outcome, then choose the relevant task or operational runbook. Technical and Native Foundation references describe their stated interfaces and review boundaries. A planning review is not hardware execution or production acceptance. Native Foundation Deploy is distinct from the retired Native pipeline executor option. NKP and ZTF 2.x console setup and execution are retired.
 
@@ -375,3 +375,5 @@ Original Word/PDF artifacts remain unchanged. Superseded local variants, private
 - [PDF collection maintenance](pages/documentation-library.md) explains source review, regeneration and publication checks.
 - [Quick Guide validation](quick-guides/VALIDATION.md) describes current capture, source, coverage and artifact verification.
 - [Prism Central simulator](demo/PRISM-CENTRAL-SIMULATOR.md) describes the separate simulated demo environment.
+
+Packaged Docker/appliance builds enable independently reviewed application for uplink migration, empty virtual switch creation, DARE and VS0 MTU by default. Explicit false overrides retain planning mode. Direct source execution retains explicit enablement. Startup or update submits no cluster operation. See [workflow execution settings](workflow-execution-settings.md). The retained simulated screenshots show a planning-mode authoring fixture, not the capability of the installed appliance. Initial host/CVM password writes and Native Foundation adapters keep their separate gates.

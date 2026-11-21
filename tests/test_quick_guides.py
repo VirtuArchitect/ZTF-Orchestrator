@@ -85,7 +85,7 @@ def test_screenshots_match_all_current_guides():
     actual = {(s['kind'], s['id']): s for s in capture['captures']}
     assert len(actual) == len(capture['captures'])
     assert set(actual) == set(expected)
-    assert capture['sourceCommit'] == coverage['sourceCommit']
+    assert capture['sourceCommit'] == coverage.get('screenshotSourceCommit', coverage['sourceCommit'])
     assert 'external network blocked' in capture['mode']
     hashes = set()
     for key, shot in actual.items():
@@ -98,6 +98,7 @@ def test_screenshots_match_all_current_guides():
         hashes.add(digest)
         text = (GUIDES / expected[key]['path']).read_text(encoding='utf-8')
         assert shot['file'] in text and 'not evidence of a successful run' in text
+        assert f"captured 21 November 2026 from application source `{capture['sourceCommit'][:7]}`" in text
 
 
 def test_previous_illustrated_word_preserves_original_screenshots():

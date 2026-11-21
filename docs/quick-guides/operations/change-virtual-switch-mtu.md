@@ -20,7 +20,7 @@ Administrator; healthy 3–16 host AHV cluster, active-backup bond, trusted PC/P
 
 1. After registration and any planned uplink migration, open Advanced Automation → Scripts → Change Virtual Switch MTU.
 2. Run read-only preflight. Review the default switch and every physical uplink's observed MTU; missing or mismatched host evidence blocks Apply.
-3. Review the plan and obtain a different administrator's approval. Live writes default off pending exact PC/AOS/AHV hardware validation.
+3. Review the plan and obtain a different administrator's approval. Packaged builds enable reviewed application by default; explicit false overrides retain planning mode. Validate the exact PC/AOS/AHV versions before production use.
 4. When approved live operation is available, type the displayed cluster-bound confirmation and submit once. Keep quick mode off and preserve the existing bond/uplinks.
 
 ## Validation and expected result

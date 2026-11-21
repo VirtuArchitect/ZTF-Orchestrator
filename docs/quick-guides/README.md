@@ -1,6 +1,6 @@
 # Workflow and Script Quick Guides
 
-Easy-to-follow task guides using the ZTF documentation structure and the maintained Word/PDF manual style. Reviewed **21 November 2026** against source `48eb875`. These are source-reviewed procedures, not live hardware validation or an appliance update.
+Easy-to-follow task guides using the ZTF documentation structure and the maintained Word/PDF manual style. Reviewed **21 November 2026** against source `db16219`. These are source-reviewed procedures, not live hardware validation or an appliance update.
 
 **Start with [Using the quick guides](using-the-guides.md)** for credentials, approvals, Dry Run limits, job monitoring and safe recovery.
 

@@ -30,7 +30,7 @@ Per-host readback shows the expected empty bridge; reported MTU is observed evid
 
 ## Failure and recovery
 
-Live creation defaults off. Response loss, failed readback or ambiguous state stops later hosts. No write is automatically retried or rolled back. Reconcile actual state and obtain a fresh exact-plan approval before continuing.
+Packaged builds enable reviewed creation by default; explicit false overrides retain planning mode. Response loss, failed readback or ambiguous state stops later hosts. No write is automatically retried or rolled back. Reconcile actual state and obtain a fresh exact-plan approval before continuing.
 
 ## Evidence to capture
 

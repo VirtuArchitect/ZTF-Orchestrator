@@ -1,6 +1,6 @@
 # Using the quick guides
 
-Reviewed 21 November 2026 against application source `48eb875`. These procedures describe source behaviour; compare your installed build before use. v1.8.5-rc1 remains a prerelease; documentation does not update an appliance or certify target compatibility.
+Reviewed 21 November 2026 against application source `db16219`. These procedures describe source behaviour; compare your installed build before use. v1.8.5-rc1 remains a prerelease; documentation does not update an appliance or certify target compatibility.
 
 The library follows the ZTF operator documentation structure: purpose, prerequisites, required inputs, numbered procedure, validation, failure/recovery and evidence. The Word/PDF edition uses the maintained manual's portrait geometry, Arial typography and navy table headers. Each catalogue entry also has an individually linked Markdown guide.
 
@@ -47,3 +47,5 @@ This collection covers the UI workflow/script catalogue, retained retired entrie
 ## Current PE transport policy
 
 Supported PE operations now expose per-operation TLS verification and an explicit exception reason. Prefer certificate verification when the PE certificate is trusted. New deployment/recovery drafts may start with a reviewed exception; inspect the actual setting instead of assuming the checkbox is enabled. HTTPS encryption is retained while server identity is not certificate-authenticated when verification is bypassed. Changing the transport choice requires fresh review and approval where that operation uses an approved plan. PC certificate policy and pinned CVM/AHV SSH identity remain separate. Consult [PE TLS options](../pe-tls-options.md) and the detailed procedure for the selected action.
+
+Packaged Docker/appliance builds enable independently reviewed application for uplink migration, empty virtual switch creation, DARE and VS0 MTU by default. Explicit false overrides retain planning mode. Direct source execution retains explicit enablement. Startup or update submits no cluster operation. See [workflow execution settings](../workflow-execution-settings.md). The retained simulated screenshots show a planning-mode authoring fixture, not the capability of the installed appliance. Initial host/CVM password writes and Native Foundation adapters keep their separate gates.

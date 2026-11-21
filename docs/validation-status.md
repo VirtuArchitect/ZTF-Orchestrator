@@ -3,13 +3,15 @@
 
 ## Current source verification 21 November 2026
 
-Application source `48eb875931ebfc73abe3c564e9996c0c030a179e` passed [main CI](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/44921462182): 1,878 tests passed, four were skipped and measured server coverage was 81.50%. Frontend build/audit, caption rendering, Docker build and the Docker smoke test passed. Pages deployment and container publishing passed separately. These are repository and simulated/container checks, not live Nutanix compatibility or production recovery evidence.
+Application source `db162199f8b89a2f1a82b21581a28a7bc204ef59` passed [main CI](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/44925623250): 1,890 tests passed, four were skipped and measured server coverage was 81.22%. Frontend build/audit, caption rendering, Docker build and the Docker smoke test passed. Pages deployment and container publishing passed separately. These are repository and simulated/container checks, not live Nutanix compatibility or production recovery evidence.
+
+Current packaged builds also enable reviewed application for uplink migration, empty virtual switch creation, DARE and VS0 MTU by default; explicit false overrides retain planning mode. Startup submits no operation. See [workflow execution settings](workflow-execution-settings.md).
 
 Current source includes per-operation [PE TLS options](pe-tls-options.md) and the separate [Create Virtual Switch](create-virtual-switch.md) action. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired. Retained tests, fixtures, templates and runtime files do not establish an available console execution path. Native Foundation Deploy is a separate workflow with planning/review APIs and an explicitly gated controlled-UAT adapter path. A successful planning review is not adapter activation.
 
 The detailed earlier review records below retain their original scope. Historical integration test coverage is not current execution availability.
 
-Current application baseline: `a3c9c79`; consolidated appliance bundle
+Earlier reviewed application baseline: `a3c9c79`; consolidated appliance bundle
 `v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
 
 This document describes what has been validated for ZTF-Orchestrator and what

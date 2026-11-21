@@ -1,6 +1,6 @@
 {
   "reviewed": "2026-11-21",
-  "sourceCommit": "48eb875931ebfc73abe3c564e9996c0c030a179e",
+  "sourceCommit": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
   "scope": "Console workflow/script catalogue plus nine dedicated operator flows; repository engineering helpers are outside scope.",
   "counts": {
     "currentWorkflows": 30,
@@ -949,5 +949,6 @@
     }
   ],
   "screenshotDirectory": "docs/assets/quick-guides/2026-11-21",
-  "applicationSource": "48eb875931ebfc73abe3c564e9996c0c030a179e"
+  "applicationSource": "48eb875931ebfc73abe3c564e9996c0c030a179e",
+  "screenshotSourceCommit": "48eb875931ebfc73abe3c564e9996c0c030a179e"
 }

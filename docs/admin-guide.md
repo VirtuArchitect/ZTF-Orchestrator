@@ -1,8 +1,8 @@
 # ZTF-Orchestrator Admin Guide
 
-Current execution and transport guidance refreshed 21 November 2026 against application source `48eb875`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
+Current execution and transport guidance refreshed 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
-ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; live writes default to off. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
+ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; packaged builds enable the four reviewed network/encryption application paths; explicit false overrides retain planning mode. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
 The [revision 3 cluster deployment process](cluster-deployment-process.md)
 provides the diagram, text equivalent and acceptance gates. The PDF manual
@@ -147,7 +147,7 @@ select a target automatically. Follow [the complete journey](start-here.md).
 
 Administrators can open **Configure → Enable Data-at-Rest Encryption (DARE)** to
 review a read-only Prism preflight and request independent approval for software
-encryption with Native KMS (Local). Live enablement defaults to off. See the
+encryption with Native KMS (Local). Packaged builds enable reviewed application by default; explicit false overrides retain planning mode. See the
 [DARE wizard guide](dare-workflow.md) for prerequisites and verification.
 
 ## Overview Dashboard
@@ -957,4 +957,4 @@ Use the administrator-only [Unregister PE from PC wizard](unregister-pe-from-pc.
 
 The per-operation [PE TLS options](pe-tls-options.md) allow an explicitly reviewed HTTPS certificate-verification exception for supported PE operations. HTTPS encryption is retained; the PE server certificate does not authenticate identity while verification is bypassed. Prefer verification whenever the PE certificate is trusted. Saved plans retain their reviewed policy, changing it requires a fresh plan and approval, and an HTTPS exception never bypasses PC or SSH trust.
 
-[Create Virtual Switch](create-virtual-switch.md) is a separate action under Configure. It creates empty cluster-local OVS bridges through pinned CVM SSH, reports observed MTU, and moves no physical NICs. Use its read-only preflight, independently approved exact plan, exact confirmation and per-host readback. Live creation defaults off pending target-version validation. To attach NICs later, use the separate [AHV Uplink Migration](ahv-uplink-migration.md) workflow with its own preflight and approval.
+[Create Virtual Switch](create-virtual-switch.md) is a separate action under Configure. It creates empty cluster-local OVS bridges through pinned CVM SSH, reports observed MTU, and moves no physical NICs. Use its read-only preflight, independently approved exact plan, exact confirmation and per-host readback. Packaged builds enable reviewed creation by default; explicit false overrides retain planning mode. Validate the exact target before production use. To attach NICs later, use the separate [AHV Uplink Migration](ahv-uplink-migration.md) workflow with its own preflight and approval.

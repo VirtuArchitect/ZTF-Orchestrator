@@ -21,7 +21,7 @@ Administrator; expected cluster UUID and PE endpoint/credential; supported healt
 1. Open Configure → Enable Data-at-Rest Encryption (DARE). Select PE direct : no Prism Central for that transport. Keep certificate verification on, or follow its explicitly approved scoped exception procedure.
 2. Run Discover cluster (read-only). Review complete membership, Good health, encryption readiness and existing LKM. Stop for external/PC key managers, drive encryption or ambiguous state; this wizard does not convert them.
 3. Acknowledge licensing, irreversibility, exclusive change ownership and key recovery; record the change reference. Run Preflight and obtain approval from a different administrator for the exact hashed plan.
-4. Live writes default off. Only after representative lab validation and approved enablement, type ENCRYPT followed by the cluster UUID and submit once.
+4. Packaged builds enable reviewed application by default; explicit false overrides retain planning mode. Only after representative lab validation and independent approval, type ENCRYPT followed by the cluster UUID and submit once.
 5. Inspect the job and fresh configuration readback. Follow Prism's key-backup procedure and monitor background encryption separately.
 
 ## Validation and expected result

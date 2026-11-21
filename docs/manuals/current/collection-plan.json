@@ -1,5 +1,5 @@
 {
-  "applicationSource": "48eb875931ebfc73abe3c564e9996c0c030a179e",
+  "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
   "reviewed": "2026-11-21",
   "items": [
     {
@@ -2591,7 +2591,7 @@
       "title": "Create Virtual Switch security review",
       "category": "Technical reference",
       "sourceDocument": "docs/audits/create-virtual-switch-security-review.md",
-      "archived": false,
+      "archived": true,
       "kind": "reference"
     },
     {
@@ -2623,6 +2623,22 @@
       "title": "Quick Guide Validation and Source Checks",
       "category": "Testing and governance",
       "sourceDocument": "docs/quick-guides/VALIDATION.md",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "workflow-execution-settings",
+      "title": "Workflow Execution Settings",
+      "sourceDocument": "docs/workflow-execution-settings.md",
+      "category": "Installation and updates",
+      "archived": false,
+      "kind": "reference"
+    },
+    {
+      "id": "audits-live-workflow-enablement-security-review",
+      "title": "Packaged Workflow Enablement Security Review",
+      "sourceDocument": "docs/audits/live-workflow-enablement-security-review.md",
+      "category": "Technical reference",
       "archived": false,
       "kind": "reference"
     }

@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '../..');
 const modules = process.env.DOCUMENTATION_TOOL_MODULES;
 if (!modules) throw new Error('Set DOCUMENTATION_TOOL_MODULES to the provided authoring toolkit.');
 const { chromium } = require(path.join(modules, 'playwright'));
-const output = path.resolve(process.env.DOCUMENTATION_RENDER_DIR || path.join(root, 'output/documentation-render')); 
+const output = path.resolve(process.env.DOCUMENTATION_RENDER_DIR || path.join(root, 'output/documentation-render'));
 fs.mkdirSync(output, { recursive: true });
 const plan = JSON.parse(fs.readFileSync(path.join(root, 'docs/manuals/current/collection-plan.json'), 'utf8'));
 const sourceShort = plan.applicationSource.slice(0, 7);
@@ -79,9 +79,10 @@ function referenceScope(item) {
         },
       });
       let body = marked.parse(markdown, { renderer, gfm: true });
+      body = body.replace(/<p>(<figure>[\s\S]*?<\/figure>)<\/p>/g, '$1');
       body = body.replace(/(<figure>[\s\S]*?)<\/figure>\s*(<p>Simulated initial\/authoring[\s\S]*?<\/p>)/g, '$1$2</figure>');
       const scope = referenceScope(item).replaceAll('48eb875', sourceShort);
-      body = body.replace('</h1>', `</h1><p class="provenance">${version} Â· Source checked ${reviewDate} Â· Application source ${sourceShort}</p><p class="scope">${escape(scope)}</p>`);
+      body = body.replace('</h1>', `</h1><p class="provenance">${version} · Source checked ${reviewDate} · Application source ${sourceShort}</p><p class="scope">${escape(scope)}</p>`);
       const maximumColumns = Math.max(0, ...markdown.split('\n').filter(line => /^\|[- :|]+\|\s*$/.test(line)).map(line => line.split('|').length - 2));
       const landscape = maximumColumns > 6;
       const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escape(item.title)}</title><style>

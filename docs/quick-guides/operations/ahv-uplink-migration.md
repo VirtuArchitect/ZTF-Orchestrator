@@ -30,7 +30,7 @@ Verify each host's retained and destination uplinks plus PE/PC reachability, clu
 
 ## Failure and recovery
 
-Live writes default off. Missing pins, inconsistent inventory or unhealthy hosts block execution. A disconnect may leave a host changed; inspect OVS and durable job state before another request. Workload subnet moves and CVM backplane segmentation are separate procedures.
+Packaged builds enable reviewed application by default; explicit false overrides retain planning mode. Missing pins, inconsistent inventory or unhealthy hosts block execution. A disconnect may leave a host changed; inspect OVS and durable job state before another request. Workload subnet moves and CVM backplane segmentation are separate procedures.
 
 ## Evidence to capture
 

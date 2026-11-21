@@ -30,7 +30,7 @@ Requesters and independent approvers must remain administrators at execution tim
 
 ## Remaining acceptance work
 
-Mocked success does not establish vendor certification or representative hardware support. Before enabling live writes, validate the exact AOS/AHV API responses, Local KMS eligibility/licensing, CVM `manage_ovs` availability, strict CVM-to-local-AHV SSH access at `192.168.5.1`, bond naming/MTU behavior, real management and workload connectivity, timeout behavior and the out-of-band recovery procedure. PE v2 encryption has no revision token for this operation; coordinate an exclusive change window and monitor independent Prism tasks. Encryption is irreversible and requires separate key-backup verification. Live writes remain disabled by default.
+Mocked success does not establish vendor certification or representative hardware support. Packaged builds enable reviewed application by default; explicit false overrides retain planning mode. Before production use, validate the exact AOS/AHV API responses, Local KMS eligibility/licensing, CVM `manage_ovs` availability, strict CVM-to-local-AHV SSH access at `192.168.5.1`, bond naming/MTU behavior, real management and workload connectivity, timeout behavior and the out-of-band recovery procedure. PE v2 encryption has no revision token for this operation; coordinate an exclusive change window and monitor independent Prism tasks. Encryption is irreversible and requires separate key-backup verification. Live writes remain disabled by default.
 
 - [AHV Uplink Migration operator guide](../ahv-uplink-migration.md)
 - [DARE operator guide](../dare-workflow.md)

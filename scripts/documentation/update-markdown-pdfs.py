@@ -11,6 +11,8 @@ import argparse
 import hashlib
 import json
 import re
+import os
+import tempfile
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
@@ -81,8 +83,15 @@ def main():
             previous['scope'] = 'Earlier source edition. ' + previous['scope']
             if not any(row['id'] == previous['id'] for row in catalogue['documents']):
                 catalogue['documents'].append(previous)
-        with destination.open('wb') as output:
-            writer.write(output)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=destination.parent, suffix='.pdf.tmp', delete=False) as output:
+                temporary = Path(output.name)
+                writer.write(output)
+            os.replace(temporary, destination)
+        finally:
+            if temporary and temporary.exists():
+                temporary.unlink()
         data = destination.read_bytes()
         result = dict(old or {}, **{key: item[key] for key in ['id', 'title', 'category', 'archived', 'kind', 'scope', 'sourceDocument']})
         result.update(source=destination.relative_to(ROOT).as_posix(), pdf='files/' + destination.name,
