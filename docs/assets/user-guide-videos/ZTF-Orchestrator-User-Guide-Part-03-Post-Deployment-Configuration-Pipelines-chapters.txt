@@ -1,5 +1,6 @@
-00:00:00.000 Separate the configuration files
-00:00:17.271 Keep the eight steps in order
-00:00:41.134 Handle credentials once
-00:01:00.754 Review and run
-00:01:18.014 Recover only eligible work
+00:00:00.000 Reported operational experience
+00:00:09.542 Separate the configuration files
+00:00:26.813 Keep the eight steps in order
+00:00:50.676 Handle credentials once
+00:01:10.296 Review and run
+00:01:27.556 Recover only eligible work

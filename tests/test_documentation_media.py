@@ -12,6 +12,11 @@ from html.parser import HTMLParser
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def historical_recording(recording):
+    """Earlier audits prove their own snapshot, not a later narrated revision."""
+    return recording.get('baselineVerification', recording)
+
+
 def test_public_entry_pages_link_the_current_manual_downloads():
     folder = ROOT / 'docs/manuals'
     manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
@@ -130,6 +135,7 @@ def test_part06_visuals_follow_appliance_updates_and_preserve_narration():
 def test_caption_render_audit_covers_every_video_and_preserves_audio():
     media = ROOT / 'docs/assets/user-guide-videos'
     report = json.loads((media / 'caption-render-audit.json').read_text(encoding='utf-8'))
+    manifest = json.loads((media / 'series-manifest.json').read_text(encoding='utf-8'))
     assert report['remainingVideosChecked'] == 22 and report['controlPart'] == 2
     assert report['repairedParts'] == [0, 1] + list(range(3, 16)) + list(range(18, 23))
     assert report['unchangedParts'] == [2, 16, 17]
@@ -137,7 +143,8 @@ def test_caption_render_audit_covers_every_video_and_preserves_audio():
     assert report['failedSamples'] == 0 and report['narrationRegenerated'] is False
     assert [r['part'] for r in report['records']] == list(range(23))
     for record in report['records']:
-        assert hashlib.sha256((media / record['file']).read_bytes()).hexdigest() == record['sha256']
+        baseline = historical_recording(manifest['verification'][record['part']])
+        assert baseline['sha256'] == record['sha256']
         assert record['failedSamples'] == 0
         if record['changed']:
             assert record['beforeSha256'] != record.get('captionAuditSha256', record['sha256'])
@@ -168,12 +175,13 @@ def test_visual_topic_audit_preserves_all_audio_captions_and_chapter_links():
     assert report['chaptersReviewed'] == sum(row['chaptersReviewed'] for row in report['records']) == 115
     assert report['visualStatesReviewed'] == sum(row['visualStatesReviewed'] for row in report['records']) == 434
     assert report['findingsAddressed'] == sum(len(row['issues']) for row in report['records'])
-    control = manifest['verification'][report['controlPart']]
+    control = historical_recording(manifest['verification'][report['controlPart']])
     assert control['sha256'] == report['controlSha256']
     for row in report['records']:
-        recording = manifest['verification'][row['part']]
+        current = manifest['verification'][row['part']]
+        recording = historical_recording(current)
         assert row['sha256'] == recording['sha256'] != row['beforeSha256']
-        assert hashlib.sha256((media / row['poster']).read_bytes()).hexdigest() == row['posterSha256']
+        assert recording.get('posterSha256', hashlib.sha256((media / row['poster']).read_bytes()).hexdigest()) == row['posterSha256']
         assert row['audioUnchanged'] and row['chaptersUnchanged'] and row['fullDecode'] == 'passed'
         assert row['audioPayloadSha256'] == recording['audioPayloadSha256']
         assert row['decodedAudioSha256'] == recording['decodedAudioSha256']
@@ -183,9 +191,9 @@ def test_visual_topic_audit_preserves_all_audio_captions_and_chapter_links():
         assert len(row['companionSha256']) == 4
         for name, expected_hash in row['companionSha256'].items():
             assert Path(name).name == name
-            assert hashlib.sha256((media / name).read_bytes()).hexdigest() == expected_hash
+            assert recording.get('companionSha256', {}).get(name, hashlib.sha256((media / name).read_bytes()).hexdigest()) == expected_hash
     page = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
-    assert 'media/visual-topic-audit.json' in page
+    assert 'media/Update-verification.json' in page
 
 
 def test_training_media_integrity_and_pages_packaging():
@@ -225,7 +233,7 @@ def test_training_media_integrity_and_pages_packaging():
     assert manifest['lightMode'] is True
     assert manifest['updatedParts'] == list(range(23))
     assert not any(entry['retained'] for entry in manifest['verification'])
-    assert '23-part series' in page and '19 November 2026' in page
+    assert '23-part series' in page and '22 November 2026' in page
     assert 'Shared Validation Evidence and Historical Records' in page
     assert 'Supported Execution and Retired Integrations' in page
     assert 'sha256sum -c SHA256SUMS' in workflow
@@ -285,7 +293,9 @@ def test_manual_links_every_corrected_tutorial_and_complete_download():
                and row.get('Type', '').endswith('/hyperlink')}
     expected = {f'https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part={part:02d}'
                 for part in range(download['parts'])}
-    expected.update([download['url'], download['checksumUrl']])
+    # The Word/PDF edition retains working links to the prior release asset.
+    previous = download['previousEdition']
+    expected.update([previous['url'], previous['checksumUrl']])
     assert len(expected) == 25 and expected <= targets
     text = ''.join(document.itertext())
     assert 'predates the Sessions panel' not in text
@@ -337,3 +347,32 @@ def test_part_02_compares_all_create_cluster_workflows():
         guide = (ROOT / filename).read_text(encoding='utf-8')
         assert all(name in guide for name in ['Cluster Create (Foundation VM)',
                    'Cluster Create (Standalone FCA)', 'Foundation Central associated with Prism Central'])
+
+
+def test_revised_introductions_preserve_task_narration_and_shift_chapters():
+    media = ROOT / 'docs/assets/user-guide-videos'
+    manifest = json.loads((media / 'series-manifest.json').read_text(encoding='utf-8'))
+    statement = ('Operators report consistent successful cluster deployments with pipeline '
+                 'post-configuration and successful cluster recoveries using ZTF Orchestrator.')
+    update = manifest['operationalExperienceUpdate']
+    assert update['statement'] == statement
+    assert update['newSpeechRequests'] == 1
+    assert manifest['chapters'] == 125
+    assert update['newJoannaNarrationParts'] == [0, 2, 3, 4, 15]
+    for part in update['newJoannaNarrationParts']:
+        row = manifest['verification'][part]
+        base = row['baselineVerification']
+        assert row['sourceAudioPreservedAsExactAacSuffix']
+        assert [c['title'] for c in row['chapters'][1:]] == [c['title'] for c in base['chapters']]
+        assert all(abs(a['start'] - b['start'] - row['introSeconds']) < .001
+                   for a, b in zip(row['chapters'][1:], base['chapters']))
+        stem = Path(row['file']).stem
+        text = (media / (stem + '-transcript.txt')).read_text(encoding='utf-8')
+        intro, original = text.split('\n\n', 1)
+        assert intro == statement
+        assert hashlib.sha256(original.encode()).hexdigest() == base['companionSha256'][stem + '-transcript.txt']
+        vtt = (media / (stem + '.vtt')).read_text(encoding='utf-8')
+        assert vtt.startswith('WEBVTT') and 'Operators report consistent' in vtt
+        assert not re.search(r'40\+|20\+|more than forty|more than twenty', text, re.I)
+    for name in ['README.md', 'docs/pages/project/index.html', 'public/tutorials/index.html']:
+        assert statement in (ROOT / name).read_text(encoding='utf-8')

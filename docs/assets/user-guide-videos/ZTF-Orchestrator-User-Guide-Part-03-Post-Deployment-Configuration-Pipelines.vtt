@@ -1,86 +1,95 @@
 WEBVTT
 
-00:00:00.256 --> 00:00:03.128
+00:00:00.256 --> 00:00:03.875
+Operators report consistent successful cluster deployments
+
+00:00:03.883 --> 00:00:07.629
+with pipeline post-configuration and successful cluster recoveries
+
+00:00:07.680 --> 00:00:09.426
+using ZTF Orchestrator.
+
+00:00:09.798 --> 00:00:12.670
 Build one reviewed pipeline for Cluster A.
 
-00:00:03.413 --> 00:00:08.056
+00:00:12.955 --> 00:00:17.598
 Keep each configuration file focused on its named task and confirm the same
 intended
 
-00:00:08.107 --> 00:00:09.659
+00:00:17.649 --> 00:00:19.201
 cluster in every file.
 
-00:00:09.777 --> 00:00:14.250
+00:00:19.319 --> 00:00:23.792
 Datacenter and cluster labels help you find files, but they do not select
 
-00:00:14.258 --> 00:00:16.946
+00:00:23.800 --> 00:00:26.488
 a target or map its credentials automatically.
 
-00:00:17.271 --> 00:00:21.914
+00:00:26.813 --> 00:00:31.456
 Use the established sequence: zero one, administrator password when required;
 
-00:00:22.092 --> 00:00:24.452
+00:00:31.634 --> 00:00:33.994
 zero two, EULA and Pulse;
 
-00:00:24.610 --> 00:00:27.183
+00:00:34.152 --> 00:00:36.725
 zero three, data services IP;
 
-00:00:27.340 --> 00:00:29.572
+00:00:36.882 --> 00:00:39.114
 zero four, high availability;
 
-00:00:29.772 --> 00:00:32.068
+00:00:39.314 --> 00:00:41.610
 zero five, rebuild reservation;
 
-00:00:32.204 --> 00:00:34.464
+00:00:41.746 --> 00:00:44.006
 zero six, storage container;
 
-00:00:34.606 --> 00:00:36.987
+00:00:44.148 --> 00:00:46.529
 zero seven, Prism login title;
 
-00:00:37.038 --> 00:00:40.884
+00:00:46.580 --> 00:00:50.426
 and zero eight, register Prism Element to Prism Central.
 
-00:00:41.134 --> 00:00:45.691
+00:00:50.676 --> 00:00:55.233
 After changing an administrator password, verify the replacement login before later
 
-00:00:45.742 --> 00:00:47.835
+00:00:55.284 --> 00:00:57.377
 stages use its credential reference.
 
-00:00:48.024 --> 00:00:51.344
+00:00:57.566 --> 00:01:00.886
 Do not repeat the initial password change in later files.
 
-00:00:51.566 --> 00:00:55.078
+00:01:01.108 --> 00:01:04.620
 Saving changed credentials to ZTF persists their values;
 
-00:00:55.150 --> 00:00:59.750
+00:01:04.692 --> 00:01:09.292
 pipeline submission synchronizes the saved global configuration into the execution
 
-00:00:59.800 --> 00:01:04.138
+00:01:09.342 --> 00:01:13.680
 runtime. ZTF one point x remains the supported executor.
 
-00:01:04.253 --> 00:01:08.255
+00:01:13.795 --> 00:01:17.797
 Check each selected action against its configuration file and obtain the required
 
-00:01:08.306 --> 00:01:11.595
+00:01:17.848 --> 00:01:21.137
 approvals. A failed stage stops later work.
 
-00:01:11.828 --> 00:01:16.172
+00:01:21.370 --> 00:01:25.714
 The running label identifies the configuration step, so several Configure actions
 
-00:01:16.393 --> 00:01:17.793
+00:01:25.935 --> 00:01:27.335
 can still be distinguished.
 
-00:01:18.014 --> 00:01:22.366
+00:01:27.556 --> 00:01:31.908
 If only step zero eight fails during an eligible recovery, resume that
 
-00:01:22.366 --> 00:01:26.820
+00:01:31.908 --> 00:01:36.362
 recovery run. Reconcile PE and PC, confirm registration is
 
-00:01:26.820 --> 00:01:31.293
+00:01:36.362 --> 00:01:40.835
 absent, and provide fresh health evidence before the registration-only retry.
 
-00:01:31.471 --> 00:01:35.525
+00:01:41.013 --> 00:01:45.067
 Successful steps zero one through zero seven stay recorded and are not
 
-00:01:35.525 --> 00:01:36.349
+00:01:45.067 --> 00:01:45.891
 replayed.

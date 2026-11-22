@@ -1,6 +1,7 @@
-00:00:00.000 Prepare the example
-00:00:19.683 Capture and review the baseline
-00:00:39.720 Recover or resume
-00:00:58.573 Establish access and health
-00:01:18.928 Recover only the final registration
-00:01:40.594 Accept the handoff
+00:00:00.000 Reported operational experience
+00:00:09.542 Prepare the example
+00:00:29.225 Capture and review the baseline
+00:00:49.262 Recover or resume
+00:01:08.115 Establish access and health
+00:01:28.470 Recover only the final registration
+00:01:50.136 Accept the handoff

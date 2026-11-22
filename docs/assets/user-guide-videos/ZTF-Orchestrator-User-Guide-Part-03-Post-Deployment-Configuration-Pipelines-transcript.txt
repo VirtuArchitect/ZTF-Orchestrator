@@ -1,3 +1,5 @@
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
+
 Build one reviewed pipeline for Cluster A. Keep each configuration file focused on its named task and confirm the same intended cluster in every file. Datacenter and cluster labels help you find files, but they do not select a target or map its credentials automatically.
 
 Use the established sequence: zero one, administrator password when required; zero two, EULA and Pulse; zero three, data services IP; zero four, high availability; zero five, rebuild reservation; zero six, storage container; zero seven, Prism login title; and zero eight, register Prism Element to Prism Central.

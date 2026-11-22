@@ -1,8 +1,8 @@
 {
   "title": "ZTF-Orchestrator User Guide Videos",
-  "date": "19 November 2026",
+  "date": "22 November 2026",
   "parts": 23,
-  "sourceRevision": "63fb53618ae6dd314238574192a5380c3745a8ab",
+  "sourceRevision": "cd338909010c75e4d50898a5c4ab9d3a45c2a50b",
   "applicationSource": "f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2",
   "manualPages": 156,
   "narration": "HeyGen Joanna - Warm & Conversational",
@@ -41,31 +41,35 @@
       "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
       "updated": true,
       "retained": false,
-      "duration": 99.78999999999999,
-      "sha256": "d7db1e9a57fe38021238cc5b04fa2896c6f53989f6da10536f54548ed49d5714",
+      "duration": 109.395996,
+      "sha256": "9217eef736812f461ece33b1ec7dacd8d6ef729004dfba39a802b4753c75e9d4",
       "chapters": [
         {
-          "title": "Follow one cluster",
-          "start": 0
+          "start": 0,
+          "title": "Reported operational experience"
         },
         {
-          "title": "Understand the components",
-          "start": 20.247
+          "start": 9.541666666666666,
+          "title": "Follow one cluster"
         },
         {
-          "title": "Prepare before execution",
-          "start": 42.649
+          "start": 29.788666666666664,
+          "title": "Understand the components"
         },
         {
-          "title": "Recover and verify",
-          "start": 60.111
+          "start": 52.190666666666665,
+          "title": "Prepare before execution"
         },
         {
-          "title": "Know the current boundary",
-          "start": 79.391
+          "start": 69.65266666666666,
+          "title": "Recover and verify"
+        },
+        {
+          "start": 88.93266666666668,
+          "title": "Know the current boundary"
         }
       ],
-      "captions": 29,
+      "captions": 32,
       "narration": "Joanna - Warm & Conversational",
       "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
       "speed": 1.0,
@@ -76,21 +80,93 @@
         1080
       ],
       "fps": 24,
-      "integratedLufs": -16.51,
+      "integratedLufs": -16.48,
       "truePeakDb": -1.4,
       "embeddedChapters": 5,
       "captionRasterAudit": {
-        "cueSamples": 29,
-        "gapSamples": 9,
-        "failedSamples": 0
+        "part": 0,
+        "introCaptionMidpointsChecked": 3,
+        "retainedTaskVideoFramesPixelIdentical": 4,
+        "pictureComparisonBaseline": "Foundation-clarified picture track with original AAC",
+        "integratedLufs": -16.48,
+        "truePeakDb": -1.4,
+        "fullDecode": "passed"
       },
-      "audioPayloadSha256": "a6dda835d76c5e9577d83ab1cc786aa539158339f752f9623a62eaec75e9b5db",
-      "decodedAudioSha256": "10320363d257e17fd6d0fd87f8fca8ba0387bc6d1d9d4a8db57683eae7d065b0",
-      "audioUnchanged": true,
-      "chaptersUnchanged": true,
+      "audioPayloadSha256": "dd8b686416247b774e5ac7fb3b37f70a270936dd9cafc9cb5ee8aa10a1117ca0",
+      "decodedAudioSha256": null,
+      "audioUnchanged": false,
+      "chaptersUnchanged": false,
       "captionRendering": "24 fps expansion before ASS rasterization",
       "retainedAudio": true,
-      "visualTopicCorrection": "visual-topic-audit.json"
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "introSeconds": 9.541666666666666,
+      "sourceAudioPreservedAsExactAacSuffix": true,
+      "lightMode": true,
+      "baselineVerification": {
+        "part": 0,
+        "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
+        "updated": true,
+        "retained": false,
+        "duration": 99.78999999999999,
+        "sha256": "d7db1e9a57fe38021238cc5b04fa2896c6f53989f6da10536f54548ed49d5714",
+        "chapters": [
+          {
+            "title": "Follow one cluster",
+            "start": 0
+          },
+          {
+            "title": "Understand the components",
+            "start": 20.247
+          },
+          {
+            "title": "Prepare before execution",
+            "start": 42.649
+          },
+          {
+            "title": "Recover and verify",
+            "start": 60.111
+          },
+          {
+            "title": "Know the current boundary",
+            "start": 79.391
+          }
+        ],
+        "captions": 29,
+        "narration": "Joanna - Warm & Conversational",
+        "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+        "speed": 1.0,
+        "listeningReview": "not_performed",
+        "fullDecode": "passed",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "fps": 24,
+        "integratedLufs": -16.51,
+        "truePeakDb": -1.4,
+        "embeddedChapters": 5,
+        "captionRasterAudit": {
+          "cueSamples": 29,
+          "gapSamples": 9,
+          "failedSamples": 0
+        },
+        "audioPayloadSha256": "a6dda835d76c5e9577d83ab1cc786aa539158339f752f9623a62eaec75e9b5db",
+        "decodedAudioSha256": "10320363d257e17fd6d0fd87f8fca8ba0387bc6d1d9d4a8db57683eae7d065b0",
+        "audioUnchanged": true,
+        "chaptersUnchanged": true,
+        "captionRendering": "24 fps expansion before ASS rasterization",
+        "retainedAudio": true,
+        "visualTopicCorrection": "visual-topic-audit.json",
+        "posterSha256": "4162f9fa91ccf5380f16e96d06b564cd20be74c60fb0783dad22c95f1058af8b",
+        "companionSha256": {
+          "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.srt": "cb4ede0a5decc7682b7b399628d7d8df2e67a91c26fa62fab06ce30a32d92a1d",
+          "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.vtt": "e4b627e8b015fd292cd12efa7c32e039b76ca49e0ee3250d02d79482d1c6bb83",
+          "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt": "c1c79a2fecbbc32e02df66a7644a1d57514a3e8a4044e32f778a329d90d97a09",
+          "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-chapters.txt": "79708f948547663c29650ee8f07f56a59ec6d0ca4664c380ac041866d3b750a3"
+        }
+      },
+      "retainedOriginalTaskAudio": true,
+      "decodedAudioSha256Status": "Earlier baseline hash retained only in baselineVerification; not recomputed for the combined track"
     },
     {
       "part": 1,
@@ -153,99 +229,44 @@
       "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
       "updated": true,
       "retained": false,
-      "duration": 154.75,
+      "duration": 164.312663,
       "chapters": [
         {
-          "title": "Choose by deployment service",
-          "start": 0
+          "start": 0,
+          "title": "Reported operational experience"
         },
         {
-          "title": "Use a classic Foundation VM",
-          "start": 15.955
+          "start": 9.541666666666666,
+          "title": "Choose by deployment service"
         },
         {
-          "title": "Use Foundation Central",
-          "start": 52.015
+          "start": 25.496666666666666,
+          "title": "Use a classic Foundation VM"
         },
         {
-          "title": "Use a standalone FCA",
-          "start": 79.388
+          "start": 61.556666666666665,
+          "title": "Use Foundation Central"
         },
         {
-          "title": "Validate the selected path",
-          "start": 105.511
+          "start": 88.92966666666668,
+          "title": "Use a standalone FCA"
         },
         {
-          "title": "Verify and continue configuration",
-          "start": 121.851
+          "start": 115.05266666666667,
+          "title": "Validate the selected path"
         },
         {
-          "title": "Choose a broader workflow when needed",
-          "start": 138.167
+          "start": 131.39266666666666,
+          "title": "Verify and continue configuration"
+        },
+        {
+          "start": 147.70866666666666,
+          "title": "Choose a broader workflow when needed"
         }
       ],
       "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
       "listeningReview": "not_performed",
-      "sha256": "3f3d4985f1cde4f4b2a13b01313a7a98187b7df47bf4a7fc3a3e4439cb9a0c5a",
-      "fullDecode": "passed",
-      "dimensions": [
-        1920,
-        1080
-      ],
-      "fps": 24,
-      "integratedLufs": -16.52,
-      "truePeakDb": -1.05,
-      "embeddedChapters": 7,
-      "title": "Create Cluster Workflows and Deployment Use Cases",
-      "scriptSha256": "f6108f8ff58cad52e5ded1b245dcaf9e4dd52ac61e565b0b9e3101c669bdd00a",
-      "narration": "Joanna - Warm & Conversational",
-      "captionRendering": "CFR 24 fps before ASS rasterization; encoded cue samples checked",
-      "captionRasterAudit": {
-        "cueSamples": 43,
-        "gapSamples": 22,
-        "failedSamples": 0
-      },
-      "retainedAudio": true,
-      "audioUnchanged": true,
-      "chaptersUnchanged": true,
-      "visualTopicCorrection": "visual-topic-audit.json",
-      "audioPayloadSha256": "7f0dc4d667d8e9209ac7552a0822efaae1a3d725b4461886a5819b44d2b77a9e",
-      "decodedAudioSha256": "55e3b732422f92a185eb59ef33e918a0120befecd1da7c34aa8390dc72db3a66"
-    },
-    {
-      "part": 3,
-      "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
-      "updated": true,
-      "retained": false,
-      "duration": 96.46000000000001,
-      "sha256": "ea54eda8fccd0d6617ec97ef16ee7e73b4496e1c5770c966e1df1c032239b134",
-      "chapters": [
-        {
-          "title": "Separate the configuration files",
-          "start": 0
-        },
-        {
-          "title": "Keep the eight steps in order",
-          "start": 17.271
-        },
-        {
-          "title": "Handle credentials once",
-          "start": 41.134
-        },
-        {
-          "title": "Review and run",
-          "start": 60.754
-        },
-        {
-          "title": "Recover only eligible work",
-          "start": 78.014
-        }
-      ],
-      "captions": 28,
-      "narration": "Joanna - Warm & Conversational",
-      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
-      "speed": 1.0,
-      "listeningReview": "not_performed",
+      "sha256": "feb5624afd4fd1f38fedea6c92e9fc002c5b70dd70ae0cb18f5230c050985ce0",
       "fullDecode": "passed",
       "dimensions": [
         1920,
@@ -253,51 +274,141 @@
       ],
       "fps": 24,
       "integratedLufs": -16.5,
-      "truePeakDb": -1.46,
-      "embeddedChapters": 5,
+      "truePeakDb": -1.05,
+      "embeddedChapters": 7,
+      "title": "Create Cluster Workflows and Deployment Use Cases",
+      "scriptSha256": "f6108f8ff58cad52e5ded1b245dcaf9e4dd52ac61e565b0b9e3101c669bdd00a",
+      "narration": "Joanna - Warm & Conversational",
+      "captionRendering": "CFR 24 fps before ASS rasterization; encoded cue samples checked",
       "captionRasterAudit": {
-        "cueSamples": 28,
-        "gapSamples": 10,
-        "failedSamples": 0
+        "part": 2,
+        "introCaptionMidpointsChecked": 3,
+        "retainedTaskVideoFramesPixelIdentical": 4,
+        "pictureComparisonBaseline": "Original task clip",
+        "integratedLufs": -16.5,
+        "truePeakDb": -1.05,
+        "fullDecode": "passed"
       },
-      "audioPayloadSha256": "dd8d89e9aaf7ec94b33d148d253dbf3480ade04f81df2ffcc3045c61c557fe0c",
-      "decodedAudioSha256": "00ddc5f551713618ae0b31edabc8a60784f572f43dea0a3ae481a847e6a04c8f",
-      "audioUnchanged": true,
-      "chaptersUnchanged": true,
-      "captionRendering": "24 fps expansion before ASS rasterization",
       "retainedAudio": true,
-      "visualTopicCorrection": "visual-topic-audit.json"
+      "audioUnchanged": false,
+      "chaptersUnchanged": false,
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "audioPayloadSha256": "94969c6b5b4f5ef2dfbc1f14ecddb47165d710d9f12e7bdc45ddb820ad83a40d",
+      "decodedAudioSha256": null,
+      "introSeconds": 9.541666666666666,
+      "sourceAudioPreservedAsExactAacSuffix": true,
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "speed": 1.0,
+      "captions": 46,
+      "lightMode": true,
+      "baselineVerification": {
+        "part": 2,
+        "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
+        "updated": true,
+        "retained": false,
+        "duration": 154.75,
+        "chapters": [
+          {
+            "title": "Choose by deployment service",
+            "start": 0
+          },
+          {
+            "title": "Use a classic Foundation VM",
+            "start": 15.955
+          },
+          {
+            "title": "Use Foundation Central",
+            "start": 52.015
+          },
+          {
+            "title": "Use a standalone FCA",
+            "start": 79.388
+          },
+          {
+            "title": "Validate the selected path",
+            "start": 105.511
+          },
+          {
+            "title": "Verify and continue configuration",
+            "start": 121.851
+          },
+          {
+            "title": "Choose a broader workflow when needed",
+            "start": 138.167
+          }
+        ],
+        "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
+        "listeningReview": "not_performed",
+        "sha256": "3f3d4985f1cde4f4b2a13b01313a7a98187b7df47bf4a7fc3a3e4439cb9a0c5a",
+        "fullDecode": "passed",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "fps": 24,
+        "integratedLufs": -16.52,
+        "truePeakDb": -1.05,
+        "embeddedChapters": 7,
+        "title": "Create Cluster Workflows and Deployment Use Cases",
+        "scriptSha256": "f6108f8ff58cad52e5ded1b245dcaf9e4dd52ac61e565b0b9e3101c669bdd00a",
+        "narration": "Joanna - Warm & Conversational",
+        "captionRendering": "CFR 24 fps before ASS rasterization; encoded cue samples checked",
+        "captionRasterAudit": {
+          "cueSamples": 43,
+          "gapSamples": 22,
+          "failedSamples": 0
+        },
+        "retainedAudio": true,
+        "audioUnchanged": true,
+        "chaptersUnchanged": true,
+        "visualTopicCorrection": "visual-topic-audit.json",
+        "audioPayloadSha256": "7f0dc4d667d8e9209ac7552a0822efaae1a3d725b4461886a5819b44d2b77a9e",
+        "decodedAudioSha256": "55e3b732422f92a185eb59ef33e918a0120befecd1da7c34aa8390dc72db3a66",
+        "posterSha256": "e0749d9708f380eaa34fbf78c30b41b6ae8060f99b0214443788564208413c0b",
+        "companionSha256": {
+          "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.srt": "79b94e93162671087d12a310267b33461bf2c4daffefc3be6ee54686c7f48d75",
+          "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.vtt": "4f909b4351d71c9a86da081818c60bd160ee76800970db8e900c87de78a18801",
+          "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt": "3598d65413737730c552576864cf7d642867133d0f2f7e2ef3d169bfee1c72b7",
+          "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-chapters.txt": "07335c2f8a130069356301e573f8ad3ff75e11cbe57edf5c58ea7d261669bc6f"
+        }
+      },
+      "retainedOriginalTaskAudio": true,
+      "decodedAudioSha256Status": "Earlier baseline hash retained only in baselineVerification; not recomputed for the combined track"
     },
     {
-      "part": 4,
-      "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
+      "part": 3,
+      "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
       "updated": true,
       "retained": false,
-      "duration": 103.33,
-      "sha256": "7c5d731a1f6001b9e262d7076c831dfd0dd1182f25c3d7e537b3c0c60bbcba9c",
+      "duration": 106.020996,
+      "sha256": "f3e770c592ed1235ccf28dfb4883e2ae2c821e5f92b08a826307a0e8dc87fb9d",
       "chapters": [
         {
-          "title": "Start with the recovery action",
-          "start": 0
+          "start": 0,
+          "title": "Reported operational experience"
         },
         {
-          "title": "Prepare a new baseline",
-          "start": 17.613
+          "start": 9.541666666666666,
+          "title": "Separate the configuration files"
         },
         {
-          "title": "Follow the next action",
-          "start": 39.582
+          "start": 26.812666666666665,
+          "title": "Keep the eight steps in order"
         },
         {
-          "title": "Bootstrap before health",
-          "start": 56.58
+          "start": 50.675666666666665,
+          "title": "Handle credentials once"
         },
         {
-          "title": "Resume without replay",
-          "start": 80.543
+          "start": 70.29566666666666,
+          "title": "Review and run"
+        },
+        {
+          "start": 87.55566666666667,
+          "title": "Recover only eligible work"
         }
       ],
-      "captions": 27,
+      "captions": 31,
       "narration": "Joanna - Warm & Conversational",
       "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
       "speed": 1.0,
@@ -308,21 +419,225 @@
         1080
       ],
       "fps": 24,
-      "integratedLufs": -16.57,
+      "integratedLufs": -16.46,
+      "truePeakDb": -1.4,
+      "embeddedChapters": 5,
+      "captionRasterAudit": {
+        "part": 3,
+        "introCaptionMidpointsChecked": 3,
+        "retainedTaskVideoFramesPixelIdentical": 4,
+        "pictureComparisonBaseline": "Original task clip",
+        "integratedLufs": -16.46,
+        "truePeakDb": -1.4,
+        "fullDecode": "passed"
+      },
+      "audioPayloadSha256": "c29f69b81d7b5bf8b343c85cd60852b347e100d0feb4c477092a401822360e22",
+      "decodedAudioSha256": null,
+      "audioUnchanged": false,
+      "chaptersUnchanged": false,
+      "captionRendering": "24 fps expansion before ASS rasterization",
+      "retainedAudio": true,
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "introSeconds": 9.541666666666666,
+      "sourceAudioPreservedAsExactAacSuffix": true,
+      "lightMode": true,
+      "baselineVerification": {
+        "part": 3,
+        "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
+        "updated": true,
+        "retained": false,
+        "duration": 96.46000000000001,
+        "sha256": "ea54eda8fccd0d6617ec97ef16ee7e73b4496e1c5770c966e1df1c032239b134",
+        "chapters": [
+          {
+            "title": "Separate the configuration files",
+            "start": 0
+          },
+          {
+            "title": "Keep the eight steps in order",
+            "start": 17.271
+          },
+          {
+            "title": "Handle credentials once",
+            "start": 41.134
+          },
+          {
+            "title": "Review and run",
+            "start": 60.754
+          },
+          {
+            "title": "Recover only eligible work",
+            "start": 78.014
+          }
+        ],
+        "captions": 28,
+        "narration": "Joanna - Warm & Conversational",
+        "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+        "speed": 1.0,
+        "listeningReview": "not_performed",
+        "fullDecode": "passed",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "fps": 24,
+        "integratedLufs": -16.5,
+        "truePeakDb": -1.46,
+        "embeddedChapters": 5,
+        "captionRasterAudit": {
+          "cueSamples": 28,
+          "gapSamples": 10,
+          "failedSamples": 0
+        },
+        "audioPayloadSha256": "dd8d89e9aaf7ec94b33d148d253dbf3480ade04f81df2ffcc3045c61c557fe0c",
+        "decodedAudioSha256": "00ddc5f551713618ae0b31edabc8a60784f572f43dea0a3ae481a847e6a04c8f",
+        "audioUnchanged": true,
+        "chaptersUnchanged": true,
+        "captionRendering": "24 fps expansion before ASS rasterization",
+        "retainedAudio": true,
+        "visualTopicCorrection": "visual-topic-audit.json",
+        "posterSha256": "99d12fbfa970e447c8e514865c239d87b3c15348043d5b39e270f9ebe115ddcd",
+        "companionSha256": {
+          "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.srt": "11df212701db2c86389e038a1d669e5855b22e3e57cf15d757ce2ac2a6bd5174",
+          "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.vtt": "05a4c8b9933a33f665ea624103691cc2c3ef3f92808ebca0ecfb2058548a14fe",
+          "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt": "f43ef7691cc078e52c1a6c7937e7c41b5e7d3a5638f7c16acec6edc82240d574",
+          "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-chapters.txt": "adc8b061e284b3f12898e6530c94e3a34e455da04426014b6e391b12e3ee6836"
+        }
+      },
+      "retainedOriginalTaskAudio": true,
+      "decodedAudioSha256Status": "Earlier baseline hash retained only in baselineVerification; not recomputed for the combined track"
+    },
+    {
+      "part": 4,
+      "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
+      "updated": true,
+      "retained": false,
+      "duration": 112.895996,
+      "sha256": "aa78f6b2b5d16bb8064a4e67515a643ca9e859ac3bcdd91ca7b5487367f89f7f",
+      "chapters": [
+        {
+          "start": 0,
+          "title": "Reported operational experience"
+        },
+        {
+          "start": 9.541666666666666,
+          "title": "Start with the recovery action"
+        },
+        {
+          "start": 27.154666666666664,
+          "title": "Prepare a new baseline"
+        },
+        {
+          "start": 49.123666666666665,
+          "title": "Follow the next action"
+        },
+        {
+          "start": 66.12166666666667,
+          "title": "Bootstrap before health"
+        },
+        {
+          "start": 90.08466666666668,
+          "title": "Resume without replay"
+        }
+      ],
+      "captions": 30,
+      "narration": "Joanna - Warm & Conversational",
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "speed": 1.0,
+      "listeningReview": "not_performed",
+      "fullDecode": "passed",
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 24,
+      "integratedLufs": -16.53,
       "truePeakDb": -0.31,
       "embeddedChapters": 5,
       "captionRasterAudit": {
-        "cueSamples": 27,
-        "gapSamples": 8,
-        "failedSamples": 0
+        "part": 4,
+        "introCaptionMidpointsChecked": 3,
+        "retainedTaskVideoFramesPixelIdentical": 4,
+        "pictureComparisonBaseline": "Original task clip",
+        "integratedLufs": -16.53,
+        "truePeakDb": -0.31,
+        "fullDecode": "passed"
       },
-      "audioPayloadSha256": "881be001dc9ba11b15abc85bf24e33f03b2d4d5b88903cc1b3cfdd5144ccbcb9",
-      "decodedAudioSha256": "1ab672dd0694e24fd77a4648522537cab72c87e5b4b2ff23c1bbe780fef3060a",
-      "audioUnchanged": true,
-      "chaptersUnchanged": true,
+      "audioPayloadSha256": "24796c02e000f0b1a8a5bdaf12549360d63b69654f057ebfb6d81f16ecd647b5",
+      "decodedAudioSha256": null,
+      "audioUnchanged": false,
+      "chaptersUnchanged": false,
       "captionRendering": "24 fps expansion before ASS rasterization",
       "retainedAudio": true,
-      "visualTopicCorrection": "visual-topic-audit.json"
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "introSeconds": 9.541666666666666,
+      "sourceAudioPreservedAsExactAacSuffix": true,
+      "lightMode": true,
+      "baselineVerification": {
+        "part": 4,
+        "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
+        "updated": true,
+        "retained": false,
+        "duration": 103.33,
+        "sha256": "7c5d731a1f6001b9e262d7076c831dfd0dd1182f25c3d7e537b3c0c60bbcba9c",
+        "chapters": [
+          {
+            "title": "Start with the recovery action",
+            "start": 0
+          },
+          {
+            "title": "Prepare a new baseline",
+            "start": 17.613
+          },
+          {
+            "title": "Follow the next action",
+            "start": 39.582
+          },
+          {
+            "title": "Bootstrap before health",
+            "start": 56.58
+          },
+          {
+            "title": "Resume without replay",
+            "start": 80.543
+          }
+        ],
+        "captions": 27,
+        "narration": "Joanna - Warm & Conversational",
+        "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+        "speed": 1.0,
+        "listeningReview": "not_performed",
+        "fullDecode": "passed",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "fps": 24,
+        "integratedLufs": -16.57,
+        "truePeakDb": -0.31,
+        "embeddedChapters": 5,
+        "captionRasterAudit": {
+          "cueSamples": 27,
+          "gapSamples": 8,
+          "failedSamples": 0
+        },
+        "audioPayloadSha256": "881be001dc9ba11b15abc85bf24e33f03b2d4d5b88903cc1b3cfdd5144ccbcb9",
+        "decodedAudioSha256": "1ab672dd0694e24fd77a4648522537cab72c87e5b4b2ff23c1bbe780fef3060a",
+        "audioUnchanged": true,
+        "chaptersUnchanged": true,
+        "captionRendering": "24 fps expansion before ASS rasterization",
+        "retainedAudio": true,
+        "visualTopicCorrection": "visual-topic-audit.json",
+        "posterSha256": "f99b79a14d16a6707c9790d0b934c83fc758f3c2b9d6d1d420ae453c4596a2b0",
+        "companionSha256": {
+          "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.srt": "d62b85cc57855aa30591fa56b718e34282c50cb55a142967f5cfa549d5f73b14",
+          "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.vtt": "a2277f8632bf2bacf2b862aca2dd45598deecd6d3a156e1f311782ef3dc8fc69",
+          "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-transcript.txt": "0e4413be4c70962722550a2b9c9ce329d069701de3aec67ad33c1acd1d94b5c1",
+          "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-chapters.txt": "47727760b8730c9d0ec06eca98ac6a45bc18299526b2327f564016ea503bb9d6"
+        }
+      },
+      "retainedOriginalTaskAudio": true,
+      "decodedAudioSha256Status": "Earlier baseline hash retained only in baselineVerification; not recomputed for the combined track"
     },
     {
       "part": 5,
@@ -496,8 +811,8 @@
       "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
       "updated": true,
       "retained": false,
-      "duration": 95.63,
-      "sha256": "3d40d321ec5f698f936e9a96c6a3e2b16ae4a4e769c87262680258413c5e7346",
+      "duration": 95.625,
+      "sha256": "89353c1e0f3ac69dfe0eb55a45e917773fd261d1721e50f383343e2718e57fc9",
       "chapters": [
         {
           "title": "Match action to intent",
@@ -525,7 +840,7 @@
       "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
       "speed": 1.0,
       "listeningReview": "not_performed",
-      "fullDecode": "passed",
+      "fullDecode": "previously_verified",
       "dimensions": [
         1920,
         1080
@@ -539,13 +854,79 @@
         "gapSamples": 10,
         "failedSamples": 0
       },
-      "audioPayloadSha256": "23a3a915f460761fd93dbd41fa36c3180dcad49379d9fe7538fd0cdae10d3680",
+      "audioPayloadSha256": "4348169e5411f3aa30724a59e0024318c7aa99dceb32d1f23488a824f239e2b6",
       "decodedAudioSha256": "f6275d189c684a2bb9eb80e3c9f96af9bd56d5b8432c94eb2ae42da1aa1b66ad",
       "audioUnchanged": true,
       "chaptersUnchanged": true,
       "captionRendering": "24 fps expansion before ASS rasterization",
       "retainedAudio": true,
-      "visualTopicCorrection": "visual-topic-audit.json"
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "captionsAndChaptersUnchanged": true,
+      "lightMode": true,
+      "anonymisedFields": "Retained documentation-only addresses in two simulated UI captures",
+      "baselineVerification": {
+        "part": 8,
+        "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
+        "updated": true,
+        "retained": false,
+        "duration": 95.63,
+        "sha256": "3d40d321ec5f698f936e9a96c6a3e2b16ae4a4e769c87262680258413c5e7346",
+        "chapters": [
+          {
+            "title": "Match action to intent",
+            "start": 0
+          },
+          {
+            "title": "Review references",
+            "start": 20.041
+          },
+          {
+            "title": "Handle administrator changes",
+            "start": 38.055
+          },
+          {
+            "title": "Use focused configuration",
+            "start": 55.816
+          },
+          {
+            "title": "Investigate the failing stage",
+            "start": 75.211
+          }
+        ],
+        "captions": 24,
+        "narration": "Joanna - Warm & Conversational",
+        "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+        "speed": 1.0,
+        "listeningReview": "not_performed",
+        "fullDecode": "passed",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "fps": 24,
+        "integratedLufs": -16.32,
+        "truePeakDb": -1.23,
+        "embeddedChapters": 5,
+        "captionRasterAudit": {
+          "cueSamples": 24,
+          "gapSamples": 10,
+          "failedSamples": 0
+        },
+        "audioPayloadSha256": "23a3a915f460761fd93dbd41fa36c3180dcad49379d9fe7538fd0cdae10d3680",
+        "decodedAudioSha256": "f6275d189c684a2bb9eb80e3c9f96af9bd56d5b8432c94eb2ae42da1aa1b66ad",
+        "audioUnchanged": true,
+        "chaptersUnchanged": true,
+        "captionRendering": "24 fps expansion before ASS rasterization",
+        "retainedAudio": true,
+        "visualTopicCorrection": "visual-topic-audit.json",
+        "posterSha256": "d04bcd11977906a042936201edf10512cca5e65a6aa179d38e85d4cc973288f4",
+        "companionSha256": {
+          "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.srt": "1b78a862c338ffdfb7c3580f0688de2b4e775498b3fe39b2220fa2fa506fe589",
+          "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.vtt": "8205166447e7a160cbae4e23cd6579dcf78d653fe997de70d01b826de098ac0f",
+          "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-transcript.txt": "7357c6f1b6fe541d27cfcc1abf711d18059fab43d15135f444a38b244c08023e",
+          "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-chapters.txt": "649bae130029d64bbf613cf5929f64d533a94a12271c74eb19d882b935b4a66f"
+        }
+      }
     },
     {
       "part": 9,
@@ -888,35 +1269,39 @@
       "file": "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4",
       "updated": true,
       "retained": false,
-      "duration": 117.5,
-      "sha256": "e54a7123d61dd645a983fbe045195595089142b4da4a7c293adbd507572462ea",
+      "duration": 127.063,
+      "sha256": "da060b5685bd483e66e36bff0f93398da2045afa6225b3fc453e4bafd2ee54cc",
       "chapters": [
         {
-          "title": "Prepare the example",
-          "start": 0
+          "start": 0,
+          "title": "Reported operational experience"
         },
         {
-          "title": "Capture and review the baseline",
-          "start": 19.683
+          "start": 9.541666666666666,
+          "title": "Prepare the example"
         },
         {
-          "title": "Recover or resume",
-          "start": 39.72
+          "start": 29.224666666666664,
+          "title": "Capture and review the baseline"
         },
         {
-          "title": "Establish access and health",
-          "start": 58.573
+          "start": 49.26166666666666,
+          "title": "Recover or resume"
         },
         {
-          "title": "Recover only the final registration",
-          "start": 78.928
+          "start": 68.11466666666666,
+          "title": "Establish access and health"
         },
         {
-          "title": "Accept the handoff",
-          "start": 100.594
+          "start": 88.46966666666667,
+          "title": "Recover only the final registration"
+        },
+        {
+          "start": 110.13566666666667,
+          "title": "Accept the handoff"
         }
       ],
-      "captions": 34,
+      "captions": 37,
       "narration": "Joanna - Warm & Conversational",
       "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
       "speed": 1.0,
@@ -927,21 +1312,97 @@
         1080
       ],
       "fps": 24,
-      "integratedLufs": -16.47,
-      "truePeakDb": -1.45,
+      "integratedLufs": -16.45,
+      "truePeakDb": -1.4,
       "embeddedChapters": 6,
       "captionRasterAudit": {
-        "cueSamples": 34,
-        "gapSamples": 13,
-        "failedSamples": 0
+        "part": 15,
+        "introCaptionMidpointsChecked": 3,
+        "retainedTaskVideoFramesPixelIdentical": 4,
+        "pictureComparisonBaseline": "Original task clip",
+        "integratedLufs": -16.45,
+        "truePeakDb": -1.4,
+        "fullDecode": "passed"
       },
-      "audioPayloadSha256": "246cdfe4e8789df81f8cda4bc21017d58e59a94496db2983968a4bdb15c6fb88",
-      "decodedAudioSha256": "0a40a1ef0a74d3ed5ce8e8b4c51fa9c74ad21e1183a2880294ec3db226f60597",
-      "audioUnchanged": true,
-      "chaptersUnchanged": true,
+      "audioPayloadSha256": "3958f7275964df1ab9a644b28d962ed53f24904efa2a021d5b04cb63d77535cf",
+      "decodedAudioSha256": null,
+      "audioUnchanged": false,
+      "chaptersUnchanged": false,
       "captionRendering": "24 fps expansion before ASS rasterization",
       "retainedAudio": true,
-      "visualTopicCorrection": "visual-topic-audit.json"
+      "visualTopicCorrection": "visual-topic-audit.json",
+      "introSeconds": 9.541666666666666,
+      "sourceAudioPreservedAsExactAacSuffix": true,
+      "lightMode": true,
+      "baselineVerification": {
+        "part": 15,
+        "file": "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4",
+        "updated": true,
+        "retained": false,
+        "duration": 117.5,
+        "sha256": "e54a7123d61dd645a983fbe045195595089142b4da4a7c293adbd507572462ea",
+        "chapters": [
+          {
+            "title": "Prepare the example",
+            "start": 0
+          },
+          {
+            "title": "Capture and review the baseline",
+            "start": 19.683
+          },
+          {
+            "title": "Recover or resume",
+            "start": 39.72
+          },
+          {
+            "title": "Establish access and health",
+            "start": 58.573
+          },
+          {
+            "title": "Recover only the final registration",
+            "start": 78.928
+          },
+          {
+            "title": "Accept the handoff",
+            "start": 100.594
+          }
+        ],
+        "captions": 34,
+        "narration": "Joanna - Warm & Conversational",
+        "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+        "speed": 1.0,
+        "listeningReview": "not_performed",
+        "fullDecode": "passed",
+        "dimensions": [
+          1920,
+          1080
+        ],
+        "fps": 24,
+        "integratedLufs": -16.47,
+        "truePeakDb": -1.45,
+        "embeddedChapters": 6,
+        "captionRasterAudit": {
+          "cueSamples": 34,
+          "gapSamples": 13,
+          "failedSamples": 0
+        },
+        "audioPayloadSha256": "246cdfe4e8789df81f8cda4bc21017d58e59a94496db2983968a4bdb15c6fb88",
+        "decodedAudioSha256": "0a40a1ef0a74d3ed5ce8e8b4c51fa9c74ad21e1183a2880294ec3db226f60597",
+        "audioUnchanged": true,
+        "chaptersUnchanged": true,
+        "captionRendering": "24 fps expansion before ASS rasterization",
+        "retainedAudio": true,
+        "visualTopicCorrection": "visual-topic-audit.json",
+        "posterSha256": "ef28a79b829f1466637e9bd2758063186aa237f4c24b953ba5030135ebb14719",
+        "companionSha256": {
+          "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.srt": "e1363af00c8fca375d0cdffbecf5a6c13111c014c60bd5d2141ededffc485803",
+          "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.vtt": "4128a3acecbe4d476db003701cdfd574e50839fd0315ba934e047c92114474bf",
+          "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt": "576c0410fba55464645f1f09324a9d35f52ec41c6c679a3414218ad2dfbf7057",
+          "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-chapters.txt": "bac74cf98fdf30bf0aeb69356003423f0c34e8e4048c8bd37a55b4f1fe89d06c"
+        }
+      },
+      "retainedOriginalTaskAudio": true,
+      "decodedAudioSha256Status": "Earlier baseline hash retained only in baselineVerification; not recomputed for the combined track"
     },
     {
       "part": 16,
@@ -1339,7 +1800,7 @@
     }
   ],
   "durationSeconds": 2366.45,
-  "chapters": 120,
+  "chapters": 125,
   "part02Refresh": {
     "reviewed": "19 November 2026",
     "sourceRevision": "c12eee738505f23eff57cd7592dc854d8d042623",
@@ -1446,5 +1907,50 @@
     "unchangedControlPart": 6,
     "narrationRegenerated": false,
     "report": "visual-topic-audit.json"
+  },
+  "operationalExperienceUpdate": {
+    "date": "2026-11-22",
+    "statement": "Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.",
+    "evidence": "Operator-reported experience supplied by the maintainer",
+    "newJoannaNarrationParts": [
+      0,
+      2,
+      3,
+      4,
+      15
+    ],
+    "newSpeechRequests": 1,
+    "foundationCoverage": [
+      "Foundation VM",
+      "Foundation Central associated with Prism Central",
+      "Standalone Foundation Central Appliance"
+    ],
+    "pictureClarificationParts": [
+      0
+    ],
+    "anonymisedPictureOnlyParts": [
+      8
+    ],
+    "unchangedParts": [
+      1,
+      5,
+      6,
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ],
+    "technicalInstructionScope": "Existing task narration retained; Part 00 labels Foundation VM as the selected example while showing all three deployment paths; Part 02 retains its existing three-workflow instructions. Recovery-profile instructions retain their Foundation VM scope.",
+    "liveActionsExecuted": false
   }
 }

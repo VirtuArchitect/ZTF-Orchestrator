@@ -1,0 +1,73 @@
+{
+  "newCaptionSamples": 15,
+  "unchangedPartsByteIdentical": [
+    1,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "part08OriginalCaptionSamplesCompared": 24,
+  "part08MaximumCaptionBandMeanAbsoluteError": 0.0006047453703703704,
+  "listeningReview": "not_performed",
+  "liveActionsExecuted": false,
+  "records": [
+    {
+      "part": 0,
+      "introCaptionMidpointsChecked": 3,
+      "retainedTaskVideoFramesPixelIdentical": 4,
+      "pictureComparisonBaseline": "Foundation-clarified picture track with original AAC",
+      "integratedLufs": -16.48,
+      "truePeakDb": -1.4,
+      "fullDecode": "passed"
+    },
+    {
+      "part": 2,
+      "introCaptionMidpointsChecked": 3,
+      "retainedTaskVideoFramesPixelIdentical": 4,
+      "pictureComparisonBaseline": "Original task clip",
+      "integratedLufs": -16.5,
+      "truePeakDb": -1.05,
+      "fullDecode": "passed"
+    },
+    {
+      "part": 3,
+      "introCaptionMidpointsChecked": 3,
+      "retainedTaskVideoFramesPixelIdentical": 4,
+      "pictureComparisonBaseline": "Original task clip",
+      "integratedLufs": -16.46,
+      "truePeakDb": -1.4,
+      "fullDecode": "passed"
+    },
+    {
+      "part": 4,
+      "introCaptionMidpointsChecked": 3,
+      "retainedTaskVideoFramesPixelIdentical": 4,
+      "pictureComparisonBaseline": "Original task clip",
+      "integratedLufs": -16.53,
+      "truePeakDb": -0.31,
+      "fullDecode": "passed"
+    },
+    {
+      "part": 15,
+      "introCaptionMidpointsChecked": 3,
+      "retainedTaskVideoFramesPixelIdentical": 4,
+      "pictureComparisonBaseline": "Original task clip",
+      "integratedLufs": -16.45,
+      "truePeakDb": -1.4,
+      "fullDecode": "passed"
+    }
+  ]
+}

@@ -7,6 +7,7 @@
 
 
 ### Documentation
+- Publish the revised 23-part Joanna video series and complete offline ZIP with the exact operator-reported deployment/recovery statement, all three Foundation deployment paths, anonymised examples, English captions and 125 aligned chapters. Preserve stable video URLs and the prior release download.
 - Enable reviewed AHV Uplink Migration, Create Virtual Switch, DARE and VS0 MTU application in packaged Docker/appliance deployments; honor explicit planning-mode overrides and preserve approvals, pipelines and step 08-only recovery.
 
 - Publish dated Administrator and User Guide PDF/Word release assets and checksums; point README, landing page, video page and manual index downloads to the verified release files while retaining repository copies.

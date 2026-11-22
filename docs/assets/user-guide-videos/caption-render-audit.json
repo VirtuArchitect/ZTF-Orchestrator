@@ -1070,5 +1070,6 @@
       "captionAuditSha256": "659a3f77834215c6ccdcd0fdea206d6beec3e8f487ea7fc2285e43bea7ac3712",
       "subsequentVisualCorrection": "visual-topic-audit.json"
     }
-  ]
+  ],
+  "scope": "Historical 19 November picture/caption audit. Revised narration and Foundation graphics in Parts 00, 02, 03, 04 and 15, and anonymised Part 08, are covered by Update-verification.json and series-manifest.json. Baseline hashes are retained in baselineVerification."
 }

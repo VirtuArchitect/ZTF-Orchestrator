@@ -1,173 +1,185 @@
 1
-00:00:00,299 --> 00:00:03,277
-You need to build a four-node AHV cluster.
+00:00:00,256 --> 00:00:03,875
+Operators report consistent successful cluster deployments
 
 2
-00:00:03,627 --> 00:00:06,200
-Which Create Cluster workflow should you choose?
+00:00:03,883 --> 00:00:07,629
+with pipeline post-configuration and successful cluster recoveries
 
 3
-00:00:06,443 --> 00:00:09,036
-Start with the deployment service available at the site.
+00:00:07,680 --> 00:00:09,426
+using ZTF Orchestrator.
 
 4
-00:00:09,129 --> 00:00:13,523
-ZTF-Orchestrator offers three paths to the same goal, but each uses
+00:00:09,841 --> 00:00:12,819
+You need to build a four-node AHV cluster.
 
 5
-00:00:13,523 --> 00:00:15,592
-a different service and configuration.
+00:00:13,169 --> 00:00:15,742
+Which Create Cluster workflow should you choose?
 
 6
-00:00:15,955 --> 00:00:20,563
-Choose Cluster Create, Foundation VM, when you have a classic Foundation VM
+00:00:15,985 --> 00:00:18,578
+Start with the deployment service available at the site.
 
 7
-00:00:20,563 --> 00:00:22,292
-that can reach the physical nodes.
+00:00:18,671 --> 00:00:23,065
+ZTF-Orchestrator offers three paths to the same goal, but each uses
 
 8
-00:00:22,501 --> 00:00:26,461
-This suits a local build, a remote site with its own Foundation VM,
+00:00:23,065 --> 00:00:25,134
+a different service and configuration.
 
 9
-00:00:26,469 --> 00:00:28,573
-or an approved cluster rebuild.
+00:00:25,497 --> 00:00:30,105
+Choose Cluster Create, Foundation VM, when you have a classic Foundation VM
 
 10
-00:00:28,773 --> 00:00:33,159
+00:00:30,105 --> 00:00:31,834
+that can reach the physical nodes.
+
+11
+00:00:32,043 --> 00:00:36,003
+This suits a local build, a remote site with its own Foundation VM,
+
+12
+00:00:36,011 --> 00:00:38,115
+or an approved cluster rebuild.
+
+13
+00:00:38,315 --> 00:00:42,701
 Review the node addresses and credential references, then select the approved
 images
 
-11
-00:00:33,295 --> 00:00:35,300
+14
+00:00:42,837 --> 00:00:44,842
 already in Foundation inventory.
 
-12
-00:00:35,443 --> 00:00:40,086
+15
+00:00:44,985 --> 00:00:49,628
 Refresh inventory, validate the payload, test IPMI credentials and check
 
-13
-00:00:40,094 --> 00:00:44,310
+16
+00:00:49,636 --> 00:00:53,852
 progress. The IPMI test uses the Orchestrator's network path;
 
-14
-00:00:44,361 --> 00:00:48,734
+17
+00:00:53,903 --> 00:00:58,276
 a failed direct test does not prove Foundation cannot reach the nodes.
 
-15
-00:00:48,943 --> 00:00:51,737
+18
+00:00:58,485 --> 00:01:01,279
 Follow Foundation's reported phase and percentage.
 
-16
-00:00:52,015 --> 00:00:56,530
+19
+00:01:01,557 --> 00:01:06,072
 Now keep the same four-node requirement, but use Foundation Central associated
 
-17
-00:00:56,538 --> 00:01:00,506
+20
+00:01:06,080 --> 00:01:10,048
 with Prism Central. Choose the workflow named Cluster Create.
 
-18
-00:01:00,693 --> 00:01:04,867
+21
+00:01:10,235 --> 00:01:14,409
 It uses the existing ZTF one point x execution path.
 
-19
-00:01:05,088 --> 00:01:09,432
+22
+00:01:14,630 --> 00:01:18,974
 Configure the Foundation Central endpoint and credentials, then review eligible
 
-20
-00:01:09,440 --> 00:01:11,745
+23
+00:01:18,982 --> 00:01:21,287
 discovered nodes and the approved images.
 
-21
-00:01:12,018 --> 00:01:16,029
+24
+00:01:21,560 --> 00:01:25,571
 This is the appropriate choice when your deployment service and node inventory are
 
-22
-00:01:16,029 --> 00:01:19,118
+25
+00:01:25,571 --> 00:01:28,660
 already managed through that Foundation Central environment.
 
-23
-00:01:19,388 --> 00:01:23,689
+26
+00:01:28,930 --> 00:01:33,231
 If your deployment service is a separate Foundation Central Appliance, choose Cluster
 
-24
-00:01:23,740 --> 00:01:26,100
+27
+00:01:33,282 --> 00:01:35,642
 Create, Standalone FCA.
 
-25
-00:01:26,428 --> 00:01:29,485
+28
+00:01:35,970 --> 00:01:39,027
 This path uses the appliance's Lifecycle APIs.
 
-26
-00:01:29,699 --> 00:01:34,000
+29
+00:01:39,241 --> 00:01:43,542
 Check the actual API version, inventory and hardware compatibility before
 
-27
-00:01:34,051 --> 00:01:38,480
+30
+00:01:43,593 --> 00:01:48,022
 proceeding. Submission remains guarded and requires the explicit execution
 
-28
-00:01:38,488 --> 00:01:42,815
+31
+00:01:48,030 --> 00:01:52,357
 acknowledgement. A workflow being available does not establish compatibility
 
-29
-00:01:42,865 --> 00:01:45,147
+32
+00:01:52,407 --> 00:01:54,689
 with every appliance or hardware version.
 
-30
-00:01:45,511 --> 00:01:48,468
+33
+00:01:55,053 --> 00:01:58,010
 For each path, use its matching YAML schema.
 
-31
-00:01:48,625 --> 00:01:51,529
+34
+00:01:58,167 --> 00:02:01,071
 Do not swap configuration files between services.
 
-32
-00:01:51,803 --> 00:01:55,848
+35
+00:02:01,345 --> 00:02:05,390
 Run the checks available in that workflow, review the exact physical targets
 
-33
-00:01:55,899 --> 00:01:58,494
+36
+00:02:05,441 --> 00:02:08,036
 and obtain the required approval before imaging.
 
-34
-00:01:58,715 --> 00:02:01,416
+37
+00:02:08,257 --> 00:02:10,958
 Imaging can overwrite existing installations.
 
-35
-00:02:01,851 --> 00:02:06,515
+38
+00:02:11,393 --> 00:02:16,057
 Monitor the submitted job and inspect the real outcome before retrying a failure.
 
-36
-00:02:06,629 --> 00:02:11,144
+39
+00:02:16,171 --> 00:02:20,686
 After cluster formation, verify Prism Element and continue with the reviewed
 
-37
-00:02:11,152 --> 00:02:12,988
+40
+00:02:20,694 --> 00:02:22,530
 post-configuration pipeline.
 
-38
-00:02:13,175 --> 00:02:17,832
+41
+00:02:22,717 --> 00:02:27,374
 Prism Central registration, when needed, is a separate configuration step.
 
-39
-00:02:18,167 --> 00:02:22,733
+42
+00:02:27,709 --> 00:02:32,275
 For a broader site or multiple-cluster deployment, review Site Deploy or Site
 
-40
-00:02:22,733 --> 00:02:25,071
+43
+00:02:32,275 --> 00:02:34,613
 Deploy, Standalone FCA.
 
-41
-00:02:25,293 --> 00:02:28,216
+44
+00:02:34,835 --> 00:02:37,758
 Imaging Only prepares nodes without forming a cluster.
 
-42
-00:02:28,424 --> 00:02:33,024
+45
+00:02:37,966 --> 00:02:42,566
 For our four-node example, choose the Create Cluster workflow that matches the
 service
 
-43
-00:02:33,075 --> 00:02:34,640
+46
+00:02:42,617 --> 00:02:44,182
 you actually operate.

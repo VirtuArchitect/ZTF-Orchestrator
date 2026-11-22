@@ -1,115 +1,127 @@
 1
-00:00:00,256 --> 00:00:02,744
-A new cluster needs more than an installer.
+00:00:00,256 --> 00:00:03,875
+Operators report consistent successful cluster deployments
 
 2
-00:00:02,816 --> 00:00:07,168
-Its physical nodes need approved images and addresses, its services need
+00:00:03,883 --> 00:00:07,629
+with pipeline post-configuration and successful cluster recoveries
 
 3
-00:00:07,168 --> 00:00:11,021
-configuration, and its recovery process needs a reviewed plan.
+00:00:07,680 --> 00:00:09,426
+using ZTF Orchestrator.
 
 4
-00:00:11,136 --> 00:00:15,181
-ZTF Orchestrator brings those activities into one browser console.
+00:00:09,798 --> 00:00:12,286
+A new cluster needs more than an installer.
 
 5
-00:00:15,360 --> 00:00:17,954
-This walkthrough follows a simulated Cluster A;
+00:00:12,358 --> 00:00:16,710
+Its physical nodes need approved images and addresses, its services need
 
 6
-00:00:18,005 --> 00:00:19,953
-it changes no infrastructure.
+00:00:16,710 --> 00:00:20,563
+configuration, and its recovery process needs a reviewed plan.
 
 7
-00:00:20,247 --> 00:00:24,463
-The Orchestrator stores reviewed YAML, credential references, approvals
+00:00:20,678 --> 00:00:24,723
+ZTF Orchestrator brings those activities into one browser console.
 
 8
-00:00:24,557 --> 00:00:28,602
-and job evidence. ZTF one point x remains the workflow
+00:00:24,902 --> 00:00:27,496
+This walkthrough follows a simulated Cluster A;
 
 9
-00:00:28,610 --> 00:00:30,074
-and pipeline executor.
+00:00:27,547 --> 00:00:29,495
+it changes no infrastructure.
 
 10
-00:00:30,189 --> 00:00:33,668
-Foundation VM performs the imaging and cluster formation.
+00:00:29,789 --> 00:00:34,005
+The Orchestrator stores reviewed YAML, credential references, approvals
 
 11
-00:00:33,878 --> 00:00:38,052
-Prism and guarded specialist adapters perform their supported target actions.
+00:00:34,099 --> 00:00:38,144
+and job evidence. ZTF one point x remains the workflow
 
 12
-00:00:38,358 --> 00:00:40,484
-The Orchestrator coordinates those systems;
+00:00:38,152 --> 00:00:39,616
+and pipeline executor.
 
 13
-00:00:40,534 --> 00:00:42,326
-it does not replace Foundation.
+00:00:39,731 --> 00:00:43,210
+Foundation VM performs the imaging and cluster formation.
 
 14
-00:00:42,649 --> 00:00:46,950
-Start Here offers deployment, configuration, recovery, monitoring
+00:00:43,420 --> 00:00:47,594
+Prism and guarded specialist adapters perform their supported target actions.
 
 15
-00:00:46,958 --> 00:00:51,046
-and saved automation. YAML Studio helps prepare a configuration
+00:00:47,900 --> 00:00:50,026
+The Orchestrator coordinates those systems;
 
 16
-00:00:51,225 --> 00:00:52,817
-and hand it to a pipeline.
+00:00:50,076 --> 00:00:51,868
+it does not replace Foundation.
 
 17
-00:00:52,974 --> 00:00:55,105
-Saving a file starts no job.
+00:00:52,191 --> 00:00:56,492
+Start Here offers deployment, configuration, recovery, monitoring
 
 18
-00:00:55,247 --> 00:00:59,386
-Successful authoring checks do not prove that a password works or that a target is
+00:00:56,500 --> 00:01:00,588
+and saved automation. YAML Studio helps prepare a configuration
 
 19
-00:00:59,386 --> 00:01:03,794
-ready. Recovery profiles preserve deployment and pipeline snapshots.
+00:01:00,767 --> 00:01:02,359
+and hand it to a pipeline.
 
 20
-00:01:03,951 --> 00:01:07,942
-Resume an existing recovery to retain approvals and completed work.
+00:01:02,516 --> 00:01:04,647
+Saving a file starts no job.
 
 21
-00:01:08,151 --> 00:01:12,196
-Monitoring distinguishes recorded health, failed collection and expired
+00:01:04,789 --> 00:01:08,928
+Successful authoring checks do not prove that a password works or that a target is
 
 22
-00:01:12,247 --> 00:01:16,250
-evidence. Inspect the result behind a status before accepting the cluster
+00:01:08,928 --> 00:01:13,336
+ready. Recovery profiles preserve deployment and pipeline snapshots.
 
 23
-00:01:16,386 --> 00:01:19,186
-for workload restoration through your backup platform.
+00:01:13,493 --> 00:01:17,484
+Resume an existing recovery to retain approvals and completed work.
 
 24
-00:01:19,391 --> 00:01:23,999
-Native pipeline opt-in, NKP and ZTF two point x console
+00:01:17,693 --> 00:01:21,738
+Monitoring distinguishes recorded health, failed collection and expired
 
 25
-00:01:23,999 --> 00:01:25,590
-execution are retired.
+00:01:21,789 --> 00:01:25,792
+evidence. Inspect the result behind a status before accepting the cluster
 
 26
-00:01:25,748 --> 00:01:27,340
-Historical records remain.
+00:01:25,928 --> 00:01:28,728
+for workload restoration through your backup platform.
 
 27
-00:01:27,540 --> 00:01:31,171
-Specialist changes keep their own approval and verification gates.
+00:01:28,933 --> 00:01:33,541
+Native pipeline opt-in, NKP and ZTF two point x console
 
 28
-00:01:31,404 --> 00:01:35,628
-This release is a candidate, and simulated videos do not establish hardware
+00:01:33,541 --> 00:01:35,132
+execution are retired.
 
 29
-00:01:35,628 --> 00:01:39,710
+00:01:35,290 --> 00:01:36,882
+Historical records remain.
+
+30
+00:01:37,082 --> 00:01:40,713
+Specialist changes keep their own approval and verification gates.
+
+31
+00:01:40,946 --> 00:01:45,170
+This release is a candidate, and simulated videos do not establish hardware
+
+32
+00:01:45,170 --> 00:01:49,252
 compatibility. Begin with Start Here and the current written guide.

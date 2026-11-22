@@ -1,3 +1,6 @@
+REVISED USER GUIDE VIDEOS (22 November 2026 documentation update)
+Publish the revised 23-part light-mode Joanna series with the approved operator-reported deployment/recovery statement, all three Foundation deployment paths, English captions, 125 aligned chapters and an offline ZIP. Existing task narration, stable video URLs and the previous release download remain available. No application, appliance or live-cluster behavior changes.
+
 WINDOWS-STYLE DARK PALETTE (new consolidated builds; existing appliance bundles unchanged)
 Use neutral #202020 canvas and #282828/#2C2C2C/#333333 surfaces following Windows 11 / WinUI solid background shades. Existing light colours, brand/status accents, theme preference, credentials, approvals and workflow behavior are retained. This is a web palette, not a native Windows backdrop or OS theme integration.
 

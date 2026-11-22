@@ -1,3 +1,5 @@
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
+
 A new cluster needs more than an installer. Its physical nodes need approved images and addresses, its services need configuration, and its recovery process needs a reviewed plan. ZTF Orchestrator brings those activities into one browser console. This walkthrough follows a simulated Cluster A; it changes no infrastructure.
 
 The Orchestrator stores reviewed YAML, credential references, approvals and job evidence. ZTF one point x remains the workflow and pipeline executor. Foundation VM performs the imaging and cluster formation. Prism and guarded specialist adapters perform their supported target actions. The Orchestrator coordinates those systems; it does not replace Foundation.
