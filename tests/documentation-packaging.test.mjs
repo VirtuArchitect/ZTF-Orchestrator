@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import './documentation-addresses.test.cjs';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';

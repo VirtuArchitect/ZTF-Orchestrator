@@ -123,7 +123,3 @@ def test_address_revision_preserves_editions_and_declares_collection_scope():
     page = (ROOT / 'public/documentation/index.html').read_text(encoding='utf-8')
     assert 'John Goulden attribution' in page
     assert '22 November 2026' in page
-
-
-def test_documentation_address_policy_keeps_operational_endpoints_correct():
-    subprocess.run(['node', '--test', str(ROOT / 'tests/documentation-addresses.test.cjs')], check=True)
