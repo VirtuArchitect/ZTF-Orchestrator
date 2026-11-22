@@ -5,25 +5,28 @@
 @layer base {
   :root,
   .theme-dark {
-    --color-gray-50: 249 250 251;
-    --color-gray-100: 243 244 246;
-    --color-gray-200: 229 231 235;
-    --color-gray-300: 209 213 219;
-    --color-gray-400: 156 163 175;
-    --color-gray-500: 107 114 128;
-    --color-gray-600: 75 85 99;
-    --color-gray-700: 55 65 81;
-    --color-gray-800: 31 41 55;
-    --color-gray-900: 17 24 39;
-    --color-gray-950: 3 7 18;
-    --color-surface: 28 30 45;
-    --color-surface-elevated: 37 40 64;
-    --color-surface-elevated-2: 46 50 85;
-    --color-border: 46 49 80;
-    --color-border-light: 61 65 112;
+    /* Neutral Windows 11 / WinUI solid surfaces; brand/status accents stay separate. */
+    color-scheme: dark;
+    --color-gray-50: 255 255 255;
+    --color-gray-100: 245 245 245;
+    --color-gray-200: 229 229 229;
+    --color-gray-300: 214 214 214;
+    --color-gray-400: 191 191 191;
+    --color-gray-500: 160 160 160;
+    --color-gray-600: 118 118 118;
+    --color-gray-700: 69 69 69;
+    --color-gray-800: 51 51 51;
+    --color-gray-900: 28 28 28;
+    --color-gray-950: 32 32 32;
+    --color-surface: 40 40 40;
+    --color-surface-elevated: 44 44 44;
+    --color-surface-elevated-2: 51 51 51;
+    --color-border: 69 69 69;
+    --color-border-light: 96 96 96;
   }
 
   .theme-light {
+    color-scheme: light;
     --color-gray-50: 3 7 18;
     --color-gray-100: 17 24 39;
     --color-gray-200: 31 41 55;

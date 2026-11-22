@@ -1,3 +1,6 @@
+WINDOWS-STYLE DARK PALETTE (new consolidated builds; existing appliance bundles unchanged)
+Use neutral #202020 canvas and #282828/#2C2C2C/#333333 surfaces following Windows 11 / WinUI solid background shades. Existing light colours, brand/status accents, theme preference, credentials, approvals and workflow behavior are retained. This is a web palette, not a native Windows backdrop or OS theme integration.
+
 UPLINK CREDENTIAL SELECTORS (new consolidated builds; existing appliance bundles unchanged)
 Global Config reference/username dropdowns replace uplink PE/PC and CVM text inputs. CVM choices identify nutanix. Missing saved values stay visible for correction; loading, empty or failed catalogues block discovery with refresh guidance. The additive admin-only GET /api/ahv-uplink-migration/credentials returns declarations only, never passwords, tokens or remote secret values. Approval, pipeline and recovery behavior is unchanged.
 
