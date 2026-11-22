@@ -259,9 +259,11 @@ def test_published_manual_checksums_match_current_reference():
     with ZipFile(path) as archive:
         root = ElementTree.fromstring(archive.read('word/document.xml'))
     text = ''.join(root.itertext())
-    assert '40+ successful cluster deployments with pipeline post-configuration' in text
-    assert '20+ successful cluster recoveries' in text
-    assert 'As of 22 November 2026, operators report' in text
+    statement = ('Operators report consistent successful cluster deployments with pipeline '
+                 'post-configuration and successful cluster recoveries using ZTF Orchestrator.')
+    assert statement in text
+    assert manifest['operationalExperienceUpdate']['statement'] == statement
+    assert not re.search(r'40\+|20\+', text)
     assert 'Workload restoration remains a backup-platform handoff.' in text
     ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
           'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'}
@@ -293,13 +295,33 @@ def test_manual_links_every_corrected_tutorial_and_complete_download():
                and row.get('Type', '').endswith('/hyperlink')}
     expected = {f'https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part={part:02d}'
                 for part in range(download['parts'])}
-    # The Word/PDF edition retains working links to the prior release asset.
-    previous = download['previousEdition']
-    expected.update([previous['url'], previous['checksumUrl']])
+    expected.update([download['url'], download['checksumUrl']])
     assert len(expected) == 25 and expected <= targets
     text = ''.join(document.itertext())
     assert 'predates the Sessions panel' not in text
-    assert 'complete corrected video ZIP' in text
+    assert 'complete revised video ZIP' in text
+    assert download['previousEdition']['url'] not in targets
+
+
+def test_manual_distinguishes_foundation_workflows_without_reformatting():
+    folder = ROOT / 'docs/manuals'
+    manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
+    with ZipFile(folder / 'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx') as archive:
+        document = ElementTree.fromstring(archive.read('word/document.xml'))
+    text = ''.join(document.itertext())
+    for phrase in ['Cluster Create (Foundation VM)', 'Foundation Central associated with Prism Central',
+                   'Cluster Create (Standalone FCA)', 'separate Foundation Central Appliance',
+                   'local/remote site or an approved rebuild', 'Match the YAML to that service.',
+                   'validate inventory read-only']:
+        assert phrase in text
+    verification = manifest['formatVerification']
+    assert verification['pixelComparedPages'] == verification['pages'] == manifest['pdfPages'] == 156
+    assert verification['pixelChangedPages'] == verification['wordExportChangedPages'] == [14, 47, 77, 80]
+    assert verification['unchangedPublishedPages'] == 152
+    assert verification['tables'] == manifest['tables'] == 54
+    assert verification['inlineImages'] == manifest['inlineImages'] == 83
+    assert verification['pageGeometryUnchanged'] and verification['stylesImagesHeadersFootersUnchanged']
+    assert verification['changedDocxParts'] == ['word/document.xml', 'word/_rels/document.xml.rels']
 
 
 def test_current_operator_documentation_local_link_targets_exist():

@@ -1,3 +1,6 @@
+ADMINISTRATOR AND USER GUIDE REFRESH (22 November 2026)
+The maintained Word/PDF use the agreed operator-reported wording, distinguish classic Foundation VM, PC-associated Foundation Central and standalone FCA, and link the revised 23-part video ZIP and checksum. The original edition/review, 156 pages, 54 tables, 83 illustrations and download paths are retained. Only four intended PDF pages change. No runtime, appliance or live-cluster behavior changes.
+
 REVISED USER GUIDE VIDEOS (22 November 2026 documentation update)
 Publish the revised 23-part light-mode Joanna series with the approved operator-reported deployment/recovery statement, all three Foundation deployment paths, English captions, 125 aligned chapters and an offline ZIP. Existing task narration, stable video URLs and the previous release download remain available. No application, appliance or live-cluster behavior changes.
 
