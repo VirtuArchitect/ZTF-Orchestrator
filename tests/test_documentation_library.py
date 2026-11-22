@@ -107,4 +107,20 @@ def test_project_and_tutorial_entries_link_current_manuals_and_label_earlier_edi
         for ident in ['admin-guide', 'user-guide', 'current-workflow-script-collection']:
             assert 'documentation/?doc=' + ident in source
         assert 'Earlier combined' in source
-        assert '2026-11-19.pdf' in source
+        assert 'documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf' in source
+        assert '/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf' not in source
+
+
+def test_address_revision_preserves_editions_and_declares_collection_scope():
+    catalogue = load('public/documentation/library.json')
+    assert catalogue['addressAnonymisation']['date'] == '2026-11-22'
+    assert 'historical' in catalogue['addressAnonymisation']['scope']
+    revised = [row for row in catalogue['documents'] if row.get('addressAnonymisation')]
+    assert any(row['archived'] for row in revised)
+    assert any(not row['archived'] for row in revised)
+    for row in revised:
+        assert row['beforeAddressAnonymisationSha256'] != row['sha256']
+        assert row['edition']
+    page = (ROOT / 'public/documentation/index.html').read_text(encoding='utf-8')
+    assert 'John Goulden attribution' in page
+    assert '22 November 2026' in page

@@ -6,7 +6,7 @@ Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orch
 
 The collection is reviewed against application source `db16219` on **21 November 2026**. Use the [collection overview](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=collection-overview), [current Administrator Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=admin-guide), [current User Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=user-guide) and [complete current task collection](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=current-workflow-script-collection). Every current workflow, script and dedicated operation also has an individual PDF.
 
-Runbooks, architecture, API references, installation, updates, recovery, security, test guidance and the provided remote deployment design/pilot are searchable by topic and document type. Current guides retain the ZTF cover and running format. Historical editions are hidden by default and retain their original bytes and source provenance. Source review and simulated figures do not establish hardware or production acceptance.
+Runbooks, architecture, API references, installation, updates, recovery, security, test guidance and the provided remote deployment design/pilot are searchable by topic and document type. Current guides retain the ZTF cover and running format. Historical editions are hidden by default and retain their source provenance and original edition labels. Source review and simulated figures do not establish hardware or production acceptance.
 
 The [source register](current/collection-register.json) records publication dispositions, source fingerprints and provided-document provenance. The [maintenance guide](../pages/documentation-library.md) describes review, regeneration and publication.
 
@@ -25,7 +25,7 @@ Operational Quick Guides cover and matching page layout:
 See the [format reference](../assets/quick-guides/branding/README.md),
 [checksums](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded-SHA256SUMS.txt) and
 [branding manifest](workflow-script-quick-guides-branding.json).
-Source content and screenshot provenance remain unchanged; earlier editions
+Original source content and edition provenance remain recorded; earlier editions
 below are retained for comparison.
 
 ### Previous editions
@@ -40,7 +40,7 @@ or [online-style local gallery](../assets/quick-guides/2026-11-20/gallery.html).
 See [screenshot provenance](../assets/quick-guides/2026-11-20/README.md) and
 [checksums](ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-SHA256SUMS.txt).
 These initial-screen/authoring views do not demonstrate live target execution.
-The original text edition below is preserved unchanged.
+The original text edition below retains its source content and format.
 
 The earlier quick-guide editions, reviewed 20 November
 2026 against source `79c3ecc`, cover all 30 current workflows, 79 scripts and
@@ -55,9 +55,9 @@ the exact files; see the [earlier validation record](../quick-guides/VALIDATION-
 
 ## Earlier combined Administrator and User Guide downloads
 
-[Download the illustrated PDF guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.docx) · [Release download checksums](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19-SHA256SUMS.txt)
+[Download the illustrated PDF guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
 
-Dated **19 November 2026** release assets are byte-identical to the maintained guide files below. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).
+The **19 November 2026** release assets record the earlier publication. Maintained downloads now include the **22 November 2026** address anonymisation revision and have refreshed checksums below. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).
 
 The maintained **156-page** guide was reviewed **19 November 2026** against application source `f33c9ed` and repository/README revision `27d28a2`. **v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable.** The maintained repository filenames are unchanged.
 
@@ -83,9 +83,9 @@ Native pipeline opt-in, NKP and ZTF 2.x console execution are **retired**. Histo
 
 The example consolidated build is `v1.8.5-rc1-f33c9ed`. Obtain its exact trusted ZIP and checksum from the release maintainer; this is not a claim that a commit-specific bundle is a public release asset. This manual update changes no installed runtime or immutable ZIP. See [current source/package evidence](../current-status.md).
 
-PDF SHA256: `6a0d0ef25d2d9f148f8b79d616aa88df09c9ba311dc85cca7925ac59c84d0017`.
+PDF SHA256: `a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78`.
 
-Editable source SHA256: `3469ef49a02b26d28bdaf2da2016660990a5620b1d684b417fafa16aad4396e3`.
+Editable source SHA256: `9c076d44baeb63b7aa171045e2d3755034ae4921608bf78acbed64aedb5d0a9b`.
 
 [Publication manifest](administrator-user-guide-publication.json) records source revisions, page count, layout geometry and download checksums.
 
@@ -134,3 +134,7 @@ candidate to stable. Verify exact installed build metadata independently.
 - [PE login-title procedure](../pe-login-title.md)
 
 - [Upgrade Advisor temporary TLS exceptions](../upgrade-advisor-tls.md): current procedure addendum; earlier manual editions describe the verified-only collector.
+
+## Address anonymisation
+
+On 22 November 2026, remaining illustrative IP addresses in current and historical collection PDFs, editable Word editions and screenshot downloads were replaced with documentation-only TEST-NET examples. Covers, layout, original edition labels and application-source provenance are retained. John Goulden attribution is retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks remain technically accurate. Historical validation statements refer to their original environments, not tests against TEST-NET. Earlier immutable GitHub release assets, Git history and previously downloaded copies are separate from this republished collection; use the collection links above for the anonymised editions.

@@ -2339,11 +2339,11 @@
     {
       "id": "collection-overview",
       "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
-      "sha256": "473fb8a8664cd92b6b90503df11ed693b1434a07b944b39376c4cde58fa788ec",
+      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
       "inputSources": [
         {
           "path": "docs/documentation-collection.md",
-          "sha256": "d73dff73bd72da3f71404d175d9e7e1043106912980b9e554bca5c66186072ca",
+          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
           "normalization": "utf8-lf"
         },
         {
@@ -2351,7 +2351,8 @@
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "architecture-data-flow",
@@ -2787,14 +2788,12 @@
     {
       "id": "ahv-appliance-build",
       "source": "docs/AHV-Appliance-Build-Guide.pdf",
-      "sha256": "0b6c24c0fc35be0efeb3e843f91648a00fb3f2d9bdd2ec94ae89942afa33cd0a",
-      "inputSources": []
+      "sha256": "0b6c24c0fc35be0efeb3e843f91648a00fb3f2d9bdd2ec94ae89942afa33cd0a"
     },
     {
       "id": "ahv-appliance-deployment",
       "source": "docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf",
-      "sha256": "269dfc9e1c1d2398f2ca6480a22a93fec0857caa1559167a62327c877fa41269",
-      "inputSources": []
+      "sha256": "269dfc9e1c1d2398f2ca6480a22a93fec0857caa1559167a62327c877fa41269"
     },
     {
       "id": "contributing",
@@ -2816,11 +2815,11 @@
     {
       "id": "pages-documentation-library",
       "source": "docs/manuals/current/ZTF-Orchestrator-pages-documentation-library-2026-11-21.pdf",
-      "sha256": "16b372818e93dfd70d06991c1f210f0a7d82eb0d9bd040b2f6162fa46631f51f",
+      "sha256": "91d3ec3d0c640251e358567bb9cff6bd3861354a0fbff9ae34eac8f2c058893d",
       "inputSources": [
         {
           "path": "docs/pages/documentation-library.md",
-          "sha256": "4ee414c993b574b1db4ae01174c2428535f4dc42373b66b395562cf31f14ede0",
+          "sha256": "84d52ac6f4e88f588d04e7bec3eb52ce2fbeecbafb4c83faa0c1eb1467754e86",
           "normalization": "utf8-lf"
         },
         {
@@ -2828,7 +2827,8 @@
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "release",
@@ -5287,7 +5287,7 @@
     {
       "id": "quick-guides-scripts-addadserverpc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addadserverpc-2026-11-21.pdf",
-      "sha256": "2448cb1f0591b508aae0256ed14646e19ace730b5d313d3ffebc08ba7682c979",
+      "sha256": "1fca85f2650ea722b6ffc5261c5e4e69c0ac505ce9303cb6059469bd68c57cce",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/AddAdServerPc.md",
@@ -5296,20 +5296,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-AddAdServerPc.png",
-          "sha256": "77e77995da80dbda9cc522249512bf4f7928118231cd727ae6d9085134a9bc03",
-          "normalization": "binary"
+          "sha256": "eeb17461ede9ed7b67b69e1f16799712a14ae80a0253eac2aea1dd895a717c43",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "77e77995da80dbda9cc522249512bf4f7928118231cd727ae6d9085134a9bc03"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-addadserverpe",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addadserverpe-2026-11-21.pdf",
-      "sha256": "5a03fbac2ee72e2b7a6cf14ff7d8eaad82812f5cd98a5b98c89955f78de2cbbb",
+      "sha256": "fd1196735dda10d1e63ba3f87713c5b3e39e05ec95ed474b89ba66414f9e6af7",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/AddAdServerPe.md",
@@ -5318,20 +5320,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-AddAdServerPe.png",
-          "sha256": "cacdeeff5e50cf9a59bc07cdf2c6fd50f55ea1766d241b55d7c2058211cae102",
-          "normalization": "binary"
+          "sha256": "39b3fb7d16c58ebcba590035b828f43a057d2706c2c856f298022dbb635ab2ef",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "cacdeeff5e50cf9a59bc07cdf2c6fd50f55ea1766d241b55d7c2058211cae102"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-adddirectoryservices",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-adddirectoryservices-2026-11-21.pdf",
-      "sha256": "2b01c652e300372ae33fad06982ee77dde71271c1c517f69433fa2894f3b9e9f",
+      "sha256": "fea962f3f0972edddf7449eb5ed1a87021d381f6dcbce16b40897bdd57bff873",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/AddDirectoryServices.md",
@@ -5340,20 +5344,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-AddDirectoryServices.png",
-          "sha256": "c09b634032d53819de0d254277d87f80e27a62714e720a0d0d3321d253c383ad",
-          "normalization": "binary"
+          "sha256": "d457faa61b982dfa7c708bd9f1757d866ea7f12921a5b5142010acce9139ceb9",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c09b634032d53819de0d254277d87f80e27a62714e720a0d0d3321d253c383ad"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-addnameserverspc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addnameserverspc-2026-11-21.pdf",
-      "sha256": "73dbe731e5b111fa4dfe8232d65f70a4d69ad42c98a4c7d87ee8a59aac5509bb",
+      "sha256": "a5732221efbfe9a084d0e608b461b51c13b5049d91c364ae955502ae41e1354c",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/AddNameServersPc.md",
@@ -5362,20 +5368,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-AddNameServersPc.png",
-          "sha256": "85b0ca6c26251cdd15bf8a8b6610bd37a39a5632f0e3e402a60756df229b78b0",
-          "normalization": "binary"
+          "sha256": "b0c62072bba062c549f29e6a846c491506edcafdd7fdbeb3a3952a42dbf82df9",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "85b0ca6c26251cdd15bf8a8b6610bd37a39a5632f0e3e402a60756df229b78b0"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-addnameserverspe",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addnameserverspe-2026-11-21.pdf",
-      "sha256": "d851db88be779e3125170c2edf18aa44a06a9d1d0878e8ccdd80fb98755615c6",
+      "sha256": "9e415eeff8efcfc5b03e2f9e3b24684e2335bd79253688c9d21f07ecd94bd540",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/AddNameServersPe.md",
@@ -5384,15 +5392,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-AddNameServersPe.png",
-          "sha256": "211b1ee8ede688001cc4818d0574ef52340b11b5d65fd40691e5f95591f4c5c7",
-          "normalization": "binary"
+          "sha256": "9408fd304afd58e02d1990e6ef89be5b23a2b35aa5a6da3893d4f67a1a47246a",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "211b1ee8ede688001cc4818d0574ef52340b11b5d65fd40691e5f95591f4c5c7"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-addlocalusers",
@@ -5529,7 +5539,7 @@
     {
       "id": "quick-guides-scripts-ndbconfig",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-ndbconfig-2026-11-21.pdf",
-      "sha256": "d86f08f90a986304eddc9c09b920051165b6d0b0e09298e1ac9f03efd307bc63",
+      "sha256": "ebef17aa7667ffbb4160cc6f6ff9e81ab3270d9215be129952bad119603b1828",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/NdbConfig.md",
@@ -5538,20 +5548,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-NdbConfig.png",
-          "sha256": "907d1cd50818e2afbc0c41dc56ac690cb644b8f2efbbec772f75972e3990414c",
-          "normalization": "binary"
+          "sha256": "e6cf584156b1fdf59437c5906d5aefbb81fd8341269e566e225ea2cd4825066c",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "907d1cd50818e2afbc0c41dc56ac690cb644b8f2efbbec772f75972e3990414c"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-connecttoaz",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-connecttoaz-2026-11-21.pdf",
-      "sha256": "f8f2229de6a1cd0d66b49e152b41dd1e16857225b52903b1271a9886396c3692",
+      "sha256": "a68bce8ff849ded93390db460da08e3c0702e052fd96641bb46f0eb1040ca41b",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/ConnectToAz.md",
@@ -5560,15 +5572,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-ConnectToAz.png",
-          "sha256": "d87951e241f105f48e4c96d5d4d150d2528e41f383df105d236bbffeb4909ffb",
-          "normalization": "binary"
+          "sha256": "0c3bca85727fe1b4887a7b715ed9881f31dfdb76e5fa4e53330e589648df2b7c",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "d87951e241f105f48e4c96d5d4d150d2528e41f383df105d236bbffeb4909ffb"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createaddressgroups",
@@ -5595,7 +5609,7 @@
     {
       "id": "quick-guides-scripts-createbucket",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createbucket-2026-11-21.pdf",
-      "sha256": "88a2d7ef5a6c006b07cca31e3a9aee71f0c035949dff7e1bf2beb3a10e9de8fd",
+      "sha256": "486278384e67a29ba7ed447b843c98b14446c36352de96a38bb009d9f3fc0104",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateBucket.md",
@@ -5604,15 +5618,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateBucket.png",
-          "sha256": "63ed74ab6c107493a8c121351ad2409e5f73a748123256d7f366da701a72152d",
-          "normalization": "binary"
+          "sha256": "e63c87c43eb438c879e9291b369b4be27f2c133c11d99b856886033999ff801e",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "63ed74ab6c107493a8c121351ad2409e5f73a748123256d7f366da701a72152d"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createcategorypc",
@@ -5683,7 +5699,7 @@
     {
       "id": "quick-guides-scripts-createobjectstore",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createobjectstore-2026-11-21.pdf",
-      "sha256": "c9ac040c19eb870fc026bc0c736f6a525728a70303a439f037b717624759cc44",
+      "sha256": "afbc0d411bc3af3f306d24c09ef0dbba0126a89fe35a8ce5b2fa6dd366453fc7",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateObjectStore.md",
@@ -5692,20 +5708,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateObjectStore.png",
-          "sha256": "34a741ae59bc45502c77b3a647b17c7591daf8299e12cfd849c793a4ad879023",
-          "normalization": "binary"
+          "sha256": "bafffc10f7ef7a15f61f45b3bd62092d75586827ddb0c5fa59da74d0c6fe4ffa",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "34a741ae59bc45502c77b3a647b17c7591daf8299e12cfd849c793a4ad879023"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createprotectionpolicy",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createprotectionpolicy-2026-11-21.pdf",
-      "sha256": "fd90cf1c9d285fd220c54d9389b0c19edd702677fcad0da17e9878f7a1020601",
+      "sha256": "af1d796a8fb618a1df9320910d0dc133f1e1d5dacc2acacc360ae6a321709376",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateProtectionPolicy.md",
@@ -5714,20 +5732,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateProtectionPolicy.png",
-          "sha256": "0d9f9047e05b408ca5c6c2089674a2010bb6581053063b4d226ca5214174b4ce",
-          "normalization": "binary"
+          "sha256": "7a48d2271124317244b0fc3039cde960e499f34e4231174a5b41bec817ac84f5",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "0d9f9047e05b408ca5c6c2089674a2010bb6581053063b4d226ca5214174b4ce"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createrecoveryplan",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createrecoveryplan-2026-11-21.pdf",
-      "sha256": "c3fdda80ef710387ff98b71ed0dc5a1cf8dcf492dc21b0e885d7384382c43a7e",
+      "sha256": "6ae8ff9a1431be68d7c231a0caa46539bacd2fe7870375eaf8572bac573ca7e7",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateRecoveryPlan.md",
@@ -5736,20 +5756,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateRecoveryPlan.png",
-          "sha256": "89c84176269829d14fa919a50013912c44dde6e738983cc8b6313b4ccc116d0e",
-          "normalization": "binary"
+          "sha256": "a928f85b6d0747af1b5c92c39e023890c4254bda1d2b762b2f6a0f4ed5880c59",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "89c84176269829d14fa919a50013912c44dde6e738983cc8b6313b4ccc116d0e"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createrolemappingpc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createrolemappingpc-2026-11-21.pdf",
-      "sha256": "c3ad958e8bc442d43d2206e7a5fa47d530dd82538aafa1fe722128156d594585",
+      "sha256": "1c690a0f27121651add7df5c72259dd555534bafeb4e459f7a2d50cd212f8f99",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateRoleMappingPc.md",
@@ -5758,20 +5780,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateRoleMappingPc.png",
-          "sha256": "7486d5c7f3a54634708e29cb4a8079360750979144463183bd43563d54e13f20",
-          "normalization": "binary"
+          "sha256": "722bacd5af75f332b6af6ca3e7adb074033984dc4b4959d56022a15dd55f3cf9",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "7486d5c7f3a54634708e29cb4a8079360750979144463183bd43563d54e13f20"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createrolemappingpe",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createrolemappingpe-2026-11-21.pdf",
-      "sha256": "982294cd258b44be06d9ea53c0c5af1213c3b84825d43a6abe25eac3eb9f5d14",
+      "sha256": "72c5b07c764ad60cf9c2dd78880914d7b1f8b6366806c6b126e8bc50b653a16b",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateRoleMappingPe.md",
@@ -5780,15 +5804,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateRoleMappingPe.png",
-          "sha256": "034fc0bdce64446d6e3b5afdcaf313d46c85551f2b3a6ff9278bf581c1d036b0",
-          "normalization": "binary"
+          "sha256": "4ce14bac336aa204072d1c92bfc027656a8019b848753fb9ad1ae8ff6995e99e",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "034fc0bdce64446d6e3b5afdcaf313d46c85551f2b3a6ff9278bf581c1d036b0"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createidp",
@@ -5881,7 +5907,7 @@
     {
       "id": "quick-guides-scripts-createsubnetpe",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createsubnetpe-2026-11-21.pdf",
-      "sha256": "8523d33550a24d47fddc2b09847b5beae9eba8ba1e4ebe20296501dc75beca66",
+      "sha256": "68279370f9f8596674549dab9757e57234846e7f7a5362f2f93d3c85980d5802",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateSubnetPe.md",
@@ -5890,20 +5916,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateSubnetPe.png",
-          "sha256": "d275624a950ee2db02ef512eb21e3b278639ecabb11d7ccc93fb194ded3e542f",
-          "normalization": "binary"
+          "sha256": "9531bac7a84cb59830c308da8e771c2a4da50aadb22de0d7c5b719560296f50b",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "d275624a950ee2db02ef512eb21e3b278639ecabb11d7ccc93fb194ded3e542f"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createsubnetspc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createsubnetspc-2026-11-21.pdf",
-      "sha256": "5e90966cd35abc842b0a690c41bcfa907a68d5889f53af5e7ecf5533f5e57b57",
+      "sha256": "615cf9bb323f2bd153c17631f318a8c7f2ea22d2975c8fb31ad4bcfb5a53c8d0",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateSubnetsPc.md",
@@ -5912,20 +5940,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateSubnetsPc.png",
-          "sha256": "779e3ca0e6ba514f1f2fbe69ec241eb6693b452b68e110a0529a3dc56109fc21",
-          "normalization": "binary"
+          "sha256": "d42790234c499bd58f5892ec41eaea4a934a96376d3b1ab9f70759e9d1e8e10f",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "779e3ca0e6ba514f1f2fbe69ec241eb6693b452b68e110a0529a3dc56109fc21"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createvmpe",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createvmpe-2026-11-21.pdf",
-      "sha256": "8b0459ed1097d4f9606ae0f0d6e73d2b0d2a6ac6c9e6fd81ac32ed3ccc319e3d",
+      "sha256": "83690c746e85e9a0a694a30696539f6474a41bf7a1aca0f70d7496e127fa4091",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateVmPe.md",
@@ -5934,20 +5964,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateVmPe.png",
-          "sha256": "9fedfccbe1cd0361c033eaee5538c7169a827b3afdf38c9e85d7dda2cce88cb0",
-          "normalization": "binary"
+          "sha256": "ab94a7fa5c65a4a67564bb9e603af8a869b2ebd90a1736e1a52802875263b3a1",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "9fedfccbe1cd0361c033eaee5538c7169a827b3afdf38c9e85d7dda2cce88cb0"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createvmspc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createvmspc-2026-11-21.pdf",
-      "sha256": "c9dbf1de458d03737917aa1ad4de1f93ab5e49a407426ba490fe28e99bbe172f",
+      "sha256": "702de0ace80a60956cd9559d82b94a164d9d8f9a40a66d9c81b49f7aa225a886",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateVmsPc.md",
@@ -5956,20 +5988,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateVmsPc.png",
-          "sha256": "ba43983bdb0a61472d62567a07cb4f722bb369b51fe9b8b8be3178c50775362a",
-          "normalization": "binary"
+          "sha256": "34819033c132518a39aec438b8e980a70504eca595194bf57d4fe4693cc2e561",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "ba43983bdb0a61472d62567a07cb4f722bb369b51fe9b8b8be3178c50775362a"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-createvpc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createvpc-2026-11-21.pdf",
-      "sha256": "379ace584c276ae029b8dea20449d4685c74b43d72d167e5a0da6269ae3bbfa8",
+      "sha256": "d74188eb044da71e1c031f01fbdd8cb54f247d9024853a4ab6656d8d70e6e3ef",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/CreateVPC.md",
@@ -5978,15 +6012,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-CreateVPC.png",
-          "sha256": "aaae098bd0cdc94bad599de4340cc5932597ed7cd35b60639dc122a5e68142f2",
-          "normalization": "binary"
+          "sha256": "b5b5c7c8dbeee2a1050bd6a5f45064bea95c5b5475d8708465400273ecfd6124",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "aaae098bd0cdc94bad599de4340cc5932597ed7cd35b60639dc122a5e68142f2"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-deleteaddressgroups",
@@ -6057,7 +6093,7 @@
     {
       "id": "quick-guides-scripts-deleteobjectstore",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleteobjectstore-2026-11-21.pdf",
-      "sha256": "b75ce5f3512ded99c0ab79afb790b819f58cdc56c1ad1abafc90b45874f629be",
+      "sha256": "3e7aae81c2973f5148c6ffb405b342054567ee3ec7d9780d3f5b47dcbbed47cb",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/DeleteObjectStore.md",
@@ -6066,15 +6102,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-DeleteObjectStore.png",
-          "sha256": "7f9223070d88fd8ee3e5e73371ab5088e02c125cd1ef7f7ad389b42ecdf957d4",
-          "normalization": "binary"
+          "sha256": "a929c66087c7aa8f570254c65acfa15a284d210201a49c9f1e15b8351add6890",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "7f9223070d88fd8ee3e5e73371ab5088e02c125cd1ef7f7ad389b42ecdf957d4"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-pcovadelete",
@@ -6101,7 +6139,7 @@
     {
       "id": "quick-guides-scripts-deleteprotectionpolicy",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleteprotectionpolicy-2026-11-21.pdf",
-      "sha256": "c9c13aca6e4921e0ea4e52b5c74e16e7c55f4b8795beb513879a13df6051c43e",
+      "sha256": "b88612c09b2dfd17d3c9d45bd65a7bef4e2111325ee5d47624cd0b1749c0161e",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/DeleteProtectionPolicy.md",
@@ -6110,20 +6148,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-DeleteProtectionPolicy.png",
-          "sha256": "56ea009262a3436f41c42042ba48de83afcb824ab53064c349866a11bca39858",
-          "normalization": "binary"
+          "sha256": "17332a7a005ad57f351d2f1a5acef97c74ed4eb54952cce2d81ebeffc97bef13",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "56ea009262a3436f41c42042ba48de83afcb824ab53064c349866a11bca39858"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-deleterecoveryplan",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleterecoveryplan-2026-11-21.pdf",
-      "sha256": "f3705b4043bd5c79a1f80e7e0a43c02269dd55715ccf76598ff936e67aac46b1",
+      "sha256": "028f8816c98c8649c5335f01754bc62dc6e19d6fd9cae42d2b92ba69b1e3f1fa",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/DeleteRecoveryPlan.md",
@@ -6132,15 +6172,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-DeleteRecoveryPlan.png",
-          "sha256": "60802196666abb4af043499823ac2b66bafb3dc5db1f3a74da87d5609dc8b5a8",
-          "normalization": "binary"
+          "sha256": "a89852041f9b3caf4fda6bdd8b366ccd10cd032d7356c9322a4902fd30064555",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "60802196666abb4af043499823ac2b66bafb3dc5db1f3a74da87d5609dc8b5a8"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-deletenetworksecuritypolicy",
@@ -6299,7 +6341,7 @@
     {
       "id": "quick-guides-scripts-deletevpc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deletevpc-2026-11-21.pdf",
-      "sha256": "fbc1332ef68ada6e40817d4d77cfce0cf11e73d623c5728fa38bc4f9b2852db3",
+      "sha256": "bd24f568cebf0aab3c64453ed08c4e1f35e64b587afba7cf466724e9f8f03d58",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/DeleteVPC.md",
@@ -6308,20 +6350,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-DeleteVPC.png",
-          "sha256": "5b495f7cafbcd472bb9ac98bb9daa7ac86578446d9805deefe9a846f15a3f573",
-          "normalization": "binary"
+          "sha256": "7cd86b3242e22425648722dc49663d359f1881079549976fb5feb36a34669909",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "5b495f7cafbcd472bb9ac98bb9daa7ac86578446d9805deefe9a846f15a3f573"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-deploypc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deploypc-2026-11-21.pdf",
-      "sha256": "12dba9a61d6a80d14fcb09a113d809e5bfa9d88ad93edce7fe5d66f908752261",
+      "sha256": "8777981f1025558639b4bf4e3973e9d7ef7b7d1c0fff940b56ef7f66e112cfc2",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/DeployPC.md",
@@ -6330,15 +6374,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-DeployPC.png",
-          "sha256": "fdc571ecd706c6ad2281bb4962d57c27149b2136aa7b1876361ae66d5f1be5d6",
-          "normalization": "binary"
+          "sha256": "e149d64cdf177759012fb67f69ee76000d2e70601d4db93800ee48fdc5711805",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "fdc571ecd706c6ad2281bb4962d57c27149b2136aa7b1876361ae66d5f1be5d6"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-disablemicrosegmentation",
@@ -6387,7 +6433,7 @@
     {
       "id": "quick-guides-scripts-disconnectaz",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-disconnectaz-2026-11-21.pdf",
-      "sha256": "89b3c2c80f408a5e569fe20684d4afb7af41c8a95ed1595b89199a31c910609a",
+      "sha256": "7c116ee83a2b0e3566c9f17e6593506db9cf0f21c5b8de2b840b0733b64941cd",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/DisconnectAz.md",
@@ -6396,15 +6442,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-DisconnectAz.png",
-          "sha256": "42e73985f79e44bba1017c87554c04710de211e8f82a7be1e42e3b6497f6c109",
-          "normalization": "binary"
+          "sha256": "b925a9c4cc296594ff90db113f9e4c4acb894fd22566e7f42338c85f003a2c8a",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "42e73985f79e44bba1017c87554c04710de211e8f82a7be1e42e3b6497f6c109"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-enabledr",
@@ -6761,7 +6809,7 @@
     {
       "id": "quick-guides-scripts-sharebucket",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-sharebucket-2026-11-21.pdf",
-      "sha256": "c3c7ec1810cfb1e7786c70beea1bae03e2c7b4116baf3f3be497026b7c34c211",
+      "sha256": "0c427cb5c67dde3faab09613723f91b1b1a7d5dd35821a260988ff8250e5c07e",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/ShareBucket.md",
@@ -6770,15 +6818,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-ShareBucket.png",
-          "sha256": "a27c781fbabdcc7b20c69e64c1d7911348dcebe7d2f74eca2020857243232030",
-          "normalization": "binary"
+          "sha256": "8573a69adf8ec4fc7cbc3e9ce6d3da723411e8f769717fbec757dfbdbc042b57",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "a27c781fbabdcc7b20c69e64c1d7911348dcebe7d2f74eca2020857243232030"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-unregisterpefrompc",
@@ -6805,7 +6855,7 @@
     {
       "id": "quick-guides-scripts-updatecvmfoundation",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatecvmfoundation-2026-11-21.pdf",
-      "sha256": "8c57e960676305a95f1c863881442f13e4ce7837c581846d317a47b094d3e61f",
+      "sha256": "cec2bdf81638b3310826c12cd38e2e9584d539c69434ca55e84d0bd51e93efe9",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/UpdateCvmFoundation.md",
@@ -6814,20 +6864,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-UpdateCvmFoundation.png",
-          "sha256": "3cc7db6f08378725a2ab63773f7e7a6d50131f0a88a0d5efb2a0a3c5799fa63c",
-          "normalization": "binary"
+          "sha256": "ce7b0430b10293bc77b341927c993017f552a1868b190b1bd4f6a3e394f996ff",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "3cc7db6f08378725a2ab63773f7e7a6d50131f0a88a0d5efb2a0a3c5799fa63c"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-updatedsip",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatedsip-2026-11-21.pdf",
-      "sha256": "c0ed12ee3ef1c42e71ce358c6c02a3f91184123234b8a0bc2de0533ed3dafd0b",
+      "sha256": "f6dbc25e595b4e89934f94f4fb8418cb3b96935c3c5a447a0664f5cf9d3d31b1",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/UpdateDsip.md",
@@ -6836,15 +6888,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-UpdateDsip.png",
-          "sha256": "49426148df2c5881ad4ece6d7899d06e5a74bfd45d45d73b8ca289f5838d4d01",
-          "normalization": "binary"
+          "sha256": "15323536b383e5465cb6d7715db8138238575c7145e3e81fcbc1d55f0a633db7",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "49426148df2c5881ad4ece6d7899d06e5a74bfd45d45d73b8ca289f5838d4d01"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-updatepulsepc",
@@ -6893,7 +6947,7 @@
     {
       "id": "quick-guides-scripts-updatevpc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatevpc-2026-11-21.pdf",
-      "sha256": "183686c077bd323c9bd54fc7cb033d5c499efcbdfc252b251a7f1ae060064644",
+      "sha256": "6fdd5602a5cdc82583cb47665ef1062ab14a3750348da548b8dab76db6dcfd12",
       "inputSources": [
         {
           "path": "docs/quick-guides/scripts/UpdateVPC.md",
@@ -6902,15 +6956,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/scripts-UpdateVPC.png",
-          "sha256": "a235d04978890f4b4a68eec60a9ae6a8e22b1c4d6c9b3292aaaa838d48720226",
-          "normalization": "binary"
+          "sha256": "432a2aa552fea97afb02499c2406772d47464c144ca6d37fca23976dc41e9914",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "a235d04978890f4b4a68eec60a9ae6a8e22b1c4d6c9b3292aaaa838d48720226"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-scripts-pcimageupload",
@@ -7059,8 +7115,7 @@
     {
       "id": "initial-password-illustrated-guide",
       "source": "docs/manuals/current/ZTF-Orchestrator-Initial-Host-CVM-Password-Illustrated-Quick-Guide-2026-11-20.pdf",
-      "sha256": "d85a5d76c9dd253400f7baa9d8f6381c48735862227ab81d15aa4df8f4f76f0c",
-      "inputSources": []
+      "sha256": "d85a5d76c9dd253400f7baa9d8f6381c48735862227ab81d15aa4df8f4f76f0c"
     },
     {
       "id": "nginx-tls",
@@ -7233,11 +7288,11 @@
     {
       "id": "dev-lab-disposable-container-runbook",
       "source": "docs/manuals/current/ZTF-Orchestrator-dev-lab-disposable-container-runbook-2026-11-21.pdf",
-      "sha256": "27a141a055972640521d7267753d93d3680bbc3c5d60aba4eabc252852dffe4d",
+      "sha256": "b118841fa5bf966acf66ec33f1b5e64389834bfa0c6df41a2b778d89cd5418fc",
       "inputSources": [
         {
           "path": "docs/dev-lab-disposable-container-runbook.md",
-          "sha256": "0c8d6f8a57e58e55b62e154a9c157c232cdba8e9ca09bdf43221ceb99a1d9f20",
+          "sha256": "48a8b2c85e9e3dc375f88f240dc945797a0abd1f962629d41f13f79f54b4ca91",
           "normalization": "utf8-lf"
         },
         {
@@ -7245,7 +7300,8 @@
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "live-pe-drift-monitoring",
@@ -7831,7 +7887,7 @@
     {
       "id": "quick-guides-workflows-cluster-create",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-cluster-create-2026-11-21.pdf",
-      "sha256": "db3e51fe2fc3456416eaeb80e892e73ce98cd18ede3cbd2169507335249cd73b",
+      "sha256": "c20c836aaa53bbdbc38f72efb82c71c8c34176fed591fb1d01490d688b8450b9",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/cluster-create.md",
@@ -7840,15 +7896,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-cluster-create.png",
-          "sha256": "42dbf1ece2a9632db1943c1fad5f1f6e7f94ce3763bb4f9512cd4a4267761f0a",
-          "normalization": "binary"
+          "sha256": "9849090bd09ab4af946a1dba7317dad56e5c7d13041894ada143f4cad54590fb",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "42dbf1ece2a9632db1943c1fad5f1f6e7f94ce3763bb4f9512cd4a4267761f0a"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-cluster-storage-standard",
@@ -7897,7 +7955,7 @@
     {
       "id": "quick-guides-workflows-config-management-pc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-config-management-pc-2026-11-21.pdf",
-      "sha256": "5165e356fcd1a56dc0f5904baf8bc987b7e25af5efbdef7bac31f52cadf19601",
+      "sha256": "1b00f7e996e5e645fd2bf29e4f779fc262dccbc137e1143937dd77fa9bf52ac0",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/config-management-pc.md",
@@ -7906,20 +7964,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-config-management-pc.png",
-          "sha256": "4110529e13708bad6c3238f6d3975939b4c0a7c624b074012867b4e3a6d8473b",
-          "normalization": "binary"
+          "sha256": "39c8e4a64c5c8c8e834020896e8f185b9c804421142cfc84f36d66ca927db6a5",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "4110529e13708bad6c3238f6d3975939b4c0a7c624b074012867b4e3a6d8473b"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-config-pc",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-config-pc-2026-11-21.pdf",
-      "sha256": "047f722b4768ccc4141e41d2e57d6d97e180924463478a192472e42e4e50e2ef",
+      "sha256": "0f44a451dc4adb3c0b2bd470782e1f8dea392df30c2a1cc66ea3149d6fbfaa26",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/config-pc.md",
@@ -7928,15 +7988,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-config-pc.png",
-          "sha256": "4264480199687644e450926f20fddc2f006028323502601e3da335a2022601ec",
-          "normalization": "binary"
+          "sha256": "8af8d1a9ed7f7aeb4784658ba153a8413fc07c674ded2c9e114ace1da3bae0e4",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "4264480199687644e450926f20fddc2f006028323502601e3da335a2022601ec"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-cvm-idrac-password-rotation",
@@ -8051,7 +8113,7 @@
     {
       "id": "quick-guides-workflows-imaging-only-standalone-fca",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-only-standalone-fca-2026-11-21.pdf",
-      "sha256": "4bd7a0f9e5127b8743d6f33d77037b2f4cdd862077f5d520ebcea106f09788f2",
+      "sha256": "c4af014eaa8d40bd159897a68b686477ed02d75defb8c14ab5ed6d8359536de6",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/imaging-only-standalone-fca.md",
@@ -8060,20 +8122,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-imaging-only-standalone-fca.png",
-          "sha256": "bd083150ef001a2c6908a65ebceea31f8a0572b0e569a47b58553015ab499a72",
-          "normalization": "binary"
+          "sha256": "45b85d487d97b91a7b741de8429b86e27b024b3cdad9cc590e63f3062d498e37",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "bd083150ef001a2c6908a65ebceea31f8a0572b0e569a47b58553015ab499a72"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-imaging-only",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-only-2026-11-21.pdf",
-      "sha256": "6e28215cc78a438957a1354e700df13a84885f3713a549866b41ad20b983a0d1",
+      "sha256": "a143520fc528fe46577724c5634a40b45f6a9abb0ea5a013eae1ee830cc47026",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/imaging-only.md",
@@ -8082,15 +8146,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-imaging-only.png",
-          "sha256": "39cde79c66c92ce370f62d9606eeaecc52d84bc822370a8ea5f46a38244cb9fe",
-          "normalization": "binary"
+          "sha256": "75114bfdb911faf7b1a9610bb338bab80a2100f7e3142682af13bef13155f62b",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "39cde79c66c92ce370f62d9606eeaecc52d84bc822370a8ea5f46a38244cb9fe"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-initial-host-cvm-password-setup",
@@ -8161,7 +8227,7 @@
     {
       "id": "quick-guides-workflows-ndb",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-ndb-2026-11-21.pdf",
-      "sha256": "6f1806afe8681dcc55871d8e25b19acd179b117d2c332dbf058124cf4ee39b69",
+      "sha256": "111cbe96cc1d1a4a5a798f10f14abc5c2dd5b57bc9426947547dcf2d883bebe3",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/ndb.md",
@@ -8170,15 +8236,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-ndb.png",
-          "sha256": "8b8cb0ebcc080e35aa9c0f5c7efa6b852102fcbc3b029e3a06aff3750ceba22a",
-          "normalization": "binary"
+          "sha256": "96dc857abd3fc1b5052dce67a383b80aaf7344e52d4448fbcdca1f6e18ebcdb9",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "8b8cb0ebcc080e35aa9c0f5c7efa6b852102fcbc3b029e3a06aff3750ceba22a"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-pe-certificate-baseline",
@@ -8249,7 +8317,7 @@
     {
       "id": "quick-guides-workflows-pod-config",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-pod-config-2026-11-21.pdf",
-      "sha256": "f58693ba711c5ffdadab8b966db16ec2de7f42ebe3ae47682f5272d40b9c1922",
+      "sha256": "549b928c9cfa955c56501fc881ff3c90f5c64a4fee6dcad1c7ff389acd420bb5",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/pod-config.md",
@@ -8258,20 +8326,22 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-pod-config.png",
-          "sha256": "55ee8f6c9ef0ea27c5707295fb8636f3c21232fbcc7bb0b5859d8aac890b0a7f",
-          "normalization": "binary"
+          "sha256": "5aeeb357059b0e3379da42c2259c336958150d722e8646b5190d41342b445056",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "55ee8f6c9ef0ea27c5707295fb8636f3c21232fbcc7bb0b5859d8aac890b0a7f"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-imaging-standalone-fca",
       "source": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-standalone-fca-2026-11-21.pdf",
-      "sha256": "9638a121952a2bcd801807ed3c39ab890362de280c109eb60e90436419b6aeaa",
+      "sha256": "18115889463574c7371cedc512dfbcb27fca8947b68fbb9bb217d937d39bcf60",
       "inputSources": [
         {
           "path": "docs/quick-guides/workflows/imaging-standalone-fca.md",
@@ -8280,15 +8350,17 @@
         },
         {
           "path": "docs/assets/quick-guides/2026-11-21/workflows-imaging-standalone-fca.png",
-          "sha256": "451c9341a728c664f0e5bea8a12f309ff6d68a09612ed5a074a0f12cb5f430c0",
-          "normalization": "binary"
+          "sha256": "f99c268ca2e54b6cdc29e4bf5f38a9a1696252356dc349d10c9923c481207fd0",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "451c9341a728c664f0e5bea8a12f309ff6d68a09612ed5a074a0f12cb5f430c0"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-workflows-imaging",
@@ -8403,8 +8475,8 @@
     {
       "id": "administrator-user-guide",
       "source": "docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
-      "sha256": "6a0d0ef25d2d9f148f8b79d616aa88df09c9ba311dc85cca7925ac59c84d0017",
-      "inputSources": []
+      "sha256": "a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "quick-guides-retired-script-ztf2-create-category-pc",
@@ -8698,44 +8770,41 @@
     {
       "id": "screenshot-companion",
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
-      "sha256": "4a62bce84d37dbed4bc556211a37eb9511f7f6d218db765c9256015bf4ed3614",
-      "inputSources": []
+      "sha256": "753f64c2830cb5922959a7d039f1300fb2e0cbf3dcd1277b90cb9d3e9ef3eb76",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "previous-illustrated",
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
-      "sha256": "3b8c25afa8245790a377f8edae6d77a2f0deb63800add4056094b79b478e7931",
-      "inputSources": []
+      "sha256": "de24758013fa0b97191f8db59be8beffedad199845e28e48f895ffd3558c9104",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "previous-text",
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
-      "sha256": "8b5fb2350c15276ef73596abbfa86a355309bb07ac349c8fe0a261f405efa44f",
-      "inputSources": []
+      "sha256": "8b5fb2350c15276ef73596abbfa86a355309bb07ac349c8fe0a261f405efa44f"
     },
     {
       "id": "previous-screenshots",
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
-      "sha256": "3991fa4a5acf2f10dfda1c5ca440cc25eef8a57228dc77126b92015d40ede0aa",
-      "inputSources": []
+      "sha256": "c2b76f2bd56233ea6d5864dd9c83fa577e2df8432cf7a6bc440af2e7c98a6ecc",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "illustrated-quick-guides",
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
-      "sha256": "ed5a3b67be8c4efe89633393c9c183ec559f097a85c5e2a51c340c1fad0b2187",
-      "inputSources": []
+      "sha256": "01c2c66f204bdcd47bcf55c609c6dc34a47fea2346b391b2300f58d8ba53d912",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "text-quick-guides",
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
-      "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
-      "inputSources": []
+      "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a"
     },
     {
       "id": "disaster-recovery-setup-previous-edition",
       "source": "docs/manuals/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf",
-      "sha256": "ec1404037a7f14aefec916a59debec5c4fab658959e2b207749bb559af96d6d3",
-      "inputSources": []
+      "sha256": "ec1404037a7f14aefec916a59debec5c4fab658959e2b207749bb559af96d6d3"
     },
     {
       "id": "audits-create-virtual-switch-security-review",
@@ -8791,7 +8860,7 @@
     {
       "id": "current-workflow-script-collection",
       "source": "docs/manuals/current/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Current-2026-11-21.pdf",
-      "sha256": "b76365c50788932024e93b8b6fb1fc5109fb6ba0e1960a8902d8da2f4b8122af",
+      "sha256": "acc8518403d7005ea62b552ef85a648b9bee550631c8618721e9255bfee8157b",
       "inputSources": [
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-using-the-guides-2026-11-21.pdf",
@@ -8855,28 +8924,33 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addadserverpc-2026-11-21.pdf",
-          "sha256": "2448cb1f0591b508aae0256ed14646e19ace730b5d313d3ffebc08ba7682c979",
-          "normalization": "binary"
+          "sha256": "1fca85f2650ea722b6ffc5261c5e4e69c0ac505ce9303cb6059469bd68c57cce",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "2448cb1f0591b508aae0256ed14646e19ace730b5d313d3ffebc08ba7682c979"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addadserverpe-2026-11-21.pdf",
-          "sha256": "5a03fbac2ee72e2b7a6cf14ff7d8eaad82812f5cd98a5b98c89955f78de2cbbb",
-          "normalization": "binary"
+          "sha256": "fd1196735dda10d1e63ba3f87713c5b3e39e05ec95ed474b89ba66414f9e6af7",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "5a03fbac2ee72e2b7a6cf14ff7d8eaad82812f5cd98a5b98c89955f78de2cbbb"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-adddirectoryservices-2026-11-21.pdf",
-          "sha256": "2b01c652e300372ae33fad06982ee77dde71271c1c517f69433fa2894f3b9e9f",
-          "normalization": "binary"
+          "sha256": "fea962f3f0972edddf7449eb5ed1a87021d381f6dcbce16b40897bdd57bff873",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "2b01c652e300372ae33fad06982ee77dde71271c1c517f69433fa2894f3b9e9f"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addnameserverspc-2026-11-21.pdf",
-          "sha256": "73dbe731e5b111fa4dfe8232d65f70a4d69ad42c98a4c7d87ee8a59aac5509bb",
-          "normalization": "binary"
+          "sha256": "a5732221efbfe9a084d0e608b461b51c13b5049d91c364ae955502ae41e1354c",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "73dbe731e5b111fa4dfe8232d65f70a4d69ad42c98a4c7d87ee8a59aac5509bb"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addnameserverspe-2026-11-21.pdf",
-          "sha256": "d851db88be779e3125170c2edf18aa44a06a9d1d0878e8ccdd80fb98755615c6",
-          "normalization": "binary"
+          "sha256": "9e415eeff8efcfc5b03e2f9e3b24684e2335bd79253688c9d21f07ecd94bd540",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "d851db88be779e3125170c2edf18aa44a06a9d1d0878e8ccdd80fb98755615c6"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-addlocalusers-2026-11-21.pdf",
@@ -8910,13 +8984,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-ndbconfig-2026-11-21.pdf",
-          "sha256": "d86f08f90a986304eddc9c09b920051165b6d0b0e09298e1ac9f03efd307bc63",
-          "normalization": "binary"
+          "sha256": "ebef17aa7667ffbb4160cc6f6ff9e81ab3270d9215be129952bad119603b1828",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "d86f08f90a986304eddc9c09b920051165b6d0b0e09298e1ac9f03efd307bc63"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-connecttoaz-2026-11-21.pdf",
-          "sha256": "f8f2229de6a1cd0d66b49e152b41dd1e16857225b52903b1271a9886396c3692",
-          "normalization": "binary"
+          "sha256": "a68bce8ff849ded93390db460da08e3c0702e052fd96641bb46f0eb1040ca41b",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "f8f2229de6a1cd0d66b49e152b41dd1e16857225b52903b1271a9886396c3692"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createaddressgroups-2026-11-21.pdf",
@@ -8925,8 +9001,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createbucket-2026-11-21.pdf",
-          "sha256": "88a2d7ef5a6c006b07cca31e3a9aee71f0c035949dff7e1bf2beb3a10e9de8fd",
-          "normalization": "binary"
+          "sha256": "486278384e67a29ba7ed447b843c98b14446c36352de96a38bb009d9f3fc0104",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "88a2d7ef5a6c006b07cca31e3a9aee71f0c035949dff7e1bf2beb3a10e9de8fd"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createcategorypc-2026-11-21.pdf",
@@ -8945,28 +9022,33 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createobjectstore-2026-11-21.pdf",
-          "sha256": "c9ac040c19eb870fc026bc0c736f6a525728a70303a439f037b717624759cc44",
-          "normalization": "binary"
+          "sha256": "afbc0d411bc3af3f306d24c09ef0dbba0126a89fe35a8ce5b2fa6dd366453fc7",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c9ac040c19eb870fc026bc0c736f6a525728a70303a439f037b717624759cc44"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createprotectionpolicy-2026-11-21.pdf",
-          "sha256": "fd90cf1c9d285fd220c54d9389b0c19edd702677fcad0da17e9878f7a1020601",
-          "normalization": "binary"
+          "sha256": "af1d796a8fb618a1df9320910d0dc133f1e1d5dacc2acacc360ae6a321709376",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "fd90cf1c9d285fd220c54d9389b0c19edd702677fcad0da17e9878f7a1020601"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createrecoveryplan-2026-11-21.pdf",
-          "sha256": "c3fdda80ef710387ff98b71ed0dc5a1cf8dcf492dc21b0e885d7384382c43a7e",
-          "normalization": "binary"
+          "sha256": "6ae8ff9a1431be68d7c231a0caa46539bacd2fe7870375eaf8572bac573ca7e7",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c3fdda80ef710387ff98b71ed0dc5a1cf8dcf492dc21b0e885d7384382c43a7e"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createrolemappingpc-2026-11-21.pdf",
-          "sha256": "c3ad958e8bc442d43d2206e7a5fa47d530dd82538aafa1fe722128156d594585",
-          "normalization": "binary"
+          "sha256": "1c690a0f27121651add7df5c72259dd555534bafeb4e459f7a2d50cd212f8f99",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c3ad958e8bc442d43d2206e7a5fa47d530dd82538aafa1fe722128156d594585"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createrolemappingpe-2026-11-21.pdf",
-          "sha256": "982294cd258b44be06d9ea53c0c5af1213c3b84825d43a6abe25eac3eb9f5d14",
-          "normalization": "binary"
+          "sha256": "72c5b07c764ad60cf9c2dd78880914d7b1f8b6366806c6b126e8bc50b653a16b",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "982294cd258b44be06d9ea53c0c5af1213c3b84825d43a6abe25eac3eb9f5d14"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createidp-2026-11-21.pdf",
@@ -8990,28 +9072,33 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createsubnetpe-2026-11-21.pdf",
-          "sha256": "8523d33550a24d47fddc2b09847b5beae9eba8ba1e4ebe20296501dc75beca66",
-          "normalization": "binary"
+          "sha256": "68279370f9f8596674549dab9757e57234846e7f7a5362f2f93d3c85980d5802",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "8523d33550a24d47fddc2b09847b5beae9eba8ba1e4ebe20296501dc75beca66"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createsubnetspc-2026-11-21.pdf",
-          "sha256": "5e90966cd35abc842b0a690c41bcfa907a68d5889f53af5e7ecf5533f5e57b57",
-          "normalization": "binary"
+          "sha256": "615cf9bb323f2bd153c17631f318a8c7f2ea22d2975c8fb31ad4bcfb5a53c8d0",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "5e90966cd35abc842b0a690c41bcfa907a68d5889f53af5e7ecf5533f5e57b57"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createvmpe-2026-11-21.pdf",
-          "sha256": "8b0459ed1097d4f9606ae0f0d6e73d2b0d2a6ac6c9e6fd81ac32ed3ccc319e3d",
-          "normalization": "binary"
+          "sha256": "83690c746e85e9a0a694a30696539f6474a41bf7a1aca0f70d7496e127fa4091",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "8b0459ed1097d4f9606ae0f0d6e73d2b0d2a6ac6c9e6fd81ac32ed3ccc319e3d"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createvmspc-2026-11-21.pdf",
-          "sha256": "c9dbf1de458d03737917aa1ad4de1f93ab5e49a407426ba490fe28e99bbe172f",
-          "normalization": "binary"
+          "sha256": "702de0ace80a60956cd9559d82b94a164d9d8f9a40a66d9c81b49f7aa225a886",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c9dbf1de458d03737917aa1ad4de1f93ab5e49a407426ba490fe28e99bbe172f"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-createvpc-2026-11-21.pdf",
-          "sha256": "379ace584c276ae029b8dea20449d4685c74b43d72d167e5a0da6269ae3bbfa8",
-          "normalization": "binary"
+          "sha256": "d74188eb044da71e1c031f01fbdd8cb54f247d9024853a4ab6656d8d70e6e3ef",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "379ace584c276ae029b8dea20449d4685c74b43d72d167e5a0da6269ae3bbfa8"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleteaddressgroups-2026-11-21.pdf",
@@ -9030,8 +9117,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleteobjectstore-2026-11-21.pdf",
-          "sha256": "b75ce5f3512ded99c0ab79afb790b819f58cdc56c1ad1abafc90b45874f629be",
-          "normalization": "binary"
+          "sha256": "3e7aae81c2973f5148c6ffb405b342054567ee3ec7d9780d3f5b47dcbbed47cb",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "b75ce5f3512ded99c0ab79afb790b819f58cdc56c1ad1abafc90b45874f629be"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-pcovadelete-2026-11-21.pdf",
@@ -9040,13 +9128,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleteprotectionpolicy-2026-11-21.pdf",
-          "sha256": "c9c13aca6e4921e0ea4e52b5c74e16e7c55f4b8795beb513879a13df6051c43e",
-          "normalization": "binary"
+          "sha256": "b88612c09b2dfd17d3c9d45bd65a7bef4e2111325ee5d47624cd0b1749c0161e",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c9c13aca6e4921e0ea4e52b5c74e16e7c55f4b8795beb513879a13df6051c43e"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deleterecoveryplan-2026-11-21.pdf",
-          "sha256": "f3705b4043bd5c79a1f80e7e0a43c02269dd55715ccf76598ff936e67aac46b1",
-          "normalization": "binary"
+          "sha256": "028f8816c98c8649c5335f01754bc62dc6e19d6fd9cae42d2b92ba69b1e3f1fa",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "f3705b4043bd5c79a1f80e7e0a43c02269dd55715ccf76598ff936e67aac46b1"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deletenetworksecuritypolicy-2026-11-21.pdf",
@@ -9085,13 +9175,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deletevpc-2026-11-21.pdf",
-          "sha256": "fbc1332ef68ada6e40817d4d77cfce0cf11e73d623c5728fa38bc4f9b2852db3",
-          "normalization": "binary"
+          "sha256": "bd24f568cebf0aab3c64453ed08c4e1f35e64b587afba7cf466724e9f8f03d58",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "fbc1332ef68ada6e40817d4d77cfce0cf11e73d623c5728fa38bc4f9b2852db3"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-deploypc-2026-11-21.pdf",
-          "sha256": "12dba9a61d6a80d14fcb09a113d809e5bfa9d88ad93edce7fe5d66f908752261",
-          "normalization": "binary"
+          "sha256": "8777981f1025558639b4bf4e3973e9d7ef7b7d1c0fff940b56ef7f66e112cfc2",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "12dba9a61d6a80d14fcb09a113d809e5bfa9d88ad93edce7fe5d66f908752261"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-disablemicrosegmentation-2026-11-21.pdf",
@@ -9105,8 +9197,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-disconnectaz-2026-11-21.pdf",
-          "sha256": "89b3c2c80f408a5e569fe20684d4afb7af41c8a95ed1595b89199a31c910609a",
-          "normalization": "binary"
+          "sha256": "7c116ee83a2b0e3566c9f17e6593506db9cf0f21c5b8de2b840b0733b64941cd",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "89b3c2c80f408a5e569fe20684d4afb7af41c8a95ed1595b89199a31c910609a"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-enabledr-2026-11-21.pdf",
@@ -9190,8 +9283,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-sharebucket-2026-11-21.pdf",
-          "sha256": "c3c7ec1810cfb1e7786c70beea1bae03e2c7b4116baf3f3be497026b7c34c211",
-          "normalization": "binary"
+          "sha256": "0c427cb5c67dde3faab09613723f91b1b1a7d5dd35821a260988ff8250e5c07e",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c3c7ec1810cfb1e7786c70beea1bae03e2c7b4116baf3f3be497026b7c34c211"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-unregisterpefrompc-2026-11-21.pdf",
@@ -9200,13 +9294,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatecvmfoundation-2026-11-21.pdf",
-          "sha256": "8c57e960676305a95f1c863881442f13e4ce7837c581846d317a47b094d3e61f",
-          "normalization": "binary"
+          "sha256": "cec2bdf81638b3310826c12cd38e2e9584d539c69434ca55e84d0bd51e93efe9",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "8c57e960676305a95f1c863881442f13e4ce7837c581846d317a47b094d3e61f"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatedsip-2026-11-21.pdf",
-          "sha256": "c0ed12ee3ef1c42e71ce358c6c02a3f91184123234b8a0bc2de0533ed3dafd0b",
-          "normalization": "binary"
+          "sha256": "f6dbc25e595b4e89934f94f4fb8418cb3b96935c3c5a447a0664f5cf9d3d31b1",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "c0ed12ee3ef1c42e71ce358c6c02a3f91184123234b8a0bc2de0533ed3dafd0b"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatepulsepc-2026-11-21.pdf",
@@ -9220,8 +9316,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-updatevpc-2026-11-21.pdf",
-          "sha256": "183686c077bd323c9bd54fc7cb033d5c499efcbdfc252b251a7f1ae060064644",
-          "normalization": "binary"
+          "sha256": "6fdd5602a5cdc82583cb47665ef1062ab14a3750348da548b8dab76db6dcfd12",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "183686c077bd323c9bd54fc7cb033d5c499efcbdfc252b251a7f1ae060064644"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-scripts-pcimageupload-2026-11-21.pdf",
@@ -9260,8 +9357,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-cluster-create-2026-11-21.pdf",
-          "sha256": "db3e51fe2fc3456416eaeb80e892e73ce98cd18ede3cbd2169507335249cd73b",
-          "normalization": "binary"
+          "sha256": "c20c836aaa53bbdbc38f72efb82c71c8c34176fed591fb1d01490d688b8450b9",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "db3e51fe2fc3456416eaeb80e892e73ce98cd18ede3cbd2169507335249cd73b"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-cluster-storage-standard-2026-11-21.pdf",
@@ -9275,13 +9373,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-config-management-pc-2026-11-21.pdf",
-          "sha256": "5165e356fcd1a56dc0f5904baf8bc987b7e25af5efbdef7bac31f52cadf19601",
-          "normalization": "binary"
+          "sha256": "1b00f7e996e5e645fd2bf29e4f779fc262dccbc137e1143937dd77fa9bf52ac0",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "5165e356fcd1a56dc0f5904baf8bc987b7e25af5efbdef7bac31f52cadf19601"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-config-pc-2026-11-21.pdf",
-          "sha256": "047f722b4768ccc4141e41d2e57d6d97e180924463478a192472e42e4e50e2ef",
-          "normalization": "binary"
+          "sha256": "0f44a451dc4adb3c0b2bd470782e1f8dea392df30c2a1cc66ea3149d6fbfaa26",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "047f722b4768ccc4141e41d2e57d6d97e180924463478a192472e42e4e50e2ef"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-cvm-idrac-password-rotation-2026-11-21.pdf",
@@ -9310,13 +9410,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-only-standalone-fca-2026-11-21.pdf",
-          "sha256": "4bd7a0f9e5127b8743d6f33d77037b2f4cdd862077f5d520ebcea106f09788f2",
-          "normalization": "binary"
+          "sha256": "c4af014eaa8d40bd159897a68b686477ed02d75defb8c14ab5ed6d8359536de6",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "4bd7a0f9e5127b8743d6f33d77037b2f4cdd862077f5d520ebcea106f09788f2"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-only-2026-11-21.pdf",
-          "sha256": "6e28215cc78a438957a1354e700df13a84885f3713a549866b41ad20b983a0d1",
-          "normalization": "binary"
+          "sha256": "a143520fc528fe46577724c5634a40b45f6a9abb0ea5a013eae1ee830cc47026",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "6e28215cc78a438957a1354e700df13a84885f3713a549866b41ad20b983a0d1"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-initial-host-cvm-password-setup-2026-11-21.pdf",
@@ -9335,8 +9437,9 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-ndb-2026-11-21.pdf",
-          "sha256": "6f1806afe8681dcc55871d8e25b19acd179b117d2c332dbf058124cf4ee39b69",
-          "normalization": "binary"
+          "sha256": "111cbe96cc1d1a4a5a798f10f14abc5c2dd5b57bc9426947547dcf2d883bebe3",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "6f1806afe8681dcc55871d8e25b19acd179b117d2c332dbf058124cf4ee39b69"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-pe-certificate-baseline-2026-11-21.pdf",
@@ -9355,13 +9458,15 @@
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-pod-config-2026-11-21.pdf",
-          "sha256": "f58693ba711c5ffdadab8b966db16ec2de7f42ebe3ae47682f5272d40b9c1922",
-          "normalization": "binary"
+          "sha256": "549b928c9cfa955c56501fc881ff3c90f5c64a4fee6dcad1c7ff389acd420bb5",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "f58693ba711c5ffdadab8b966db16ec2de7f42ebe3ae47682f5272d40b9c1922"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-standalone-fca-2026-11-21.pdf",
-          "sha256": "9638a121952a2bcd801807ed3c39ab890362de280c109eb60e90436419b6aeaa",
-          "normalization": "binary"
+          "sha256": "18115889463574c7371cedc512dfbcb27fca8947b68fbb9bb217d937d39bcf60",
+          "normalization": "binary",
+          "beforeAddressAnonymisationSha256": "9638a121952a2bcd801807ed3c39ab890362de280c109eb60e90436419b6aeaa"
         },
         {
           "path": "docs/manuals/current/ZTF-Orchestrator-quick-guides-workflows-imaging-2026-11-21.pdf",
@@ -9388,7 +9493,8 @@
           "sha256": "0842e1fb4a83c3c6e6cafe3902e681833010c1a949aecfde28d290aa7c98bc97",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "ahv-uplink-migration-previous-2026-11-21",
@@ -9424,5 +9530,9 @@
         }
       ]
     }
-  ]
+  ],
+  "addressAnonymisation": {
+    "date": "2026-11-22",
+    "scope": "Current and historical collection downloads; TEST-NET illustrations; original edition labels, layout and attribution retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks retain their technical meaning."
+  }
 }

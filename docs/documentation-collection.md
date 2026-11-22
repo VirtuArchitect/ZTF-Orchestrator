@@ -368,7 +368,9 @@ Browse the [documentation website](https://virtuarchitect.github.io/ZTF-Orchestr
 - [Remote AHV deployment design](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=remote-ahv-deployment-design) describes central orchestration and site-local Foundation VM imaging, with current implementation and qualification boundaries.
 - [Remote AHV pilot test plan](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=remote-ahv-pilot-test-plan) is a source-aligned pilot template, not a completed validation record.
 
-Original Word/PDF artifacts remain unchanged. Superseded local variants, private configuration packs and dated lab evidence are not presented as current public operating instructions. Source provenance and dispositions are recorded in the collection register.
+Address examples in current and historical downloads were anonymised on 22 November 2026. Original covers, layout, edition labels and John Goulden attribution remain; publication manifests retain the original hashes.
+
+Superseded local variants, private configuration packs and dated lab evidence are not presented as current public operating instructions. Source provenance and dispositions are recorded in the collection register.
 
 ## Collection maintenance and simulator references
 

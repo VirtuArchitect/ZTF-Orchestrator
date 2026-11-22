@@ -3,6 +3,13 @@
 Reviewed 20 November 2026 against application source
 `79c3eccde1a0361ddfb49850e78c732217980f26`.
 
+Address revision, 22 November 2026: current and historical collection downloads
+now use documentation-only address examples, including embedded screenshots.
+The validation findings below describe the original 20/21 November editions.
+Original byte comparisons remain historical evidence; current checksums and
+before-revision hashes are recorded separately in the publication manifests.
+Original covers, layout, source labels and John Goulden attribution are retained.
+
 ## Cover and format correction on 21 November 2026
 
 The corrected **Branded** editions restore the unchanged standard Operational
