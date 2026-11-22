@@ -55,9 +55,9 @@ the exact files; see the [earlier validation record](../quick-guides/VALIDATION-
 
 ## Earlier combined Administrator and User Guide downloads
 
-[Download the illustrated PDF guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
+[Download the illustrated PDF guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx)
 
-The **19 November 2026** release assets record the earlier publication. Maintained downloads now include the **22 November 2026** address anonymisation and operational-experience revisions and have refreshed checksums below. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).
+The **22 November 2026** Word/PDF release assets are exact copies of the verified maintained guide, including the agreed operator-reported wording, all three Foundation deployment workflows and revised video ZIP links. Verify both files with the [guide SHA-256 checksums](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22-SHA256SUMS.txt). The **19 November 2026** release assets remain historical snapshots. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).
 
 The maintained **156-page** guide was reviewed **19 November 2026** against application source `f33c9ed` and repository/README revision `27d28a2`. **v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable.** The maintained repository filenames are unchanged.
 

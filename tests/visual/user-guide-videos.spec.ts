@@ -6,8 +6,8 @@ for (const width of [1440, 390]) {
     test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
     await page.setViewportSize({ width, height: 1000 })
     const manuals = {
-      pdf: 'https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf',
-      word: 'https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx',
+      pdf: 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf',
+      word: 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx',
     }
     for (const route of ['./', 'tutorials/']) {
       await page.goto(route)
@@ -18,6 +18,7 @@ for (const width of [1440, 390]) {
         await expect(link).toHaveAttribute('href', manuals[kind])
         await expect(link).toContainText(kind === 'pdf' ? /PDF/ : /Word/)
       }
+      await expect(page.locator('#guide-pdf-preview')).toHaveAttribute('href', 'https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf')
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
     }
   })

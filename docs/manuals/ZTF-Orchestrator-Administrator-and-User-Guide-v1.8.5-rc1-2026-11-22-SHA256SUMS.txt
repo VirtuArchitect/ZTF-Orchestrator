@@ -1,0 +1,2 @@
+9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a  ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf
+92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8  ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx
