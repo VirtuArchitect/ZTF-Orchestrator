@@ -73,6 +73,35 @@ def test_manual_original_release_provenance_and_current_downloads():
     assert actual_sums == expected_sums
 
 
+def test_current_guide_release_assets_are_exact_verified_repository_copies():
+    folder = ROOT / 'docs/manuals'
+    manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
+    release = manifest['currentReleaseDownloads']
+    assert release['published'] == '2026-11-22'
+    assert re.fullmatch(r'[a-f0-9]{40}', release['sourceRevision'])
+    prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/' + release['releaseTag'] + '/'
+    expected = {}
+    for kind, row in release['files'].items():
+        source = folder / row['source']
+        assert source.name == row['source']
+        assert row['asset'] == source.stem + '-' + release['published'] + source.suffix
+        assert row['url'] == prefix + row['asset'] == manifest['currentDownloads']['files'][kind]['url']
+        assert row['sha256'] == manifest['files'][source.name] == hashlib.sha256(source.read_bytes()).hexdigest()
+        assert row['bytes'] == source.stat().st_size
+        assert manifest['repositoryDownloads']['files'][kind]['sha256'] == row['sha256']
+        assert manifest['repositoryDownloads']['files'][kind]['url'] != row['url']
+        expected[row['asset']] = row['sha256']
+    checksum = release['checksums']
+    assert checksum['url'] == prefix + checksum['asset']
+    payload = (folder / checksum['asset']).read_bytes()
+    assert len(payload) == checksum['bytes']
+    assert hashlib.sha256(payload).hexdigest() == checksum['sha256']
+    assert {name: digest for digest, name in
+            (line.split('  ', 1) for line in payload.decode('ascii').splitlines())} == expected
+    assert checksum['url'] in (folder / 'README.md').read_text(encoding='utf-8')
+    assert manifest['releaseDownloads']['published'] == '2026-11-19'
+
+
 def test_complete_video_zip_release_links_match_the_current_media_snapshot():
     download = json.loads((ROOT / 'docs/user-guide-video-download.json').read_text(encoding='utf-8'))
     media = ROOT / 'docs/assets/user-guide-videos'

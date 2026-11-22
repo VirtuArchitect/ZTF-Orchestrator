@@ -82,16 +82,24 @@
     "files": {
       "pdf": {
         "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
-        "url": "https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
+        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf",
         "sha256": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a",
-        "bytes": 10864119
+        "bytes": 10864119,
+        "asset": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf"
       },
       "word": {
         "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
-        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
+        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx",
         "sha256": "92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8",
-        "bytes": 13615179
+        "bytes": 13615179,
+        "asset": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx"
       }
+    },
+    "checksums": {
+      "asset": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22-SHA256SUMS.txt",
+      "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22-SHA256SUMS.txt",
+      "bytes": 277,
+      "sha256": "8260eb98ba2b25fbc5b0cf25f688492f07a1285f6f23cf6f73b6677b73a56447"
     }
   },
   "operationalExperienceUpdate": {
@@ -158,5 +166,49 @@
       "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10"
     },
     "liveActionsExecuted": false
+  },
+  "repositoryDownloads": {
+    "published": "2026-11-22",
+    "files": {
+      "pdf": {
+        "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
+        "url": "https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
+        "sha256": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a",
+        "bytes": 10864119
+      },
+      "word": {
+        "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
+        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
+        "sha256": "92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8",
+        "bytes": 13615179
+      }
+    }
+  },
+  "currentReleaseDownloads": {
+    "published": "2026-11-22",
+    "releaseTag": "v1.8.5-rc1",
+    "sourceRevision": "589bf424eaa7b8039c2286abe72afedd80148f43",
+    "files": {
+      "pdf": {
+        "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
+        "asset": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf",
+        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.pdf",
+        "bytes": 10864119,
+        "sha256": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a"
+      },
+      "word": {
+        "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
+        "asset": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx",
+        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22.docx",
+        "bytes": 13615179,
+        "sha256": "92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8"
+      }
+    },
+    "checksums": {
+      "asset": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22-SHA256SUMS.txt",
+      "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-22-SHA256SUMS.txt",
+      "bytes": 277,
+      "sha256": "8260eb98ba2b25fbc5b0cf25f688492f07a1285f6f23cf6f73b6677b73a56447"
+    }
   }
 }

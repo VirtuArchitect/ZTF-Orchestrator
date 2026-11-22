@@ -1,3 +1,6 @@
+GUIDE RELEASE DOWNLOADS (22 November 2026)
+The verified Administrator and User Guide Word/PDF are available as dated GitHub prerelease assets with a SHA-256 checksum file. Primary download links point to these exact copies. Earlier release assets and repository/PDF preview copies remain available; no guide content, formatting, application or appliance behavior changes.
+
 ADMINISTRATOR AND USER GUIDE REFRESH (22 November 2026)
 The maintained Word/PDF use the agreed operator-reported wording, distinguish classic Foundation VM, PC-associated Foundation Central and standalone FCA, and link the revised 23-part video ZIP and checksum. The original edition/review, 156 pages, 54 tables, 83 illustrations and download paths are retained. Only four intended PDF pages change. No runtime, appliance or live-cluster behavior changes.
 
