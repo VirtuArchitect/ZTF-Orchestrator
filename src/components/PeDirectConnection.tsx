@@ -1,4 +1,5 @@
 import PeTlsOptions, { deploymentPeTls } from './PeTlsOptions'
+export type CredentialReference = { reference: string; username: string }
 export type ClusterConnection = {
   pc_endpoint: string; pc_credential: string; pe_endpoint: string; pe_credential: string; cluster_uuid: string
   mode?: 'pe-direct' | 'pc'; verify_tls?: boolean; tls_bypass_reason?: string
@@ -45,10 +46,21 @@ export function transportSummary(content: string | undefined, value: ClusterConn
     : `Prism Central managed · PC TLS verified · ${selected.pe_verify_tls === false ? 'PE TLS verification bypassed for this run · ' + selected.pe_tls_bypass_reason : 'PE TLS certificate verified'}`
 }
 
-export default function PeDirectConnection({ value, onChange, disabled, cvm = false, recoveryTls = false, allowPc = true }: {
+export default function PeDirectConnection({ value, onChange, disabled, cvm = false, recoveryTls = false, allowPc = true, credentialReferences }: {
   value: ClusterConnection; onChange: (patch: Partial<ClusterConnection>) => void; disabled: boolean; cvm?: boolean; recoveryTls?: boolean; allowPc?: boolean
+  credentialReferences?: CredentialReference[]
 }) {
   const direct = value.mode === 'pe-direct'
+  const credentialSelect = (key: 'pe_credential' | 'pc_credential' | 'cvm_credential') => {
+    const choices = (credentialReferences || []).filter(item => key !== 'cvm_credential' || item.username === 'nutanix')
+    const selected = String(value[key] || '')
+    return <select aria-label={{ pe_credential: 'PE credential reference', pc_credential: 'PC credential reference', cvm_credential: 'CVM credential reference' }[key]}
+      className="input mt-1" value={selected} onChange={e => onChange({ [key]: e.target.value })}>
+      <option value="">Select saved credential reference</option>
+      {selected && !choices.some(item => item.reference === selected) && <option value={selected} disabled>{selected} — unavailable for this field; select a saved reference</option>}
+      {choices.map(item => <option key={item.reference} value={item.reference}>{item.reference} — {item.username || 'username not declared'}</option>)}
+    </select>
+  }
   const fields: [keyof ClusterConnection, string][] = [
     ...(!direct ? [['pc_endpoint', 'Prism Central HTTPS endpoint'], ['pc_credential', 'PC credential reference']] as [keyof ClusterConnection, string][] : []),
     ['pe_endpoint', 'Prism Element HTTPS endpoint'], ['pe_credential', 'PE credential reference'], ['cluster_uuid', 'Expected cluster UUID'],
@@ -60,8 +72,10 @@ export default function PeDirectConnection({ value, onChange, disabled, cvm = fa
       <option value="pe-direct">PE direct — no Prism Central</option>{allowPc && <option value="pc">Prism Central managed</option>}
     </select></label>
     <div className="grid gap-4 md:grid-cols-2">{fields.map(([key, label]) => <label className="block" key={key}>{label}
-      <input className="input mt-1" autoComplete="off" value={String(value[key] || '')} onChange={e => onChange({ [key]: e.target.value })} />
+      {credentialReferences !== undefined && (key === 'pe_credential' || key === 'pc_credential') ? credentialSelect(key)
+        : <input className="input mt-1" autoComplete="off" value={String(value[key] || '')} onChange={e => onChange({ [key]: e.target.value })} />}
     </label>)}</div>
+    {credentialReferences !== undefined && <p className="text-sm">Choose the PE account with Prism administrator permissions. Options show reference — username; passwords are never included. CVM SSH uses the separate nutanix account.</p>}
     {!direct && <PeTlsOptions value={{ pe_verify_tls: value.pe_verify_tls !== false, pe_tls_bypass_reason: value.pe_tls_bypass_reason || '' }} onChange={onChange} disabled={disabled} />}
     {direct && <>
       {recoveryTls && <p className="text-sm">PE certificate verification is optional. New deployment and recovery drafts use a per-run exception so self-signed certificates do not block discovery. Enable verification when the PE certificate is trusted. Saved drafts retain their selected setting.</p>}
@@ -74,8 +88,8 @@ export default function PeDirectConnection({ value, onChange, disabled, cvm = fa
       </>}
       {cvm && <>
         <p className="text-sm">Cluster-local uplink changes use manage_ovs over pinned CVM SSH, one host at a time. vs1 maps to OVS bridge br1. Existing CVM-to-AHV SSH trust is also required.</p>
-        <label className="block">CVM credential reference<input className="input mt-1" autoComplete="off" value={value.cvm_credential || ''}
-          onChange={e => onChange({ cvm_credential: e.target.value })} /></label>
+        <label className="block">CVM credential reference{credentialReferences !== undefined ? credentialSelect('cvm_credential')
+          : <input className="input mt-1" autoComplete="off" value={value.cvm_credential || ''} onChange={e => onChange({ cvm_credential: e.target.value })} />}</label>
         <label className="block">CVM SSH host keys by IP as JSON<textarea className="input mt-1 w-full font-mono" rows={4}
           placeholder={'{"192.0.2.21":"SHA256:verifiedFingerprint"}'} value={typeof value.cvm_host_keys === 'string'
             ? value.cvm_host_keys : JSON.stringify(value.cvm_host_keys || {}, null, 2)}

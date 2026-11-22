@@ -1,3 +1,6 @@
+UPLINK CREDENTIAL SELECTORS (new consolidated builds; existing appliance bundles unchanged)
+Global Config reference/username dropdowns replace uplink PE/PC and CVM text inputs. CVM choices identify nutanix. Missing saved values stay visible for correction; loading, empty or failed catalogues block discovery with refresh guidance. The additive admin-only GET /api/ahv-uplink-migration/credentials returns declarations only, never passwords, tokens or remote secret values. Approval, pipeline and recovery behavior is unchanged.
+
 UPLINK DISCOVERY FEEDBACK (new consolidated builds; existing bundles unchanged)
 AHV Uplink Migration explains disabled Continue, missing inputs and stale discovery, reports Running/Passed/Failed with elapsed time and per-host counts, and exposes discovery HTTP errors with retry guidance. No automatic discovery, approval or cluster changes.
 
