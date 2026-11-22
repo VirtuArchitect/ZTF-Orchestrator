@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased source
+- Select uplink PE/PC and CVM credentials from saved Global Config references with usernames. CVM choices match the required nutanix account; missing references and unavailable catalogues block discovery without replacing drafts or changing approvals. The admin-only catalogue returns no secrets.
 - Explain disabled uplink assignment, show discovery Running/Passed/Failed with elapsed time, per-host inventory and HTTP errors, and clear stale inventory before a refresh. Existing approvals and execution gates remain unchanged.
 
 

@@ -82,6 +82,8 @@ approval remain in the existing workflow and pipeline paths.
 
 AHV Uplink Migration explains why Continue is disabled and shows read-only discovery progress, host/NIC results and actionable HTTP errors. See [discovery feedback](docs/ahv-uplink-migration.md#discovery-and-continue-feedback).
 
+AHV Uplink Migration uses Global Config credential dropdowns showing reference and username. CVM options use the required nutanix SSH account; catalogue refresh and selection do not authenticate or submit changes. Earlier appliance bundles retain their original controls until updated.
+
 | Workflow | Connection and operating boundary |
 |---|---|
 | [Create Virtual Switch](docs/create-virtual-switch.md) | Separate PE-direct action to create an empty AHV bridge per host; preflight, approval and readback preserve all physical NIC assignments. Live application available with approvals |

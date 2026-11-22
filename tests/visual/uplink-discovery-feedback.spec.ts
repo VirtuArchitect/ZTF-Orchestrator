@@ -26,6 +26,9 @@ async function setup(page: Page, outcomes: ('success' | 'failed' | 'empty')[] = 
       if (outcome === 'failed') return route.fulfill({ status: 403, json: { error: 'CVM SSH host-key verification failed.' } })
       return route.fulfill({ json: outcome === 'empty' ? { ...inventory, hosts: [] } : inventory })
     }
+    if (path === base + '/credentials') return route.fulfill({ json: { references: [
+      { reference: 'pe_ref', username: 'admin' }, { reference: 'cvm_ref', username: 'nutanix' }, { reference: 'pc_ref', username: 'admin' },
+    ] } })
     if (path === base) return route.fulfill({ json: { applyEnabled: true } })
     if (path === '/api/operations') return route.fulfill({ json: { clusters: [] } })
     return route.fulfill({ json: {} })
@@ -36,9 +39,9 @@ async function setup(page: Page, outcomes: ('success' | 'failed' | 'empty')[] = 
 
 async function fill(page: Page) {
   await page.getByLabel('Prism Element HTTPS endpoint', { exact: true }).fill('https://pe.example.com:9440')
-  await page.getByLabel('PE credential reference', { exact: true }).fill('pe_ref')
+  await page.getByLabel('PE credential reference', { exact: true }).selectOption('pe_ref')
   await page.getByLabel('Expected cluster UUID').fill(cluster)
-  await page.getByLabel('CVM credential reference').fill('cvm_ref')
+  await page.getByLabel('CVM credential reference').selectOption('cvm_ref')
   await page.getByLabel('CVM SSH host keys by IP as JSON').fill(JSON.stringify(Object.fromEntries([1, 2, 3].map(i => [`192.0.2.${i}`, 'SHA256:' + 'A'.repeat(43)]))))
 }
 

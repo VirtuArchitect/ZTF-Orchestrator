@@ -24,6 +24,9 @@ test(mode + ' - assigns physical NICs per host and submits only the exact approv
     if (path === '/api/operations') return route.fulfill({ json: { clusters: [{
       id: 'cluster-1', expectedUuid: cluster, name: 'LAB-AHV-01', peEndpoint: 'https://pe.example.com:9440', peCredential: 'pe_ref',
     }] } })
+    if (path === base + '/credentials') return route.fulfill({ json: { references: [
+      { reference: 'pe_ref', username: 'admin' }, { reference: 'cvm_ref', username: 'nutanix' }, { reference: 'pc_ref', username: 'admin' },
+    ] } })
     if (path === base) return route.fulfill({ json: { applyEnabled: true } })
     if (path === base + '/discover') {
       const body = route.request().postDataJSON()
@@ -61,7 +64,7 @@ test(mode + ' - assigns physical NICs per host and submits only the exact approv
   await page.getByLabel('Connection mode').selectOption('pc')
   await expect(page.getByLabel('Verify PE TLS certificate (optional)', { exact: true })).not.toBeChecked()
   await page.getByLabel('Prism Central HTTPS endpoint').fill('https://pc.example.com:9440')
-  await page.getByLabel('PC credential reference').fill('pc_ref')
+  await page.getByLabel('PC credential reference').selectOption('pc_ref')
   } else {
     await expect(page.getByLabel('Prism Central HTTPS endpoint')).toHaveCount(0)
     await expect(page.getByLabel('Verify PE TLS certificate')).not.toBeChecked()
@@ -71,7 +74,7 @@ test(mode + ' - assigns physical NICs per host and submits only the exact approv
     await page.getByLabel('Connection mode').selectOption('pe-direct')
     await expect(page.getByLabel('Verify PE TLS certificate')).not.toBeChecked()
     await page.getByLabel('Verify PE TLS certificate').check()
-    await page.getByLabel('CVM credential reference').fill('cvm_ref')
+    await page.getByLabel('CVM credential reference').selectOption('cvm_ref')
     await page.getByLabel('CVM SSH host keys by IP as JSON').fill(JSON.stringify(Object.fromEntries(
       ['192.0.2.21', '192.0.2.22', '192.0.2.23'].map(ip => [ip, 'SHA256:' + 'A'.repeat(43)]))))
     await page.getByLabel('Verify PE TLS certificate').uncheck()

@@ -4,7 +4,7 @@ import { operationsRequest, type Operations } from '../components/ClusterOperati
 import { Link } from '../router'
 import { useStore } from '../store'
 import { apiFetch } from '../utils/api'
-import PeDirectConnection, { initialPeConnection, deploymentRecoveryTls, connectionPayload, connectionReady, transportSummary, type ClusterConnection } from '../components/PeDirectConnection'
+import PeDirectConnection, { initialPeConnection, deploymentRecoveryTls, connectionPayload, connectionReady, transportSummary, type ClusterConnection, type CredentialReference } from '../components/PeDirectConnection'
 
 const base = '/api/ahv-uplink-migration'
 const steps = ['Select cluster', 'Assign uplinks', 'Preflight', 'Review & approve', 'Apply & verify']
@@ -86,10 +86,22 @@ export default function AhvUplinkMigration() {
   const [notice, setNotice] = useState('')
   const [discovery, setDiscovery] = useState<Discovery>(() => ({ state: draft.inventory ? 'passed' : 'idle' }))
   const [discoverySeconds, setDiscoverySeconds] = useState(0)
+  const [credentials, setCredentials] = useState<CredentialReference[]>([])
+  const [credentialState, setCredentialState] = useState<'loading' | 'ready' | 'failed'>('loading')
+  const [credentialRefresh, setCredentialRefresh] = useState(0)
   const { connection, destination, inventory, move, plan, approval, jobId, reviewed, step } = draft
   const stepper = useRef<HTMLOListElement>(null)
 
   useEffect(() => { stepper.current?.scrollIntoView({ block: 'start' }) }, [step])
+  useEffect(() => {
+    let cancelled = false
+    setCredentialState('loading')
+    void request<{ references: CredentialReference[] }>(base + '/credentials').then(result => {
+      if (!Array.isArray(result.references) || !result.references.every(item => item && typeof item.reference === 'string' && typeof item.username === 'string')) throw new Error('Invalid catalogue')
+      if (!cancelled) { setCredentials(result.references); setCredentialState('ready') }
+    }).catch(() => { if (!cancelled) { setCredentials([]); setCredentialState('failed') } })
+    return () => { cancelled = true }
+  }, [credentialRefresh])
   useEffect(() => {
     if (discovery.state !== 'running') return
     const started = Date.now()
@@ -182,9 +194,16 @@ export default function AhvUplinkMigration() {
   const total = Object.values(current).reduce((sum, nics) => sum + nics.length, 0)
   const migrating = Object.values(move).reduce((sum, ports) => sum + ports.length, 0)
   const expectedConfirmation = `APPLY UPLINKS ${connection.cluster_uuid.toLowerCase()}`
+  const credentialBlocker = credentialState === 'loading' ? 'Loading saved credential references from Global Config.'
+    : credentialState === 'failed' ? 'Credential catalogue unavailable. Review Global Config, then refresh credentials.'
+    : !credentials.length ? 'No saved credential references. Add credentials in Global Config, save to ZTF, then refresh credentials.'
+    : !credentials.some(item => item.reference === connection.pe_credential && item.username) ? 'Select a saved PE credential reference with a declared username.'
+    : connection.mode === 'pe-direct' && !credentials.some(item => item.reference === connection.cvm_credential && item.username === 'nutanix') ? 'Select a saved CVM credential reference for the nutanix SSH account.'
+    : connection.mode !== 'pe-direct' && !credentials.some(item => item.reference === connection.pc_credential && item.username) ? 'Select a saved PC credential reference with a declared username.' : ''
   const missingDiscoveryInputs = discoveryRequirements(connection)
   const continueBlocker = discovery.state === 'running' ? 'Discovery is running. Wait for host and uplink results before continuing.'
     : busy ? 'Wait for the current operation to finish.'
+    : credentialBlocker ? credentialBlocker
     : !connectionReady(connection, true) ? 'Complete the cluster connection details listed above, then run Discover cluster (read-only).'
     : discovery.state === 'failed' ? 'Discovery failed. Resolve the reported error and retry Discover cluster (read-only).'
     : !inventory?.hosts.length ? discovery.state === 'stale'
@@ -218,9 +237,17 @@ export default function AhvUplinkMigration() {
               </select>
             </label>
             <label className="block">Source switch<input className="input mt-1" readOnly value="br0 (vs0)" /></label>
-            <PeDirectConnection value={connection} onChange={updateConnection} disabled={busy} cvm recoveryTls />
+            <div className="md:col-span-2 space-y-2" aria-label="Saved credential catalogue">
+              <p role="status">{credentialBlocker || 'Saved credential references loaded. Selection does not test authentication.'}</p>
+              <Link to="/global-config" className="text-blue-500 underline">Open Global Config</Link>
+              <button className="btn-secondary ml-3" disabled={busy || credentialState === 'loading'} onClick={() => {
+                if (inventory) updateConnection({})
+                setCredentialRefresh(value => value + 1)
+              }}>Refresh credentials</button>
+            </div>
+            <PeDirectConnection value={connection} onChange={updateConnection} disabled={busy || credentialState === 'loading'} credentialReferences={credentials} cvm recoveryTls />
           </div>
-          <button className="btn-secondary" disabled={busy || !connectionReady(connection, true)}
+          <button className="btn-secondary" disabled={busy || Boolean(credentialBlocker) || !connectionReady(connection, true)}
             aria-describedby="uplink-discovery-feedback" onClick={() => void discoverCluster()}>
             {discovery.state === 'running' ? 'Discovering cluster…' : 'Discover cluster (read-only)'}</button>
           <section id="uplink-discovery-feedback" aria-label="Cluster discovery" aria-busy={discovery.state === 'running'}
