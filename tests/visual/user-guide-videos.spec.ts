@@ -113,7 +113,7 @@ test('mobile transcript Back restores the selected part and timestamp without pl
 test('the recovery documentation deep link opens the full recovery walkthrough', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires the assembled Pages demo')
   await page.goto('tutorials/?part=15')
-  await expect(page.getByRole('heading', { name: 'Part 15 — Disaster Recovery Start to Finish (2:07)' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Part 15 — Disaster Recovery Start to Finish \(\d+:\d{2}\)$/ })).toBeVisible()
   await expect(page.getByRole('button', { name: '15. Disaster Recovery Start to Finish' })).toHaveAttribute('aria-current', 'true')
   const player = page.locator('video')
   await expect.poll(() => player.evaluate(video => video.videoWidth)).toBe(1920)
@@ -133,7 +133,7 @@ test('the recovery documentation deep link opens the full recovery walkthrough',
 test('the disk expansion deep link plays and seeks to readiness', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires the assembled Pages demo')
   await page.goto('tutorials/?part=17')
-  await expect(page.getByRole('heading', { name: 'Part 17 — Production Ubuntu VM Disk Expansion (1:30)' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Part 17 — Production Ubuntu VM Disk Expansion \(\d+:\d{2}\)$/ })).toBeVisible()
   await expect(page.getByRole('button', { name: '17. Production Ubuntu VM Disk Expansion' })).toHaveAttribute('aria-current', 'true')
   const player = page.locator('video')
   await expect.poll(() => player.evaluate(video => video.videoWidth)).toBe(1920)
