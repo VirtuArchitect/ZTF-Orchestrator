@@ -19,13 +19,13 @@
       ],
       "archived": false,
       "pages": 13,
-      "bytes": 1459651,
-      "sha256": "473fb8a8664cd92b6b90503df11ed693b1434a07b944b39376c4cde58fa788ec",
+      "bytes": 1464176,
+      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
       "sourceDocument": "docs/documentation-collection.md",
       "inputSources": [
         {
           "path": "docs/documentation-collection.md",
-          "sha256": "d73dff73bd72da3f71404d175d9e7e1043106912980b9e554bca5c66186072ca",
+          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
           "normalization": "utf8-lf"
         },
         {
@@ -37,7 +37,9 @@
       "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-21",
+      "beforeAddressAnonymisationSha256": "473fb8a8664cd92b6b90503df11ed693b1434a07b944b39376c4cde58fa788ec",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "architecture-data-flow",

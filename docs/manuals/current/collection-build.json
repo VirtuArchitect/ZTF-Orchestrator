@@ -5,11 +5,11 @@
     {
       "id": "collection-overview",
       "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
-      "sha256": "473fb8a8664cd92b6b90503df11ed693b1434a07b944b39376c4cde58fa788ec",
+      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
       "inputSources": [
         {
           "path": "docs/documentation-collection.md",
-          "sha256": "d73dff73bd72da3f71404d175d9e7e1043106912980b9e554bca5c66186072ca",
+          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
           "normalization": "utf8-lf"
         },
         {
@@ -17,7 +17,8 @@
           "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
           "normalization": "binary"
         }
-      ]
+      ],
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "id": "architecture-data-flow",
