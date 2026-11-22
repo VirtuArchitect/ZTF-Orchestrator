@@ -250,6 +250,11 @@ def test_published_manual_checksums_match_current_reference():
     path = folder / 'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx'
     with ZipFile(path) as archive:
         root = ElementTree.fromstring(archive.read('word/document.xml'))
+    text = ''.join(root.itertext())
+    assert '40+ successful cluster deployments with pipeline post-configuration' in text
+    assert '20+ successful cluster recoveries' in text
+    assert 'As of 22 November 2026, operators report' in text
+    assert 'Workload restoration remains a backup-platform handoff.' in text
     ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
           'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'}
     assert len(root.findall('.//w:tbl', ns)) == manifest['tables']

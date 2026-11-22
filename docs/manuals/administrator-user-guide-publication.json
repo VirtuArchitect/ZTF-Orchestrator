@@ -28,8 +28,8 @@
   "liveActionsExecuted": false,
   "exporter": "Microsoft Word 16; read-only PDF export; existing fields and linked contents preserved",
   "files": {
-    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "9c076d44baeb63b7aa171045e2d3755034ae4921608bf78acbed64aedb5d0a9b",
-    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78"
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26",
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10"
   },
   "videoLinkUpdate": {
     "reviewed": "2026-11-19",
@@ -86,15 +86,42 @@
       "pdf": {
         "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
         "url": "https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
-        "sha256": "a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78",
-        "bytes": 10555235
+        "sha256": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10",
+        "bytes": 10650109
       },
       "word": {
         "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
         "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
-        "sha256": "9c076d44baeb63b7aa171045e2d3755034ae4921608bf78acbed64aedb5d0a9b",
-        "bytes": 13615109
+        "sha256": "2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26",
+        "bytes": 13615086
       }
     }
+  },
+  "operationalExperienceUpdate": {
+    "date": "2026-11-22",
+    "repositorySource": "9daa5fc30cf10056d6b64e20b1f1f0ed3682993b",
+    "evidenceCategory": "Operator-reported operational experience confirmed by the maintainer",
+    "successfulClusterDeployments": "40+",
+    "pipelinePostConfiguration": true,
+    "successfulClusterRecoveries": "20+",
+    "page": 14,
+    "scope": "Existing operational-experience paragraph only; original application review, edition and screenshot provenance retained",
+    "changedDocxParts": [
+      "word/document.xml"
+    ],
+    "wordExportChangedPages": [
+      14
+    ],
+    "pixelComparedPages": 156,
+    "pixelChangedPages": [
+      14
+    ],
+    "unchangedPublishedPages": 155,
+    "beforeFiles": {
+      "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "9c076d44baeb63b7aa171045e2d3755034ae4921608bf78acbed64aedb5d0a9b",
+      "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78"
+    },
+    "liveActionsExecuted": false,
+    "pdfMethod": "Microsoft Word read-only before/after exports; only changed page content/resources transferred into the maintained PDF to preserve all other pages and existing navigation"
   }
 }
