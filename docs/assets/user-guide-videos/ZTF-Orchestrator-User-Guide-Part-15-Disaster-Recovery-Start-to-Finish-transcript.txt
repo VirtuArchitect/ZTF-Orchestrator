@@ -1,3 +1,5 @@
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
+
 Recovering Cluster A begins with a trusted Orchestrator, approved images and reviewed configuration. This is a simulated walkthrough, not an actual rebuild. Add or select the recovery datacenter, review prerequisites, and link one Foundation VM YAML with the intended post-configuration pipeline.
 
 Create the recovery profile and inspect its revision, exact nodes, image selections, credentials and ordered pipeline. Mark the baseline reviewed through the existing controls. An edited profile creates a new draft; an existing run keeps its original snapshot. No physical deployment happens while preparing these records.

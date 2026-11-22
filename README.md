@@ -9,8 +9,7 @@ Nutanix infrastructure from reviewed profiles through one web console.
 
 **Operational experience — operator-reported, 22 November 2026:**
 
-- **40+ successful cluster deployments with pipeline post-configuration.**
-- **20+ successful cluster recoveries.**
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
 
 These results reflect the configurations used in those deployments and recoveries,
 separately from the simulated demo and automated tests. Recovery covers cluster
@@ -327,8 +326,8 @@ and English captions, including YAML Studio, PE-direct uplink/DARE and specialis
 configuration. Corrected visuals retain the existing Joanna audio, English captions
 and chapter timing.
 
-[Download the complete corrected 23-part video ZIP (84 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip)
-| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256). Includes the offline player, transcripts,
+[Download the complete revised 23-part video ZIP (81 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip)
+| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). Includes the offline player, transcripts,
 English SRT/VTT captions and chapter files. Extract the ZIP, then open `index.html`.
 
 See [video transcripts and captions](docs/user-guide-videos.md).

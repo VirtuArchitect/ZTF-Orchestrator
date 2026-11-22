@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewed": "19 November 2026",
   "sourceRevision": "381ca3ffb0766a10dba2daa239ac042d0c532230",
-  "scope": "Remaining 22 picture tracks after the Part 06 correction",
+  "scope": "Historical 19 November picture/caption audit. Revised narration and Foundation graphics in Parts 00, 02, 03, 04 and 15, and anonymised Part 08, are covered by Update-verification.json and series-manifest.json. Baseline hashes are retained in baselineVerification.",
   "method": "Chapter narration and aligned sentence text compared with decoded semantic visual states; corrected states received a second visual review. This is not a complete independent audio listening or every-video-frame semantic review.",
   "reviewedParts": [
     0,

@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-22",
+  "seriesParts": 23,
+  "priorCompleteSeriesVisualSamplesAndPosters": 2389,
+  "finalRevisedVisualSamplesAndPosters": 738,
+  "sampling": "One decoded frame per second for six revised recordings, plus all 23 posters; prior whole-series audit retained for the 17 byte-identical recordings. OCR with source review, not every-frame or independent listening assurance.",
+  "unresolvedIdentifyingLabelsPrivatePathsNonExampleAddressesOrSupersededCountCandidates": 0,
+  "newScenes": "Generic product descriptions and no customer identifiers",
+  "part08": "Retained documentation-only addresses in simulated UI captures",
+  "noLiveInfrastructureAccess": true,
+  "listeningReview": "not_performed"
+}

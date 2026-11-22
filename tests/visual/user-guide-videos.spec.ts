@@ -5,14 +5,17 @@ for (const width of [1440, 390]) {
   test(`landing and video pages link the current PDF and Word manual at ${width}px`, async ({ page }) => {
     test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
     await page.setViewportSize({ width, height: 1000 })
-    const prefix = 'https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.'
+    const manuals = {
+      pdf: 'https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf',
+      word: 'https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx',
+    }
     for (const route of ['./', 'tutorials/']) {
       await page.goto(route)
-      for (const [kind, suffix] of [['pdf', 'pdf'], ['word', 'docx']]) {
+      for (const kind of ['pdf', 'word'] as const) {
         const link = page.locator(`#admin-guide-${kind}`)
         await link.scrollIntoViewIfNeeded()
         await expect(link).toBeVisible()
-        await expect(link).toHaveAttribute('href', prefix + suffix)
+        await expect(link).toHaveAttribute('href', manuals[kind])
         await expect(link).toContainText(kind === 'pdf' ? /PDF/ : /Word/)
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
@@ -22,7 +25,7 @@ for (const width of [1440, 390]) {
 
 test('landing and video pages expose the same complete-series release download', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
-  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip'
+  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip'
   const url = `https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/${asset}`
   for (const route of ['', 'tutorials/']) {
     await page.goto(route || './')
@@ -44,7 +47,7 @@ for (const width of [1440, 390]) {
     await expect(page.locator('#parts button').first()).toHaveText('00. ZTF-Orchestrator Overview')
     await expect(page.locator('#title')).toContainText('ZTF-Orchestrator Overview')
     await expect.poll(() => page.locator('video').evaluate(video => video.videoWidth)).toBe(1920)
-    await expect(page.locator('#chapters button')).toHaveCount(5)
+    await expect(page.locator('#chapters button')).toHaveCount(6)
     await page.locator('#chapters button').last().click()
     await expect.poll(() => page.locator('video').evaluate(video => video.currentTime)).toBeGreaterThan(79)
     await page.locator('video').evaluate(video => video.pause())
@@ -110,14 +113,14 @@ test('mobile transcript Back restores the selected part and timestamp without pl
 test('the recovery documentation deep link opens the full recovery walkthrough', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires the assembled Pages demo')
   await page.goto('tutorials/?part=15')
-  await expect(page.getByRole('heading', { name: 'Part 15 — Disaster Recovery Start to Finish (1:57)' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Part 15 — Disaster Recovery Start to Finish (2:07)' })).toBeVisible()
   await expect(page.getByRole('button', { name: '15. Disaster Recovery Start to Finish' })).toHaveAttribute('aria-current', 'true')
   const player = page.locator('video')
   await expect.poll(() => player.evaluate(video => video.videoWidth)).toBe(1920)
   const download = page.getByRole('link', { name: 'Download MP4', exact: true })
   await expect(download).toHaveAttribute('href', /^media\/.*Part-15.*\.mp4$/)
   expect(await player.evaluate(video => video.currentSrc)).toBe(await download.evaluate(link => link.href))
-  await expect(page.locator('#chapters button')).toHaveCount(6)
+  await expect(page.locator('#chapters button')).toHaveCount(7)
   await page.getByRole('button', { name: /Accept the handoff/ }).click()
   await expect.poll(() => player.evaluate(video => video.currentTime)).toBeGreaterThan(95)
   for (const link of await page.locator('#downloads a').all()) {
@@ -155,7 +158,7 @@ for (let part = 0; part < 23; part++) {
     await expect.poll(() => player.evaluate(video => video.videoWidth)).toBe(1920)
     const duration = await player.evaluate(video => video.duration)
     expect(duration).toBeGreaterThan(60)
-    await page.locator('#chapters button').nth(1).click()
+    await page.locator('#chapters button').last().click()
     await expect.poll(() => player.evaluate(video => !video.paused && video.currentTime > 10)).toBe(true)
     await expect.poll(() => player.evaluate(video => video.error)).toBe(null)
     for (const label of ['Captions (VTT)', 'Captions (SRT)', 'Chapter list', 'Transcript']) {
@@ -175,7 +178,7 @@ test('Part 02 keeps its URL and explains the three deployment services', async (
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
   await page.goto('tutorials/?part=02')
   await expect(page.locator('#title')).toContainText('Create Cluster Workflows and Deployment Use Cases')
-  await expect(page.locator('#chapters button')).toHaveCount(7)
+  await expect(page.locator('#chapters button')).toHaveCount(8)
   const player = page.locator('video')
   for (const title of ['Use a classic Foundation VM', 'Use Foundation Central', 'Use a standalone FCA']) {
     await page.getByRole('button', { name: new RegExp(title) }).click()
@@ -197,6 +200,11 @@ test.describe('Burned-in caption pixels', () => {
     const response = await request.get('tutorials/media/caption-render-audit.json')
     expect(response.ok()).toBe(true)
     records = (await response.json()).records
+    const manifest = await (await request.get('tutorials/media/series-manifest.json')).json()
+    records = records.map(record => {
+      const offset = manifest.verification.find((row: { part: number }) => row.part === record.part).introSeconds || 0
+      return { ...record, browserSamples: record.browserSamples.map(sample => ({ ...sample, time: sample.time + offset })) }
+    })
   })
   for (let part = 0; part < 23; part++) {
     test(`part ${part} displays the expected changing caption text`, async ({ page }) => {

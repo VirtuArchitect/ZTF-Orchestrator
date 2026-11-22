@@ -1,7 +1,8 @@
-00:00:00.000 Choose by deployment service
-00:00:15.955 Use a classic Foundation VM
-00:00:52.015 Use Foundation Central
-00:01:19.388 Use a standalone FCA
-00:01:45.511 Validate the selected path
-00:02:01.851 Verify and continue configuration
-00:02:18.167 Choose a broader workflow when needed
+00:00:00.000 Reported operational experience
+00:00:09.542 Choose by deployment service
+00:00:25.497 Use a classic Foundation VM
+00:01:01.557 Use Foundation Central
+00:01:28.930 Use a standalone FCA
+00:01:55.053 Validate the selected path
+00:02:11.393 Verify and continue configuration
+00:02:27.709 Choose a broader workflow when needed

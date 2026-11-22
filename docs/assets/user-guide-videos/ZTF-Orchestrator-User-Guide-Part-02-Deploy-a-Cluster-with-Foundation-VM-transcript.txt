@@ -1,3 +1,5 @@
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
+
 You need to build a four-node AHV cluster. Which Create Cluster workflow should you choose? Start with the deployment service available at the site. ZTF-Orchestrator offers three paths to the same goal, but each uses a different service and configuration.
 
 Choose Cluster Create, Foundation VM, when you have a classic Foundation VM that can reach the physical nodes. This suits a local build, a remote site with its own Foundation VM, or an approved cluster rebuild. Review the node addresses and credential references, then select the approved images already in Foundation inventory. Refresh inventory, validate the payload, test IPMI credentials and check progress. The IPMI test uses the Orchestrator's network path; a failed direct test does not prove Foundation cannot reach the nodes. Follow Foundation's reported phase and percentage.

@@ -1,16 +1,31 @@
 # ZTF-Orchestrator User Guide Videos
 
-**v1.8.5-rc1 | 19 November 2026 | 23 videos | approximately 39½ minutes**
+**v1.8.5-rc1 | 22 November 2026 | 23 videos | approximately 40 minutes**
 
 [Watch the refreshed series](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00).
 The light-mode player provides Joanna studio narration, burned-in English captions,
 MP4 downloads, transcripts, SRT/VTT captions and seekable chapters. After opening a
 transcript, use Back to return to the same part and timestamp, paused.
 
-[Download all 23 corrected videos (ZIP, 84 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip) |
-[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256).
+[Download all 23 revised videos (ZIP, 81 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip) |
+[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256).
 Includes an offline player, transcripts, English SRT/VTT captions and chapter files.
 Extract the ZIP completely, then open `index.html`.
+
+## Revised introductions and Foundation coverage
+
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
+
+Parts 00, 02, 03, 04 and 15 use this exact introduction, with Joanna studio
+narration, light-mode visuals and timed English captions. Numeric deployment and
+recovery totals are omitted. The overview labels Foundation VM as the selected
+example while showing Foundation Central associated with Prism Central and
+standalone Foundation Central Appliance as separate deployment paths. Part 02
+retains its three-workflow comparison. Recovery-profile instructions retain their
+Foundation VM scope. Earlier picture/caption audits below describe the historical
+19 November edition; [current verification](assets/user-guide-videos/Update-verification.json)
+and the [anonymisation report](assets/user-guide-videos/Anonymisation-report.json)
+cover this revision. No live infrastructure was changed.
 
 ## Parts
 

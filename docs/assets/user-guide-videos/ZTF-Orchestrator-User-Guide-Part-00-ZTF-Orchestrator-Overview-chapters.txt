@@ -1,5 +1,6 @@
-00:00:00.000 Follow one cluster
-00:00:20.247 Understand the components
-00:00:42.649 Prepare before execution
-00:01:00.111 Recover and verify
-00:01:19.391 Know the current boundary
+00:00:00.000 Reported operational experience
+00:00:09.542 Follow one cluster
+00:00:29.789 Understand the components
+00:00:52.191 Prepare before execution
+00:01:09.653 Recover and verify
+00:01:28.933 Know the current boundary

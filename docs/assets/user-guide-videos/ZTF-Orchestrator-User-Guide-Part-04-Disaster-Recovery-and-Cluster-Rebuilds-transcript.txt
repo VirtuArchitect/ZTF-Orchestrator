@@ -1,3 +1,5 @@
+Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
+
 Open Recover Infrastructure from Start Here, or Recover Cluster in Disaster Recovery. Choose the intended datacenter and profile. If an open recovery exists, select Resume Recovery. This opens its saved snapshot and completed work instead of preparing another deployment.
 
 For a new recovery, review prerequisites, the Foundation YAML, exact physical nodes and the linked post-configuration pipeline. Profile edits create a new draft revision; they do not rewrite existing run snapshots. Review that revision before preparing the run. Archive preserves history; deletion is limited to unused, unlinked profiles.
