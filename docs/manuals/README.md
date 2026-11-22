@@ -57,13 +57,15 @@ the exact files; see the [earlier validation record](../quick-guides/VALIDATION-
 
 [Download the illustrated PDF guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Download the editable Word guide](https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx)
 
-The **19 November 2026** release assets record the earlier publication. Maintained downloads now include the **22 November 2026** address anonymisation revision and have refreshed checksums below. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).
+The **19 November 2026** release assets record the earlier publication. Maintained downloads now include the **22 November 2026** address anonymisation and operational-experience revisions and have refreshed checksums below. The release remains a prerelease. Repository copies remain available: [PDF](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx).
 
 The maintained **156-page** guide was reviewed **19 November 2026** against application source `f33c9ed` and repository/README revision `27d28a2`. **v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable.** The maintained repository filenames are unchanged.
 
 The Word and searchable PDF retain the original typography, navy table headers, portrait pages, margins, headers/footers and revision 3 landscape process appendix. The linked contents and page fields were refreshed in Word. All 156 exported pages were rendered and checked; 83 inline illustrations and 54 tables remain in the source.
 
 The training references on page 77 now link all [23 corrected videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256). The ZIP includes transcripts, English captions and chapter files. This narrow link refresh was checked against repository revision `fa962ba`: all 156 PDF pages were compared, with the other 155 pages pixel-identical. The original guide review provenance remains unchanged.
+
+On **22 November 2026**, the operational-experience paragraph on page 14 was updated to reflect operator-reported **40+ successful cluster deployments with pipeline post-configuration** and **20+ successful cluster recoveries**. The results apply to the configurations used; workload restoration remains a separate backup-platform handoff. The guide remains 156 pages. Only one Word XML part changed, and all 155 other published PDF pages are pixel-identical. Original edition, application review, styles, images, tables and navigation are retained.
 
 ## Operating coverage of the earlier combined guide
 
@@ -83,9 +85,9 @@ Native pipeline opt-in, NKP and ZTF 2.x console execution are **retired**. Histo
 
 The example consolidated build is `v1.8.5-rc1-f33c9ed`. Obtain its exact trusted ZIP and checksum from the release maintainer; this is not a claim that a commit-specific bundle is a public release asset. This manual update changes no installed runtime or immutable ZIP. See [current source/package evidence](../current-status.md).
 
-PDF SHA256: `a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78`.
+PDF SHA256: `5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10`.
 
-Editable source SHA256: `9c076d44baeb63b7aa171045e2d3755034ae4921608bf78acbed64aedb5d0a9b`.
+Editable source SHA256: `2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26`.
 
 [Publication manifest](administrator-user-guide-publication.json) records source revisions, page count, layout geometry and download checksums.
 
