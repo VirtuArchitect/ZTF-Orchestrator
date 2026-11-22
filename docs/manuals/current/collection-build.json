@@ -1,6 +1,6 @@
 {
-  "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862",
-  "reviewed": "2026-11-21",
+  "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
+  "reviewed": "2026-11-22",
   "documents": [
     {
       "id": "collection-overview",
@@ -102,12 +102,12 @@
     },
     {
       "id": "ahv-uplink-migration",
-      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-21.pdf",
-      "sha256": "a7d32338ee71fe063fdf2dccee63e7b0b434aa75a0fde6cfa597a0c60559c6e5",
+      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
+      "sha256": "f700f5ad45c2ac25d28670a37176ba28b9a6ac680f6d915833841f9cab5684f3",
       "inputSources": [
         {
           "path": "docs/ahv-uplink-migration.md",
-          "sha256": "b127962defbcfca96e8a9dacfa973534bb7456ed8f403e931e236a6c9050b790",
+          "sha256": "1b34b653941d9c90f0c4977037921a0c2721012f77062d6eb0b261e3acb17a79",
           "normalization": "utf8-lf"
         },
         {
@@ -566,12 +566,12 @@
     },
     {
       "id": "current-status",
-      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-21.pdf",
-      "sha256": "57eed52d2947999622a7cf82be1a457fa009884825a2e9602e14ab2375dd8ada",
+      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-22.pdf",
+      "sha256": "6bf299d91a8077328d0af1286f222b8449610ccf5ef4ca1fba96e755dff2c6d4",
       "inputSources": [
         {
           "path": "docs/current-status.md",
-          "sha256": "26ffaf2649685f742964b0907be61e3a391fc97283b4ebac934c3c3daadc9e1f",
+          "sha256": "8943d0b68bab14c58dfa7dd24358852dc247e810ec1af85a9ea90c864283234b",
           "normalization": "utf8-lf"
         },
         {
@@ -7161,10 +7161,46 @@
         }
       ],
       "addressAnonymisation": "2026-11-22"
+    },
+    {
+      "id": "ahv-uplink-migration-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-21.pdf",
+      "sha256": "a7d32338ee71fe063fdf2dccee63e7b0b434aa75a0fde6cfa597a0c60559c6e5",
+      "inputSources": [
+        {
+          "path": "docs/ahv-uplink-migration.md",
+          "sha256": "b127962defbcfca96e8a9dacfa973534bb7456ed8f403e931e236a6c9050b790",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "current-status-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-21.pdf",
+      "sha256": "57eed52d2947999622a7cf82be1a457fa009884825a2e9602e14ab2375dd8ada",
+      "inputSources": [
+        {
+          "path": "docs/current-status.md",
+          "sha256": "26ffaf2649685f742964b0907be61e3a391fc97283b4ebac934c3c3daadc9e1f",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
     }
   ],
   "addressAnonymisation": {
     "date": "2026-11-22",
     "scope": "Current and historical collection downloads; TEST-NET illustrations; original edition labels, layout and attribution retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks retain their technical meaning."
-  }
+  },
+  "currentDocuments": 317,
+  "historicalDocuments": 30
 }

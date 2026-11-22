@@ -42646,6 +42646,41 @@ def ahv_uplink_capabilities():
     return jsonify({'applyEnabled': uplink_migration.writes_enabled()})
 
 
+@app.route('/api/ahv-uplink-migration/credentials')
+@require_role('admin')
+def ahv_uplink_credentials():
+    """Declared usernames only; mirror lookup precedence without resolving secrets."""
+    try:
+        path = get_global_config_path()
+        if not path.exists():
+            path = get_legacy_global_config_path()
+        data = (yaml.safe_load(path.read_text(encoding='utf-8')) or {}) if path.exists() else {}
+        if not isinstance(data, dict) or not isinstance(data.get('vaults', {}), dict):
+            raise ValueError('Invalid catalogue')
+        active = str(data.get('vault_to_use') or '').strip()
+        order = list(dict.fromkeys([active, 'local', 'cyberark']))
+        references = {}
+        for name in order:
+            vault = data.get('vaults', {}).get(name)
+            entries = vault.get('credentials') if isinstance(vault, dict) else None
+            if not isinstance(entries, dict):
+                continue
+            for reference, entry in entries.items():
+                if (not isinstance(reference, str) or not reference.strip() or reference != reference.strip()
+                        or not isinstance(entry, dict) or reference in references):
+                    continue
+                username = entry.get('username')
+                references[reference] = username.strip() if isinstance(username, str) else ''
+        response = jsonify({'references': [{'reference': ref, 'username': references[ref]}
+                                           for ref in sorted(references)], 'check': 'declaration_only'})
+    except (OSError, ValueError, TypeError, yaml.YAMLError):
+        # Never include YAML parser diagnostics: they can contain credential values.
+        response = jsonify({'error': 'Credential catalogue unavailable. Review saved Global Config and refresh.'})
+        response.status_code = 500
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 @app.route('/api/ahv-uplink-migration/discover', methods=['POST'])
 @require_role('admin')
 @limiter.limit('8 per minute')

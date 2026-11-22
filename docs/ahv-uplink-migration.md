@@ -30,6 +30,14 @@ See [workflow execution settings](workflow-execution-settings.md) for defaults a
 
 ## Discovery and Continue feedback
 
+### Saved credential selection
+
+Select **PE credential reference**, **CVM credential reference** and, in PC-managed mode, **PC credential reference** from the saved Global Config catalogue. Each option shows **reference — username**. Choose a PE/PC account with the required Prism administrator permissions; CVM choices are limited to the `nutanix` SSH account required by the existing transport. Selection does not prove authentication, permissions or host identity.
+
+Add or correct credential definitions in **Administration → Global Config**, select **Save to ZTF**, then return and select **Refresh credentials**. Only the reference is stored in the draft and submitted to the existing workflow. The admin-only catalogue API returns declared references and usernames, never passwords, tokens or provider paths; it does not contact external secret providers or clusters. Entries without a declared username cannot unlock discovery.
+
+Loading, empty or unavailable catalogues block discovery with guidance. A saved missing reference or a UUID entered in an earlier CVM field stays visible as unavailable until an operator selects a valid saved reference. No draft or approval is silently replaced. Changing references, or refreshing the catalogue after discovery, clears inventory and requires another read-only discovery and preflight. Existing SSH pins, independent approval, confirmation and verification controls remain in effect.
+
 The discovery panel lists missing inputs before a request can start, including invalid SSH host-key JSON. Running shows elapsed request time, without an estimated percentage. Passed lists the returned cluster, host count and each host's physical NIC/br0 uplink counts. Failed retains the returned error and HTTP status, with read-only retry guidance. Refreshing discovery clears earlier inventory first; a failed or empty response cannot unlock assignment using old results.
 
 A message beside **Continue to uplink assignment** explains the current blocker: incomplete connection details, discovery running/failed/not run, changed connection/TLS settings requiring rediscovery, or a missing destination switch. After successful discovery and destination selection it shows Ready. Connection controls are disabled during discovery. These UI changes do not perform discovery automatically or change preflight, approval or apply behavior.

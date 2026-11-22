@@ -630,6 +630,13 @@ async function demoResponse(request: Request) {
     }
     return json(demoCredentialOrganization)
   }
+  if (path === '/api/ahv-uplink-migration/credentials') {
+    const global = fromYaml(configs['global.yml']) as { vaults?: { local?: { credentials?: Record<string, { username?: unknown }> } } }
+    return json({ check: 'declaration_only', simulated: true,
+      references: Object.entries(global.vaults?.local?.credentials || {}).map(([reference, entry]) => ({
+        reference, username: typeof entry.username === 'string' ? entry.username : '',
+      })) })
+  }
   if (path === '/api/global-config') {
     if (method === 'PUT' || method === 'POST') return okAction('Global config save simulated.')
     return json({ content: configs['global.yml'] })
