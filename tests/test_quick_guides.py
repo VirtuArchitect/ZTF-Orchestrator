@@ -121,7 +121,11 @@ def test_screenshot_download_contains_only_current_anonymised_assets():
         for row in manifest['captures']:
             assert package.read(members[row['file']]) == (folder / row['file']).read_bytes()
         for filename in ['capture-manifest.json', 'SHA256SUMS']:
-            assert package.read(members[filename]) == (folder / filename).read_bytes()
+            # Archive text uses Git's canonical LF representation on every OS.
+            archived = package.read(members[filename])
+            assert b'\r\n' not in archived
+            assert archived == (folder / filename).read_bytes().replace(b'\r\n', b'\n')
+        assert b'Address examples anonymised on 22 November 2026' in package.read(members['README.txt'])
 
 
 def test_corrected_editions_retain_the_standard_cover_and_format():
