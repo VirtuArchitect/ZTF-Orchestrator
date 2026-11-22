@@ -2,6 +2,8 @@
 
 Date: 2026-07-22
 
+Address examples anonymised on 22 November 2026. Historical results refer to the original environment; no tests were run against the documentation-only addresses.
+
 Latest live validation refresh: 2026-07-24 17:59:00 +02:00
 
 > Historical evidence only.
@@ -15,13 +17,13 @@ lab cluster and the lab Prism Central instance deployed by ZTF-Orchestrator.
 
 ## Target Summary
 
-- Prism Element API endpoint used for validation: `10.20.30.201:9440`
+- Prism Element API endpoint used for validation: `192.0.2.201:9440`
 - Cluster name: `DEV_LAB`
 - Prism Element version: `6.8.1`
 - Reachability from the development PC:
-  - `10.20.30.201:9440`: reachable
-  - `10.20.30.201:22`: reachable
-  - `10.20.30.200:9440`: not reachable
+  - `192.0.2.201:9440`: reachable
+  - `192.0.2.201:22`: reachable
+  - `192.0.2.200:9440`: not reachable
 - Read-only inventory observed:
   - VMs: `0`
   - Images: `0`
@@ -137,9 +139,9 @@ Checks performed:
 
 - YAML parse
 - top-level `clusters`
-- `clusters.10.20.30.201.name`
+- `clusters.192.0.2.201.name`
 - schema-required nested item fields for PE delete payloads
-- Prism Element reachability on `10.20.30.201:9440`
+- Prism Element reachability on `192.0.2.201:9440`
 
 ### Live DEV_LAB Read-Only Inventory
 
@@ -200,7 +202,7 @@ Observed results:
 - ZTF verification returned:
 
 ```text
-{'clusters': {'10.20.30.201': {'Register_to_PC': 'PASS'}}}
+{'clusters': {'192.0.2.201': {'Register_to_PC': 'PASS'}}}
 ```
 
 Additional PC-backed validation:
@@ -230,7 +232,7 @@ Observed results:
   `replication_factor: 1` and ZTF verification returned:
 
 ```text
-{'clusters': {'10.20.30.201': {'Create_container': {'ztf_validation_container_20260724': 'PASS'}}}}
+{'clusters': {'192.0.2.201': {'Create_container': {'ztf_validation_container_20260724': 'PASS'}}}}
 ```
 
 - `DeleteContainerPe` was rejected on the first submission without destructive
@@ -239,7 +241,7 @@ Observed results:
   `RUN DeleteContainerPe` and ZTF verification returned:
 
 ```text
-{'clusters': {'10.20.30.201': {'Delete_container': {'ztf_validation_container_20260724': 'PASS'}}}}
+{'clusters': {'192.0.2.201': {'Delete_container': {'ztf_validation_container_20260724': 'PASS'}}}}
 ```
 
 This validates both the Orchestrator destructive-action gate and the live PE
@@ -297,7 +299,7 @@ DEV_LAB currently has `0` images, so a VM lifecycle test is not the best first m
 Disposable target:
 
 - Container name: `ztf-orchestrator-validation-container`
-- Prism Element endpoint: `10.20.30.201`
+- Prism Element endpoint: `192.0.2.201`
 - Cluster name: `DEV_LAB`
 - Replication factor: `1` for DEV_LAB's one-node cluster
 - Advertised capacity: `16 GiB`
@@ -306,7 +308,7 @@ Create YAML:
 
 ```yaml
 clusters:
-  10.20.30.201:
+  192.0.2.201:
     name: DEV_LAB
     pe_credential: pe_user
     containers:
@@ -319,7 +321,7 @@ Delete YAML:
 
 ```yaml
 clusters:
-  10.20.30.201:
+  192.0.2.201:
     name: DEV_LAB
     pe_credential: pe_user
     containers:

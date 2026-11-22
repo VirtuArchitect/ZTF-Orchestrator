@@ -9,3 +9,5 @@ The [capture manifest](capture-manifest.json) records task ID, route, state, dim
 Long dash punctuation is normalised to colons for the documentation presentation. No functional values or target state are changed.
 
 The collection is also source-reviewed against `db16219`, whose shared UI controls are unchanged. These captures retain their actual `48eb875` provenance and deliberately show planning-mode authoring fixtures. Current packaged enablement and explicit owner overrides follow [workflow execution settings](../../../workflow-execution-settings.md).
+
+Address examples were anonymised on 22 November 2026 by recreating affected simulated views from the recorded source edition. TEST-NET addresses are documentation-only. Original edition dates, application provenance and the absence of live execution remain unchanged.

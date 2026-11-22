@@ -385,7 +385,7 @@ recovery and administration procedures alongside matching tutorials.
 | [Current source and package status](docs/current-status.md) | Release channels, exact build identity and historical package boundaries |
 | [Installation](docs/installation-guide.md) | Docker, appliance, manual and offline procedures |
 | [AHV Quick Guide (PDF)](docs/manuals/ZTF-Orchestrator-AHV-Appliance-Deployment-Quick-Guide.pdf) | Static IP before SSH, key provisioning, sudo and web admin access |
-| Earlier combined Administrator and User Guide: [PDF](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.pdf) · [Word](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1-2026-11-19.docx) | 19 November 2026 edition, retained with its original source provenance; use the documentation collection for the current manuals and task PDFs |
+| Earlier combined Administrator and User Guide: [PDF](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf) · [Word](https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx) | 19 November 2026 edition, retained with its original source provenance; use the documentation collection for the current manuals and task PDFs |
 | [Administrator guide](docs/admin-guide.md) | Console configuration and operation |
 | [User guide](docs/user-guide.md) | Workflows, scripts, pipelines and saved configuration |
 | [Infrastructure recovery](docs/infrastructure-recovery.md) | Rebuild preparation and acceptance boundaries |

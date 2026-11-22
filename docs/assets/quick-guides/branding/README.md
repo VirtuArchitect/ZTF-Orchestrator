@@ -17,8 +17,9 @@ separate body section in the established Quick Guide format:
 - Original editable procedures, links, guide IDs and simulated task screenshots retained.
 
 The initial host/CVM password Quick Guide supplies the matching editable style
-reference. Both reference files and all earlier collection editions remain
-unchanged. The [branding manifest](../../../manuals/workflow-script-quick-guides-branding.json)
+reference. Both reference files remain unchanged. Earlier collection editions
+retain their original format and source labels, with illustrative addresses
+anonymised on **22 November 2026**. The [branding manifest](../../../manuals/workflow-script-quick-guides-branding.json)
 records reference hashes and corrected Word/PDF hashes. This is a format
 correction dated **21 November 2026**; source review and screenshot provenance
 remain pinned to `79c3ecc` on 20 November 2026.

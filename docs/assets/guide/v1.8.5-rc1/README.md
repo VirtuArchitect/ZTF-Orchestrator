@@ -98,3 +98,5 @@ latest implemented UI with generic simulated fixtures. Supplement captures can
 be reproduced with `node scripts/capture_current_operational_supplements.cjs`
 after serving the local static demo on port 15221. See `capture-manifest.json`
 and `SHA256SUMS` for per-image provenance.
+
+The Foundation node illustration was recreated from the same recorded source on 22 November 2026 to use documentation-only TEST-NET address examples. The original source edition and simulated validation boundary remain unchanged.

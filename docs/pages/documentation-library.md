@@ -51,3 +51,7 @@ The existing Pages workflow places the library beside the tutorials and copies v
 - Verify the deployed source identity and actual PDF downloads after Pages publication. Test the embedded reader and keep independent Open PDF and Download PDF links available for browsers without embedding support.
 
 The library is static and accepts no visitor uploads. Query strings select catalogue IDs and never become arbitrary viewer URLs or HTML. No runtime credentials, permissions, infrastructure write gates or application data are changed by documentation publication.
+
+## Controlled address anonymisation
+
+The 22 November 2026 address revision applies to current and historical collection downloads. Recreate simulated figures from each recorded source edition using TEST-NET examples, replace the embedded image objects and Word media, and refresh all checksums and source fingerprints. Preserve the standard cover, geometry, original source/version labels and John Goulden attribution. Retain before-revision hashes as provenance without presenting old release assets as current anonymised downloads. Review rendered figures and scan PDF text, metadata, annotations, Word XML and embedded images with OCR. Actual protocol endpoints, loopback/bind addresses and netmasks are not illustrative targets.

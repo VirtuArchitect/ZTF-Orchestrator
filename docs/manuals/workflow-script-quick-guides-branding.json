@@ -21,28 +21,28 @@
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.docx",
-      "bytes": 6788109,
-      "sha256": "403ce283713eeeaf8b5497f2ba662977fe89eb036f6012407aff52cf3206d884"
+      "bytes": 6773517,
+      "sha256": "b647ec933eabd13aeda356d17c251a10e17c5918d7f1c64fce3b9b800e851c91"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
-      "bytes": 4148857,
-      "sha256": "3991fa4a5acf2f10dfda1c5ca440cc25eef8a57228dc77126b92015d40ede0aa"
+      "bytes": 4307738,
+      "sha256": "c2b76f2bd56233ea6d5864dd9c83fa577e2df8432cf7a6bc440af2e7c98a6ecc"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.docx",
-      "bytes": 6894701,
-      "sha256": "26f119bab408cd49382b6000c49ed300b88cf65b832a07b0f960f8a404b7edf2"
+      "bytes": 6874495,
+      "sha256": "608d6a48ca93ca81904276e74cca6720afb0b861035a82fcbdd3306fe6d0abea"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
-      "bytes": 5781153,
-      "sha256": "3b8c25afa8245790a377f8edae6d77a2f0deb63800add4056094b79b478e7931"
+      "bytes": 7169525,
+      "sha256": "de24758013fa0b97191f8db59be8beffedad199845e28e48f895ffd3558c9104"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.zip",
-      "bytes": 4746189,
-      "sha256": "e48b1dc4f7aff9c7e299bd38a9c58a25e79dcfb251374ef605e76a7b9414b591"
+      "bytes": 4734719,
+      "sha256": "7351b4e192a921a8f805f1fbe9ddaa6f5f6bb45969ed82ab5677454378a231a0"
     }
   ],
   "editions": [
@@ -78,23 +78,124 @@
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.docx",
-      "bytes": 7276430,
-      "sha256": "fb4120ac443f94b430c9fd7bf16d41595a330a7db00f4f041d991af935eed9d2"
+      "bytes": 7257391,
+      "sha256": "d9bb7a250e81515f8aff09c58a50b3d5be4565027bfe556a2a80011ff44eaa99"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
-      "bytes": 5968870,
-      "sha256": "ed5a3b67be8c4efe89633393c9c183ec559f097a85c5e2a51c340c1fad0b2187"
+      "bytes": 7358387,
+      "sha256": "01c2c66f204bdcd47bcf55c609c6dc34a47fea2346b391b2300f58d8ba53d912"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.docx",
-      "bytes": 7218195,
-      "sha256": "5665b768595e53528b99731d2d08b23656b0df25a4b0a99516fb704f153c3536"
+      "bytes": 7203631,
+      "sha256": "ca0afbb094aaaceb82c91793f30b6b4e3bc6841379d956b375f3d9c7843fea31"
     },
     {
       "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
-      "bytes": 4342824,
-      "sha256": "4a62bce84d37dbed4bc556211a37eb9511f7f6d218db765c9256015bf4ed3614"
+      "bytes": 4501695,
+      "sha256": "753f64c2830cb5922959a7d039f1300fb2e0cbf3dcd1277b90cb9d3e9ef3eb76"
     }
-  ]
+  ],
+  "beforeAddressAnonymisation": {
+    "formatCorrected": "2026-11-21",
+    "sourceReviewed": "2026-11-20",
+    "sourceCommit": "79c3eccde1a0361ddfb49850e78c732217980f26",
+    "coverAsset": "docs/assets/quick-guides/branding/operational-quick-guides-cover.png",
+    "coverReference": "ZTF-Orchestrator Quick Guide - Multiple Cluster Deployment Planning.pdf",
+    "coverReferenceSha256": "b03954bd0c1829ce4ae452f73c89762dbd2e1fc43ec10ec1e5ef375f09bb9713",
+    "styleReference": "ZTF-Orchestrator Quick Guide - Initial Host and CVM Password Setup.docx",
+    "styleReferenceSha256": "ceb81e2dcecbcd4555dec9a3e7d294ecdf9ef1d60c038f2dc1903061ef63af63",
+    "coverImageSha256": "0266aabcb651385701a84cd432867d65d7b98469598962a5f5588573d97b0c47",
+    "preservedFiles": [
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
+        "bytes": 1882866,
+        "sha256": "8b5fb2350c15276ef73596abbfa86a355309bb07ac349c8fe0a261f405efa44f"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.docx",
+        "bytes": 1814937,
+        "sha256": "ddd89a250cc7ad45e638c6fd4acf1996440dc14d85b1c97aff9faa80737644af"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.docx",
+        "bytes": 6788109,
+        "sha256": "403ce283713eeeaf8b5497f2ba662977fe89eb036f6012407aff52cf3206d884"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
+        "bytes": 4148857,
+        "sha256": "3991fa4a5acf2f10dfda1c5ca440cc25eef8a57228dc77126b92015d40ede0aa"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.docx",
+        "bytes": 6894701,
+        "sha256": "26f119bab408cd49382b6000c49ed300b88cf65b832a07b0f960f8a404b7edf2"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
+        "bytes": 5781153,
+        "sha256": "3b8c25afa8245790a377f8edae6d77a2f0deb63800add4056094b79b478e7931"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.zip",
+        "bytes": 4746189,
+        "sha256": "e48b1dc4f7aff9c7e299bd38a9c58a25e79dcfb251374ef605e76a7b9414b591"
+      }
+    ],
+    "editions": [
+      {
+        "name": "Text",
+        "docx": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.docx",
+        "pdf": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+        "pages": 191
+      },
+      {
+        "name": "Illustrated",
+        "docx": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.docx",
+        "pdf": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
+        "pages": 308
+      },
+      {
+        "name": "Screenshots",
+        "docx": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.docx",
+        "pdf": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
+        "pages": 123
+      }
+    ],
+    "files": [
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.docx",
+        "bytes": 2246508,
+        "sha256": "c72c37c8cd46c6dda92065f0d6b0c86d914eaac4c385a13aa1e8496620757930"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+        "bytes": 2075475,
+        "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.docx",
+        "bytes": 7276430,
+        "sha256": "fb4120ac443f94b430c9fd7bf16d41595a330a7db00f4f041d991af935eed9d2"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
+        "bytes": 5968870,
+        "sha256": "ed5a3b67be8c4efe89633393c9c183ec559f097a85c5e2a51c340c1fad0b2187"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.docx",
+        "bytes": 7218195,
+        "sha256": "5665b768595e53528b99731d2d08b23656b0df25a4b0a99516fb704f153c3536"
+      },
+      {
+        "filename": "ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
+        "bytes": 4342824,
+        "sha256": "4a62bce84d37dbed4bc556211a37eb9511f7f6d218db765c9256015bf4ed3614"
+      }
+    ]
+  },
+  "addressAnonymisation": "2026-11-22"
 }
