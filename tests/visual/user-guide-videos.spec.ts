@@ -18,6 +18,7 @@ for (const width of [1440, 390]) {
         await expect(link).toHaveAttribute('href', manuals[kind])
         await expect(link).toContainText(kind === 'pdf' ? /PDF/ : /Word/)
       }
+      await expect(page.locator('#guide-pdf-preview')).toHaveAttribute('href', 'https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf')
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
     }
   })
