@@ -26,23 +26,20 @@
   ],
   "simulatedScreenshots": true,
   "liveActionsExecuted": false,
-  "exporter": "Microsoft Word 16; read-only PDF export; existing fields and linked contents preserved",
+  "exporter": "Microsoft Word 16; read-only before/after exports; changed-page content and URI annotations transferred into the maintained PDF; other pages and existing internal navigation preserved",
   "files": {
-    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26",
-    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10"
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8",
+    "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a"
   },
   "videoLinkUpdate": {
-    "reviewed": "2026-11-19",
-    "repositorySource": "fa962ba88ca9c31ac2e994d270b4aac22b63b8ee",
+    "reviewed": "2026-11-22",
+    "repositorySource": "33960f1a4bd015749b0bc498fd1bff91b83acf52",
     "parts": 23,
     "page": 77,
     "externalTargets": 25,
-    "pixelComparedPages": 156,
-    "pixelChangedPages": [
-      77
-    ],
-    "unchangedPackageParts": 101,
-    "scope": "Corrected tutorial links, complete offline ZIP and checksum; obsolete Part 11 note removed",
+    "zipUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip",
+    "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256",
+    "scope": "Revised 23-part video ZIP, checksum and existing per-part tutorial links",
     "liveActionsExecuted": false
   },
   "releaseDownloads": {
@@ -86,42 +83,80 @@
       "pdf": {
         "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
         "url": "https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
-        "sha256": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10",
-        "bytes": 10650109
+        "sha256": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a",
+        "bytes": 10864119
       },
       "word": {
         "source": "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
         "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/raw/refs/heads/main/docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx",
-        "sha256": "2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26",
-        "bytes": 13615086
+        "sha256": "92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8",
+        "bytes": 13615179
       }
     }
   },
   "operationalExperienceUpdate": {
     "date": "2026-11-22",
-    "repositorySource": "9daa5fc30cf10056d6b64e20b1f1f0ed3682993b",
+    "repositorySource": "33960f1a4bd015749b0bc498fd1bff91b83acf52",
     "evidenceCategory": "Operator-reported operational experience confirmed by the maintainer",
-    "successfulClusterDeployments": "40+",
-    "pipelinePostConfiguration": true,
-    "successfulClusterRecoveries": "20+",
+    "statement": "Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.",
     "page": 14,
-    "scope": "Existing operational-experience paragraph only; original application review, edition and screenshot provenance retained",
-    "changedDocxParts": [
-      "word/document.xml"
+    "scope": "Exact operator-reported statement without deployment or recovery totals; original application review and edition retained",
+    "liveActionsExecuted": false
+  },
+  "foundationWorkflowUpdate": {
+    "date": "2026-11-22",
+    "pages": [
+      47,
+      80
     ],
+    "workflows": [
+      {
+        "name": "Cluster Create (Foundation VM)",
+        "service": "Classic Foundation VM",
+        "useCase": "Local/remote site or approved rebuild"
+      },
+      {
+        "name": "Cluster Create",
+        "service": "Foundation Central associated with Prism Central",
+        "useCase": "Nodes and images managed through PC-associated Foundation Central"
+      },
+      {
+        "name": "Cluster Create (Standalone FCA)",
+        "service": "Separate Foundation Central Appliance",
+        "useCase": "Compatible standalone Lifecycle APIs and inventory"
+      }
+    ],
+    "scope": "Select the matching deployment service and YAML schema; Foundation VM remains the illustrated example and recovery-profile path"
+  },
+  "formatVerification": {
+    "pages": 156,
+    "tables": 54,
+    "inlineImages": 83,
+    "changedDocxParts": [
+      "word/document.xml",
+      "word/_rels/document.xml.rels"
+    ],
+    "unchangedPackageParts": 101,
     "wordExportChangedPages": [
-      14
+      14,
+      47,
+      77,
+      80
     ],
     "pixelComparedPages": 156,
     "pixelChangedPages": [
-      14
+      14,
+      47,
+      77,
+      80
     ],
-    "unchangedPublishedPages": 155,
+    "unchangedPublishedPages": 152,
+    "pageGeometryUnchanged": true,
+    "stylesImagesHeadersFootersUnchanged": true,
     "beforeFiles": {
-      "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "9c076d44baeb63b7aa171045e2d3755034ae4921608bf78acbed64aedb5d0a9b",
-      "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "a490fa52689d8f4760bbd668e38f42dbf11a9d6c1d1bd808b9286d6adb7c9e78"
+      "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx": "2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26",
+      "ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10"
     },
-    "liveActionsExecuted": false,
-    "pdfMethod": "Microsoft Word read-only before/after exports; only changed page content/resources transferred into the maintained PDF to preserve all other pages and existing navigation"
+    "liveActionsExecuted": false
   }
 }

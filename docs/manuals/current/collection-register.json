@@ -8475,8 +8475,9 @@
     {
       "id": "administrator-user-guide",
       "source": "docs/manuals/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
-      "sha256": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10",
-      "addressAnonymisation": "2026-11-22"
+      "sha256": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a",
+      "addressAnonymisation": "2026-11-22",
+      "guideContentUpdate": "2026-11-22"
     },
     {
       "id": "quick-guides-retired-script-ztf2-create-category-pc",

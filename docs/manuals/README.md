@@ -63,9 +63,9 @@ The maintained **156-page** guide was reviewed **19 November 2026** against appl
 
 The Word and searchable PDF retain the original typography, navy table headers, portrait pages, margins, headers/footers and revision 3 landscape process appendix. The linked contents and page fields were refreshed in Word. All 156 exported pages were rendered and checked; 83 inline illustrations and 54 tables remain in the source.
 
-The training references on page 77 now link all [23 corrected videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256). The ZIP includes transcripts, English captions and chapter files. This narrow link refresh was checked against repository revision `fa962ba`: all 156 PDF pages were compared, with the other 155 pages pixel-identical. The original guide review provenance remains unchanged.
+The training references on page 77 link all [23 revised videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete revised offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). The ZIP includes the offline player, transcripts, English SRT/VTT captions and chapter files. Existing per-part URLs remain unchanged.
 
-On **22 November 2026**, the operational-experience paragraph on page 14 was updated to reflect operator-reported **40+ successful cluster deployments with pipeline post-configuration** and **20+ successful cluster recoveries**. The results apply to the configurations used; workload restoration remains a separate backup-platform handoff. The guide remains 156 pages. Only one Word XML part changed, and all 155 other published PDF pages are pixel-identical. Original edition, application review, styles, images, tables and navigation are retained.
+On **22 November 2026**, page 14 was revised to use this exact statement: Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator. The workflow catalogue on page 47 and deployment guidance on page 80 now distinguish classic Foundation VM, Foundation Central associated with Prism Central and standalone FCA, with use cases and matching YAML requirements. The maintained Word/PDF retain their original source review and edition. Only two Word XML parts changed; all 156 PDF pages were rendered and compared, with the other 152 pages pixel-identical. All 54 tables, 83 inline illustrations, styles, page geometry, headers and footers remain unchanged.
 
 ## Operating coverage of the earlier combined guide
 
@@ -85,9 +85,9 @@ Native pipeline opt-in, NKP and ZTF 2.x console execution are **retired**. Histo
 
 The example consolidated build is `v1.8.5-rc1-f33c9ed`. Obtain its exact trusted ZIP and checksum from the release maintainer; this is not a claim that a commit-specific bundle is a public release asset. This manual update changes no installed runtime or immutable ZIP. See [current source/package evidence](../current-status.md).
 
-PDF SHA256: `5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10`.
+PDF SHA256: `9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a`.
 
-Editable source SHA256: `2c183d90b279223684fcaedc6e11b437ad5f735481d68f583355a31867d94d26`.
+Editable source SHA256: `92aa7eb73ab272012cbeb3a3584f3191edd3ccc3abbd037596d18f6be069b5a8`.
 
 [Publication manifest](administrator-user-guide-publication.json) records source revisions, page count, layout geometry and download checksums.
 
@@ -141,4 +141,4 @@ candidate to stable. Verify exact installed build metadata independently.
 
 On 22 November 2026, remaining illustrative IP addresses in current and historical collection PDFs, editable Word editions and screenshot downloads were replaced with documentation-only TEST-NET examples. Covers, layout, original edition labels and application-source provenance are retained. John Goulden attribution is retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks remain technically accurate. Historical validation statements refer to their original environments, not tests against TEST-NET. Earlier immutable GitHub release assets, Git history and previously downloaded copies are separate from this republished collection; use the collection links above for the anonymised editions.
 
-The [revised 23-part series ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip) ([SHA-256](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256)) supersedes that earlier video edition. The existing Word/PDF retain their original edition links, which remain available.
+The maintained Word/PDF now link the revised video edition. Earlier dated release assets remain available as historical snapshots.

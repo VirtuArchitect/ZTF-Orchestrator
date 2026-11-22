@@ -13749,7 +13749,7 @@
       "pdf": "files/ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.pdf",
       "description": "The illustrated console manual: deployment, configuration, recovery, monitoring, approvals and administration.",
       "edition": "Reviewed 19 November 2026",
-      "scope": "Earlier source edition; use the current source guides for later transport and console changes. Application source f33c9ed; v1.8.5-rc1 prerelease. Training links refreshed separately. Illustrations retain their stated provenance. Operator-reported 40+ deployments with pipeline post-configuration and 20+ cluster recoveries added on 22 November 2026; original source review retained.",
+      "scope": "Earlier source edition; use the current source guides for later transport and console changes. Application source f33c9ed; v1.8.5-rc1 prerelease. Operator-reported wording, all three Foundation deployment workflows and revised video ZIP links refreshed on 22 November 2026. Original source review and illustration provenance retained.",
       "tags": [
         "manual",
         "admin",
@@ -13760,13 +13760,14 @@
       ],
       "archived": true,
       "pages": 156,
-      "bytes": 10650109,
-      "sha256": "5ce889c14ba1b0ccb0296298042021ee28659f4e77978e3b8528b5892d995f10",
+      "bytes": 10864119,
+      "sha256": "9f83535cf9585c6df818efff9d7f7b20499baa1b6616161962e71bc5add8a79a",
       "tutorial": "00",
       "coverFile": "administrator-user-guide.jpg",
       "beforeAddressAnonymisationSha256": "453b5a045b6baf5019264792e3b6381a4cb1a59d4eb02af4ae39ef4567268dbf",
       "addressAnonymisation": "2026-11-22",
-      "operationalExperienceUpdate": "2026-11-22"
+      "operationalExperienceUpdate": "2026-11-22",
+      "guideContentUpdate": "2026-11-22"
     },
     {
       "id": "quick-guides-retired-script-ztf2-create-category-pc",
