@@ -29,6 +29,8 @@ are simulated; screenshots and videos do not establish hardware validation.*
 
 ## Current Repository Status
 
+The console's Dark theme uses Windows-style neutral charcoal surfaces. Use the header Theme control to choose Dark, Light or System; your saved browser preference is retained. The existing light palette, blue/teal accents and workflow controls remain available. Earlier appliance bundles retain their original palette until updated.
+
 Reviewed **19 November 2026** against application source
 [`f33c9ed`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2).
 The corresponding consolidated appliance build is `v1.8.5-rc1-f33c9ed`.
