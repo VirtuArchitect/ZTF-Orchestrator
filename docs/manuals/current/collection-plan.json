@@ -25,7 +25,8 @@
       "sourceDocument": "docs/ahv-uplink-migration.md",
       "archived": false,
       "kind": "guide",
-      "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862"
+      "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
+      "reviewed": "2026-11-22"
     },
     {
       "id": "appliance-update-manager",
@@ -122,7 +123,8 @@
       "sourceDocument": "docs/current-status.md",
       "archived": false,
       "kind": "guide",
-      "applicationSource": "590de8cd07cd6fb81cd76640090a18a5fb7bc862"
+      "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
+      "reviewed": "2026-11-22"
     },
     {
       "id": "dare-workflow",

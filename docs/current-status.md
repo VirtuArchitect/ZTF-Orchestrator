@@ -1,5 +1,9 @@
 # Current documentation and appliance build
 
+## Source additions — 22 November 2026
+
+AHV Uplink Migration now selects saved Global Config references through dropdowns showing reference and username. CVM choices use the required `nutanix` account. Loading, empty and failed catalogues, and unavailable saved references, block discovery with refresh/correction guidance. The additive admin-only catalogue API returns declarations only and never resolves secret providers or exposes passwords. Existing ZTF 1.x pipelines, approvals, completed recovery work and the step 08-only retry are unchanged. See [saved credential selection](ahv-uplink-migration.md#saved-credential-selection). Existing appliance ZIPs are immutable; use the consolidated update published with this source change.
+
 ## Source additions — 21 November 2026
 
 AHV Uplink Migration now explains disabled assignment controls and reports discovery Running/Passed/Failed, elapsed request time, per-host NIC counts and HTTP errors. Connection changes require rediscovery; a failed refresh clears old inventory. See [uplink discovery feedback](ahv-uplink-migration.md#discovery-and-continue-feedback). No automatic discovery or cluster operation is introduced.
