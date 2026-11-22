@@ -109,21 +109,27 @@
     },
     {
       "file": "foundation-images.png",
-      "sha256": "e383202709d66ea3800359412a2966ad9fab5269a2fb3002a1111dfa2ddaa171",
+      "sha256": "dcaeb20698ff4badfc26366eb894c2aa1ad82675465395c30fd58c82ad3f8c80",
       "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
-      "simulated": true
+      "simulated": true,
+      "originalSha256": "e383202709d66ea3800359412a2966ad9fab5269a2fb3002a1111dfa2ddaa171",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "file": "foundation-nodes.png",
-      "sha256": "d8bbad1b784980815e7cdbaefb7e524300eebce9973e89954a86065571ba8d97",
+      "sha256": "73bebf55b50fa0f9dcb61993eadc52bfadacb10031aa1260fa99e69282a9c903",
       "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
-      "simulated": true
+      "simulated": true,
+      "originalSha256": "d8bbad1b784980815e7cdbaefb7e524300eebce9973e89954a86065571ba8d97",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "file": "foundation-vm.png",
-      "sha256": "fe1d266d84ae3153d3d898cc9c1b7c64b37d14d18ff1d41767c6dfa841be919f",
+      "sha256": "992371ed55554b12eacc7b63253132bc4f7a803a33cc3fca1c3e3ea1c9f88436",
       "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
-      "simulated": true
+      "simulated": true,
+      "originalSha256": "fe1d266d84ae3153d3d898cc9c1b7c64b37d14d18ff1d41767c6dfa841be919f",
+      "addressAnonymisation": "2026-11-22"
     },
     {
       "file": "global-config.png",
@@ -317,5 +323,6 @@
       "sourceRevision": "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
       "simulated": true
     }
-  ]
+  ],
+  "addressAnonymisation": "2026-11-22"
 }

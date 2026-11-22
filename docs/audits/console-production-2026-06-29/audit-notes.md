@@ -104,7 +104,7 @@ run.
 
 7. Workflow forms show plausible sample values.
    - Evidence: `12-workflow-detail-view.png`.
-   - Fields such as `10.0.0.100`, `my-cluster-01`, and `8.8.8.8` help users
+   - Fields such as `192.0.2.100`, `my-cluster-01`, and `192.0.2.53` help users
      understand format, but in production they can blur the difference between
      placeholder and real input. Keep placeholders visually distinct and avoid
      sample values that could be accidentally submitted.

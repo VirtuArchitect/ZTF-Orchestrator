@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_public_entry_pages_link_the_current_manual_downloads():
     folder = ROOT / 'docs/manuals'
     manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
-    expected = {kind: row['url'] for kind, row in manifest['releaseDownloads']['files'].items()}
+    expected = {kind: row['url'] for kind, row in manifest['currentDownloads']['files'].items()}
 
     class ManualLinks(HTMLParser):
         def __init__(self):
@@ -36,7 +36,7 @@ def test_public_entry_pages_link_the_current_manual_downloads():
     assert set(expected.values()) <= set(links)
 
 
-def test_manual_release_assets_match_maintained_documents_and_checksums():
+def test_manual_original_release_provenance_and_current_downloads():
     folder = ROOT / 'docs/manuals'
     manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
     release = manifest['releaseDownloads']
@@ -50,10 +50,12 @@ def test_manual_release_assets_match_maintained_documents_and_checksums():
         assert Path(row['asset']).name == row['asset']
         assert row['asset'] == row['source'].rsplit('.', 1)[0] + '-' + release['published'] + '.' + row['source'].rsplit('.', 1)[1]
         assert row['url'] == prefix + row['asset']
+        assert row['sha256'] == manifest['addressAnonymisation']['originalFiles'][row['source']]
+        expected_sums[row['asset']] = row['sha256']
+    for row in manifest['currentDownloads']['files'].values():
         data = (folder / row['source']).read_bytes()
         assert len(data) == row['bytes']
         assert hashlib.sha256(data).hexdigest() == row['sha256'] == manifest['files'][row['source']]
-        expected_sums[row['asset']] = row['sha256']
         assert row['url'] in (folder / 'README.md').read_text(encoding='utf-8')
     checksums = release['checksums']
     assert Path(checksums['asset']).name == checksums['asset']

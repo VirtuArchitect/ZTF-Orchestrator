@@ -111,6 +111,19 @@ def test_previous_illustrated_word_preserves_original_screenshots():
     assert hashes <= embedded, 'A task screenshot is missing from the illustrated Word collection'
 
 
+def test_screenshot_download_contains_only_current_anonymised_assets():
+    folder = ROOT / 'docs/assets/quick-guides/2026-11-20'
+    manifest = json.loads((folder / 'capture-manifest.json').read_text(encoding='utf-8'))
+    assert manifest['addressAnonymisation'] == '2026-11-22'
+    archive = ROOT / 'docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.zip'
+    with zipfile.ZipFile(archive) as package:
+        members = {Path(name).name: name for name in package.namelist()}
+        for row in manifest['captures']:
+            assert package.read(members[row['file']]) == (folder / row['file']).read_bytes()
+        for filename in ['capture-manifest.json', 'SHA256SUMS']:
+            assert package.read(members[filename]) == (folder / filename).read_bytes()
+
+
 def test_corrected_editions_retain_the_standard_cover_and_format():
     manuals = ROOT / 'docs/manuals'
     manifest = json.loads((manuals / 'workflow-script-quick-guides-branding.json').read_text(encoding='utf-8'))

@@ -2,6 +2,8 @@
 
 Date: 2026-07-22
 
+Address examples anonymised on 22 November 2026. Historical results refer to the original environment; no tests were run against the documentation-only addresses.
+
 Current ZTF-Orchestrator source-tree release: `v1.8.5-rc1`.
 
 > Historical evidence only.
@@ -16,7 +18,7 @@ This runbook intentionally uses a temporary storage container instead of a VM be
 
 ## Scope
 
-- Prism Element API endpoint: `10.20.30.201:9440`
+- Prism Element API endpoint: `192.0.2.201:9440`
 - Cluster name: `DEV_LAB`
 - Disposable container: `ztf-orchestrator-validation-container`
 - Replication factor: `1` for the one-node DEV_LAB cluster
@@ -28,14 +30,14 @@ Do not run this lifecycle unless object creation and deletion have been explicit
 
 1. Confirm `pe_user` exists in Orchestrator Global Config and has Prism Element rights to create and delete storage containers.
 2. Confirm `ztf-orchestrator-validation-container` is absent.
-3. Confirm Prism Element API reachability on `10.20.30.201:9440`.
+3. Confirm Prism Element API reachability on `192.0.2.201:9440`.
 4. Confirm the operator understands the delete confirmation phrase: `RUN DeleteContainerPe`.
 
 ## Create YAML
 
 ```yaml
 clusters:
-  10.20.30.201:
+  192.0.2.201:
     name: DEV_LAB
     pe_credential: pe_user
     containers:
@@ -48,7 +50,7 @@ clusters:
 
 ```yaml
 clusters:
-  10.20.30.201:
+  192.0.2.201:
     name: DEV_LAB
     pe_credential: pe_user
     containers:
@@ -71,9 +73,9 @@ Dry-run proof points:
 
 - YAML is parseable.
 - top-level `clusters` exists.
-- `clusters.10.20.30.201.name` exists.
+- `clusters.192.0.2.201.name` exists.
 - `DeleteContainerPe` item fields `containers[0].name` and `containers[0].replication_factor` exist.
-- Prism Element `10.20.30.201:9440` is reachable.
+- Prism Element `192.0.2.201:9440` is reachable.
 
 ## Execution Payloads
 
@@ -85,7 +87,7 @@ Create payload:
 {
   "script": "CreateContainerPe",
   "configFile": "dev-lab-create-validation-container.yml",
-  "configContent": "clusters:\n  10.20.30.201:\n    name: DEV_LAB\n    pe_credential: pe_user\n    containers:\n      - name: ztf-orchestrator-validation-container\n        replication_factor: 1\n        advertisedCapacity_in_gb: 16\n"
+  "configContent": "clusters:\n  192.0.2.201:\n    name: DEV_LAB\n    pe_credential: pe_user\n    containers:\n      - name: ztf-orchestrator-validation-container\n        replication_factor: 1\n        advertisedCapacity_in_gb: 16\n"
 }
 ```
 
@@ -95,7 +97,7 @@ Delete payload:
 {
   "script": "DeleteContainerPe",
   "configFile": "dev-lab-delete-validation-container.yml",
-  "configContent": "clusters:\n  10.20.30.201:\n    name: DEV_LAB\n    pe_credential: pe_user\n    containers:\n      - name: ztf-orchestrator-validation-container\n        replication_factor: 1\n",
+  "configContent": "clusters:\n  192.0.2.201:\n    name: DEV_LAB\n    pe_credential: pe_user\n    containers:\n      - name: ztf-orchestrator-validation-container\n        replication_factor: 1\n",
   "riskAcknowledged": true,
   "destructiveConfirmation": "RUN DeleteContainerPe"
 }
