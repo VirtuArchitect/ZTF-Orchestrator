@@ -1,0 +1,11 @@
+[
+  { "id": "home", "label": "Home", "path": "" },
+  { "id": "status", "label": "Current status", "path": "#status" },
+  { "id": "capabilities", "label": "Capabilities", "path": "#capabilities" },
+  { "id": "demo", "label": "Demo", "path": "demo/" },
+  { "id": "resources", "label": "Resources", "path": "#resources" },
+  { "id": "documentation", "label": "Documentation", "path": "documentation/" },
+  { "id": "tutorials", "label": "Video tutorials", "path": "tutorials/" },
+  { "id": "releases", "label": "Releases", "path": "releases/" },
+  { "id": "github", "label": "GitHub", "path": "https://github.com/VirtuArchitect/ZTF-Orchestrator" }
+]
