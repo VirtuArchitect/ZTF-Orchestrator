@@ -154,7 +154,7 @@ def test_pages_release_index_preserves_pinned_historical_links():
     assert {path for _, path in html_pins} == archived
     assert not {'script', 'form', 'iframe'} & set(parser.tags)
     for link in parser.links:
-        assert link == '../demo/' or link.startswith('https://github.com/VirtuArchitect/ZTF-Orchestrator')
+        assert link in {'../', '../#status', '../#capabilities', '../demo/', '../#resources', '../documentation/', '../tutorials/', '../releases/'} or link.startswith('https://github.com/VirtuArchitect/ZTF-Orchestrator')
     assert "default-src 'none'" in page
     assert 'Latest stable' in page and '>v1.8.4<' in page
     assert 'v1.8.5-rc1' in page and 'Current prerelease' in page

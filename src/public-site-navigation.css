@@ -1,0 +1,41 @@
+/* Shared public-site header. All selectors stay inside this header. */
+.ztf-site-header, .ztf-site-header * { box-sizing: border-box; }
+header.ztf-site-header {
+  display: block; flex-shrink: 0; margin: 0; padding: 0;
+  color-scheme: light; color: #17252e; background: #f6f8f9;
+  border: 0; border-bottom: 1px solid #d7e0e4;
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.ztf-site-header .ztf-site-header-inner {
+  width: min(96rem, calc(100% - 3rem)); margin: auto; padding: 12px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px 24px;
+}
+.ztf-site-header .ztf-site-brand {
+  display: inline-flex; flex-shrink: 0; align-items: center; gap: 12px;
+  margin: 0; padding: 0; color: #17252e; text-decoration: none;
+  font-size: 19px; font-weight: 720; letter-spacing: -.025em;
+}
+.ztf-site-header .ztf-site-brand img { display: block; width: 34px; height: 34px; max-width: none; }
+.ztf-site-header nav {
+  display: flex; flex-direction: row; align-items: center; flex-wrap: wrap;
+  justify-content: flex-end; gap: 4px 12px; max-height: none; overflow: visible;
+  margin: 0; padding: 0; font: inherit;
+}
+.ztf-site-header nav a {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 44px; margin: 0; padding: 8px; border: 0; border-radius: 6px;
+  color: #4c5e69; text-decoration: none; white-space: nowrap;
+}
+.ztf-site-header nav a:hover { color: #075e53; background: #e5efec; }
+.ztf-site-header nav a[aria-current] { color: #17252e; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.ztf-site-header nav a.ztf-site-home { padding-inline: 15px; background: #096c5d; color: white; font-weight: 650; }
+.ztf-site-header nav a.ztf-site-home:hover { background: #075346; color: white; }
+.ztf-site-header a:focus-visible { outline: 3px solid #0068bd; outline-offset: 3px; }
+@media (max-width: 1200px) {
+  .ztf-site-header nav { width: 100%; justify-content: flex-start; }
+}
+@media (max-width: 480px) {
+  .ztf-site-header .ztf-site-header-inner { width: calc(100% - 2rem); gap: 10px; }
+  .ztf-site-header nav { gap: 4px 8px; }
+}
