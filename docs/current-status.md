@@ -1,5 +1,14 @@
 # Current documentation and appliance build
 
+## Recovery workspace — updated source, 23 November 2026
+
+The recovery workspace combines one next action, recorded stage status, current
+execution, readable pipeline steps and an exportable shift handover snapshot.
+Failure details and YAML remain expandable. No approval, health, retry or API
+policy changes are introduced. Existing appliance ZIPs remain unchanged; a local
+frontend preview is not a newly published appliance release. See the
+[recovery workspace](disaster-recovery.md#recovery-workspace-updated-source-builds).
+
 ## Source additions — 22 November 2026
 
 AHV Uplink Migration now selects saved Global Config references through dropdowns showing reference and username. CVM choices use the required `nutanix` account. Loading, empty and failed catalogues, and unavailable saved references, block discovery with refresh/correction guidance. The additive admin-only catalogue API returns declarations only and never resolves secret providers or exposes passwords. Existing ZTF 1.x pipelines, approvals, completed recovery work and the step 08-only retry are unchanged. See [saved credential selection](ahv-uplink-migration.md#saved-credential-selection). Existing appliance ZIPs are immutable; use the consolidated update published with this source change.

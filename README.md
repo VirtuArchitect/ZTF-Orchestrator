@@ -7,6 +7,11 @@ Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orch
 Prepare cluster configuration, run governed ZTF 1.x pipelines, and recover
 Nutanix infrastructure from reviewed profiles through one web console.
 
+Updated source builds provide a [recovery workspace](docs/disaster-recovery.md#recovery-workspace-updated-source-builds)
+with a clear next action, readable pipeline steps, recorded failure stages and an
+exportable handover summary. Existing approval, health and step 08-only retry
+controls are retained.
+
 **Operational experience — operator-reported, 22 November 2026:**
 
 Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.

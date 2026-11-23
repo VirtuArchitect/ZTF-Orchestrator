@@ -123,8 +123,8 @@
       "sourceDocument": "docs/current-status.md",
       "archived": false,
       "kind": "guide",
-      "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
-      "reviewed": "2026-11-22"
+      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
+      "reviewed": "2026-11-23"
     },
     {
       "id": "dare-workflow",
@@ -156,7 +156,9 @@
       "category": "Recovery and data",
       "sourceDocument": "docs/disaster-recovery.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "reviewed": "2026-11-23",
+      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010"
     },
     {
       "id": "docker-build-identity",

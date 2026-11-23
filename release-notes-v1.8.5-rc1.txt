@@ -1,3 +1,6 @@
+RECOVERY OPERATIONS WORKSPACE (updated source builds)
+Present the next recovery action, stage status, current execution, readable pipeline steps and a plain-text shift handover summary together. Advanced diagnostics and YAML stay expandable. Export omits configuration contents, raw logs, connection endpoints and credentials. Existing approvals, health gates, completed work and eligible step 08-only recovery retry are unchanged. No API, schema or runtime dependency changes.
+
 EXTENDED DEPLOYMENT WALKTHROUGH (23 November 2026 documentation update)
 Publish Part 23 using actual Orchestrator Foundation progress and pipeline-runner screens with simulated data, accelerated tutorial progress, Joanna narration and English captions. The existing 23-part ZIP and all earlier video links remain unchanged; the additional MP4 and companion ZIP have separate release downloads. No runtime or live-cluster changes.
 

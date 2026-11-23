@@ -35,8 +35,29 @@ target confirmations before imaging can start. The count beside **Approvals**
 shows requests awaiting a decision and refreshes after approval changes. A
 question mark means the count could not be retrieved.
 
-The recovery guide leads with the current failure and next action. Expand
-**Recovery stages** or **Pipeline steps** when you need the full plan.
+### Recovery workspace (updated source builds)
+
+The recovery workspace leads with one **Next action**, then shows recorded
+stage status, execution information and readable pipeline steps. The next-action
+button opens or focuses the existing review/confirmation controls; it does not
+submit a retry, grant approval or bypass verification. During active execution,
+reported stages and available Foundation phase/node telemetry are available in
+the same workspace. Estimated job progress is explicitly labelled.
+
+Pipeline labels are derived from saved filenames, alongside the exact filename,
+workflow and recorded status. Use descriptive configuration filenames. Completed
+steps link to their exact jobs. Pipelines retain their actual length; only an
+eligible baseline registration recovery offers the existing **step 08-only** retry.
+Future pipeline details stay collapsed after an early deployment failure.
+
+**Shift handover** summarises the target, stage, completed count, recorded approval
+reference, update/evidence timestamps and next action. A recorded approval reference
+is not a new authorisation; action-specific checks and evidence freshness are still
+validated by the server. Refresh errors explicitly identify stale displayed state.
+**Export handover summary** downloads a plain-text snapshot without configuration
+contents, raw logs, endpoints or credentials. It includes operational identifiers
+(cluster/run/job IDs); handle it according to your organisation's data policy.
+Advanced failure details, step YAML and run history remain expandable.
 Jobs / Queue loads the complete record and saved output when a job is expanded.
 A failed deployment alone does not establish whether Foundation began imaging.
 Inspect its saved error and Foundation session before choosing a continuation.
