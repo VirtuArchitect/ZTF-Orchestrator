@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 
 const passwordWorkflow = 'initial-host-cvm-password-setup'
 const passwordConfirmation = 'SET INITIAL HOST AND CVM PASSWORDS'
@@ -506,7 +507,7 @@ test('Recover Cluster reviews readiness and prepares through the existing deploy
   await page.getByRole('button', { name: 'Prepare Recovery', exact: true }).click()
   const guide = page.getByRole('region', { name: 'Recovery stage guide' })
   await guide.getByText('Recovery stages', { exact: true }).click()
-  await expect(guide.getByText('Review targets and approve', { exact: true }).locator('..')).toContainText('Current')
+  await expect(guide.getByRole('listitem').filter({ hasText: 'Review targets and approve' })).toContainText('Current')
   await expect(page.getByRole('button', { name: 'Deploy Reviewed Recovery' })).toBeDisabled()
   expect(writes).toEqual(['/api/recovery/runs'])
 })
@@ -518,7 +519,7 @@ test('Resume Recovery retains steps 01 through 07 and guides reconciliation, hea
   await expect(page.getByRole('button', { name: 'Review targets and readiness' })).toHaveCount(0)
   await page.getByRole('dialog').getByRole('button', { name: 'Resume Recovery', exact: true }).click()
   const guide = page.getByRole('region', { name: 'Recovery stage guide' })
-  await guide.getByText('Pipeline steps · 7 / 8 completed', { exact: true }).click()
+  await expect(guide.getByText('Pipeline steps · 7 / 8 completed', { exact: true })).toBeVisible()
   await expect(guide.getByText('08. 08_register_pc.yml').locator('..')).toContainText('Blocked')
   await expect(guide.getByText('01. 01_settings.yml').locator('..')).toContainText('Completed')
   await expect(page.getByRole('button', { name: 'Deploy Reviewed Recovery' })).toHaveCount(0)
@@ -583,7 +584,7 @@ test('an interrupted bootstrap is blocked after completed Foundation imaging', a
   const guide = page.getByRole('region', { name: 'Recovery stage guide' })
   await guide.getByText('Recovery stages', { exact: true }).click()
   await expect(guide.getByText('Foundation imaging', { exact: true }).locator('..')).toContainText('Completed')
-  await expect(guide.getByText('Initial-access bootstrap', { exact: true }).locator('..')).toContainText('Blocked')
+  await expect(guide.getByRole('listitem').filter({ hasText: 'Initial-access bootstrap' })).toContainText('Blocked')
   await expect(page.getByRole('button', { name: 'Deploy Reviewed Recovery' })).toHaveCount(0)
 })
 
@@ -602,11 +603,94 @@ test('early deployment failure shows its saved cause before collapsed future con
   await page.getByRole('button', { name: 'Resume Recovery', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Resume Recovery', exact: true }).click()
   const guide = page.getByRole('region', { name: 'Recovery stage guide' })
+  await guide.getByText('View failure details', { exact: true }).click()
   await expect(guide.getByText('Foundation image inventory request returned HTTP 503', { exact: true })).toBeVisible()
   await expect(guide.getByRole('link', { name: 'Open this job and its log' })).toHaveAttribute('href', '/jobs?job=foundation-complete')
   await expect(guide.getByText('08. 08_register_pc.yml')).toBeHidden()
   await expect(page.getByLabel('Recovery configuration step')).toHaveCount(0)
   await expect(page.getByLabel('Prepare to resume remaining configuration after fresh health evidence.')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Save checked outcome' })).toBeDisabled()
+  expect(writes).toEqual([])
+})
+
+test('recovery handover export is a read-only allowlisted snapshot, not approval or raw logs', async ({ page }, testInfo) => {
+  const writes = await seed(page, 'admin', { recoveryStatus: 'needs_reconciliation' })
+  await page.route('**/api/jobs/registration-failed', route => route.fulfill({ json: {
+    id: 'registration-failed', status: 'failed', returnCode: 1, lastRecordedStage: 'Registration verification',
+    diagnostics: { stderrTail: 'private-log-marker', likelyFix: 'Reconcile PE and PC before retrying.' },
+  } }))
+  await page.goto('/recovery/runs?run=run1')
+  const guide = page.getByRole('region', { name: 'Recovery stage guide' })
+  await expect(guide).toContainText('Failed stage: Registration verification')
+  await expect(guide).toContainText('No automatic retry')
+  const handover = page.getByRole('complementary', { name: 'Shift handover' })
+  await expect(handover).toContainText('7 of 8 steps')
+  await expect(handover).toContainText('No deployment approval reference recorded')
+  await expect(guide.getByText('private-log-marker', { exact: true })).toBeHidden()
+  const downloadPromise = page.waitForEvent('download')
+  await handover.getByRole('button', { name: 'Export handover summary' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('ztf-recovery-handover.txt')
+  const text = await readFile((await download.path())!, 'utf8')
+  expect(text).toContain('Completed: 7 / 8')
+  expect(text).toContain('Blocker: Target state needs reconciliation')
+  expect(text).toContain('before retrying step 08')
+  expect(text).toContain('not permission to execute')
+  for (const secret of ['private-log-marker', 'configContent', 'clusters: {}', 'foundation.example.com', '192.0.2.20']) expect(text).not.toContain(secret)
+  expect(writes).toEqual([])
+  await page.setViewportSize({ width: 1600, height: 1100 })
+  await page.getByRole('dialog').evaluate(el => { el.scrollTop = 0 })
+  await page.screenshot({ path: testInfo.outputPath('recovery-workspace-desktop.png'), fullPage: true })
+})
+
+test('workspace uses the actual pipeline length and shows exact completed job links', async ({ page }) => {
+  const writes = await seed(page, 'viewer', { recoveryStatus: 'needs_reconciliation' })
+  await page.goto('/recovery')
+  const overview = await page.evaluate(async () => (await fetch('/api/recovery')).json())
+  const run = { ...overview.runs[0], canRetryRegistration: false, status: 'configuring', approvalId: 'recorded-approval',
+    snapshot: { ...overview.runs[0].snapshot, steps: Array.from({ length: 12 }, (_, index) => ({
+      workflow: 'config-cluster', configFile: `${index + 1}_Configure_HA.yml`, configContent: 'private-yaml-marker',
+    })) } }
+  await page.route('**/api/recovery/runs/run1', route => route.fulfill({ json: run }))
+  await page.goto('/recovery/runs?run=run1')
+  const guide = page.getByRole('region', { name: 'Recovery stage guide' })
+  await expect(guide).toContainText('7 / 12 completed')
+  await expect(guide.getByText('Configure HA', { exact: true })).toHaveCount(12)
+  await expect(guide.getByRole('link', { name: 'Job completed-0', exact: true })).toHaveAttribute('href', '/jobs?job=completed-0')
+  await expect(guide).toContainText('Deployment approval reference recorded; action-specific checks still apply')
+  await expect(guide.getByRole('button', { name: 'Monitor configuration', exact: true })).toHaveCount(0)
+  await expect(guide).not.toContainText('only eligible retry')
+  expect(writes).toEqual([])
+})
+
+test('mobile recovery workspace preserves reconciliation controls and contains its layout', async ({ page }, testInfo) => {
+  const writes = await seed(page, 'admin', { recoveryStatus: 'needs_reconciliation' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/recovery/runs?run=run1')
+  await page.getByRole('button', { name: 'Review reconciliation', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Check the target before continuing' })).toBeFocused()
+  await expect(page.getByRole('button', { name: 'Save checked outcome' })).toBeDisabled()
+  const dialog = page.getByRole('dialog')
+  expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+  expect(writes).toEqual([])
+  await page.screenshot({ path: testInfo.outputPath('recovery-workspace-mobile.png'), fullPage: true })
+})
+
+test('active recovery shows saved execution stage and distinguishes reported Foundation telemetry from estimates', async ({ page }) => {
+  const writes = await seed(page, 'admin', { recoveryStatus: 'deploying' })
+  await page.route('**/api/jobs/registration-failed', route => route.fulfill({ json: {
+    id: 'registration-failed', status: 'running', lastRecordedStage: 'AHV installation',
+    progress: { phase: 'deploy', percent: 62, estimated: true },
+    foundationStatus: { status: 'running', percent: 25, connection: 'connected', phases: [
+      { id: 'ahv', label: 'AHV installation', status: 'running', percent: 25, nodes: [] },
+    ], nodes: [] },
+  } }))
+  await page.goto('/recovery/runs?run=run1')
+  const execution = page.getByRole('region', { name: 'Current recovery execution' })
+  await expect(execution).toContainText('Reported stage: AHV installation')
+  await expect(execution).toContainText('Estimated job progress: 62%')
+  await execution.getByText('Foundation phases and node progress', { exact: true }).click()
+  await expect(execution.getByRole('region', { name: 'Foundation VM deployment status' })).toContainText('Foundation 25%')
+  await expect(execution.getByRole('link', { name: 'Open current execution and logs' })).toHaveAttribute('href', '/jobs?job=registration-failed')
   expect(writes).toEqual([])
 })
