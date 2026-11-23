@@ -1,3 +1,6 @@
+EXTENDED DEPLOYMENT WALKTHROUGH (23 November 2026 documentation update)
+Publish Part 23 using actual Orchestrator Foundation progress and pipeline-runner screens with simulated data, accelerated tutorial progress, Joanna narration and English captions. The existing 23-part ZIP and all earlier video links remain unchanged; the additional MP4 and companion ZIP have separate release downloads. No runtime or live-cluster changes.
+
 GUIDE RELEASE DOWNLOADS (22 November 2026)
 The verified Administrator and User Guide Word/PDF are available as dated GitHub prerelease assets with a SHA-256 checksum file. Primary download links point to these exact copies. Earlier release assets and repository/PDF preview copies remain available; no guide content, formatting, application or appliance behavior changes.
 

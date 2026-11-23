@@ -59,6 +59,15 @@ jobs:
           cp "$source"/* "$output/"
           (cd "$output" && sha256sum -c SHA256SUMS)
 
+      - name: Add extended deployment walkthrough
+        run: |
+          source=docs/assets/deployment-progress-video
+          output=dist-demo/tutorials/deployment
+          (cd "$source" && sha256sum -c SHA256SUMS)
+          mkdir -p "$output"
+          cp "$source"/* "$output/"
+          (cd "$output" && sha256sum -c SHA256SUMS)
+
       - name: Record published source identity
         env:
           SOURCE_SHA: ${{ github.sha }}

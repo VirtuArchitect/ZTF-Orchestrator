@@ -1,0 +1,19 @@
+00:00:00 Opening
+00:00:19 Choose deployment service
+00:00:42 Review nodes and images
+00:01:04 Accelerated cluster deployment
+00:01:23 Review pipeline 01–09
+00:01:44 01 · PE administrator password
+00:01:59 02 · EULA and Pulse
+00:02:02 03 · Data Services IP
+00:02:06 04 · High availability
+00:02:09 05 · Rebuild reservation
+00:02:17 06 · Create containers
+00:02:20 07 · PE login title
+00:02:26 08 · Configure Dark Site
+00:02:42 09 · Register PE to PC
+00:03:03 10 · Plan uplink migration
+00:03:26 10 · Apply and verify per host
+00:03:44 11 · Change MTU
+00:04:10 12 · Enable DARE
+00:04:35 Review completion evidence

@@ -44,7 +44,7 @@ for (const width of [1440, 390]) {
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
     await page.goto('tutorials/')
-    await expect(page.locator('#parts button')).toHaveCount(23)
+    await expect(page.locator('#parts button')).toHaveCount(24)
     await expect(page.locator('#parts button').first()).toHaveText('00. ZTF-Orchestrator Overview')
     await expect(page.locator('#title')).toContainText('ZTF-Orchestrator Overview')
     await expect.poll(() => page.locator('video').evaluate(video => video.videoWidth)).toBe(1920)
@@ -155,7 +155,7 @@ for (let part = 0; part < 23; part++) {
     test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
     await page.goto(`tutorials/?part=${String(part).padStart(2, '0')}`)
     const player = page.locator('video')
-    await expect(page.locator('#parts button')).toHaveCount(23)
+    await expect(page.locator('#parts button')).toHaveCount(24)
     await expect.poll(() => player.evaluate(video => video.videoWidth)).toBe(1920)
     const duration = await player.evaluate(video => video.duration)
     expect(duration).toBeGreaterThan(60)
@@ -192,6 +192,48 @@ test('Part 02 keeps its URL and explains the three deployment services', async (
 type CaptionSample = {
   time: number; region: [number, number, number, number];
   ink: 'light' | 'dark'; threshold: number; referenceMaskZlib: string;
+}
+
+for (const width of [1440, 390]) {
+  test(`extended Part 23 plays with stereo audio and all chapter links at ${width}px`, async ({ page }) => {
+    test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
+    test.slow()
+    await page.setViewportSize({ width, height: 1000 })
+    await page.goto('tutorials/?part=23')
+    await expect(page.locator('#parts button')).toHaveCount(24)
+    await expect(page.locator('#title')).toContainText('Part 23: Cluster Deployment and Pipeline Progress (4:56)')
+    const player = page.locator('video')
+    await expect.poll(() => player.evaluate(v => v.videoWidth)).toBe(1920)
+    expect(await player.evaluate(v => v.duration)).toBeCloseTo(296.5, 0)
+    await player.evaluate(v => { v.muted = false; v.volume = 1 })
+    await page.locator('#chapters button').first().click()
+    await expect.poll(() => player.evaluate(v => v.currentTime)).toBeGreaterThan(0.5)
+    await expect.poll(() => player.evaluate(v => (v as HTMLVideoElement & { webkitAudioDecodedByteCount: number }).webkitAudioDecodedByteCount)).toBeGreaterThan(0)
+    await expect(player).toHaveJSProperty('muted', false)
+    await expect(page.locator('#chapters button')).toHaveCount(19)
+    for (const button of await page.locator('#chapters button').all()) {
+      const label = await button.textContent()
+      const match = label!.match(/^(\d+):(\d+):/)
+      const target = Number(match![1]) * 60 + Number(match![2])
+      await button.click()
+      await expect.poll(() => player.evaluate(v => v.readyState >= 2 && !v.seeking && !v.paused)).toBe(true)
+      await expect.poll(() => player.evaluate(v => v.currentTime)).toBeGreaterThanOrEqual(target - 0.1)
+      expect(await player.evaluate(v => v.currentTime)).toBeLessThan(target + 3)
+    }
+    await expect(page.getByRole('link', { name: 'Download MP4', exact: true })).toHaveAttribute('href', /releases\/download\/v1\.8\.5-rc1\/.*Part-23.*2026-11-23\.mp4$/)
+    await expect(page.getByRole('link', { name: 'Download companion files', exact: true })).toHaveAttribute('href', /Part-23.*Companions.*\.zip$/)
+    for (const label of ['Transcript', 'Captions (SRT)', 'Captions (VTT)', 'Chapter list']) {
+      const link = page.getByRole('link', { name: label, exact: true })
+      const response = await page.request.get(await link.evaluate(a => a.href))
+      expect(response.ok()).toBe(true)
+      const text = await response.text()
+      expect(text.length).toBeGreaterThan(50)
+      expect(text).not.toContain('\u2014')
+    }
+    await expect(page.locator('#extended-walkthrough-note')).toContainText('unchanged 23-part ZIP')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+    await page.screenshot({ path: `test-results/extended-part-23-${width}.png`, fullPage: true })
+  })
 }
 
 test.describe('Burned-in caption pixels', () => {

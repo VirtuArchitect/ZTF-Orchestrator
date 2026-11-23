@@ -1,0 +1,114 @@
+{
+  "kind": "documentation-media-supplement",
+  "part": 23,
+  "title": "Cluster Deployment and Pipeline Progress",
+  "published": "2026-11-23",
+  "releaseTag": "v1.8.5-rc1",
+  "sourceRevision": "3dab86b2ca1239c32d541095f506027d25ea1620",
+  "file": "ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress.mp4",
+  "mediaBase": "deployment/",
+  "duration": 296.5,
+  "chapters": [
+    {
+      "start": 0,
+      "title": "Opening"
+    },
+    {
+      "start": 19.527,
+      "title": "Choose deployment service"
+    },
+    {
+      "start": 42.324,
+      "title": "Review nodes and images"
+    },
+    {
+      "start": 64.845,
+      "title": "Accelerated cluster deployment"
+    },
+    {
+      "start": 83.191,
+      "title": "Review pipeline 01\u201309"
+    },
+    {
+      "start": 104.235,
+      "title": "01 \u00b7 PE administrator password"
+    },
+    {
+      "start": 119.058,
+      "title": "02 \u00b7 EULA and Pulse"
+    },
+    {
+      "start": 122.94,
+      "title": "03 \u00b7 Data Services IP"
+    },
+    {
+      "start": 126.183,
+      "title": "04 \u00b7 High availability"
+    },
+    {
+      "start": 129.617,
+      "title": "05 \u00b7 Rebuild reservation"
+    },
+    {
+      "start": 137.98,
+      "title": "06 \u00b7 Create containers"
+    },
+    {
+      "start": 140.861,
+      "title": "07 \u00b7 PE login title"
+    },
+    {
+      "start": 146.535,
+      "title": "08 \u00b7 Configure Dark Site"
+    },
+    {
+      "start": 162.833,
+      "title": "09 \u00b7 Register PE to PC"
+    },
+    {
+      "start": 183.367,
+      "title": "10 \u00b7 Plan uplink migration"
+    },
+    {
+      "start": 206.017,
+      "title": "10 \u00b7 Apply and verify per host"
+    },
+    {
+      "start": 224.403,
+      "title": "11 \u00b7 Change MTU"
+    },
+    {
+      "start": 250.723,
+      "title": "12 \u00b7 Enable DARE"
+    },
+    {
+      "start": 275.945,
+      "title": "Review completion evidence"
+    }
+  ],
+  "voice": "Joanna - Warm & Conversational",
+  "lightMode": true,
+  "liveActionsExecuted": false,
+  "coreArchiveUnchanged": true,
+  "coreArchiveParts": 23,
+  "assets": {
+    "video": {
+      "asset": "ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-2026-11-23.mp4",
+      "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-2026-11-23.mp4",
+      "sha256": "181591b011d0d4206f57be30f3758b9866e070a6817eaf3b0e5bdd650f96fdec",
+      "bytes": 13045314
+    },
+    "companions": {
+      "asset": "ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-Companions-2026-11-23.zip",
+      "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-Companions-2026-11-23.zip",
+      "sha256": "f3d0bdecb52f597eb64a135f7f7ff67946eda71266a6dd1460c0abc40f431ec1",
+      "bytes": 133207
+    }
+  },
+  "checksums": {
+    "asset": "ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-2026-11-23-SHA256SUMS.txt",
+    "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-2026-11-23-SHA256SUMS.txt",
+    "sha256": "f7278766212636298c1d212bbc3eef0fb7b3f9729d66c0b12136c672bcf8572e",
+    "bytes": 327
+  }
+}
