@@ -1,0 +1,27 @@
+Start with four prepared AHV nodes and finish with a configured cluster. ZTF-Orchestrator brings deployment, post-configuration and verification into one console. This walkthrough uses anonymised demonstration data, with deployment progress accelerated for teaching. It does not measure real deployment time.
+
+From Start Here, choose Deploy a Cluster. Select the workflow that matches your deployment service: Foundation VM for a classic local or remote Foundation VM, Cluster Create for Foundation Central associated with Prism Central, or Standalone FCA for a separate Foundation Central Appliance. Each path needs its own reviewed configuration and compatible environment.
+
+Our example follows the Foundation VM path. Select the intended nodes, check their management addresses and credential references, and choose the approved AOS and AHV images already in Foundation inventory. Refresh inventory and review the available validation results. Confirm the exact physical targets and satisfy the required approval before imaging.
+
+Open Jobs and Queue to follow deployment. Watch the reported phases advance through imaging and cluster formation. The progress sequence is condensed here; the real job can take much longer. When formation finishes, verify the expected cluster identity, membership and health before starting post-configuration.
+
+Open the saved ZTF one point x pipeline and review the configuration filenames in execution order. The first nine steps are your post-configuration sequence. The final three operations use their own governed workflows. They are part of the same deployment runbook, but this walkthrough does not present them as twelve automatically chained pipeline actions.
+
+Step one, initial configuration admin password, replaces the initial Prism Element administrator password. Verify the replacement login before later steps use its saved credential reference. Keep password values hidden throughout the demonstration.
+
+Step two accepts the EULA and applies the reviewed Pulse setting. Step three configures the Data Services IP address. Step four applies the intended high availability policy. Step five sets rebuild capacity reservation. Check the resulting settings rather than treating a successful process exit as the only evidence.
+
+Step six creates the reviewed storage containers. Step seven sets the Prism Element login title so operators can recognise the target cluster. Step eight runs your reviewed Configure Dark Site configuration. Its source and settings are site-specific; confirm they suit the installed environment. The filename is your supplied configuration label, not a claim that every installation includes an identical built-in action.
+
+Step nine registers Prism Element with Prism Central. Verify registration on both sides. If a step fails, inspect its output and reconcile the actual target state before continuing. Registration is step nine in this demonstration. Do not confuse it with the separate recovery baseline whose registration-only retry is called step zero eight.
+
+After the pipeline checks pass, open AHV Uplink Migration. Discover the cluster, then review each host individually. For this example, retain two physical uplinks on v-switch zero and move two to v-switch one. Create the destination switch if needed. The selected NICs must match the actual cabling and management path; their names can differ between hosts.
+
+Run read-only preflight, review the exact assignments and obtain approval. The workflow applies one host at a time and verifies the retained and destination uplinks. A failed or uncertain result stops the sequence for investigation. It does not justify automatically replaying completed host changes.
+
+Step eleven changes the virtual switch MTU using the dedicated workflow. The current action targets v-switch zero and still uses Prism Central. Confirm jumbo-frame support across the intended physical network, review the target MTU, then approve and verify each host's readback. An optional Prism Element TLS exception does not remove Prism Central certificate requirements. Check end-to-end traffic separately.
+
+Step twelve enables Data-at-Rest Encryption through the DARE wizard. Choose the PE-direct path where appropriate, review local key-manager readiness and confirm licensing and key recovery ownership. Complete preflight and approval before enabling encryption. Software encryption cannot be disabled afterward. Verify the reported encryption configuration, follow background progress and complete the key-backup procedure.
+
+Finish by reviewing the deployment job, each pipeline result and the three finishing workflows. Record cluster identity, health, registration, uplink assignments, MTU and encryption evidence. The outcome is a repeatable deployment sequence with visible checkpoints, and a clear record of what completed and what still needs attention.

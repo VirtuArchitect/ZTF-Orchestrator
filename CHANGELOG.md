@@ -7,6 +7,7 @@
 
 
 ### Documentation
+- Add extended Part 23 with actual Orchestrator deployment/pipeline UI, anonymised simulated telemetry, Joanna narration, English captions and separate prerelease video/companion downloads. Preserve Parts 00–22, their archived ZIP, existing approvals and all runtime behavior.
 - Publish the verified 22 November Administrator and User Guide Word/PDF as dated prerelease assets with SHA-256 checksums. Update the primary README, landing-page, video-page and guide-index download links while retaining historical assets and repository/PDF preview copies. Guide contents and formatting are unchanged.
 - Refresh the maintained Administrator and User Guide Word/PDF with the exact operator-reported statement, all three Foundation deployment workflows and revised video ZIP links. Preserve the 156-page layout, 54 tables, 83 illustrations and stable download URLs; 152 published pages remain pixel-identical.
 - Publish the revised 23-part Joanna video series and complete offline ZIP with the exact operator-reported deployment/recovery statement, all three Foundation deployment paths, anonymised examples, English captions and 125 aligned chapters. Preserve stable video URLs and the prior release download.

@@ -12,6 +12,22 @@ transcript, use Back to return to the same part and timestamp, paused.
 Includes an offline player, transcripts, English SRT/VTT captions and chapter files.
 Extract the ZIP completely, then open `index.html`.
 
+## Extended walkthrough: Part 23
+
+[Watch Cluster Deployment and Pipeline Progress (4:56)](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=23).
+Added 23 November 2026 with Joanna narration, light mode and English captions.
+Actual Jobs / Queue and pipeline-runner UI captures use anonymised simulated
+telemetry; accelerated progress is not a measured live deployment. No cluster
+was contacted. Steps 01–09 are the example pipeline; Uplink Migration, VS0 MTU
+and DARE follow as separate governed workflows, preserving all twelve steps.
+
+[Download Part 23 MP4](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-2026-11-23.mp4) |
+[Captions, transcript and chapters](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-Companions-2026-11-23.zip) |
+[SHA-256 checksums](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Part-23-Cluster-Deployment-and-Pipeline-Progress-2026-11-23-SHA256SUMS.txt).
+
+The existing 22 November 23-part ZIP is unchanged and does not contain this
+extended walkthrough. Existing Parts 00–22 and their URLs are retained.
+
 ## Revised introductions and Foundation coverage
 
 Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.

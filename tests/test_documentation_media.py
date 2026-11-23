@@ -17,6 +17,51 @@ def historical_recording(recording):
     return recording.get('baselineVerification', recording)
 
 
+def test_extended_deployment_walkthrough_is_separate_and_verified():
+    folder = ROOT / 'docs/assets/deployment-progress-video'
+    publication = json.loads((folder / 'publication.json').read_text(encoding='utf-8'))
+    verification = json.loads((folder / 'verification.json').read_text(encoding='utf-8'))
+    page = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
+    extended, _ = json.JSONDecoder().raw_decode(page.split('const extendedVideos=', 1)[1])
+    assert len(extended) == 1
+    entry = extended[0]
+    assert entry['part'] == publication['part'] == 23
+    assert publication['kind'] == 'documentation-media-supplement'
+    assert publication['coreArchiveUnchanged'] and publication['coreArchiveParts'] == 23
+    assert entry['mediaBase'] == publication['mediaBase'] == 'deployment/'
+    assert 'const playlist = videos.concat(extendedVideos)' in page
+    assert 'playlist.findIndex' in page and 'playlist[selected]' in page
+    assert 'unchanged 23-part ZIP' in page
+    video = folder / entry['file']
+    assert video.name == publication['file']
+    assert hashlib.sha256(video.read_bytes()).hexdigest() == publication['assets']['video']['sha256'] == verification['sha256']
+    assert video.stat().st_size == publication['assets']['video']['bytes']
+    assert entry['downloadUrl'] == publication['assets']['video']['url']
+    assert entry['companionUrl'] == publication['assets']['companions']['url']
+    assert entry['checksumUrl'] == publication['checksums']['url']
+    assert len(entry['chapters']) == verification['chapterCount'] == 19
+    assert [c['at'] for c in entry['chapters']] == [c['start'] for c in publication['chapters']]
+    assert entry['chapters'][0]['at'] == 0
+    assert entry['chapters'][-1]['at'] < publication['duration']
+    assert verification['all12StepsInOrder'] and verification['fullDecodePassed']
+    assert verification['audioSampleRate'] == 48000 and verification['audioChannels'] == 2
+    assert verification['actualApplicationCaptureCount'] == 44
+    assert verification['noLiveActions'] and not publication['liveActionsExecuted']
+    sums = {}
+    for line in (folder / 'SHA256SUMS').read_text(encoding='utf-8').splitlines():
+        digest, name = line.split('  ', 1)
+        assert Path(name).name == name
+        assert hashlib.sha256((folder / name).read_bytes()).hexdigest() == digest
+        sums[name] = digest
+    assert set(sums) == {p.name for p in folder.iterdir() if p.is_file() and p.name != 'SHA256SUMS'}
+    for suffix in ['.vtt', '.srt', '-transcript.txt', '-chapters.txt', '-chapters.vtt']:
+        text = (folder / (video.stem + suffix)).read_text(encoding='utf-8')
+        assert '\u2014' not in text
+    workflow = (ROOT / '.github/workflows/pages-demo.yml').read_text(encoding='utf-8')
+    assert 'source=docs/assets/deployment-progress-video' in workflow
+    assert 'output=dist-demo/tutorials/deployment' in workflow
+
+
 def test_public_entry_pages_link_the_current_manual_downloads():
     folder = ROOT / 'docs/manuals'
     manifest = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))
