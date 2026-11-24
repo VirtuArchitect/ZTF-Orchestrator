@@ -93,6 +93,47 @@ def test_direct_uplinks_sequentially_create_and_verify_all_hosts(lab):
         assert value['switches']['br1']['ports'] == ['eth2', 'eth3']
 
 
+@pytest.mark.parametrize('health', ['Warning', 'Critical', 'Unknown', None, 'missing'])
+def test_bootstrap_alerts_do_not_gate_direct_network_discovery_or_approved_execution(lab, health):
+    pc, pe = uplink.clients(UPLINK, resolver)
+    baseline = uplink.preflight(DESIRED, pc, pe)
+    lab.health = health
+    for node in lab.nodes:
+        node['health_summary'] = {'health_status': health}
+    if health == 'missing':
+        original_request = lab.request
+        def request(method, path, body=None):
+            value = original_request(method, path, body)
+            if path == '/cluster/': value.pop('health_summary', None)
+            if path == '/hosts/':
+                for node in value['entities']: node.pop('health_summary', None)
+            return value
+        lab.request = request
+    discovered = uplink.collect(UPLINK, pc, pe)
+    assert len(discovered['hosts']) == 3
+    assert uplink.preflight(DESIRED, pc, pe) == baseline
+    assert not lab.writes
+    result = uplink.execute(baseline, pc, pe, lambda _: None, lambda: None, lambda: False)
+    assert len(result) == 3 and all(row['stage'] == 'verified' for row in result)
+
+
+def test_discovery_api_accepts_bootstrap_alerts_but_still_rejects_wrong_identity(client, auth_headers, monkeypatch, lab):
+    import server
+    monkeypatch.setattr(server.limiter, 'enabled', False)
+    monkeypatch.setattr(server, '_pe_login_title_resolver', lambda _: resolver)
+    lab.health = 'Critical'
+    for node in lab.nodes: node['health_summary']['health_status'] = 'Warning'
+    response = client.post('/api/ahv-uplink-migration/discover', json=UPLINK, headers=auth_headers)
+    assert response.status_code == 200, response.get_json()
+    assert len(response.get_json()['hosts']) == 3
+    response = client.post('/api/ahv-uplink-migration/preflight', json=DESIRED, headers=auth_headers)
+    assert response.status_code == 200, response.get_json()
+    lab.uuid = HOSTS[0]
+    response = client.post('/api/ahv-uplink-migration/discover', json=UPLINK, headers=auth_headers)
+    assert response.status_code == 400 and 'UUID' in response.get_json()['error']
+    assert not lab.writes
+
+
 @pytest.mark.parametrize('failure', ['few-kept', 'missing-pin', 'bad-pin', 'wrong-serial', 'wrong-host-ip', 'down-link', 'stale', 'cancelled'])
 def test_uplink_preflight_and_execution_fail_closed(lab, failure):
     config, intended = deepcopy(UPLINK), deepcopy(DESIRED)

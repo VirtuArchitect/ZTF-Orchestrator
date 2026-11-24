@@ -1,8 +1,8 @@
 {
-  "updated": "2026-11-23",
-  "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
+  "updated": "2026-11-24",
+  "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
   "currentDocuments": 317,
-  "historicalDocuments": 32,
+  "historicalDocuments": 35,
   "documents": [
     {
       "id": "collection-overview",
@@ -240,11 +240,11 @@
       "id": "ahv-uplink-migration",
       "title": "AHV Uplink Migration",
       "category": "Cluster operations",
-      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
-      "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
-      "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
-      "edition": "Source snapshot 22 November 2026",
-      "scope": "Reviewed against application source 173e119. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-24.pdf",
+      "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-24.pdf",
+      "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 identifiable AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
+      "edition": "Source snapshot 24 November 2026",
+      "scope": "Reviewed against application source 8524107. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Cluster operations",
         "docs/ahv-uplink-migration.md",
@@ -262,13 +262,13 @@
       ],
       "archived": false,
       "pages": 4,
-      "bytes": 633231,
-      "sha256": "f700f5ad45c2ac25d28670a37176ba28b9a6ac680f6d915833841f9cab5684f3",
+      "bytes": 662390,
+      "sha256": "90dca174bf0a1b288eea31223461215b2c8652a019b2590abec4e7bb2313956e",
       "sourceDocument": "docs/ahv-uplink-migration.md",
       "inputSources": [
         {
           "path": "docs/ahv-uplink-migration.md",
-          "sha256": "1b34b653941d9c90f0c4977037921a0c2721012f77062d6eb0b261e3acb17a79",
+          "sha256": "cb62f8d09c43f9852b7e7ac1babacaa91354428fed1baae765f39e18081e8307",
           "normalization": "utf8-lf"
         },
         {
@@ -277,33 +277,33 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
+      "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-22"
+      "reviewed": "2026-11-24"
     },
     {
       "id": "change-virtual-switch-mtu",
       "title": "Change Virtual Switch MTU",
       "category": "Cluster operations",
-      "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
-      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a healthy 3\u201316 host AHV cluste...",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-24.pdf",
+      "pdf": "files/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-24.pdf",
+      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a 3\u201316 host AHV cluste...",
+      "edition": "Source snapshot 24 November 2026",
+      "scope": "Reviewed against application source 8524107. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Cluster operations",
         "docs/change-virtual-switch-mtu.md"
       ],
       "archived": false,
       "pages": 2,
-      "bytes": 494263,
-      "sha256": "b407028af42b1889580f2435b2ad801e2112af4963c24a2c564b0d8d55b25cf1",
+      "bytes": 503324,
+      "sha256": "f19c864cef5b4db673191261cfc48a0c849b03d6f509b57b987adb749da91e65",
       "sourceDocument": "docs/change-virtual-switch-mtu.md",
       "inputSources": [
         {
           "path": "docs/change-virtual-switch-mtu.md",
-          "sha256": "2f54064c1041ac8b913d125c518d1851c57825205863f66ec4e279216ff8bd57",
+          "sha256": "f49ea0962125d53da6c9800a2d3df6df570b58c172dbbf41acaead312d18c817",
           "normalization": "utf8-lf"
         },
         {
@@ -312,10 +312,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-24"
     },
     {
       "id": "cluster-storage-standard",
@@ -405,11 +405,11 @@
       "id": "create-virtual-switch",
       "title": "Create Virtual Switch",
       "category": "Cluster operations",
-      "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
+      "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-24.pdf",
+      "pdf": "files/ZTF-Orchestrator-create-virtual-switch-2026-11-24.pdf",
       "description": "A separate administrator workflow under Configure \u2192 Create Virtual Switch, also linked from Scripts and Workflows. Route: /configure/create-virtual-switch (Scripts alias: /scripts/create-virtual-switch). Workflow ID: create-virtual-switc...",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "edition": "Source snapshot 24 November 2026",
+      "scope": "Reviewed against application source 8524107. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Cluster operations",
         "docs/create-virtual-switch.md",
@@ -433,13 +433,13 @@
       ],
       "archived": false,
       "pages": 3,
-      "bytes": 560589,
-      "sha256": "d7a701ad0ad5bd46dcea1bf28a7053ab527dd4b460efa2bb427c7bef5e51a9de",
+      "bytes": 568620,
+      "sha256": "08f96262990acfb2d442336f1845b6160f0168c7248ef4db1b60668716ea57b9",
       "sourceDocument": "docs/create-virtual-switch.md",
       "inputSources": [
         {
           "path": "docs/create-virtual-switch.md",
-          "sha256": "025a00ce40ff900eda89dbdd018b1ec4ca4701a3482e0f449ca25f667f547e47",
+          "sha256": "b5d7c833bc36594d21d2aa42c8bb2d2bd81851453512593460095b10e66661d1",
           "normalization": "utf8-lf"
         },
         {
@@ -448,10 +448,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-24"
     },
     {
       "id": "dare-workflow",
@@ -15582,6 +15582,136 @@
           "path": "docs/assets/disaster-recovery/overview.png",
           "sha256": "06e4ad3aae1dd1b29c5ae0b792fb0471e3df3b8cfa403a8414a02a9531e75ae7",
           "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "ahv-uplink-migration-previous-2026-11-22",
+      "title": "AHV Uplink Migration",
+      "category": "Cluster operations",
+      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
+      "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
+      "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
+      "edition": "Source snapshot 22 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source 173e119. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Cluster operations",
+        "docs/ahv-uplink-migration.md",
+        "nutanix",
+        "vs1",
+        "br1",
+        "vs1",
+        "br1",
+        "vs999",
+        "br999",
+        "br0",
+        "br0",
+        "manage_ovs",
+        "br0"
+      ],
+      "archived": true,
+      "pages": 4,
+      "bytes": 633231,
+      "sha256": "f700f5ad45c2ac25d28670a37176ba28b9a6ac680f6d915833841f9cab5684f3",
+      "inputSources": [
+        {
+          "path": "docs/ahv-uplink-migration.md",
+          "sha256": "1b34b653941d9c90f0c4977037921a0c2721012f77062d6eb0b261e3acb17a79",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-22"
+    },
+    {
+      "id": "change-virtual-switch-mtu-previous-2026-11-21",
+      "title": "Change Virtual Switch MTU",
+      "category": "Cluster operations",
+      "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
+      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a healthy 3\u201316 host AHV cluste...",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Cluster operations",
+        "docs/change-virtual-switch-mtu.md"
+      ],
+      "archived": true,
+      "pages": 2,
+      "bytes": 494263,
+      "sha256": "b407028af42b1889580f2435b2ad801e2112af4963c24a2c564b0d8d55b25cf1",
+      "inputSources": [
+        {
+          "path": "docs/change-virtual-switch-mtu.md",
+          "sha256": "2f54064c1041ac8b913d125c518d1851c57825205863f66ec4e279216ff8bd57",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "create-virtual-switch-previous-2026-11-21",
+      "title": "Create Virtual Switch",
+      "category": "Cluster operations",
+      "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
+      "description": "A separate administrator workflow under Configure \u2192 Create Virtual Switch, also linked from Scripts and Workflows. Route: /configure/create-virtual-switch (Scripts alias: /scripts/create-virtual-switch). Workflow ID: create-virtual-switc...",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Cluster operations",
+        "docs/create-virtual-switch.md",
+        "create-virtual-switch",
+        "manage_ovs",
+        "vs1",
+        "br1",
+        "vs1",
+        "vs999",
+        "nutanix",
+        "vs1",
+        "vs1",
+        "POST",
+        "connection",
+        "switchName",
+        "reviewed",
+        "content",
+        "content",
+        "approvalId",
+        "confirmation"
+      ],
+      "archived": true,
+      "pages": 3,
+      "bytes": 560589,
+      "sha256": "d7a701ad0ad5bd46dcea1bf28a7053ab527dd4b460efa2bb427c7bef5e51a9de",
+      "inputSources": [
+        {
+          "path": "docs/create-virtual-switch.md",
+          "sha256": "025a00ce40ff900eda89dbdd018b1ec4ca4701a3482e0f449ca25f667f547e47",
+          "normalization": "utf8-lf"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",

@@ -253,6 +253,7 @@ export default function AhvUplinkMigration() {
           <section id="uplink-discovery-feedback" aria-label="Cluster discovery" aria-busy={discovery.state === 'running'}
             className={`rounded-lg border p-4 space-y-2 text-sm ${discovery.state === 'failed' ? 'border-red-500' : discovery.state === 'passed' ? 'border-emerald-500' : 'border-border'}`}>
             <h3 className="font-semibold">Cluster discovery</h3>
+            <p>General PE health alerts, including missing licensing and default-password warnings, do not block network configuration. Discovery checks identity and network inventory; it is not a cluster-health assessment.</p>
             <p role="status" className={discovery.state === 'failed' ? 'text-red-600' : discovery.state === 'passed' ? 'text-emerald-600' : ''}>
               {discovery.state === 'running' ? 'Running — waiting for host and uplink inventory.'
                 : discovery.state === 'passed' && inventory ? `Passed — ${inventory.clusterName} · ${inventory.hosts.length} hosts discovered`
@@ -326,7 +327,7 @@ export default function AhvUplinkMigration() {
         </>}
         {step === 2 && <>
           <h2 className="section-title">Read-only preflight</h2>
-          <p>Check cluster identity, host health, switch membership and link state. Confirm the physical fabric separately.</p>
+          <p>Check cluster identity, complete host inventory, switch membership and operational link state. Confirm the physical fabric separately. General PE health alerts are not a preflight gate.</p>
           <p className="text-sm">{transportSummary(plan?.content, connection)}</p>
           <label className="flex items-start gap-3"><input type="checkbox" checked={reviewed} disabled={busy} onChange={e => update({ reviewed: e.target.checked })} />
             I verified physical cabling, VLANs, MTU, maintenance capacity and out-of-band access for every host.</label>

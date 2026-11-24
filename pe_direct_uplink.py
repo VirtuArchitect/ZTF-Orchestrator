@@ -28,7 +28,9 @@ class Controller:
         return {'address': ip, 'ssh_host_key_sha256': self.config['cvm_host_keys'][ip]}
 
     def observe(self, pe, cancelled=lambda: False):
-        cluster, hosts = pe_direct.inventory(self.config, pe)
+        # Aggregate PE health includes bootstrap/licensing alerts unrelated to OVS
+        # readiness. Identity, pinned SSH and the observed network remain mandatory.
+        cluster, hosts = pe_direct.inventory(self.config, pe, require_good_health=False)
         if {pe_direct.host_ip(h['cvmIp']) for h in hosts} != set(self.config['cvm_host_keys']):
             raise pe_direct.DirectError('The SSH host-key inventory must exactly match discovered CVMs.')
         for host in hosts:
@@ -137,7 +139,7 @@ class Controller:
                     nic['switch'] = None
             if retained != expected:
                 raise pe_direct.DirectError('Retained br0 identity, management address or uplinks did not verify. No later host was changed.')
-            retained_cluster, _ = pe_direct.inventory(self.config, pe)
+            retained_cluster, _ = pe_direct.inventory(self.config, pe, require_good_health=False)
             if retained_cluster != plan['inventory']['cluster']:
                 raise pe_direct.DirectError('PE membership changed after retaining br0. Reconcile before continuing.')
             results.append({**assignment, 'kept': assignment['keep'], 'moved': assignment['move'], 'stage': 'retained_uplinks_verified'})
@@ -165,7 +167,7 @@ class Controller:
             if (set(final['switches']) != set(host['observed']['switches']) | {bridge}
                     or any(final['switches'][b] != host['observed']['switches'][b] for b in untouched)):
                 raise pe_direct.DirectError('An unrelated bridge changed. Reconcile before continuing.')
-            actual, _ = pe_direct.inventory(self.config, pe)
+            actual, _ = pe_direct.inventory(self.config, pe, require_good_health=False)
             if actual != plan['inventory']['cluster']:
                 raise pe_direct.DirectError('PE identity or membership changed during verification.')
             results[-1]['stage'] = 'verified'

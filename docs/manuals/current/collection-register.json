@@ -1,8 +1,8 @@
 {
-  "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
-  "reviewed": "2026-11-23",
+  "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
+  "reviewed": "2026-11-24",
   "currentDocuments": 317,
-  "historicalDocuments": 32,
+  "historicalDocuments": 35,
   "scope": "Public maintained source documents, source-aligned provided guides and clearly identified historical references. Private configuration packs, dated lab reports and superseded evidence are not current operating guidance.",
   "inventory": [
     {
@@ -2435,12 +2435,12 @@
     },
     {
       "id": "ahv-uplink-migration",
-      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
-      "sha256": "f700f5ad45c2ac25d28670a37176ba28b9a6ac680f6d915833841f9cab5684f3",
+      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-24.pdf",
+      "sha256": "90dca174bf0a1b288eea31223461215b2c8652a019b2590abec4e7bb2313956e",
       "inputSources": [
         {
           "path": "docs/ahv-uplink-migration.md",
-          "sha256": "1b34b653941d9c90f0c4977037921a0c2721012f77062d6eb0b261e3acb17a79",
+          "sha256": "cb62f8d09c43f9852b7e7ac1babacaa91354428fed1baae765f39e18081e8307",
           "normalization": "utf8-lf"
         },
         {
@@ -2452,12 +2452,12 @@
     },
     {
       "id": "change-virtual-switch-mtu",
-      "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
-      "sha256": "b407028af42b1889580f2435b2ad801e2112af4963c24a2c564b0d8d55b25cf1",
+      "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-24.pdf",
+      "sha256": "f19c864cef5b4db673191261cfc48a0c849b03d6f509b57b987adb749da91e65",
       "inputSources": [
         {
           "path": "docs/change-virtual-switch-mtu.md",
-          "sha256": "2f54064c1041ac8b913d125c518d1851c57825205863f66ec4e279216ff8bd57",
+          "sha256": "f49ea0962125d53da6c9800a2d3df6df570b58c172dbbf41acaead312d18c817",
           "normalization": "utf8-lf"
         },
         {
@@ -2503,12 +2503,12 @@
     },
     {
       "id": "create-virtual-switch",
-      "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
-      "sha256": "d7a701ad0ad5bd46dcea1bf28a7053ab527dd4b460efa2bb427c7bef5e51a9de",
+      "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-24.pdf",
+      "sha256": "08f96262990acfb2d442336f1845b6160f0168c7248ef4db1b60668716ea57b9",
       "inputSources": [
         {
           "path": "docs/create-virtual-switch.md",
-          "sha256": "025a00ce40ff900eda89dbdd018b1ec4ca4701a3482e0f449ca25f667f547e47",
+          "sha256": "b5d7c833bc36594d21d2aa42c8bb2d2bd81851453512593460095b10e66661d1",
           "normalization": "utf8-lf"
         },
         {
@@ -9527,6 +9527,57 @@
           "path": "docs/assets/disaster-recovery/overview.png",
           "sha256": "06e4ad3aae1dd1b29c5ae0b792fb0471e3df3b8cfa403a8414a02a9531e75ae7",
           "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "ahv-uplink-migration-previous-2026-11-22",
+      "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
+      "sha256": "f700f5ad45c2ac25d28670a37176ba28b9a6ac680f6d915833841f9cab5684f3",
+      "inputSources": [
+        {
+          "path": "docs/ahv-uplink-migration.md",
+          "sha256": "1b34b653941d9c90f0c4977037921a0c2721012f77062d6eb0b261e3acb17a79",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "change-virtual-switch-mtu-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
+      "sha256": "b407028af42b1889580f2435b2ad801e2112af4963c24a2c564b0d8d55b25cf1",
+      "inputSources": [
+        {
+          "path": "docs/change-virtual-switch-mtu.md",
+          "sha256": "2f54064c1041ac8b913d125c518d1851c57825205863f66ec4e279216ff8bd57",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "create-virtual-switch-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
+      "sha256": "d7a701ad0ad5bd46dcea1bf28a7053ab527dd4b460efa2bb427c7bef5e51a9de",
+      "inputSources": [
+        {
+          "path": "docs/create-virtual-switch.md",
+          "sha256": "025a00ce40ff900eda89dbdd018b1ec4ca4701a3482e0f449ca25f667f547e47",
+          "normalization": "utf8-lf"
         },
         {
           "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",

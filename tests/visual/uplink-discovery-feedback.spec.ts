@@ -48,6 +48,7 @@ async function fill(page: Page) {
 test('missing inputs, malformed pins and PC inputs explain disabled discovery and Continue', async ({ page }) => {
   const posts = await setup(page)
   const feedback = page.getByRole('region', { name: 'Cluster discovery', exact: true })
+  await expect(feedback).toContainText('General PE health alerts, including missing licensing and default-password warnings, do not block network configuration.')
   await expect(feedback).toContainText('Complete before discovery:')
   await expect(page.getByRole('button', { name: 'Continue to uplink assignment' })).toBeDisabled()
   await fill(page)
