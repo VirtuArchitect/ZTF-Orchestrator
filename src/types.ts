@@ -255,6 +255,8 @@ export interface PipelineStep {
 }
 
 export interface Pipeline {
+  /** Organisational label only; execution targets remain in step YAML. */
+  groupId?: string
   executor?: 'legacy' | 'native'
   id:        string
   name:      string

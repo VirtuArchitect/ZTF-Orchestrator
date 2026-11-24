@@ -12,11 +12,23 @@ import { actionName } from '../startGuide'
 import type { Pipeline, PipelineStep } from '../types'
 import { useStore } from '../store'
 import clsx from 'clsx'
-import { ScopedConfigPicker } from '../components/ConfigScope'
+import ConfigScope, { ScopedConfigPicker, useConfigOrganization } from '../components/ConfigScope'
 
 type ConfigFile = { name: string }
 
 export default function Pipelines() {
+  const { organization, error: groupingError, ready: groupsReady, reload: reloadGroups } = useConfigOrganization()
+  const [scope, setScope] = useState(() => new URLSearchParams(window.location.search).get('group') || 'all')
+  const changeScope = (value: string) => {
+    setScope(value)
+    const url = new URL(window.location.href)
+    if (value === 'all') url.searchParams.delete('group')
+    else url.searchParams.set('group', value)
+    window.history.replaceState(null, '', url)
+  }
+  const [search, setSearch] = useState('')
+  const [formGroup, setFormGroup] = useState('')
+  const groupFor = (id?: string) => organization.groups.find(group => group.id === id)
   const requiredApprovals = useStore(s => s.settings.approvalRequiredWorkflows || [])
   const selectableWorkflows = WORKFLOWS.filter(w => w.id === PASSWORD_SETUP_WORKFLOW || (w.id !== 'cvm-idrac-password-rotation' && !requiredApprovals.includes(w.id)))
   const admin = useStore(s => s.user?.role === 'admin')
@@ -33,6 +45,12 @@ export default function Pipelines() {
   const [convert, setConvert] = useState(false)
   const [creating,    setCreating]    = useState(false)
 
+  const visiblePipelines = pipelines.filter(pipeline => {
+    const group = groupFor(pipeline.groupId)
+    const inScope = scope === 'all' || (scope === 'ungrouped' ? !group : scope.startsWith('dc:') ? group?.datacenter === scope.slice(3) : group?.id === scope)
+    return inScope && `${pipeline.name} ${group?.name || ''} ${group?.datacenter || ''} ${pipeline.steps.map(step => step.configFile).join(' ')}`.toLowerCase().includes(search.toLowerCase())
+  })
+
   const load = async () => {
     setLoading(true)
     try {
@@ -40,8 +58,11 @@ export default function Pipelines() {
         apiFetch('/api/pipelines'),
         apiFetch('/api/configs'),
       ])
-      if (pResp.ok) setPipelines(await pResp.json())
+      if (!pResp.ok) throw new Error('Pipelines could not be loaded. Refresh before making changes.')
+      setPipelines(await pResp.json())
       if (cResp.ok) setConfigs(await cResp.json())
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Unable to load pipelines.')
     } finally {
       setLoading(false)
     }
@@ -75,6 +96,7 @@ export default function Pipelines() {
   const openCreate = () => {
     setEditId(null)
     setFormName('')
+    setFormGroup(groupFor(scope) ? scope : '')
     setFormSteps([{ workflow: selectableWorkflows[0]?.id || '', configFile: '' }])
     setConvert(false)
     setCreating(true)
@@ -84,6 +106,7 @@ export default function Pipelines() {
   const openEdit = (p: Pipeline) => {
     setEditId(p.id)
     setFormName(p.name)
+    setFormGroup(p.groupId || '')
     setFormSteps(p.steps.map(s => ({ ...s })))
     setConvert(false)
     setCreating(true)
@@ -97,7 +120,7 @@ export default function Pipelines() {
     if (formSteps.length < 1) { setError('Add at least one step'); return }
     setError('')
 
-    const body = { name: formName.trim(), steps: formSteps, ...(convert ? { executor: 'legacy' } : {}) }
+    const body = { name: formName.trim(), steps: formSteps, groupId: formGroup, ...(convert ? { executor: 'legacy' } : {}) }
     const resp = editId
       ? await apiFetch(`/api/pipelines/${editId}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -109,8 +132,10 @@ export default function Pipelines() {
         })
 
     if (!resp.ok) { const d = await resp.json(); setError(d.error || 'Save failed'); return }
+    changeScope(groupFor(formGroup) ? formGroup : 'ungrouped')
+    setSearch('')
     cancelForm()
-    load()
+    void load()
   }
 
   const deletePipeline = async (id: string, name: string) => {
@@ -128,7 +153,7 @@ export default function Pipelines() {
         subtitle="Chain workflows sequentially with pass/fail gates"
         actions={
           <div className="flex gap-2">
-            <button onClick={load} disabled={loading} className="btn-ghost p-2">
+            <button onClick={() => { void load(); void reloadGroups() }} disabled={loading} className="btn-ghost p-2">
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             </button>
             {!creating && (
@@ -139,7 +164,16 @@ export default function Pipelines() {
           </div>
         }
       >
-        {/* ── Builder form ───────────────────────────────────────────────────── */}
+        {error && !creating && <p role="alert" className="text-red-400 mb-3">{error}</p>}
+        {groupingError && <p role="alert" className="text-amber-600 mb-3">{groupingError} Existing pipelines remain accessible.<button className="btn-secondary ml-2" onClick={() => void reloadGroups()}>Reload groups</button></p>}
+        <div className="flex flex-col lg:flex-row gap-4 items-start">
+          <aside className="card p-3 w-full lg:w-56 shrink-0" aria-label="Pipeline datacenters and clusters">
+            <h2 className="font-semibold mb-2">Datacenters &amp; clusters</h2>
+            <ConfigScope organization={organization} scope={scope} onChange={changeScope} allLabel="All pipelines" hint="Manage groups in Global Config. Grouping does not change YAML targets or permissions." />
+          </aside>
+          <section className="min-w-0 w-full flex-1" aria-label="Pipeline workspace">
+            <h2 className="font-semibold mb-2">{scope === 'all' ? 'All pipelines' : scope === 'ungrouped' ? 'Ungrouped' : scope.startsWith('dc:') ? scope.slice(3) : groupFor(scope)?.name || 'Group unavailable'}</h2>
+            <input className="input w-full mb-4" aria-label="Search pipelines" placeholder="Search pipelines, cluster or configuration file" value={search} onChange={event => setSearch(event.target.value)} />
         {creating && (
           <div className="card mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -158,6 +192,14 @@ export default function Pipelines() {
                 {admin && <label><input type="checkbox" checked={convert} onChange={e => setConvert(e.target.checked)} /> Convert to ZTF 1.x when saving</label>}
               </div>
             )}
+            <label className="label">Datacenter / cluster
+              <select aria-label="Pipeline group" className="input w-full" value={formGroup} disabled={!groupsReady} onChange={event => setFormGroup(event.target.value)}>
+                <option value="">Ungrouped</option>
+                {formGroup && !groupFor(formGroup) && <option value={formGroup}>Previous group unavailable (retained)</option>}
+                {organization.groups.map(group => <option key={group.id} value={group.id}>{group.kind === 'shared' ? 'Shared' : group.datacenter} / {group.name}</option>)}
+              </select>
+            </label>
+            <p className="text-xs text-gray-500 mb-4">Grouping organises pipelines only. Review each step's YAML for its actual targets.</p>
             {/* Name */}
             <div className="mb-4">
               <label className="label">Pipeline Name</label>
@@ -206,7 +248,7 @@ export default function Pipelines() {
                     </select>
 
                     {/* Config file selector */}
-                    <ScopedConfigPicker files={configs} value={step.configFile} onChange={name => updateStep(i, 'configFile', name)} />
+                    <ScopedConfigPicker key={`${editId || 'new'}:${formGroup}:${i}`} initialScope={groupFor(formGroup) ? formGroup : 'all'} files={configs} value={step.configFile} onChange={name => updateStep(i, 'configFile', name)} />
 
                     {/* Reorder */}
                     <div className="flex flex-col gap-0.5">
@@ -241,12 +283,12 @@ export default function Pipelines() {
         )}
 
         {/* ── Pipeline list ──────────────────────────────────────────────────── */}
-        {!loading && pipelines.length === 0 && !creating && (
+        {!loading && visiblePipelines.length === 0 && !creating && (
           <div className="card text-center py-16">
             <GitBranch size={40} className="mx-auto mb-3 opacity-20 text-nutanix-cyan" />
-            <p className="text-lg font-medium text-gray-400">No pipelines yet</p>
+            <p className="text-lg font-medium text-gray-400">No pipelines in this view</p>
             <p className="text-sm text-gray-600 mt-1 mb-4">
-              Chain workflows together to automate multi-step Nutanix deployments
+              Create a pipeline for the selected cluster, or choose All pipelines to find existing work.
             </p>
             <button onClick={openCreate} className="btn-primary gap-1.5">
               <Plus size={14} /> Create your first pipeline
@@ -255,7 +297,7 @@ export default function Pipelines() {
         )}
 
         <div className="space-y-4">
-          {pipelines.map(pipeline => (
+          {visiblePipelines.map(pipeline => (
             <div key={pipeline.id} className="card">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-nutanix-blue/10 border border-nutanix-blue/20 flex items-center justify-center flex-shrink-0">
@@ -264,6 +306,7 @@ export default function Pipelines() {
 
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-100">{pipeline.name}</p>
+                  <p className="text-xs text-gray-500">{groupFor(pipeline.groupId) ? `${groupFor(pipeline.groupId)!.kind === 'shared' ? 'Shared' : groupFor(pipeline.groupId)!.datacenter} / ${groupFor(pipeline.groupId)!.name}` : 'Ungrouped'}</p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {pipeline.steps.length} step{pipeline.steps.length !== 1 ? 's' : ''}
                     {' · '}Updated {new Date(pipeline.updatedAt).toLocaleDateString()}
@@ -315,6 +358,8 @@ export default function Pipelines() {
               </div>
             </div>
           ))}
+        </div>
+          </section>
         </div>
       </Layout>
 

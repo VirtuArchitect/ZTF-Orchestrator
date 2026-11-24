@@ -1,3 +1,6 @@
+PIPELINE DATACENTER / CLUSTER ORGANISATION (updated source builds)
+Reuse Global Config groups in Pipelines, create in a selected cluster, search and bookmark views, and assign existing pipelines without replacing steps. Optional groupId metadata extends pipeline CRUD; older records and clients remain compatible. No migration or dependency change. Grouping is not an access boundary and does not alter YAML targets, approvals or recovery controls.
+
 NETWORK CONFIGURATION READINESS (updated source builds)
 AHV uplink discovery and execution no longer require aggregate PE cluster/host health to be Good. General licensing and default-password alerts do not block the shared uplink, empty-switch and VS0 MTU network inventory paths. Exact identity, complete inventory, operational links, redundancy, SSH trust, approvals, cancellation and verification remain enforced. The console distinguishes successful discovery from a cluster-health assessment. DARE and Disaster Recovery health gates are unchanged; no API/schema or dependency change.
 

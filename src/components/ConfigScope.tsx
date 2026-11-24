@@ -35,19 +35,19 @@ export function configMatches(name: string, organization: ConfigOrganization, sc
   const inScope = scope === 'all' || (scope === 'ungrouped' ? !group : scope.startsWith('dc:') ? group?.datacenter === scope.slice(3) || group?.kind === 'shared' : group?.id === scope || (group?.kind === 'shared' && organization.groups.some(item => item.id === scope && item.kind === 'cluster')))
   return inScope && (!purpose || assignment?.purpose === purpose) && `${name} ${group?.name || ''} ${group?.datacenter || ''} ${assignment?.purpose || ''}`.toLowerCase().includes(search.toLowerCase())
 }
-export default function ConfigScope({ organization, scope, onChange }: { organization: ConfigOrganization; scope: string; onChange: (value: string) => void }) {
+export default function ConfigScope({ organization, scope, onChange, allLabel = 'All files', hint = 'Cluster filters include shared files. Manage groups in Global Config.' }: { organization: ConfigOrganization; scope: string; onChange: (value: string) => void; allLabel?: string; hint?: string }) {
   const datacenters = [...new Set(organization.groups.filter(group => group.kind === 'cluster').map(group => group.datacenter))].sort()
   const button = (value: string, label: string, indent = false) => <button key={value} type="button" aria-pressed={scope === value} className={`block w-full text-left rounded px-3 py-1.5 text-sm ${indent ? 'pl-6' : ''} ${scope === value ? 'bg-nutanix-blue/20 font-semibold' : 'hover:bg-surface-elevated'}`} onClick={() => onChange(value)}>{label}</button>
   return <div aria-label="Configuration scope" className="space-y-1">
-    {button('all', 'All files')}{button('ungrouped', 'Ungrouped')}
+    {button('all', allLabel)}{button('ungrouped', 'Ungrouped')}
     {datacenters.map(dc => <div key={dc}>{button(`dc:${dc}`, dc)}{organization.groups.filter(group => group.kind === 'cluster' && group.datacenter === dc).map(group => button(group.id, group.name, true))}</div>)}
     {organization.groups.filter(group => group.kind === 'shared').map(group => button(group.id, `Shared / ${group.name}`))}
-    <p className="text-xs text-gray-500 px-3">Cluster filters include shared files. Manage groups in Global Config.</p>
+    <p className="text-xs text-gray-500 px-3">{hint}</p>
   </div>
 }
-export function ScopedConfigPicker({ files, value, onChange }: { files: { name: string }[]; value: string; onChange: (name: string) => void }) {
+export function ScopedConfigPicker({ files, value, onChange, initialScope = 'all' }: { files: { name: string }[]; value: string; onChange: (name: string) => void; initialScope?: string }) {
   const { organization, error } = useConfigOrganization()
-  const [scope, setScope] = useState('all')
+  const [scope, setScope] = useState(initialScope)
   const [search, setSearch] = useState('')
   const [showAll, setShowAll] = useState(false)
   const visible = files.filter(file => configMatches(file.name, organization, showAll ? 'all' : scope, search))

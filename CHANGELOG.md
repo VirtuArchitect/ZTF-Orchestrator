@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased source
+- Organise Pipelines by existing Global Config datacenter/cluster groups, create within the selected cluster, retain legacy pipelines under Ungrouped and keep YAML targets, approvals and recovery execution unchanged.
 - Do not gate AHV uplink discovery, preflight or per-host verification on aggregate PE cluster/host health. Shared empty-switch and VS0 MTU network inventory uses the same policy. Bootstrap licensing/default-password alerts remain for operators to address; identity, complete inventory, operational links, redundancy, pinned SSH, exact approvals and readback checks remain enforced. DARE and recovery health gates are unchanged.
 - Consolidate recovery progress, next-action guidance, recorded failure stages, readable pipeline steps and a safe plain-text handover export; retain action-specific approvals, health checks, completed jobs and the eligible step 08-only retry.
 - Use Windows 11-style neutral charcoal dark surfaces, readable neutral text and native dark controls; retain the existing light palette, brand/status accents and saved theme/system preference.

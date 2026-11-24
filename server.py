@@ -41610,6 +41610,26 @@ def _pipeline_executor_error(data, previous='legacy'):
     return None
 
 
+def _pipeline_group_error(data, previous=''):
+    """Optional display label only; never selects execution targets or permissions."""
+    if 'groupId' not in data:
+        return None
+    group_id = data['groupId']
+    if not isinstance(group_id, str) or (group_id and not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', group_id)):
+        return 'Invalid pipeline group ID.', 400
+    if not group_id or group_id == previous:
+        return None
+    try:
+        with _CREDENTIAL_ORGANIZATION_LOCK:
+            catalogue = validate_organization(_read_group_document(
+                CONFIG_DIR / 'credential_organization.json', empty_organization()))
+    except (ValueError, TypeError, OSError):
+        return 'Grouping metadata cannot be read. Reload before assigning a pipeline.', 503
+    if not any(group['id'] == group_id for group in catalogue['groups']):
+        return 'The selected group no longer exists. Reload before saving.', 409
+    return None
+
+
 @app.route('/api/pipelines')
 @require_role('admin', 'operator', 'viewer')
 def list_pipelines():
@@ -41634,6 +41654,9 @@ def create_pipeline():
         approval_error = _pipeline_step_error(s)
         if approval_error:
             return jsonify({'error': approval_error}), 400
+    group_error = _pipeline_group_error(data)
+    if group_error:
+        return jsonify({'error': group_error[0]}), group_error[1]
     pipeline = {
         'id':        str(uuid.uuid4()),
         'name':      name,
@@ -41641,6 +41664,8 @@ def create_pipeline():
         'createdAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
         'updatedAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f') + 'Z',
     }
+    if data.get('groupId'):
+        pipeline['groupId'] = data['groupId']
     pipelines = _load_pipelines()
     pipelines.append(pipeline)
     _save_pipelines(pipelines)
@@ -41668,6 +41693,11 @@ def update_pipeline(pipeline_id: str):
     executor_error = _pipeline_executor_error(data, pipeline.get('executor', 'legacy'))
     if executor_error:
         return jsonify({'error': executor_error[0]}), executor_error[1]
+    group_error = _pipeline_group_error(data, pipeline.get('groupId', ''))
+    if group_error:
+        return jsonify({'error': group_error[0]}), group_error[1]
+    if 'groupId' in data:
+        pipeline['groupId'] = data['groupId']
     if 'executor' in data:
         pipeline['executor'] = data['executor']
     if 'name' in data:
