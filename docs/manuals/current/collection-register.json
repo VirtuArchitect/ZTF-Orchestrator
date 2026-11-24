@@ -2290,6 +2290,12 @@
       "disposition": "historical-evidence",
       "reason": "Dated security and verification evidence retained in the repository; not a separate operating procedure.",
       "documentId": null
+    },
+    {
+      "path": "docs/pipeline-organization.md",
+      "disposition": "published-web-reference",
+      "reason": "Maintained GitHub guidance for pipeline grouping in updated source builds, linked from the README. The PDF pipeline guide remains its separately reviewed edition.",
+      "documentId": null
     }
   ],
   "providedDocuments": [
