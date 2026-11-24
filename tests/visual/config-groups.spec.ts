@@ -32,6 +32,7 @@ async function setup(page: import('@playwright/test').Page) {
       if (route.request().method() === 'POST') { writes++; contents[name] = route.request().postDataJSON().content; return route.fulfill({ json: { success: true } }) }
       return route.fulfill({ json: { name, content: contents[name] } })
     }
+    if (path === '/api/pipelines/actions') return route.fulfill({ json: { actions: [{ id: 'config-cluster', available: true, reason: '' }] } })
     if (path === '/api/pipelines') return route.fulfill({ json: [{ id: 'p1', name: 'Demo baseline', updatedAt: new Date().toISOString(), steps: [{ workflow: 'config-cluster', configFile: 'two.yml' }] }] })
     if (path === '/api/system/check') return route.fulfill({ json: { checks: [], ztfInstalled: true } })
     return route.fulfill({ json: {} })

@@ -1,3 +1,6 @@
+PIPELINE ACTION AVAILABILITY (updated source builds)
+Read current server eligibility through a non-secret, no-store action catalogue instead of browser Settings defaults. Configure Cluster is selectable where saved Governance policy allows pipelines; direct-approval requirements remain enforced and are explained visibly. Retired choices are excluded, unsupported saved actions stay visibly retained and new steps require an explicit choice. No migration or dependency change; no pipeline or approval is automatically rewritten.
+
 PIPELINE DATACENTER / CLUSTER ORGANISATION (updated source builds)
 Reuse Global Config groups in Pipelines, create in a selected cluster, search and bookmark views, and assign existing pipelines without replacing steps. Optional groupId metadata extends pipeline CRUD; older records and clients remain compatible. No migration or dependency change. Grouping is not an access boundary and does not alter YAML targets, approvals or recovery controls.
 
