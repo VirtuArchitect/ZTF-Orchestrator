@@ -7,7 +7,6 @@ import Layout from '../components/Layout'
 import PipelineModal from '../components/PipelineModal'
 import { apiFetch } from '../utils/api'
 import { WORKFLOWS, SCRIPTS } from '../data'
-import { PASSWORD_SETUP_WORKFLOW } from '../utils/initialPasswordSetup'
 import { actionName } from '../startGuide'
 import type { Pipeline, PipelineStep } from '../types'
 import { useStore } from '../store'
@@ -15,6 +14,7 @@ import clsx from 'clsx'
 import ConfigScope, { ScopedConfigPicker, useConfigOrganization } from '../components/ConfigScope'
 
 type ConfigFile = { name: string }
+type PipelineAction = { id: string; available: boolean; reason: string }
 
 export default function Pipelines() {
   const { organization, error: groupingError, ready: groupsReady, reload: reloadGroups } = useConfigOrganization()
@@ -29,8 +29,29 @@ export default function Pipelines() {
   const [search, setSearch] = useState('')
   const [formGroup, setFormGroup] = useState('')
   const groupFor = (id?: string) => organization.groups.find(group => group.id === id)
-  const requiredApprovals = useStore(s => s.settings.approvalRequiredWorkflows || [])
-  const selectableWorkflows = WORKFLOWS.filter(w => w.id === PASSWORD_SETUP_WORKFLOW || (w.id !== 'cvm-idrac-password-rotation' && !requiredApprovals.includes(w.id)))
+  const [actions, setActions] = useState<PipelineAction[]>([])
+  const [actionsReady, setActionsReady] = useState(false)
+  const [actionsLoading, setActionsLoading] = useState(true)
+  const [actionsError, setActionsError] = useState('')
+  const actionDefinitions = [...WORKFLOWS.filter(workflow => workflow.runtimeMode !== 'ztf2'),
+    ...SCRIPTS.filter(script => ['ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', 'SetPrismLoginTitlePe'].includes(script.id))]
+  const catalogue = actionDefinitions.filter(action => actions.some(item => item.id === action.id))
+  const actionStatus = (id: string) => actions.find(item => item.id === id)
+  const loadActions = async () => {
+    setActionsReady(false); setActionsLoading(true)
+    try {
+      const response = await apiFetch('/api/pipelines/actions')
+      if (!response.ok) throw new Error('Workflow availability could not be loaded. Refresh actions before saving.')
+      const result = await response.json()
+      if (!Array.isArray(result.actions) || !result.actions.every((action: PipelineAction) =>
+        action && typeof action.id === 'string' && typeof action.available === 'boolean' && typeof action.reason === 'string')) {
+        throw new Error('Workflow availability response is invalid. Refresh actions before saving.')
+      }
+      setActions(result.actions); setActionsReady(true); setActionsError('')
+    } catch (failure) {
+      setActionsError(failure instanceof Error ? failure.message : 'Workflow availability could not be loaded.')
+    } finally { setActionsLoading(false) }
+  }
   const admin = useStore(s => s.user?.role === 'admin')
   const [pipelines,   setPipelines]   = useState<Pipeline[]>([])
   const [configs,     setConfigs]     = useState<ConfigFile[]>([])
@@ -68,12 +89,12 @@ export default function Pipelines() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load(); void loadActions() }, [])
 
   // ── Step helpers ─────────────────────────────────────────────────────────────
 
   const addStep = () =>
-    setFormSteps(prev => [...prev, { workflow: selectableWorkflows[0]?.id || '', configFile: '' }])
+    setFormSteps(prev => [...prev, { workflow: '', configFile: '' }])
 
   const removeStep = (i: number) =>
     setFormSteps(prev => prev.filter((_, idx) => idx !== i))
@@ -97,7 +118,7 @@ export default function Pipelines() {
     setEditId(null)
     setFormName('')
     setFormGroup(groupFor(scope) ? scope : '')
-    setFormSteps([{ workflow: selectableWorkflows[0]?.id || '', configFile: '' }])
+    setFormSteps([{ workflow: '', configFile: '' }])
     setConvert(false)
     setCreating(true)
     setError('')
@@ -116,6 +137,9 @@ export default function Pipelines() {
   const cancelForm = () => { setCreating(false); setEditId(null); setError('') }
 
   const save = async () => {
+    if (!actionsReady) { setError('Refresh workflow availability before saving.'); return }
+    const unavailable = formSteps.findIndex(step => !actionStatus(step.workflow)?.available || !catalogue.some(action => action.id === step.workflow))
+    if (unavailable >= 0) { setError(`Step ${unavailable + 1}: choose an available workflow. ${actionStatus(formSteps[unavailable].workflow)?.reason || 'The saved action is unavailable or retired and has been retained for review.'}`); return }
     if (!formName.trim())     { setError('Pipeline name is required'); return }
     if (formSteps.length < 1) { setError('Add at least one step'); return }
     setError('')
@@ -153,7 +177,7 @@ export default function Pipelines() {
         subtitle="Chain workflows sequentially with pass/fail gates"
         actions={
           <div className="flex gap-2">
-            <button onClick={() => { void load(); void reloadGroups() }} disabled={loading} className="btn-ghost p-2">
+            <button onClick={() => { void load(); void reloadGroups(); void loadActions() }} disabled={loading} className="btn-ghost p-2">
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             </button>
             {!creating && (
@@ -212,6 +236,12 @@ export default function Pipelines() {
               />
             </div>
 
+            <div className="mb-4 text-sm" aria-label="Pipeline workflow availability">
+              <p role="status">{actionsLoading ? 'Checking workflow availability. Saved actions are retained.' : actionsReady ? 'Workflow availability checked against current server Governance policy.' : 'Workflow availability is unavailable. Saved actions are retained.'}</p>
+              {actionsError && <p role="alert" className="text-amber-600">{actionsError}</p>}
+              {actionsReady && actionStatus('config-cluster')?.available === false && <p className="text-amber-600">Configure Cluster: {actionStatus('config-cluster')?.reason}. Use its direct approved workflow while this policy applies.</p>}
+              <button type="button" className="btn-secondary mt-2" disabled={actionsLoading} onClick={() => void loadActions()}>Refresh actions</button>
+            </div>
             {/* Steps */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
@@ -234,18 +264,20 @@ export default function Pipelines() {
                     <span className="text-xs text-gray-500 w-5 flex-shrink-0 text-center font-mono">{i + 1}</span>
 
                     {/* Workflow selector */}
-                    <select
-                      className="input flex-1 text-sm"
-                      value={step.workflow}
-                      onChange={e => updateStep(i, 'workflow', e.target.value)}
-                    >
-                      {selectableWorkflows.map(w => (
-                        <option key={w.id} value={w.id}>{w.name}</option>
-                      ))}
-                      {SCRIPTS.filter(s => ['ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', 'SetPrismLoginTitlePe'].includes(s.id)).map(s => (
-                        <option key={s.id} value={s.id}>{s.name} (Script)</option>
-                      ))}
-                    </select>
+                    <div className="flex-1 min-w-0">
+                      <select aria-label={`Workflow action ${i + 1}`} className="input w-full text-sm"
+                        value={step.workflow} disabled={!actionsReady}
+                        onChange={event => updateStep(i, 'workflow', event.target.value)}>
+                        <option value="">Select workflow</option>
+                        {step.workflow && !catalogue.some(action => action.id === step.workflow) &&
+                          <option value={step.workflow} disabled>{actionName(step.workflow)} (unavailable; retained)</option>}
+                        {catalogue.map(action => <option key={action.id} value={action.id} disabled={!actionStatus(action.id)?.available}>
+                          {action.name}{!actionStatus(action.id)?.available ? ' (requires direct approved job)' : ''}
+                        </option>)}
+                      </select>
+                      {step.workflow && actionsReady && (!actionStatus(step.workflow)?.available || !catalogue.some(action => action.id === step.workflow)) &&
+                        <p role="alert" className="text-xs text-amber-600 mt-1">{actionStatus(step.workflow)?.reason || 'Saved action is unavailable or retired. It has not been replaced; choose a supported action explicitly.'}</p>}
+                    </div>
 
                     {/* Config file selector */}
                     <ScopedConfigPicker key={`${editId || 'new'}:${formGroup}:${i}`} initialScope={groupFor(formGroup) ? formGroup : 'all'} files={configs} value={step.configFile} onChange={name => updateStep(i, 'configFile', name)} />
@@ -274,7 +306,7 @@ export default function Pipelines() {
             {error && <p className="text-sm text-red-400 mb-3">{error}</p>}
 
             <div className="flex gap-2">
-              <button onClick={save} className="btn-primary gap-1.5">
+              <button onClick={save} disabled={!actionsReady} className="btn-primary gap-1.5">
                 <Save size={14} /> {editId ? 'Update' : 'Create'} Pipeline
               </button>
               <button onClick={cancelForm} className="btn-secondary">Cancel</button>

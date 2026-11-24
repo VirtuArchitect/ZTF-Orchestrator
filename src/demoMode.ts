@@ -777,6 +777,7 @@ async function demoResponse(request: Request) {
     })
   }
   if (path.startsWith('/api/recovery/')) return json({ error: 'Recovery detail, changes and execution require a connected authorised backend. Demo records are illustrative only.' }, { status: 403 })
+  if (path === '/api/pipelines/actions') return json({ actions: ['config-cluster', 'pod-config', 'initial-host-cvm-password-setup', 'ChangeDefaultAdminPasswordPe', 'CreateLocalUsersPe', 'SetPrismLoginTitlePe'].map(id => ({ id, available: true, reason: '' })) })
   if (path === '/api/pipelines') return json([{...studioDemoPipeline, createdAt: iso(800), updatedAt: iso(90)}])
   if (path.startsWith('/api/pipelines/')) return okAction('Pipeline action simulated.')
   if (path === '/api/parallel-runs') return json([])

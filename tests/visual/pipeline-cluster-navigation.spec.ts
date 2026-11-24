@@ -21,6 +21,7 @@ async function setup(page: Page, failGroups = false) {
     const request = route.request()
     const path = new URL(request.url()).pathname
     if (path === '/api/config-organization') return route.fulfill({ status: failGroups ? 503 : 200, json: { version: 1, revision: 0, groups, assignments: { 'a.yml': { groupId: 'cluster-a', purpose: '' }, 'b.yml': { groupId: 'cluster-b', purpose: '' }, 'shared.yml': { groupId: 'shared', purpose: '' } } } })
+    if (path === '/api/pipelines/actions') return route.fulfill({ json: { actions: [{ id: 'config-cluster', available: true, reason: '' }] } })
     if (path === '/api/configs') return route.fulfill({ json: ['a.yml', 'b.yml', 'shared.yml'].map(name => ({ name })) })
     if (path === '/api/pipelines' && request.method() === 'GET') return route.fulfill({ json: pipelines })
     if (path === '/api/pipelines' && request.method() === 'POST') {
@@ -74,6 +75,7 @@ test('create in selected cluster, scope config choices and retain selection when
   await expect(picker.getByRole('option', { name: 'a.yml', exact: true })).toHaveCount(1)
   await expect(picker.getByRole('option', { name: 'shared.yml', exact: true })).toHaveCount(1)
   await expect(picker.getByRole('option', { name: 'b.yml', exact: true })).toHaveCount(0)
+  await page.getByLabel('Workflow action 1', { exact: true }).selectOption('config-cluster')
   await picker.selectOption('a.yml')
   await page.getByLabel('Pipeline group').selectOption('cluster-b')
   await expect(picker).toHaveValue('a.yml')

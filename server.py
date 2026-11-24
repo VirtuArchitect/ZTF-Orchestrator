@@ -41630,6 +41630,19 @@ def _pipeline_group_error(data, previous=''):
     return None
 
 
+@app.route('/api/pipelines/actions')
+@require_role('admin', 'operator', 'viewer')
+def pipeline_actions():
+    # Current server policy, not the browser's cached Settings defaults.
+    actions = []
+    for action in sorted(ALLOWED_WORKFLOWS | PIPELINE_SCRIPT_IDS):
+        reason = _pipeline_step_error({'workflow': action, 'configFile': 'reviewed.yml'})
+        actions.append({'id': action, 'available': reason is None, 'reason': reason or ''})
+    response = jsonify({'actions': actions})
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 @app.route('/api/pipelines')
 @require_role('admin', 'operator', 'viewer')
 def list_pipelines():

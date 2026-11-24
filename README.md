@@ -7,7 +7,7 @@ Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orch
 Prepare cluster configuration, run governed ZTF 1.x pipelines, and recover
 Nutanix infrastructure from reviewed profiles through one web console.
 
-Updated source builds support [datacenter and cluster organisation in Pipelines](docs/pipeline-organization.md), including creation in the selected cluster and scoped configuration-file choices.
+Updated source builds support [datacenter and cluster organisation in Pipelines](docs/pipeline-organization.md), including creation in the selected cluster and scoped configuration-file choices. Pipeline action availability follows current server Governance policy; unsupported saved actions are retained for explicit review.
 
 Updated source builds provide a [recovery workspace](docs/disaster-recovery.md#recovery-workspace-updated-source-builds)
 with a clear next action, readable pipeline steps, recorded failure stages and an
