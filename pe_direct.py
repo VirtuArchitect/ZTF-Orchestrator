@@ -98,25 +98,26 @@ class Client:
             raise DirectError('PE response was incomplete or unsupported. Reconcile before retrying.') from None
 
 
-def inventory(config, pe):
+def inventory(config, pe, *, require_good_health=True):
     cluster = pe.request('GET', '/cluster/')
     if cluster_uuid(cluster.get('uuid')) != config['cluster_uuid']:
         raise DirectError('PE cluster UUID does not match the reviewed target.')
     name = cluster.get('name')
     if not isinstance(name, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_. -]{0,127}', name):
         raise DirectError('PE cluster name is missing or unsupported.')
-    if (cluster.get('health_summary') or {}).get('health_status') != 'Good':
+    if require_good_health and (cluster.get('health_summary') or {}).get('health_status') != 'Good':
         raise DirectError('PE does not report Good cluster health.')
     body = pe.request('GET', '/hosts/')
     rows = body.get('entities')
     total = (body.get('metadata') or {}).get('grand_total_entities')
     if not isinstance(rows, list) or type(total) is not int or total != len(rows) or not 3 <= len(rows) <= 16:
-        raise DirectError('Complete PE inventory of 3–16 healthy AHV hosts is required.')
+        raise DirectError('Complete PE inventory of 3–16 AHV hosts is required.')
     hosts = []
     for row in rows:
-        if (not isinstance(row, dict) or (row.get('health_summary') or {}).get('health_status') != 'Good'
-                or row.get('hypervisor_type') not in {'kKvm', 'AHV'}):
-            raise DirectError('Every host must be an identifiable, healthy AHV host.')
+        if not isinstance(row, dict) or row.get('hypervisor_type') not in {'kKvm', 'AHV'}:
+            raise DirectError('Every host must be an identifiable AHV host.')
+        if require_good_health and (row.get('health_summary') or {}).get('health_status') != 'Good':
+            raise DirectError('Every host must report Good health.')
         serial = row.get('serial')
         if not isinstance(serial, str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,128}', serial):
             raise DirectError('PE host serial is missing or invalid.')

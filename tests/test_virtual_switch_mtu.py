@@ -58,6 +58,16 @@ def test_read_only_apply_and_approved_rollback():
     assert [write[2]['mtu'] for write in lab.writes] == [9000, 1500]
 
 
+def test_aggregate_alerts_do_not_block_mtu_configuration():
+    lab = MtuLab()
+    original = mtu.preflight(draft(), lab, lab)
+    lab.health = 'Critical'
+    lab.host_health = 'Warning'
+    assert mtu.preflight(draft(), lab, lab) == original
+    assert not lab.writes
+    assert all(row['verified'] for row in execute(lab, original))
+
+
 def test_reject_stale_plan_and_missing_telemetry():
     lab = MtuLab()
     plan = mtu.preflight(draft(), lab, lab)

@@ -2,7 +2,7 @@
 
 Open **Advanced Automation > Scripts > Change Virtual Switch MTU** as an administrator.
 Use the standalone action after cluster registration and any planned uplink
-migration. It targets the default **vs0 (br0)** on a healthy 3–16 host AHV
+migration. It targets the default **vs0 (br0)** on a 3–16 host AHV
 cluster with an active-backup bond. The apply path changes MTU 1500 to 9000
 using Prism Central Networking v4.2. It preserves the existing uplinks and
 bond and keeps quick mode off.
@@ -35,3 +35,5 @@ procedure. The action does not automatically reverse or replay a write.
 PE certificate verification is optional per operation. See [PE TLS options](pe-tls-options.md) for the UI, YAML fields, audit evidence and preserved approval/identity checks. PC trust is unchanged.
 
 See [workflow execution settings](workflow-execution-settings.md) for defaults and operator overrides.
+
+General PE cluster/host health alerts are not MTU readiness gates. Licensing/default-password alerts do not block preflight or readback. Complete network identity, working uplinks, MTU telemetry, physical fabric review, exact approval, verification and rollback checks remain required. A successful MTU readback does not establish general cluster health.

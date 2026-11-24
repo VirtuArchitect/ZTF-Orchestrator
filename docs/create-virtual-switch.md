@@ -31,3 +31,5 @@ No write is automatically retried or rolled back. A response loss or failed read
 The API is admin-only: `GET /api/create-virtual-switch`, and `POST` to `/preflight`, `/approval` and `/apply`. Preflight accepts `connection`, `switchName` and `reviewed`; approval accepts exact `content`; apply requires `content`, `approvalId` and the exact `confirmation`. The durable job uses `create-virtual-switch.yml` as the reviewed configuration filename. No credentials or private SSH keys are included in the plan.
 
 See [workflow execution settings](workflow-execution-settings.md) for packaged defaults, existing overrides and planning-mode rollback.
+
+Aggregate PE cluster/host health is not a switch-creation gate. General licensing/default-password alerts do not prevent configuration; identity, pinned SSH, complete inventory, working management uplinks, independent approval and per-host readback remain required. No physical NICs are moved by this action.

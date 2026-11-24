@@ -1,3 +1,6 @@
+NETWORK CONFIGURATION READINESS (updated source builds)
+AHV uplink discovery and execution no longer require aggregate PE cluster/host health to be Good. General licensing and default-password alerts do not block the shared uplink, empty-switch and VS0 MTU network inventory paths. Exact identity, complete inventory, operational links, redundancy, SSH trust, approvals, cancellation and verification remain enforced. The console distinguishes successful discovery from a cluster-health assessment. DARE and Disaster Recovery health gates are unchanged; no API/schema or dependency change.
+
 RECOVERY OPERATIONS WORKSPACE (updated source builds)
 Present the next recovery action, stage status, current execution, readable pipeline steps and a plain-text shift handover summary together. Advanced diagnostics and YAML stay expandable. Export omits configuration contents, raw logs, connection endpoints and credentials. Existing approvals, health gates, completed work and eligible step 08-only recovery retry are unchanged. No API, schema or runtime dependency changes.
 

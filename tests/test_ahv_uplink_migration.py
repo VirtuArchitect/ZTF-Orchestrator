@@ -28,6 +28,7 @@ class Lab:
     def __init__(self, existing=False):
         self.writes = []
         self.health = 'Good'
+        self.host_health = 'Good'
         self.task_status = 'SUCCEEDED'
         self.fail_source_readback = False
         self.source = self.switch('vs0', SOURCE, PORTS, default=True)
@@ -45,7 +46,7 @@ class Lab:
             return {'uuid': CLUSTER, 'name': 'AHV Lab', 'health_summary': {'health_status': self.health}}
         return {'metadata': {'grand_total_entities': len(HOSTS)}, 'entities': [
             {'serial': f'host-{idx}', 'hypervisor_address': f'192.0.2.{10 + idx}',
-             'service_vmexternal_ip': f'192.0.2.{20 + idx}', 'health_summary': {'health_status': 'Good'}}
+             'service_vmexternal_ip': f'192.0.2.{20 + idx}', 'health_summary': {'health_status': self.host_health}}
             for idx in range(len(HOSTS))]}
 
     def rows(self, path, cluster_header=None):
@@ -73,7 +74,7 @@ class Lab:
             for host in self.source['clusters'][0]['hosts']:
                 host['internalBridgeName'] = 'br0'
             if self.fail_source_readback:
-                self.health = 'Warning'
+                self.source['clusters'][0]['hosts'][0]['hostNics'] = ['eth0']
         else:
             self.destination = self.switch('vs1', DESTINATION, [])
             self.destination['clusters'][0]['hosts'] = deepcopy(body['clusters'][0]['hosts'])
@@ -101,7 +102,7 @@ def test_preflight_and_approved_application_are_scoped(existing):
     assert progress[0][0]['stage'] == 'retained_uplinks_verified'
 
 
-@pytest.mark.parametrize('failure', ['too-few-kept', 'unknown-port', 'unconfirmed-fabric', 'destination-conflict', 'cluster-health'])
+@pytest.mark.parametrize('failure', ['too-few-kept', 'unknown-port', 'unconfirmed-fabric', 'destination-conflict'])
 def test_preflight_rejects_unsafe_plans(failure):
     lab = Lab(existing=failure == 'destination-conflict')
     value = intent()
@@ -111,11 +112,23 @@ def test_preflight_rejects_unsafe_plans(failure):
         value['move'][HOSTS[0]] = ['eth5', 'eth6']
     elif failure == 'unconfirmed-fabric':
         value['fabricReviewed'] = False
-    elif failure == 'cluster-health':
-        lab.health = 'Warning'
     with pytest.raises(uplink.MigrationError):
         uplink.preflight(value, lab, lab)
     assert not lab.writes
+
+
+@pytest.mark.parametrize('health', ['Warning', 'Critical', 'Unknown', None])
+def test_aggregate_pe_health_does_not_gate_pc_uplink_plans_or_readback(health):
+    lab = Lab()
+    baseline = uplink.preflight(intent(), lab, lab)
+    lab.health = lab.host_health = health
+    # Alert-only changes neither invalidate approval intent nor trigger writes.
+    assert uplink.preflight(intent(), lab, lab) == baseline
+    assert not lab.writes
+    output = []
+    result = uplink.execute(baseline, lab, lab, output.append, lambda: None, lambda: False)
+    assert all(row['stage'] == 'verified' for row in result)
+    assert not any('PE reports Good' in row for row in output)
 
 
 @pytest.mark.parametrize('failure', ['source-readback', 'task', 'stale', 'cancelled'])

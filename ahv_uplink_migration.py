@@ -219,15 +219,13 @@ def collect(config, pc, pe, destination=None, *, include_nic_mtu=False):
     if (cluster.get('extId') != cluster_id or pe_cluster.get('uuid') != cluster_id
             or not cluster.get('name') or cluster['name'] != pe_cluster.get('name')):
         raise MigrationError('PC and PE do not agree on the expected cluster identity.')
-    if member(pe_cluster.get('health_summary')).get('health_status') != 'Good':
-        raise MigrationError('Prism Element does not report Good cluster health.')
     pe_hosts = pe.request('GET', '/api/nutanix/v2.0/hosts/')
     nodes = pe_hosts.get('entities')
     if (not isinstance(nodes, list) or member(pe_hosts.get('metadata')).get('grand_total_entities') != len(nodes)
             or not 3 <= len(nodes) <= MAX_HOSTS):
         raise MigrationError('Complete PE inventory is required for a 3–16 host AHV cluster.')
-    if any(member(node.get('health_summary')).get('health_status') != 'Good' for node in nodes):
-        raise MigrationError('Prism Element does not report Good health for every host.')
+    # Aggregate cluster/host health is not a network prerequisite. Incomplete
+    # membership, switch state and physical links are checked independently below.
     by_serial = {node.get('serial'): node for node in nodes}
     pc_hosts = pc.rows(path + '/hosts')
     if (len(by_serial) != len(nodes) or len(pc_hosts) != len(nodes) or None in by_serial
@@ -406,7 +404,7 @@ def verify(snapshot, observed, final, emit, report):
                or nics[port]['switchId'] != switch_id or (switch_id and not nics[port]['up'])
                for port, switch_id in expected.items()):
             raise MigrationError(f'{host["name"]} physical NIC assignment or link did not verify.')
-        emit(f'{host["name"]}: PE reports Good and {"both switch assignments verified" if final else "retained uplinks verified"}.')
+        emit(f'{host["name"]}: {"both switch assignments verified" if final else "retained uplinks verified"}.')
         results.append({'hostId': identity, 'host': host['name'], 'kept': assignment['keep'], 'moved': assignment['move'],
                         'stage': 'verified' if final else 'retained_uplinks_verified'})
         report(results)

@@ -24,6 +24,17 @@ def prepared(lab):
     return controller, pe, create.preflight(config(), controller, pe)
 
 
+def test_create_only_inventory_allows_bootstrap_alerts_without_moving_nics(lab):
+    lab.health = 'Critical'
+    for node in lab.nodes: node['health_summary']['health_status'] = 'Warning'
+    _, _, plan = prepared(lab)
+    assert plan['changeRequired'] is True
+    assert not lab.writes
+    result, _ = execute(lab, plan)
+    assert all(row['stage'] == 'verified' for row in result)
+    assert all(state['switches']['br0']['ports'] == ['eth0', 'eth1', 'eth2', 'eth3'] for state in lab.ovs.values())
+
+
 def execute(lab, plan=None, authorize=lambda: None, cancelled=lambda: False):
     controller, pe, generated = prepared(lab)
     reports = []

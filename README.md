@@ -95,6 +95,14 @@ approval remain in the existing workflow and pipeline paths.
 
 ### Specialist configuration
 
+Network configuration checks workflow-specific readiness rather than requiring
+aggregate PE health to be `Good`. Missing-license and default-password alerts do
+not block AHV Uplink Migration, Create Virtual Switch or the shared VS0 MTU
+inventory path. Identity, complete host inventory, operational links, management
+uplink redundancy, approvals and readback remain required. Discovery is not a
+cluster-health assessment. This change does not relax DARE prerequisites or
+Disaster Recovery health-evidence gates.
+
 AHV Uplink Migration explains why Continue is disabled and shows read-only discovery progress, host/NIC results and actionable HTTP errors. See [discovery feedback](docs/ahv-uplink-migration.md#discovery-and-continue-feedback).
 
 AHV Uplink Migration uses Global Config credential dropdowns showing reference and username. CVM options use the required nutanix SSH account; catalogue refresh and selection do not authenticate or submit changes. Earlier appliance bundles retain their original controls until updated.
