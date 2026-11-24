@@ -25,8 +25,8 @@
       "sourceDocument": "docs/ahv-uplink-migration.md",
       "archived": false,
       "kind": "guide",
-      "applicationSource": "173e1194a6ca4f0f086e0f7cbb15bf79e6949f5a",
-      "reviewed": "2026-11-22"
+      "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
+      "reviewed": "2026-11-24"
     },
     {
       "id": "appliance-update-manager",
@@ -42,7 +42,9 @@
       "category": "Cluster operations",
       "sourceDocument": "docs/change-virtual-switch-mtu.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "reviewed": "2026-11-24",
+      "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71"
     },
     {
       "id": "cluster-deployment-process",
@@ -98,7 +100,9 @@
       "category": "Cluster operations",
       "sourceDocument": "docs/create-virtual-switch.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "reviewed": "2026-11-24",
+      "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71"
     },
     {
       "id": "credential-groups",
