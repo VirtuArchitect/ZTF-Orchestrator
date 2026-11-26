@@ -24,6 +24,11 @@ jobs:
             -e POSTGRES_PASSWORD= \
             python:3.11-slim \
             bash -lc '
+              # First-boot fixtures create local Git repositories; no Docker
+              # socket, remote cluster or VM is used by these shell tests.
+              apt-get update
+              apt-get install -y --no-install-recommends git
+              rm -rf /var/lib/apt/lists/*
               echo "::group::Install Python dependencies"
               pip install -r requirements.txt pytest pytest-cov pip-audit defusedxml
               echo "::endgroup::"
