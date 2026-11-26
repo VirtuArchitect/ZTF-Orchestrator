@@ -66,3 +66,11 @@ def historical_integration_contract(monkeypatch):
     """Exercise retained implementation without changing production defaults."""
     import server
     monkeypatch.setattr(server, '_integrations_retired', lambda: False)
+
+
+def create_account_session(server, username, role):
+    """Synthetic tokens must belong to a real account, as production sessions do."""
+    import uuid
+    if not server._find_user(username):
+        server._save_users(server._load_users()+[{'id':str(uuid.uuid4()),'username':username,'role':role,'password_hash':'synthetic-no-login'}])
+    return server._create_session(username,role)

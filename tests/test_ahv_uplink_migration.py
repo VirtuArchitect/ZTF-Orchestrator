@@ -1,3 +1,5 @@
+
+from tests.conftest import create_account_session
 from copy import deepcopy
 
 import pytest
@@ -158,7 +160,7 @@ def test_apply_requires_different_admin_and_one_job_per_approval(client, auth_he
     apply_url = '/api/ahv-uplink-migration/apply'
     assert client.get('/api/ahv-uplink-migration').status_code == 401
     assert client.post('/api/approvals', json={'workflow': uplink.WORKFLOW}, headers=auth_headers).status_code == 400
-    operator = server._create_session('example-operator', 'operator')
+    operator = create_account_session(server, 'example-operator', 'operator')
     assert client.post(approval_url, json={'content': content}, headers={'Authorization': f'Bearer {operator}'}).status_code == 403
     response = client.post(approval_url, json={'content': content}, headers=auth_headers)
     assert response.status_code == 201
@@ -168,7 +170,7 @@ def test_apply_requires_different_admin_and_one_job_per_approval(client, auth_he
     monkeypatch.setenv('ZTF_AHV_UPLINK_MIGRATION_ENABLED', 'true')
     assert client.post(apply_url, json=payload, headers=auth_headers).status_code == 403
     assert client.post(f'/api/approvals/{approval_id}/approve', json={}, headers=auth_headers).status_code == 403
-    second_admin = server._create_session('another-admin', 'admin')
+    second_admin = create_account_session(server, 'another-admin', 'admin')
     headers = {'Authorization': f'Bearer {second_admin}'}
     assert client.post(f'/api/approvals/{approval_id}/approve', json={}, headers=headers).status_code == 200
     calls = []

@@ -395,11 +395,11 @@ def test_operator_cannot_create_pe_admins_directly_or_in_pipeline(client, auth_h
     for endpoint in ['/api/jobs', '/api/execute']:
         assert client.post(endpoint, headers=headers, json=body).status_code == 403
         assert client.post(endpoint, headers=headers, json={**body, 'dryRun': True}).status_code == 403
-    pipeline = client.post('/api/pipelines', headers=headers, json={'name': 'users', 'steps': [
+    pipeline = client.post('/api/pipelines', headers=auth_headers, json={'name': 'users', 'steps': [
         {'workflow': pe.SCRIPT_ID, 'configFile': 'pe-users.yml'}]}).get_json()
     response = client.post(f'/api/pipelines/{pipeline["id"]}/run', headers=headers, json=body)
-    assert response.status_code == 400
-    assert 'Only an Orchestrator administrator' in response.get_json()['error']
+    assert response.status_code == 403
+    assert 'scoped Operations workspace' in response.get_json()['error']
 
 
 def test_dry_run_cannot_bypass_job_or_pipeline_confirmation(client, auth_headers):

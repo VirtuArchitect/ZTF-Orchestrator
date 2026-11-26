@@ -18,7 +18,7 @@ The selected view is stored in the URL so it can be bookmarked. If grouping is u
 
 ## Compatibility and access
 
-The existing pipeline CRUD API accepts an optional `groupId` string referencing a Global Config group, or an empty string for Ungrouped. Older clients and records work without the field. No database migration or new runtime dependency is needed. Existing admin/operator editing permissions and viewer read access apply.
+The existing pipeline CRUD API accepts an optional `groupId` string referencing a Global Config group, or an empty string for Ungrouped. Older clients and records work without the field. No database migration or new runtime dependency is needed. Administrators retain the existing editing path. Updated source builds restrict Operators and Viewers to the separate scoped Operations workspace; see [RBAC management](scoped-operations-access.md).
 
 Groups are not access-control partitions. Execution still uses the existing pipeline and action approvals, YAML targets, authentication, verification and recovery controls, including the eligible registration-only recovery retry. Grouping does not confer permission to execute a workflow.
 

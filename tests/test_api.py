@@ -59,11 +59,11 @@ def test_viewer_cannot_execute(client, auth_headers):
     assert resp.status_code == 403
 
 
-def test_viewer_can_read_configs(client, auth_headers):
+def test_viewer_cannot_read_raw_configs(client, auth_headers):
     _create_user(client, auth_headers, 'viewer2', 'viewer')
     viewer_headers = _login(client, 'viewer2')
     resp = client.get('/api/configs', headers=viewer_headers)
-    assert resp.status_code == 200
+    assert resp.status_code == 403
 
 
 def test_appliance_artifact_archive_crud(client, auth_headers):
@@ -597,14 +597,9 @@ def test_operator_cannot_stage_appliance_update(client, auth_headers):
                            'containerImage': 'ghcr.io/virtuarchitect/ztf-orchestrator:v1.4.1',
                        }},
                        headers=operator_headers)
-    assert resp.status_code == 201
-    record = resp.get_json()
-    resp = client.post(f"/api/appliance/updates/{record['id']}/verify",
-                       headers=operator_headers)
-    assert resp.status_code == 200
-    resp = client.post(f"/api/appliance/updates/{record['id']}/stage",
-                       headers=operator_headers)
     assert resp.status_code == 403
+    assert client.post('/api/appliance/updates/unknown/verify',headers=operator_headers).status_code == 403
+    assert client.post('/api/appliance/updates/unknown/stage',headers=operator_headers).status_code == 403
 
 
 def test_viewer_cannot_write_config(client, auth_headers):
@@ -616,13 +611,13 @@ def test_viewer_cannot_write_config(client, auth_headers):
     assert resp.status_code == 403
 
 
-def test_operator_can_write_config(client, auth_headers):
+def test_operator_cannot_write_unrestricted_config(client, auth_headers):
     _create_user(client, auth_headers, 'op1', 'operator')
     op_headers = _login(client, 'op1')
     resp = client.post('/api/configs/test.yml',
                        json={'content': 'key: val\n'},
                        headers=op_headers)
-    assert resp.status_code == 200
+    assert resp.status_code == 403
 
 
 def test_operator_cannot_change_settings(client, auth_headers):
@@ -920,7 +915,7 @@ def test_connection_profile_test_reports_missing_endpoint(client, auth_headers, 
     assert body['message'] == 'endpoint is not configured'
 
 
-def test_connection_profile_test_operator_allowed(client, auth_headers, monkeypatch):
+def test_connection_profile_test_operator_denied(client, auth_headers, monkeypatch):
     import server
 
     _create_user(client, auth_headers, 'op-settings', 'operator')
@@ -929,11 +924,7 @@ def test_connection_profile_test_operator_allowed(client, auth_headers, monkeypa
     resp = client.post('/api/settings/test-connection',
                        json={'target': 'ipam', 'profile': {'ipam': {'method': 'infoblox', 'infobloxHost': 'infoblox.example.com'}}},
                        headers=op_headers)
-    body = resp.get_json()
-    assert resp.status_code == 200
-    assert body['ok'] is False
-    assert body['host'] == 'infoblox.example.com'
-    assert body['port'] == 443
+    assert resp.status_code == 403
 
 
 def test_connection_profile_test_rejects_unknown_target(client, auth_headers):
@@ -3750,7 +3741,7 @@ def test_native_foundation_evidence_pack_approval_review_binds_ready_records_wit
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfpack_operator', 'operator')
+    _create_user(client, auth_headers, 'nfpack_operator', 'admin')
     operator_headers = _login(client, 'nfpack_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -4089,7 +4080,7 @@ def test_native_foundation_deployment_wave_gate_review_carries_approval_evidence
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfwave_operator', 'operator')
+    _create_user(client, auth_headers, 'nfwave_operator', 'admin')
     operator_headers = _login(client, 'nfwave_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -4175,7 +4166,7 @@ def test_native_foundation_deployment_wave_rehearsal_carries_bound_package(clien
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrehearsal_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrehearsal_operator', 'admin')
     operator_headers = _login(client, 'nfrehearsal_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -4262,7 +4253,7 @@ def test_native_foundation_deployment_wave_authorization_review_carries_ready_pa
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfwaveauth_operator', 'operator')
+    _create_user(client, auth_headers, 'nfwaveauth_operator', 'admin')
     operator_headers = _login(client, 'nfwaveauth_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -4350,7 +4341,7 @@ def test_native_foundation_deployment_window_reservation_review_binds_approval_e
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfwindow_operator', 'operator')
+    _create_user(client, auth_headers, 'nfwindow_operator', 'admin')
     operator_headers = _login(client, 'nfwindow_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -4444,7 +4435,7 @@ def test_native_foundation_deployment_scheduler_review_binds_approval_evidence(c
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfschedule_operator', 'operator')
+    _create_user(client, auth_headers, 'nfschedule_operator', 'admin')
     operator_headers = _login(client, 'nfschedule_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -5240,7 +5231,7 @@ def test_native_foundation_review_packet_exports_bound_packet_gate_artifacts(cli
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfpacket_operator', 'operator')
+    _create_user(client, auth_headers, 'nfpacket_operator', 'admin')
     operator_headers = _login(client, 'nfpacket_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -5319,7 +5310,7 @@ def test_validation_evidence_can_capture_native_foundation_review_packet(client,
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfcapture_operator', 'operator')
+    _create_user(client, auth_headers, 'nfcapture_operator', 'admin')
     operator_headers = _login(client, 'nfcapture_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -5525,7 +5516,7 @@ def test_native_foundation_adapter_activation_review_binds_package_but_blocks_ac
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfactivate_operator', 'operator')
+    _create_user(client, auth_headers, 'nfactivate_operator', 'admin')
     operator_headers = _login(client, 'nfactivate_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -5834,7 +5825,7 @@ def test_native_foundation_adapter_load_plan_review_carries_packet_gate_summary(
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfload_operator', 'operator')
+    _create_user(client, auth_headers, 'nfload_operator', 'admin')
     operator_headers = _login(client, 'nfload_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -6038,7 +6029,7 @@ def test_native_foundation_adapter_package_provenance_review_carries_packet_gate
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfpackage_operator', 'operator')
+    _create_user(client, auth_headers, 'nfpackage_operator', 'admin')
     operator_headers = _login(client, 'nfpackage_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -6285,7 +6276,7 @@ def test_native_foundation_adapter_sbom_review_carries_packet_gate_summary(clien
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfsbom_operator', 'operator')
+    _create_user(client, auth_headers, 'nfsbom_operator', 'admin')
     operator_headers = _login(client, 'nfsbom_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -6543,7 +6534,7 @@ def test_native_foundation_adapter_runtime_isolation_review_carries_packet_gate_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfruntime_operator', 'operator')
+    _create_user(client, auth_headers, 'nfruntime_operator', 'admin')
     operator_headers = _login(client, 'nfruntime_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -6795,7 +6786,7 @@ def test_native_foundation_adapter_runtime_admission_review_carries_packet_gate_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfadmission_operator', 'operator')
+    _create_user(client, auth_headers, 'nfadmission_operator', 'admin')
     operator_headers = _login(client, 'nfadmission_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -7030,7 +7021,7 @@ def test_native_foundation_adapter_execution_preflight_review_carries_packet_gat
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfpreflight_operator', 'operator')
+    _create_user(client, auth_headers, 'nfpreflight_operator', 'admin')
     operator_headers = _login(client, 'nfpreflight_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -7283,7 +7274,7 @@ def test_native_foundation_adapter_target_connectivity_review_carries_packet_gat
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nftarget_operator', 'operator')
+    _create_user(client, auth_headers, 'nftarget_operator', 'admin')
     operator_headers = _login(client, 'nftarget_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -7554,7 +7545,7 @@ def test_native_foundation_adapter_credential_handoff_review_carries_packet_gate
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfhandoff_operator', 'operator')
+    _create_user(client, auth_headers, 'nfhandoff_operator', 'admin')
     operator_headers = _login(client, 'nfhandoff_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -7815,7 +7806,7 @@ def test_native_foundation_adapter_command_invocation_review_carries_packet_gate
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfcommand_operator', 'operator')
+    _create_user(client, auth_headers, 'nfcommand_operator', 'admin')
     operator_headers = _login(client, 'nfcommand_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8073,7 +8064,7 @@ def test_native_foundation_adapter_output_evidence_review_carries_packet_gate_su
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfoutput_operator', 'operator')
+    _create_user(client, auth_headers, 'nfoutput_operator', 'admin')
     operator_headers = _login(client, 'nfoutput_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8326,7 +8317,7 @@ def test_native_foundation_retained_evidence_export_review_carries_packet_gate_s
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfexport_operator', 'operator')
+    _create_user(client, auth_headers, 'nfexport_operator', 'admin')
     operator_headers = _login(client, 'nfexport_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8498,7 +8489,7 @@ def test_native_foundation_approval_binding_review_binds_approved_request_and_ev
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfbind_operator', 'operator')
+    _create_user(client, auth_headers, 'nfbind_operator', 'admin')
     operator_headers = _login(client, 'nfbind_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8547,7 +8538,7 @@ def test_native_foundation_approval_binding_review_binds_approved_request_and_ev
 def test_native_foundation_approval_binding_review_blocks_mismatched_approval_and_evidence(client, auth_headers):
     original = _native_foundation_intent_with_uat_evidence()
     modified = original.replace('NODE-1', 'NODE-X', 1)
-    _create_user(client, auth_headers, 'nfbind_mismatch_operator', 'operator')
+    _create_user(client, auth_headers, 'nfbind_mismatch_operator', 'admin')
     operator_headers = _login(client, 'nfbind_mismatch_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8636,7 +8627,7 @@ def test_native_foundation_execution_admission_review_binds_approval_and_evidenc
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfadmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfadmit_operator', 'admin')
     operator_headers = _login(client, 'nfadmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8791,7 +8782,7 @@ def test_native_foundation_execution_adapter_contract_carries_packet_gate_summar
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfcontract_operator', 'operator')
+    _create_user(client, auth_headers, 'nfcontract_operator', 'admin')
     operator_headers = _login(client, 'nfcontract_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -8928,7 +8919,7 @@ def test_native_foundation_execution_request_review_carries_adapter_gate_summary
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrequest_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrequest_operator', 'admin')
     operator_headers = _login(client, 'nfrequest_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9066,7 +9057,7 @@ def test_native_foundation_dry_run_ledger_carries_adapter_gate_summary(client, a
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfledger_operator', 'operator')
+    _create_user(client, auth_headers, 'nfledger_operator', 'admin')
     operator_headers = _login(client, 'nfledger_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9185,7 +9176,7 @@ def test_native_foundation_execution_permit_review_binds_package_but_blocks_issu
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfpermit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfpermit_operator', 'admin')
     operator_headers = _login(client, 'nfpermit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9310,7 +9301,7 @@ def test_native_foundation_execution_lock_plan_carries_packet_gate_summary(clien
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nflock_operator', 'operator')
+    _create_user(client, auth_headers, 'nflock_operator', 'admin')
     operator_headers = _login(client, 'nflock_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9457,7 +9448,7 @@ def test_native_foundation_execution_audit_plan_carries_packet_gate_summary(clie
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfaudit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfaudit_operator', 'admin')
     operator_headers = _login(client, 'nfaudit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9614,7 +9605,7 @@ def test_native_foundation_execution_retention_plan_carries_packet_gate_summary(
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfretention_operator', 'operator')
+    _create_user(client, auth_headers, 'nfretention_operator', 'admin')
     operator_headers = _login(client, 'nfretention_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9741,7 +9732,7 @@ def test_native_foundation_runner_readiness_carries_packet_gate_summary(client, 
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrunner_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrunner_operator', 'admin')
     operator_headers = _login(client, 'nfrunner_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -9884,7 +9875,7 @@ def test_native_foundation_controlled_uat_entry_review_carries_packet_gate_summa
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfentry_operator', 'operator')
+    _create_user(client, auth_headers, 'nfentry_operator', 'admin')
     operator_headers = _login(client, 'nfentry_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10031,7 +10022,7 @@ def test_native_foundation_controlled_uat_scope_review_carries_packet_gate_summa
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfscope_operator', 'operator')
+    _create_user(client, auth_headers, 'nfscope_operator', 'admin')
     operator_headers = _login(client, 'nfscope_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10164,7 +10155,7 @@ def test_native_foundation_controlled_uat_runbook_review_carries_packet_gate_sum
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrunbook_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrunbook_operator', 'admin')
     operator_headers = _login(client, 'nfrunbook_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10333,7 +10324,7 @@ def test_native_foundation_controlled_uat_security_review_carries_packet_gate_su
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfsecurity_operator', 'operator')
+    _create_user(client, auth_headers, 'nfsecurity_operator', 'admin')
     operator_headers = _login(client, 'nfsecurity_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10505,7 +10496,7 @@ def test_native_foundation_controlled_uat_operations_review_carries_packet_gate_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfoperations_operator', 'operator')
+    _create_user(client, auth_headers, 'nfoperations_operator', 'admin')
     operator_headers = _login(client, 'nfoperations_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10689,7 +10680,7 @@ def test_native_foundation_controlled_uat_signoff_review_carries_packet_gate_sum
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfsignoff_operator', 'operator')
+    _create_user(client, auth_headers, 'nfsignoff_operator', 'admin')
     operator_headers = _login(client, 'nfsignoff_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10853,7 +10844,7 @@ def test_native_foundation_recovery_plan_carries_packet_gate_summary(client, aut
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrecovery_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrecovery_operator', 'admin')
     operator_headers = _login(client, 'nfrecovery_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -10986,7 +10977,7 @@ def test_native_foundation_job_state_plan_carries_packet_gate_summary(client, au
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfjobstate_operator', 'operator')
+    _create_user(client, auth_headers, 'nfjobstate_operator', 'admin')
     operator_headers = _login(client, 'nfjobstate_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11118,7 +11109,7 @@ def test_native_foundation_restart_resume_review_binds_approval_evidence(client,
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrestart_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrestart_operator', 'admin')
     operator_headers = _login(client, 'nfrestart_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11225,7 +11216,7 @@ def test_native_foundation_backup_restore_review_binds_approval_evidence(client,
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfbackup_operator', 'operator')
+    _create_user(client, auth_headers, 'nfbackup_operator', 'admin')
     operator_headers = _login(client, 'nfbackup_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11350,7 +11341,7 @@ def test_native_foundation_mutating_enablement_review_binds_approval_evidence(cl
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfmutating_operator', 'operator')
+    _create_user(client, auth_headers, 'nfmutating_operator', 'admin')
     operator_headers = _login(client, 'nfmutating_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11473,7 +11464,7 @@ def test_native_foundation_execution_request_persistence_admission_review_binds_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrequestpersist_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrequestpersist_operator', 'admin')
     operator_headers = _login(client, 'nfrequestpersist_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11628,7 +11619,7 @@ def test_native_foundation_execution_submission_review_binds_approval_evidence(c
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfsubmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfsubmit_operator', 'admin')
     operator_headers = _login(client, 'nfsubmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11771,7 +11762,7 @@ def test_native_foundation_execution_submission_persistence_admission_review_bin
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfsubmitpersist_operator', 'operator')
+    _create_user(client, auth_headers, 'nfsubmitpersist_operator', 'admin')
     operator_headers = _login(client, 'nfsubmitpersist_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -11918,7 +11909,7 @@ def test_native_foundation_queue_persistence_review_binds_approval_evidence(clie
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfqueue_operator', 'operator')
+    _create_user(client, auth_headers, 'nfqueue_operator', 'admin')
     operator_headers = _login(client, 'nfqueue_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -12059,7 +12050,7 @@ def test_native_foundation_queue_persistence_admission_review_binds_approval_evi
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfqueueadmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfqueueadmit_operator', 'admin')
     operator_headers = _login(client, 'nfqueueadmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -12202,7 +12193,7 @@ def test_native_foundation_execution_authorization_persistence_admission_review_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfauthpersist_operator', 'operator')
+    _create_user(client, auth_headers, 'nfauthpersist_operator', 'admin')
     operator_headers = _login(client, 'nfauthpersist_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -12372,7 +12363,7 @@ def test_native_foundation_job_persistence_admission_review_binds_approval_evide
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfpersist_operator', 'operator')
+    _create_user(client, auth_headers, 'nfpersist_operator', 'admin')
     operator_headers = _login(client, 'nfpersist_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -12574,7 +12565,7 @@ def test_native_foundation_mutating_adapter_binding_review_binds_approval_eviden
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfbinding_operator', 'operator')
+    _create_user(client, auth_headers, 'nfbinding_operator', 'admin')
     operator_headers = _login(client, 'nfbinding_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -12761,7 +12752,7 @@ def test_native_foundation_controlled_uat_lane_selection_review_binds_approval_e
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nflane_operator', 'operator')
+    _create_user(client, auth_headers, 'nflane_operator', 'admin')
     operator_headers = _login(client, 'nflane_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -12940,7 +12931,7 @@ def test_native_foundation_controlled_uat_lane_persistence_admission_review_bind
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nflaneadmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nflaneadmit_operator', 'admin')
     operator_headers = _login(client, 'nflaneadmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -13124,7 +13115,7 @@ def test_native_foundation_controlled_uat_hardware_reservation_review_binds_appr
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfreserve_operator', 'operator')
+    _create_user(client, auth_headers, 'nfreserve_operator', 'admin')
     operator_headers = _login(client, 'nfreserve_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -13299,7 +13290,7 @@ def test_native_foundation_controlled_uat_reservation_persistence_admission_revi
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfreserveadmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfreserveadmit_operator', 'admin')
     operator_headers = _login(client, 'nfreserveadmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -13477,7 +13468,7 @@ def test_native_foundation_controlled_uat_entry_issuance_review_binds_approval_e
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfissue_operator', 'operator')
+    _create_user(client, auth_headers, 'nfissue_operator', 'admin')
     operator_headers = _login(client, 'nfissue_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -13651,7 +13642,7 @@ def test_native_foundation_controlled_uat_entry_persistence_admission_review_bin
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfentryadmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfentryadmit_operator', 'admin')
     operator_headers = _login(client, 'nfentryadmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -13819,7 +13810,7 @@ def test_native_foundation_controlled_uat_start_readiness_review_binds_approval_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfstart_operator', 'operator')
+    _create_user(client, auth_headers, 'nfstart_operator', 'admin')
     operator_headers = _login(client, 'nfstart_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -13996,7 +13987,7 @@ def test_native_foundation_controlled_uat_start_persistence_admission_review_bin
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfstartadmit_operator', 'operator')
+    _create_user(client, auth_headers, 'nfstartadmit_operator', 'admin')
     operator_headers = _login(client, 'nfstartadmit_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -14176,7 +14167,7 @@ def test_native_foundation_controlled_uat_runner_admission_review_binds_approval
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrunner_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrunner_operator', 'admin')
     operator_headers = _login(client, 'nfrunner_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -14355,7 +14346,7 @@ def test_native_foundation_controlled_uat_runner_persistence_admission_review_bi
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfrunnerpersist_operator', 'operator')
+    _create_user(client, auth_headers, 'nfrunnerpersist_operator', 'admin')
     operator_headers = _login(client, 'nfrunnerpersist_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -14531,7 +14522,7 @@ def test_native_foundation_controlled_uat_execution_authorization_review_binds_a
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfauthorize_operator', 'operator')
+    _create_user(client, auth_headers, 'nfauthorize_operator', 'admin')
     operator_headers = _login(client, 'nfauthorize_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -14679,7 +14670,7 @@ def test_native_foundation_controlled_uat_completion_review_binds_approval_evide
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfcompletion_operator', 'operator')
+    _create_user(client, auth_headers, 'nfcompletion_operator', 'admin')
     operator_headers = _login(client, 'nfcompletion_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -14917,7 +14908,7 @@ def _approve_native_foundation_deployment(client, auth_headers, content):
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfdeploy_operator', 'operator')
+    _create_user(client, auth_headers, 'nfdeploy_operator', 'admin')
     operator_headers = _login(client, 'nfdeploy_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -15056,7 +15047,7 @@ def test_native_foundation_review_job_carries_packet_gate_bindings(client, auth_
                             headers=auth_headers)
     assert plan_resp.status_code == 200
     plan = plan_resp.get_json()
-    _create_user(client, auth_headers, 'nfreviewjob_operator', 'operator')
+    _create_user(client, auth_headers, 'nfreviewjob_operator', 'admin')
     operator_headers = _login(client, 'nfreviewjob_operator')
     approval_resp = client.post('/api/approvals',
                                 json={'workflow': 'native-foundation-deploy',
@@ -15555,7 +15546,7 @@ def test_approval_create_and_decide_fire_configured_webhook(client, auth_headers
     import server
 
     events = []
-    _create_user(client, auth_headers, 'approval-op', 'operator')
+    _create_user(client, auth_headers, 'approval-op', 'admin')
     op_headers = _login(client, 'approval-op')
 
     client.post('/api/settings',
@@ -15622,7 +15613,7 @@ def test_mandatory_workflow_approval_accepts_approved_request(client, auth_heade
 
     monkeypatch.setattr(subprocess, 'Popen', lambda *a, **kw: FakeProc())
 
-    _create_user(client, auth_headers, 'approval-runner', 'operator')
+    _create_user(client, auth_headers, 'approval-runner', 'admin')
     op_headers = _login(client, 'approval-runner')
     create_resp = client.post('/api/approvals',
                               json={'workflow': 'config-pc',
@@ -17809,7 +17800,7 @@ def test_nkp_controlled_phase_accepts_approved_gate(historical_integration_contr
     server._job_manager = server.ExecutionJobManager(1)
     server._job_manager.start()
 
-    _create_user(client, auth_headers, 'nkp-op', 'operator')
+    _create_user(client, auth_headers, 'nkp-op', 'admin')
     op_headers = _login(client, 'nkp-op')
 
     nkp_dir = tmp_path / 'nkp-zerotouch-framework'
@@ -17925,7 +17916,7 @@ def test_nkp_binary_viewer_can_list_but_not_write(historical_integration_contrac
     viewer_headers = _login(client, 'nkp-viewer')
 
     listing = client.get('/api/nkp/binaries', headers=viewer_headers)
-    assert listing.status_code == 200
+    assert listing.status_code == 403
 
     create = client.post('/api/nkp/binaries',
                          json={'name': 'Denied', 'path': '/tmp/nkp'},
@@ -18224,7 +18215,7 @@ def test_nkp_template_apply_restricted_for_viewer(historical_integration_contrac
     viewer_headers = _login(client, 'template-viewer')
 
     listing = client.get('/api/nkp/templates', headers=viewer_headers)
-    assert listing.status_code == 200
+    assert listing.status_code == 403
 
     apply_resp = client.post('/api/nkp/templates/workload-cluster/apply',
                              json={'overrides': {}},
@@ -18504,8 +18495,8 @@ def test_validation_evidence_viewer_can_read_not_create_or_delete(historical_int
     _create_user(client, auth_headers, 'evidence-viewer', 'viewer')
     viewer_headers = _login(client, 'evidence-viewer')
 
-    assert client.get('/api/validation-evidence', headers=viewer_headers).status_code == 200
-    assert client.get(f"/api/validation-evidence/{evidence['id']}/download", headers=viewer_headers).status_code == 200
+    assert client.get('/api/validation-evidence', headers=viewer_headers).status_code == 403
+    assert client.get(f"/api/validation-evidence/{evidence['id']}/download", headers=viewer_headers).status_code == 403
     assert client.post('/api/validation-evidence', json={'profileId': profile['id']}, headers=viewer_headers).status_code == 403
     assert client.delete(f"/api/validation-evidence/{evidence['id']}", headers=viewer_headers).status_code == 403
 
@@ -18551,6 +18542,8 @@ def test_audit_log_passes_filters_to_storage(client, auth_headers, monkeypatch):
             })
             return [{'msg': 'login_success', 'event': 'auth'}]
 
+    current_admin=server._find_user('admin')
+    monkeypatch.setattr(server, '_find_user', lambda username: current_admin if username=='admin' else None)
     monkeypatch.setattr(server, '_storage', AuditStorage())
     resp = client.get(
         '/api/audit-log?level=info&user=admin&action=login&include_http=false&include_routine=false&limit=25',

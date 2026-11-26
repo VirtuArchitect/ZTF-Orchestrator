@@ -58,6 +58,7 @@ const NAV_GROUPS: NavGroup[] = [
     { path: '/setup', icon: Download, label: 'Setup & Install', roles: OPERATORS },
     { path: '/global-config', icon: Settings, label: 'Global Config', roles: ALL_ROLES },
     { path: '/appliance', icon: Archive, label: 'Appliance Ops', roles: ALL_ROLES },
+    { path: '/access-control', icon: ShieldCheck, label: 'Access Control', roles: ADMINS },
     { path: '/users', icon: Users, label: 'Users', roles: ADMINS },
     { path: '/audit-log', icon: ScrollText, label: 'Audit Log', roles: ADMINS },
     { path: '/settings', icon: Wrench, label: 'Settings', roles: OPERATORS },
@@ -89,7 +90,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     setOpenApprovals(null); setApprovalCountUnavailable(false)
-    if (!sessionToken) return
+    if (!sessionToken || user?.role !== 'admin') return
     return pollReadOnly(async signal => {
       const response = await apiFetch('/api/approvals?status=pending', { signal })
       if (!response.ok) throw httpFailure(response, 'Approval count unavailable')
@@ -98,11 +99,11 @@ export default function Sidebar() {
       return approvals.filter(item => item?.status === 'pending').length
     }, count => { setOpenApprovals(count); setApprovalCountUnavailable(false) },
     () => { setOpenApprovals(null); setApprovalCountUnavailable(true) }, 30_000)
-  }, [sessionToken, approvalRefresh])
+  }, [sessionToken, approvalRefresh, user?.role])
 
   const approvalCountLabel = approvalCountUnavailable ? 'Open approval count unavailable'
     : openApprovals === null ? 'Checking open approvals' : `${openApprovals} open approvals`
-  const approvalCountText = approvalCountUnavailable ? '?' : openApprovals === null ? '…' : String(openApprovals)
+  const approvalCountText = approvalCountUnavailable ? '?' : openApprovals === null ? 'Ã¢â‚¬Â¦' : String(openApprovals)
 
   useEffect(() => {
     if (!sessionToken || ztfInstalled !== null) return
@@ -137,7 +138,8 @@ export default function Sidebar() {
     if (group) setExpanded(current => ({ ...current, [group.label]: true }))
   }, [location.pathname])
   const role = user?.role
-  const visibleGroups = NAV_GROUPS.map(group => ({
+  const navigationGroups: NavGroup[] = (role && role !== 'admin' ? [{label: 'Workspace', items: [{path:'/operations',icon:ShieldCheck,label:'Operations workspace',roles:ALL_ROLES}]}] : NAV_GROUPS)
+  const visibleGroups = navigationGroups.map(group => ({
     ...group,
     items: group.items.filter(item => role && item.roles.includes(role)),
   })).filter(group => group.items.length > 0)
@@ -195,7 +197,7 @@ export default function Sidebar() {
             <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', ztfInstalled ? 'bg-nutanix-teal' : ztfInstalled === null && !frameworkCheckFailed ? 'bg-gray-500' : 'bg-yellow-500')} />
             <span className="text-xs text-gray-400 truncate">
               {ztfInstalled === null
-                ? frameworkCheckFailed ? 'Framework status unavailable' : 'Checking framework…'
+                ? frameworkCheckFailed ? 'Framework status unavailable' : 'Checking frameworkÃ¢â‚¬Â¦'
                 : ztfInstalled ? 'Framework installed' : 'Framework not found'}
             </span>
           </div>
@@ -247,7 +249,7 @@ export default function Sidebar() {
                           ? 'bg-nutanix-blue text-white'
                           : 'text-gray-400 hover:text-gray-200 hover:bg-surface'
                       )}
-                      title={!sidebarOpen ? `${item.label}${item.path === '/approvals' ? ` · ${approvalCountLabel}` : item.badge ? ` (${item.badge})` : ''}` : undefined}
+                      title={!sidebarOpen ? `${item.label}${item.path === '/approvals' ? ` Ã‚Â· ${approvalCountLabel}` : item.badge ? ` (${item.badge})` : ''}` : undefined}
                     >
                       <item.icon size={18} className="flex-shrink-0" />
                       {!sidebarOpen && approvalBadge}

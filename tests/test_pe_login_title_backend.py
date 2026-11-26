@@ -127,11 +127,11 @@ def test_operator_blocked_for_scripts_config_cluster_and_pipeline(client, auth_h
     folder = server.get_configs_dir()
     folder.mkdir(parents=True, exist_ok=True)
     (folder / 'title.yml').write_text(yaml.safe_dump(intent()))
-    pipeline = client.post('/api/pipelines', headers=headers, json={'name': 'title', 'steps': [
+    pipeline = client.post('/api/pipelines', headers=auth_headers, json={'name': 'title', 'steps': [
         {'workflow': pipeline_action, 'configFile': 'title.yml'}]}).get_json()
     response = client.post('/api/pipelines/' + pipeline['id'] + '/run', headers=headers, json=ack)
-    assert response.status_code == 400
-    assert 'Only an Orchestrator administrator' in response.get_json()['error']
+    assert response.status_code == 403
+    assert 'scoped Operations workspace' in response.get_json()['error']
 
 
 @pytest.mark.parametrize('output,status', [('', 'success'), ('[ERROR] title failed', 'failed')])

@@ -1,3 +1,5 @@
+
+from tests.conftest import create_account_session
 from copy import deepcopy
 import datetime
 from hashlib import sha256
@@ -189,8 +191,8 @@ def test_resumable_sequence_gates_checkpoints_and_never_replays_uncertain_jobs(c
     url = f"{base}/{run['id']}"
     users = server._load_users()
     server._save_users([*users, {'username': 'reviewer', 'role': 'admin'}])
-    reviewer = {'Authorization': 'Bearer ' + server._create_session('reviewer', 'admin')}
-    operator = {'Authorization': 'Bearer ' + server._create_session('operator', 'operator')}
+    reviewer = {'Authorization': 'Bearer ' + create_account_session(server, 'reviewer', 'admin')}
+    operator = {'Authorization': 'Bearer ' + create_account_session(server, 'operator', 'operator')}
     assert client.get(base, headers=operator).status_code == 403
     assert client.get(base, headers=reviewer).get_json() == []
     assert client.post(url, json={'revision': 0, 'action': 'continue'}, headers=reviewer).status_code == 404
@@ -382,7 +384,7 @@ def test_api_is_admin_only_flag_gated_and_binds_one_job_to_approval(client, auth
     base = '/api/post-deployment'
     monkeypatch.delenv('ZTF_LCM_INVENTORY_ENABLE_SUBMISSION', raising=False)
     monkeypatch.setattr(server.limiter, 'enabled', False)
-    operator = server._create_session('test-operator', 'operator')
+    operator = create_account_session(server, 'test-operator', 'operator')
     assert client.get(base).status_code == 401
     assert client.post(base + '/acceptance', json=ACCEPTANCE,
                        headers={'Authorization': 'Bearer ' + operator}).status_code == 403
@@ -401,7 +403,7 @@ def test_api_is_admin_only_flag_gated_and_binds_one_job_to_approval(client, auth
     assert client.post(f'/api/approvals/{approval_id}/approve', json={}, headers=auth_headers).status_code == 403
     users = server._load_users()
     server._save_users([*users, {'username': 'reviewer', 'role': 'admin'}])
-    reviewer = {'Authorization': 'Bearer ' + server._create_session('reviewer', 'admin')}
+    reviewer = {'Authorization': 'Bearer ' + create_account_session(server, 'reviewer', 'admin')}
     assert client.post(f'/api/approvals/{approval_id}/approve', json={}, headers=reviewer).status_code == 200
     assert client.post(base + '/apply', json=body, headers=reviewer).status_code == 403
     assert client.post(base + '/apply', json={**body, 'content': content + ' '}, headers=auth_headers).status_code == 400

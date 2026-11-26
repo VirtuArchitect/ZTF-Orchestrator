@@ -42,8 +42,8 @@ def test_catalogue_does_not_change_records_or_expose_settings(client, auth_heade
     assert all(path.read_bytes() == content for path, content in before.items())
 
 
-def test_catalogue_requires_auth_and_allows_viewers(client, auth_headers):
+def test_catalogue_requires_auth_and_restricts_viewers(client, auth_headers):
     assert client.get('/api/pipelines/actions').status_code == 401
     from tests.test_api import _create_user, _login
     _create_user(client, auth_headers, 'catalogue_viewer', 'viewer')
-    assert client.get('/api/pipelines/actions', headers=_login(client, 'catalogue_viewer')).status_code == 200
+    assert client.get('/api/pipelines/actions', headers=_login(client, 'catalogue_viewer')).status_code == 403

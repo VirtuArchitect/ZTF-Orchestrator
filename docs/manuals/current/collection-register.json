@@ -2296,6 +2296,12 @@
       "disposition": "published-web-reference",
       "reason": "Maintained GitHub guidance for pipeline grouping in updated source builds, linked from the README. The PDF pipeline guide remains its separately reviewed edition.",
       "documentId": null
+    },
+    {
+      "path": "docs/scoped-operations-access.md",
+      "disposition": "published-web-reference",
+      "reason": "Updated source guidance for the explicit Operator and Viewer access boundary, separate from the current PDF runbook edition.",
+      "documentId": null
     }
   ],
   "providedDocuments": [

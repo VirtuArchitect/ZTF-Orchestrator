@@ -208,12 +208,12 @@ def test_operations_api_permissions_storage_and_no_automatic_collection(client, 
         client.post('/api/users', headers=auth_headers, json={'username': role, 'password': 'FixtureOnly123!', 'role': role})
         token = client.post('/api/auth/login', json={'username': role, 'password': 'FixtureOnly123!'}).get_json()['token']
         headers = {'Authorization': 'Bearer ' + token}
-        assert client.get('/api/operations', headers=headers).status_code == 200
+        assert client.get('/api/operations', headers=headers).status_code == 403
         assert client.post('/api/operations/clusters', headers=headers, json={}).status_code == 403
         status = client.post(f'/api/operations/clusters/{identity}/health', headers=headers, json={}).status_code
-        assert status == (403 if role == 'viewer' else 200)
-        assert client.put('/api/operations/attention/missing', headers=headers, json={}).status_code == (403 if role == 'viewer' else 400)
-    assert len(calls) == 1
+        assert status == 403
+        assert client.put('/api/operations/attention/missing', headers=headers, json={}).status_code == 403
+    assert calls == []
     path = isolated_data_dir / 'cluster_operations.json'; path.write_text('{broken', encoding='utf-8')
     assert client.get('/api/operations', headers=auth_headers).status_code != 200
     assert client.post('/api/operations/clusters', headers=auth_headers, json={**record(), 'configFiles': [], 'pipelineId': '', 'revision': 0}).status_code != 200

@@ -90,13 +90,13 @@ def test_operator_cannot_disable_tls_even_by_direct_api(client, auth_headers, mo
     resp = client.post('/api/upgrade-advisor/inventory', json=payload(**{kind + 'VerifyTls': False}), headers={'Authorization': 'Bearer ' + token})
     assert resp.status_code == 403
     collector.assert_not_called()
-    event = next(r for r in caplog.records if getattr(r, 'action', '') == 'upgrade_inventory_tls_exception')
-    assert event.outcome == 'denied' and event.user == 'ops'
+    event = next(r for r in caplog.records if getattr(r, 'action', '') == 'access_denied')
+    assert event.user == 'ops'
     collector.side_effect = None
     collector.return_value = dict(components={}, unknownComponents=[], errors=[])
     verified = client.post('/api/upgrade-advisor/inventory', json=payload(), headers={'Authorization': 'Bearer ' + token})
-    assert verified.status_code == 200
-    collector.assert_called_once()
+    assert verified.status_code == 403
+    collector.assert_not_called()
 
 
 def test_admin_exception_is_audited_persisted_reopened_and_exported(client, auth_headers, monkeypatch, caplog):

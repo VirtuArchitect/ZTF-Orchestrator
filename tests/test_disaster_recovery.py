@@ -559,7 +559,8 @@ def test_recovery_api_roles_and_saved_records(client, auth_headers):
     client.post('/api/users', headers=auth_headers, json={'username': 'reader', 'password': 'TestReader123!', 'role': 'viewer'})
     token = client.post('/api/auth/login', json={'username': 'reader', 'password': 'TestReader123!'}).get_json()['token']
     viewer = {'Authorization': f'Bearer {token}'}
-    assert client.get('/api/recovery', headers=viewer).status_code == 200
+    assert client.get('/api/recovery', headers=viewer).status_code == 403
+    assert client.get('/api/access/workspace', headers=viewer).get_json()['recovery'] == []
     assert client.post('/api/recovery/datacenters', headers=viewer, json=body).status_code == 403
     assert client.post('/api/recovery/profiles', headers=auth_headers, json=[]).status_code == 400
 

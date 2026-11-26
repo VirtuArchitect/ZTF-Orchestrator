@@ -1,4 +1,6 @@
 """All PC access is faked; never execute removal against a target."""
+
+from tests.conftest import create_account_session
 import copy
 import datetime
 import json
@@ -242,7 +244,7 @@ def test_review_api_returns_reference_only_intent(client, auth_headers, monkeypa
 @pytest.mark.parametrize('role', ['operator', 'viewer'])
 def test_non_admin_cannot_review_or_submit(client, role):
     import server
-    headers = {'Authorization': 'Bearer '+server._create_session('fixture-'+role, role)}
+    headers = {'Authorization': 'Bearer '+create_account_session(server, 'fixture-'+role, role)}
     for path in ['/api/pc-unregistration/review', '/api/jobs', '/api/execute', '/api/approvals']:
         response = client.post(path, headers=headers, json={'workflow': core.WORKFLOW,
             'configContent': yaml.safe_dump(intent()), 'configFile': 'remove.yml'})

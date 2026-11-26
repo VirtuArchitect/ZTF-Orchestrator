@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased source
+- Restrict Operators and Viewers to a deny-default Operations workspace with explicit target scopes, safe status summaries and separate reviewed pipeline delegation. Add administrator Access Control, optional planning/request capabilities, fresh role checks and revocation. Preserve existing administrator pipelines, approvals, completed recovery work and the step 08-only retry; sensitive scripts and destructive recovery stay administrator-only. No new runtime dependency.
 - Load pipeline action availability from current server Governance policy; retain Configure Cluster when allowed, explain approval-blocked choices, exclude retired ZTF 2.x options and preserve unsupported saved action labels without silent substitution.
 - Organise Pipelines by existing Global Config datacenter/cluster groups, create within the selected cluster, retain legacy pipelines under Ungrouped and keep YAML targets, approvals and recovery execution unchanged.
 - Do not gate AHV uplink discovery, preflight or per-host verification on aggregate PE cluster/host health. Shared empty-switch and VS0 MTU network inventory uses the same policy. Bootstrap licensing/default-password alerts remain for operators to address; identity, complete inventory, operational links, redundancy, pinned SSH, exact approvals and readback checks remain enforced. DARE and recovery health gates are unchanged.

@@ -178,7 +178,7 @@ def test_viewer_cannot_collect_or_save(client, auth_headers):
     headers = {'Authorization': 'Bearer ' + token}
     assert client.post('/api/upgrade-advisor/inventory', json={}, headers=headers).status_code == 403
     assert client.post('/api/upgrade-advisor/assessments', json=sample(), headers=headers).status_code == 403
-    assert client.get('/api/upgrade-advisor/assessments', headers=headers).status_code == 200
+    assert client.get('/api/upgrade-advisor/assessments', headers=headers).status_code == 403
     assert client.get('/api/upgrade-advisor/assessments').status_code == 401
 
 
@@ -202,9 +202,8 @@ def test_viewer_assessment_responses_redact_inventory_endpoints(client, auth_hea
     assert pe_endpoint not in json.dumps(history)
     assert pe_endpoint not in json.dumps(detail)
     assert pc_endpoint not in json.dumps(detail)
-    for collection in (detail['inventoryCollection'], detail['assessment']['inventoryCollection']):
-        assert collection['observations'][0] == {'component': 'aos', 'value': '7.3.0', 'source': 'cluster'}
-        assert collection['errors'][0] == {'component': 'ahv', 'message': 'Inventory returned HTTP 403'}
+    assert 'scoped Operations workspace' in detail['error']
+    assert 'inventoryCollection' not in detail
 
 
 def test_archive_limit_does_not_overwrite_saved_history(client, auth_headers):

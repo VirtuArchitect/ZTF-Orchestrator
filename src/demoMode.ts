@@ -436,6 +436,16 @@ async function demoResponse(request: Request) {
   if (path === '/health') return json({ status: 'healthy', version: APP_VERSION, installed: DEMO_INSTALLED_BUILD, storage: 'demo', ztf: { installed: true } })
   if (!path.startsWith('/api/')) return null
 
+  if (path === '/api/access/admin' && method === 'GET') return json({
+    policy: {version:1,revision:0,scopes:[],assignments:{},bindings:[]},
+    users: [{id:'demo-operator',username:'demo-operator',role:'operator'},{id:'demo-viewer',username:'demo-viewer',role:'viewer'}],
+    pipelines: [{id:'demo-pipeline-001',name:'Post-deployment baseline (simulated)'}], requests:[],drafts:[],runs:[],
+  })
+  if (path === '/api/access/workspace' && method === 'GET') return json({
+    user: useStore.getState().user || {username:'demo-viewer',role:'viewer'}, capabilities:[],scopes:[],pipelines:[],runs:[],requests:[],recovery:[],drafts:[],
+  })
+  if (path.startsWith('/api/access/')) return json({error:'Access changes and delegated execution require a connected authorised backend. Demo metadata is illustrative only.'},{status:403})
+
   if (path === '/api/operations' && method === 'GET') return json({
     version: 1, revision: 0, collectedAt: iso(0),
     clusters: [{ id: 'demo-cluster-01', name: 'HCI-CLUSTER-01', datacenter: 'DC-A', owner: 'Infrastructure team',

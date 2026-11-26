@@ -1,4 +1,6 @@
 """Cluster-local rehearsal. All PE and SSH endpoints are test doubles."""
+
+from tests.conftest import create_account_session
 from copy import deepcopy
 import json
 import ssl
@@ -208,7 +210,7 @@ def test_api_audits_exception_and_requires_exact_independent_approval(client, au
     monkeypatch.setattr(server.limiter, 'enabled', False)
     monkeypatch.setattr(server, '_pe_login_title_resolver', lambda _: resolver)
     base = '/api/' + workflow
-    operator = {'Authorization': 'Bearer ' + server._create_session('operator', 'operator')}
+    operator = {'Authorization': 'Bearer ' + create_account_session(server, 'operator', 'operator')}
     assert client.post(base + '/discover', json=connection, headers=operator).status_code == 403
     assert not lab.calls
     response = client.post(base + '/discover', json=connection, headers=auth_headers)
@@ -231,7 +233,7 @@ def test_api_audits_exception_and_requires_exact_independent_approval(client, au
     assert client.post(base + '/apply', json=payload, headers=auth_headers).status_code == 403
     assert client.post('/api/approvals/' + identity + '/approve', json={}, headers=auth_headers).status_code == 403
     server._save_users([*server._load_users(), {'username': 'reviewer', 'role': 'admin'}])
-    approver = {'Authorization': 'Bearer ' + server._create_session('reviewer', 'admin')}
+    approver = {'Authorization': 'Bearer ' + create_account_session(server, 'reviewer', 'admin')}
     assert client.post('/api/approvals/' + identity + '/approve', json={}, headers=approver).status_code == 200
     tampered = json.loads(content)
     tampered['intent']['connection']['tls_bypass_reason'] = 'DIFFERENT'
