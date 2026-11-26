@@ -1,0 +1,46 @@
+{
+  "deploymentJobsCreated": 0,
+  "buildNumber": 72,
+  "liveClusterChanges": false,
+  "existingLocalContainersUnchanged": true,
+  "httpChecksPassed": 36,
+  "ahvImportPerformed": false,
+  "run": 45857730316,
+  "profiles": [
+    {
+      "defaultEnabled": true,
+      "artifactId": 15140012194,
+      "downloadUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15140012194",
+      "httpChecks": 12,
+      "noJobsCreated": true,
+      "sha256": "a28e6c2b3f52148c6942793090211e5914e84ad0f438ac625295b4a2996ef084",
+      "firstBootPassed": true,
+      "sourceCommit": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "profile": "standard"
+    },
+    {
+      "defaultEnabled": true,
+      "artifactId": 15139016921,
+      "downloadUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15139016921",
+      "httpChecks": 12,
+      "noJobsCreated": true,
+      "sha256": "37e9ae056b43ca1cee6cdd6c1ce4f00492cce0705545287ccffd85eb5c0a0d8e",
+      "firstBootPassed": true,
+      "sourceCommit": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "profile": "airgap"
+    },
+    {
+      "defaultEnabled": true,
+      "artifactId": 15137946073,
+      "downloadUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15137946073",
+      "httpChecks": 12,
+      "noJobsCreated": true,
+      "sha256": "85e39bfaea7c84e0b44fde7b0fb06e1b1024ff945454064bb918480ea47e6695",
+      "firstBootPassed": true,
+      "sourceCommit": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "profile": "minimal"
+    }
+  ],
+  "state": "all builds and downloaded appliance verifications passed",
+  "sourceCommit": "f9eee7e5b7c15610b4f463818bda364c907e4fd3"
+}

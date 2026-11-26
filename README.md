@@ -197,6 +197,13 @@ forensics and final workload acceptance remain separate responsibilities.
 
 ## Appliance Downloads
 
+**Verified Build #72 (26 November 2026)**: [Standard](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15140012194) · [Airgap](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15139016921) · [Minimal](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15137946073).
+
+All three use source `f9eee7e` and passed checksum, disposable-guest first-boot
+and approval/confirmation checks. Fresh appliances enable governed Foundation VM
+deployment by default; startup submits no deployment. GitHub sign-in and Actions
+artifact retention apply. [Profiles, checksums and verification boundaries](docs/appliance-build-72.md).
+
 Start at the [download centre](https://www.johngoulden.de/ztf/downloads.html)
 for full appliance image locations, stable updates, controlled-UAT candidate
 packages, matching checksums and installation guidance.

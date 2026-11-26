@@ -1,8 +1,8 @@
 {
-  "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
-  "reviewed": "2026-11-24",
-  "currentDocuments": 317,
-  "historicalDocuments": 35,
+  "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+  "reviewed": "2026-11-26",
+  "currentDocuments": 319,
+  "historicalDocuments": 56,
   "scope": "Public maintained source documents, source-aligned provided guides and clearly identified historical references. Private configuration packs, dated lab reports and superseded evidence are not current operating guidance.",
   "inventory": [
     {
@@ -2308,6 +2308,18 @@
       "disposition": "published-web-reference",
       "reason": "Updated source guidance for versioned fresh-appliance bootstrap and guided rollback eligibility, separate from the current PDF edition.",
       "documentId": null
+    },
+    {
+      "path": "docs/appliance-build-72.md",
+      "disposition": "published-current",
+      "reason": "Build 72 current operating guidance, available as a PDF.",
+      "documentId": "appliance-build-72"
+    },
+    {
+      "path": "docs/video-current-guidance.md",
+      "disposition": "published-current",
+      "reason": "Build 72 current operating guidance, available as a PDF.",
+      "documentId": "video-current-guidance"
     }
   ],
   "providedDocuments": [
@@ -2356,12 +2368,12 @@
   "documents": [
     {
       "id": "collection-overview",
-      "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
-      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
+      "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-26.pdf",
+      "sha256": "4ea346828cedd34406a478432f9a49246a77e512c3fe37a08dd175d98029d04e",
       "inputSources": [
         {
           "path": "docs/documentation-collection.md",
-          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
+          "sha256": "30d17c5fbcd7fdbd216f8759e5c836c3065516c34c1e1bb93fb63c31fec692a7",
           "normalization": "utf8-lf"
         },
         {
@@ -2555,12 +2567,12 @@
     },
     {
       "id": "cluster-initial-configuration",
-      "source": "docs/manuals/current/ZTF-Orchestrator-cluster-initial-configuration-2026-11-21.pdf",
-      "sha256": "be3e43a265da0a67a0998cc8e0a6821b7bfe5121bc1ed3e7fc3f788266852a13",
+      "source": "docs/manuals/current/ZTF-Orchestrator-cluster-initial-configuration-2026-11-26.pdf",
+      "sha256": "2416620d67eec373fb104d37630d764b08c135e9559401bf3a80a33ab7d07fde",
       "inputSources": [
         {
           "path": "docs/cluster-initial-configuration.md",
-          "sha256": "4d587276844688246df2b8bd52b79622c17529c03883b3230d4e7a108315c73f",
+          "sha256": "a3d4d769e9f3190bb3a6cf519e95f04c50d6d521a1bd904d9ccf5da4c057e03d",
           "normalization": "utf8-lf"
         },
         {
@@ -2572,12 +2584,12 @@
     },
     {
       "id": "pe-post-configuration-verification",
-      "source": "docs/manuals/current/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-21.pdf",
-      "sha256": "8dbae2bc42768bbae872f2d08b545ce35ef54faf57e91759f1f7a8a739ff63d1",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-26.pdf",
+      "sha256": "562f3a80af0db57c37f2e56e364a054552b37f5701ed2103ef20e4a6ea13d8bc",
       "inputSources": [
         {
           "path": "docs/pe-post-configuration-verification.md",
-          "sha256": "e4a4ddb93d45ea7f38d11082d97ca531b1f5b82ef5b4d5604366a4a15cef8898",
+          "sha256": "6ae88309e31f8eed67b96254b3f0122ae6a280087a918e02dc599e6030526071",
           "normalization": "utf8-lf"
         },
         {
@@ -2918,12 +2930,12 @@
     },
     {
       "id": "current-status",
-      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-23.pdf",
-      "sha256": "6b743bb3151f8166990845b3ab50c04abb08c0ad14b0208533eea0ad856bbc92",
+      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-26.pdf",
+      "sha256": "c385d8e2c3ff02158acf974ced9421de9835e38669c871eb1c5590ddf724f8b7",
       "inputSources": [
         {
           "path": "docs/current-status.md",
-          "sha256": "c283aa40372c9268fdc20dd85bda9a96020d4590c2c7b114c4bde0711a119ff6",
+          "sha256": "363d3b900804700fedeec55ef1467a06299e3e456da95d113ecd3a30b8db5bb9",
           "normalization": "utf8-lf"
         },
         {
@@ -2967,12 +2979,12 @@
     },
     {
       "id": "streamlined-console",
-      "source": "docs/manuals/current/ZTF-Orchestrator-streamlined-console-2026-11-21.pdf",
-      "sha256": "097504f751d15b6bf0d2f2220d43154cb35761a6e2ec99e6c9066c4a818b1be8",
+      "source": "docs/manuals/current/ZTF-Orchestrator-streamlined-console-2026-11-26.pdf",
+      "sha256": "9eaff1bb5e7698847270253b7c4b59f8372c15ac5bfb75ec1e3ee71dcda18824",
       "inputSources": [
         {
           "path": "docs/streamlined-console.md",
-          "sha256": "6ae8a18ab54e3ebeb10e703ccaa0fe6d714490f11d32c165737bd5e8111b17c1",
+          "sha256": "965c944f3708bf5b3d2715a0051a750e63892c38f41e047e1323011ae906ba6f",
           "normalization": "utf8-lf"
         },
         {
@@ -3031,12 +3043,12 @@
     },
     {
       "id": "admin-guide",
-      "source": "docs/manuals/current/ZTF-Orchestrator-admin-guide-2026-11-21.pdf",
-      "sha256": "99c9119ebf4d6a5f1e46a50aa0bcdb9aa6fa6dbff7e783793fd53e55b1455d6d",
+      "source": "docs/manuals/current/ZTF-Orchestrator-admin-guide-2026-11-26.pdf",
+      "sha256": "0b411924560fca44f1e51702031c885e9174a85b2003c56ca39aa8920e23e1a1",
       "inputSources": [
         {
           "path": "docs/admin-guide.md",
-          "sha256": "77259ef65c853de0b46dc4b4f2f9ca739b667a338388964a04a2811aebae2e49",
+          "sha256": "53b3a945e354a24818203ceb2784a20beabd1a47180ec6b2ee7a80339df80ef1",
           "normalization": "utf8-lf"
         },
         {
@@ -3058,12 +3070,12 @@
     },
     {
       "id": "user-guide",
-      "source": "docs/manuals/current/ZTF-Orchestrator-user-guide-2026-11-21.pdf",
-      "sha256": "40f712842ed31f30f35e965575b3134c2474b5510f1ad42148f0453d8aa6c71f",
+      "source": "docs/manuals/current/ZTF-Orchestrator-user-guide-2026-11-26.pdf",
+      "sha256": "28b90c7749ab3fb2073c75499d8a0251661979ccf6216abd4f751b8a3ada97fc",
       "inputSources": [
         {
           "path": "docs/user-guide.md",
-          "sha256": "3cf9f4a5c1da7d013b969744d80568bd4b78af7782776c25740d7f1dc78ef57b",
+          "sha256": "6d50f11777fad8c86f34e1d18cdad9ca33db18310771ac26b7d0b1dfcb463c2f",
           "normalization": "utf8-lf"
         },
         {
@@ -3117,12 +3129,12 @@
     },
     {
       "id": "appliance-update-manager",
-      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-update-manager-2026-11-21.pdf",
-      "sha256": "7517fecbe682ccc314ad472f50a73c5fd94d38c081c252e8a807c37c0ab0bb72",
+      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-update-manager-2026-11-26.pdf",
+      "sha256": "0f071540ca7b8751e6362a78daa47ca817f93a6b118a606fb759eb627c390eaa",
       "inputSources": [
         {
           "path": "docs/appliance-update-manager.md",
-          "sha256": "b8b3c5148032ab93db7dceb66d6aab7441316e9af1f1afeea771806d6d7dac7e",
+          "sha256": "a70d593ef2d9752a9f17e92d116257e879ebdf4c35b4638482bad349ed3b28a3",
           "normalization": "utf8-lf"
         },
         {
@@ -3134,12 +3146,12 @@
     },
     {
       "id": "docker-build-identity",
-      "source": "docs/manuals/current/ZTF-Orchestrator-docker-build-identity-2026-11-21.pdf",
-      "sha256": "e995c87f5f8735199eee7fd09401320cd4ab64183a4e1ed6562ae99f11afe628",
+      "source": "docs/manuals/current/ZTF-Orchestrator-docker-build-identity-2026-11-26.pdf",
+      "sha256": "cce9e87ed1204148bc1bca567a3c94aad5ff06dc8f6d6a3efbfb5818dc7670dd",
       "inputSources": [
         {
           "path": "docs/docker-build-identity.md",
-          "sha256": "f41110ecec5667802c5b31894457fa9f5551f178576ef52a3d154b4508e4c900",
+          "sha256": "9fbbc00ba6abf677afb8d4e60f23235cc7a11ca5fa8e26ffe1cf2bc12b227cf1",
           "normalization": "utf8-lf"
         },
         {
@@ -3151,12 +3163,12 @@
     },
     {
       "id": "guided-appliance-updates",
-      "source": "docs/manuals/current/ZTF-Orchestrator-guided-appliance-updates-2026-11-21.pdf",
-      "sha256": "644dac11c8e8e43b60ac5c8604d01ec55c40c69b6554dca2133bd1e64c28d2a0",
+      "source": "docs/manuals/current/ZTF-Orchestrator-guided-appliance-updates-2026-11-26.pdf",
+      "sha256": "d7365cb3668dffb0cc14c0e26c2c0483c152b5dcd2dc8b82f0c4a4127bdacbc9",
       "inputSources": [
         {
           "path": "docs/guided-appliance-updates.md",
-          "sha256": "f94988ab9609e6228c1f17d4e3392dbdc7d210371c7a16927236ca10a397c1b5",
+          "sha256": "ada79803f90bb1b20ac5ef884e1ed7303e252e9c5367aab55dd713ba2d5bd817",
           "normalization": "utf8-lf"
         },
         {
@@ -3229,12 +3241,12 @@
     },
     {
       "id": "installation-guide",
-      "source": "docs/manuals/current/ZTF-Orchestrator-installation-guide-2026-11-21.pdf",
-      "sha256": "5e7ebac5ca4b0069cc8a5b06ab298c966790d88dd558eaf554ab186ff4de872b",
+      "source": "docs/manuals/current/ZTF-Orchestrator-installation-guide-2026-11-26.pdf",
+      "sha256": "4701169ca9ef6ad33eab0a6d5d8962a9125eac1d88f0f8e5479ffb8487c79ec8",
       "inputSources": [
         {
           "path": "docs/installation-guide.md",
-          "sha256": "445c0d7de7df67255a369678dae859c1cd68c57a4b4229ce5ef6092cd8617387",
+          "sha256": "07b0d7202ac182ddaf5a10d7e15a82bd56f32009d28590f8876aa72fd47e1295",
           "normalization": "utf8-lf"
         },
         {
@@ -5116,12 +5128,12 @@
     },
     {
       "id": "disaster-recovery",
-      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-2026-11-23.pdf",
-      "sha256": "1f32e842d64771848f9fa8a8750f0d3b46584779b1f8d6968821180a6f37c888",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-2026-11-26.pdf",
+      "sha256": "0b1f312c64c191c949c4c75e64cbe446fdc71da6a69842888caf22682f56a3c5",
       "inputSources": [
         {
           "path": "docs/disaster-recovery.md",
-          "sha256": "e8832b7f17ed4461d58b95133bed49d19f1be098a994a57d8580b77a386d5ed0",
+          "sha256": "395c80d3e02e9caa888c9ac2764c396e1f4be48ebbef05fd570f19b9356dc082",
           "normalization": "utf8-lf"
         },
         {
@@ -5138,12 +5150,12 @@
     },
     {
       "id": "disaster-recovery-setup",
-      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-setup-2026-11-21.pdf",
-      "sha256": "91dec85deb0372949c3f0e73427d14d5c6be68bf7086b781d37398aa2b09c963",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-setup-2026-11-26.pdf",
+      "sha256": "9ddc25c80d3d18acc596013086388763a08528a11dce72ae60a1327e64ba6a25",
       "inputSources": [
         {
           "path": "docs/disaster-recovery-setup.md",
-          "sha256": "cbd68ce913a1cf715c5769362c6b90aac9fa2642827de6e2f80c35eeaaa61ea7",
+          "sha256": "f9eefc6786b76d23bc20f6e46748dde87eccc24849b170dd3f604b26417e017a",
           "normalization": "utf8-lf"
         },
         {
@@ -7026,12 +7038,12 @@
     },
     {
       "id": "pe-local-users",
-      "source": "docs/manuals/current/ZTF-Orchestrator-pe-local-users-2026-11-21.pdf",
-      "sha256": "60d8f896e1fb5c341833d1757740d24482d778d75845acfc7081e9413a7e7ba5",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-local-users-2026-11-26.pdf",
+      "sha256": "410f3f99408d1c0b4b6b14330483153cbc7cc65d68a8ea5294186d6851ef8989",
       "inputSources": [
         {
           "path": "docs/pe-local-users.md",
-          "sha256": "cd57988e0a68cbb6a5583a0b0348da4fa60e967ca272f46f27be66e71d1d2331",
+          "sha256": "ba6e6c39453c96b44dfe9bdfd43e477050ecf831676ca6ca0dd69d7dbb0c863b",
           "normalization": "utf8-lf"
         },
         {
@@ -7043,12 +7055,12 @@
     },
     {
       "id": "credential-groups",
-      "source": "docs/manuals/current/ZTF-Orchestrator-credential-groups-2026-11-21.pdf",
-      "sha256": "2dc8480c92e8eededed93565baef775fb53be041bc166b5cfe1c5156c75e46e5",
+      "source": "docs/manuals/current/ZTF-Orchestrator-credential-groups-2026-11-26.pdf",
+      "sha256": "9f96b6d8ee8340e36154ae88a10e2634c9fef97856da65846d0c51b905dfab3a",
       "inputSources": [
         {
           "path": "docs/credential-groups.md",
-          "sha256": "3a55fced23cd7b90187fc2722e17f995dfcba3772e718edbe1172b8a75c6cd2e",
+          "sha256": "e7e3ead0803473cc102755b7f21c00f889080ee10257363a9a7908b51def917b",
           "normalization": "utf8-lf"
         },
         {
@@ -7178,12 +7190,12 @@
     },
     {
       "id": "session-management",
-      "source": "docs/manuals/current/ZTF-Orchestrator-session-management-2026-11-21.pdf",
-      "sha256": "dd9335c65caae1c0c30dfa8920b4219e9bfe28894959f80ff9ab4bc326ffe01a",
+      "source": "docs/manuals/current/ZTF-Orchestrator-session-management-2026-11-26.pdf",
+      "sha256": "831561f497aaca997e23557d8e3e8a8e258b7203a709d0c1eabf1d36dcc4f605",
       "inputSources": [
         {
           "path": "docs/session-management.md",
-          "sha256": "b01aa22e43e14c20e3d484627c202e1053fe74a4e68c4ab28b6be36518704887",
+          "sha256": "47040ae75a822a3c679d8bcb4bab9fbd1b85240aa6cf60ff3504c4d5e9f80d00",
           "normalization": "utf8-lf"
         },
         {
@@ -7205,12 +7217,12 @@
     },
     {
       "id": "pe-login-title",
-      "source": "docs/manuals/current/ZTF-Orchestrator-pe-login-title-2026-11-21.pdf",
-      "sha256": "f70bfa41c84d843d8cd75612a9c27f09e3456e7368589a094292aba26e20028f",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-login-title-2026-11-26.pdf",
+      "sha256": "e84f4d97d294dd7efc51b9dfb9e1017dc51c7fb8d560d7b701179090fc584e7d",
       "inputSources": [
         {
           "path": "docs/pe-login-title.md",
-          "sha256": "c2b9942208973bde9a5a263892cee4b076e2872003c3b8fd014c012fc3aa1fe3",
+          "sha256": "bc85175f11c92eb3296115fddb973f12cb41e3fef6d5326164ce58c47d69f7e2",
           "normalization": "utf8-lf"
         },
         {
@@ -7244,12 +7256,12 @@
     },
     {
       "id": "config-file-groups",
-      "source": "docs/manuals/current/ZTF-Orchestrator-config-file-groups-2026-11-21.pdf",
-      "sha256": "95f44fe73eb2393a4e9cd40c18d973a4d9197dfd3b1a999341477e0b580fabfd",
+      "source": "docs/manuals/current/ZTF-Orchestrator-config-file-groups-2026-11-26.pdf",
+      "sha256": "eb3617b1f5d4ca0b38d9ad03d0fc2291e1087c8c66adc2ec7fd7829f66caa0c2",
       "inputSources": [
         {
           "path": "docs/config-file-groups.md",
-          "sha256": "7d0f0b68df1141098937c2f1a33deb0fb81dcce8e7c0f88c5bb9c14c27866d79",
+          "sha256": "ae93104172ba84ef37aaaac49b8c54e816d7508ab8dbb4baf87215640e1fce74",
           "normalization": "utf8-lf"
         },
         {
@@ -7295,12 +7307,12 @@
     },
     {
       "id": "live-pe-drift-monitoring",
-      "source": "docs/manuals/current/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-21.pdf",
-      "sha256": "97c5bc40c33996c79c12ce2c8d82c215913d9649e99a824c6129bd5b1e539051",
+      "source": "docs/manuals/current/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-26.pdf",
+      "sha256": "fac42efb7159e53621498236de0f33cf988c3817d9a19003d7929f107fe990f4",
       "inputSources": [
         {
           "path": "docs/live-pe-drift-monitoring.md",
-          "sha256": "4298a6d2706a83383231ad64c9dcc961a09f9532bf3b062c44914983cea498a6",
+          "sha256": "1b2c69358fbd54431d18b74e4f73748bf9927ccf67fa5198e6972adc820b02c3",
           "normalization": "utf8-lf"
         },
         {
@@ -7329,12 +7341,12 @@
     },
     {
       "id": "nutanix-upgrade-risk-advisor",
-      "source": "docs/manuals/current/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-21.pdf",
-      "sha256": "74aafe08378f1ba35328507eee00c008549008913344e770dec259495f7a7c87",
+      "source": "docs/manuals/current/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-26.pdf",
+      "sha256": "afb7ffcf051042c220397397365af306815497a899f6653be47ca18535ab01c1",
       "inputSources": [
         {
           "path": "docs/nutanix-upgrade-risk-advisor.md",
-          "sha256": "f9d67c518aa5f3be67835b249f3bd719807b4d8f0d6001a9be80cafe17ff5813",
+          "sha256": "7f3fd22f94e3c51c7863b238240e1feb1d5410422d9869f139af3edaa57a905c",
           "normalization": "utf8-lf"
         },
         {
@@ -7572,12 +7584,12 @@
     },
     {
       "id": "production-readiness-boundary",
-      "source": "docs/manuals/current/ZTF-Orchestrator-production-readiness-boundary-2026-11-21.pdf",
-      "sha256": "57a001f0f2190009f1b8f6c465a8600983203aab249438eff3a9ebf879783424",
+      "source": "docs/manuals/current/ZTF-Orchestrator-production-readiness-boundary-2026-11-26.pdf",
+      "sha256": "329eba4b23ad58279560214c432b083052f0af8ac68c0540702dfe830b09b004",
       "inputSources": [
         {
           "path": "docs/production-readiness-boundary.md",
-          "sha256": "ef8087bca3291d28001ccdcddf8358d9cf2264cbef400477080f0d060443e2e8",
+          "sha256": "56e0c3ef930c1b651c56809248250c800d5444e634c257501618e9f7503b9fcf",
           "normalization": "utf8-lf"
         },
         {
@@ -9595,6 +9607,507 @@
         {
           "path": "docs/create-virtual-switch.md",
           "sha256": "025a00ce40ff900eda89dbdd018b1ec4ca4701a3482e0f449ca25f667f547e47",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "appliance-build-72",
+      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-build-72-2026-11-26.pdf",
+      "sha256": "34050d469f863bd792b1de07686cebe60fdbea80ed5952ec184879ba272d46c3",
+      "inputSources": [
+        {
+          "path": "docs/appliance-build-72.md",
+          "sha256": "8aa8855976b5b74cf26f2e54a08a443bd4fb2329249fb3f4db92f53e466ed507",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "video-current-guidance",
+      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
+      "sha256": "ecd114999ce0622587e679cc34a30b23ac9968e1e2fb2eb05c81344fc33bb642",
+      "inputSources": [
+        {
+          "path": "docs/video-current-guidance.md",
+          "sha256": "42d8f58a6249bd40b58ab6e395d8dd17fa21d765991240587190d9c7b130fa41",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "cluster-initial-configuration-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-cluster-initial-configuration-2026-11-21.pdf",
+      "sha256": "be3e43a265da0a67a0998cc8e0a6821b7bfe5121bc1ed3e7fc3f788266852a13",
+      "inputSources": [
+        {
+          "path": "docs/cluster-initial-configuration.md",
+          "sha256": "4d587276844688246df2b8bd52b79622c17529c03883b3230d4e7a108315c73f",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "pe-post-configuration-verification-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-21.pdf",
+      "sha256": "8dbae2bc42768bbae872f2d08b545ce35ef54faf57e91759f1f7a8a739ff63d1",
+      "inputSources": [
+        {
+          "path": "docs/pe-post-configuration-verification.md",
+          "sha256": "e4a4ddb93d45ea7f38d11082d97ca531b1f5b82ef5b4d5604366a4a15cef8898",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "current-status-previous-2026-11-23",
+      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-23.pdf",
+      "sha256": "6b743bb3151f8166990845b3ab50c04abb08c0ad14b0208533eea0ad856bbc92",
+      "inputSources": [
+        {
+          "path": "docs/current-status.md",
+          "sha256": "c283aa40372c9268fdc20dd85bda9a96020d4590c2c7b114c4bde0711a119ff6",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "collection-overview-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
+      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
+      "inputSources": [
+        {
+          "path": "docs/documentation-collection.md",
+          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "streamlined-console-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-streamlined-console-2026-11-21.pdf",
+      "sha256": "097504f751d15b6bf0d2f2220d43154cb35761a6e2ec99e6c9066c4a818b1be8",
+      "inputSources": [
+        {
+          "path": "docs/streamlined-console.md",
+          "sha256": "6ae8a18ab54e3ebeb10e703ccaa0fe6d714490f11d32c165737bd5e8111b17c1",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/monitor-preview/monitor-verify.png",
+          "sha256": "26987030b060118245f8df6e21d51bfcb59d0e77819a033f598df980a8b0df22",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/monitor-preview/evidence-preview.png",
+          "sha256": "f494d7c5d0e1067b64b34fb51224e4df4de9b7d8dbe2c1f93eb293a3b7da4e65",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/streamlined-console/overview.png",
+          "sha256": "b21542af8dd289f6bda7b9d0e0cb413a851fae5f640396e9e0a57ffb500ed236",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/dashboard.png",
+          "sha256": "070308a8889512989e71d3187632366c6d7164945c4b8e0f17f37175b0cb2208",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/clusters.png",
+          "sha256": "7b4f67180734de62dd8f4733efcdab157f20b01425f54c8f2e893a9957118326",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/monitor-verify.png",
+          "sha256": "fdd5ceb36e430838ccaf41e8c79088af81fe5aef6e9fcea8dced9155c73c615d",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "admin-guide-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-admin-guide-2026-11-21.pdf",
+      "sha256": "99c9119ebf4d6a5f1e46a50aa0bcdb9aa6fa6dbff7e783793fd53e55b1455d6d",
+      "inputSources": [
+        {
+          "path": "docs/admin-guide.md",
+          "sha256": "77259ef65c853de0b46dc4b4f2f9ca739b667a338388964a04a2811aebae2e49",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/start-here.png",
+          "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/post-configuration.png",
+          "sha256": "2d9bc6be8b60f25b5b7aec778fe1e9928027d0f164ef81a88eec0b69a80ba1c0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "user-guide-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-user-guide-2026-11-21.pdf",
+      "sha256": "40f712842ed31f30f35e965575b3134c2474b5510f1ad42148f0453d8aa6c71f",
+      "inputSources": [
+        {
+          "path": "docs/user-guide.md",
+          "sha256": "3cf9f4a5c1da7d013b969744d80568bd4b78af7782776c25740d7f1dc78ef57b",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/start-here.png",
+          "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/config-groups.png",
+          "sha256": "2c020d9c09a091d538629833cc0b5601dee818e9e6e3084eaa5fc5ff8d8741c0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/pipeline-config-groups.png",
+          "sha256": "ce6865fcc5f5163a7385470b6851ed40e51c0e4e53edbdf56b396230abf416fa",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/pe-login-title.png",
+          "sha256": "69aac0f5916d05f88c377fedc3cb2133004eb22fb1d09dc01b80c1e1e5bb4e9e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "appliance-update-manager-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-update-manager-2026-11-21.pdf",
+      "sha256": "7517fecbe682ccc314ad472f50a73c5fd94d38c081c252e8a807c37c0ab0bb72",
+      "inputSources": [
+        {
+          "path": "docs/appliance-update-manager.md",
+          "sha256": "b8b3c5148032ab93db7dceb66d6aab7441316e9af1f1afeea771806d6d7dac7e",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "docker-build-identity-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-docker-build-identity-2026-11-21.pdf",
+      "sha256": "e995c87f5f8735199eee7fd09401320cd4ab64183a4e1ed6562ae99f11afe628",
+      "inputSources": [
+        {
+          "path": "docs/docker-build-identity.md",
+          "sha256": "f41110ecec5667802c5b31894457fa9f5551f178576ef52a3d154b4508e4c900",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "guided-appliance-updates-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-guided-appliance-updates-2026-11-21.pdf",
+      "sha256": "644dac11c8e8e43b60ac5c8604d01ec55c40c69b6554dca2133bd1e64c28d2a0",
+      "inputSources": [
+        {
+          "path": "docs/guided-appliance-updates.md",
+          "sha256": "f94988ab9609e6228c1f17d4e3392dbdc7d210371c7a16927236ca10a397c1b5",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guided-appliance-updates/readiness.png",
+          "sha256": "d75720bba66f52fa353f5e0766d4662a4801e71f39bda4e7815ffaced5ab0ab2",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/update-progress.png",
+          "sha256": "b7c428b5a3a7722b3b9fa384955fd85a1a502fee421998a92db2249e1216caa0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "installation-guide-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-installation-guide-2026-11-21.pdf",
+      "sha256": "5e7ebac5ca4b0069cc8a5b06ab298c966790d88dd558eaf554ab186ff4de872b",
+      "inputSources": [
+        {
+          "path": "docs/installation-guide.md",
+          "sha256": "445c0d7de7df67255a369678dae859c1cd68c57a4b4229ce5ef6092cd8617387",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "disaster-recovery-previous-2026-11-23",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-2026-11-23.pdf",
+      "sha256": "1f32e842d64771848f9fa8a8750f0d3b46584779b1f8d6968821180a6f37c888",
+      "inputSources": [
+        {
+          "path": "docs/disaster-recovery.md",
+          "sha256": "e8832b7f17ed4461d58b95133bed49d19f1be098a994a57d8580b77a386d5ed0",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/overview.png",
+          "sha256": "06e4ad3aae1dd1b29c5ae0b792fb0471e3df3b8cfa403a8414a02a9531e75ae7",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "disaster-recovery-setup-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-setup-2026-11-21.pdf",
+      "sha256": "91dec85deb0372949c3f0e73427d14d5c6be68bf7086b781d37398aa2b09c963",
+      "inputSources": [
+        {
+          "path": "docs/disaster-recovery-setup.md",
+          "sha256": "cbd68ce913a1cf715c5769362c6b90aac9fa2642827de6e2f80c35eeaaa61ea7",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/setup-v1.8.5-rc1/01-add-datacenter.png",
+          "sha256": "02bcbd12c29e7c22dfa1cbaa9ab4483bad59ff1e4cd7cf1d36b1f1fc85f27f3e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/setup-v1.8.5-rc1/02-linked-profile.png",
+          "sha256": "08df39fe422e6352ebf6a2653c7b52a866193697424b6c089fbf6c5d733ae1df",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/setup-v1.8.5-rc1/03-reviewed-baseline.png",
+          "sha256": "d04209fbbda13983cf83392c6d7f59131d2622b7bd9d9070a2714b845a6d15e3",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "pe-local-users-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-local-users-2026-11-21.pdf",
+      "sha256": "60d8f896e1fb5c341833d1757740d24482d778d75845acfc7081e9413a7e7ba5",
+      "inputSources": [
+        {
+          "path": "docs/pe-local-users.md",
+          "sha256": "cd57988e0a68cbb6a5583a0b0348da4fa60e967ca272f46f27be66e71d1d2331",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "credential-groups-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-credential-groups-2026-11-21.pdf",
+      "sha256": "2dc8480c92e8eededed93565baef775fb53be041bc166b5cfe1c5156c75e46e5",
+      "inputSources": [
+        {
+          "path": "docs/credential-groups.md",
+          "sha256": "3a55fced23cd7b90187fc2722e17f995dfcba3772e718edbe1172b8a75c6cd2e",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/credential-groups-desktop.png",
+          "sha256": "4070af0a09eed9853b73cdada73afdfa92905abeec00a61e4f2272508ca04cd9",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guided-update-completed-green.png",
+          "sha256": "5fc04998ac2f9d7b9a200fae19f98d12e5cf36865515f3f0a9462ac3a661b49e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "session-management-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-session-management-2026-11-21.pdf",
+      "sha256": "dd9335c65caae1c0c30dfa8920b4219e9bfe28894959f80ff9ab4bc326ffe01a",
+      "inputSources": [
+        {
+          "path": "docs/session-management.md",
+          "sha256": "b01aa22e43e14c20e3d484627c202e1053fe74a4e68c4ab28b6be36518704887",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/sessions.png",
+          "sha256": "cc41e6dcddb7d93b82b43e7903d0341e501092da7ce9e0ae81798bcccfe1f4fe",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/session-revocation.png",
+          "sha256": "2a12b15da900a728fd92d3e0428b9cd0f6e34aeafd32c276689c2ae30a283f9e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "pe-login-title-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-login-title-2026-11-21.pdf",
+      "sha256": "f70bfa41c84d843d8cd75612a9c27f09e3456e7368589a094292aba26e20028f",
+      "inputSources": [
+        {
+          "path": "docs/pe-login-title.md",
+          "sha256": "c2b9942208973bde9a5a263892cee4b076e2872003c3b8fd014c012fc3aa1fe3",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "config-file-groups-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-config-file-groups-2026-11-21.pdf",
+      "sha256": "95f44fe73eb2393a4e9cd40c18d973a4d9197dfd3b1a999341477e0b580fabfd",
+      "inputSources": [
+        {
+          "path": "docs/config-file-groups.md",
+          "sha256": "7d0f0b68df1141098937c2f1a33deb0fb81dcce8e7c0f88c5bb9c14c27866d79",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "live-pe-drift-monitoring-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-21.pdf",
+      "sha256": "97c5bc40c33996c79c12ce2c8d82c215913d9649e99a824c6129bd5b1e539051",
+      "inputSources": [
+        {
+          "path": "docs/live-pe-drift-monitoring.md",
+          "sha256": "4298a6d2706a83383231ad64c9dcc961a09f9532bf3b062c44914983cea498a6",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "nutanix-upgrade-risk-advisor-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-21.pdf",
+      "sha256": "74aafe08378f1ba35328507eee00c008549008913344e770dec259495f7a7c87",
+      "inputSources": [
+        {
+          "path": "docs/nutanix-upgrade-risk-advisor.md",
+          "sha256": "f9d67c518aa5f3be67835b249f3bd719807b4d8f0d6001a9be80cafe17ff5813",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "production-readiness-boundary-previous-2026-11-21",
+      "source": "docs/manuals/current/ZTF-Orchestrator-production-readiness-boundary-2026-11-21.pdf",
+      "sha256": "57a001f0f2190009f1b8f6c465a8600983203aab249438eff3a9ebf879783424",
+      "inputSources": [
+        {
+          "path": "docs/production-readiness-boundary.md",
+          "sha256": "ef8087bca3291d28001ccdcddf8358d9cf2264cbef400477080f0d060443e2e8",
           "normalization": "utf8-lf"
         },
         {

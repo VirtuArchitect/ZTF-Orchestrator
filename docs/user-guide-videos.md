@@ -1,5 +1,22 @@
 # ZTF-Orchestrator User Guide Videos
 
+## Build #72 operator update - 26 November 2026
+
+[Verified Standard, Airgap and Minimal downloads, checksums and first-boot instructions](appliance-build-72.md)
+use application source `f9eee7e`. Fresh QCOW2 appliances enable reviewed Foundation VM
+deployment by default and establish a versioned rollback baseline without manual
+retagging. Administrator authorization, exact deployment confirmation, configured
+approvals and preflight remain required. Existing environment overrides are retained;
+an update ZIP does not rerun factory bootstrap. No startup action deploys a cluster.
+
+Use [pipeline datacenter/cluster organization](pipeline-organization.md),
+[workflow execution settings](workflow-execution-settings.md) and
+[PE TLS options](pe-tls-options.md) for current controls. Pipelines, approvals,
+completed recovery work and the eligible step 08-only recovery retry are preserved.
+[Video currency notes](video-current-guidance.md) identify dated narration that
+must be read with current written procedures.
+
+
 **v1.8.5-rc1 | 22 November 2026 | 23 videos | approximately 40 minutes**
 
 [Watch the refreshed series](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00).

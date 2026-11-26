@@ -1,7 +1,8 @@
 # Session management
 
-Current application baseline: `a3c9c79`; consolidated appliance bundle
-`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+Current appliance downloads: [Build #72 Standard, Airgap and Minimal](appliance-build-72.md),
+reviewed 26 November 2026 at source `f9eee7e`. Historical package reference:
+`a3c9c79` / `v1.8.5-rc1-636f191` (not the current QCOW2 build). See [current build and documentation status](current-status.md).
 
 Administrators use **Administration > Users > Sessions** to review sign-ins and
 remove one session's future access. This guide describes updated v1.8.5-rc1 source

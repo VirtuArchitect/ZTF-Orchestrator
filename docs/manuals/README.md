@@ -4,7 +4,13 @@ Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orch
 
 ## Current source collection
 
-The collection is reviewed against application source `db16219` on **21 November 2026**. Use the [collection overview](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=collection-overview), [current Administrator Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=admin-guide), [current User Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=user-guide) and [complete current task collection](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=current-workflow-script-collection). Every current workflow, script and dedicated operation also has an individual PDF.
+The [Build #72 guide](../appliance-build-72.md) and refreshed Administrator/User
+PDFs cover the 26 November 2026 factory defaults and verified download links.
+Retained dated Word/PDF editions and original video ZIPs keep their provenance;
+see [video currency notes](../video-current-guidance.md) before using older recordings.
+
+
+The collection retains per-document source/review dates. Affected appliance and operator guides were refreshed against `f9eee7e` on **26 November 2026**. Use the [collection overview](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=collection-overview), [current Administrator Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=admin-guide), [current User Guide](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=user-guide) and [complete current task collection](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/?doc=current-workflow-script-collection). Every current workflow, script and dedicated operation also has an individual PDF.
 
 Runbooks, architecture, API references, installation, updates, recovery, security, test guidance and the provided remote deployment design/pilot are searchable by topic and document type. Current guides retain the ZTF cover and running format. Historical editions are hidden by default and retain their source provenance and original edition labels. Source review and simulated figures do not establish hardware or production acceptance.
 

@@ -1,3 +1,5 @@
+Documentation update: verified Build #72 QCOW2 downloads and affected operator PDFs are published with explicit first-boot, approval and test boundaries. Dated Parts 18-20 are identified alongside current transport/default guidance pending approved replacement narration. Existing media, application behavior and records are unchanged.
+
 FRESH APPLIANCE FOUNDATION VM DEPLOYMENT (updated source builds)
 New Standard, Airgap and Minimal first boot writes ZTF_FOUNDATION_VM_ENABLE_MUTATION=true. Administrator access, exact DEPLOY FOUNDATION VM confirmation, configured workflow approvals and preflight remain enforced; bootstrap submits no deployment. Explicit false overrides, existing .env files and interrupted-bootstrap settings remain unchanged. Application update ZIPs do not opt in existing installations or replace previously published QCOW2 artifacts. Image upload remains a separate setting; no new dependency or data migration.
 

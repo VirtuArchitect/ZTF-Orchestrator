@@ -5,8 +5,9 @@ Overview links these records to automation and optional PE readbacks. The existi
 recovery-profile list remains available; it is separate from the explicit managed
 cluster catalogue. Older screenshots below retain their documented provenance.
 
-Current application baseline: `a3c9c79`; consolidated appliance bundle
-`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+Current appliance downloads: [Build #72 Standard, Airgap and Minimal](appliance-build-72.md),
+reviewed 26 November 2026 at source `f9eee7e`. Historical package reference:
+`a3c9c79` / `v1.8.5-rc1-636f191` (not the current QCOW2 build). See [current build and documentation status](current-status.md).
 
 Overview centres on four tasks: **Deploy a Cluster**, **Configure a Cluster**,
 **Recover Infrastructure**, and **Monitor & Verify**. These links open the

@@ -1,5 +1,22 @@
 # Current documentation and appliance build
 
+## Build #72 operator update - 26 November 2026
+
+[Verified Standard, Airgap and Minimal downloads, checksums and first-boot instructions](appliance-build-72.md)
+use application source `f9eee7e`. Fresh QCOW2 appliances enable reviewed Foundation VM
+deployment by default and establish a versioned rollback baseline without manual
+retagging. Administrator authorization, exact deployment confirmation, configured
+approvals and preflight remain required. Existing environment overrides are retained;
+an update ZIP does not rerun factory bootstrap. No startup action deploys a cluster.
+
+Use [pipeline datacenter/cluster organization](pipeline-organization.md),
+[workflow execution settings](workflow-execution-settings.md) and
+[PE TLS options](pe-tls-options.md) for current controls. Pipelines, approvals,
+completed recovery work and the eligible step 08-only recovery retry are preserved.
+[Video currency notes](video-current-guidance.md) identify dated narration that
+must be read with current written procedures.
+
+
 ## Recovery workspace — updated source, 23 November 2026
 
 The recovery workspace combines one next action, recorded stage status, current
@@ -30,7 +47,7 @@ Application source reviewed at [`f33c9ed`](https://github.com/VirtuArchitect/ZTF
 - [YAML Studio](admin-guide.md#yaml-studio): datacenter/cluster context, guided forms, explicit authoring validation and reviewed pipeline handoff. Saving and handoff start no execution.
 - [Supported execution](console-retirement.md): ZTF 1.x pipelines remain available; Native opt-in, NKP and ZTF 2.x console execution are retired, with historical records retained.
 - [Recover Cluster and Resume Recovery](disaster-recovery.md): clear stages, preserved completed work and approvals, and step 08-only registration retry after reconciliation and fresh health evidence.
-- [PE-direct uplink migration](ahv-uplink-migration.md) and [DARE](dare-workflow.md): no PC required for these transports; per-run TLS exceptions are audited and independently approved. Uplink SSH host keys remain verified. Live writes default to off pending environment validation. DARE enablement cannot be undone by rolling back the appliance.
+- [PE-direct uplink migration](ahv-uplink-migration.md) and [DARE](dare-workflow.md): no PC required for these transports; per-run TLS exceptions are audited and independently approved. Uplink SSH host keys remain verified. This historical baseline defaulted live writes off; current packaged defaults are described above and in workflow execution settings. DARE enablement cannot be undone by rolling back the appliance.
 - [Health diagnostics](pe-health-reporting.md), [sessions](session-management.md), [credential groups](credential-groups.md), [Config Files groups](config-file-groups.md), detailed job stages and [guided updates](guided-appliance-updates.md) remain part of the console.
 
 Required checks on PR #202 passed. Separate local Docker verification of the exact image passed 128 targeted tests and 64 network-isolated container tests, including the mocked step 08-only retry. Browser authoring checks and record-preservation checks passed. These results do not establish live hardware compatibility or production recovery acceptance.

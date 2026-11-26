@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased source
+- Publish verified Build #72 Standard, Airgap and Minimal QCOW2 links and checksums. Refresh affected operator PDFs, first-boot/update guidance and scoped role summaries; clearly flag dated video transport/default narration while retaining original media and download provenance. No application behavior or data migration.
 - Enable Foundation VM deployment in newly generated Standard, Airgap and Minimal appliance configurations. Preserve explicit opt-outs, existing installations and interrupted-bootstrap settings; retain administrator access, exact confirmation, configured approvals, preflight and separate image-upload policy. No automatic deployment, data migration or new dependency.
 - Give fresh appliance builds a shared immutable source/version identity. Pass Docker build metadata, retain verified baked images on first boot, obtain only source-verified Minimal images, forbid Airgap image pulls and report matching Compose identity for guided update/rollback. Preserve existing installations and interrupted-bootstrap credentials; no application data migration or new runtime dependency.
 - Add reusable Viewer/Operator permission profiles, bulk account assignment, searchable datacentre/cluster selection, fixed selections and explicit future-cluster inheritance. Resolve execution identity internally and retain exact pipeline review, existing approvals and completed recovery work.
