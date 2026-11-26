@@ -1,3 +1,6 @@
+FRESH APPLIANCE GUIDED UPDATE BASELINE (updated source builds)
+Resolve one source commit and a versioned image baseline across all QCOW2 profiles. Bake complete application build identity, reuse verified local images, fetch only the matching verified source for Minimal and prevent implicit application pulls. Compose health/version metadata follows the selected baseline during update and rollback. Interrupted bootstrap retains its generated database credentials. Existing deployed appliances and previous QCOW2 artifacts are unchanged; rebuilt images are separate deliverables. No new runtime dependency or cluster operation.
+
 BULK DATACENTRE AND CLUSTER ACCESS (updated source builds)
 Assign reusable Viewer/Operator profiles to multiple accounts through a searchable datacentre/cluster tree. Access assignment needs no PE endpoints or UUIDs; internal execution identity and exact pipeline authorisation remain required. Existing-cluster selection is fixed; future-cluster inheritance is explicit and audited. Additive access metadata preserves workflows, approvals and completed recovery work. No runtime dependency added.
 

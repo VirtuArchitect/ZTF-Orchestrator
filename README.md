@@ -44,6 +44,8 @@ are simulated; screenshots and videos do not establish hardware validation.*
 
 ## Current Repository Status
 
+Updated appliance source fixes [fresh-install guided update identity](docs/appliance-bootstrap-identity.md): source-pinned versioned baselines, verified baked-image reuse, source-checked Minimal provisioning and matching Compose health metadata. Existing appliance images and deployed VMs retain their original contents until separately rebuilt or updated.
+
 Updated source builds support [bulk datacentre and cluster access](docs/scoped-operations-access.md#phase-2-permission-profiles-and-bulk-cluster-selection): reusable Viewer/Operator permission profiles, multi-account assignment and searchable cluster selection without entering PE endpoints or UUIDs. Exact execution identity, pipeline review and workflow approvals remain enforced.
 
 The console's Dark theme uses Windows-style neutral charcoal surfaces. Use the header Theme control to choose Dark, Light or System; your saved browser preference is retained. The existing light palette, blue/teal accents and workflow controls remain available. Earlier appliance bundles retain their original palette until updated.

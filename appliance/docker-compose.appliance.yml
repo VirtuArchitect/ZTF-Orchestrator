@@ -1,7 +1,8 @@
 services:
   ztf-orchestrator:
-    image: ghcr.io/virtuarchitect/ztf-orchestrator:${ZTF_ORCHESTRATOR_VERSION:-latest}
+    image: ghcr.io/virtuarchitect/ztf-orchestrator:${ZTF_ORCHESTRATOR_VERSION:?Set a versioned appliance image pin}
     container_name: ztf-orchestrator
+    pull_policy: never
     restart: unless-stopped
     group_add:
       - "${ZTF_UPDATE_SERVICE_GID:-65534}"
@@ -18,6 +19,8 @@ services:
       - /opt/ztf-orchestrator-preload/nkp-zerotouch-framework:/var/lib/ztf-orchestrator/nkp-zerotouch-framework:ro
       - /opt/ztf-orchestrator-preload/bundles:/var/lib/ztf-orchestrator/bundles:ro
     environment:
+      ZTF_ORCHESTRATOR_VERSION: ${ZTF_ORCHESTRATOR_VERSION:?Set a versioned appliance image pin}
+      ZTF_ORCHESTRATOR_IMAGE: ghcr.io/virtuarchitect/ztf-orchestrator:${ZTF_ORCHESTRATOR_VERSION:?Set a versioned appliance image pin}
       ZTF_DATA_DIR: /var/lib/ztf-orchestrator
       ZTF_PATH: /opt/zerotouch-framework
       ZTF2_PATH: /opt/zerotouch-framework-2x

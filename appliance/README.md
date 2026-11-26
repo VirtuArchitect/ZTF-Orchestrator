@@ -16,6 +16,21 @@ QCOW2 files as GitHub Actions artifacts or in an internal artifact repository.
 | GitHub Release assets | Update packages, checksums, manifests, and metadata |
 | ZTF runtime | Legacy ZeroTouch Framework `v1.5.2` for Workflows 1.x/Scripts 1.x, with a separate baked ZTF `v2.0.0` runtime for ZTF 2.x IaC |
 
+## Fresh-appliance update identity (updated source)
+
+New builds resolve a single source commit and a versioned `v<package>-<commit>`
+application baseline across Standard, Airgap and Minimal. Packer passes complete
+build identity into the application image. First boot reuses a verified baked
+image; Minimal can fetch the matching source image and verifies its full commit
+before creating a local versioned alias. Airgap never pulls missing images.
+Compose reports the selected version/image and prevents implicit application pulls.
+
+First boot marks completion only after health/version/image checks. Interrupted
+bootstrap retains its generated database credentials. An existing `.env` without
+a pending-bootstrap marker is retained, with no automatic image or data migration.
+Existing Build #67 QCOW2 downloads and deployed VMs are unchanged by source updates.
+See [bootstrap identity and test boundaries](../docs/appliance-bootstrap-identity.md).
+
 ## Recommended Distribution Model
 
 See [Guided appliance updates](../docs/guided-appliance-updates.md) for the one-time
@@ -81,7 +96,7 @@ appliance build and validation path is Ubuntu/Debian-family.
 By default, the appliance uses the `latest` GHCR image. To pin a release:
 
 ```bash
-sudo ZTF_ORCHESTRATOR_VERSION=<version> \
+sudo ZTF_ORCHESTRATOR_VERSION=auto \
   bash /opt/ztf-orchestrator-source/appliance/scripts/firstboot.sh
 ```
 
@@ -634,7 +649,7 @@ cd appliance/packer
 packer init ahv-qcow2.pkr.hcl
 packer build \
   -var "version=<version>" \
-  -var "ztf_orchestrator_version=<version>" \
+  -var "ztf_orchestrator_version=auto" \
   -var "build_container_image=true" \
   -var "pull_container_images=true" \
   -var "ztf_framework_ref=v1.5.2" \

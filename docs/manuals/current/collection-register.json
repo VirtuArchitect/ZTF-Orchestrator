@@ -2302,6 +2302,12 @@
       "disposition": "published-web-reference",
       "reason": "Updated source guidance for the explicit Operator and Viewer access boundary, separate from the current PDF runbook edition.",
       "documentId": null
+    },
+    {
+      "path": "docs/appliance-bootstrap-identity.md",
+      "disposition": "published-web-reference",
+      "reason": "Updated source guidance for versioned fresh-appliance bootstrap and guided rollback eligibility, separate from the current PDF edition.",
+      "documentId": null
     }
   ],
   "providedDocuments": [
