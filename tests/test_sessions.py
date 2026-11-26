@@ -1,4 +1,6 @@
 """Session visibility, activity semantics and revocation without bearer disclosure."""
+
+from tests.conftest import create_account_session
 import datetime as dt
 import json
 import uuid
@@ -13,7 +15,7 @@ def headers(token):
 @pytest.mark.parametrize('role', [None, 'viewer', 'operator'])
 def test_session_management_requires_admin(client, role):
     import server
-    auth = headers(server._create_session('other', role)) if role else {}
+    auth = headers(create_account_session(server, 'other', role)) if role else {}
     assert client.get('/api/auth/sessions', headers=auth).status_code == (403 if role else 401)
     assert client.delete(f'/api/auth/sessions/{uuid.uuid4()}', headers=auth).status_code == (403 if role else 401)
 
@@ -21,9 +23,9 @@ def test_session_management_requires_admin(client, role):
 def test_counts_distinct_users_sessions_and_recent_reported_activity(client, auth_headers, admin_token):
     import server
     now = dt.datetime.now(dt.timezone.utc)
-    alice = [server._create_session('alice', 'operator') for _ in range(2)]
-    bob = server._create_session('bob', 'viewer')
-    second_admin = server._create_session('admin', 'admin')
+    alice = [create_account_session(server, 'alice', 'operator') for _ in range(2)]
+    bob = create_account_session(server, 'bob', 'viewer')
+    second_admin = create_account_session(server, 'admin', 'admin')
     for token in [bob, second_admin, alice[1]]:
         server._SESSIONS[token]['lastActivityAt'] = now - dt.timedelta(minutes=20)
     response = client.get('/api/auth/sessions', headers=auth_headers)
@@ -41,9 +43,9 @@ def test_counts_distinct_users_sessions_and_recent_reported_activity(client, aut
 
 def test_expired_and_legacy_activity_stays_unknown(client, auth_headers):
     import server
-    expired = server._create_session('expired', 'viewer')
+    expired = create_account_session(server, 'expired', 'viewer')
     server._SESSIONS[expired]['expires'] = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=1)
-    legacy = server._create_session('legacy', 'operator')
+    legacy = create_account_session(server, 'legacy', 'operator')
     server._SESSIONS[legacy].pop('lastActivityAt')
     body = client.get('/api/auth/sessions', headers=auth_headers).get_json()
     assert not any(s['username'] == 'expired' for s in body['sessions'])
@@ -68,8 +70,8 @@ def test_passive_reads_do_not_mark_activity_but_explicit_report_does(client, aut
 
 def test_revoke_one_session_preserves_other_signin_and_audits_safe_identifier(client, auth_headers, caplog):
     import server
-    first = server._create_session('alice', 'operator')
-    second = server._create_session('alice', 'operator')
+    first = create_account_session(server, 'alice', 'operator')
+    second = create_account_session(server, 'alice', 'operator')
     session_id = server._SESSIONS[first]['id']
     response = client.delete(f'/api/auth/sessions/{session_id}', headers=auth_headers)
     assert response.get_json() == {'success': True, 'currentSession': False}
@@ -109,5 +111,5 @@ def test_stale_admin_session_cannot_manage_after_account_disable_or_demotion(cli
     if not disabled:
         users[0]['role'] = 'viewer'
     server._save_users(users)
-    assert client.get('/api/auth/sessions', headers=auth_headers).status_code == 403
-    assert client.delete(f'/api/auth/sessions/{uuid.uuid4()}', headers=auth_headers).status_code == 403
+    assert client.get('/api/auth/sessions', headers=auth_headers).status_code == (401 if disabled else 403)
+    assert client.delete(f'/api/auth/sessions/{uuid.uuid4()}', headers=auth_headers).status_code == (401 if disabled else 403)

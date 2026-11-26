@@ -136,6 +136,8 @@ The per-operation setting never disables Prism Central or SSH trust. See
 and key recovery independently. Rolling back the Orchestrator cannot disable
 encryption. Mocked tests do not establish hardware or workload compatibility.
 
+Updated source builds add an explicit **Operations workspace** for scoped Operator and Viewer access. Administrators assign actual PE targets and separately authorise exact pipeline intent in **Administration > Access Control**. Unassigned accounts see no clusters; Viewers remain read-only. Existing administrator pipelines, approvals, completed work and recovery retry controls are retained. See the [access rollout procedure](docs/scoped-operations-access.md) for delegation limits and validation requirements.
+
 ## Core Operator Workflow
 
 1. Start with **Start Here** and choose Deploy, Configure, Recover Infrastructure

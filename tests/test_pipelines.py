@@ -87,13 +87,14 @@ def test_pipeline_viewer_cannot_create(client, auth_headers):
     assert resp.status_code == 403
 
 
-def test_pipeline_viewer_can_list(client, auth_headers):
+def test_pipeline_viewer_uses_scoped_workspace(client, auth_headers):
     from tests.test_api import _create_user, _login
     _create(client, auth_headers)
     _create_user(client, auth_headers, 'viewer_pl2', 'viewer')
     vh = _login(client, 'viewer_pl2')
     resp = client.get('/api/pipelines', headers=vh)
-    assert resp.status_code == 200
+    assert resp.status_code == 403
+    assert client.get('/api/access/workspace',headers=vh).get_json()['pipelines'] == []
 
 
 # ── Execution ─────────────────────────────────────────────────────────────────

@@ -131,7 +131,7 @@ def test_lifecycle_api_is_administrator_only_and_validates_persisted_references(
         client.post('/api/users', headers=auth_headers, json={'username': role, 'password': 'FixtureOnly123!', 'role': role})
         token = client.post('/api/auth/login', json={'username': role, 'password': 'FixtureOnly123!'}).get_json()['token']
         headers = {'Authorization': 'Bearer ' + token}
-        assert client.get('/api/recovery', headers=headers).status_code == 200
+        assert client.get('/api/recovery', headers=headers).status_code == 403
         for action in ('archive', 'restore', 'delete'):
             url = f'/api/recovery/profiles/{p["id"]}' + ('' if action == 'delete' else '/' + action)
             response = client.open(url, method='DELETE' if action == 'delete' else 'POST', headers=headers, json=action_data(p, action))

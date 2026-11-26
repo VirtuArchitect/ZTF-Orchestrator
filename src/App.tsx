@@ -1,3 +1,5 @@
+import AccessControl from './pages/AccessControl'
+import ScopedWorkspace from './pages/ScopedWorkspace'
 import DareWizard from './pages/DareWizard'
 import PostDeployment from './pages/PostDeployment'
 import PostDeploymentRuns from './pages/PostDeploymentRuns'
@@ -5,7 +7,7 @@ import AhvUplinkMigration from './pages/AhvUplinkMigration'
 import CreateVirtualSwitch from './pages/CreateVirtualSwitch'
 import VirtualSwitchMtu from './pages/VirtualSwitchMtu'
 import ClusterStorageStandard from './pages/ClusterStorageStandard'
-import { BrowserRouter, Routes, Route, Navigate } from './router'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from './router'
 import { useStore } from './store'
 import Dashboard     from './pages/Dashboard'
 import Clusters from './pages/Clusters'
@@ -65,11 +67,24 @@ function RequireRole({ roles, children }: { roles: Role[]; children: React.React
   return <>{children}</>
 }
 
+function RoleBoundary({children}: {children: React.ReactNode}) {
+  const user = useStore(s => s.user)
+  const token = useStore(s => s.sessionToken)
+  const location = useLocation()
+  if (token && user && user.role !== 'admin' && location.pathname !== '/login') {
+    if (location.pathname !== '/operations') return <Navigate to="/operations" replace />
+    return <ScopedWorkspace />
+  }
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <SessionActivity />
-      <Routes>
+      <RoleBoundary><Routes>
+        <Route path="/operations" element={<RequireAuth><ScopedWorkspace /></RequireAuth>} />
+        <Route path="/access-control" element={<RequireRole roles={['admin']}><AccessControl /></RequireRole>} />
         {/* Public */}
         <Route path="/login" element={<Login />} />
 
@@ -168,7 +183,7 @@ export default function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Routes></RoleBoundary>
     </BrowserRouter>
   )
 }

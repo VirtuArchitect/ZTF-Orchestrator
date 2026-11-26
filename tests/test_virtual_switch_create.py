@@ -1,4 +1,6 @@
 """Empty-switch creation and handoff use fake PE/CVM endpoints exclusively."""
+
+from tests.conftest import create_account_session
 from copy import deepcopy
 import pytest
 import pe_direct as direct
@@ -135,7 +137,7 @@ def test_api_roles_independent_approval_and_exact_durable_job(client, auth_heade
     monkeypatch.setattr(server, '_pe_login_title_resolver', lambda _: resolver)
     base = '/api/create-virtual-switch'
     assert client.get(base).status_code == 401
-    operator = {'Authorization': 'Bearer ' + server._create_session('operator', 'operator')}
+    operator = {'Authorization': 'Bearer ' + create_account_session(server, 'operator', 'operator')}
     assert client.post(base + '/preflight', json=config(), headers=operator).status_code == 403
     assert client.post(base + '/apply', json={}, headers=auth_headers).status_code == 403
     response = client.post(base + '/preflight', json=config(), headers=auth_headers)
@@ -152,7 +154,7 @@ def test_api_roles_independent_approval_and_exact_durable_job(client, auth_heade
                'confirmation': 'CREATE SWITCH ' + UPLINK['cluster_uuid'] + ' vs1'}
     assert client.post(base + '/apply', json=payload, headers=auth_headers).status_code == 403
     server._save_users([*server._load_users(), {'username': 'reviewer', 'role': 'admin'}])
-    reviewer = {'Authorization': 'Bearer ' + server._create_session('reviewer', 'admin')}
+    reviewer = {'Authorization': 'Bearer ' + create_account_session(server, 'reviewer', 'admin')}
     assert client.post('/api/approvals/' + aid + '/approve', json={}, headers=reviewer).status_code == 200
     changed = json.loads(data['content'])
     changed['intent']['switchName'] = 'vs2'

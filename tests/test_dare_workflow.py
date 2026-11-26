@@ -1,3 +1,5 @@
+
+from tests.conftest import create_account_session
 from copy import deepcopy
 import time
 
@@ -122,7 +124,7 @@ def test_dare_is_admin_only_and_apply_is_bound_to_one_approved_job(client, auth_
     monkeypatch.delenv('ZTF_DARE_ENABLE_MUTATION', raising=False)
     monkeypatch.setattr(server.limiter, 'enabled', False)
     assert client.get('/api/dare').status_code == 401
-    operator = server._create_session('test-operator', 'operator')
+    operator = create_account_session(server, 'test-operator', 'operator')
     assert client.post('/api/dare/discover', json=CONNECTION,
                        headers={'Authorization': f'Bearer {operator}'}).status_code == 403
     assert client.post('/api/approvals', json={'workflow': dare.WORKFLOW}, headers=auth_headers).status_code == 400
@@ -141,7 +143,7 @@ def test_dare_is_admin_only_and_apply_is_bound_to_one_approved_job(client, auth_
     assert client.post('/api/dare/apply', json=payload, headers=auth_headers).status_code == 403
     url = f'/api/approvals/{approval_id}/approve'
     assert client.post(url, json={}, headers=auth_headers).status_code == 403
-    approver = server._create_session('separate-admin', 'admin')
+    approver = create_account_session(server, 'separate-admin', 'admin')
     approver_headers = {'Authorization': f'Bearer {approver}'}
     assert client.post(url, json={}, headers=approver_headers).status_code == 200
     changed = dare.parse_plan(content)

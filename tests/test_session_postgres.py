@@ -1,4 +1,6 @@
 """Real PostgreSQL migration, persistence and revocation checks in a unique schema."""
+
+from tests.conftest import create_account_session
 import datetime as dt
 import os
 import uuid
@@ -32,7 +34,7 @@ def test_existing_sessions_migrate_without_relogin_and_revocation_is_shared(clie
         assert str(uuid.UUID(legacy['id'])) == legacy['id']
         monkeypatch.setattr(server, '_storage', storage)
         server._save_users(users)
-        admin = server._create_session('admin', 'admin')
+        admin = create_account_session(server, 'admin', 'admin')
         auth = {'Authorization': f'Bearer {admin}'}
         body = client.get('/api/auth/sessions', headers=auth).get_json()
         assert body['summary']['totalSessions'] == 2

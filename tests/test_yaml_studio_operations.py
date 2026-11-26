@@ -117,10 +117,10 @@ def test_viewer_permissions(client,auth_headers,setup_studio,monkeypatch):
   user=original()
   return {**user,'role':'viewer'} if user else user
  monkeypatch.setattr(server,'_current_session',viewer)
- assert client.get('/api/yaml-studio/context',headers=auth_headers).status_code==200
- assert client.post('/api/yaml-studio/validate',headers=auth_headers,json={'taskId':'AddNtpServersPe','content':CONTENT}).status_code==200
+ assert client.get('/api/yaml-studio/context',headers=auth_headers).status_code==403
+ assert client.post('/api/yaml-studio/validate',headers=auth_headers,json={'taskId':'AddNtpServersPe','content':CONTENT}).status_code==403
  assert save_request(client,auth_headers).status_code==403
- assert handoff_request(client,auth_headers).status_code==403
+ assert client.post('/api/yaml-studio/handoff',headers=auth_headers,json={'pipelineId':'example'}).status_code==403
  assert client.get('/api/yaml-studio/context').status_code==401
 
 

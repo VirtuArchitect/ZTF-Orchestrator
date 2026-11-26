@@ -13,6 +13,15 @@ export default function SessionActivity() {
     let lastInteractionAt = 0
     let sending = false
     const controller = new AbortController()
+    const refreshRole = async () => {
+      const response = await apiFetch('/api/auth/me', { signal: controller.signal })
+      if (response.ok) {
+        const current = await response.json()
+        const state = useStore.getState()
+        if (current.role && current.role !== state.user?.role) state.setAuth(state.sessionToken, current)
+      }
+    }
+    void refreshRole().catch(() => { /* Backend permissions remain authoritative. */ })
     const flush = async () => {
       // Do not replay an old queued interaction when a hidden tab is reopened.
       if (pending && Date.now() - lastInteractionAt > 60_000) pending = false
@@ -22,6 +31,7 @@ export default function SessionActivity() {
       sending = true
       try {
         await apiFetch('/api/auth/activity', { method: 'POST', signal: controller.signal })
+        await refreshRole()
       } catch { /* Activity reporting must not interrupt an operator's action. */ }
       finally { sending = false }
     }

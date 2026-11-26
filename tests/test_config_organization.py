@@ -79,5 +79,5 @@ def test_role_boundaries(client, auth_headers, role):
     assert client.post('/api/users', headers=auth_headers, json={'username': role, 'password': 'FixtureOnly123!', 'role': role}).status_code == 201
     token = client.post('/api/auth/login', json={'username': role, 'password': 'FixtureOnly123!'}).get_json()['token']
     headers = {'Authorization': 'Bearer '+token}
-    assert client.get('/api/config-organization', headers=headers).status_code == 200
-    assert client.put('/api/config-organization', headers=headers, json=empty_config_organization()).status_code == (403 if role == 'viewer' else 200)
+    assert client.get('/api/config-organization', headers=headers).status_code == 403
+    assert client.put('/api/config-organization', headers=headers, json=empty_config_organization()).status_code == 403

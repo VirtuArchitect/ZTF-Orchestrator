@@ -1,4 +1,6 @@
 """No real PE requests: lifecycle and dependency evidence comes from fakes."""
+
+from tests.conftest import create_account_session
 import copy
 import json
 import time
@@ -213,7 +215,7 @@ def test_approval_binding_role_expiry_and_replay(client):
 @pytest.mark.parametrize('role', ['operator', 'viewer'])
 def test_non_admin_cannot_review_approve_or_submit(client, role):
     import server
-    headers = {'Authorization': 'Bearer '+server._create_session('test-'+role, role)}
+    headers = {'Authorization': 'Bearer '+create_account_session(server, 'test-'+role, role)}
     for path in ['/api/cluster-storage-standard/review', '/api/jobs', '/api/execute', '/api/approvals']:
         response = client.post(path, headers=headers, json={'workflow': core.WORKFLOW, 'configContent': yaml.safe_dump(intent()), 'configFile': 'storage.yml'})
         assert response.status_code == 403
@@ -235,7 +237,7 @@ def test_durable_job_smoke_uses_fake_pe_only(client, auth_headers, monkeypatch, 
     assert response.status_code == 202
     for _ in range(100):
         job = server._job_manager.get_job(response.json['id'])
-        if job['status'] in ('success', 'failed'): break
+        if job and job['status'] in ('success', 'failed'): break
         time.sleep(.02)
     assert job['status'] == ('failed' if blocked else 'success')
     assert len(fake.writes) == (0 if dry_run else 3 if blocked else 4)

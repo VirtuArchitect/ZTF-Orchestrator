@@ -56,7 +56,7 @@ from pe_login_title import has_title_intent, validate_intent as validate_pe_logi
 from pe_login_title import prepare_credentials as prepare_pe_login_title_credentials
 from pe_local_users import validate_intent as validate_pe_local_users_intent
 from pe_local_users import prepare_credentials as prepare_pe_local_users_credentials
-from flask import Flask, Response, jsonify, request, send_file, send_from_directory
+from flask import Flask, Response, g, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -6493,6 +6493,7 @@ def _maintenance_error() -> tuple[dict, int]:
 # ─── User & session management ────────────────────────────────────────────────
 
 ROLES = ('admin', 'operator', 'viewer')
+_USERS_LOCK = threading.RLock()
 
 def _load_users() -> list[dict]:
     return read_json(USERS_FILE, [])
@@ -6623,7 +6624,13 @@ def _purge_expired():
 def _current_session() -> dict | None:
     auth = request.headers.get('Authorization', '')
     if auth.startswith('Bearer '):
-        return _get_session(auth[7:])
+        session = _get_session(auth[7:])
+        if not session:
+            return None
+        user = _find_user(session['username'])
+        if not user or user.get('disabled') or user.get('role') not in ROLES:
+            return None
+        return {**session, 'role': user['role']}
     return None
 
 def require_auth(f):
@@ -37495,6 +37502,7 @@ def health_details():
 
 @app.route('/api/auth/login', methods=['POST'])
 @limiter.limit('10 per minute')
+@studio_routes.guard(_USERS_LOCK)
 def auth_login():
     data     = request.json or {}
     username = str(data.get('username', '')).strip()
@@ -37503,7 +37511,7 @@ def auth_login():
         return jsonify({'error': 'username and password required'}), 400
     users = _load_users()
     user = next((u for u in users if u.get('username') == username), None)
-    if not user or not bcrypt.checkpw(password.encode(), user['password_hash'].encode()):
+    if not user or user.get('disabled') or not bcrypt.checkpw(password.encode(), user['password_hash'].encode()):
         log.warning('login_failed', extra={'user': username, 'ip': request.remote_addr})
         return jsonify({'error': 'Invalid credentials'}), 401
     user['last_login_at'] = _now_iso()
@@ -37620,6 +37628,7 @@ def list_users():
     ])
 
 @app.route('/api/users', methods=['POST'])
+@studio_routes.guard(_USERS_LOCK)
 @require_role('admin')
 def create_user():
     data     = request.json or {}
@@ -37647,6 +37656,7 @@ def create_user():
     return jsonify({'success': True}), 201
 
 @app.route('/api/users/<username>', methods=['PUT'])
+@studio_routes.guard(_USERS_LOCK)
 @require_role('admin')
 def update_user(username: str):
     data  = request.json or {}
@@ -37654,6 +37664,8 @@ def update_user(username: str):
     user  = next((u for u in users if u['username'] == username), None)
     if not user:
         return jsonify({'error': 'Not found'}), 404
+    if user.get('role') == 'admin' and data.get('role', 'admin') != 'admin' and not any(u['username'] != username and u.get('role') == 'admin' and not u.get('disabled') for u in users):
+        return jsonify({'error': 'At least one active administrator must remain.'}), 409
     if 'password' in data:
         user['password_hash'] = bcrypt.hashpw(
             str(data['password']).encode(), bcrypt.gensalt()
@@ -37664,9 +37676,11 @@ def update_user(username: str):
             return jsonify({'error': f'role must be one of {ROLES}'}), 400
         user['role'] = data['role']
     _save_users(users)
+    log.info('user_access_updated', extra={'user': request.current_user['username'], 'action': 'user_access_update', 'targetUser': username, 'role': user['role']})
     return jsonify({'success': True})
 
 @app.route('/api/users/<username>', methods=['DELETE'])
+@studio_routes.guard(_USERS_LOCK)
 @require_role('admin')
 def delete_user(username: str):
     users = _load_users()
@@ -37675,6 +37689,9 @@ def delete_user(username: str):
     updated = [u for u in users if u['username'] != username]
     if len(updated) == len(users):
         return jsonify({'error': 'Not found'}), 404
+    for session in _list_sessions():
+        if session.get('username') == username:
+            _revoke_session(session['id'])
     _save_users(updated)
     return jsonify({'success': True})
 
@@ -41796,6 +41813,10 @@ def run_pipeline(pipeline_id: str):
             ):
                 return jsonify({'error': 'Password change requires clusters keyed by PE IP with name, pe_credential and new_pe_admin_credential'}), 400
 
+    scoped_context = getattr(g, 'scoped_pipeline', None)
+    if scoped_context:
+        pe_users_configs.update(scoped_context['snapshots'])
+
     settings     = get_settings()
     ztf_path     = settings['ztfPath']
     python_path  = settings['pythonPath']
@@ -41834,6 +41855,16 @@ def run_pipeline(pipeline_id: str):
         for step_idx, step in enumerate(steps):
             workflow    = step['workflow']
             config_file = step.get('configFile', '')
+
+            if scoped_context:
+                try:
+                    if scoped_context['service'].cancelled(scoped_context):
+                        raise ValueError('Cancellation requested')
+                    scoped_context['service'].checkpoint(scoped_context, step_idx)
+                except ValueError:
+                    overall_status = 'failed'
+                    yield from send('step_complete', {'step': step_idx, 'status': 'failed', 'returnCode': -1})
+                    break
 
             if initial_password_pipeline.is_preserved(password_context, step_idx):
                 preserved = {'step': step_idx, 'workflow': workflow, 'configFile': config_file,
@@ -41921,7 +41952,16 @@ def run_pipeline(pipeline_id: str):
 
                     done = 0
                     while done < 2:
-                        item = combined.get()
+                        if scoped_context:
+                            if scoped_context['service'].cancelled(scoped_context) and proc.poll() is None:
+                                proc.kill()
+                                failure_evidence = True
+                            try:
+                                item = combined.get(timeout=0.5)
+                            except queue.Empty:
+                                continue
+                        else:
+                            item = combined.get()
                         if item is None:
                             done += 1
                         else:
@@ -45359,6 +45399,9 @@ _operations_service = OperationsService({
 register_operations_routes(app, _operations_service, require_role, limiter)
 
 studio_routes.register_routes(app, require_role, sys.modules[__name__])
+
+import scoped_access
+_access_service = scoped_access.register(sys.modules[__name__])
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 

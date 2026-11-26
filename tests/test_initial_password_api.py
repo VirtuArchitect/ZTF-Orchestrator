@@ -1,4 +1,6 @@
 """Offline facade/API boundary checks; never use real SSH or vault secrets."""
+
+from tests.conftest import create_account_session
 import copy
 from contextlib import nullcontext
 import datetime as dt
@@ -750,8 +752,8 @@ def test_api_wiring_admin_reads_and_safe_rejection(tmp_path, monkeypatch):
     try:
         server.app.config['TESTING'] = True
         server._save_users([{'username': 'alice', 'role': 'admin'}, {'username': 'reader', 'role': 'operator'}])
-        admin = {'Authorization': 'Bearer ' + server._create_session('alice', 'admin')}
-        reader = {'Authorization': 'Bearer ' + server._create_session('reader', 'operator')}
+        admin = {'Authorization': 'Bearer ' + create_account_session(server, 'alice', 'admin')}
+        reader = {'Authorization': 'Bearer ' + create_account_session(server, 'reader', 'operator')}
         with server.app.test_client() as client:
             assert client.get('/api/initial-password-setup').status_code == 401
             assert client.get('/api/initial-password-setup/runs', headers=reader).status_code == 403
