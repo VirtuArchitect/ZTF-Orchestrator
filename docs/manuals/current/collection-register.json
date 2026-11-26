@@ -2320,6 +2320,12 @@
       "disposition": "published-current",
       "reason": "Build 72 current operating guidance, available as a PDF.",
       "documentId": "video-current-guidance"
+    },
+    {
+      "path": "docs/assets/appliance-build-72/Build-72-Verification.md",
+      "disposition": "published-web-reference",
+      "reason": "Build 72 verification evidence with explicit disposable-guest and no-live-cluster boundaries; not a general operating procedure.",
+      "documentId": null
     }
   ],
   "providedDocuments": [
