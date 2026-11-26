@@ -1,3 +1,6 @@
+FRESH APPLIANCE FOUNDATION VM DEPLOYMENT (updated source builds)
+New Standard, Airgap and Minimal first boot writes ZTF_FOUNDATION_VM_ENABLE_MUTATION=true. Administrator access, exact DEPLOY FOUNDATION VM confirmation, configured workflow approvals and preflight remain enforced; bootstrap submits no deployment. Explicit false overrides, existing .env files and interrupted-bootstrap settings remain unchanged. Application update ZIPs do not opt in existing installations or replace previously published QCOW2 artifacts. Image upload remains a separate setting; no new dependency or data migration.
+
 FRESH APPLIANCE GUIDED UPDATE BASELINE (updated source builds)
 Resolve one source commit and a versioned image baseline across all QCOW2 profiles. Bake complete application build identity, reuse verified local images, fetch only the matching verified source for Minimal and prevent implicit application pulls. Compose health/version metadata follows the selected baseline during update and rollback. Interrupted bootstrap retains its generated database credentials. Existing deployed appliances and previous QCOW2 artifacts are unchanged; rebuilt images are separate deliverables. No new runtime dependency or cluster operation.
 

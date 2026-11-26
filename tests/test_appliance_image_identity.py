@@ -116,6 +116,11 @@ def test_compose_version_metadata_follows_update_and_rollback():
     assert service['environment']['ZTF_ORCHESTRATOR_IMAGE'] == service['image']
 
 
+def test_existing_appliance_without_saved_foundation_setting_keeps_disabled_fallback():
+    service = yaml.safe_load((ROOT / 'appliance/docker-compose.appliance.yml').read_text())['services']['ztf-orchestrator']
+    assert service['environment']['ZTF_FOUNDATION_VM_ENABLE_MUTATION'] == '${ZTF_FOUNDATION_VM_ENABLE_MUTATION:-false}'
+
+
 def test_workflow_resolves_one_commit_for_all_profiles():
     workflow = yaml.safe_load((ROOT / '.github/workflows/ahv-appliance-image.yml').read_text())
     resolver = workflow['jobs']['resolve-profiles']
@@ -162,7 +167,8 @@ def test_bootstrap_env_has_pinned_identity_not_branch_names():
                     reason='Linux root sandbox only; no host services or Docker daemon are used')
 @pytest.mark.parametrize('profile,mode,scenario', [('standard', 'baked', 'fresh'), ('airgap', 'baked', 'fresh'),
     ('minimal', 'missing', 'fresh'), ('airgap', 'missing', 'fresh'),
-    ('standard', 'baked', 'existing'), ('standard', 'baked', 'retry')])
+    ('standard', 'baked', 'existing'), ('standard', 'baked', 'existing-disabled'), ('standard', 'baked', 'retry'),
+    ('standard', 'baked', 'disabled'), ('airgap', 'baked', 'disabled'), ('minimal', 'missing', 'disabled')])
 def test_firstboot_shell_in_disconnected_sandbox(tmp_path, profile, mode, scenario):
     """Run the real shell/helper with local Git and command stubs, no network."""
     source = tmp_path / 'source'; source.mkdir()
@@ -200,8 +206,11 @@ if args[:1]==['exec']:print(json.dumps({'status':'healthy','installed':{'version
     for name in ('systemctl', 'install', 'apt-get', 'dnf'):
         target = binary / name; target.write_text('#!/bin/sh\nexit 0\n'); target.chmod(0o755)
     app = tmp_path / 'app'
-    if scenario == 'existing':
-        app.mkdir(); (app / '.env').write_text('ZTF_ORCHESTRATOR_VERSION=latest\nPOSTGRES_PASSWORD=keep-existing\n')
+    if scenario.startswith('existing'):
+        existing = 'ZTF_ORCHESTRATOR_VERSION=latest\nPOSTGRES_PASSWORD=keep-existing\n'
+        if scenario == 'existing-disabled':
+            existing += 'ZTF_FOUNDATION_VM_ENABLE_MUTATION=false\n'
+        app.mkdir(); (app / '.env').write_text(existing)
     if scenario == 'retry':
         (binary / 'systemctl').write_text('''#!/bin/sh
 if [ "$1" = restart ] && [ ! -f "$FIXTURE_FAILED" ]; then touch "$FIXTURE_FAILED"; exit 1; fi
@@ -213,23 +222,28 @@ exit 0
            'ZTF_APPLIANCE_PROFILE': profile, 'ZTF_ORCHESTRATOR_VERSION': 'auto', 'POSTGRES_PASSWORD': 'fixture-only',
            'FIXTURE_LOG': str(log), 'FIXTURE_STATE': str(state), 'FIXTURE_COMMIT': commit,
            'FIXTURE_FAILED': str(tmp_path / 'failed-once')}
+    env.pop('ZTF_FOUNDATION_VM_ENABLE_MUTATION', None)
+    if scenario == 'disabled':
+        env['ZTF_FOUNDATION_VM_ENABLE_MUTATION'] = 'false'
     result = subprocess.run(['bash', str(source / 'appliance/scripts/firstboot.sh')], env=env, capture_output=True, text=True)
     calls = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
-    if scenario == 'existing':
+    if scenario.startswith('existing'):
         assert result.returncode == 0 and not calls
-        assert (app / '.env').read_text() == 'ZTF_ORCHESTRATOR_VERSION=latest\nPOSTGRES_PASSWORD=keep-existing\n'
+        assert (app / '.env').read_text() == existing
         return
     if scenario == 'retry':
         assert result.returncode != 0 and (app / '.firstboot-pending').exists()
         original = (app / '.env').read_bytes()
         result = subprocess.run(['bash', str(source / 'appliance/scripts/firstboot.sh')],
-            env={**env, 'POSTGRES_PASSWORD': 'must-not-replace'}, capture_output=True, text=True)
+            env={**env, 'POSTGRES_PASSWORD': 'must-not-replace', 'ZTF_FOUNDATION_VM_ENABLE_MUTATION': 'false'}, capture_output=True, text=True)
         assert (app / '.env').read_bytes() == original
     if profile == 'airgap' and mode == 'missing':
         assert result.returncode != 0 and not (app / '.env').exists()
     else:
         assert result.returncode == 0, result.stderr
         assert 'ZTF_ORCHESTRATOR_VERSION=' + version in (app / '.env').read_text()
+        expected_gate = 'false' if scenario == 'disabled' else 'true'
+        assert 'ZTF_FOUNDATION_VM_ENABLE_MUTATION=' + expected_gate in (app / '.env').read_text()
         assert (app / '.firstboot-complete').exists() and not (app / '.firstboot-pending').exists()
         original = (app / '.env').read_bytes()
         again = subprocess.run(['bash', str(source / 'appliance/scripts/firstboot.sh')], env=env, capture_output=True)

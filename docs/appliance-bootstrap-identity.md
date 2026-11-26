@@ -32,6 +32,21 @@ there is no fallback to `latest` or another source revision.
 
 ## First-boot persistence and guided updates
 
+Fresh Standard, Airgap and Minimal appliances explicitly write
+`ZTF_FOUNDATION_VM_ENABLE_MUTATION=true` into their new `.env`. This permits
+reviewed Foundation VM deployment without a separate host-side enablement step.
+Administrator access, exact `DEPLOY FOUNDATION VM` confirmation, configured
+workflow approvals, intent validation and preflight remain required. First boot
+does not submit a deployment. Image upload remains a separate setting.
+
+Set `ZTF_FOUNDATION_VM_ENABLE_MUTATION=false` in the first-boot service environment
+to opt out before provisioning. An interrupted bootstrap retains the setting
+already saved in `.env`, even if the service environment later changes. Existing
+installations are never opted in by rerunning first boot or importing an update
+ZIP. Compose retains its disabled fallback for an existing `.env` without this
+key; an explicit saved `false` remains disabled. Previously published QCOW2
+downloads retain their original behavior until separately rebuilt.
+
 The generated `.env` contains the resolved version. The appliance Compose file
 uses that value both for its image and for the application's reported version and
 image metadata. `pull_policy: never` prevents systemd or later Compose starts

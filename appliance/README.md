@@ -31,6 +31,15 @@ a pending-bootstrap marker is retained, with no automatic image or data migratio
 Existing Build #67 QCOW2 downloads and deployed VMs are unchanged by source updates.
 See [bootstrap identity and test boundaries](../docs/appliance-bootstrap-identity.md).
 
+Fresh Standard, Airgap and Minimal bootstrap explicitly enables Foundation VM
+deployment in the generated `.env`. Administrator access, exact deployment
+confirmation, configured approvals and preflight remain enforced; no deployment
+starts automatically. A first-boot environment override of
+`ZTF_FOUNDATION_VM_ENABLE_MUTATION=false` opts out. Existing `.env` files,
+interrupted-bootstrap settings and image-upload policy are retained. Importing
+an application update does not opt in an existing installation or change a
+previously published QCOW2 artifact.
+
 ## Recommended Distribution Model
 
 See [Guided appliance updates](../docs/guided-appliance-updates.md) for the one-time
