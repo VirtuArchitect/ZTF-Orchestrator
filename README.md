@@ -52,9 +52,10 @@ Updated source builds support [bulk datacentre and cluster access](docs/scoped-o
 
 The console's Dark theme uses Windows-style neutral charcoal surfaces. Use the header Theme control to choose Dark, Light or System; your saved browser preference is retained. The existing light palette, blue/teal accents and workflow controls remain available. Earlier appliance bundles retain their original palette until updated.
 
-Reviewed **19 November 2026** against application source
-[`f33c9ed`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2).
-The corresponding consolidated appliance build is `v1.8.5-rc1-f33c9ed`.
+Reviewed **26 November 2026** against application source
+[`f9eee7e`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f9eee7e5b7c15610b4f463818bda364c907e4fd3).
+The verified **Build #72** QCOW2 profiles use factory image version
+`v1.8.5-rc1-f9eee7e5b7c1`; see [downloads and checksums](docs/appliance-build-72.md).
 Source changes, container images, offline update ZIPs and QCOW2 appliances are
 separate deliverables. Check the exact package version and checksum with your
 release maintainer; older packages are immutable.
