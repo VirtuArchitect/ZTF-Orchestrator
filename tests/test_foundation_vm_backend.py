@@ -283,6 +283,40 @@ def test_api_validation_and_controlled_job_lifecycle(client, auth_headers, monke
     assert restart.status_code == 409
 
 
+@pytest.mark.parametrize('confirmation,requires_approval', [('', False), ('DEPLOY FOUNDATION VM', True)])
+def test_enabled_deployment_retains_confirmation_and_configured_approval(client, auth_headers, monkeypatch, confirmation, requires_approval):
+    import server
+
+    monkeypatch.setattr(server, 'FOUNDATION_VM_MUTATION_ENABLED', True)
+    monkeypatch.setattr(server, '_lookup_credential_ref', _resolver)
+    def no_submit(*_args, **_kwargs):
+        pytest.fail('A blocked request must not create a deployment job')
+    monkeypatch.setattr(server._job_manager, 'submit', no_submit)
+    settings = client.post('/api/settings', json={
+        'approvalRequiredWorkflows': ['cluster-create-foundation-vm'],
+    }, headers=auth_headers)
+    assert settings.status_code == 200
+    response = client.post('/api/jobs', json={
+        'workflow': 'cluster-create-foundation-vm',
+        'configContent': _yaml(), 'configFile': 'fixture-foundation.yml',
+        'destructiveConfirmation': confirmation,
+    }, headers=auth_headers)
+    assert response.status_code == 403
+    body = response.get_json()
+    if requires_approval:
+        assert body['approvalRequired'] is True
+        assert 'requires an approved approval request' in body['error']
+    else:
+        assert 'confirmation must exactly match' in body['error']
+
+
+@pytest.mark.parametrize('role', ['operator', 'viewer'])
+def test_enabled_deployment_remains_administrator_only(monkeypatch, role):
+    import server
+    monkeypatch.setattr(server, 'FOUNDATION_VM_MUTATION_ENABLED', True)
+    assert server._foundation_vm_submission_error({}, {}, role=role) == 'Foundation VM deployment is restricted to administrators'
+
+
 def test_failed_foundation_job_can_be_restarted_with_lineage(client, auth_headers, monkeypatch):
     import server
     import time
