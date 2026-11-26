@@ -31,9 +31,9 @@ def test_dated_video_audio_is_not_relabelled_as_a_new_recording():
     assert len(review['coreParts']) == 23
     assert review['narrationReplaced'] is False
     assert {row['part'] for row in review['coreParts']
-            if row['status'] == 'narration-correction-required'} == {18, 19, 20}
+            if row['status'] == 'narration-correction-required'} == {5, 18, 19, 20, 21}
     player = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
-    assert 'Parts 18–20 contain older PE TLS/live-write defaults' in player
+    assert 'Parts 05 and 18–21 contain older PE TLS/live-write defaults' in player
     for folder in ['user-guide-videos', 'deployment-progress-video']:
         media = ROOT / 'docs/assets' / folder
         for line in (media / 'SHA256SUMS').read_text(encoding='utf-8').splitlines():

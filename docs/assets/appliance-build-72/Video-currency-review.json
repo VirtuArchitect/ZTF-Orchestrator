@@ -35,7 +35,7 @@
     {
       "part": 5,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt",
-      "status": "retained-procedure-scope",
+      "status": "narration-correction-required",
       "currentGuidance": "docs/video-current-guidance.md"
     },
     {
@@ -131,7 +131,7 @@
     {
       "part": 21,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-transcript.txt",
-      "status": "retained-procedure-scope",
+      "status": "narration-correction-required",
       "currentGuidance": "docs/video-current-guidance.md"
     },
     {

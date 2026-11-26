@@ -9636,11 +9636,11 @@
     {
       "id": "video-current-guidance",
       "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
-      "sha256": "ecd114999ce0622587e679cc34a30b23ac9968e1e2fb2eb05c81344fc33bb642",
+      "sha256": "d419f9fda959971cb27be9750bed3412ae8703ce4f456f8919269197a5d702aa",
       "inputSources": [
         {
           "path": "docs/video-current-guidance.md",
-          "sha256": "42d8f58a6249bd40b58ab6e395d8dd17fa21d765991240587190d9c7b130fa41",
+          "sha256": "1060cd68aa2c3ba7622478f8b1ce5dccdee03720fefd9203c4fdc784c83b749b",
           "normalization": "utf8-lf"
         },
         {
