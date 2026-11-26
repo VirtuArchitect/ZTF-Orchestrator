@@ -361,6 +361,10 @@ and chapter timing.
 | [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). Includes the offline player, transcripts,
 English SRT/VTT captions and chapter files. Extract the ZIP, then open `index.html`.
 
+The ZIP retains its **22 November 2026** edition. Parts 18–20 contain older
+PE TLS/live-write narration; use [current video guidance](docs/video-current-guidance.md)
+and the linked procedures before execution. Corrected narration awaits script approval.
+
 See [video transcripts and captions](docs/user-guide-videos.md).
 
 <details>
