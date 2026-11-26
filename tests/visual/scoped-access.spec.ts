@@ -17,6 +17,7 @@ async function setup(page: Page, role: string, failure = false) {
       pipelines: [{ id: 'baseline', name: 'Reviewed baseline', bindingId: 'binding', scopeIds: ['one'], steps: [{ workflow: 'config-cluster' }], executable: role === 'operator', reviewRequired: false }],
       runs: [{ id: 'receipt', pipelineId: 'baseline', status: 'success', events: [{ type: 'step_complete', data: { step: 0, status: 'success' } }], canCancel: false }], requests: [], recovery: [], drafts: []
     } })
+    if (path === '/api/access/admin/bulk') return route.fulfill({ json: { document: { version: 1, revision: 0, profiles: [{ id: 'viewer', name: 'Viewer', role: 'viewer', capabilities: ['clusters.view', 'history.view'] }, { id: 'operator', name: 'Operator', role: 'operator', capabilities: ['clusters.view', 'pipeline.execute'] }], assignments: {} }, clusters: [], catalogueFingerprint: 'fixture' } })
     if (path === '/api/access/admin') return route.fulfill({ json: { policy: { version: 1, revision: 0, scopes: [], assignments: {}, bindings: [] }, users: [{ id: 'op', username: 'example-operator', role: 'operator' }, { id: 'view', username: 'example-viewer', role: 'viewer' }], pipelines: [], requests: [], drafts: [] } })
     if (path === '/api/auth/me') return route.fulfill({ json: { username: 'fixture-' + role, role } })
     return route.fulfill({ json: {} })
@@ -67,6 +68,7 @@ test('Admin can configure scopes; Viewer execution capabilities stay disabled', 
   await setup(page, 'admin')
   await page.goto('/access-control')
   await expect(page.getByRole('heading', { name: 'Access Control', exact: true })).toBeVisible()
+  await page.getByText('Advanced legacy scopes and assignments', { exact: true }).click()
   await page.getByLabel('Account', { exact: true }).selectOption('view')
   await expect(page.getByLabel('Run reviewed pipelines', { exact: true })).toBeDisabled()
   await page.getByLabel('Account', { exact: true }).selectOption('op')

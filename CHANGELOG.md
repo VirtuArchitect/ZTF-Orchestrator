@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased source
+- Add reusable Viewer/Operator permission profiles, bulk account assignment, searchable datacentre/cluster selection, fixed selections and explicit future-cluster inheritance. Resolve execution identity internally and retain exact pipeline review, existing approvals and completed recovery work.
 - Restrict Operators and Viewers to a deny-default Operations workspace with explicit target scopes, safe status summaries and separate reviewed pipeline delegation. Add administrator Access Control, optional planning/request capabilities, fresh role checks and revocation. Preserve existing administrator pipelines, approvals, completed recovery work and the step 08-only retry; sensitive scripts and destructive recovery stay administrator-only. No new runtime dependency.
 - Load pipeline action availability from current server Governance policy; retain Configure Cluster when allowed, explain approval-blocked choices, exclude retired ZTF 2.x options and preserve unsupported saved action labels without silent substitution.
 - Organise Pipelines by existing Global Config datacenter/cluster groups, create within the selected cluster, retain legacy pipelines under Ungrouped and keep YAML targets, approvals and recovery execution unchanged.

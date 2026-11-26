@@ -436,6 +436,14 @@ async function demoResponse(request: Request) {
   if (path === '/health') return json({ status: 'healthy', version: APP_VERSION, installed: DEMO_INSTALLED_BUILD, storage: 'demo', ztf: { installed: true } })
   if (!path.startsWith('/api/')) return null
 
+  if (path === '/api/access/admin/bulk' && method === 'GET') return json({
+    document: { version: 1, revision: 0, profiles: [
+      { id: 'viewer', name: 'Viewer', role: 'viewer', capabilities: ['clusters.view', 'history.view'] },
+      { id: 'operator', name: 'Operator', role: 'operator', capabilities: ['clusters.view', 'history.view', 'pipeline.execute', 'requests.create', 'drafts.create', 'jobs.cancel_own'] },
+    ], assignments: {} },
+    clusters: [{ id: 'demo-cluster', name: 'HCI-CLUSTER-01 (simulated)', datacenter: 'Example Datacentre', datacenterId: 'demo-dc', executionReady: false }],
+    catalogueFingerprint: 'simulated-read-only-catalogue',
+  })
   if (path === '/api/access/admin' && method === 'GET') return json({
     policy: {version:1,revision:0,scopes:[],assignments:{},bindings:[]},
     users: [{id:'demo-operator',username:'demo-operator',role:'operator'},{id:'demo-viewer',username:'demo-viewer',role:'viewer'}],

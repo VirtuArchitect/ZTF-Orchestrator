@@ -10,6 +10,7 @@ from flask import Response, g, jsonify, request, stream_with_context
 import yaml
 import pe_direct
 import yaml_studio_ops
+import bulk_access
 
 LOCK = threading.RLock()
 CAPABILITIES = {
@@ -167,7 +168,7 @@ def validate_policy(value):
         ):
             raise AccessError("Invalid account assignment.", 400)
         if not string_list(item["scopeIds"], ids) or not string_list(
-            item["capabilities"], CAPABILITIES
+            item["capabilities"], CAPABILITIES | bulk_access.READ_CAPS
         ):
             raise AccessError("Unknown scope or capability.", 400)
     binding_ids = set()
@@ -182,10 +183,17 @@ def validate_policy(value):
             "approvedAt",
         }:
             raise AccessError("Invalid reviewed pipeline binding.", 400)
+        # Retain reviewed bindings for internally resolved catalogue clusters,
+        # including removed catalogue records. They never grant access by
+        # themselves: runtime scopes, account grants and intent are rechecked.
+        catalogue_ids = {
+            identity for identity in binding.get("scopeIds", [])
+            if isinstance(identity, str) and re.fullmatch(r"catalog-[a-f0-9]{32}", identity)
+        } if isinstance(binding.get("scopeIds"), list) else set()
         if (
             not ID.fullmatch(text(binding["id"], 80))
             or not ID.fullmatch(text(binding["accountId"], 80))
-            or not string_list(binding["scopeIds"], ids)
+            or not string_list(binding["scopeIds"], ids | catalogue_ids)
             or not binding["scopeIds"]
             or not isinstance(binding["fingerprint"], str)
             or not re.fullmatch("[a-f0-9]{64}", binding["fingerprint"])
@@ -231,7 +239,7 @@ class Service:
         self.s = server
         self.active_runs = set()
 
-    def policy(self):
+    def raw_policy(self):
         try:
             return validate_policy(
                 self.s._read_group_document(
@@ -243,7 +251,19 @@ class Service:
                 "Access policy is unavailable. Contact an administrator.", 503
             ) from None
 
+    def policy(self):
+        try:
+            return bulk_access.effective(self.s, self.raw_policy(), bulk_access.load(self.s))
+        except (ValueError, TypeError, KeyError, OSError):
+            raise AccessError("Access inventory is unavailable. Contact an administrator.", 503) from None
+
     def write_policy(self, value):
+        # Materialised bulk selections must never overwrite the original scopes
+        # or account grants. Existing reviewed binding operations only change
+        # bindings/revision; bulk configuration has its own revisioned document.
+        if bulk_access.load(self.s)["assignments"]:
+            raw = self.raw_policy()
+            value = {**value, "scopes": raw["scopes"], "assignments": raw["assignments"]}
         self.s.write_json(self.s.CONFIG_DIR / "access_policy.json", value)
 
     def records(self, name):
@@ -276,7 +296,8 @@ class Service:
             user["id"], {"scopeIds": [], "capabilities": []}
         )
         capabilities = (
-            set(assignment["capabilities"]) if user["role"] == "operator" else set()
+            set(assignment["capabilities"]) if user["role"] == "operator"
+            else set(assignment["capabilities"]) & bulk_access.READ_CAPS
         )
         return user, policy, assignment, capabilities
 
@@ -298,6 +319,8 @@ class Service:
             raise AccessError("Only reviewed ZTF 1.x pipelines can be delegated.", 409)
         from urllib.parse import urlparse
 
+        if any(not s["connection"].get("pe_endpoint") or not s["connection"].get("cluster_uuid") for s in scopes):
+            raise AccessError("A selected cluster has unresolved or ambiguous execution identity. Review its managed cluster record before delegation.", 409)
         by_ip = {urlparse(s["connection"]["pe_endpoint"]).hostname: s for s in scopes}
         snapshots, identities, all_scopes = {}, [], set()
         for step in pipeline["steps"]:
@@ -567,6 +590,8 @@ class Service:
     def workspace(self, actor):
         user, policy, assignment, caps = self.access(actor)
         ids = set(assignment["scopeIds"])
+        managed = user["id"] in bulk_access.load(self.s)["assignments"]
+        history_allowed = not managed or "history.view" in caps
         scopes = [
             {
                 "id": s["id"],
@@ -678,9 +703,9 @@ class Service:
             "capabilities": sorted(caps),
             "scopes": scopes,
             "pipelines": pipelines,
-            "runs": receipts,
-            "requests": requests,
-            "recovery": recovery,
+            "runs": receipts if history_allowed else [],
+            "requests": requests if history_allowed else [],
+            "recovery": recovery if history_allowed else [],
             "drafts": [
                 r
                 for r in self.records("operational_drafts.json")
@@ -778,9 +803,42 @@ def register(server):
             }
         )
 
+    @endpoint("/admin/bulk", ["GET"], ("admin",))
+    def bulk_catalogue():
+        with LOCK:
+            rows, fingerprint = bulk_access.catalogue(server, service.raw_policy())
+            return jsonify({"document": bulk_access.load(server), "clusters": rows,
+                            "catalogueFingerprint": fingerprint})
+
+    @endpoint("/admin/bulk/preview", ["POST"], ("admin",))
+    def bulk_preview():
+        data = request.get_json(silent=True) or {}
+        with LOCK:
+            return jsonify(bulk_access.preview(server, service.raw_policy(), data.get("document"),
+                bulk_access.load(server), data.get("catalogueFingerprint")))
+
+    @endpoint("/admin/bulk", ["PUT"], ("admin",))
+    def save_bulk_access():
+        data = request.get_json(silent=True) or {}
+        with LOCK, server._CREDENTIAL_ORGANIZATION_LOCK, server._operations_service.lock:
+            document = data.get("document")
+            reviewed = bulk_access.preview(server, service.raw_policy(), document,
+                bulk_access.load(server), data.get("catalogueFingerprint"))
+            if data.get("fingerprint") != reviewed["fingerprint"]:
+                raise AccessError("Review the exact access changes before saving.", 409)
+            document = {**document, "revision": document["revision"] + 1}
+            server.write_json(server.CONFIG_DIR / "bulk_access.json", document)
+            server.log.info("bulk_access_updated", extra={"action": "bulk_access_update",
+                "user": request.current_user["username"], "revision": document["revision"],
+                "profileCount": len(document["profiles"]), "assignmentCount": len(document["assignments"]),
+                "reviewFingerprint": reviewed["fingerprint"]})
+            return jsonify(document)
+
     @endpoint("/admin/policy", ["PUT"], ("admin",))
     def save_policy():
         with LOCK:
+            if bulk_access.load(server)["assignments"]:
+                raise AccessError("Use permission profiles and bulk assignments to manage access.", 409)
             proposed = validate_policy(request.get_json(silent=True))
             current = service.policy()
             if proposed["revision"] != current["revision"]:
@@ -798,7 +856,7 @@ def register(server):
                 ) or (
                     account_id in users
                     and users[account_id]["role"] == "viewer"
-                    and item["capabilities"]
+                    and set(item["capabilities"]) - bulk_access.READ_CAPS
                 ):
                     raise AccessError(
                         "Viewer accounts cannot receive execution or authoring capabilities.",
