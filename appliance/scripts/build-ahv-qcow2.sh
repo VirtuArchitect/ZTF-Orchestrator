@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${VERSION:-dev}"
+VERSION="${VERSION:-main}"
 IMAGE_LABEL="${IMAGE_LABEL:-${VERSION}}"
-ZTF_ORCHESTRATOR_VERSION="${ZTF_ORCHESTRATOR_VERSION:-latest}"
+ZTF_ORCHESTRATOR_VERSION="${ZTF_ORCHESTRATOR_VERSION:-auto}"
+ZTF_APPLIANCE_PROFILE="${ZTF_APPLIANCE_PROFILE:-standard}"
 QEMU_ACCELERATOR="${QEMU_ACCELERATOR:-tcg}"
 ZTF_CONTAINER_IMAGE="${ZTF_CONTAINER_IMAGE:-ghcr.io/virtuarchitect/ztf-orchestrator}"
 ZTF_POSTGRES_IMAGE="${ZTF_POSTGRES_IMAGE:-postgres:16-alpine}"
@@ -47,6 +48,7 @@ packer init ahv-qcow2.pkr.hcl
 packer validate \
   -var "version=${VERSION}" \
   -var "image_label=${IMAGE_LABEL}" \
+  -var "appliance_profile=${ZTF_APPLIANCE_PROFILE}" \
   -var "ztf_orchestrator_version=${ZTF_ORCHESTRATOR_VERSION}" \
   -var "ztf_container_image=${ZTF_CONTAINER_IMAGE}" \
   -var "postgres_image=${ZTF_POSTGRES_IMAGE}" \
@@ -66,6 +68,7 @@ packer validate \
 packer build \
   -var "version=${VERSION}" \
   -var "image_label=${IMAGE_LABEL}" \
+  -var "appliance_profile=${ZTF_APPLIANCE_PROFILE}" \
   -var "ztf_orchestrator_version=${ZTF_ORCHESTRATOR_VERSION}" \
   -var "ztf_container_image=${ZTF_CONTAINER_IMAGE}" \
   -var "postgres_image=${ZTF_POSTGRES_IMAGE}" \

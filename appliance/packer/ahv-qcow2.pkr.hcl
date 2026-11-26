@@ -12,6 +12,15 @@ variable "version" {
   default = "dev"
 }
 
+variable "appliance_profile" {
+  type    = string
+  default = "standard"
+  validation {
+    condition     = contains(["standard", "airgap", "minimal"], var.appliance_profile)
+    error_message = "Use standard, airgap or minimal."
+  }
+}
+
 variable "image_label" {
   type    = string
   default = "dev"
@@ -19,12 +28,16 @@ variable "image_label" {
 
 variable "ztf_orchestrator_version" {
   type    = string
-  default = "latest"
+  default = "auto"
 }
 
 variable "ztf_container_image" {
   type    = string
   default = "ghcr.io/virtuarchitect/ztf-orchestrator"
+  validation {
+    condition     = var.ztf_container_image == "ghcr.io/virtuarchitect/ztf-orchestrator"
+    error_message = "Guided appliance updates require the standard Orchestrator repository."
+  }
 }
 
 variable "postgres_image" {
@@ -136,6 +149,7 @@ build {
     environment_vars = [
       "ZTF_ORCHESTRATOR_VERSION=${var.ztf_orchestrator_version}",
       "ZTF_SOURCE_REF=${var.version}",
+      "ZTF_APPLIANCE_PROFILE=${var.appliance_profile}",
       "ZTF_CONTAINER_IMAGE=${var.ztf_container_image}",
       "ZTF_POSTGRES_IMAGE=${var.postgres_image}",
       "ZTF_BUILD_CONTAINER_IMAGE=${var.build_container_image}",
@@ -152,12 +166,14 @@ build {
       "sudo cloud-init status --wait || true",
       "while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock >/dev/null 2>&1; do echo 'Waiting for apt locks...'; sleep 5; done",
       "sudo apt-get update",
-      "sudo apt-get install -y git ca-certificates curl openssl",
-      "sudo git clone --branch ${var.version} https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source || sudo git clone https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source",
+      "sudo apt-get install -y git ca-certificates curl openssl python3",
+      "sudo git clone --no-checkout https://github.com/VirtuArchitect/ZTF-Orchestrator.git /opt/ztf-orchestrator-source",
+      "sudo git -C /opt/ztf-orchestrator-source fetch --depth=1 origin -- \"$ZTF_SOURCE_REF\"",
+      "sudo git -C /opt/ztf-orchestrator-source checkout --detach FETCH_HEAD",
       "sudo bash /opt/ztf-orchestrator-source/appliance/scripts/install-docker.sh",
-      "if [ \"$ZTF_BUILD_CONTAINER_IMAGE\" = \"true\" ]; then sudo docker build --build-arg ZTF_REPO_URL=\"$ZTF_FRAMEWORK_REPO_URL\" --build-arg ZTF_REF=\"$ZTF_FRAMEWORK_REF\" -t \"$ZTF_CONTAINER_IMAGE:$ZTF_ORCHESTRATOR_VERSION\" /opt/ztf-orchestrator-source; elif [ \"$ZTF_PULL_CONTAINER_IMAGES\" = \"true\" ]; then sudo docker pull \"$ZTF_CONTAINER_IMAGE:$ZTF_ORCHESTRATOR_VERSION\" || true; fi",
-      "if [ \"$ZTF_PULL_CONTAINER_IMAGES\" = \"true\" ]; then sudo docker pull \"$ZTF_POSTGRES_IMAGE\" || true; fi",
-      "printf 'ZTF_SOURCE_REPO=https://github.com/VirtuArchitect/ZTF-Orchestrator.git\\nZTF_LOCAL_SOURCE_DIR=/opt/ztf-orchestrator-source\\nZTF_SOURCE_REF=${var.version}\\nZTF_ORCHESTRATOR_VERSION=${var.ztf_orchestrator_version}\\nZTF_HOST_BIND=0.0.0.0\\n' | sudo tee /etc/ztf-orchestrator-appliance.env >/dev/null",
+      "if [ \"$ZTF_BUILD_CONTAINER_IMAGE\" = \"true\" ]; then image_mode=--build; elif [ \"$ZTF_PULL_CONTAINER_IMAGES\" = \"true\" ]; then image_mode=--allow-pull; else image_mode=--defer; fi; sudo python3 /opt/ztf-orchestrator-source/appliance/image_identity.py --source /opt/ztf-orchestrator-source --version \"$ZTF_ORCHESTRATOR_VERSION\" $image_mode --framework-repo \"$ZTF_FRAMEWORK_REPO_URL\" --framework-ref \"$ZTF_FRAMEWORK_REF\" --manifest /etc/ztf-orchestrator-image.json",
+      "if [ \"$ZTF_PULL_CONTAINER_IMAGES\" = \"true\" ]; then sudo docker image inspect \"$ZTF_POSTGRES_IMAGE\" >/dev/null 2>&1 || sudo docker pull \"$ZTF_POSTGRES_IMAGE\"; fi",
+      "sudo python3 /opt/ztf-orchestrator-source/appliance/scripts/write-bootstrap-env.py --manifest /etc/ztf-orchestrator-image.json --profile \"$ZTF_APPLIANCE_PROFILE\" --output /etc/ztf-orchestrator-appliance.env",
       "sudo chmod 600 /etc/ztf-orchestrator-appliance.env",
       "sudo install -m 0644 /opt/ztf-orchestrator-source/appliance/systemd/ztf-orchestrator-firstboot.service /etc/systemd/system/ztf-orchestrator-firstboot.service",
       "sudo systemctl daemon-reload",

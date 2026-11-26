@@ -18,9 +18,9 @@ on:
         required: false
         default: main
       image_version:
-        description: ZTF-Orchestrator container tag to preload and run
+        description: Versioned appliance tag; auto derives the source version and commit
         required: false
-        default: latest
+        default: auto
       qemu_accelerator:
         description: QEMU accelerator to use; tcg works on GitHub-hosted runners
         required: false
@@ -66,7 +66,31 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.profiles.outputs.matrix }}
+      source_commit: ${{ steps.identity.outputs.source_commit }}
+      image_version: ${{ steps.identity.outputs.image_version }}
     steps:
+      - uses: actions/checkout@v6
+      - name: Resolve immutable appliance identity
+        id: identity
+        env:
+          INPUT_SOURCE_REF: ${{ inputs.source_ref }}
+          INPUT_IMAGE_VERSION: ${{ inputs.image_version }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            source_ref="${INPUT_SOURCE_REF:-main}"
+            requested_version="${INPUT_IMAGE_VERSION:-auto}"
+          else
+            source_ref="${GITHUB_REF_NAME}"
+            requested_version="${GITHUB_REF_NAME}"
+          fi
+          git fetch --depth=1 origin -- "$source_ref"
+          source_commit="$(git rev-parse FETCH_HEAD)"
+          git cat-file -e "${source_commit}:appliance/image_identity.py"
+          git show "${source_commit}:package.json" > "$RUNNER_TEMP/appliance-source-package.json"
+          image_version="$(python3 -c 'import json,sys; from appliance.image_identity import version_for; print(version_for(json.load(open(sys.argv[1]))["version"],sys.argv[2],sys.argv[3]))' "$RUNNER_TEMP/appliance-source-package.json" "$source_commit" "$requested_version")"
+          echo "source_commit=${source_commit}" >> "$GITHUB_OUTPUT"
+          echo "image_version=${image_version}" >> "$GITHUB_OUTPUT"
       - name: Select profiles
         id: profiles
         run: |
@@ -108,16 +132,28 @@ jobs:
 
       - name: Resolve build inputs
         id: vars
+        env:
+          INPUT_SOURCE_REF: ${{ inputs.source_ref }}
+          INPUT_IMAGE_VERSION: ${{ inputs.image_version }}
+          INPUT_QEMU_ACCELERATOR: ${{ inputs.qemu_accelerator }}
+          INPUT_QEMU_BINARY: ${{ inputs.qemu_binary }}
+          INPUT_ZTF_FRAMEWORK_REF: ${{ inputs.ztf_framework_ref }}
+          INPUT_NKP_FRAMEWORK_REF: ${{ inputs.nkp_framework_ref }}
+          INPUT_NKP_BUNDLE_URLS: ${{ inputs.nkp_bundle_urls }}
+          INPUT_ARTIFACT_PROFILE: ${{ inputs.artifact_profile }}
+          INPUT_BUILD_CONTAINER_IMAGE: ${{ inputs.build_container_image }}
+          INPUT_PULL_CONTAINER_IMAGES: ${{ inputs.pull_container_images }}
+          INPUT_BAKE_NKP_FRAMEWORK: ${{ inputs.bake_nkp_framework }}
         run: |
           profile="${{ matrix.profile }}"
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            source_ref="${{ inputs.source_ref }}"
-            image_version="${{ inputs.image_version }}"
-            qemu_accelerator="${{ inputs.qemu_accelerator }}"
-            qemu_binary="${{ inputs.qemu_binary }}"
-            ztf_framework_ref="${{ inputs.ztf_framework_ref }}"
-            nkp_framework_ref="${{ inputs.nkp_framework_ref }}"
-            nkp_bundle_urls="${{ inputs.nkp_bundle_urls }}"
+            source_ref="${INPUT_SOURCE_REF}"
+            image_version="${INPUT_IMAGE_VERSION}"
+            qemu_accelerator="${INPUT_QEMU_ACCELERATOR}"
+            qemu_binary="${INPUT_QEMU_BINARY}"
+            ztf_framework_ref="${INPUT_ZTF_FRAMEWORK_REF}"
+            nkp_framework_ref="${INPUT_NKP_FRAMEWORK_REF}"
+            nkp_bundle_urls="${INPUT_NKP_BUNDLE_URLS}"
           else
             source_ref="${GITHUB_REF_NAME}"
             image_version="${GITHUB_REF_NAME}"
@@ -130,12 +166,14 @@ jobs:
           build_container_image="${{ matrix.build_container_image }}"
           pull_container_images="${{ matrix.pull_container_images }}"
           bake_nkp_framework="${{ matrix.bake_nkp_framework }}"
-          if [ "$profile" = "standard" ] && [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${{ inputs.artifact_profile }}" != "all" ]; then
-            build_container_image="${{ inputs.build_container_image }}"
-            pull_container_images="${{ inputs.pull_container_images }}"
-            bake_nkp_framework="${{ inputs.bake_nkp_framework }}"
+          if [ "$profile" = "standard" ] && [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${INPUT_ARTIFACT_PROFILE}" != "all" ]; then
+            build_container_image="${INPUT_BUILD_CONTAINER_IMAGE}"
+            pull_container_images="${INPUT_PULL_CONTAINER_IMAGES}"
+            bake_nkp_framework="${INPUT_BAKE_NKP_FRAMEWORK}"
           fi
           artifact_suffix="${profile}-${source_ref}"
+          source_ref="${{ needs.resolve-profiles.outputs.source_commit }}"
+          image_version="${{ needs.resolve-profiles.outputs.image_version }}"
           echo "profile=${profile}" >> "$GITHUB_OUTPUT"
           echo "profile_description=${{ matrix.description }}" >> "$GITHUB_OUTPUT"
           echo "source_ref=${source_ref}" >> "$GITHUB_OUTPUT"
@@ -189,6 +227,7 @@ jobs:
           packer validate \
             -var "version=${{ steps.vars.outputs.source_ref }}" \
             -var "image_label=${{ steps.vars.outputs.artifact_suffix }}" \
+            -var "appliance_profile=${{ steps.vars.outputs.profile }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
             -var "qemu_binary=${{ steps.vars.outputs.qemu_binary }}" \
@@ -211,6 +250,7 @@ jobs:
           packer build \
             -var "version=${{ steps.vars.outputs.source_ref }}" \
             -var "image_label=${{ steps.vars.outputs.artifact_suffix }}" \
+            -var "appliance_profile=${{ steps.vars.outputs.profile }}" \
             -var "ztf_orchestrator_version=${{ steps.vars.outputs.image_version }}" \
             -var "qemu_accelerator=${{ steps.vars.outputs.qemu_accelerator }}" \
             -var "qemu_binary=${{ steps.vars.outputs.qemu_binary }}" \

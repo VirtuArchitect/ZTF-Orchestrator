@@ -3,7 +3,7 @@ Description=ZTF-Orchestrator first-boot bootstrap
 Documentation=https://github.com/VirtuArchitect/ZTF-Orchestrator
 After=network-online.target docker.service
 Wants=network-online.target docker.service
-ConditionPathExists=!/opt/ztf-orchestrator/.env
+ConditionPathExists=!/opt/ztf-orchestrator/.firstboot-complete
 
 [Service]
 Type=oneshot
