@@ -1,6 +1,23 @@
 # ZTF Orchestrator Documentation Collection
 
-This collection brings the maintained operator guides, task procedures, runbooks, architecture, governance and API references into one PDF library. Current execution and transport guidance was reviewed on 21 November 2026 against application source `db162199f8b89a2f1a82b21581a28a7bc204ef59`. The release remains v1.8.5-rc1 prerelease. Match each document to the exact installed build.
+## Build #72 operator update - 26 November 2026
+
+[Verified Standard, Airgap and Minimal downloads, checksums and first-boot instructions](appliance-build-72.md)
+use application source `f9eee7e`. Fresh QCOW2 appliances enable reviewed Foundation VM
+deployment by default and establish a versioned rollback baseline without manual
+retagging. Administrator authorization, exact deployment confirmation, configured
+approvals and preflight remain required. Existing environment overrides are retained;
+an update ZIP does not rerun factory bootstrap. No startup action deploys a cluster.
+
+Use [pipeline datacenter/cluster organization](pipeline-organization.md),
+[workflow execution settings](workflow-execution-settings.md) and
+[PE TLS options](pe-tls-options.md) for current controls. Pipelines, approvals,
+completed recovery work and the eligible step 08-only recovery retry are preserved.
+[Video currency notes](video-current-guidance.md) identify dated narration that
+must be read with current written procedures.
+
+
+This collection brings the maintained operator guides, task procedures, runbooks, architecture, governance and API references into one PDF library. The collection retains per-document source and review dates. Affected appliance and operator guides were refreshed on 26 November 2026 against source `f9eee7e`; unchanged documents retain their earlier review evidence. The release remains v1.8.5-rc1 prerelease. Match each document to the exact installed build.
 
 Use Getting started to choose an outcome, then choose the relevant task or operational runbook. Technical and Native Foundation references describe their stated interfaces and review boundaries. A planning review is not hardware execution or production acceptance. Native Foundation Deploy is distinct from the retired Native pipeline executor option. NKP and ZTF 2.x console setup and execution are retired.
 

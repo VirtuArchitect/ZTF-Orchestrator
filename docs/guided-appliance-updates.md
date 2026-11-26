@@ -1,11 +1,29 @@
 # Guided appliance updates
 
+## Build #72 operator update - 26 November 2026
+
+[Verified Standard, Airgap and Minimal downloads, checksums and first-boot instructions](appliance-build-72.md)
+use application source `f9eee7e`. Fresh QCOW2 appliances enable reviewed Foundation VM
+deployment by default and establish a versioned rollback baseline without manual
+retagging. Administrator authorization, exact deployment confirmation, configured
+approvals and preflight remain required. Existing environment overrides are retained;
+an update ZIP does not rerun factory bootstrap. No startup action deploys a cluster.
+
+Use [pipeline datacenter/cluster organization](pipeline-organization.md),
+[workflow execution settings](workflow-execution-settings.md) and
+[PE TLS options](pe-tls-options.md) for current controls. Pipelines, approvals,
+completed recovery work and the eligible step 08-only recovery retry are preserved.
+[Video currency notes](video-current-guidance.md) identify dated narration that
+must be read with current written procedures.
+
+
 [Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word)](manuals/ZTF-Orchestrator-UAT-Update-and-Verification-v1.8.5-rc1-c660955.docx) covers guided update readiness, Native opt-in,
 compatibility results, the offline step 08-only retry rehearsal, and rollback.
 Screenshots use simulated records.
 
-Current application baseline: `a3c9c79`; consolidated appliance bundle
-`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+Current appliance downloads: [Build #72 Standard, Airgap and Minimal](appliance-build-72.md),
+reviewed 26 November 2026 at source `f9eee7e`. Historical package reference:
+`a3c9c79` / `v1.8.5-rc1-636f191` (not the current QCOW2 build). See [current build and documentation status](current-status.md).
 
 Updated source builds add **Appliance Ops → Updates → Guided Appliance Update**.
 After the host service is installed once, routine supported appliance ZIP updates

@@ -1,11 +1,28 @@
 # ZTF-Orchestrator User Guide
 
+## Build #72 operator update - 26 November 2026
+
+[Verified Standard, Airgap and Minimal downloads, checksums and first-boot instructions](appliance-build-72.md)
+use application source `f9eee7e`. Fresh QCOW2 appliances enable reviewed Foundation VM
+deployment by default and establish a versioned rollback baseline without manual
+retagging. Administrator authorization, exact deployment confirmation, configured
+approvals and preflight remain required. Existing environment overrides are retained;
+an update ZIP does not rerun factory bootstrap. No startup action deploys a cluster.
+
+Use [pipeline datacenter/cluster organization](pipeline-organization.md),
+[workflow execution settings](workflow-execution-settings.md) and
+[PE TLS options](pe-tls-options.md) for current controls. Pipelines, approvals,
+completed recovery work and the eligible step 08-only recovery retry are preserved.
+[Video currency notes](video-current-guidance.md) identify dated narration that
+must be read with current written procedures.
+
+
 For short task-specific procedures, use the [Workflow and Script Quick Guides](quick-guides/README.md),
 including the complete editable Word and PDF collection.
 
 The [console retirement procedure](console-retirement.md) describes current ZTF 1.x operation and historical integration access.
 
-Current execution and transport guidance refreshed 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
+Earlier execution and transport review: 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the [current PDF collection and dated Word/PDF editions](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
 ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; packaged builds enable the four reviewed network/encryption application paths; explicit false overrides retain planning mode. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
@@ -42,8 +59,10 @@ The visible menu depends on the signed-in user's role.
 | Role | Intended user | Access summary |
 |---|---|---|
 | Admin | Platform owner or trusted operator | Full access, including user management, audit log, settings, backup restore, approvals, and destructive record cleanup. |
-| Operator | Infrastructure operator | Can configure and execute governed workflows, scripts, schedules, pipelines, drift checks, and evidence runs. Cannot manage users or view admin-only audit screens. |
-| Viewer | Reviewer, auditor, or stakeholder | Can view operational state, configs, jobs, schedules, evidence, drift results, appliance state, NKP state, and upgrade assessments. Viewer actions are read-only where execution or mutation would occur. |
+| Operator | Infrastructure operator with explicit assigned scope. | Assigned cluster/pipeline summaries; only explicitly granted drafts, change requests, exact reviewed pipeline execution and own-run cancellation. No raw credentials/YAML/logs, arbitrary authoring, approvals or destructive recovery. |
+| Viewer | Reviewer or stakeholder with explicit assigned scope. | Assigned cluster/pipeline summaries and sanitised run/recovery status only. No execution, writes, approvals, credentials, raw configuration, raw logs or exports. |
+
+Administrators manage reusable permission profiles and multi-select datacenter/cluster assignments in **Administration > Access Control**. Existing Operator/Viewer accounts have no implicit target grants. See [scoped operations access](scoped-operations-access.md); Global Config labels alone do not authorize access.
 
 All protected pages require login. If a user opens a page their role cannot
 access, the app shows an access-denied page instead of the requested feature.

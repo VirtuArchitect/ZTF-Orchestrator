@@ -1,7 +1,8 @@
 # Docker build identity
 
-Current application baseline: `a3c9c79`; consolidated appliance bundle
-`v1.8.5-rc1-636f191`. See [current build and documentation status](current-status.md).
+Current appliance downloads: [Build #72 Standard, Airgap and Minimal](appliance-build-72.md),
+reviewed 26 November 2026 at source `f9eee7e`. Historical package reference:
+`a3c9c79` / `v1.8.5-rc1-636f191` (not the current QCOW2 build). See [current build and documentation status](current-status.md).
 
 Current source uses `v1.8.5-rc1` as its default Docker version. Local Compose
 builds now use `ztf-orchestrator:v1.8.5-rc1` rather than the ambiguous local

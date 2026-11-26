@@ -52,9 +52,10 @@ Updated source builds support [bulk datacentre and cluster access](docs/scoped-o
 
 The console's Dark theme uses Windows-style neutral charcoal surfaces. Use the header Theme control to choose Dark, Light or System; your saved browser preference is retained. The existing light palette, blue/teal accents and workflow controls remain available. Earlier appliance bundles retain their original palette until updated.
 
-Reviewed **19 November 2026** against application source
-[`f33c9ed`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f33c9ed02fc40cd40e3399fd96d5ca5a8fa386a2).
-The corresponding consolidated appliance build is `v1.8.5-rc1-f33c9ed`.
+Reviewed **26 November 2026** against application source
+[`f9eee7e`](https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f9eee7e5b7c15610b4f463818bda364c907e4fd3).
+The verified **Build #72** QCOW2 profiles use factory image version
+`v1.8.5-rc1-f9eee7e5b7c1`; see [downloads and checksums](docs/appliance-build-72.md).
 Source changes, container images, offline update ZIPs and QCOW2 appliances are
 separate deliverables. Check the exact package version and checksum with your
 release maintainer; older packages are immutable.
@@ -196,6 +197,13 @@ forensics and final workload acceptance remain separate responsibilities.
 [Part 15: start-to-finish recovery](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=15)
 
 ## Appliance Downloads
+
+**Verified Build #72 (26 November 2026)**: [Standard](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15140012194) · [Airgap](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15139016921) · [Minimal](https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15137946073).
+
+All three use source `f9eee7e` and passed checksum, disposable-guest first-boot
+and approval/confirmation checks. Fresh appliances enable governed Foundation VM
+deployment by default; startup submits no deployment. GitHub sign-in and Actions
+artifact retention apply. [Profiles, checksums and verification boundaries](docs/appliance-build-72.md).
 
 Start at the [download centre](https://www.johngoulden.de/ztf/downloads.html)
 for full appliance image locations, stable updates, controlled-UAT candidate
@@ -352,6 +360,10 @@ and chapter timing.
 [Download the complete revised 23-part video ZIP (81 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip)
 | [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). Includes the offline player, transcripts,
 English SRT/VTT captions and chapter files. Extract the ZIP, then open `index.html`.
+
+The ZIP retains its **22 November 2026** edition. Parts 05 and 18–21 contain older
+PE TLS/live-write narration; use [current video guidance](docs/video-current-guidance.md)
+and the linked procedures before execution. Corrected narration awaits script approval.
 
 See [video transcripts and captions](docs/user-guide-videos.md).
 

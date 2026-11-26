@@ -3,6 +3,13 @@
 Public entry point: [Release documents](https://virtuarchitect.github.io/ZTF-Orchestrator/releases/).
 Use that address for future public references; it is separate from the demo UI.
 
+## Verified appliance builds
+
+[Build #72 Standard, Airgap and Minimal downloads](../appliance-build-72.md)
+use source `f9eee7e` and include matching checksums. GitHub sign-in and Actions
+artifact retention apply. These are full new-VM disks, separate from offline
+application update ZIPs. Review the recorded first-boot and guard-check boundaries.
+
 ## Current Candidate
 
 **v1.8.5-rc1** is the current prerelease. Established deployment and pipeline

@@ -1,31 +1,31 @@
 {
-  "updated": "2026-11-24",
-  "applicationSource": "8524107b8ca15889ea1bcc8488fb3ad7a9da4b71",
-  "currentDocuments": 317,
-  "historicalDocuments": 35,
+  "updated": "2026-11-26",
+  "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+  "currentDocuments": 319,
+  "historicalDocuments": 56,
   "documents": [
     {
       "id": "collection-overview",
       "title": "Documentation Collection Overview",
       "category": "Getting started",
-      "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
-      "description": "This collection brings the maintained operator guides, task procedures, runbooks, architecture, governance and API references into one PDF library. Current execution and transport guidance was reviewed on 21 November 2026 against applica...",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-collection-overview-2026-11-26.pdf",
+      "description": "Documentation Collection Overview. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Getting started",
         "docs/documentation-collection.md"
       ],
       "archived": false,
       "pages": 13,
-      "bytes": 1464176,
-      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
+      "bytes": 1493900,
+      "sha256": "4ea346828cedd34406a478432f9a49246a77e512c3fe37a08dd175d98029d04e",
       "sourceDocument": "docs/documentation-collection.md",
       "inputSources": [
         {
           "path": "docs/documentation-collection.md",
-          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
+          "sha256": "30d17c5fbcd7fdbd216f8759e5c836c3065516c34c1e1bb93fb63c31fec692a7",
           "normalization": "utf8-lf"
         },
         {
@@ -34,10 +34,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21",
+      "reviewed": "2026-11-26",
       "beforeAddressAnonymisationSha256": "473fb8a8664cd92b6b90503df11ed693b1434a07b944b39376c4cde58fa788ec",
       "addressAnonymisation": "2026-11-22"
     },
@@ -242,7 +242,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-24.pdf",
       "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-24.pdf",
-      "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 identifiable AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
+      "description": "Open Configure → AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3–16 identifiable AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
       "edition": "Source snapshot 24 November 2026",
       "scope": "Reviewed against application source 8524107. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -288,7 +288,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-24.pdf",
       "pdf": "files/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-24.pdf",
-      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a 3\u201316 host AHV cluste...",
+      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a 3–16 host AHV cluste...",
       "edition": "Source snapshot 24 November 2026",
       "scope": "Reviewed against application source 8524107. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -323,7 +323,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-cluster-storage-standard-2026-11-21.pdf",
       "pdf": "files/ZTF-Orchestrator-cluster-storage-standard-2026-11-21.pdf",
-      "description": "An administrator workflow under Workflows 1.x \u2192 Configuration \u2192 Cluster Storage Standard. Run it separately after cluster deployment. It is not automatically inserted into deployment or recovery pipelines.",
+      "description": "An administrator workflow under Workflows 1.x → Configuration → Cluster Storage Standard. Run it separately after cluster deployment. It is not automatically inserted into deployment or recovery pipelines.",
       "edition": "Source snapshot 21 November 2026",
       "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -407,7 +407,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-24.pdf",
       "pdf": "files/ZTF-Orchestrator-create-virtual-switch-2026-11-24.pdf",
-      "description": "A separate administrator workflow under Configure \u2192 Create Virtual Switch, also linked from Scripts and Workflows. Route: /configure/create-virtual-switch (Scripts alias: /scripts/create-virtual-switch). Workflow ID: create-virtual-switc...",
+      "description": "A separate administrator workflow under Configure → Create Virtual Switch, also linked from Scripts and Workflows. Route: /configure/create-virtual-switch (Scripts alias: /scripts/create-virtual-switch). Workflow ID: create-virtual-switc...",
       "edition": "Source snapshot 24 November 2026",
       "scope": "Reviewed against application source 8524107. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -459,7 +459,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-dare-workflow-2026-11-21.pdf",
       "pdf": "files/ZTF-Orchestrator-dare-workflow-2026-11-21.pdf",
-      "description": "Open Configure \u2192 Enable Data-at-Rest Encryption (DARE) as an administrator. The wizard enables cluster-wide software encryption with Native KMS (Local). Software encryption cannot be disabled after enablement. Confirm licensing, release-...",
+      "description": "Open Configure → Enable Data-at-Rest Encryption (DARE) as an administrator. The wizard enables cluster-wide software encryption with Native KMS (Local). Software encryption cannot be disabled after enablement. Confirm licensing, release-...",
       "edition": "Source snapshot 21 November 2026",
       "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -492,11 +492,11 @@
       "id": "cluster-initial-configuration",
       "title": "Initial Cluster Configuration",
       "category": "Cluster operations",
-      "source": "docs/manuals/current/ZTF-Orchestrator-cluster-initial-configuration-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-cluster-initial-configuration-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-cluster-initial-configuration-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-cluster-initial-configuration-2026-11-26.pdf",
+      "description": "Initial Cluster Configuration. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Cluster operations",
         "docs/cluster-initial-configuration.md",
@@ -527,13 +527,13 @@
       ],
       "archived": false,
       "pages": 3,
-      "bytes": 537631,
-      "sha256": "be3e43a265da0a67a0998cc8e0a6821b7bfe5121bc1ed3e7fc3f788266852a13",
+      "bytes": 542545,
+      "sha256": "2416620d67eec373fb104d37630d764b08c135e9559401bf3a80a33ab7d07fde",
       "sourceDocument": "docs/cluster-initial-configuration.md",
       "inputSources": [
         {
           "path": "docs/cluster-initial-configuration.md",
-          "sha256": "4d587276844688246df2b8bd52b79622c17529c03883b3230d4e7a108315c73f",
+          "sha256": "a3d4d769e9f3190bb3a6cf519e95f04c50d6d521a1bd904d9ccf5da4c057e03d",
           "normalization": "utf8-lf"
         },
         {
@@ -542,20 +542,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "pe-post-configuration-verification",
       "title": "PE Post-Configuration Verification",
       "category": "Cluster operations",
-      "source": "docs/manuals/current/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-26.pdf",
+      "description": "PE Post-Configuration Verification. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Cluster operations",
         "docs/pe-post-configuration-verification.md",
@@ -573,13 +573,13 @@
       ],
       "archived": false,
       "pages": 3,
-      "bytes": 557928,
-      "sha256": "8dbae2bc42768bbae872f2d08b545ce35ef54faf57e91759f1f7a8a739ff63d1",
+      "bytes": 563110,
+      "sha256": "562f3a80af0db57c37f2e56e364a054552b37f5701ed2103ef20e4a6ea13d8bc",
       "sourceDocument": "docs/pe-post-configuration-verification.md",
       "inputSources": [
         {
           "path": "docs/pe-post-configuration-verification.md",
-          "sha256": "e4a4ddb93d45ea7f38d11082d97ca531b1f5b82ef5b4d5604366a4a15cef8898",
+          "sha256": "6ae88309e31f8eed67b96254b3f0122ae6a280087a918e02dc599e6030526071",
           "normalization": "utf8-lf"
         },
         {
@@ -588,10 +588,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "post-deployment-checks",
@@ -1273,11 +1273,11 @@
       "id": "current-status",
       "title": "Current documentation and appliance build",
       "category": "Getting started",
-      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-23.pdf",
-      "pdf": "files/ZTF-Orchestrator-current-status-2026-11-23.pdf",
-      "description": "Current source adds per-operation PE TLS options across supported configuration and collection paths, plus the separate Create Virtual Switch action. New deployment/recovery drafts expose an audited PE TLS exception; old saved YAML/plans...",
-      "edition": "Source snapshot 23 November 2026",
-      "scope": "Reviewed against application source 10c81ac. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-current-status-2026-11-26.pdf",
+      "description": "Current documentation and appliance build. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Getting started",
         "docs/current-status.md",
@@ -1286,13 +1286,13 @@
       ],
       "archived": false,
       "pages": 6,
-      "bytes": 752818,
-      "sha256": "6b743bb3151f8166990845b3ab50c04abb08c0ad14b0208533eea0ad856bbc92",
+      "bytes": 784379,
+      "sha256": "c385d8e2c3ff02158acf974ced9421de9835e38669c871eb1c5590ddf724f8b7",
       "sourceDocument": "docs/current-status.md",
       "inputSources": [
         {
           "path": "docs/current-status.md",
-          "sha256": "c283aa40372c9268fdc20dd85bda9a96020d4590c2c7b114c4bde0711a119ff6",
+          "sha256": "363d3b900804700fedeec55ef1467a06299e3e456da95d113ecd3a30b8db5bb9",
           "normalization": "utf8-lf"
         },
         {
@@ -1301,10 +1301,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-23"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "start-here",
@@ -1361,11 +1361,11 @@
       "id": "streamlined-console",
       "title": "Streamlined operations console",
       "category": "Getting started",
-      "source": "docs/manuals/current/ZTF-Orchestrator-streamlined-console-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-streamlined-console-2026-11-21.pdf",
-      "description": "New source adds managed-cluster records and persistent attention. Overview links these records to automation and optional PE readbacks. The existing recovery-profile list remains available; it is separate from the explicit managed cluste...",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-streamlined-console-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-streamlined-console-2026-11-26.pdf",
+      "description": "Streamlined operations console. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Getting started",
         "docs/streamlined-console.md",
@@ -1373,13 +1373,13 @@
       ],
       "archived": false,
       "pages": 8,
-      "bytes": 1123917,
-      "sha256": "097504f751d15b6bf0d2f2220d43154cb35761a6e2ec99e6c9066c4a818b1be8",
+      "bytes": 1129240,
+      "sha256": "9eaff1bb5e7698847270253b7c4b59f8372c15ac5bfb75ec1e3ee71dcda18824",
       "sourceDocument": "docs/streamlined-console.md",
       "inputSources": [
         {
           "path": "docs/streamlined-console.md",
-          "sha256": "6ae8a18ab54e3ebeb10e703ccaa0fe6d714490f11d32c165737bd5e8111b17c1",
+          "sha256": "965c944f3708bf5b3d2715a0051a750e63892c38f41e047e1323011ae906ba6f",
           "normalization": "utf8-lf"
         },
         {
@@ -1418,10 +1418,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "quick-guides-using-the-guides",
@@ -1462,11 +1462,11 @@
       "id": "admin-guide",
       "title": "ZTF-Orchestrator Admin Guide",
       "category": "Getting started",
-      "source": "docs/manuals/current/ZTF-Orchestrator-admin-guide-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-admin-guide-2026-11-21.pdf",
-      "description": "ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See console retirement. Current operations include YAM...",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-admin-guide-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-admin-guide-2026-11-26.pdf",
+      "description": "ZTF-Orchestrator Admin Guide. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Getting started",
         "docs/admin-guide.md",
@@ -1480,14 +1480,14 @@
         "new_pe_admin_credential"
       ],
       "archived": false,
-      "pages": 31,
-      "bytes": 2172123,
-      "sha256": "99c9119ebf4d6a5f1e46a50aa0bcdb9aa6fa6dbff7e783793fd53e55b1455d6d",
+      "pages": 32,
+      "bytes": 2206273,
+      "sha256": "0b411924560fca44f1e51702031c885e9174a85b2003c56ca39aa8920e23e1a1",
       "sourceDocument": "docs/admin-guide.md",
       "inputSources": [
         {
           "path": "docs/admin-guide.md",
-          "sha256": "77259ef65c853de0b46dc4b4f2f9ca739b667a338388964a04a2811aebae2e49",
+          "sha256": "53b3a945e354a24818203ceb2784a20beabd1a47180ec6b2ee7a80339df80ef1",
           "normalization": "utf8-lf"
         },
         {
@@ -1506,20 +1506,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "user-guide",
       "title": "ZTF-Orchestrator User Guide",
       "category": "Getting started",
-      "source": "docs/manuals/current/ZTF-Orchestrator-user-guide-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-user-guide-2026-11-21.pdf",
-      "description": "The console retirement procedure describes current ZTF 1.x operation and historical integration access.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-user-guide-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-user-guide-2026-11-26.pdf",
+      "description": "ZTF-Orchestrator User Guide. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Getting started",
         "docs/user-guide.md",
@@ -1552,13 +1552,13 @@
       ],
       "archived": false,
       "pages": 38,
-      "bytes": 2825008,
-      "sha256": "40f712842ed31f30f35e965575b3134c2474b5510f1ad42148f0453d8aa6c71f",
+      "bytes": 2856644,
+      "sha256": "28b90c7749ab3fb2073c75499d8a0251661979ccf6216abd4f751b8a3ada97fc",
       "sourceDocument": "docs/user-guide.md",
       "inputSources": [
         {
           "path": "docs/user-guide.md",
-          "sha256": "3cf9f4a5c1da7d013b969744d80568bd4b78af7782776c25740d7f1dc78ef57b",
+          "sha256": "6d50f11777fad8c86f34e1d18cdad9ca33db18310771ac26b7d0b1dfcb463c2f",
           "normalization": "utf8-lf"
         },
         {
@@ -1587,10 +1587,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "cluster-deployment-process",
@@ -1637,11 +1637,11 @@
       "id": "appliance-update-manager",
       "title": "Appliance Update Manager",
       "category": "Installation and updates",
-      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-update-manager-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-appliance-update-manager-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-update-manager-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-appliance-update-manager-2026-11-26.pdf",
+      "description": "Appliance Update Manager. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Installation and updates",
         "docs/appliance-update-manager.md",
@@ -1663,13 +1663,13 @@
       ],
       "archived": false,
       "pages": 12,
-      "bytes": 846463,
-      "sha256": "7517fecbe682ccc314ad472f50a73c5fd94d38c081c252e8a807c37c0ab0bb72",
+      "bytes": 851306,
+      "sha256": "0f071540ca7b8751e6362a78daa47ca817f93a6b118a606fb759eb627c390eaa",
       "sourceDocument": "docs/appliance-update-manager.md",
       "inputSources": [
         {
           "path": "docs/appliance-update-manager.md",
-          "sha256": "b8b3c5148032ab93db7dceb66d6aab7441316e9af1f1afeea771806d6d7dac7e",
+          "sha256": "a70d593ef2d9752a9f17e92d116257e879ebdf4c35b4638482bad349ed3b28a3",
           "normalization": "utf8-lf"
         },
         {
@@ -1678,20 +1678,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "docker-build-identity",
       "title": "Docker build identity",
       "category": "Installation and updates",
-      "source": "docs/manuals/current/ZTF-Orchestrator-docker-build-identity-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-docker-build-identity-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-docker-build-identity-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-docker-build-identity-2026-11-26.pdf",
+      "description": "Docker build identity. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Installation and updates",
         "docs/docker-build-identity.md",
@@ -1704,13 +1704,13 @@
       ],
       "archived": false,
       "pages": 3,
-      "bytes": 529658,
-      "sha256": "e995c87f5f8735199eee7fd09401320cd4ab64183a4e1ed6562ae99f11afe628",
+      "bytes": 535450,
+      "sha256": "cce9e87ed1204148bc1bca567a3c94aad5ff06dc8f6d6a3efbfb5818dc7670dd",
       "sourceDocument": "docs/docker-build-identity.md",
       "inputSources": [
         {
           "path": "docs/docker-build-identity.md",
-          "sha256": "f41110ecec5667802c5b31894457fa9f5551f178576ef52a3d154b4508e4c900",
+          "sha256": "9fbbc00ba6abf677afb8d4e60f23235cc7a11ca5fa8e26ffe1cf2bc12b227cf1",
           "normalization": "utf8-lf"
         },
         {
@@ -1719,20 +1719,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "guided-appliance-updates",
       "title": "Guided appliance updates",
       "category": "Installation and updates",
-      "source": "docs/manuals/current/ZTF-Orchestrator-guided-appliance-updates-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-guided-appliance-updates-2026-11-21.pdf",
-      "description": "Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word) covers guided update readiness, Native opt-in, compatibility results, the offline step 08-only retry rehearsal, and rollback. Screenshots use simulated records.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-guided-appliance-updates-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-guided-appliance-updates-2026-11-26.pdf",
+      "description": "Guided appliance updates. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Installation and updates",
         "docs/guided-appliance-updates.md",
@@ -1745,13 +1745,13 @@
       ],
       "archived": false,
       "pages": 8,
-      "bytes": 1027950,
-      "sha256": "644dac11c8e8e43b60ac5c8604d01ec55c40c69b6554dca2133bd1e64c28d2a0",
+      "bytes": 1060800,
+      "sha256": "d7365cb3668dffb0cc14c0e26c2c0483c152b5dcd2dc8b82f0c4a4127bdacbc9",
       "sourceDocument": "docs/guided-appliance-updates.md",
       "inputSources": [
         {
           "path": "docs/guided-appliance-updates.md",
-          "sha256": "f94988ab9609e6228c1f17d4e3392dbdc7d210371c7a16927236ca10a397c1b5",
+          "sha256": "ada79803f90bb1b20ac5ef884e1ed7303e252e9c5367aab55dd713ba2d5bd817",
           "normalization": "utf8-lf"
         },
         {
@@ -1770,10 +1770,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "production-disk-expansion",
@@ -1892,11 +1892,11 @@
       "id": "installation-guide",
       "title": "ZTF-Orchestrator Installation Guide",
       "category": "Installation and updates",
-      "source": "docs/manuals/current/ZTF-Orchestrator-installation-guide-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-installation-guide-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-installation-guide-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-installation-guide-2026-11-26.pdf",
+      "description": "ZTF-Orchestrator Installation Guide. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Installation and updates",
         "docs/installation-guide.md",
@@ -1934,13 +1934,13 @@
       ],
       "archived": false,
       "pages": 23,
-      "bytes": 1077014,
-      "sha256": "5e7ebac5ca4b0069cc8a5b06ab298c966790d88dd558eaf554ab186ff4de872b",
+      "bytes": 1108933,
+      "sha256": "4701169ca9ef6ad33eab0a6d5d8962a9125eac1d88f0f8e5479ffb8487c79ec8",
       "sourceDocument": "docs/installation-guide.md",
       "inputSources": [
         {
           "path": "docs/installation-guide.md",
-          "sha256": "445c0d7de7df67255a369678dae859c1cd68c57a4b4229ce5ef6092cd8617387",
+          "sha256": "07b0d7202ac182ddaf5a10d7e15a82bd56f32009d28590f8876aa72fd47e1295",
           "normalization": "utf8-lf"
         },
         {
@@ -1949,10 +1949,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "foundation-engine-dell-xc770-hci-deployment-requirements",
@@ -6552,11 +6552,11 @@
       "id": "disaster-recovery",
       "title": "Disaster Recovery: datacenters and cluster rebuilds",
       "category": "Recovery and data",
-      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-2026-11-23.pdf",
-      "pdf": "files/ZTF-Orchestrator-disaster-recovery-2026-11-23.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 23 November 2026",
-      "scope": "Reviewed against application source 10c81ac. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-disaster-recovery-2026-11-26.pdf",
+      "description": "Disaster Recovery: datacenters and cluster rebuilds. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Recovery and data",
         "docs/disaster-recovery.md",
@@ -6572,13 +6572,13 @@
       ],
       "archived": false,
       "pages": 8,
-      "bytes": 985346,
-      "sha256": "1f32e842d64771848f9fa8a8750f0d3b46584779b1f8d6968821180a6f37c888",
+      "bytes": 989754,
+      "sha256": "0b1f312c64c191c949c4c75e64cbe446fdc71da6a69842888caf22682f56a3c5",
       "sourceDocument": "docs/disaster-recovery.md",
       "inputSources": [
         {
           "path": "docs/disaster-recovery.md",
-          "sha256": "e8832b7f17ed4461d58b95133bed49d19f1be098a994a57d8580b77a386d5ed0",
+          "sha256": "395c80d3e02e9caa888c9ac2764c396e1f4be48ebbef05fd570f19b9356dc082",
           "normalization": "utf8-lf"
         },
         {
@@ -6592,20 +6592,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-23"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "disaster-recovery-setup",
       "title": "Illustrated Disaster Recovery setup",
       "category": "Recovery and data",
-      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-setup-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-disaster-recovery-setup-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-setup-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-disaster-recovery-setup-2026-11-26.pdf",
+      "description": "Illustrated Disaster Recovery setup. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Recovery and data",
         "docs/disaster-recovery-setup.md",
@@ -6620,13 +6620,13 @@
       ],
       "archived": false,
       "pages": 7,
-      "bytes": 994728,
-      "sha256": "91dec85deb0372949c3f0e73427d14d5c6be68bf7086b781d37398aa2b09c963",
+      "bytes": 999780,
+      "sha256": "9ddc25c80d3d18acc596013086388763a08528a11dce72ae60a1327e64ba6a25",
       "sourceDocument": "docs/disaster-recovery-setup.md",
       "inputSources": [
         {
           "path": "docs/disaster-recovery-setup.md",
-          "sha256": "cbd68ce913a1cf715c5769362c6b90aac9fa2642827de6e2f80c35eeaaa61ea7",
+          "sha256": "f9eefc6786b76d23bc20f6e46748dde87eccc24849b170dd3f604b26417e017a",
           "normalization": "utf8-lf"
         },
         {
@@ -6650,10 +6650,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "infrastructure-recovery",
@@ -10698,11 +10698,11 @@
       "id": "pe-local-users",
       "title": "Create Local Users (PE)",
       "category": "Security and access",
-      "source": "docs/manuals/current/ZTF-Orchestrator-pe-local-users-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-pe-local-users-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-local-users-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-pe-local-users-2026-11-26.pdf",
+      "description": "Create Local Users (PE). Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Security and access",
         "docs/pe-local-users.md",
@@ -10719,13 +10719,13 @@
       ],
       "archived": false,
       "pages": 5,
-      "bytes": 647410,
-      "sha256": "60d8f896e1fb5c341833d1757740d24482d778d75845acfc7081e9413a7e7ba5",
+      "bytes": 652894,
+      "sha256": "410f3f99408d1c0b4b6b14330483153cbc7cc65d68a8ea5294186d6851ef8989",
       "sourceDocument": "docs/pe-local-users.md",
       "inputSources": [
         {
           "path": "docs/pe-local-users.md",
-          "sha256": "cd57988e0a68cbb6a5583a0b0348da4fa60e967ca272f46f27be66e71d1d2331",
+          "sha256": "ba6e6c39453c96b44dfe9bdfd43e477050ecf831676ca6ca0dd69d7dbb0c863b",
           "normalization": "utf8-lf"
         },
         {
@@ -10734,20 +10734,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "credential-groups",
       "title": "Credential groups by datacenter and cluster",
       "category": "Security and access",
-      "source": "docs/manuals/current/ZTF-Orchestrator-credential-groups-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-credential-groups-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-credential-groups-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-credential-groups-2026-11-26.pdf",
+      "description": "Credential groups by datacenter and cluster. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Security and access",
         "docs/credential-groups.md",
@@ -10757,13 +10757,13 @@
       ],
       "archived": false,
       "pages": 5,
-      "bytes": 829753,
-      "sha256": "2dc8480c92e8eededed93565baef775fb53be041bc166b5cfe1c5156c75e46e5",
+      "bytes": 834523,
+      "sha256": "9f96b6d8ee8340e36154ae88a10e2634c9fef97856da65846d0c51b905dfab3a",
       "sourceDocument": "docs/credential-groups.md",
       "inputSources": [
         {
           "path": "docs/credential-groups.md",
-          "sha256": "3a55fced23cd7b90187fc2722e17f995dfcba3772e718edbe1172b8a75c6cd2e",
+          "sha256": "e7e3ead0803473cc102755b7f21c00f889080ee10257363a9a7908b51def917b",
           "normalization": "utf8-lf"
         },
         {
@@ -10782,10 +10782,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "credential-rotation",
@@ -11063,11 +11063,11 @@
       "id": "session-management",
       "title": "Session management",
       "category": "Security and access",
-      "source": "docs/manuals/current/ZTF-Orchestrator-session-management-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-session-management-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-session-management-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-session-management-2026-11-26.pdf",
+      "description": "Session management. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Security and access",
         "docs/session-management.md",
@@ -11101,13 +11101,13 @@
       ],
       "archived": false,
       "pages": 6,
-      "bytes": 888810,
-      "sha256": "dd9335c65caae1c0c30dfa8920b4219e9bfe28894959f80ff9ab4bc326ffe01a",
+      "bytes": 894155,
+      "sha256": "831561f497aaca997e23557d8e3e8a8e258b7203a709d0c1eabf1d36dcc4f605",
       "sourceDocument": "docs/session-management.md",
       "inputSources": [
         {
           "path": "docs/session-management.md",
-          "sha256": "b01aa22e43e14c20e3d484627c202e1053fe74a4e68c4ab28b6be36518704887",
+          "sha256": "47040ae75a822a3c679d8bcb4bab9fbd1b85240aa6cf60ff3504c4d5e9f80d00",
           "normalization": "utf8-lf"
         },
         {
@@ -11126,20 +11126,20 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "pe-login-title",
       "title": "Set Prism Login Title (PE)",
       "category": "Security and access",
-      "source": "docs/manuals/current/ZTF-Orchestrator-pe-login-title-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-pe-login-title-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-login-title-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-pe-login-title-2026-11-26.pdf",
+      "description": "Set Prism Login Title (PE). Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Security and access",
         "docs/pe-login-title.md",
@@ -11163,13 +11163,13 @@
       ],
       "archived": false,
       "pages": 4,
-      "bytes": 618611,
-      "sha256": "f70bfa41c84d843d8cd75612a9c27f09e3456e7368589a094292aba26e20028f",
+      "bytes": 623588,
+      "sha256": "e84f4d97d294dd7efc51b9dfb9e1017dc51c7fb8d560d7b701179090fc584e7d",
       "sourceDocument": "docs/pe-login-title.md",
       "inputSources": [
         {
           "path": "docs/pe-login-title.md",
-          "sha256": "c2b9942208973bde9a5a263892cee4b076e2872003c3b8fd014c012fc3aa1fe3",
+          "sha256": "bc85175f11c92eb3296115fddb973f12cb41e3fef6d5326164ce58c47d69f7e2",
           "normalization": "utf8-lf"
         },
         {
@@ -11178,10 +11178,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "guide",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "upgrade-advisor-tls",
@@ -11232,11 +11232,11 @@
       "id": "config-file-groups",
       "title": "Config files by datacenter and cluster",
       "category": "Technical reference",
-      "source": "docs/manuals/current/ZTF-Orchestrator-config-file-groups-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-config-file-groups-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-config-file-groups-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-config-file-groups-2026-11-26.pdf",
+      "description": "Config files by datacenter and cluster. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Technical reference",
         "docs/config-file-groups.md",
@@ -11244,13 +11244,13 @@
       ],
       "archived": false,
       "pages": 3,
-      "bytes": 538746,
-      "sha256": "95f44fe73eb2393a4e9cd40c18d973a4d9197dfd3b1a999341477e0b580fabfd",
+      "bytes": 544494,
+      "sha256": "eb3617b1f5d4ca0b38d9ad03d0fc2291e1087c8c66adc2ec7fd7829f66caa0c2",
       "sourceDocument": "docs/config-file-groups.md",
       "inputSources": [
         {
           "path": "docs/config-file-groups.md",
-          "sha256": "7d0f0b68df1141098937c2f1a33deb0fb81dcce8e7c0f88c5bb9c14c27866d79",
+          "sha256": "ae93104172ba84ef37aaaac49b8c54e816d7508ab8dbb4baf87215640e1fce74",
           "normalization": "utf8-lf"
         },
         {
@@ -11259,10 +11259,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "reference",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "console-retirement",
@@ -11359,11 +11359,11 @@
       "id": "live-pe-drift-monitoring",
       "title": "Live Prism Element drift monitoring",
       "category": "Technical reference",
-      "source": "docs/manuals/current/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-26.pdf",
+      "description": "Live Prism Element drift monitoring. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Technical reference",
         "docs/live-pe-drift-monitoring.md",
@@ -11375,13 +11375,13 @@
       ],
       "archived": false,
       "pages": 4,
-      "bytes": 601254,
-      "sha256": "97c5bc40c33996c79c12ce2c8d82c215913d9649e99a824c6129bd5b1e539051",
+      "bytes": 606746,
+      "sha256": "fac42efb7159e53621498236de0f33cf988c3817d9a19003d7929f107fe990f4",
       "sourceDocument": "docs/live-pe-drift-monitoring.md",
       "inputSources": [
         {
           "path": "docs/live-pe-drift-monitoring.md",
-          "sha256": "4298a6d2706a83383231ad64c9dcc961a09f9532bf3b062c44914983cea498a6",
+          "sha256": "1b2c69358fbd54431d18b74e4f73748bf9927ccf67fa5198e6972adc820b02c3",
           "normalization": "utf8-lf"
         },
         {
@@ -11390,10 +11390,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "reference",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "foundation-engine-roadmap",
@@ -11437,11 +11437,11 @@
       "id": "nutanix-upgrade-risk-advisor",
       "title": "Nutanix Upgrade Risk Advisor",
       "category": "Technical reference",
-      "source": "docs/manuals/current/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
-      "scope": "Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "source": "docs/manuals/current/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-26.pdf",
+      "description": "Nutanix Upgrade Risk Advisor. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
         "Technical reference",
         "docs/nutanix-upgrade-risk-advisor.md",
@@ -11455,13 +11455,13 @@
       ],
       "archived": false,
       "pages": 5,
-      "bytes": 660551,
-      "sha256": "74aafe08378f1ba35328507eee00c008549008913344e770dec259495f7a7c87",
+      "bytes": 665776,
+      "sha256": "afb7ffcf051042c220397397365af306815497a899f6653be47ca18535ab01c1",
       "sourceDocument": "docs/nutanix-upgrade-risk-advisor.md",
       "inputSources": [
         {
           "path": "docs/nutanix-upgrade-risk-advisor.md",
-          "sha256": "f9d67c518aa5f3be67835b249f3bd719807b4d8f0d6001a9be80cafe17ff5813",
+          "sha256": "7f3fd22f94e3c51c7863b238240e1feb1d5410422d9869f139af3edaa57a905c",
           "normalization": "utf8-lf"
         },
         {
@@ -11470,10 +11470,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "reference",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "audits-live-workflow-enablement-security-review",
@@ -11964,10 +11964,10 @@
       "id": "production-readiness-boundary",
       "title": "Production Readiness Boundary",
       "category": "Testing and governance",
-      "source": "docs/manuals/current/ZTF-Orchestrator-production-readiness-boundary-2026-11-21.pdf",
-      "pdf": "files/ZTF-Orchestrator-production-readiness-boundary-2026-11-21.pdf",
-      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
-      "edition": "Source snapshot 21 November 2026",
+      "source": "docs/manuals/current/ZTF-Orchestrator-production-readiness-boundary-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-production-readiness-boundary-2026-11-26.pdf",
+      "description": "Production Readiness Boundary. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
       "scope": "Source guidance, review criteria or test template. Test plans and documented controls do not establish completed hardware or production validation.",
       "tags": [
         "Testing and governance",
@@ -11978,13 +11978,13 @@
       ],
       "archived": false,
       "pages": 4,
-      "bytes": 557975,
-      "sha256": "57a001f0f2190009f1b8f6c465a8600983203aab249438eff3a9ebf879783424",
+      "bytes": 563439,
+      "sha256": "329eba4b23ad58279560214c432b083052f0af8ac68c0540702dfe830b09b004",
       "sourceDocument": "docs/production-readiness-boundary.md",
       "inputSources": [
         {
           "path": "docs/production-readiness-boundary.md",
-          "sha256": "ef8087bca3291d28001ccdcddf8358d9cf2264cbef400477080f0d060443e2e8",
+          "sha256": "56e0c3ef930c1b651c56809248250c800d5444e634c257501618e9f7503b9fcf",
           "normalization": "utf8-lf"
         },
         {
@@ -11993,10 +11993,10 @@
           "normalization": "binary"
         }
       ],
-      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "kind": "reference",
       "coverFile": "ztf-standard-cover.jpg",
-      "reviewed": "2026-11-21"
+      "reviewed": "2026-11-26"
     },
     {
       "id": "quick-guides-validation",
@@ -14387,7 +14387,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
       "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots-Branded.pdf",
       "description": "Find the matching console view in 117 labelled task-specific screenshots. Use alongside the full task procedures.",
-      "edition": "Branded edition \u00b7 21 November 2026",
+      "edition": "Branded edition · 21 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Captured 20 November 2026 against source 79c3ecc. Simulated initial and authoring states; no live infrastructure execution.",
       "tags": [
         "workflow",
@@ -14411,7 +14411,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
       "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated.pdf",
       "description": "Preserved earlier edition before the original ZTF cover and document formatting were restored. Choose the branded edition for current presentation.",
-      "edition": "Previous edition \u00b7 20 November 2026",
+      "edition": "Previous edition · 20 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Historical presentation of the source-reviewed 79c3ecc guide content. Superseded by the branded edition; simulated screenshot boundaries still apply.",
       "tags": [
         "archive",
@@ -14434,7 +14434,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
       "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides.pdf",
       "description": "Preserved earlier edition before the original ZTF cover and document formatting were restored. Choose the branded edition for current presentation.",
-      "edition": "Previous edition \u00b7 20 November 2026",
+      "edition": "Previous edition · 20 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Historical presentation of the source-reviewed 79c3ecc guide content. Superseded by the branded edition; simulated screenshot boundaries still apply.",
       "tags": [
         "archive",
@@ -14455,7 +14455,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
       "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Screenshots.pdf",
       "description": "Preserved earlier edition before the original ZTF cover and document formatting were restored. Choose the branded edition for current presentation.",
-      "edition": "Previous edition \u00b7 20 November 2026",
+      "edition": "Previous edition · 20 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Historical presentation of the source-reviewed 79c3ecc guide content. Superseded by the branded edition; simulated screenshot boundaries still apply.",
       "tags": [
         "archive",
@@ -14478,7 +14478,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
       "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Illustrated-Branded.pdf",
       "description": "133 task guides with prerequisites, inputs, numbered steps, verification and recovery. Includes 117 task-specific console screenshots.",
-      "edition": "Branded edition \u00b7 21 November 2026",
+      "edition": "Branded edition · 21 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Source reviewed 20 November 2026 at 79c3ecc; v1.8.5-rc1 prerelease. Screenshots are simulated. Includes separately identified retired reference notes.",
       "tags": [
         "workflow",
@@ -14505,7 +14505,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
       "pdf": "files/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
       "description": "The complete task-based collection in a compact text edition, with linked contents and operational checks.",
-      "edition": "Branded edition \u00b7 21 November 2026",
+      "edition": "Branded edition · 21 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Source reviewed 20 November 2026 at 79c3ecc. Same task coverage as the illustrated edition, without its screenshot collection.",
       "tags": [
         "workflow",
@@ -14528,7 +14528,7 @@
       "source": "docs/manuals/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf",
       "pdf": "files/ZTF-Orchestrator-Disaster-Recovery-Setup-v1.8.5-rc1.pdf",
       "description": "Link saved deployment and post-configuration automation to a recovery profile without deploying infrastructure.",
-      "edition": "Build-specific \u00b7 2 November 2026",
+      "edition": "Build-specific · 2 November 2026",
       "scope": "Earlier source edition; use the current source guides for later transport and console changes. Reviewed at a3c9c79 for v1.8.5-rc1-636f191. Earlier build reference: compare with the Administrator and User Guide for later console behaviour.",
       "tags": [
         "disaster",
@@ -15435,7 +15435,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-21.pdf",
       "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-21.pdf",
-      "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
+      "description": "Open Configure → AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3–16 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
       "edition": "Source snapshot 21 November 2026",
       "scope": "Earlier source edition. Reviewed against application source 590de8c. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -15600,7 +15600,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
       "pdf": "files/ZTF-Orchestrator-ahv-uplink-migration-2026-11-22.pdf",
-      "description": "Open Configure \u2192 AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3\u201316 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
+      "description": "Open Configure → AHV Uplink Migration as an administrator. The wizard changes physical uplink membership on one cluster of 3–16 healthy AHV hosts. Workload subnet moves and CVM backplane segmentation have separate procedures.",
       "edition": "Source snapshot 22 November 2026",
       "scope": "Earlier source edition. Reviewed against application source 173e119. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -15645,7 +15645,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
       "pdf": "files/ZTF-Orchestrator-change-virtual-switch-mtu-2026-11-21.pdf",
-      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a healthy 3\u201316 host AHV cluste...",
+      "description": "Open Advanced Automation > Scripts > Change Virtual Switch MTU as an administrator. Use the standalone action after cluster registration and any planned uplink migration. It targets the default vs0 (br0) on a healthy 3–16 host AHV cluste...",
       "edition": "Source snapshot 21 November 2026",
       "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -15679,7 +15679,7 @@
       "category": "Cluster operations",
       "source": "docs/manuals/current/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
       "pdf": "files/ZTF-Orchestrator-create-virtual-switch-2026-11-21.pdf",
-      "description": "A separate administrator workflow under Configure \u2192 Create Virtual Switch, also linked from Scripts and Workflows. Route: /configure/create-virtual-switch (Scripts alias: /scripts/create-virtual-switch). Workflow ID: create-virtual-switc...",
+      "description": "A separate administrator workflow under Configure → Create Virtual Switch, also linked from Scripts and Workflows. Route: /configure/create-virtual-switch (Scripts alias: /scripts/create-virtual-switch). Workflow ID: create-virtual-switc...",
       "edition": "Source snapshot 21 November 2026",
       "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
       "tags": [
@@ -15721,6 +15721,1122 @@
       ],
       "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
       "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "appliance-build-72",
+      "title": "Build 72 Appliance Downloads and Deployment",
+      "category": "Installation and updates",
+      "archived": false,
+      "kind": "guide",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "sourceDocument": "docs/appliance-build-72.md",
+      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-build-72-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-appliance-build-72-2026-11-26.pdf",
+      "description": "Build 72 Appliance Downloads and Deployment. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "pages": 4,
+      "bytes": 581467,
+      "sha256": "34050d469f863bd792b1de07686cebe60fdbea80ed5952ec184879ba272d46c3",
+      "reviewed": "2026-11-26",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "inputSources": [
+        {
+          "path": "docs/appliance-build-72.md",
+          "sha256": "8aa8855976b5b74cf26f2e54a08a443bd4fb2329249fb3f4db92f53e466ed507",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "coverFile": "ztf-standard-cover.jpg",
+      "tags": [
+        "Installation and updates",
+        "docs/appliance-build-72.md"
+      ]
+    },
+    {
+      "id": "video-current-guidance",
+      "title": "Video Currency and Current Operating Guidance",
+      "category": "Installation and updates",
+      "archived": false,
+      "kind": "guide",
+      "scope": "Reviewed against application source f9eee7e. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "sourceDocument": "docs/video-current-guidance.md",
+      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
+      "pdf": "files/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
+      "description": "Video Currency and Current Operating Guidance. Refreshed 26 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
+      "edition": "Source snapshot 26 November 2026",
+      "pages": 4,
+      "bytes": 591486,
+      "sha256": "d419f9fda959971cb27be9750bed3412ae8703ce4f456f8919269197a5d702aa",
+      "reviewed": "2026-11-26",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "inputSources": [
+        {
+          "path": "docs/video-current-guidance.md",
+          "sha256": "1060cd68aa2c3ba7622478f8b1ce5dccdee03720fefd9203c4fdc784c83b749b",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "coverFile": "ztf-standard-cover.jpg",
+      "tags": [
+        "Installation and updates",
+        "docs/video-current-guidance.md"
+      ]
+    },
+    {
+      "id": "cluster-initial-configuration-previous-2026-11-21",
+      "title": "Initial Cluster Configuration",
+      "category": "Cluster operations",
+      "source": "docs/manuals/current/ZTF-Orchestrator-cluster-initial-configuration-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-cluster-initial-configuration-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Cluster operations",
+        "docs/cluster-initial-configuration.md",
+        "a3c9c79",
+        "config-cluster",
+        "ClusterConfig",
+        "admin",
+        "enable_pulse",
+        "company_name",
+        "job_title",
+        "enable_pulse",
+        "directory_services",
+        "ad_directory_url",
+        "service_account_credential",
+        "role_type",
+        "entity_type",
+        "values",
+        "containers",
+        "compression_enabled",
+        "num_host_failure_to_tolerate",
+        "vlan_id",
+        "ip_config",
+        "pulse",
+        "storage_containers",
+        "active_directory",
+        "ha_reservation",
+        "None"
+      ],
+      "archived": true,
+      "pages": 3,
+      "bytes": 537631,
+      "sha256": "be3e43a265da0a67a0998cc8e0a6821b7bfe5121bc1ed3e7fc3f788266852a13",
+      "inputSources": [
+        {
+          "path": "docs/cluster-initial-configuration.md",
+          "sha256": "4d587276844688246df2b8bd52b79622c17529c03883b3230d4e7a108315c73f",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "pe-post-configuration-verification-previous-2026-11-21",
+      "title": "PE Post-Configuration Verification",
+      "category": "Cluster operations",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-pe-post-configuration-verification-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Cluster operations",
+        "docs/pe-post-configuration-verification.md",
+        "a3c9c79",
+        "admin",
+        "new_pe_admin_credential",
+        "default_pe_password",
+        "pe_credential",
+        "pe_credential",
+        "new_pe_admin_credential",
+        "SKIP",
+        "_in_gb",
+        "FAIL",
+        "SKIP"
+      ],
+      "archived": true,
+      "pages": 3,
+      "bytes": 557928,
+      "sha256": "8dbae2bc42768bbae872f2d08b545ce35ef54faf57e91759f1f7a8a739ff63d1",
+      "inputSources": [
+        {
+          "path": "docs/pe-post-configuration-verification.md",
+          "sha256": "e4a4ddb93d45ea7f38d11082d97ca531b1f5b82ef5b4d5604366a4a15cef8898",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "current-status-previous-2026-11-23",
+      "title": "Current documentation and appliance build",
+      "category": "Getting started",
+      "source": "docs/manuals/current/ZTF-Orchestrator-current-status-2026-11-23.pdf",
+      "pdf": "files/ZTF-Orchestrator-current-status-2026-11-23.pdf",
+      "description": "Current source adds per-operation PE TLS options across supported configuration and collection paths, plus the separate Create Virtual Switch action. New deployment/recovery drafts expose an audited PE TLS exception; old saved YAML/plans...",
+      "edition": "Source snapshot 23 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source 10c81ac. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Getting started",
+        "docs/current-status.md",
+        "f33c9ed",
+        "a3c9c79832efe4552cab5b208d5fbe49936dcbf8"
+      ],
+      "archived": true,
+      "pages": 6,
+      "bytes": 752818,
+      "sha256": "6b743bb3151f8166990845b3ab50c04abb08c0ad14b0208533eea0ad856bbc92",
+      "inputSources": [
+        {
+          "path": "docs/current-status.md",
+          "sha256": "c283aa40372c9268fdc20dd85bda9a96020d4590c2c7b114c4bde0711a119ff6",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-23"
+    },
+    {
+      "id": "collection-overview-previous-2026-11-21",
+      "title": "Documentation Collection Overview",
+      "category": "Getting started",
+      "source": "docs/manuals/current/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-collection-overview-2026-11-21.pdf",
+      "description": "This collection brings the maintained operator guides, task procedures, runbooks, architecture, governance and API references into one PDF library. Current execution and transport guidance was reviewed on 21 November 2026 against applica...",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Getting started",
+        "docs/documentation-collection.md"
+      ],
+      "archived": true,
+      "pages": 13,
+      "bytes": 1464176,
+      "sha256": "848b0b66d57908f98d35416645ed628d0440b2bca7e0233d91538c829ad14cf7",
+      "inputSources": [
+        {
+          "path": "docs/documentation-collection.md",
+          "sha256": "02ef7b1cfb8c372f3f61884eadfea5999bdf043a7a9947974e96f56ab26611dd",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21",
+      "beforeAddressAnonymisationSha256": "473fb8a8664cd92b6b90503df11ed693b1434a07b944b39376c4cde58fa788ec",
+      "addressAnonymisation": "2026-11-22"
+    },
+    {
+      "id": "streamlined-console-previous-2026-11-21",
+      "title": "Streamlined operations console",
+      "category": "Getting started",
+      "source": "docs/manuals/current/ZTF-Orchestrator-streamlined-console-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-streamlined-console-2026-11-21.pdf",
+      "description": "New source adds managed-cluster records and persistent attention. Overview links these records to automation and optional PE readbacks. The existing recovery-profile list remains available; it is separate from the explicit managed cluste...",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Getting started",
+        "docs/streamlined-console.md",
+        "a3c9c79"
+      ],
+      "archived": true,
+      "pages": 8,
+      "bytes": 1123917,
+      "sha256": "097504f751d15b6bf0d2f2220d43154cb35761a6e2ec99e6c9066c4a818b1be8",
+      "inputSources": [
+        {
+          "path": "docs/streamlined-console.md",
+          "sha256": "6ae8a18ab54e3ebeb10e703ccaa0fe6d714490f11d32c165737bd5e8111b17c1",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/monitor-preview/monitor-verify.png",
+          "sha256": "26987030b060118245f8df6e21d51bfcb59d0e77819a033f598df980a8b0df22",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/monitor-preview/evidence-preview.png",
+          "sha256": "f494d7c5d0e1067b64b34fb51224e4df4de9b7d8dbe2c1f93eb293a3b7da4e65",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/streamlined-console/overview.png",
+          "sha256": "b21542af8dd289f6bda7b9d0e0cb413a851fae5f640396e9e0a57ffb500ed236",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/dashboard.png",
+          "sha256": "070308a8889512989e71d3187632366c6d7164945c4b8e0f17f37175b0cb2208",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/clusters.png",
+          "sha256": "7b4f67180734de62dd8f4733efcdab157f20b01425f54c8f2e893a9957118326",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/monitor-verify.png",
+          "sha256": "fdd5ceb36e430838ccaf41e8c79088af81fe5aef6e9fcea8dced9155c73c615d",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "admin-guide-previous-2026-11-21",
+      "title": "ZTF-Orchestrator Admin Guide",
+      "category": "Getting started",
+      "source": "docs/manuals/current/ZTF-Orchestrator-admin-guide-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-admin-guide-2026-11-21.pdf",
+      "description": "ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See console retirement. Current operations include YAM...",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Getting started",
+        "docs/admin-guide.md",
+        "f33c9ed",
+        "a3c9c79",
+        "pc_user",
+        "foundation_central",
+        "pe_user",
+        "ncm_user",
+        "cvm_credential",
+        "new_pe_admin_credential"
+      ],
+      "archived": true,
+      "pages": 31,
+      "bytes": 2172123,
+      "sha256": "99c9119ebf4d6a5f1e46a50aa0bcdb9aa6fa6dbff7e783793fd53e55b1455d6d",
+      "inputSources": [
+        {
+          "path": "docs/admin-guide.md",
+          "sha256": "77259ef65c853de0b46dc4b4f2f9ca739b667a338388964a04a2811aebae2e49",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/start-here.png",
+          "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/post-configuration.png",
+          "sha256": "2d9bc6be8b60f25b5b7aec778fe1e9928027d0f164ef81a88eec0b69a80ba1c0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "user-guide-previous-2026-11-21",
+      "title": "ZTF-Orchestrator User Guide",
+      "category": "Getting started",
+      "source": "docs/manuals/current/ZTF-Orchestrator-user-guide-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-user-guide-2026-11-21.pdf",
+      "description": "The console retirement procedure describes current ZTF 1.x operation and historical integration access.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Getting started",
+        "docs/user-guide.md",
+        "f33c9ed",
+        "a3c9c79",
+        "pc_user",
+        "foundation_central",
+        "pe_user",
+        "ncm_user",
+        "cvm_credential",
+        "ipmi_config",
+        "image_nodes",
+        "apply",
+        "evidence",
+        "manual",
+        "blocked",
+        "apply",
+        "blocks",
+        "clusters",
+        "false",
+        "image_nodes",
+        "ipmi_config",
+        "ZTF_FOUNDATION_VM_IMAGE_MAX_UPLOAD",
+        "foundation_vm_options",
+        "aos_hypervisor_images",
+        "common_network_settings",
+        "create_clusters",
+        "evidenceId",
+        "native-foundation-deploy"
+      ],
+      "archived": true,
+      "pages": 38,
+      "bytes": 2825008,
+      "sha256": "40f712842ed31f30f35e965575b3134c2474b5510f1ad42148f0453d8aa6c71f",
+      "inputSources": [
+        {
+          "path": "docs/user-guide.md",
+          "sha256": "3cf9f4a5c1da7d013b969744d80568bd4b78af7782776c25740d7f1dc78ef57b",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/start-here.png",
+          "sha256": "ea9aa87aae76782e03e1fe35418e6b0805d0f74597108969ffb7e5b74d80d0e0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/config-groups.png",
+          "sha256": "2c020d9c09a091d538629833cc0b5601dee818e9e6e3084eaa5fc5ff8d8741c0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/pipeline-config-groups.png",
+          "sha256": "ce6865fcc5f5163a7385470b6851ed40e51c0e4e53edbdf56b396230abf416fa",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/pe-login-title.png",
+          "sha256": "69aac0f5916d05f88c377fedc3cb2133004eb22fb1d09dc01b80c1e1e5bb4e9e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "appliance-update-manager-previous-2026-11-21",
+      "title": "Appliance Update Manager",
+      "category": "Installation and updates",
+      "source": "docs/manuals/current/ZTF-Orchestrator-appliance-update-manager-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-appliance-update-manager-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Installation and updates",
+        "docs/appliance-update-manager.md",
+        "a3c9c79",
+        "ZTF-Orchestrator",
+        "nkp",
+        "containerImage",
+        "containerImage",
+        "SHA256SUMS",
+        "ZTF_UPDATE_PACKAGE_MAX_UPLOAD",
+        "ztf_documents",
+        "ztf-orchestrator",
+        "ztf-orchestrator-postgres",
+        "target",
+        "version",
+        "containerImage",
+        "checksum",
+        "pg_restore"
+      ],
+      "archived": true,
+      "pages": 12,
+      "bytes": 846463,
+      "sha256": "7517fecbe682ccc314ad472f50a73c5fd94d38c081c252e8a807c37c0ab0bb72",
+      "inputSources": [
+        {
+          "path": "docs/appliance-update-manager.md",
+          "sha256": "b8b3c5148032ab93db7dceb66d6aab7441316e9af1f1afeea771806d6d7dac7e",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "docker-build-identity-previous-2026-11-21",
+      "title": "Docker build identity",
+      "category": "Installation and updates",
+      "source": "docs/manuals/current/ZTF-Orchestrator-docker-build-identity-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-docker-build-identity-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Installation and updates",
+        "docs/docker-build-identity.md",
+        "a3c9c79",
+        "latest",
+        "ZTF_ORCHESTRATOR_VERSION",
+        "ZTF_ORCHESTRATOR_IMAGE",
+        "ZTF_BUILD_COMMIT",
+        "ZTF_BUILD_DATE"
+      ],
+      "archived": true,
+      "pages": 3,
+      "bytes": 529658,
+      "sha256": "e995c87f5f8735199eee7fd09401320cd4ab64183a4e1ed6562ae99f11afe628",
+      "inputSources": [
+        {
+          "path": "docs/docker-build-identity.md",
+          "sha256": "f41110ecec5667802c5b31894457fa9f5551f178576ef52a3d154b4508e4c900",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "guided-appliance-updates-previous-2026-11-21",
+      "title": "Guided appliance updates",
+      "category": "Installation and updates",
+      "source": "docs/manuals/current/ZTF-Orchestrator-guided-appliance-updates-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-guided-appliance-updates-2026-11-21.pdf",
+      "description": "Illustrated v1.8.5-rc1-c660955 UAT update and verification guide (Word) covers guided update readiness, Native opt-in, compatibility results, the offline step 08-only retry rehearsal, and rollback. Screenshots use simulated records.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Installation and updates",
+        "docs/guided-appliance-updates.md",
+        "a3c9c79",
+        "ztf-updates",
+        "ZTF_UPDATE_SERVICE_GID",
+        "__appliance_host_backup__",
+        "results",
+        "complete"
+      ],
+      "archived": true,
+      "pages": 8,
+      "bytes": 1027950,
+      "sha256": "644dac11c8e8e43b60ac5c8604d01ec55c40c69b6554dca2133bd1e64c28d2a0",
+      "inputSources": [
+        {
+          "path": "docs/guided-appliance-updates.md",
+          "sha256": "f94988ab9609e6228c1f17d4e3392dbdc7d210371c7a16927236ca10a397c1b5",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guided-appliance-updates/readiness.png",
+          "sha256": "d75720bba66f52fa353f5e0766d4662a4801e71f39bda4e7815ffaced5ab0ab2",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/update-progress.png",
+          "sha256": "b7c428b5a3a7722b3b9fa384955fd85a1a502fee421998a92db2249e1216caa0",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "installation-guide-previous-2026-11-21",
+      "title": "ZTF-Orchestrator Installation Guide",
+      "category": "Installation and updates",
+      "source": "docs/manuals/current/ZTF-Orchestrator-installation-guide-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-installation-guide-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Installation and updates",
+        "docs/installation-guide.md",
+        "a3c9c79",
+        "ZTF_REF",
+        "ZTF2_REF",
+        "ZTF2_PATH",
+        "ZTF2_COMMAND",
+        "ZTF_PATH",
+        "admin",
+        "ZTF_DATA_DIR",
+        "pip",
+        "git",
+        "ZTF_PORT",
+        "zerotouch-framework",
+        "ztf",
+        "PATH",
+        "pip",
+        "PATH",
+        "ZTF_PORT",
+        "ztfadmin",
+        "sudo",
+        "ztf-orchestrator-firstboot",
+        "pip",
+        "ZTF_DATABASE_URL",
+        "xorriso",
+        "xorriso",
+        "xorriso",
+        "mkisofs",
+        "ubuntu",
+        "admin",
+        "ZTF_NKP_PATH",
+        "ZTF_DATA_DIR",
+        "ZTF_PATH"
+      ],
+      "archived": true,
+      "pages": 23,
+      "bytes": 1077014,
+      "sha256": "5e7ebac5ca4b0069cc8a5b06ab298c966790d88dd558eaf554ab186ff4de872b",
+      "inputSources": [
+        {
+          "path": "docs/installation-guide.md",
+          "sha256": "445c0d7de7df67255a369678dae859c1cd68c57a4b4229ce5ef6092cd8617387",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "disaster-recovery-previous-2026-11-23",
+      "title": "Disaster Recovery: datacenters and cluster rebuilds",
+      "category": "Recovery and data",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-2026-11-23.pdf",
+      "pdf": "files/ZTF-Orchestrator-disaster-recovery-2026-11-23.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 23 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source 10c81ac. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Recovery and data",
+        "docs/disaster-recovery.md",
+        "a3c9c79",
+        "clusters",
+        "name",
+        "pe_credential",
+        "new_pe_admin_credential",
+        "eula",
+        "enable_pulse",
+        "RUN",
+        "Good"
+      ],
+      "archived": true,
+      "pages": 8,
+      "bytes": 985346,
+      "sha256": "1f32e842d64771848f9fa8a8750f0d3b46584779b1f8d6968821180a6f37c888",
+      "inputSources": [
+        {
+          "path": "docs/disaster-recovery.md",
+          "sha256": "e8832b7f17ed4461d58b95133bed49d19f1be098a994a57d8580b77a386d5ed0",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/overview.png",
+          "sha256": "06e4ad3aae1dd1b29c5ae0b792fb0471e3df3b8cfa403a8414a02a9531e75ae7",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-23"
+    },
+    {
+      "id": "disaster-recovery-setup-previous-2026-11-21",
+      "title": "Illustrated Disaster Recovery setup",
+      "category": "Recovery and data",
+      "source": "docs/manuals/current/ZTF-Orchestrator-disaster-recovery-setup-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-disaster-recovery-setup-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Recovery and data",
+        "docs/disaster-recovery-setup.md",
+        "a3c9c79",
+        "a3c9c79832efe4552cab5b208d5fbe49936dcbf8",
+        "config-cluster",
+        "ChangeDefaultAdminPasswordPe",
+        "CreateLocalUsersPe",
+        "SetPrismLoginTitlePe",
+        "DC01",
+        "DC01"
+      ],
+      "archived": true,
+      "pages": 7,
+      "bytes": 994728,
+      "sha256": "91dec85deb0372949c3f0e73427d14d5c6be68bf7086b781d37398aa2b09c963",
+      "inputSources": [
+        {
+          "path": "docs/disaster-recovery-setup.md",
+          "sha256": "cbd68ce913a1cf715c5769362c6b90aac9fa2642827de6e2f80c35eeaaa61ea7",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/setup-v1.8.5-rc1/01-add-datacenter.png",
+          "sha256": "02bcbd12c29e7c22dfa1cbaa9ab4483bad59ff1e4cd7cf1d36b1f1fc85f27f3e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/setup-v1.8.5-rc1/02-linked-profile.png",
+          "sha256": "08df39fe422e6352ebf6a2653c7b52a866193697424b6c089fbf6c5d733ae1df",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/disaster-recovery/setup-v1.8.5-rc1/03-reviewed-baseline.png",
+          "sha256": "d04209fbbda13983cf83392c6d7f59131d2622b7bd9d9070a2714b845a6d15e3",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "pe-local-users-previous-2026-11-21",
+      "title": "Create Local Users (PE)",
+      "category": "Security and access",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-local-users-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-pe-local-users-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Security and access",
+        "docs/pe-local-users.md",
+        "a3c9c79",
+        "CreateLocalUsersPe",
+        "AddLocalUsers",
+        "pe_tls_bypass_reason",
+        "first_name",
+        "last_name",
+        "ROLE_CLUSTER_ADMIN",
+        "ROLE_USER_ADMIN",
+        "ROLE_CLUSTER_ADMIN",
+        "ROLE_USER_ADMIN"
+      ],
+      "archived": true,
+      "pages": 5,
+      "bytes": 647410,
+      "sha256": "60d8f896e1fb5c341833d1757740d24482d778d75845acfc7081e9413a7e7ba5",
+      "inputSources": [
+        {
+          "path": "docs/pe-local-users.md",
+          "sha256": "cd57988e0a68cbb6a5583a0b0348da4fa60e967ca272f46f27be66e71d1d2331",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "credential-groups-previous-2026-11-21",
+      "title": "Credential groups by datacenter and cluster",
+      "category": "Security and access",
+      "source": "docs/manuals/current/ZTF-Orchestrator-credential-groups-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-credential-groups-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Security and access",
+        "docs/credential-groups.md",
+        "a3c9c79",
+        "DC1",
+        "AHV-Cluster-01"
+      ],
+      "archived": true,
+      "pages": 5,
+      "bytes": 829753,
+      "sha256": "2dc8480c92e8eededed93565baef775fb53be041bc166b5cfe1c5156c75e46e5",
+      "inputSources": [
+        {
+          "path": "docs/credential-groups.md",
+          "sha256": "3a55fced23cd7b90187fc2722e17f995dfcba3772e718edbe1172b8a75c6cd2e",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/credential-groups-desktop.png",
+          "sha256": "4070af0a09eed9853b73cdada73afdfa92905abeec00a61e4f2272508ca04cd9",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guided-update-completed-green.png",
+          "sha256": "5fc04998ac2f9d7b9a200fae19f98d12e5cf36865515f3f0a9462ac3a661b49e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "session-management-previous-2026-11-21",
+      "title": "Session management",
+      "category": "Security and access",
+      "source": "docs/manuals/current/ZTF-Orchestrator-session-management-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-session-management-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Security and access",
+        "docs/session-management.md",
+        "a3c9c79",
+        "pointerdown",
+        "keydown",
+        "session_revoked",
+        "targetUser",
+        "targetSessionId",
+        "currentSession",
+        "sessions",
+        "summary",
+        "recentActivityWindowSeconds",
+        "observedAt",
+        "currentSession",
+        "username",
+        "role",
+        "signedInAt",
+        "lastActivityAt",
+        "expiresAt",
+        "isCurrent",
+        "recentlyActive",
+        "uniqueUsers",
+        "totalSessions",
+        "recentlyActiveUsers",
+        "recentlyActiveSessions",
+        "ztf_sessions",
+        "session_id",
+        "last_activity_at",
+        "idx_ztf_sessions_id"
+      ],
+      "archived": true,
+      "pages": 6,
+      "bytes": 888810,
+      "sha256": "dd9335c65caae1c0c30dfa8920b4219e9bfe28894959f80ff9ab4bc326ffe01a",
+      "inputSources": [
+        {
+          "path": "docs/session-management.md",
+          "sha256": "b01aa22e43e14c20e3d484627c202e1053fe74a4e68c4ab28b6be36518704887",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/sessions.png",
+          "sha256": "cc41e6dcddb7d93b82b43e7903d0341e501092da7ce9e0ae81798bcccfe1f4fe",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/assets/guide/v1.8.5-rc1/session-revocation.png",
+          "sha256": "2a12b15da900a728fd92d3e0428b9cd0f6e34aeafd32c276689c2ae30a283f9e",
+          "normalization": "binary"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "pe-login-title-previous-2026-11-21",
+      "title": "Set Prism Login Title (PE)",
+      "category": "Security and access",
+      "source": "docs/manuals/current/ZTF-Orchestrator-pe-login-title-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-pe-login-title-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Security and access",
+        "docs/pe-login-title.md",
+        "a3c9c79",
+        "SetPrismLoginTitlePe",
+        "CUSTOM_LOGIN_SCREEN",
+        "product_title",
+        "pe_admin_current",
+        "pe_credential",
+        "prism_login_title_verify_tls",
+        "false",
+        "false",
+        "name",
+        "config-cluster",
+        "changed",
+        "previous_title",
+        "requested_title",
+        "verified_title",
+        "previous_title",
+        "null"
+      ],
+      "archived": true,
+      "pages": 4,
+      "bytes": 618611,
+      "sha256": "f70bfa41c84d843d8cd75612a9c27f09e3456e7368589a094292aba26e20028f",
+      "inputSources": [
+        {
+          "path": "docs/pe-login-title.md",
+          "sha256": "c2b9942208973bde9a5a263892cee4b076e2872003c3b8fd014c012fc3aa1fe3",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "guide",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "config-file-groups-previous-2026-11-21",
+      "title": "Config files by datacenter and cluster",
+      "category": "Technical reference",
+      "source": "docs/manuals/current/ZTF-Orchestrator-config-file-groups-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-config-file-groups-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Technical reference",
+        "docs/config-file-groups.md",
+        "a3c9c79"
+      ],
+      "archived": true,
+      "pages": 3,
+      "bytes": 538746,
+      "sha256": "95f44fe73eb2393a4e9cd40c18d973a4d9197dfd3b1a999341477e0b580fabfd",
+      "inputSources": [
+        {
+          "path": "docs/config-file-groups.md",
+          "sha256": "7d0f0b68df1141098937c2f1a33deb0fb81dcce8e7c0f88c5bb9c14c27866d79",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "reference",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "live-pe-drift-monitoring-previous-2026-11-21",
+      "title": "Live Prism Element drift monitoring",
+      "category": "Technical reference",
+      "source": "docs/manuals/current/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-live-pe-drift-monitoring-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Technical reference",
+        "docs/live-pe-drift-monitoring.md",
+        "a3c9c79",
+        "pe_tls_bypass_reason",
+        "SSL_CERT_FILE",
+        "enable",
+        "SSL_CERT_FILE"
+      ],
+      "archived": true,
+      "pages": 4,
+      "bytes": 601254,
+      "sha256": "97c5bc40c33996c79c12ce2c8d82c215913d9649e99a824c6129bd5b1e539051",
+      "inputSources": [
+        {
+          "path": "docs/live-pe-drift-monitoring.md",
+          "sha256": "4298a6d2706a83383231ad64c9dcc961a09f9532bf3b062c44914983cea498a6",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "reference",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "nutanix-upgrade-risk-advisor-previous-2026-11-21",
+      "title": "Nutanix Upgrade Risk Advisor",
+      "category": "Technical reference",
+      "source": "docs/manuals/current/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-nutanix-upgrade-risk-advisor-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Reviewed against application source db16219. Match the guide to the installed build and retain the procedure-specific approval and validation boundaries.",
+      "tags": [
+        "Technical reference",
+        "docs/nutanix-upgrade-risk-advisor.md",
+        "a3c9c79",
+        "enabled",
+        "blocked",
+        "warning",
+        "review",
+        "unknown",
+        "clear"
+      ],
+      "archived": true,
+      "pages": 5,
+      "bytes": 660551,
+      "sha256": "74aafe08378f1ba35328507eee00c008549008913344e770dec259495f7a7c87",
+      "inputSources": [
+        {
+          "path": "docs/nutanix-upgrade-risk-advisor.md",
+          "sha256": "f9d67c518aa5f3be67835b249f3bd719807b4d8f0d6001a9be80cafe17ff5813",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "reference",
+      "coverFile": "ztf-standard-cover.jpg",
+      "reviewed": "2026-11-21"
+    },
+    {
+      "id": "production-readiness-boundary-previous-2026-11-21",
+      "title": "Production Readiness Boundary",
+      "category": "Testing and governance",
+      "source": "docs/manuals/current/ZTF-Orchestrator-production-readiness-boundary-2026-11-21.pdf",
+      "pdf": "files/ZTF-Orchestrator-production-readiness-boundary-2026-11-21.pdf",
+      "description": "Current application baseline: a3c9c79; consolidated appliance bundle v1.8.5-rc1-636f191. See current build and documentation status.",
+      "edition": "Source snapshot 21 November 2026",
+      "scope": "Earlier source edition. Source guidance, review criteria or test template. Test plans and documented controls do not establish completed hardware or production validation.",
+      "tags": [
+        "Testing and governance",
+        "docs/production-readiness-boundary.md",
+        "a3c9c79",
+        "apply",
+        "destroy"
+      ],
+      "archived": true,
+      "pages": 4,
+      "bytes": 557975,
+      "sha256": "57a001f0f2190009f1b8f6c465a8600983203aab249438eff3a9ebf879783424",
+      "inputSources": [
+        {
+          "path": "docs/production-readiness-boundary.md",
+          "sha256": "ef8087bca3291d28001ccdcddf8358d9cf2264cbef400477080f0d060443e2e8",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ],
+      "applicationSource": "db162199f8b89a2f1a82b21581a28a7bc204ef59",
+      "kind": "reference",
       "coverFile": "ztf-standard-cover.jpg",
       "reviewed": "2026-11-21"
     }

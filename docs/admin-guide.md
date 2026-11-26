@@ -1,6 +1,23 @@
 # ZTF-Orchestrator Admin Guide
 
-Current execution and transport guidance refreshed 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the refreshed [Administrator and User Guide (Word/PDF)](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
+## Build #72 operator update - 26 November 2026
+
+[Verified Standard, Airgap and Minimal downloads, checksums and first-boot instructions](appliance-build-72.md)
+use application source `f9eee7e`. Fresh QCOW2 appliances enable reviewed Foundation VM
+deployment by default and establish a versioned rollback baseline without manual
+retagging. Administrator authorization, exact deployment confirmation, configured
+approvals and preflight remain required. Existing environment overrides are retained;
+an update ZIP does not rerun factory bootstrap. No startup action deploys a cluster.
+
+Use [pipeline datacenter/cluster organization](pipeline-organization.md),
+[workflow execution settings](workflow-execution-settings.md) and
+[PE TLS options](pe-tls-options.md) for current controls. Pipelines, approvals,
+completed recovery work and the eligible step 08-only recovery retry are preserved.
+[Video currency notes](video-current-guidance.md) identify dated narration that
+must be read with current written procedures.
+
+
+Earlier execution and transport review: 21 November 2026 against application source `db16219`. The earlier illustrated manual review was 19 November 2026 at `f33c9ed`; its original edition remains a dated reference. Use the [current PDF collection and dated Word/PDF editions](manuals/README.md), [current build status](current-status.md) and [light-mode screenshot provenance](assets/guide/2026-11-19/README.md).
 
 ZTF 1.x remains the pipeline executor. Native pipeline executor opt-in, NKP and ZTF 2.x console execution are retired; references below to earlier integration screens are historical. See [console retirement](console-retirement.md). Current operations include YAML Studio, Recover Cluster/Resume Recovery and guarded step 08-only retry. PE-direct uplink/DARE retain approval and verification; packaged builds enable the four reviewed network/encryption application paths; explicit false overrides retain planning mode. v1.8.5-rc1 remains prerelease; v1.8.4 remains Latest stable. Obtain exact commit-specific packages through the release maintainer.
 
@@ -94,14 +111,18 @@ Guide for what to configure and operate after installation.
 
 ## Roles And Permissions
 
+Administrators manage reusable permission profiles and multi-select datacenter/cluster assignments in **Administration > Access Control**. Existing Operator/Viewer accounts have no implicit target grants. See [scoped operations access](scoped-operations-access.md); Global Config labels alone do not authorize access.
+
+
+
 ZTF-Orchestrator uses role-based access control. All protected screens require
 a valid session token.
 
 | Role | Intended user | Capabilities |
 |---|---|---|
 | Admin | Platform owner, lead operator, or trusted maintainer. | Full access to settings, users, approvals, jobs, configs, evidence, audit log, backup restore, and cleanup actions. |
-| Operator | Infrastructure engineer running approved workflows. | Can prepare configs, run workflows, scripts, schedules, pipelines, drift checks, and evidence tasks where allowed. Cannot manage users or access admin-only audit screens. |
-| Viewer | Auditor, stakeholder, or handover reviewer. | Can inspect dashboard, configs, jobs, schedules, evidence, drift, appliance state, upgrade assessments, and operational history. Mutation is blocked. |
+| Operator | Infrastructure operator with explicit assigned scope. | Assigned cluster/pipeline summaries; only explicitly granted drafts, change requests, exact reviewed pipeline execution and own-run cancellation. No raw credentials/YAML/logs, arbitrary authoring, approvals or destructive recovery. |
+| Viewer | Reviewer or stakeholder with explicit assigned scope. | Assigned cluster/pipeline summaries and sanitised run/recovery status only. No execution, writes, approvals, credentials, raw configuration, raw logs or exports. |
 
 Use the lowest role that allows the work. Admin accounts should be limited and
 protected because they can change runtime settings, manage users, approve work,

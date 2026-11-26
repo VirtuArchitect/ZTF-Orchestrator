@@ -8,7 +8,9 @@
       "category": "Getting started",
       "sourceDocument": "docs/documentation-collection.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "admin-guide",
@@ -16,7 +18,9 @@
       "category": "Getting started",
       "sourceDocument": "docs/admin-guide.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "ahv-uplink-migration",
@@ -34,7 +38,9 @@
       "category": "Installation and updates",
       "sourceDocument": "docs/appliance-update-manager.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "change-virtual-switch-mtu",
@@ -60,7 +66,9 @@
       "category": "Cluster operations",
       "sourceDocument": "docs/cluster-initial-configuration.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "cluster-operations",
@@ -84,7 +92,9 @@
       "category": "Technical reference",
       "sourceDocument": "docs/config-file-groups.md",
       "archived": false,
-      "kind": "reference"
+      "kind": "reference",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "console-retirement",
@@ -110,7 +120,9 @@
       "category": "Security and access",
       "sourceDocument": "docs/credential-groups.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "credential-rotation",
@@ -127,8 +139,8 @@
       "sourceDocument": "docs/current-status.md",
       "archived": false,
       "kind": "guide",
-      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010",
-      "reviewed": "2026-11-23"
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "dare-workflow",
@@ -152,7 +164,9 @@
       "category": "Recovery and data",
       "sourceDocument": "docs/disaster-recovery-setup.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "disaster-recovery",
@@ -161,8 +175,8 @@
       "sourceDocument": "docs/disaster-recovery.md",
       "archived": false,
       "kind": "guide",
-      "reviewed": "2026-11-23",
-      "applicationSource": "10c81ac55719dc41ca76ef86daffd27f0551b010"
+      "reviewed": "2026-11-26",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3"
     },
     {
       "id": "docker-build-identity",
@@ -170,7 +184,9 @@
       "category": "Installation and updates",
       "sourceDocument": "docs/docker-build-identity.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "foundation-central-validation",
@@ -194,7 +210,9 @@
       "category": "Installation and updates",
       "sourceDocument": "docs/guided-appliance-updates.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "infrastructure-recovery",
@@ -218,7 +236,9 @@
       "category": "Installation and updates",
       "sourceDocument": "docs/installation-guide.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "live-pe-drift-monitoring",
@@ -226,7 +246,9 @@
       "category": "Technical reference",
       "sourceDocument": "docs/live-pe-drift-monitoring.md",
       "archived": false,
-      "kind": "reference"
+      "kind": "reference",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "nginx-tls",
@@ -250,7 +272,9 @@
       "category": "Technical reference",
       "sourceDocument": "docs/nutanix-upgrade-risk-advisor.md",
       "archived": false,
-      "kind": "reference"
+      "kind": "reference",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "operator-controlled-uat-readiness",
@@ -290,7 +314,9 @@
       "category": "Security and access",
       "sourceDocument": "docs/pe-local-users.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "pe-login-title",
@@ -298,7 +324,9 @@
       "category": "Security and access",
       "sourceDocument": "docs/pe-login-title.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "pe-post-configuration-verification",
@@ -306,7 +334,9 @@
       "category": "Cluster operations",
       "sourceDocument": "docs/pe-post-configuration-verification.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "pe-tls-options",
@@ -354,7 +384,9 @@
       "category": "Testing and governance",
       "sourceDocument": "docs/production-readiness-boundary.md",
       "archived": false,
-      "kind": "reference"
+      "kind": "reference",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "recovery-profile-management",
@@ -394,7 +426,9 @@
       "category": "Security and access",
       "sourceDocument": "docs/session-management.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "start-here",
@@ -410,7 +444,9 @@
       "category": "Getting started",
       "sourceDocument": "docs/streamlined-console.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "systemd",
@@ -450,7 +486,9 @@
       "category": "Getting started",
       "sourceDocument": "docs/user-guide.md",
       "archived": false,
-      "kind": "guide"
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     },
     {
       "id": "validation-status",
@@ -2651,6 +2689,26 @@
       "category": "Technical reference",
       "archived": false,
       "kind": "reference"
+    },
+    {
+      "id": "appliance-build-72",
+      "title": "Build 72 Appliance Downloads and Deployment",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/appliance-build-72.md",
+      "archived": false,
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
+    },
+    {
+      "id": "video-current-guidance",
+      "title": "Video Currency and Current Operating Guidance",
+      "category": "Installation and updates",
+      "sourceDocument": "docs/video-current-guidance.md",
+      "archived": false,
+      "kind": "guide",
+      "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+      "reviewed": "2026-11-26"
     }
   ]
 }

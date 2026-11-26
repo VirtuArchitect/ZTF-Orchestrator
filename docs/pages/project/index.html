@@ -125,9 +125,9 @@ header.ztf-site-header {
     <section class="status-section" id="status" aria-labelledby="status-title">
       <div class="wrap status-grid">
         <div>
-          <p class="eyebrow">Repository status · <time datetime="2026-11-19">19 November 2026</time></p>
+          <p class="eyebrow">Repository status · <time datetime="2026-11-26">26 November 2026</time></p>
           <h2 id="status-title">Current console, clear release channels</h2>
-          <p>Latest reviewed application source: <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/db162199f8b89a2f1a82b21581a28a7bc204ef59"><code>db16219</code></a>. YAML Studio now brings cluster context, guided forms, authoring checks and reviewed pipeline handoff into one workspace.</p>
+          <p>Latest reviewed application source: <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/commit/f9eee7e5b7c15610b4f463818bda364c907e4fd3"><code>f9eee7e</code></a>. YAML Studio now brings cluster context, guided forms, authoring checks and reviewed pipeline handoff into one workspace.</p>
         </div>
         <aside class="status-note" aria-label="Release and execution scope">
           <p><strong>v1.8.5-rc1 is the current prerelease.</strong> v1.8.4 remains the latest stable release. Source updates and versioned appliance packages are separate; check the exact package version before updating.</p>
@@ -168,7 +168,7 @@ header.ztf-site-header {
         <article>
           <span class="step" aria-hidden="true">05</span>
           <h3>Plan PE-direct configuration</h3>
-          <p>AHV Uplink Migration supports per-host NIC assignments through pinned CVM SSH. DARE supports PE-direct enablement with an existing Local KMS. Both preserve independent approval and verification; live writes default to off pending environment validation.</p>
+          <p>AHV Uplink Migration supports per-host NIC assignments through pinned CVM SSH. DARE supports PE-direct enablement with an existing Local KMS. Packaged appliances enable reviewed live application by default; explicit false host overrides retain planning mode. Independent approval, confirmation and verification remain required. Validate the installed version and hardware for your environment.</p>
           <div class="card-links"><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/ahv-uplink-migration.md">Uplink migration guide <span aria-hidden="true">↗</span></a><a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/dare-workflow.md">DARE guide <span aria-hidden="true">↗</span></a></div>
         </article>
         <article>
@@ -193,6 +193,20 @@ header.ztf-site-header {
           <img src="demo-overview-light.png" width="1600" height="1050" loading="lazy" alt="ZTF-Orchestrator Overview in light mode with shortcuts for deployment, configuration, recovery and monitoring, plus a simulated managed cluster record">
           <figcaption>Light-mode Overview captured from the interactive demo. All records are simulated; demo and video examples do not establish hardware validation.</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <section class="wrap resources" id="appliance-downloads" aria-labelledby="appliance-downloads-title">
+      <div><p class="eyebrow">Verified 26 November 2026</p><h2 id="appliance-downloads-title">Build #72 appliance downloads</h2>
+      <p>Standard, Airgap and Minimal use source <code>f9eee7e</code>. Fresh appliances enable reviewed Foundation VM deployment by default, with administrator authorization, exact confirmation and configured approvals. Startup submits no deployment.</p>
+      <p>Checksums, first boot and 36 HTTP guard checks passed in disposable QEMU/KVM guests. AHV import and live hardware deployment remain separate acceptance checks. These are release-candidate images.</p>
+      <p>GitHub sign-in is required. Actions retention applies; retain a verified copy.</p></div>
+      <div class="resource-links">
+        <a id="build72-standard" href="https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15140012194">Build #72 Standard QCOW2</a>
+        <a id="build72-airgap" href="https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15139016921">Build #72 Airgap QCOW2</a>
+        <a id="build72-minimal" href="https://github.com/VirtuArchitect/ZTF-Orchestrator/actions/runs/45857730316/artifacts/15137946073">Build #72 Minimal QCOW2</a>
+        <a href="./documentation/?doc=appliance-build-72">Profiles, SHA-256 checksums and first-boot guidance (PDF)</a>
+        <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/appliance-build-72.md">Build #72 verification and deployment guide</a>
       </div>
     </section>
 
@@ -221,6 +235,7 @@ header.ztf-site-header {
         <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/pe-health-reporting.md">PE health evidence and collection diagnostics <span aria-hidden="true">↗</span></a>
         <a href="./tutorials/">Video walkthroughs <span aria-hidden="true">↗</span></a>
         <a id="series-zip-download" href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip">Complete corrected 23-part video ZIP (81 MiB) <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator/blob/main/docs/video-current-guidance.md">Before using the dated video ZIP: current guidance for Parts 05 and 18–21</a>
         <a id="series-zip-checksum" href="https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256">Video ZIP: SHA-256 checksum <span aria-hidden="true">↗</span></a>
         <a href="./releases/">Release documentation <span aria-hidden="true">↗</span></a>
       </div>
@@ -229,7 +244,7 @@ header.ztf-site-header {
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
-      <p>ZTF-Orchestrator is an independent community project for Nutanix workflows.</p>
+      <p>ZTF-Orchestrator is an independent project for Nutanix workflows.</p>
       <a href="https://github.com/VirtuArchitect/ZTF-Orchestrator">View the GitHub repository <span aria-hidden="true">↗</span></a>
     </div>
   </footer>
