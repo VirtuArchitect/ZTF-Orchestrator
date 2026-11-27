@@ -17,17 +17,23 @@ completed recovery work and the eligible step 08-only recovery retry are preserv
 must be read with current written procedures.
 
 
-**v1.8.5-rc1 | 22 November 2026 | 23 videos | approximately 40 minutes**
+**v1.8.5-rc1 | 27 November 2026 | 23 core videos plus the separate extended Part 23**
 
 [Watch the refreshed series](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00).
 The light-mode player provides Joanna studio narration, burned-in English captions,
 MP4 downloads, transcripts, SRT/VTT captions and seekable chapters. After opening a
 transcript, use Back to return to the same part and timestamp, paused.
 
-[Download all 23 revised videos (ZIP, 81 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip) |
-[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256).
+[Download all 23 videos (27 November 2026 ZIP)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip) |
+[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256).
 Includes an offline player, transcripts, English SRT/VTT captions and chapter files.
 Extract the ZIP completely, then open `index.html`.
+
+## Current narration revision: 27 November 2026
+
+Parts **05 and 18–21** use the five approved replacement scripts and the same Joanna voice. Light-mode illustrated controls, burned-in English captions, transcripts, SRT/VTT and all five chapter sets were rebuilt against actual speech timings. The new recordings explain per-operation PE TLS exceptions and current live-application defaults while preserving identity, approval and verification requirements.
+
+The other 18 core videos and the separate extended Part 23 are unchanged. The new 23-part ZIP includes the five replacements. ZIP revision 2 uses LF checksum files for direct Windows and Linux verification; the videos are unchanged from the initial 27 November archive. Earlier ZIPs remain available as dated editions. [Current verification](assets/user-guide-videos/Narration-refresh-verification.json).
 
 ## Extended walkthrough: Part 23
 
@@ -45,7 +51,7 @@ and DARE follow as separate governed workflows, preserving all twelve steps.
 The existing 22 November 23-part ZIP is unchanged and does not contain this
 extended walkthrough. Existing Parts 00–22 and their URLs are retained.
 
-## Revised introductions and Foundation coverage
+## Retained 22 November introductions and Foundation coverage
 
 Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator.
 
@@ -56,7 +62,7 @@ example while showing Foundation Central associated with Prism Central and
 standalone Foundation Central Appliance as separate deployment paths. Part 02
 retains its three-workflow comparison. Recovery-profile instructions retain their
 Foundation VM scope. Earlier picture/caption audits below describe the historical
-19 November edition; [current verification](assets/user-guide-videos/Update-verification.json)
+19 November edition; [22 November verification](assets/user-guide-videos/Update-verification.json)
 and the [anonymisation report](assets/user-guide-videos/Anonymisation-report.json)
 cover this revision. No live infrastructure was changed.
 

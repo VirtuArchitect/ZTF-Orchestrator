@@ -1,5 +1,5 @@
-00:00:00.000 Open the local path
-00:00:21.160 Understand trust and identity
-00:00:41.848 Check readiness and ownership
-00:01:02.925 Approve an irreversible change
-00:01:23.436 Verify and retain keys
+00:00:00.000 Use the PE-direct Local KMS path
+00:00:21.711 Review the per-run PE TLS choice
+00:00:45.087 Verify encryption readiness
+00:01:06.377 Enablement is irreversible
+00:01:31.215 Verify configuration and key recovery separately

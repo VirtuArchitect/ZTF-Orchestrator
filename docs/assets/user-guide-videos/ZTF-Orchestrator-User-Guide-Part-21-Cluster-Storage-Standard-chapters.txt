@@ -1,5 +1,5 @@
-00:00:00.000 Define this cluster's storage
-00:00:19.925 Discover the exact default
-00:00:40.656 Review dependencies and approval
-00:00:59.262 Verify before cleanup
-00:01:17.543 Stop on uncertainty
+00:00:00.000 Prepare three distinct replacement containers
+00:00:34.251 Discover the exact default container
+00:00:55.387 Approval binds the YAML and filename
+00:01:13.338 Verify existing containers, then create missing ones
+00:01:31.662 Reconcile an uncertain result before continuation

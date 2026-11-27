@@ -1,2 +1,8 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# WebVTT cue blocks end with a blank separator line.
+*.vtt whitespace=-blank-at-eof
+
+# Keep the published media checksum reference identical across checkouts.
+docs/assets/user-guide-videos/SHA256SUMS text eol=lf

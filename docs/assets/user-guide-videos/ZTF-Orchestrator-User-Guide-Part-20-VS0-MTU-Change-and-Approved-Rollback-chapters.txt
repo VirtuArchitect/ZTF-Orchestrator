@@ -1,5 +1,5 @@
-00:00:00.000 Choose the correct action
-00:00:22.284 Prepare the physical path
-00:00:41.886 Preflight and approve
-00:01:02.957 Verify the actual result
-00:01:21.700 Roll back with fresh approval
+00:00:00.000 Keep PE and PC trust policies separate
+00:00:27.498 Plan physical uplink MTU 1500 to 9000
+00:00:47.320 Inspect every host before approval
+00:01:13.009 Verify host readbacks and the physical network
+00:01:31.814 Settle the original task before rollback

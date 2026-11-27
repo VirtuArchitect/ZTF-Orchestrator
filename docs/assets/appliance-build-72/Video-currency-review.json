@@ -1,5 +1,5 @@
 {
-  "reviewed": "2026-11-26",
+  "reviewed": "2026-11-27",
   "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
   "coreParts": [
     {
@@ -35,8 +35,9 @@
     {
       "part": 5,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt",
-      "status": "narration-correction-required",
-      "currentGuidance": "docs/video-current-guidance.md"
+      "status": "narration-refreshed-and-verified",
+      "currentGuidance": "docs/video-current-guidance.md",
+      "verification": "docs/assets/user-guide-videos/Narration-refresh-verification.json"
     },
     {
       "part": 6,
@@ -113,26 +114,30 @@
     {
       "part": 18,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch-transcript.txt",
-      "status": "narration-correction-required",
-      "currentGuidance": "docs/video-current-guidance.md"
+      "status": "narration-refreshed-and-verified",
+      "currentGuidance": "docs/video-current-guidance.md",
+      "verification": "docs/assets/user-guide-videos/Narration-refresh-verification.json"
     },
     {
       "part": 19,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption-transcript.txt",
-      "status": "narration-correction-required",
-      "currentGuidance": "docs/video-current-guidance.md"
+      "status": "narration-refreshed-and-verified",
+      "currentGuidance": "docs/video-current-guidance.md",
+      "verification": "docs/assets/user-guide-videos/Narration-refresh-verification.json"
     },
     {
       "part": 20,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback-transcript.txt",
-      "status": "narration-correction-required",
-      "currentGuidance": "docs/video-current-guidance.md"
+      "status": "narration-refreshed-and-verified",
+      "currentGuidance": "docs/video-current-guidance.md",
+      "verification": "docs/assets/user-guide-videos/Narration-refresh-verification.json"
     },
     {
       "part": 21,
       "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-transcript.txt",
-      "status": "narration-correction-required",
-      "currentGuidance": "docs/video-current-guidance.md"
+      "status": "narration-refreshed-and-verified",
+      "currentGuidance": "docs/video-current-guidance.md",
+      "verification": "docs/assets/user-guide-videos/Narration-refresh-verification.json"
     },
     {
       "part": 22,
@@ -142,6 +147,160 @@
     }
   ],
   "extendedPart23": "Retained anonymised accelerated simulation; current transport/default guidance applies.",
-  "narrationReplaced": false,
-  "productionChanges": false
+  "narrationReplaced": true,
+  "productionChanges": false,
+  "narrationReplacedParts": [
+    5,
+    18,
+    19,
+    20,
+    21
+  ],
+  "previousReview": {
+    "reviewed": "2026-11-26",
+    "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+    "coreParts": [
+      {
+        "part": 0,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 1,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 2,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt",
+        "status": "current-guidance-supplement",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 3,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt",
+        "status": "current-guidance-supplement",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 4,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 5,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt",
+        "status": "narration-correction-required",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 6,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-transcript.txt",
+        "status": "current-guidance-supplement",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 7,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 8,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 9,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 10,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 11,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups-transcript.txt",
+        "status": "current-guidance-supplement",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 12,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 13,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 14,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 15,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 16,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-transcript.txt",
+        "status": "current-guidance-supplement",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 17,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 18,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch-transcript.txt",
+        "status": "narration-correction-required",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 19,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption-transcript.txt",
+        "status": "narration-correction-required",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 20,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback-transcript.txt",
+        "status": "narration-correction-required",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 21,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-transcript.txt",
+        "status": "narration-correction-required",
+        "currentGuidance": "docs/video-current-guidance.md"
+      },
+      {
+        "part": 22,
+        "transcript": "docs/assets/user-guide-videos/ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central-transcript.txt",
+        "status": "retained-procedure-scope",
+        "currentGuidance": "docs/video-current-guidance.md"
+      }
+    ],
+    "extendedPart23": "Retained anonymised accelerated simulation; current transport/default guidance applies.",
+    "narrationReplaced": false,
+    "productionChanges": false
+  }
 }

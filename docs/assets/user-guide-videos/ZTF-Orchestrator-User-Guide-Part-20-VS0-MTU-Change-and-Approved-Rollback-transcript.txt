@@ -1,8 +1,8 @@
-Open Advanced Automation, Scripts, Change Virtual Switch MTU as an administrator. This standalone action targets the default V S zero, or B R zero, on the supported healthy cluster. Unlike the PE-direct uplink wizard, this workflow uses trusted PE and Prism Central connections and the supported PC networking API.
+Open Advanced Automation, Scripts, Change Virtual Switch MTU as an administrator. This standalone action targets the default V S zero, or B R zero, on the supported healthy cluster. Unlike the PE-direct uplink wizard, this workflow uses the supported Prism Central networking API. Prism Central trust remains required. PE certificate verification is optional per operation, with an audited reason for an exception.
 
 Review the intended cluster UUID, saved credentials, active-backup bond and physical network support for jumbo frames. Confirm maintenance capacity and out-of-band access. The reviewed change raises the physical uplink MTU from fifteen hundred to nine thousand while preserving the existing bond and uplinks.
 
-Run read-only preflight and inspect every host and physical uplink. Missing or inconsistent readback blocks application. Have another administrator approve the exact plan, then use the cluster-bound confirmation only in a separately validated environment. Live writes default to off; this demonstration performs no MTU changes.
+Run read-only preflight and inspect every host and physical uplink. Missing or inconsistent readback blocks application. Have another administrator approve the exact plan, then use the cluster-bound confirmation only in a separately validated environment. Packaged appliances enable reviewed live application by default; an explicit host override can retain planning mode. This demonstration performs no MTU changes.
 
 Follow the Prism task and per-host readback in Jobs and Queue. Keep controller virtual machine interface MTU at fifteen hundred as documented. Verify end-to-end traffic on the intended VLANs separately. A successful task alone does not prove that the physical switching path carries jumbo frames correctly.
 

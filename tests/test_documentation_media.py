@@ -31,7 +31,7 @@ def test_extended_deployment_walkthrough_is_separate_and_verified():
     assert entry['mediaBase'] == publication['mediaBase'] == 'deployment/'
     assert 'const playlist = videos.concat(extendedVideos)' in page
     assert 'playlist.findIndex' in page and 'playlist[selected]' in page
-    assert 'unchanged 23-part ZIP' in page
+    assert 'updated 23-part core ZIP' in page
     video = folder / entry['file']
     assert video.name == publication['file']
     assert hashlib.sha256(video.read_bytes()).hexdigest() == publication['assets']['video']['sha256'] == verification['sha256']
@@ -162,7 +162,12 @@ def test_complete_video_zip_release_links_match_the_current_media_snapshot():
     assert download['checksumUrl'] == download['url'] + '.sha256'
     assert re.fullmatch(r'[a-f0-9]{64}', download['sha256'])
     assert download['bytes'] > 0 and download['offlinePlayer']
-    assert hashlib.sha256((media / 'SHA256SUMS').read_bytes()).hexdigest() == download['mediaChecksumsSha256']
+    checksums = (media / 'SHA256SUMS').read_bytes()
+    assert b'\r' not in checksums, 'The repository checksum reference must use LF on every OS'
+    assert hashlib.sha256(checksums).hexdigest() == download['mediaChecksumsSha256']
+    assert download['packageRevision'] == 2
+    assert download['packagedMediaChecksumsLineEndings'] == 'LF'
+    assert download['packagedMediaChecksumsSha256'] == download['mediaChecksumsSha256']
 
     class DownloadLinks(HTMLParser):
         def __init__(self):
@@ -355,7 +360,7 @@ def test_published_manual_checksums_match_current_reference():
 
 
 
-def test_manual_links_every_corrected_tutorial_and_complete_download():
+def test_retained_manual_links_its_dated_video_archive_and_current_player():
     folder = ROOT / 'docs/manuals'
     download = json.loads((ROOT / 'docs/user-guide-video-download.json').read_text(encoding='utf-8'))
     with ZipFile(folder / 'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx') as archive:
@@ -369,12 +374,20 @@ def test_manual_links_every_corrected_tutorial_and_complete_download():
                and row.get('Type', '').endswith('/hyperlink')}
     expected = {f'https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part={part:02d}'
                 for part in range(download['parts'])}
-    expected.update([download['url'], download['checksumUrl']])
+    reference = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))['videoLinkUpdate']
+    expected.update([reference['zipUrl'], reference['checksumUrl']])
     assert len(expected) == 25 and expected <= targets
     text = ''.join(document.itertext())
     assert 'predates the Sessions panel' not in text
     assert 'complete revised video ZIP' in text
-    assert download['previousEdition']['url'] not in targets
+    earlier_urls = set()
+    edition = download.get('previousEdition')
+    while edition:
+        earlier_urls.add(edition['url'])
+        edition = edition.get('previousEdition')
+    assert reference['zipUrl'] in earlier_urls
+    assert download['url'] not in targets
+    assert download['url'] in (folder / 'README.md').read_text(encoding='utf-8')
 
 
 def test_manual_distinguishes_foundation_workflows_without_reformatting():

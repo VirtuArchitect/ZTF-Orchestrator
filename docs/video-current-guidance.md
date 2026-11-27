@@ -1,49 +1,67 @@
 # Video currency and current operating guidance
 
-Reviewed 26 November 2026 against application source `f9eee7e` and the
-Build #72 verification records. Recordings retain their original production
-dates, voice, captions and simulation boundaries. A current link does not make
-an older recording a new build demonstration.
+Reviewed 27 November 2026 against application source `f9eee7e`. Parts **05 and
+18–21** now use the five approved replacement scripts, the same Joanna voice,
+light-mode illustrated controls and freshly aligned English captions/chapters.
+The other 18 core recordings and the separate extended Part 23 remain unchanged.
 
-## Before following a recording
+## Current recordings
 
-Use [Build #72 downloads and first boot](appliance-build-72.md) for the verified
-Standard, Airgap and Minimal disks. Existing ZIPs, retained Word editions and
-older QCOW2 disks are immutable. New documentation does not alter their contents.
-The [PDF collection](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/)
-shows each document's review/source provenance.
-
-| Video | Current guidance to use alongside the recording |
+| Part | Guidance in the revised recording |
 |---|---|
-| Part 02: cluster deployment | All three Foundation workflow use cases remain distinct. Build #72 enables reviewed Foundation VM submission by default; administrator authorization, exact confirmation, configured approvals and preflight still apply. No automatic imaging occurs. |
-| Part 03: pipelines | Select a datacenter/cluster under Pipelines and create the pipeline there. Labels organize records; YAML selects actual targets and saved credential references. Existing pipelines and the eligible recovery registration-only retry are retained. See [pipeline organization](pipeline-organization.md). |
-| Parts 04 and 15: recovery | A per-collection PE TLS exception is also available for recovery readbacks. It preserves identity, membership, freshness and reported-health checks; a certificate failure never becomes a passing health result. See [PE TLS options](pe-tls-options.md). |
-| Part 05: operational health | Older narration says the health collector requires trusted HTTPS with no exception. Current collection offers a reasoned per-collection PE TLS exception; its evidence is explicitly marked and is never labelled certificate-verified. Identity, membership and health checks remain required. See [health collection](pe-health-reporting.md). |
-| Part 06: updates | Build #72 establishes a source-pinned rollback baseline at first boot. No manual retag is required for these disks. Existing Build #67 installations need their own readiness assessment; an application ZIP does not retrofit factory provisioning. See [bootstrap identity](appliance-bootstrap-identity.md). |
-| Part 11: administration | Operator/Viewer visibility and execution are restricted by server-side permissions. Administrators can assign reusable permission profiles to selected datacenters/clusters; labels alone never grant access. Use the current [Administrator Guide](admin-guide.md) and installed access-management controls. |
-| Part 16: AHV deployment | The access, SSH-key and static-network sequence remains applicable. Download the exact Build #72 profile and verify its matching SHA-256. Standard/Airgap use preloaded images; Minimal needs registry access. Retain dated recording provenance. |
-| Part 18: uplink migration | Older narration says PE TLS verification is on by default and writes are disabled. Current new deployment/recovery drafts offer an audited PE TLS exception. Packaged live application defaults on; explicit false overrides retain planning mode. Pinned CVM SSH keys, independent approval, exact confirmation and per-host checks remain required. See [uplink migration](ahv-uplink-migration.md). |
-| Part 19: DARE | Older narration says to retain PE certificate verification and that writes default off. Current PE-direct drafts offer an audited per-run PE TLS exception and packaged live application defaults on. Identity, supported state, Local KMS, licensing, approval and verification still apply. DARE cannot be disabled after enablement. See [DARE](dare-workflow.md). |
-| Part 20: MTU | The PC-managed MTU path still requires trusted PC HTTPS; PE TLS verification is optional per operation. Packaged live application defaults on, with explicit false overrides honored. Preflight, exact approval/confirmation, physical-network validation and verified readback remain necessary. See [MTU](change-virtual-switch-mtu.md). |
-| Part 21: storage | Older narration recommends trusted HTTPS without explaining the current per-operation PE TLS option. Use the explicit policy and reason in reviewed storage YAML; exact target/default identity, dependency checks, independent approval and readback remain enforced. See [PE TLS options](pe-tls-options.md). |
-| Extended Part 23 | Accelerated UI progress uses anonymised simulated telemetry, not measured live hardware deployment. Apply the current PE TLS/default settings above when following its network/encryption chapters. |
+| 05: health collection | A reasoned per-collection PE TLS exception is available for deployment/recovery. Evidence retains that policy and is not labelled certificate-verified. Identity, membership, health and freshness checks remain. |
+| 18: uplink migration | New deployment/recovery drafts offer a per-run PE TLS exception. Packaged application defaults on; explicit false overrides retain planning mode. Pinned CVM SSH keys, independent approval, exact confirmation and per-host verification remain required. |
+| 19: DARE | PE-direct Local KMS operation supports a reasoned PE TLS exception. Packaged application defaults on. Supported state, licensing, approval and readback remain required. Encryption cannot be disabled after enablement; key recovery is a separate responsibility. |
+| 20: MTU | PC networking still requires trusted PC HTTPS. PE TLS verification is optional per operation. Packaged application defaults on with explicit false overrides retained. Review the physical network, exact plan, confirmation and host readbacks. |
+| 21: storage | Bind the per-operation PE TLS choice and reason to reviewed storage YAML. Exact default-container identity, conservative dependency checks, independent approval and verification remain enforced. |
 
-Parts 00, 01, 04, 07–10, 12–15, 17 and 22 retain their stated topic and
-operating scope. Their narrated procedures were checked for build/default
-conflicts; this review does not establish hardware compatibility. Parts 05 and 18–21
-require revised narration before they can be described as fully refreshed.
-Pending that revision, the player and download guidance explicitly identify these
-recordings as dated and direct operators to the corrected written procedures.
+## Deployment and retained operating guidance
 
-## Preserved media and acceptance boundaries
+Use [Build #72 downloads and first boot](appliance-build-72.md) for verified
+Standard, Airgap and Minimal QCOW2 disks. **Fresh** Build #72 appliances enable
+governed Foundation VM deployment at first boot. An offline update ZIP preserves
+the existing environment setting; it does not opt an existing appliance in.
+Administrator authorization, exact confirmation and configured approvals remain.
 
-The existing Joanna audio, light-mode recordings, English captions, transcripts,
-chapter files and complete 23-part ZIP are retained with their original hashes.
-The extended Part 23 remains a separate download. New narration requires approval
-of its exact wording before recording; do not silently replace the transcript or
-captions while retaining contradictory audio.
+Part 02 retains all three Foundation workflow use cases. Part 03 retains its
+pipeline sequence; use [datacenter/cluster pipeline organization](pipeline-organization.md)
+for current authoring controls. Parts 04 and 15 preserve recovery approvals,
+completed work and the eligible step 08-only retry. Recovery PE collection also
+supports the reviewed per-collection TLS policy. See [PE TLS options](pe-tls-options.md).
 
-No live cluster operation is needed to audit media, inspect captions, test chapter
-links or verify download availability. Approvals, completed recovery work and the
-eligible step 08-only retry are runtime records and are unchanged by this
-documentation publication.
+Part 06's update procedure uses Build #72's source-pinned first-boot rollback
+baseline without manual retagging. Older disks retain their own provisioning.
+Part 11's administration guidance is supplemented by current
+[scoped Operator/Viewer access](scoped-operations-access.md). Part 16's SSH-key,
+static-networking and separate web-login sequence remains applicable; Minimal
+needs registry access, while Standard/Airgap use preloaded images.
+
+## Download edition and historical references
+
+[Download the 27 November 2026 complete 23-part ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip)
+| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256).
+
+ZIP revision 2 uses LF checksum lists for direct GNU `sha256sum` verification. Earlier archive assets remain dated references.
+
+The ZIP contains an offline player, all 23 core MP4s, transcripts, English SRT/VTT
+captions and chapter files. Extract it fully before opening `index.html`.
+Extended Part 23 remains a separate online/download supplement, using anonymised
+accelerated UI telemetry rather than measured hardware deployment.
+
+Earlier video ZIPs, retained Word guides and historical PDF editions keep their
+original dates and embedded download URLs. The older reports in the media folder
+describe their own snapshots; they do not certify the five newly recorded files.
+Use the current narration-refresh report for this edition.
+
+## Verification and limits
+
+The five new videos passed complete stream decoding and audio-level checks.
+All 149 new caption cues and held-image caption changes were checked, with 35
+visual states decoded and representative encoded frames inspected. Chapters use
+returned speech timings; narration stays at natural 1.0x speed. No full human
+listening review was performed. See the [verification report](assets/user-guide-videos/Narration-refresh-verification.json).
+
+These are illustrated, anonymised tutorials. They do not establish AHV import,
+hardware compatibility or production acceptance. No live infrastructure was
+accessed or changed. Existing pipelines, approvals and recovery records are
+unchanged by this publication.

@@ -1,8 +1,8 @@
 {
   "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
-  "reviewed": "2026-11-26",
+  "reviewed": "2026-11-27",
   "currentDocuments": 319,
-  "historicalDocuments": 56,
+  "historicalDocuments": 57,
   "scope": "Public maintained source documents, source-aligned provided guides and clearly identified historical references. Private configuration packs, dated lab reports and superseded evidence are not current operating guidance.",
   "inventory": [
     {
@@ -2370,6 +2370,10 @@
     "nativeFoundationApiReferences": 197,
     "nativeFoundationUnmatchedRoutes": 0,
     "simulatedTaskScreenshots": 118
+  },
+  "addressAnonymisation": {
+    "date": "2026-11-22",
+    "scope": "Current and historical collection downloads; TEST-NET illustrations; original edition labels, layout and attribution retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks retain their technical meaning."
   },
   "documents": [
     {
@@ -9641,12 +9645,12 @@
     },
     {
       "id": "video-current-guidance",
-      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
-      "sha256": "d419f9fda959971cb27be9750bed3412ae8703ce4f456f8919269197a5d702aa",
+      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-27.pdf",
+      "sha256": "12f26fcb2aba0c1e8bc56b464514bbfcc1d19fb10590dd75ef8b86875fb5f79a",
       "inputSources": [
         {
           "path": "docs/video-current-guidance.md",
-          "sha256": "1060cd68aa2c3ba7622478f8b1ce5dccdee03720fefd9203c4fdc784c83b749b",
+          "sha256": "f48cee7800c6dadc4d5ab05ac17637d4eccc30fd037a9c05889a4232ff27c1af",
           "normalization": "utf8-lf"
         },
         {
@@ -10122,10 +10126,23 @@
           "normalization": "binary"
         }
       ]
+    },
+    {
+      "id": "video-current-guidance-previous-2026-11-26",
+      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
+      "sha256": "d419f9fda959971cb27be9750bed3412ae8703ce4f456f8919269197a5d702aa",
+      "inputSources": [
+        {
+          "path": "docs/video-current-guidance.md",
+          "sha256": "1060cd68aa2c3ba7622478f8b1ce5dccdee03720fefd9203c4fdc784c83b749b",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
     }
-  ],
-  "addressAnonymisation": {
-    "date": "2026-11-22",
-    "scope": "Current and historical collection downloads; TEST-NET illustrations; original edition labels, layout and attribution retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks retain their technical meaning."
-  }
+  ]
 }

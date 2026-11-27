@@ -26,16 +26,33 @@ def test_build72_downloads_reference_verified_disks_not_metadata_artifacts():
             assert row['downloadUrl'] in (ROOT / surface).read_text(encoding='utf-8')
 
 
-def test_dated_video_audio_is_not_relabelled_as_a_new_recording():
+def test_approved_video_refresh_has_new_audio_and_preserves_other_recordings():
     review = json.loads((EVIDENCE / 'Video-currency-review.json').read_text(encoding='utf-8'))
     assert len(review['coreParts']) == 23
-    assert review['narrationReplaced'] is False
-    assert {row['part'] for row in review['coreParts']
-            if row['status'] == 'narration-correction-required'} == {5, 18, 19, 20, 21}
-    player = (ROOT / 'public/tutorials/index.html').read_text(encoding='utf-8')
-    assert 'Parts 05 and 18–21 contain older PE TLS/live-write defaults' in player
-    for folder in ['user-guide-videos', 'deployment-progress-video']:
-        media = ROOT / 'docs/assets' / folder
-        for line in (media / 'SHA256SUMS').read_text(encoding='utf-8').splitlines():
-            digest, name = line.split('  ', 1)
+    assert review['narrationReplaced'] is True
+    assert review['narrationReplacedParts'] == [5, 18, 19, 20, 21]
+    assert review['previousReview']['narrationReplaced'] is False
+    media = ROOT / 'docs/assets/user-guide-videos'
+    report = json.loads((media / 'Narration-refresh-verification.json').read_text(encoding='utf-8'))
+    assert report['newSpeechRequests'] == 5
+    assert report['captionSamples'] == 149 and report['failedCaptionSamples'] == 0
+    assert len(report['preservedParts']) == 18
+    assert report['listeningReview'] == 'not_performed'
+    for row in report['records']:
+        assert row['fullDecode'] == 'passed' and row['speed'] == 1
+        assert row['audioChannels'] == 2 and row['audioSampleRate'] == 48000
+        assert row['sha256'] != row['beforeSha256']
+        assert row['heldImageCaptionChanges'] > 10
+        assert len(row['browserSamples']) == 2
+        assert hashlib.sha256((media / row['file']).read_bytes()).hexdigest() == row['sha256']
+        text = (media / (Path(row['file']).stem + '-transcript.txt')).read_text(encoding='utf-8').strip()
+        assert hashlib.sha256(text.encode('utf-8')).hexdigest() == row['approvedTextSha256']
+    for row in report['preservedParts']:
+        assert hashlib.sha256((media / row['file']).read_bytes()).hexdigest() == row['sha256']
+        for name, digest in row['companions'].items():
             assert hashlib.sha256((media / name).read_bytes()).hexdigest() == digest
+    for folder in ['user-guide-videos', 'deployment-progress-video']:
+        media_folder = ROOT / 'docs/assets' / folder
+        for line in (media_folder / 'SHA256SUMS').read_text(encoding='utf-8').splitlines():
+            digest, name = line.split('  ', 1)
+            assert hashlib.sha256((media_folder / name).read_bytes()).hexdigest() == digest

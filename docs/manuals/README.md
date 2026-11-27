@@ -2,6 +2,10 @@
 
 Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orchestrator/documentation/) to search the collection, preview guides and download individual PDFs.
 
+## Current video edition
+
+The [27 November 2026 video ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256) include the five approved replacement recordings, all 23 core videos, English captions, transcripts and chapters. Earlier Word/PDF editions retain their original embedded archive links and source provenance.
+
 ## Current source collection
 
 The [Build #72 guide](../appliance-build-72.md) and refreshed Administrator/User
@@ -69,7 +73,7 @@ The maintained **156-page** guide was reviewed **19 November 2026** against appl
 
 The Word and searchable PDF retain the original typography, navy table headers, portrait pages, margins, headers/footers and revision 3 landscape process appendix. The linked contents and page fields were refreshed in Word. All 156 exported pages were rendered and checked; 83 inline illustrations and 54 tables remain in the source.
 
-The training references on page 77 link all [23 revised videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete revised offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). The ZIP includes the offline player, transcripts, English SRT/VTT captions and chapter files. Existing per-part URLs remain unchanged.
+The retained 22 November manual's training references on page 77 link all [23 revised videos](https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part=00), the [complete revised offline ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). The ZIP includes the offline player, transcripts, English SRT/VTT captions and chapter files. Existing per-part URLs remain unchanged.
 
 On **22 November 2026**, page 14 was revised to use this exact statement: Operators report consistent successful cluster deployments with pipeline post-configuration and successful cluster recoveries using ZTF Orchestrator. The workflow catalogue on page 47 and deployment guidance on page 80 now distinguish classic Foundation VM, Foundation Central associated with Prism Central and standalone FCA, with use cases and matching YAML requirements. The maintained Word/PDF retain their original source review and edition. Only two Word XML parts changed; all 156 PDF pages were rendered and compared, with the other 152 pages pixel-identical. All 54 tables, 83 inline illustrations, styles, page geometry, headers and footers remain unchanged.
 
