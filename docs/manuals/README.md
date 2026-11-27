@@ -4,7 +4,7 @@ Browse the [PDF documentation library](https://virtuarchitect.github.io/ZTF-Orch
 
 ## Current video edition
 
-The [27 November 2026 video ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip.sha256) include the five approved replacement recordings, all 23 core videos, English captions, transcripts and chapters. Earlier Word/PDF editions retain their original embedded archive links and source provenance.
+The [27 November 2026 video ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip) and its [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256) include the five approved replacement recordings, all 23 core videos, English captions, transcripts and chapters. Earlier Word/PDF editions retain their original embedded archive links and source provenance.
 
 ## Current source collection
 

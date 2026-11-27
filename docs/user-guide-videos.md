@@ -24,8 +24,8 @@ The light-mode player provides Joanna studio narration, burned-in English captio
 MP4 downloads, transcripts, SRT/VTT captions and seekable chapters. After opening a
 transcript, use Back to return to the same part and timestamp, paused.
 
-[Download all 23 videos (27 November 2026 ZIP)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip) |
-[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip.sha256).
+[Download all 23 videos (27 November 2026 ZIP)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip) |
+[SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256).
 Includes an offline player, transcripts, English SRT/VTT captions and chapter files.
 Extract the ZIP completely, then open `index.html`.
 
@@ -33,7 +33,7 @@ Extract the ZIP completely, then open `index.html`.
 
 Parts **05 and 18–21** use the five approved replacement scripts and the same Joanna voice. Light-mode illustrated controls, burned-in English captions, transcripts, SRT/VTT and all five chapter sets were rebuilt against actual speech timings. The new recordings explain per-operation PE TLS exceptions and current live-application defaults while preserving identity, approval and verification requirements.
 
-The other 18 core videos and the separate extended Part 23 are unchanged. The new 23-part ZIP includes the five replacements. Earlier ZIPs remain available as dated editions. [Current verification](assets/user-guide-videos/Narration-refresh-verification.json).
+The other 18 core videos and the separate extended Part 23 are unchanged. The new 23-part ZIP includes the five replacements. ZIP revision 2 uses LF checksum files for direct Windows and Linux verification; the videos are unchanged from the initial 27 November archive. Earlier ZIPs remain available as dated editions. [Current verification](assets/user-guide-videos/Narration-refresh-verification.json).
 
 ## Extended walkthrough: Part 23
 

@@ -2371,6 +2371,10 @@
     "nativeFoundationUnmatchedRoutes": 0,
     "simulatedTaskScreenshots": 118
   },
+  "addressAnonymisation": {
+    "date": "2026-11-22",
+    "scope": "Current and historical collection downloads; TEST-NET illustrations; original edition labels, layout and attribution retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks retain their technical meaning."
+  },
   "documents": [
     {
       "id": "collection-overview",
@@ -9642,11 +9646,11 @@
     {
       "id": "video-current-guidance",
       "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-27.pdf",
-      "sha256": "fc4e7bd7168be4940b75f43a6a224333f6a407d7e1973dbb9931415efb79b1ab",
+      "sha256": "12f26fcb2aba0c1e8bc56b464514bbfcc1d19fb10590dd75ef8b86875fb5f79a",
       "inputSources": [
         {
           "path": "docs/video-current-guidance.md",
-          "sha256": "ce8ff6c2742db76f8919cb8479b8b0d2205e19454f3b5b63966d317079e27324",
+          "sha256": "f48cee7800c6dadc4d5ab05ac17637d4eccc30fd037a9c05889a4232ff27c1af",
           "normalization": "utf8-lf"
         },
         {
@@ -10140,9 +10144,5 @@
         }
       ]
     }
-  ],
-  "addressAnonymisation": {
-    "date": "2026-11-22",
-    "scope": "Current and historical collection downloads; TEST-NET illustrations; original edition labels, layout and attribution retained. Fixed protocol endpoints, loopback/bind addresses and subnet masks retain their technical meaning."
-  }
+  ]
 }

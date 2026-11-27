@@ -3,11 +3,11 @@
   "date": "27 November 2026",
   "kind": "documentation-media",
   "releaseTag": "v1.8.5-rc1",
-  "asset": "ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip",
-  "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip",
-  "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip.sha256",
-  "bytes": 83037643,
-  "sha256": "7a70752bef08186eaca427015bdd308ae1fcb3b58a80e4cd1bd496a17d0f361d",
+  "asset": "ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip",
+  "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip",
+  "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256",
+  "bytes": 83038595,
+  "sha256": "192e9c8ca62a70f2f177b4f0b0afb3746bb08fc5d12151b10ff91ff56c4be82a",
   "sourceRevision": "6acd7b125ab9f66017e044c2d466405606622547",
   "mediaChecksumsSha256": "b44ad84d56119c05b5c3f84ab7e06205f084f0dd994312fcb492d644ae12db85",
   "parts": 23,
@@ -19,17 +19,17 @@
   ],
   "offlinePlayer": true,
   "previousEdition": {
-    "title": "Complete revised 23-part User Guide Videos",
-    "date": "22 November 2026",
+    "title": "Complete updated 23-part User Guide Videos",
+    "date": "27 November 2026",
     "kind": "documentation-media",
     "releaseTag": "v1.8.5-rc1",
-    "asset": "ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip",
-    "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip",
-    "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256",
-    "bytes": 84490317,
-    "sha256": "2527eec83e5d799662bec0f04570c25f88da8e51bcbdfa0fa382dcd70efa0b18",
-    "sourceRevision": "cd338909010c75e4d50898a5c4ab9d3a45c2a50b",
-    "mediaChecksumsSha256": "dc90c0e7008064c472ed3ad6d9ff693ae0acd3260833fea8650904562e7058f4",
+    "asset": "ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip",
+    "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip",
+    "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip.sha256",
+    "bytes": 83037643,
+    "sha256": "7a70752bef08186eaca427015bdd308ae1fcb3b58a80e4cd1bd496a17d0f361d",
+    "sourceRevision": "6acd7b125ab9f66017e044c2d466405606622547",
+    "mediaChecksumsSha256": "b44ad84d56119c05b5c3f84ab7e06205f084f0dd994312fcb492d644ae12db85",
     "parts": 23,
     "chapters": 125,
     "captions": [
@@ -39,26 +39,56 @@
     ],
     "offlinePlayer": true,
     "previousEdition": {
-      "title": "Complete corrected 23-part User Guide Videos",
-      "date": "19 November 2026",
+      "title": "Complete revised 23-part User Guide Videos",
+      "date": "22 November 2026",
       "kind": "documentation-media",
       "releaseTag": "v1.8.5-rc1",
-      "asset": "ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip",
-      "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip",
-      "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256",
-      "bytes": 87958550,
-      "sha256": "12edd4e5f02c861971848a2d26595a123067df28743cccaa3b1c1e918b3cbaf2",
-      "sourceRevision": "e3f2cfce9df874a59a2ca965b3f42e669f2f26ba",
-      "mediaChecksumsSha256": "11cbfee2d11b709844caf125eb91ed7bc60951b9a61397610143310be3a5f52b",
+      "asset": "ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip",
+      "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip",
+      "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256",
+      "bytes": 84490317,
+      "sha256": "2527eec83e5d799662bec0f04570c25f88da8e51bcbdfa0fa382dcd70efa0b18",
+      "sourceRevision": "cd338909010c75e4d50898a5c4ab9d3a45c2a50b",
+      "mediaChecksumsSha256": "dc90c0e7008064c472ed3ad6d9ff693ae0acd3260833fea8650904562e7058f4",
       "parts": 23,
-      "chapters": 120,
+      "chapters": 125,
       "captions": [
         "burned-in English",
         "SRT",
         "VTT"
       ],
-      "offlinePlayer": true
-    }
+      "offlinePlayer": true,
+      "previousEdition": {
+        "title": "Complete corrected 23-part User Guide Videos",
+        "date": "19 November 2026",
+        "kind": "documentation-media",
+        "releaseTag": "v1.8.5-rc1",
+        "asset": "ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip",
+        "url": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip",
+        "checksumUrl": "https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Corrected-23-Part-2026-11-19.zip.sha256",
+        "bytes": 87958550,
+        "sha256": "12edd4e5f02c861971848a2d26595a123067df28743cccaa3b1c1e918b3cbaf2",
+        "sourceRevision": "e3f2cfce9df874a59a2ca965b3f42e669f2f26ba",
+        "mediaChecksumsSha256": "11cbfee2d11b709844caf125eb91ed7bc60951b9a61397610143310be3a5f52b",
+        "parts": 23,
+        "chapters": 120,
+        "captions": [
+          "burned-in English",
+          "SRT",
+          "VTT"
+        ],
+        "offlinePlayer": true
+      }
+    },
+    "refreshedNarrationParts": [
+      5,
+      18,
+      19,
+      20,
+      21
+    ],
+    "packagedMediaChecksumsSha256": "e32a159b7a81cd784aba24e695d2790ac708c036ccc970568b93e1bee10a5d83",
+    "packagedMediaChecksumsLineEndings": "CRLF"
   },
   "refreshedNarrationParts": [
     5,
@@ -67,6 +97,7 @@
     20,
     21
   ],
-  "packagedMediaChecksumsSha256": "e32a159b7a81cd784aba24e695d2790ac708c036ccc970568b93e1bee10a5d83",
-  "packagedMediaChecksumsLineEndings": "CRLF"
+  "packagedMediaChecksumsSha256": "b44ad84d56119c05b5c3f84ab7e06205f084f0dd994312fcb492d644ae12db85",
+  "packagedMediaChecksumsLineEndings": "LF",
+  "packageRevision": 2
 }

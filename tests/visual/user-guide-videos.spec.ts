@@ -26,7 +26,7 @@ for (const width of [1440, 390]) {
 
 test('landing and video pages expose the same complete-series release download', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
-  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip'
+  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip'
   const url = `https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/${asset}`
   for (const route of ['', 'tutorials/']) {
     await page.goto(route || './')

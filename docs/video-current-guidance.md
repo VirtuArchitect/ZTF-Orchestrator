@@ -38,8 +38,10 @@ needs registry access, while Standard/Airgap use preloaded images.
 
 ## Download edition and historical references
 
-[Download the 27 November 2026 complete 23-part ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip)
-| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip.sha256).
+[Download the 27 November 2026 complete 23-part ZIP](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip)
+| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27-r2.zip.sha256).
+
+ZIP revision 2 uses LF checksum lists for direct GNU `sha256sum` verification. Earlier archive assets remain dated references.
 
 The ZIP contains an offline player, all 23 core MP4s, transcripts, English SRT/VTT
 captions and chapter files. Extract it fully before opening `index.html`.

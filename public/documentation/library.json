@@ -15772,14 +15772,14 @@
       "description": "Video Currency and Current Operating Guidance. Refreshed 27 November 2026; match the per-document source and current Build 72 guidance to the installed appliance.",
       "edition": "Source snapshot 27 November 2026",
       "pages": 3,
-      "bytes": 552825,
-      "sha256": "fc4e7bd7168be4940b75f43a6a224333f6a407d7e1973dbb9931415efb79b1ab",
+      "bytes": 557425,
+      "sha256": "12f26fcb2aba0c1e8bc56b464514bbfcc1d19fb10590dd75ef8b86875fb5f79a",
       "reviewed": "2026-11-27",
       "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
       "inputSources": [
         {
           "path": "docs/video-current-guidance.md",
-          "sha256": "ce8ff6c2742db76f8919cb8479b8b0d2205e19454f3b5b63966d317079e27324",
+          "sha256": "f48cee7800c6dadc4d5ab05ac17637d4eccc30fd037a9c05889a4232ff27c1af",
           "normalization": "utf8-lf"
         },
         {

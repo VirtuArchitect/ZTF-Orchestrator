@@ -165,8 +165,9 @@ def test_complete_video_zip_release_links_match_the_current_media_snapshot():
     checksums = (media / 'SHA256SUMS').read_bytes()
     assert b'\r' not in checksums, 'The repository checksum reference must use LF on every OS'
     assert hashlib.sha256(checksums).hexdigest() == download['mediaChecksumsSha256']
-    assert download['packagedMediaChecksumsLineEndings'] == 'CRLF'
-    assert hashlib.sha256(checksums.replace(b'\n', b'\r\n')).hexdigest() == download['packagedMediaChecksumsSha256']
+    assert download['packageRevision'] == 2
+    assert download['packagedMediaChecksumsLineEndings'] == 'LF'
+    assert download['packagedMediaChecksumsSha256'] == download['mediaChecksumsSha256']
 
     class DownloadLinks(HTMLParser):
         def __init__(self):
@@ -379,7 +380,12 @@ def test_retained_manual_links_its_dated_video_archive_and_current_player():
     text = ''.join(document.itertext())
     assert 'predates the Sessions panel' not in text
     assert 'complete revised video ZIP' in text
-    assert reference['zipUrl'] == download['previousEdition']['url']
+    earlier_urls = set()
+    edition = download.get('previousEdition')
+    while edition:
+        earlier_urls.add(edition['url'])
+        edition = edition.get('previousEdition')
+    assert reference['zipUrl'] in earlier_urls
     assert download['url'] not in targets
     assert download['url'] in (folder / 'README.md').read_text(encoding='utf-8')
 

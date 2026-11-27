@@ -1,4 +1,4 @@
-Video documentation: Parts 05 and 18-21 re-recorded with approved Joanna narration, light-mode illustrations, English captions and aligned chapters. New 27 November 2026 complete 23-part ZIP; other core videos and the separate Part 23 are unchanged. No runtime changes.
+Video documentation: Parts 05 and 18-21 re-recorded with approved Joanna narration, light-mode illustrations, English captions and aligned chapters. New 27 November 2026 complete 23-part ZIP revision 2 with LF checksum files; other core videos and the separate Part 23 are unchanged. No runtime changes.
 
 Documentation update: verified Build #72 QCOW2 downloads and affected operator PDFs are published with explicit first-boot, approval and test boundaries. Earlier notices for dated Parts 05 and 18-21 are superseded by the 27 November recordings. Existing media, application behavior and records are unchanged.
 
