@@ -162,7 +162,11 @@ def test_complete_video_zip_release_links_match_the_current_media_snapshot():
     assert download['checksumUrl'] == download['url'] + '.sha256'
     assert re.fullmatch(r'[a-f0-9]{64}', download['sha256'])
     assert download['bytes'] > 0 and download['offlinePlayer']
-    assert hashlib.sha256((media / 'SHA256SUMS').read_bytes()).hexdigest() == download['mediaChecksumsSha256']
+    checksums = (media / 'SHA256SUMS').read_bytes()
+    assert b'\r' not in checksums, 'The repository checksum reference must use LF on every OS'
+    assert hashlib.sha256(checksums).hexdigest() == download['mediaChecksumsSha256']
+    assert download['packagedMediaChecksumsLineEndings'] == 'CRLF'
+    assert hashlib.sha256(checksums.replace(b'\n', b'\r\n')).hexdigest() == download['packagedMediaChecksumsSha256']
 
     class DownloadLinks(HTMLParser):
         def __init__(self):

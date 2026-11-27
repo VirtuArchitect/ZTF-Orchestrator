@@ -9,7 +9,7 @@
   "bytes": 83037643,
   "sha256": "7a70752bef08186eaca427015bdd308ae1fcb3b58a80e4cd1bd496a17d0f361d",
   "sourceRevision": "6acd7b125ab9f66017e044c2d466405606622547",
-  "mediaChecksumsSha256": "e32a159b7a81cd784aba24e695d2790ac708c036ccc970568b93e1bee10a5d83",
+  "mediaChecksumsSha256": "b44ad84d56119c05b5c3f84ab7e06205f084f0dd994312fcb492d644ae12db85",
   "parts": 23,
   "chapters": 125,
   "captions": [
@@ -66,5 +66,7 @@
     19,
     20,
     21
-  ]
+  ],
+  "packagedMediaChecksumsSha256": "e32a159b7a81cd784aba24e695d2790ac708c036ccc970568b93e1bee10a5d83",
+  "packagedMediaChecksumsLineEndings": "CRLF"
 }
