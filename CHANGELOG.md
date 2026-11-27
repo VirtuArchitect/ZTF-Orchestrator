@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased source
+- Refresh User Guide Videos Parts 05 and 18-21 with approved Joanna narration, light-mode illustrations, English captions and speech-aligned chapters. Publish a new complete 23-part ZIP; retain other recordings and dated archives. No runtime or infrastructure changes.
 - Publish verified Build #72 Standard, Airgap and Minimal QCOW2 links and checksums. Refresh affected operator PDFs, first-boot/update guidance and scoped role summaries; clearly flag dated video transport/default narration while retaining original media and download provenance. No application behavior or data migration.
 - Enable Foundation VM deployment in newly generated Standard, Airgap and Minimal appliance configurations. Preserve explicit opt-outs, existing installations and interrupted-bootstrap settings; retain administrator access, exact confirmation, configured approvals, preflight and separate image-upload policy. No automatic deployment, data migration or new dependency.
 - Give fresh appliance builds a shared immutable source/version identity. Pass Docker build metadata, retain verified baked images on first boot, obtain only source-verified Minimal images, forbid Airgap image pulls and report matching Compose identity for guided update/rollback. Preserve existing installations and interrupted-bootstrap credentials; no application data migration or new runtime dependency.

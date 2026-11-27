@@ -1,5 +1,5 @@
-00:00:00.000 Collect for the intended cluster
-00:00:20.835 Interpret a failed read
-00:00:43.785 Keep time separate
-00:01:02.733 Compare configured settings
-00:01:20.989 Accept the right evidence
+00:00:00.000 Collect PE health deliberately
+00:00:31.831 Separate collection failure from cluster health
+00:00:55.405 Check the evidence clock
+00:01:14.990 Compare a readback with its approved baseline
+00:01:33.100 Refresh and Collect have different jobs

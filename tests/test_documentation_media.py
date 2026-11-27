@@ -31,7 +31,7 @@ def test_extended_deployment_walkthrough_is_separate_and_verified():
     assert entry['mediaBase'] == publication['mediaBase'] == 'deployment/'
     assert 'const playlist = videos.concat(extendedVideos)' in page
     assert 'playlist.findIndex' in page and 'playlist[selected]' in page
-    assert 'unchanged 23-part ZIP' in page
+    assert 'updated 23-part core ZIP' in page
     video = folder / entry['file']
     assert video.name == publication['file']
     assert hashlib.sha256(video.read_bytes()).hexdigest() == publication['assets']['video']['sha256'] == verification['sha256']
@@ -355,7 +355,7 @@ def test_published_manual_checksums_match_current_reference():
 
 
 
-def test_manual_links_every_corrected_tutorial_and_complete_download():
+def test_retained_manual_links_its_dated_video_archive_and_current_player():
     folder = ROOT / 'docs/manuals'
     download = json.loads((ROOT / 'docs/user-guide-video-download.json').read_text(encoding='utf-8'))
     with ZipFile(folder / 'ZTF-Orchestrator-Administrator-and-User-Guide-v1.8.5-rc1.docx') as archive:
@@ -369,12 +369,15 @@ def test_manual_links_every_corrected_tutorial_and_complete_download():
                and row.get('Type', '').endswith('/hyperlink')}
     expected = {f'https://virtuarchitect.github.io/ZTF-Orchestrator/tutorials/?part={part:02d}'
                 for part in range(download['parts'])}
-    expected.update([download['url'], download['checksumUrl']])
+    reference = json.loads((folder / 'administrator-user-guide-publication.json').read_text(encoding='utf-8'))['videoLinkUpdate']
+    expected.update([reference['zipUrl'], reference['checksumUrl']])
     assert len(expected) == 25 and expected <= targets
     text = ''.join(document.itertext())
     assert 'predates the Sessions panel' not in text
     assert 'complete revised video ZIP' in text
-    assert download['previousEdition']['url'] not in targets
+    assert reference['zipUrl'] == download['previousEdition']['url']
+    assert download['url'] not in targets
+    assert download['url'] in (folder / 'README.md').read_text(encoding='utf-8')
 
 
 def test_manual_distinguishes_foundation_workflows_without_reformatting():

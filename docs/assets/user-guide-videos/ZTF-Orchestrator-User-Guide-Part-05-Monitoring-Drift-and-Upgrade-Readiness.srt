@@ -1,107 +1,123 @@
 1
-00:00:00,299 --> 00:00:04,579
+00:00:00,256 --> 00:00:04,631
 Cluster A has a saved record, but that record is not a live health check.
 
 2
-00:00:04,693 --> 00:00:09,379
-Review the PE endpoint, expected UUID, complete node baseline
+00:00:04,736 --> 00:00:08,897
+Review the PE endpoint, expected UUID, complete node
 
 3
-00:00:09,429 --> 00:00:10,829
-and credential reference.
+00:00:08,917 --> 00:00:10,925
+baseline and credential reference.
 
 4
-00:00:10,965 --> 00:00:13,354
+00:00:11,051 --> 00:00:13,391
 Select Collect PE health deliberately.
 
 5
-00:00:13,582 --> 00:00:18,147
-The operational-health collector requires trusted HTTPS and does not
+00:00:13,509 --> 00:00:18,012
+The operational-health collector offers a per-collection PE TLS exception for
 
 6
-00:00:18,147 --> 00:00:20,614
-offer the specialist wizards' TLS exception.
+00:00:18,032 --> 00:00:20,872
+deployment and recovery. Record its reason.
 
 7
-00:00:20,835 --> 00:00:24,163
-If collection fails, read the specific diagnostic.
+00:00:21,104 --> 00:00:25,308
+HTTPS remains encrypted, but the exception does not authenticate the
 
 8
-00:00:24,307 --> 00:00:28,117
-Untrusted issuer and certificate address mismatch have different fixes.
+00:00:25,328 --> 00:00:29,763
+PE certificate. The observation retains this policy and is not labelled
 
 9
-00:00:28,189 --> 00:00:32,832
-An unresolved reference differs from HTTP four zero one authentication rejection
+00:00:29,783 --> 00:00:31,392
+certificate-verified evidence.
 
 10
-00:00:33,053 --> 00:00:35,339
-or four zero three access denial.
+00:00:31,831 --> 00:00:35,289
+If collection fails, read the specific diagnostic.
 
 11
-00:00:35,508 --> 00:00:39,689
-DNS, timeout, refused connection and routing errors describe
+00:00:35,458 --> 00:00:39,348
+Untrusted issuer and certificate address mismatch have different fixes.
 
 12
-00:00:39,689 --> 00:00:43,421
-transport failures. None of these alone proves an unhealthy cluster.
+00:00:39,522 --> 00:00:43,919
+An unresolved reference differs from HTTP four zero one authentication
 
 13
-00:00:43,785 --> 00:00:46,796
-A completed observation expires after fifteen minutes.
+00:00:43,959 --> 00:00:47,012
+rejection or four zero three access denial.
 
 14
-00:00:47,049 --> 00:00:51,479
-Evidence age uses the appliance timestamps, while browser clock skew produces
+00:00:47,202 --> 00:00:51,619
+DNS, timeout, refused connection and routing errors describe transport
 
 15
-00:00:51,487 --> 00:00:55,839
-a separate warning. A workstation timezone display is not itself proof
+00:00:51,639 --> 00:00:55,108
+failures. None of these alone proves an unhealthy cluster.
 
 16
-00:00:55,839 --> 00:00:59,960
-of clock drift. Correct invalid or future timestamps and time
+00:00:55,405 --> 00:00:58,692
+A completed observation expires after fifteen minutes.
 
 17
-00:00:59,960 --> 00:01:02,284
-synchronization before relying on the result.
+00:00:58,946 --> 00:01:03,278
+Evidence age uses the appliance timestamps, while browser clock skew
 
 18
-00:01:02,733 --> 00:01:07,120
-Use Live Prism Element drift to compare the supported settings against an approved
+00:01:03,298 --> 00:01:04,950
+produces a separate warning.
 
 19
-00:01:07,128 --> 00:01:10,879
-baseline. Test the comparison manually before scheduling it.
+00:01:05,105 --> 00:01:09,161
+A workstation timezone display is not itself proof of clock drift.
 
 20
-00:01:11,037 --> 00:01:15,018
-Keep a failed collection distinct from a real configuration difference.
+00:01:09,329 --> 00:01:13,875
+Correct invalid or future timestamps and time synchronization before relying
 
 21
-00:01:15,261 --> 00:01:19,655
-A schedule needs the same valid credentials, reachability and trust as
+00:01:13,895 --> 00:01:18,448
+on the result. Use Live Prism Element drift to compare the supported settings
 
 22
-00:01:19,655 --> 00:01:23,157
-the manual check. Refresh only reloads saved records;
+00:01:18,532 --> 00:01:20,368
+against an approved baseline.
 
 23
-00:01:23,165 --> 00:01:25,056
-it does not collect Prism data.
+00:01:20,622 --> 00:01:23,355
+Test the comparison manually before scheduling it.
 
 24
-00:01:25,256 --> 00:01:29,237
-Review timestamps, source and the individual checks before acceptance.
+00:01:23,481 --> 00:01:27,397
+Keep a failed collection distinct from a real configuration difference.
 
 25
-00:01:29,394 --> 00:01:33,610
-A PE Good readback is not a full NCC, resilience, application
+00:01:27,596 --> 00:01:32,013
+A schedule needs the same valid credentials, reachability and trust as the
 
 26
-00:01:33,789 --> 00:01:35,661
-or recovery acceptance test.
+00:01:32,033 --> 00:01:35,491
+manual check. Refresh only reloads saved records;
 
 27
-00:01:35,843 --> 00:01:40,151
+00:01:35,532 --> 00:01:37,518
+it does not collect Prism data.
+
+28
+00:01:37,665 --> 00:01:41,961
+Review timestamps, source and the individual checks before acceptance.
+
+29
+00:01:42,156 --> 00:01:46,638
+A PE Good readback is not a full NCC, resilience, application
+
+30
+00:01:46,850 --> 00:01:48,836
+or recovery acceptance test.
+
+31
+00:01:49,068 --> 00:01:53,409
 Close historical attention reviews deliberately after investigating their source.

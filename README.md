@@ -357,13 +357,11 @@ and English captions, including YAML Studio, PE-direct uplink/DARE and specialis
 configuration. Corrected visuals retain the existing Joanna audio, English captions
 and chapter timing.
 
-[Download the complete revised 23-part video ZIP (81 MiB)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip)
-| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip.sha256). Includes the offline player, transcripts,
+[Download the updated 23-part video ZIP (27 November 2026)](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip)
+| [SHA-256 checksum](https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip.sha256). Includes the offline player, transcripts,
 English SRT/VTT captions and chapter files. Extract the ZIP, then open `index.html`.
 
-The ZIP retains its **22 November 2026** edition. Parts 05 and 18–21 contain older
-PE TLS/live-write narration; use [current video guidance](docs/video-current-guidance.md)
-and the linked procedures before execution. Corrected narration awaits script approval.
+The **27 November 2026** edition replaces Parts 05 and 18–21 with approved Joanna narration, light-mode visuals, English captions and aligned chapters. Other core videos retain their prior recordings. See [recording dates and current guidance](docs/video-current-guidance.md).
 
 See [video transcripts and captions](docs/user-guide-videos.md).
 

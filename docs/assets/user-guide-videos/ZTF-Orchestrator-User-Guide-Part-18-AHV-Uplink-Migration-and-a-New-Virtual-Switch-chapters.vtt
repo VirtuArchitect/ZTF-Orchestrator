@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:22.969
+Connect to the reviewed cluster
+
+00:00:22.969 --> 00:00:44.531
+Review the per-run PE TLS choice
+
+00:00:44.531 --> 00:01:06.663
+Discover first, then assign uplinks
+
+00:01:06.663 --> 00:01:31.177
+Review the exact migration plan
+
+00:01:31.177 --> 00:01:51.905
+Apply and verify one host at a time
+

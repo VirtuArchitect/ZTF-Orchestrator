@@ -1,8 +1,8 @@
 {
   "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
-  "reviewed": "2026-11-26",
+  "reviewed": "2026-11-27",
   "currentDocuments": 319,
-  "historicalDocuments": 56,
+  "historicalDocuments": 57,
   "scope": "Public maintained source documents, source-aligned provided guides and clearly identified historical references. Private configuration packs, dated lab reports and superseded evidence are not current operating guidance.",
   "inventory": [
     {
@@ -9641,12 +9641,12 @@
     },
     {
       "id": "video-current-guidance",
-      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
-      "sha256": "d419f9fda959971cb27be9750bed3412ae8703ce4f456f8919269197a5d702aa",
+      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-27.pdf",
+      "sha256": "fc4e7bd7168be4940b75f43a6a224333f6a407d7e1973dbb9931415efb79b1ab",
       "inputSources": [
         {
           "path": "docs/video-current-guidance.md",
-          "sha256": "1060cd68aa2c3ba7622478f8b1ce5dccdee03720fefd9203c4fdc784c83b749b",
+          "sha256": "ce8ff6c2742db76f8919cb8479b8b0d2205e19454f3b5b63966d317079e27324",
           "normalization": "utf8-lf"
         },
         {
@@ -10114,6 +10114,23 @@
         {
           "path": "docs/production-readiness-boundary.md",
           "sha256": "ef8087bca3291d28001ccdcddf8358d9cf2264cbef400477080f0d060443e2e8",
+          "normalization": "utf8-lf"
+        },
+        {
+          "path": "docs/manuals/ZTF-Orchestrator-Workflow-and-Script-Quick-Guides-Branded.pdf",
+          "sha256": "e11b241c49bcf147193cc3ae8f1090d0c3e27c524fa6123b9198b9f0dcf7c30a",
+          "normalization": "binary"
+        }
+      ]
+    },
+    {
+      "id": "video-current-guidance-previous-2026-11-26",
+      "source": "docs/manuals/current/ZTF-Orchestrator-video-current-guidance-2026-11-26.pdf",
+      "sha256": "d419f9fda959971cb27be9750bed3412ae8703ce4f456f8919269197a5d702aa",
+      "inputSources": [
+        {
+          "path": "docs/video-current-guidance.md",
+          "sha256": "1060cd68aa2c3ba7622478f8b1ce5dccdee03720fefd9203c4fdc784c83b749b",
           "normalization": "utf8-lf"
         },
         {

@@ -1,107 +1,120 @@
 1
-00:00:00,256 --> 00:00:03,853
+00:00:00,256 --> 00:00:03,821
 Under Configure, open Enable Data-at-Rest Encryption.
 
 2
-00:00:04,096 --> 00:00:08,619
+00:00:04,096 --> 00:00:08,513
 Choose PE direct and enter the expected cluster UUID, PE
 
 3
-00:00:08,619 --> 00:00:11,126
+00:00:08,533 --> 00:00:10,985
 endpoint and saved credential reference.
 
 4
-00:00:11,261 --> 00:00:14,944
+00:00:11,087 --> 00:00:15,014
 This path uses Prism Element and an existing Local KMS;
 
 5
-00:00:14,973 --> 00:00:18,058
+00:00:15,055 --> 00:00:18,363
 it does not require Prism Central or SSH.
 
 6
-00:00:18,216 --> 00:00:20,910
+00:00:18,553 --> 00:00:21,499
 It is not an external key-manager conversion tool.
 
 7
-00:00:21,160 --> 00:00:23,293
-Keep certificate verification enabled.
+00:00:21,711 --> 00:00:26,308
+New deployment and recovery drafts offer optional PE certificate verification.
 
 8
-00:00:23,437 --> 00:00:27,696
-A permitted temporary exception needs an explicit reason, independent approval
+00:00:26,549 --> 00:00:31,031
+A per-run exception needs an explicit reason, independent approval and
 
 9
-00:00:27,832 --> 00:00:31,642
-and an audit record. HTTPS remains encrypted,
+00:00:31,071 --> 00:00:35,617
+an audit record. HTTPS remains encrypted, but bypassing
 
 10
-00:00:31,714 --> 00:00:35,930
-but bypassing certificate verification removes that certificate-based identity
+00:00:35,637 --> 00:00:39,660
+certificate verification removes that certificate-based identity check.
 
 11
-00:00:35,938 --> 00:00:40,347
-check. The exception applies to this operation and does not change global trust
+00:00:39,840 --> 00:00:44,086
+The exception applies to this operation and does not change global trust or other
 
 12
-00:00:40,440 --> 00:00:43,731
-or other workflows. Run read-only discovery.
+00:00:44,106 --> 00:00:46,916
+workflows. Run read-only discovery.
 
 13
-00:00:43,923 --> 00:00:48,566
-Verify cluster identity, complete healthy membership, supported software-encryption
+00:00:47,120 --> 00:00:50,983
+Verify cluster identity, complete healthy membership, supported
 
 14
-00:00:48,660 --> 00:00:51,126
-state and the reported Local KMS.
+00:00:51,003 --> 00:00:54,418
+software-encryption state and the reported Local KMS.
 
 15
-00:00:51,347 --> 00:00:55,870
-Review licensing, platform support, other encryption tasks and key-backup
+00:00:54,544 --> 00:00:58,705
+Review licensing, platform support, other encryption tasks and
 
 16
-00:00:55,870 --> 00:01:00,314
-ownership. Missing, partial or unsupported states block the operation
+00:00:58,725 --> 00:01:03,199
+key-backup ownership. Missing, partial or unsupported states block
 
 17
-00:01:00,493 --> 00:01:02,533
-rather than being converted automatically.
+00:01:03,219 --> 00:01:06,023
+the operation rather than being converted automatically.
 
 18
-00:01:02,925 --> 00:01:06,160
+00:01:06,377 --> 00:01:09,664
 Software encryption cannot be disabled after enablement.
 
 19
-00:01:06,381 --> 00:01:10,283
+00:01:09,876 --> 00:01:13,898
 Review the exact plan and obtain approval from a different administrator.
 
 20
-00:01:10,532 --> 00:01:14,372
-Live writes default to off until the installed version and hardware have been
+00:01:14,120 --> 00:01:18,324
+Packaged appliances enable reviewed live application by default, while an
 
 21
-00:01:14,372 --> 00:01:18,588
-validated. In an enabled environment, the exact confirmation
+00:01:18,344 --> 00:01:21,268
+explicit host override can retain planning mode.
 
 22
-00:01:18,724 --> 00:01:23,032
-precedes fresh identity, health and state checks and one request.
+00:01:21,458 --> 00:01:23,971
+Validate the installed version and hardware.
 
 23
-00:01:23,436 --> 00:01:27,788
-PE configuration readback and background encryption monitoring are separate from
+00:01:24,133 --> 00:01:28,700
+Before submission, the exact confirmation precedes fresh identity, health
 
 24
-00:01:27,788 --> 00:01:29,636
-proof that keys can be recovered.
+00:01:28,826 --> 00:01:30,833
+and state checks and one request.
 
 25
-00:01:29,879 --> 00:01:33,339
-Preserve and verify key backups outside the appliance.
+00:01:31,215 --> 00:01:35,547
+PE configuration readback and background
+encryption monitoring are separate from
 
 26
-00:01:33,530 --> 00:01:38,173
-If submission or verification is uncertain, inspect actual PE state before
+00:01:35,567 --> 00:01:37,393
+proof that keys can be recovered.
 
 27
-00:01:38,266 --> 00:01:42,857
-another request. Rolling back the Orchestrator does not turn encryption off.
+00:01:37,594 --> 00:01:41,073
+Preserve and verify key backups outside the appliance.
+
+28
+00:01:41,348 --> 00:01:45,723
+If submission or verification is uncertain, inspect actual PE state
+
+29
+00:01:45,743 --> 00:01:49,841
+before another request. Rolling back the Orchestrator does not turn encryption
+
+30
+00:01:49,924 --> 00:01:50,460
+off.

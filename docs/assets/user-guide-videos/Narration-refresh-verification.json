@@ -1,0 +1,709 @@
+{
+  "date": "2026-11-27",
+  "approvedScriptParts": [
+    5,
+    18,
+    19,
+    20,
+    21
+  ],
+  "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+  "records": [
+    {
+      "part": 5,
+      "file": "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.mp4",
+      "duration": 113.47895691609978,
+      "chapters": [
+        {
+          "start": 0,
+          "title": "Collect PE health deliberately"
+        },
+        {
+          "start": 31.831,
+          "title": "Separate collection failure from cluster health"
+        },
+        {
+          "start": 55.405,
+          "title": "Check the evidence clock"
+        },
+        {
+          "start": 74.99,
+          "title": "Compare a readback with its approved baseline"
+        },
+        {
+          "start": 93.1,
+          "title": "Refresh and Collect have different jobs"
+        }
+      ],
+      "captionCues": 31,
+      "visualStates": 7,
+      "speed": 1,
+      "lightMode": true,
+      "liveActionsExecuted": false,
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "approvedTextSha256": "dc2643204ae300d2f9c7a964bbac358b7cdffca91f697d01956284ff9dff270e",
+      "sha256": "8055517efd08cd20be9d4ffe7f0ff2c213a4cc0c590c4c381d77fba1dd31b689",
+      "listeningReview": "not_performed",
+      "captionFilter": "fps=24 before ASS; captions update inside held visuals",
+      "fullDecode": "passed",
+      "captionSamples": 31,
+      "failedCaptionSamples": 0,
+      "heldImageCaptionChanges": 24,
+      "minimumHeldCaptionMaskChange": 0.02614176245210728,
+      "visualStatesReviewed": 7,
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 24,
+      "meanVolumeDb": -19.1,
+      "peakVolumeDb": -4.1,
+      "audioPayloadSha256": "04032ce65c3dd4dbd32257ecf6251579e274cd98aadb8b7cf0e0df6c1a4096c0",
+      "decodedAudioSha256": "6666eab7eb272198a5b07eaba8345ff6b7a184b1d8f35424ad46ff5f2a3f7ab2",
+      "posterSha256": "3d463df910d31a359079fc28492a4a8d268f9c846c75d5200ff5d91d1276cf6d",
+      "companionSha256": {
+        "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.srt": "d5bf749c1179d9ca10cb9ff7250bc590dc5be96f219ddfb593424e0cbd2c749a",
+        "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness.vtt": "943c983b4e4d6d918ca2a5fa914240ed406c3174f0fc103afb181b8ac4a255e5",
+        "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-chapters.txt": "5da382c46841450c2d0f58a729baa70d046a31e018f7f42e53f60edde0a0582a",
+        "ZTF-Orchestrator-User-Guide-Part-05-Monitoring-Drift-and-Upgrade-Readiness-transcript.txt": "abff6e731f8e74e9af033805aae901d8ab77b805052ac957fd4c3f3fcd693f37"
+      },
+      "beforeSha256": "50cf9b2934509ffae6d24a605892809ff2844edce1350459b5a2c13ed83b008b",
+      "browserSamples": [
+        {
+          "time": 2.4435000000000002,
+          "text": "Cluster A has a saved record, but that record is not a live health check.",
+          "region": [
+            440,
+            961,
+            1040,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "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"
+        },
+        {
+          "time": 6.8165,
+          "text": "Review the PE endpoint, expected UUID, complete node",
+          "region": [
+            543,
+            961,
+            834,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "eNrtnNu22jAMBbX//6e7+lBIYt2cG4HOPHSdQnAsSzu2ZYEZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABciqRTWnmKOd/Z7Z/u8mcNmLqfXjxaQU43tafrZyhIXx+A6xde/4tePnvAf1VBuirmTu6mPqsg+4E56LCCbhbRwxV077NVx7upk4dVv+7p0xS0eqA9ws5rurEvNO+RkI4q6P0nCvqcgm5ezH6Jgu7xPwr6DQXdKiEUdLKChII+ryBDQamCFOw3HGd4Fy7Xhk4+YPHOdkUd7FJnFeQ0M7zy75pVpMi/TMl9thvtTp+GsZJ/d4W9Hu/nfvhKBak9/u7AyNnc+m4II7MagdL9QUSoDMhCQXJCffB2dmHolMXlf/8NM9THFLRpZnEnOWpeRkqSM3cWkRvrVYrNedwsrFE9HIsXBiNjAy9RkJWWhs+Wteu3b47GjAHnuzkJntKvy8ajAG9nEhY9zBUUXSjFo74cRuU33rsP2mrsLZPR2qWfXsEy9siG0H8PdGyt2ye57b1GIx2OeCHlKFPhM/RaBSnq5dLmt2WvGXUbFxY+bsyfy5PgUenXZePOINpUNnvTv1BBii5UGOaOxd54HFLQYIg7g8jivyxZmLrj3FGQ347ryTJwksWyo7rbFVS7LjmcSNzQcpCly8XGaHvyanhW7tZlmFvy7r/eWPzVWjSWWQ1X3sEMm0RTd+S9Z08W8jM73lUX3OO4evXcUVCyYblUQUnCwZtUc9eoraCp4HH8mj+k+1uGUxS0XOC0cnFRyLhCrxS0MiVwk6pnlxOyVyvIDigoHUt7jIJMig8hk+iO4+MUBWlCVP6iddhjFRaETvr3ho37jsMKcnbK9SIiWIZu3LpTQXZMQbbZso43P6CgKoF6nYI0pSDLV+ehgixZ++Vbh8jQ/BFWu1ZO+mFIsg0KGi9cZFP2KEjxxOLkausSugcpyDEtTti6dihT0HDt5xRk1ykoisy8aG+/gjqFgP7mbreCtF6ejLdVZldrEK5TkD1dQfZfKMi+U0F5GLhr9iiqtxPRhIJmTombqaCnKKhY8BQToFVzkNVxe09NwqUKaoRvZwm9YxXXOw+Kz5oDBSlTkHrB3OvxhQrSzfug1TFFcx9UKSG9VDcr6JZ90MxXC+5TkKwxt+QnMlofsttHFKSGglrZ7EsVNJOL26GgPJutspV1kUAisEO5uFxBSerKpvLNjSdokYuzo0XP7vPSt2g8FNqRizugoNnj2CQl3Dub2KegsIwjPghvnQdlR9fJmnG4sFBQ21QVw2pTp9hXKqg1lzRLNtVVkGfRWJhQmtwp1JlRkGzqVNxsquajo6B29OfVJe09huLyKb9STOWyIFOQ1Dc1j8yWazojopmjhOmahGYhd1gDFq974rsHty8UpG4AdurisnOmRf59CLXZChtPg3HMKqosHbY/CiuJsuIUx0BlQ7QprXTcvV3abg7g47Yb5X1eJiG+PrSyGzxOpG3dv5wsOrOROzX7datZEfeEguIcc6tSp/MLDwrqoJ2ur3Nxcb1urwTpbVzxWylKarOtV5vdKvUP0uDhSLsly+mAZ56pxjDKxcXXZ19o6ARPFmleMfuBn4Vof2i69fLrFmd8a6rTyhA9/gfnBjCO2bxTcf4t/ZqTsh8vUP0VqiD8D38bbZBZv1HlQ5VZOe2q+sDg7p+E+GpOHKj5Qf9aN+nxDcI3KshQEApCQSjoE/1GQShoT1h9rYIMBcETXMd2FQXhOhSEgnAdCkJBAAAAAAAAAAAAAAAAAAAAAADwdfwBDuQODA=="
+        }
+      ]
+    },
+    {
+      "part": 18,
+      "file": "ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch.mp4",
+      "duration": 111.90510204081633,
+      "chapters": [
+        {
+          "start": 0,
+          "title": "Connect to the reviewed cluster"
+        },
+        {
+          "start": 22.969,
+          "title": "Review the per-run PE TLS choice"
+        },
+        {
+          "start": 44.531,
+          "title": "Discover first, then assign uplinks"
+        },
+        {
+          "start": 66.663,
+          "title": "Review the exact migration plan"
+        },
+        {
+          "start": 91.177,
+          "title": "Apply and verify one host at a time"
+        }
+      ],
+      "captionCues": 29,
+      "visualStates": 8,
+      "speed": 1,
+      "lightMode": true,
+      "liveActionsExecuted": false,
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "approvedTextSha256": "6daf0cfa055dbdc5e1a21127d6921ecd84f082e1d307e26181f3f5ac9c8f2da5",
+      "sha256": "6e44c501473ff4325bef67371dd70000a03353591fd86bdf6130d2b4bedfb267",
+      "listeningReview": "not_performed",
+      "captionFilter": "fps=24 before ASS; captions update inside held visuals",
+      "fullDecode": "passed",
+      "captionSamples": 29,
+      "failedCaptionSamples": 0,
+      "heldImageCaptionChanges": 21,
+      "minimumHeldCaptionMaskChange": 0.03093103448275862,
+      "visualStatesReviewed": 8,
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 24,
+      "meanVolumeDb": -19.1,
+      "peakVolumeDb": -4.0,
+      "audioPayloadSha256": "26ad041c2f125f13642f4134f5bba22521e74b45453f51603d0ac1a21c86c14f",
+      "decodedAudioSha256": "498d8dbb160d5d8a63aaf99b5ff812e942cadb1fb384906ef35618ace498f769",
+      "posterSha256": "6428aca63aa49d28c0b4b6a39ad3e7a080d73cc48e4d7d4f59766e0f8af66ee2",
+      "companionSha256": {
+        "ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch.srt": "b387f8a2ddc470a4a18be30a27261502f23d4f759b5a0c030fac9fa0bb2b5253",
+        "ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch.vtt": "b82ad2194a7c2b7cbb59f7642a69a77f2eb12fc8268fe5d8458ac84a5f845a05",
+        "ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch-chapters.txt": "222ed26e6f4a9e4ce58084c7cc3c08423a69e86ba939d18c6092e94ef989fd12",
+        "ZTF-Orchestrator-User-Guide-Part-18-AHV-Uplink-Migration-and-a-New-Virtual-Switch-transcript.txt": "21fa5042205a4fbf85e295db344c6c73c75afc4d2f5381688b77323c44a218b1"
+      },
+      "beforeSha256": "0837cdcaf02871056deba22dffad64e0fddc361222797ecd5c65192913cbb8e1",
+      "browserSamples": [
+        {
+          "time": 2.2725000000000004,
+          "text": "Under Configure, open AHV Uplink Migration and choose PE",
+          "region": [
+            508,
+            961,
+            904,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "eNrtndmS2zgMRYH//+mpmlQcWcRySS2Wu899SZVblkgAhwsIOWYIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIHZa7YwSEIjTupPD/pwGj7JXCVItWPMH4N/nPnxO5h+yjtXOhN/7S0mT4nZOil9Z9dW3GIwJkha2qv3j+2Skc+u/gMAh0F4L/Jg7/tmGeQ9HAcKjYquTQ84/8ekJ+Hof+OA59eTT0L18ohuTtOfTKtgsc2ukcfsEG5jkcDoOw8tA7OFz3p/8CDu0hHAZPgsMjXZ5a1t/Dof1ODm2eQ4fDn8KhPYzDA33/ag7HPG/GoRc9/hSH7gaHD+HQx0TDEFzhxkLre7hz3UWlH1jnbpfqzVeypsT913ZRKoe2zuEuLddu/OpM6tBW2fqbJdguUShbu7JjsEhIHOPNDV7ZQpca5MUHSVCdy+EfL0RPfvfPLg/092sChlFaaffM7QXBI4Nu7psfNlJqS/S1pLOeAdBAFnEoD2qbh3vi9uKSGPd3DsNA8iEGtqZ+N6PX/iscH7nG0k69tSp3bhvX4Ud5pCctPp3DIZv3+tuQE9oON10gBSOopc8cH/7vRLHhcPxCNS8PbXm51IMb5TZa5NBzY3UOGtMBoxHSS/LJ20MONyYYGxKaLO9s6fg0qbztVHDI7M30XcV1nGKJD2XzoDqbQ5daOZqrC6Qg9LRnKumoyGpt+tiraCmD0av1l86hLXGYNnC7DIgvCcNV43BYGHp2s8x/kuOtKFLwIlZ783m5Gum9rywsruHQCwPWZ2EVh1XeUOLQNA773VHdFlM6q8Xi9kB3WJi192lHmoDDuA/5qLFrSDGNlkl5zX+V45XCqsJXRSVFtUzyfOxM91p5fntcw/rS/rAd16OLTuGwiv3J75mQyGjOEobgTbu/ymE1cvYOmuWwcMjlHHrnwC5QpznsZqvA/VFETHPo1Y74Mg7Ne6eYXuD1/Rx6v/u7nsMku1OFeXXH1lIKh+EcJ+XWJZAu4NDLw6UolZuMsov5UoHD/eD+PA6TCWiFw/19Gg6t2/01MXERh/XiPPxngsMsP1tOK03INka/h0NLCkY94XD20BIO4+iywxxW+8B+zr2KQ1c4TO4kjFi78+XjHO5D63YOI9vVHC4VD5y1LjV7LIczFqg4lKa8eCd4iEO/cV0a50lFDoV89yyHg+0+Nh++vzU0VbEjlZ3EBR8ncti37K794QyHfpTDPsk9FA5NzNcHOKyd9OeK/rjDq2SnvD+czz5KgXlBnma/NvpKDv0Z+dI1Dv0ODu1GDtvUSn7s6Mc59BkOleTYzRx2E+I6hz7LYZ6zFiLpxDO7qaN9sTK3WJe7zqGwqYs4XB0opzn0JQ7tOIe2yqEriybl/LDya9XIdgNxkMM2sycRoJcam3K33MlNOUYRMIqvwpc4hc6ewmFZL17se4u6Nusntrk7R/U0prwBW1VYVBz6DIculyOtlIFoC9MDHIaZ2bRxUe2meVs6lrnU6wKj1ERRlWuWxGvOOOOZtahD1MMnr9No320JjedDoaQ4e3U/YSNxmNSXppW/cRmZ4vhxMVbkdDZBWPi2+Lowxucj0lkcmtdHj0N5TngsoLziFBesu81wWLUif7U2OW6wtHg+quovOtu96aVxOPMbW8GLAxMclqsE5RgoW6u+vwkzHjvExvb2VLzOrf674fzxY/O+RXIwmtfIVOEl5CpcO+RQXtJTnzH/62159ri+0/sAoDQufk1tucmHFZ8Nf6I1Ze5eeFNw1orStcJrbbPfHyLirPD9cVqzgjho8BOyz34+gkM4hEN0lEODQzhEn44EOOQ/HUHfEglwWFoFDMHvlbE3OPyZxkdfAuL1gQCHHzQ+QgghhBBCCCGEEEIIIYQQQgghhBBCCCGEbtd/kWkO4w=="
+        },
+        {
+          "time": 5.9315,
+          "text": "direct. Prism Central is not required for this path.",
+          "region": [
+            596,
+            961,
+            728,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "eNrtnOlu6yAUBvne/6V7K10lNpwNG6euO/MnlRqzHAbClrQGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAV6F/PK9O+9fP5nrjgPyKwk6XzXq/jnttPLc2WodTe3ut5WOA3IidzixOfmkk9XCvz1TPGgTu5XVTu8hrs2g6n/hFzhlN1fB6Irl2L68XP/zuL+vdO5hi7amrRud7jPpLZlnvRy6q1IIMLvd6feWPdhS8xuu1XusOWuM1Xi/1+m5LZLx+stf/573j8r9PuBsftV20+TsShteyCiorg2hq7tbUKIv2aW1Kvs1nX4QokmF9FbzVXkLvi+GEurY6k4ZFjSrN3ZerK2VXQjeQ9t6A9Q/7ie1b6xkE2xXD/vX36zudoTm2mR7welfcIYNX3tvki153hdknZUWr751KRzSnvkNWxjak7/X4nryNjGOHXVLKk7LDplHzYXQxA2mMC3m0nF7vZaC5XWuN+31yD22GbjYzv96kbJ8Gfcf99YS3kRdviG9e1Zd495e6kU/+AZUUzuuNrGScCtgfPRqCJOVtZNdXE0nFC/ztH0qmCU5eabS2jzSnvPu3z81fAnWHv8wP0vJ+iIz0WjYDMQaYyoTMcMyqdeng1S6sWeqKK3Zd5Hf5mtdGswVJJXPZ+LTOSm/0Ol31+0OWnYFmVg9GgCJbDqwbg2aJvHbyyM4v5Q/Tsdd+g6QtFXWNotdhbGpeTyWVFFDhqGsGsitRyWtNeF0YsK24258B/bJkxmuNS7fko71SnSTQUVMmITrvtfnO4AKOwli3Oa/bVFJZxwvrnAzx1Wi1ktftSq/tvYzEa1mL62R+ne70XOa1cq9V81p1r9uDvdZ9ve4ueRzwOl+haNZrxZdRhrZMvdawKZMtsjOv2wGv/QpMe11I6nKvC9EyVPsNXkd7rvb++LYSeade5HUvdLyyqoy6eF08fui7wLVet3y9utBrb2E56fXU7lWbWRs7vWC51zNtVJ2HVI5+r/M6i9aQycO8tqa2kdf6Qa/jxfOS+fWDvE62GiQntY97rUu8bjNet6VeS+V1Y+EDxEgi3ud7vNfts16r4nWu1A95XRD7AV5HBwCa87p0LqNc0rVeD9E663V83hiOz2Wxr/O6VS6N1L2WvXw853V0IFccSJNDPRWOglo7f9643mv50+uzXr8LEY7XVvjUHelPGO+uGDTntXXW4xYsiVt7L8XT/et6F7Lvh2QLUvu2hHnzo8Ve+62WzNiUd8bq/rUfLdkxUtpShfP01zZQFCDzgtd4AeyM111qNa93e1lewaI9xX7Nvo2E+/1G5RcMw4upzj1V9yBLQxtVm62UlLfbU7m0G22nFqJlO5W1VMnr8tdOwkvNu/GutY/+dIV3w3j+cv/U5d4TNUuftqrkj+tTSWniudLnvQ5G63UF+fD32h/3Uyft7/5uDXUBvKYugAvUBXCBugAu4DXgNeA1dQEAAAAAAAAAAAAAAAAAAICeL1c+C04="
+        }
+      ]
+    },
+    {
+      "part": 19,
+      "file": "ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption.mp4",
+      "duration": 110.53002267573696,
+      "chapters": [
+        {
+          "start": 0,
+          "title": "Use the PE-direct Local KMS path"
+        },
+        {
+          "start": 21.711,
+          "title": "Review the per-run PE TLS choice"
+        },
+        {
+          "start": 45.087,
+          "title": "Verify encryption readiness"
+        },
+        {
+          "start": 66.377,
+          "title": "Enablement is irreversible"
+        },
+        {
+          "start": 91.215,
+          "title": "Verify configuration and key recovery separately"
+        }
+      ],
+      "captionCues": 30,
+      "visualStates": 7,
+      "speed": 1,
+      "lightMode": true,
+      "liveActionsExecuted": false,
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "approvedTextSha256": "b5d7d91b0247b1b945554541416f40c86ac00726e5271cb536a0a771fd023297",
+      "sha256": "9dd65e0c7ef7ff419929422a36a618c245b5fe30ce179a81c102dc380335c83d",
+      "listeningReview": "not_performed",
+      "captionFilter": "fps=24 before ASS; captions update inside held visuals",
+      "fullDecode": "passed",
+      "captionSamples": 30,
+      "failedCaptionSamples": 0,
+      "heldImageCaptionChanges": 23,
+      "minimumHeldCaptionMaskChange": 0.03469348659003831,
+      "visualStatesReviewed": 7,
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 24,
+      "meanVolumeDb": -19.4,
+      "peakVolumeDb": -4.1,
+      "audioPayloadSha256": "ac2a4f6e68f261fe50862cc88326e605dabe37961011630db8a5adabde663292",
+      "decodedAudioSha256": "34a5ce26efba30b8a93f80c88069297cfa84e2a829b6e3c496aad48587767205",
+      "posterSha256": "d78f538fb17fd827eccff228101f540401a866c94d555c2c77ff74e93a967650",
+      "companionSha256": {
+        "ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption.srt": "c4d179f30f5ec07bf22c846bb054e4fe964d1637e44d5d302c1a50179acb0f5d",
+        "ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption.vtt": "42d01ce4e922b77d664be67b47f8b55122c3bd7eb960314a334226be2aa88cef",
+        "ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption-chapters.txt": "87242de9dd2e1f945ee54469121e6111dae697685c7b29e759402d6a10120b68",
+        "ZTF-Orchestrator-User-Guide-Part-19-PE-Direct-Data-at-Rest-Encryption-transcript.txt": "8394a0a82515c86c7bd1557eb132915ce055dd2140d516aaa877706dbfbcc98f"
+      },
+      "beforeSha256": "c26ed82216baa784c809275134df7fa020b1fb6442c781fee043ca7351834b7b",
+      "browserSamples": [
+        {
+          "time": 2.0385,
+          "text": "Under Configure, open Enable Data-at-Rest Encryption.",
+          "region": [
+            548,
+            961,
+            824,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "eNrtndty5CAMRNX//9Nbu5VkjHVrGOzMzPZ5ScWxDQg1Bgk7ZkIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCiDcHkA3EZ7jyjaLBP938D+IJ2qgx41UH4fFG5G2xKIBvFcxXD2/mQVho75pusGjZnW18jft8oG5+rDJpnMfZMOmmK+lm5ewqWLopLPOfrW0Au2medjildL0nTInmjhMuH52Id1wi36Gb9ZFEupm6qnLgdVMChGKlm+26wf4uk26mO1C6eT/dmHRzm27wO7qBdJM/9n9W98GKP+27oicDc4/H4v4ge+kQVGivIOqSNhZ0TwHewOdBOzhUVNGVdFruZK6NZi0EQhTZ8yZqZXUrzlauyk83gOvzKd38/emCHI8D0bHhOkI3LojiyjyeMWrgqxZIuw9Ha/XRmr4u0Vl4HGt94XDDmUKjZnO6Od09NWxrDDAlI/WIY6uTWxG2cg34crNo2Dn3ylBqYP4hZEsH9lLdOK88Wt0felzHPRzgMjNxmUHsJj170E1Q7279NfjruWlBY78LCYct97u/n29jYJOuEX5UPh6OJOj/Ft2weUhkugk8op2n9bZ6NMtZKtBNZrzwGLzTYHlZiah7fTWKk9qpVpHaLAoIgp+hbgJLEfP0wJihD1vuk6kvpF4YF0oXlegmH3nY+W6bOytt7Mb3Gd2gqXwxGgDVqGuFrcv+5HWTdWF5iBh50zUl6sdMcV3pJK1uxtmA96jiwWuFbtxsxzrPR14EcXX3O7+yYK5sjDVOm1rdZLZC4laFq6B2h6hNhJHXdQNSN1zfnBZ4S7oxSjd9sDSKQ1DFzOnGCN1khQ7GfyHdBKsQ26Gbzq2KLg/jAYE320W6Kat+kW6s1Q326wZNXcxvEAoKNt6bl3RD6wQTusHTurFON4vrm3ndhCuFVd3Y1bo571BiO2ddNzatm2YbVWiAUDdFYxd1k46z/nmTNqKJQycL9DC+1l4Ztz8KOSKIIrH5myndWF6ZV9UNKN2YdJMHL4YY+1bduMhrlNjJsmPplV3IIapnmpCidVOu6Tbqxm7TzbRG7tINnyqmdVP1N1bmHvzarc49dVHkNGqYrTYm4wJtIApNib1uqrECeeTtxXSDX9QN9utmen2zSTd2gW7yNS4bmY+iM3QculoKXTRPszEv/ga6MTLo3AULJnRjVLRkSjcL8bTX1Q2u0M3Evs52d9z2uMC3bqJhMA8TPa+bOFZDBZ153ZTJUFyqm7mJGpFK2a4bEBYm36spUiDxrArlNI1+3qSJljt0Y4gnoWz+Bqu6qSe+xfwYbRLOiAldleKody0UHmFGJwrb/QJpY7frJnV27r2aZj9JtatiYdVCTkF26KaOZj82RWWbSMn9AlO6sSan7ZO3j9s6Ry22CmYVL3P8zP60Q8XCEfI8noDcn9Y785a4APzmJuTNTlWPaG/14FJBjKWIC4RXMhPcsQvArG/A78FCt20fqPaf1ONJlaDk3u9Odk78RE6JVG/3vn24HbjXjd8PfahYPLNgUkxT+6Ep3eQxayS1/k4jJh2ehNKTAHVipeRvxJXcItWC9I3fHj1tq7oPz56b9FxnUBAB46jmE1/XmL40MtjqpxiC7AOIkYENlY670bfU2Ix6w8TK9z8mC69eFerfqnjilV0k4//8xwhYH42zba1Ze4N+5me4Fu2vbx1+siOo5y7ybelGupG1LrpK1n9XR1DP/eI0TdaXbj70y9TXft1R1n/X8VM9V8V6rv4oqqz/Rg6hnpv5mLD+d4iw/uM4QgghhBBCCCGEEEIIIYQQQgghhBBCiFv5A5OODV0="
+        },
+        {
+          "time": 6.3045,
+          "text": "Choose PE direct and enter the expected cluster UUID, PE",
+          "region": [
+            533,
+            961,
+            854,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "eNrtnNlypDAMRX3//6enamqSANZq3M0kOecthPYidI0ty4wBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHADYQL4rr6r/71lD7Xw7dVKP8VlpF8oow/eZIFLhedLSp+NUBWqskt2xt3pcsndjvf1HPXfbUdnfaeqet38NM5AVahqk6rCpi06qjHwv0NVhyY2Kr3VsvvdWiuh/auvHzyvqmIL9qnqhrV6qjoJp+SpLUfVeE5VzaUSqkJV21UVrijmZ1FpoFXgm1UlVIWqHlXVqKhqNBzVugdVoarfpirtVJV8VU3TTWOFNl+yAiaxJSqN/SjmGq34d1FubcdIjL3CtK6anfLaGP9+qvdiH2s2okOr/ScRR54sh/iwVlaaJqvFt7pPT8Vlc7XCy+Pep6qxW1XOxSCgGFzK/l5T1VcpV+N8tDQJgvqqmgM8n9eM+s3Z8un2yXTT/y/1TZqZVBX1KmzMpK9aaTKslt07otZ40Vur1LhCyRxivo2qphLmWMgxKiLzzSd3e6k1Azw56GQk+bUVLDf3YExtPioiaFtuurmzf90kmQF6vSo1xrFWUJr8FYf8pqSrc19VjQqPj3uvqlz3kxaWKu6cxg8nGhJyKnS70IoBGvVYbRip25U2wqJIqjU6TK+DudNWAc44ZPzA75Vv1cu95hMrhrhsAyu1jOvWhqoKFZas9WpVjbuqiooyJGSqyrKPvx5399aMoT7yk/MqYl1VVh5HUKTcV5ypgzBJxPTWXFXeZMXZo/FaVIiczPemxl5QlVXhc6qaJ/G6q6rLzH+DquQu65WvwUbwCr2rqkI3R1RpTVXhJD1SVWmoOndHviXzBhWHrXepajykqoqjFqIVqaqszshSn6OqeeFbiFL6qtITqqq4qfMkq6qqvx+82bBqqhqqvY1foCr916qaI3DrMcAlVQ0vDdFTVWtim6nqXFs1EWuO4XVUde1ioqrJIguq8qxq/scduC77DW6E3LHwRlUNyS6pba1bMcBYVb0Ntc2qcl6VKowM+1VV2/A+9+anqWo8pCq3HENVZ109paqyQJ5Q1Wn/qFPtbVWtJA1HccPmDDCPYJkNGGN5BtgL56YzwFGfAY7KeNNQlZ1lXXToF6tqLKlKu1X1WeguVbXXVcVJSRI2/X6qsvfjquuqraryZ4DKQu97VGWPxrcylsbYlQfYiwEmj2xJVUlkvSGi/aoqbcTFfrJPVZ5Ro+3o3Gfepqpw97ysKufXuarGZlWpeU5Dv01Vi+/D16hqwQH8xMCGGsxJXcMyr1SV0uZm8diOp1bPV5UyH9TwlpU1QCG3QrGq6g5SOpLWy60oqkobVKXRPH4aJo4kCyKVXlaN3AolplPx7RgPu96IG+2Im89j9fShzCxMP0vFyh+Sua8neSfi7TTVkeUBRrvAZuKFgo2RY8mjkJll5pDKSQ5y/GduYzaORCNAtTFxkuN0DEDOJq1kHhnwLXO0/uRjXxVUEryyvRHz/VR4JaSbpsEjr39FIlK5m8udpqzXwnHJYQ0vZ73w4Y74oIhVsBUQj5s9EtO5Oevxl0RqT8K0t5WX0XiIss6WeCnl5Zz1wwaQAqex/ae+VetdTb4+UVRV7UMy0YmdbLI49yT7zQLFUrKTUqsHn5P0lJLlel3JP1Gy8MPPwx3rVpOq26d+O1MfUfWjEqn/qul+fG8SfuwXm/iKK6AqDAQ4DfCqAlSFqgBVAaAqAEBVAAAAAAAAAAAAAAAAAAAAAAAAv5c/lGsODA=="
+        }
+      ]
+    },
+    {
+      "part": 20,
+      "file": "ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback.mp4",
+      "duration": 112.729410430839,
+      "chapters": [
+        {
+          "start": 0,
+          "title": "Keep PE and PC trust policies separate"
+        },
+        {
+          "start": 27.498,
+          "title": "Plan physical uplink MTU 1500 to 9000"
+        },
+        {
+          "start": 47.32,
+          "title": "Inspect every host before approval"
+        },
+        {
+          "start": 73.009,
+          "title": "Verify host readbacks and the physical network"
+        },
+        {
+          "start": 91.814,
+          "title": "Settle the original task before rollback"
+        }
+      ],
+      "captionCues": 29,
+      "visualStates": 6,
+      "speed": 1,
+      "lightMode": true,
+      "liveActionsExecuted": false,
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "approvedTextSha256": "dd8b5eeb71f99719d37ef79b312dd46a78aed76b7549b4771d7d6c0400941f04",
+      "sha256": "289db83e06bbc1f4c40a4c07ffba43ea742267b2c0be359e4cf5a6216de9fd1d",
+      "listeningReview": "not_performed",
+      "captionFilter": "fps=24 before ASS; captions update inside held visuals",
+      "fullDecode": "passed",
+      "captionSamples": 29,
+      "failedCaptionSamples": 0,
+      "heldImageCaptionChanges": 23,
+      "minimumHeldCaptionMaskChange": 0.0367088122605364,
+      "visualStatesReviewed": 6,
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 24,
+      "meanVolumeDb": -19.3,
+      "peakVolumeDb": -4.2,
+      "audioPayloadSha256": "ec1cb54d3cd3c466604b374335b3b17331a6b182fdd08afa2e53e400847905c9",
+      "decodedAudioSha256": "f3cc03637910b0ab42f76ea73139bdadb2a383df6ba3c84c03fafedaeed1378e",
+      "posterSha256": "4e3bf792a3d31c1b38e65d11550f0e8f414a50b51aaae727e44cdbe736c1fcbc",
+      "companionSha256": {
+        "ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback.srt": "3651671de9008052af70bc510591ee1baac1289ad19f76edcf272c10d53df9c6",
+        "ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback.vtt": "19f5caab638e456087205ae96c7044f80f30036a521d167dbd2bcee61df18453",
+        "ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback-chapters.txt": "96b9fccd522d8c5545408f9e5c8b313e37eda3c9bc92387b86941321527add47",
+        "ZTF-Orchestrator-User-Guide-Part-20-VS0-MTU-Change-and-Approved-Rollback-transcript.txt": "44dabb30f3e731e7beeca5e270d1b22d2c0671929ec9b960ac6a68ea02cdbc7b"
+      },
+      "beforeSha256": "48872543d1e2b25771422f7c15f9ec01ef3d80d74e3f1d9092837b194a2731ae",
+      "browserSamples": [
+        {
+          "time": 2.454,
+          "text": "Open Advanced Automation, Scripts, Change Virtual Switch MTU",
+          "region": [
+            479,
+            961,
+            962,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "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"
+        },
+        {
+          "time": 6.859500000000001,
+          "text": "as an administrator. This standalone action targets the default V S",
+          "region": [
+            472,
+            961,
+            976,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "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"
+        }
+      ]
+    },
+    {
+      "part": 21,
+      "file": "ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard.mp4",
+      "duration": 110.63451247165533,
+      "chapters": [
+        {
+          "start": 0,
+          "title": "Prepare three distinct replacement containers"
+        },
+        {
+          "start": 34.251,
+          "title": "Discover the exact default container"
+        },
+        {
+          "start": 55.387,
+          "title": "Approval binds the YAML and filename"
+        },
+        {
+          "start": 73.338,
+          "title": "Verify existing containers, then create missing ones"
+        },
+        {
+          "start": 91.662,
+          "title": "Reconcile an uncertain result before continuation"
+        }
+      ],
+      "captionCues": 30,
+      "visualStates": 7,
+      "speed": 1,
+      "lightMode": true,
+      "liveActionsExecuted": false,
+      "voiceId": "776f9d2ff401499a8f1f2bcb4ca46004",
+      "approvedTextSha256": "171df6d72b83a43582b2104f06ce83872cdb2f05124a2b58f8a0868801e5b549",
+      "sha256": "2e89fb88724a938a87a76909ca6b1d364e6f0efaadd4fbaa277f43de93647d5b",
+      "listeningReview": "not_performed",
+      "captionFilter": "fps=24 before ASS; captions update inside held visuals",
+      "fullDecode": "passed",
+      "captionSamples": 30,
+      "failedCaptionSamples": 0,
+      "heldImageCaptionChanges": 23,
+      "minimumHeldCaptionMaskChange": 0.03321455938697318,
+      "visualStatesReviewed": 7,
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "fps": 24,
+      "meanVolumeDb": -19.2,
+      "peakVolumeDb": -4.0,
+      "audioPayloadSha256": "81778fa8d925f6b2d611960415863d73150795820201ef74da8577d12159e130",
+      "decodedAudioSha256": "e43072d9401bbf0b3d6eaf7ea1008cf55eede3045381a65f00de167e59a6214b",
+      "posterSha256": "b0e75a1b40e93c5c69e0115019e4d6a6375e4bc56bb5dbbc17ba8eabcd0bd35e",
+      "companionSha256": {
+        "ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard.srt": "96b69e0545f5c02096586b72495f96b259bb2b4b0634a27264995c386328a6e9",
+        "ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard.vtt": "cdefd477253acfe2f9144fdcfe64645a40695b9e6c1ba4cf0f2270fcfedd7f57",
+        "ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-chapters.txt": "8a969b631cbfb5ebcb89486f6a460c388bbceedb1789eeedf7414b8e591935d7",
+        "ZTF-Orchestrator-User-Guide-Part-21-Cluster-Storage-Standard-transcript.txt": "74f14a49de151652909b2c7e8165be768d57e5db808279e70cc1af1d94cf0add"
+      },
+      "beforeSha256": "7f5549fb6a153948158fd3069d038ede59d7c5316ff1950133ce740474af5294",
+      "browserSamples": [
+        {
+          "time": 2.017,
+          "text": "Open the Cluster Storage Standard workflow after deployment.",
+          "region": [
+            491,
+            961,
+            938,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "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"
+        },
+        {
+          "time": 6.1545000000000005,
+          "text": "It runs separately and is not inserted automatically into a recovery pipeline.",
+          "region": [
+            405,
+            961,
+            1110,
+            64
+          ],
+          "ink": "light",
+          "threshold": 220,
+          "referenceMaskZlib": "eNrtndly6zoMBDn//9O36tZJRRYxAKjF8dLzlNgKRSxsUlyUMRBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQggh9HrS1eWp+uC2O72Vn55huLp1l74x87V+7UWO+nh/vzNV9K1U0bVU0TdSRceoIqjyElT5jIauN4xZf6zCKL2Z1RePVd4ZL1nd9R7PJfe5v1my/rrWB8q6oil85cPR3V6AKlAFqkAVqAJVoApUgSpQBapAlW+jin4URC2/4f6vglKCjx9//f/HsKD5mvnLqe67P6zzLjR9/8nPNYk7ZIyP5tYfrjXuTyuUefTXWYVztnaV9ij8el+2fL2jO6vyQHYHdWMsF4zptnkM4wo+FKk4c+QiH/fwPvXLZmwrmCVQXLptBGeo8pOWu9tu17bDvJLLP5OO2/TfX6KwLtvvdldOfzh5LQx6XJ3AAruybG2fS6vqHMzL546eyvtxlrlRZNdw0Ji3MoRJo4Ay23obC4IghvULMdaPsQlGkZkZQ6NWknq451XfPCoDI/e774apRpZzrc6vfgLaJltMFT2y30I+7Co0FTQSKzX2yRQSfy7cVX9KzelWcy/rsJF0JkFpI+i9XR/z76Lc0b/V+71n1A3tr3uwyz5e+PyPyo4dOWaXeg/Ywc2Iy2jEWElo48GCcUcY/8ifdnxmQjElUtg8EqpETcY1r+HaWZJzgXEHqWJys6pjSpXoz/xILNueowR545EqoxrsBQE3FbRUqTYjqdk+a/ao8Og8gI5/UtaMLIoKxwduU0LPnCpFpEYzxj60hQmtXZBZ9rlIjd9x9zBWqAPe5DkzaV5BxpT9nRamYAuq5EnT767j36J81SmqBIW3Z6WtXWkF+1SJrsyGed4896gUBiKlSme6rkWV6I4Ri1eoYutUUSXpm9om6ABV0tQ2XnLtO/okpYo1NugTbSa0ovEkqhQta4Eq2dj1XamSXnmQKnKpmlAlmhi5hSpZc7ABfjJVqsayQhX/ozX2GFW8hTlVhmkU89NjLxrSc6micgEkc+xpqshSpZOq6uRGJ2Nvo0r4dD//7FYWstW9c09AuoEqqp9V6ymgl6LKfpEzcJZaVMkPo7nxR1itx098zmWNdHm2dokqw0wQh3P/27n9eLxu5sqjifWk8HpIUS929KhibD9PlWgKNfNosl65va6iio1SOjvRpooLYhKqfaRiqsTrNKepkizyRR6uqDIcVdLmcRFVXEV9zgUVexZVGlzpUcWbO4LV7lNUkXwUVqhibL+HKkOZRy+hiuLO9Cqq+CDaUM1J8USqGFBcR5Wl5jG+iyolV1r3SZeXgv0KmRG7krM1mpNUCW2/iSrxo0mxtyq9rPLLtVTJijB2ya3vlTG+gCotL1ZvyYgnGB8I32we47InoGS/in0CGuPpVClmGJS7ZG92Fvzq8T7IuOzmLaqoyBwlE3QXU2VoJcdKHlZ+uXRepbMYo2qpy1BFN1ClsfdhlSoyVGlEs9dU34oqOk6VuhHoHFVGQpWh5rpgsVay1B/dShXL6TZV1HltzCUryweoMtapMl6dKnZtLsvgfb10nipapsqhV8tdSZVqsLIy9XAlVRTPqtR2XU2V1V1wOVVGkypLDSL1y59QJapRL8ZtqjRWqtao0tivkmyFjrvs9nJty+i/pormedeDYxWVLbuZ0hpZZvQyrkcVtSZOelTp7Q5booqaVKnR0fGL8o2pWqGK+ntr76HK8vr34nOkWjvmGpu3N1RJV1k7W9dVbuBQ46xCiyrV0EvuwIFd9I5hFx32kTklkW2OCes+F15smGzYta2PxbwWurLgREXmfveMK+dRN5afm+PGroZfJsdHC2DqtFdlQTT4CGo0ejFePcvkOz6Vs/XDetjvpVa63XreVBGfNpNffVDVTBpUybMsWxfNp6x3p3arQ6x2oT84t2kuMTf796XyddZ2xlV2jcejt8OdLrRHWu1WDftyiOYqX73jxjhnzHaVfgk+GemB33wNyJdVHGweV1Olc2a5PrNuD27Xp6KVlpFNziyeWS73aNW7GSStPRKV73BorFP3X9QQvACiWxll8yMje0PG8beRHze+9V6a5SFm8D6HTtXzSFQVyh2/5oFe8aYfv/blTy0TusaVoakLUh7NlfVV/91asEZ2bPUl9azq8dqvz9fnx7jawU3aQxVEjC8wEKr8ldlAhVSCKqQCGYeIcX8rGHn/dLOBCpkEVciFN/6vxejl/7XwO/6LUzXeDQZVnmY2TIEpn2CgBlRBCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhL5J/wGtghGx"
+        }
+      ]
+    }
+  ],
+  "captionSamples": 149,
+  "failedCaptionSamples": 0,
+  "listeningReview": "not_performed",
+  "lightMode": true,
+  "liveActionsExecuted": false,
+  "newSpeechRequests": 5,
+  "preservedParts": [
+    {
+      "part": 0,
+      "file": "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4",
+      "sha256": "9217eef736812f461ece33b1ec7dacd8d6ef729004dfba39a802b4753c75e9d4",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-chapters.txt": "9810a70c72a84664f44aa896539ca926cb5b77c590732fed7aa137eabc1d1ed7",
+        "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-poster.jpg": "61faf9bef38a807517ab28dad08672338629e857c6b4a9a087a95700ad4368bd",
+        "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview-transcript.txt": "38c3c58854e83affe9fb26679efe14d05815dc2d3ca710ebd4a5fc7d48b469a9",
+        "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.mp4": "9217eef736812f461ece33b1ec7dacd8d6ef729004dfba39a802b4753c75e9d4",
+        "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.srt": "34c4257fcdbbc3db5d91575d6a9887fa0c641537252a491332c7c3528bf9fbd3",
+        "ZTF-Orchestrator-User-Guide-Part-00-ZTF-Orchestrator-Overview.vtt": "3eb027bd8b90c7e4f6c4329f0c50493594990e0c875ba22cde16c58b07a6cad8"
+      }
+    },
+    {
+      "part": 1,
+      "file": "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4",
+      "sha256": "89ca562645305a9aa896094ff7124f31bafdcaf86177b32dca932610f3256964",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-chapters.txt": "f797b0794074c3bc17666f9711ed4a34b7e2e6e05cb14763f50f513862e185b6",
+        "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-poster.jpg": "72d5355b6f674ca11861fbaf027d775de56971623b389fd0003501e6a0ea676d",
+        "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview-transcript.txt": "4f8eafb727860c7e5e267e9026905260c1b76baef16ae6350ed6a5cbc0e61649",
+        "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.mp4": "89ca562645305a9aa896094ff7124f31bafdcaf86177b32dca932610f3256964",
+        "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.srt": "0a30af6ac4257d1e8d892ec9602208b0444de893dfa3f3b3dfb33573a1172478",
+        "ZTF-Orchestrator-User-Guide-Part-01-Dashboard-Overview.vtt": "58b8ccdb660c494b92e975a1cfbef20cc11e9af81a822a9a237124fdd336757a"
+      }
+    },
+    {
+      "part": 2,
+      "file": "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4",
+      "sha256": "feb5624afd4fd1f38fedea6c92e9fc002c5b70dd70ae0cb18f5230c050985ce0",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-chapters.txt": "5676da90acb50a0869bec86b9f90f21f5d5801c1e400e9faf5f109dd98d064ab",
+        "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-poster.jpg": "61faf9bef38a807517ab28dad08672338629e857c6b4a9a087a95700ad4368bd",
+        "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM-transcript.txt": "15d81e1a947388251e54bc8633a8f4cbfbef81e341967f4175b31ff3e92cd5ea",
+        "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.mp4": "feb5624afd4fd1f38fedea6c92e9fc002c5b70dd70ae0cb18f5230c050985ce0",
+        "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.srt": "d85dbdf703f124d10bcf786d8ce45ffa059cfd1d01762664b5c174fad19c83c3",
+        "ZTF-Orchestrator-User-Guide-Part-02-Deploy-a-Cluster-with-Foundation-VM.vtt": "9bea9b0600ea1b6e6b56d0cd7260b709d38a3cfb71a5bc3e933a583d5c518d1a"
+      }
+    },
+    {
+      "part": 3,
+      "file": "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4",
+      "sha256": "f3e770c592ed1235ccf28dfb4883e2ae2c821e5f92b08a826307a0e8dc87fb9d",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-chapters.txt": "bb3e72ea3cfab5f1084ed2881dc28c5fad9a8cdf14bf32b0aaf3f01d9ea91695",
+        "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-poster.jpg": "5684754964877577d430b7c6ad461ba7555838bd654470ca8f0fcd6692ea10c8",
+        "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines-transcript.txt": "2d81f7359cbe284b40b115f3dd941677f91a1f1437edd74c755de9be26d13d1f",
+        "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.mp4": "f3e770c592ed1235ccf28dfb4883e2ae2c821e5f92b08a826307a0e8dc87fb9d",
+        "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.srt": "5d3f5bf8375e5c3ea868777263a1fc5a21f82c369b820609a77de0f0f054b4f1",
+        "ZTF-Orchestrator-User-Guide-Part-03-Post-Deployment-Configuration-Pipelines.vtt": "4273a0522a990bb96e9f4ad45b93bb736f271987c9844926d15d33a8e64483a5"
+      }
+    },
+    {
+      "part": 4,
+      "file": "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4",
+      "sha256": "aa78f6b2b5d16bb8064a4e67515a643ca9e859ac3bcdd91ca7b5487367f89f7f",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-chapters.txt": "d83082b8e3fe9c9bb5f69dbdf37c4f7d7e528c673b8c7f4c9c496b90894c7518",
+        "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-poster.jpg": "5684754964877577d430b7c6ad461ba7555838bd654470ca8f0fcd6692ea10c8",
+        "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds-transcript.txt": "45ff79748f9b4962cdb776c9df716e18c6b6f25f3775b3af2b44aa7dfc69e407",
+        "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.mp4": "aa78f6b2b5d16bb8064a4e67515a643ca9e859ac3bcdd91ca7b5487367f89f7f",
+        "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.srt": "60ebb551bad33274dda23927cc5a28b14e966abef08f1431a1d9bc8e8bd9c25e",
+        "ZTF-Orchestrator-User-Guide-Part-04-Disaster-Recovery-and-Cluster-Rebuilds.vtt": "9744a77a027275cd63f0c0cfa29920412dc456791db2d01fe2eb9e7301c3e13d"
+      }
+    },
+    {
+      "part": 6,
+      "file": "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4",
+      "sha256": "0be9a84c7843a82eb9686360cbfc8c33cfc485346283c9c8be6bcb76165a002f",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-chapters.txt": "97527647985193d2c938346ef574eb7426462e6d94c54ba11c2031f81a03366e",
+        "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-poster.jpg": "52f97bf91a42e883b8ab8d7b8ffbf7d6dfff2e0aeba6848f9a92338b4504595f",
+        "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback-transcript.txt": "bc491bd028de152c0dc844fb428b63279b93016b7f5b8af03cfa70f3d29b1822",
+        "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.mp4": "0be9a84c7843a82eb9686360cbfc8c33cfc485346283c9c8be6bcb76165a002f",
+        "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.srt": "572c6ba34737bf1d985560f36284d2f1665fc1de23b934f2d908f2f204839016",
+        "ZTF-Orchestrator-User-Guide-Part-06-Guided-Appliance-Updates-and-Rollback.vtt": "10ec9bdcff78d9818cbafb346aa3fea3e91b5b8a136c3c93033fa758b736f7d1"
+      }
+    },
+    {
+      "part": 7,
+      "file": "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4",
+      "sha256": "d4e19bb25e7c53b34ae82d1740376b06f2bc7c06e814ad62b22c60777fdff4b7",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-chapters.txt": "ab01348d3c7b3716087947e07369d233292083196c0811aca3fa50593026d725",
+        "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-poster.jpg": "d2ca27ce4b73f96fc7d9837194657aa2fdf302f74e38b0097454b47fc9f7b43a",
+        "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio-transcript.txt": "028a87e753c798906f36e38e786074e57f9bc55da8e303c0082664d19c88312a",
+        "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.mp4": "d4e19bb25e7c53b34ae82d1740376b06f2bc7c06e814ad62b22c60777fdff4b7",
+        "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.srt": "7335eb89c54efd43443dd3977572f7994081b3be3792eb6d8b1f8109a3bc26d2",
+        "ZTF-Orchestrator-User-Guide-Part-07-Credentials-Config-Files-and-YAML-Studio.vtt": "fc4b3093ff64cd2049705bf96ba7207051e9e69fdb46b6ad480e118e309fc4ce"
+      }
+    },
+    {
+      "part": 8,
+      "file": "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4",
+      "sha256": "89353c1e0f3ac69dfe0eb55a45e917773fd261d1721e50f383343e2718e57fc9",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-chapters.txt": "649bae130029d64bbf613cf5929f64d533a94a12271c74eb19d882b935b4a66f",
+        "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-poster.jpg": "d04bcd11977906a042936201edf10512cca5e65a6aa179d38e85d4cc973288f4",
+        "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators-transcript.txt": "7357c6f1b6fe541d27cfcc1abf711d18059fab43d15135f444a38b244c08023e",
+        "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.mp4": "89353c1e0f3ac69dfe0eb55a45e917773fd261d1721e50f383343e2718e57fc9",
+        "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.srt": "1b78a862c338ffdfb7c3580f0688de2b4e775498b3fe39b2220fa2fa506fe589",
+        "ZTF-Orchestrator-User-Guide-Part-08-Workflows-Scripts-and-Local-PE-Administrators.vtt": "8205166447e7a160cbae4e23cd6579dcf78d653fe997de70d01b826de098ac0f"
+      }
+    },
+    {
+      "part": 9,
+      "file": "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.mp4",
+      "sha256": "86aadbc9ca3b716b7b5c3a38b1da36de5c48fb6accd50fbe26010730c166d2b5",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals-chapters.txt": "87388d7af83ba0c04dedd7998bb14cbcdac3b48b6c4a1a81dc7e6d143842d0ca",
+        "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals-poster.jpg": "6d02f8c733de148318a1a0f0236e52874682394048ce6f2c11c9ada685a7d18a",
+        "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals-transcript.txt": "d99388b20b10747e66628efbe86a65b031a4d2592fb6f05155aed5163b3439ea",
+        "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.mp4": "86aadbc9ca3b716b7b5c3a38b1da36de5c48fb6accd50fbe26010730c166d2b5",
+        "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.srt": "360a92e0ab3d19f09331b1edaf6dbdbf1ca8e7f0112c2a3fe6f97d20addf3ac6",
+        "ZTF-Orchestrator-User-Guide-Part-09-Jobs-Schedules-Parallel-Execution-and-Approvals.vtt": "783d451de2bf230ba3d4417d32028d1bcd75cc5e2c326749a305699ee81009fb"
+      }
+    },
+    {
+      "part": 10,
+      "file": "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4",
+      "sha256": "ab4d0a68a7206b60617dd19fc9652c8a38214c7620ea00a73769f35474017da7",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions-chapters.txt": "5745bf218d7876e2d1f72e1654e181feda5ebb9a65d3b34d9c21ad30c2ad943d",
+        "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions-poster.jpg": "1ae602d914093e548605f9ace7b5a6b8135db16d4c326dc6b65751f3c0d27c24",
+        "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions-transcript.txt": "9b8902787ab08544b99e26ad9978e7af45a0b3add3cdf942c296ba9a75d6312c",
+        "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.mp4": "ab4d0a68a7206b60617dd19fc9652c8a38214c7620ea00a73769f35474017da7",
+        "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.srt": "e3ed1e3dc5416e7041098cfcb8bd92338d75609fd26817f78aaa0b98dca18a20",
+        "ZTF-Orchestrator-User-Guide-Part-10-Upgrade-Advisor-Assessments-and-Readiness-Actions.vtt": "b004092a60f85ee6d0bc2fb1bfd80e6bedd4c697214be190f97c5d2d8afbd5cf"
+      }
+    },
+    {
+      "part": 11,
+      "file": "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4",
+      "sha256": "ea61d00cf0cfd28a1964357975f10f66248112eda260967f00fa7de1c6312982",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups-chapters.txt": "b65ef1ba23c2bf46e95d834db1dcf6aa72e6ad5661079614f9d3f17aeef44210",
+        "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups-poster.jpg": "313203dbf278f112ae66b76ab22789325f98445256b87dd4fd98f0c005e82622",
+        "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups-transcript.txt": "14275650a2621e6b4a1d54aa8d10d0d270a4018768885e2ae4f4555eb89d87d3",
+        "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.mp4": "ea61d00cf0cfd28a1964357975f10f66248112eda260967f00fa7de1c6312982",
+        "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.srt": "709b31fac8feafd0a25cfa5dcd6fafceda7d9b96a00e77e322ca6fea03c83d58",
+        "ZTF-Orchestrator-User-Guide-Part-11-Administration-Settings-Audit-and-Backups.vtt": "6f060b4d265e327c656542c1fbfb01f4ea0af4e805c8af9ed64a3a218037cdec"
+      }
+    },
+    {
+      "part": 12,
+      "file": "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.mp4",
+      "sha256": "787f53b98c2e731a3ad27e3d97296baa593014d153874000900c3360fe9eb1b8",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-chapters.txt": "13e686a9441b783f2124b61b3c5392e54e2236e99f732903557b6d45c9d7201c",
+        "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-poster.jpg": "1bf237cd83cb3db71e9c659f5992805e8926af9b1c9aa1dda3cdf0976b523cde",
+        "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview-transcript.txt": "6e9b0faeb4046b5f8fdc55ae226d3d72b063fa2e07a2e1953afe3fb94efea0a9",
+        "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.mp4": "787f53b98c2e731a3ad27e3d97296baa593014d153874000900c3360fe9eb1b8",
+        "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.srt": "422457168d99df231a59785d5056f0c7f6d6effbb884f83f2a73d1890933262f",
+        "ZTF-Orchestrator-User-Guide-Part-12-NKP-Framework-and-Validation-Evidence-Preview.vtt": "b6a135c3584ce2c8809a0cba86cc3586b6dcdc9a7aeed10cf3921c226579a380"
+      }
+    },
+    {
+      "part": 13,
+      "file": "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.mp4",
+      "sha256": "b1d340e0772d4f1e59a34e9a4af54a8691f20778f381b9a8ff6579b93649f1d4",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-chapters.txt": "31b4a6d8be0dd04c6a3b408c22fac760bdae3870776d1bee0842308a40969e14",
+        "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-poster.jpg": "3e5480bf2ecd79a5509068c0b8b95d091b0ef89ccc6060512682a16a8a00b99b",
+        "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview-transcript.txt": "80be28c7600115e7ab441188f75e0c0fb5174dcc99edc4aa8b3b432f21b10ac7",
+        "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.mp4": "b1d340e0772d4f1e59a34e9a4af54a8691f20778f381b9a8ff6579b93649f1d4",
+        "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.srt": "27e0376329c421ed5f9f2d9dc428897cae8403bb54ab3d46484518044ad5e5dd",
+        "ZTF-Orchestrator-User-Guide-Part-13-ZTF-Two-Point-X-IaC-Preview.vtt": "deaec88e23dc9a34a4195f1bacfbf080c1378ba1976631ce7181617de59a1b85"
+      }
+    },
+    {
+      "part": 14,
+      "file": "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4",
+      "sha256": "9928aae7989be5e90e0a231148d099c6179ff4538c20276fdf7e1094efbf9a45",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-chapters.txt": "62b7c6b6049220bb095c06fbf8e3ca877d6c28a309e9625de1e6c8b044d34575",
+        "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-poster.jpg": "f8baa7d32b963c4659d814165f8bc7add005b19bbddb85a7f81d8ba0e94ffa8e",
+        "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries-transcript.txt": "0d0ab0f829d764675bf3fbdb8ec27a9b08d0dde133260fedfb689067dba49f8e",
+        "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.mp4": "9928aae7989be5e90e0a231148d099c6179ff4538c20276fdf7e1094efbf9a45",
+        "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.srt": "2847c3c42aab771710d4d62384e184a3182cb73eb7a2ef3829d562754db77e7e",
+        "ZTF-Orchestrator-User-Guide-Part-14-Native-Foundation-Baselines-and-Operating-Boundaries.vtt": "bdef2a9825af95a5f473b15dd3bd5b031ed991a755bfae974fb261226df512e2"
+      }
+    },
+    {
+      "part": 15,
+      "file": "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4",
+      "sha256": "da060b5685bd483e66e36bff0f93398da2045afa6225b3fc453e4bafd2ee54cc",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-chapters.txt": "5363ec88191ff317cad8ef529036770a45d3288635e5f53aa94c23cf57a6eb82",
+        "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-poster.jpg": "5684754964877577d430b7c6ad461ba7555838bd654470ca8f0fcd6692ea10c8",
+        "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish-transcript.txt": "38276149b657026bb909b236bcbd3457a67d75e73c9a77682abf6f3d3dc3d3cb",
+        "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.mp4": "da060b5685bd483e66e36bff0f93398da2045afa6225b3fc453e4bafd2ee54cc",
+        "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.srt": "fb970e83b90de3b8a26f685f67a6e2f335c1076b7e3cfa2b3e6cce5355c4cfdf",
+        "ZTF-Orchestrator-User-Guide-Part-15-Disaster-Recovery-Start-to-Finish.vtt": "11b24f3b07e6db8bc9c7f430604924dbbc1269aadf01566c281f4c3606cfecf4"
+      }
+    },
+    {
+      "part": 16,
+      "file": "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4",
+      "sha256": "98d4863ab5a93a81abd788933062bfe65c942b33947d38121bb76e8ae0e7964c",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-chapters.txt": "2b79c7e1f9f068db24b53f00953107f8688e0f6cf76defaf9399563d1e7da20e",
+        "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-poster.jpg": "ffe392c750a2e8cf5c48f81eaeb3841d3c8e345eea88cc4a6ebc6052c8b7a3db",
+        "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment-transcript.txt": "c3945a8efa587ab5a672696255af876e0e03fe5f90ad2e03e179f27a533af3c0",
+        "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.mp4": "98d4863ab5a93a81abd788933062bfe65c942b33947d38121bb76e8ae0e7964c",
+        "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.srt": "8bcbff874522292280ca004421b993b62136989a78fafeab18fc516a416fd0a8",
+        "ZTF-Orchestrator-User-Guide-Part-16-AHV-Appliance-Deployment.vtt": "563ca4c78c0aa9ceb9cbcab79aacb1c1e87ae88d6e5c4186b6349d70401ceb34"
+      }
+    },
+    {
+      "part": 17,
+      "file": "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.mp4",
+      "sha256": "b75b38e9b26e43e0b35e7220c70f39c668bb281dc1fc64da8cffbb43ad7af58c",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-chapters.txt": "7b990c67588b4eb304f0e75ad2d3f9684077b643d8a92a443093a29be8c929c2",
+        "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-poster.jpg": "d8d46d22f598d8fa47b5e0b81d3f5c14346dd53cb6dba60ad0be2c40acccab11",
+        "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion-transcript.txt": "25df762c901cde31e90ed71f4b19511fea2810646ce7c1358d9b65dfdb9d4cb0",
+        "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.mp4": "b75b38e9b26e43e0b35e7220c70f39c668bb281dc1fc64da8cffbb43ad7af58c",
+        "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.srt": "560441a93edb7d071363b5eaae1c810ae17d6de41fa863ca71a2c3c4fbc0e7ba",
+        "ZTF-Orchestrator-User-Guide-Part-17-Production-Ubuntu-VM-Disk-Expansion.vtt": "406bedef063cef35fcc9303c8fe2a8a73643b952cdbcc4b45a790e7abca3d228"
+      }
+    },
+    {
+      "part": 22,
+      "file": "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central.mp4",
+      "sha256": "bbfb02589b3117cb1f490bc4b1c98f83d181904ba461b4670888fc84aa219b09",
+      "companions": {
+        "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central-chapters.txt": "95cc7f25479e4fb6146bc87690cdfa70e5069f1acefa05ed1732acaf45d709e8",
+        "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central-poster.jpg": "e97a67e0ac3fe7a26a6b78bb87eb4dc1f60859a2aecc4263fdeb1f8eac8a56a4",
+        "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central-transcript.txt": "5eb1ae63bd9694687fef0cf5fdbace479f630657cce6d294273b096a16a9abbc",
+        "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central.mp4": "bbfb02589b3117cb1f490bc4b1c98f83d181904ba461b4670888fc84aa219b09",
+        "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central.srt": "0c76b89fee934c571bd48ec500ddc49b77644bb81ba44ba944d940670c188799",
+        "ZTF-Orchestrator-User-Guide-Part-22-Unregister-Prism-Element-from-Prism-Central.vtt": "179a860ffcf13e3d18a4e26599ad84b508766e95fd221344faf4e26cb36cc6c5"
+      }
+    }
+  ],
+  "preservedExtendedPart23": "181591b011d0d4206f57be30f3758b9866e070a6817eaf3b0e5bdd650f96fdec",
+  "applicationSource": "f9eee7e5b7c15610b4f463818bda364c907e4fd3",
+  "reviewedRepositorySource": "6acd7b125ab9f66017e044c2d466405606622547",
+  "reviewMethod": "Full decode, audio-level and aligned-caption checks; representative encoded-frame inspection. Full human listening review not performed."
+}

@@ -26,7 +26,7 @@ for (const width of [1440, 390]) {
 
 test('landing and video pages expose the same complete-series release download', async ({ page }) => {
   test.skip(process.env.ZTF_TEST_STATIC_DEMO !== '1', 'Requires assembled Pages or published site')
-  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-22.zip'
+  const asset = 'ZTF-Orchestrator-User-Guide-Videos-Revised-2026-11-27.zip'
   const url = `https://github.com/VirtuArchitect/ZTF-Orchestrator/releases/download/v1.8.5-rc1/${asset}`
   for (const route of ['', 'tutorials/']) {
     await page.goto(route || './')
@@ -230,7 +230,7 @@ for (const width of [1440, 390]) {
       expect(text.length).toBeGreaterThan(50)
       expect(text).not.toContain('\u2014')
     }
-    await expect(page.locator('#extended-walkthrough-note')).toContainText('unchanged 23-part ZIP')
+    await expect(page.locator('#extended-walkthrough-note')).toContainText('updated 23-part core ZIP')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
     await page.screenshot({ path: `test-results/extended-part-23-${width}.png`, fullPage: true })
   })
@@ -243,8 +243,11 @@ test.describe('Burned-in caption pixels', () => {
     const response = await request.get('tutorials/media/caption-render-audit.json')
     expect(response.ok()).toBe(true)
     records = (await response.json()).records
+    const refreshed = await (await request.get('tutorials/media/Narration-refresh-verification.json')).json()
     const manifest = await (await request.get('tutorials/media/series-manifest.json')).json()
     records = records.map(record => {
+      const current = refreshed.records.find((row: { part: number }) => row.part === record.part)
+      if (current) return { part: record.part, browserSamples: current.browserSamples }
       const offset = manifest.verification.find((row: { part: number }) => row.part === record.part).introSeconds || 0
       return { ...record, browserSamples: record.browserSamples.map(sample => ({ ...sample, time: sample.time + offset })) }
     })

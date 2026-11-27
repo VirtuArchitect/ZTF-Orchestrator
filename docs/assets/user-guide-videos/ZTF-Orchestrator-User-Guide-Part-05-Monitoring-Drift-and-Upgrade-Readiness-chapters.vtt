@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:31.831
+Collect PE health deliberately
+
+00:00:31.831 --> 00:00:55.405
+Separate collection failure from cluster health
+
+00:00:55.405 --> 00:01:14.990
+Check the evidence clock
+
+00:01:14.990 --> 00:01:33.100
+Compare a readback with its approved baseline
+
+00:01:33.100 --> 00:01:53.479
+Refresh and Collect have different jobs
+
